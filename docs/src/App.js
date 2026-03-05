@@ -97,6 +97,12 @@ import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
+import ChartContainersPage from "./pages/features/ChartContainersPage"
+import ChartModesPage from "./pages/features/ChartModesPage"
+import ObservationHooksPage from "./pages/features/ObservationHooksPage"
+import SerializationPage from "./pages/features/SerializationPage"
+import VegaLiteTranslatorPage from "./pages/features/VegaLiteTranslatorPage"
+import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -132,6 +138,7 @@ import StackedAreaChartPlayground from "./pages/playground/StackedAreaChartPlayg
 import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
 import TreemapPlayground from "./pages/playground/TreemapPlayground"
 import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
+import StatisticalAnnotationsPlayground from "./pages/playground/StatisticalAnnotationsPlayground"
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -369,6 +376,7 @@ export default function DocsApp() {
               <Route path="donut-chart" element={<DonutChartPlayground />} />
               <Route path="treemap" element={<TreemapPlayground />} />
               <Route path="circle-pack" element={<CirclePackPlayground />} />
+              <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
             </Route>
 
             {/* Frames routes */}
@@ -393,6 +401,12 @@ export default function DocsApp() {
               <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
+              <Route path="chart-container" element={<ChartContainersPage />} />
+              <Route path="chart-modes" element={<ChartModesPage />} />
+              <Route path="observation-hooks" element={<ObservationHooksPage />} />
+              <Route path="serialization" element={<SerializationPage />} />
+              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
+              <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

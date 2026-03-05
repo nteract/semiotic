@@ -92,6 +92,7 @@ function renderNote(
   }
 
   const lineHeight = 16
+  const labelPad = 2
   const padding = 4
   const titleLines =
     title ? (noWrap ? [title] : wrapText(title, wrap)) : []
@@ -135,7 +136,7 @@ function renderNote(
         y={yOffset}
       >
         {labelLines.map((line, i) => (
-          <tspan key={i} x={textX} dy={i === 0 ? lineHeight : lineHeight}>
+          <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
             {line}
           </tspan>
         ))}
@@ -193,23 +194,30 @@ function renderNote(
   }
 
   // Compute vertical offset for note content based on orientation and alignment.
-  // The label's first tspan adds an extra lineHeight gap below the title,
-  // so total visual height is larger when a label is present.
+  // With first tspan dy=0, the first baseline sits at the content group's y.
+  // Subsequent lines are spaced by lineHeight. Total baseline span = (N-1)*lineHeight.
+  // labelPad is the gap between the note-line and the nearest text.
   const totalLines = titleLines.length + labelLines.length
-  const totalTextHeight = totalLines * lineHeight
-  const labelGap = labelLines.length > 0 ? lineHeight : 0
-  const visualHeight = totalTextHeight + labelGap
+  const baselineSpan = Math.max(0, totalLines - 1) * lineHeight
+  const labelGap = (labelLines.length > 0 && titleLines.length > 0) ? labelPad : 0
+  const visualHeight = baselineSpan + lineHeight + labelGap
   let contentYOffset = 0
 
   if (orientation === "topBottom") {
     if (dy < 0) {
-      contentYOffset = -visualHeight
+      // Place text above the note-line
+      contentYOffset = -(baselineSpan + labelPad)
+    } else {
+      // Place text below the note-line
+      contentYOffset = labelPad + lineHeight
     }
   } else if (orientation === "leftRight") {
     if (align === "middle") {
-      contentYOffset = -(visualHeight / 2)
+      contentYOffset = -(visualHeight / 2) + lineHeight / 2
     } else if (align === "bottom" || dy < 0) {
-      contentYOffset = -visualHeight
+      contentYOffset = -(baselineSpan + labelPad)
+    } else {
+      contentYOffset = labelPad + lineHeight
     }
   }
 

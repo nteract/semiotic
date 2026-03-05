@@ -17,7 +17,8 @@ import type {
   RealtimeNode,
   RealtimeEdge,
   EdgePush,
-  ParticleStyle
+  ParticleStyle,
+  ThresholdAlertConfig
 } from "./networkTypes"
 import {
   DEFAULT_TENSION_CONFIG,
@@ -212,13 +213,21 @@ const StreamNetworkFrame = forwardRef<
     background,
     enableHover = true,
     tooltipContent,
+    customHoverBehavior: customHoverBehaviorProp,
+    customClickBehavior: customClickBehaviorProp,
+    onObservation,
+    chartId,
     onTopologyChange,
     annotations,
     svgAnnotationRules,
     legend,
     title,
     foregroundGraphics,
-    backgroundGraphics
+    backgroundGraphics,
+    decay,
+    pulse,
+    staleness,
+    thresholds
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -274,7 +283,11 @@ const StreamNetworkFrame = forwardRef<
       edgeOpacity,
       colorByDepth,
       nodeSize,
-      nodeSizeRange
+      nodeSizeRange,
+      decay,
+      pulse,
+      staleness,
+      thresholds
     }),
     [
       chartType,
@@ -311,7 +324,11 @@ const StreamNetworkFrame = forwardRef<
       edgeOpacity,
       colorByDepth,
       nodeSize,
-      nodeSizeRange
+      nodeSizeRange,
+      decay,
+      pulse,
+      staleness,
+      thresholds
     ]
   )
 
@@ -340,6 +357,7 @@ const StreamNetworkFrame = forwardRef<
   } | null>(null)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
+  const [isStale, setIsStale] = useState(false)
 
   const hoverRef = useRef<typeof hoverData>(null)
 
@@ -424,7 +442,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Stable scheduleRender ────────────────────────────────────────────
 
   const isContinuous =
-    chartType === "sankey" && showParticles
+    (chartType === "sankey" && showParticles) || !!pulse
 
   const scheduleRender = useCallback(() => {
     if (rafRef.current && !isContinuous) return
@@ -537,6 +555,16 @@ const StreamNetworkFrame = forwardRef<
       clear: clearAll,
       getTopology: () =>
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
+      getTopologyDiff: () => {
+        const store = storeRef.current
+        if (!store) return { addedNodes: [], removedNodes: [], addedEdges: [], removedEdges: [] }
+        return {
+          addedNodes: Array.from(store.addedNodes),
+          removedNodes: Array.from(store.removedNodes),
+          addedEdges: Array.from(store.addedEdges),
+          removedEdges: Array.from(store.removedEdges),
+        }
+      },
       relayout: forceRelayout,
       getTension: () => storeRef.current?.tension ?? 0
     }),
@@ -598,6 +626,38 @@ const StreamNetworkFrame = forwardRef<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── Observation wrappers ─────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (customHoverBehaviorProp) customHoverBehaviorProp(d)
+      if (onObservation) {
+        const now = Date.now()
+        if (d) {
+          onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        } else {
+          onObservation({ type: "hover-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        }
+      }
+    },
+    [customHoverBehaviorProp, onObservation, chartId]
+  )
+
+  const customClickBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (customClickBehaviorProp) customClickBehaviorProp(d)
+      if (onObservation) {
+        const now = Date.now()
+        if (d) {
+          onObservation({ type: "click", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        } else {
+          onObservation({ type: "click-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        }
+      }
+    },
+    [customClickBehaviorProp, onObservation, chartId]
+  )
+
   // ── Hover handlers ───────────────────────────────────────────────────
 
   const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
@@ -622,6 +682,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
+        if (customHoverBehavior) customHoverBehavior(null)
         scheduleRender()
       }
       return
@@ -641,6 +702,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
+        if (customHoverBehavior) customHoverBehavior(null)
         scheduleRender()
       }
       return
@@ -655,6 +717,7 @@ const StreamNetworkFrame = forwardRef<
 
     hoverRef.current = hover
     setHoverData(hover)
+    if (customHoverBehavior) customHoverBehavior(hover)
     scheduleRender()
   }
 
@@ -662,7 +725,53 @@ const StreamNetworkFrame = forwardRef<
     if (hoverRef.current) {
       hoverRef.current = null
       setHoverData(null)
+      if (customHoverBehavior) customHoverBehavior(null)
       scheduleRender()
+    }
+  }
+
+  // ── Click handler ────────────────────────────────────────────────────
+
+  const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+
+  clickHandlerRef.current = (e: React.MouseEvent) => {
+    if (!customClickBehaviorProp && !onObservation) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+
+    const chartX = e.clientX - rect.left - margin.left
+    const chartY = e.clientY - rect.top - margin.top
+
+    if (
+      chartX < 0 ||
+      chartX > adjustedWidth ||
+      chartY < 0 ||
+      chartY > adjustedHeight
+    ) {
+      return
+    }
+
+    const store = storeRef.current
+    if (!store) return
+
+    const hit = findNearestNetworkNode(
+      store.sceneNodes,
+      store.sceneEdges,
+      chartX,
+      chartY
+    )
+
+    if (hit) {
+      customClickBehavior({
+        type: hit.type,
+        data: hit.datum,
+        x: hit.x,
+        y: hit.y
+      })
+    } else {
+      customClickBehavior(null)
     }
   }
 
@@ -672,6 +781,10 @@ const StreamNetworkFrame = forwardRef<
   )
   const onMouseLeave = useCallback(
     () => hoverLeaveRef.current(),
+    []
+  )
+  const onClick = useCallback(
+    (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
   )
 
@@ -718,6 +831,29 @@ const StreamNetworkFrame = forwardRef<
       ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
     }
 
+    // Apply realtime encoding (pulse/decay/thresholds)
+    if (decay) {
+      store.applyDecay()
+    }
+    if (pulse) {
+      store.applyPulse(now)
+    }
+    if (thresholds) {
+      store.applyThresholds(now)
+    }
+
+    // Topology diff highlighting (always active for streaming)
+    store.applyTopologyDiff(now)
+
+    // Staleness dimming
+    const staleThreshold = staleness?.threshold ?? 5000
+    const currentlyStale = staleness && store.lastIngestTime > 0 &&
+      (now - store.lastIngestTime) > staleThreshold
+
+    if (currentlyStale) {
+      ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+    }
+
     // Render edges first (they go behind nodes)
     networkEdgeRenderer(ctx, store.sceneEdges)
 
@@ -726,8 +862,8 @@ const StreamNetworkFrame = forwardRef<
     networkCircleRenderer(ctx, store.sceneNodes)
     networkArcRenderer(ctx, store.sceneNodes)
 
-    // Render particles (sankey only)
-    if (showParticles && store.particlePool) {
+    // Render particles (sankey only) — stop entirely when stale
+    if (showParticles && store.particlePool && !currentlyStale) {
       const edges = Array.from(store.edges.values())
       if (edges.length > 0) {
         spawnNetworkParticles(
@@ -737,7 +873,19 @@ const StreamNetworkFrame = forwardRef<
           particleStyle
         )
         const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
-        store.particlePool.step(deltaTime, speed, edges)
+
+        // Compute per-edge speed multipliers for proportional flow rate
+        let edgeSpeedMultipliers: number[] | undefined
+        if (particleStyle.proportionalSpeed) {
+          const maxValue = edges.reduce((max, e) => Math.max(max, e.value || 1), 1)
+          edgeSpeedMultipliers = edges.map(e => {
+            const ratio = (e.value || 1) / maxValue
+            // Scale between 0.3x and 2x so low-value edges still move
+            return 0.3 + ratio * 1.7
+          })
+        }
+
+        store.particlePool.step(deltaTime, speed, edges, edgeSpeedMultipliers)
         renderNetworkParticles(
           ctx,
           store.particlePool,
@@ -748,6 +896,11 @@ const StreamNetworkFrame = forwardRef<
       }
     }
 
+    // Reset staleness dimming
+    if (currentlyStale) {
+      ctx.globalAlpha = 1
+    }
+
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
@@ -756,8 +909,8 @@ const StreamNetworkFrame = forwardRef<
       setAnnotationFrame((f) => f + 1)
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions)
-    if (isContinuous || isTransitioning) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs)
+    if (isContinuous || isTransitioning || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
@@ -775,6 +928,25 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = true
     scheduleRender()
   }, [chartType, adjustedWidth, adjustedHeight, background, scheduleRender])
+
+  // ── Staleness timer ─────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!staleness) return
+    const interval = setInterval(() => {
+      const store = storeRef.current
+      if (!store || store.lastIngestTime === 0) return
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+      const threshold = staleness.threshold ?? 5000
+      const stale = (now - store.lastIngestTime) > threshold
+      if (stale !== isStale) {
+        setIsStale(stale)
+        dirtyRef.current = true
+        scheduleRender()
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [staleness, isStale, scheduleRender])
 
   // ── Tooltip ──────────────────────────────────────────────────────────
 
@@ -821,6 +993,7 @@ const StreamNetworkFrame = forwardRef<
       }}
       onMouseMove={enableHover ? onMouseMove : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}
+      onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
     >
       {backgroundGraphics && (
         <svg
@@ -864,6 +1037,33 @@ const StreamNetworkFrame = forwardRef<
       />
 
       {tooltipElement}
+
+      {staleness?.showBadge && (
+        <div
+          className="stream-staleness-badge"
+          style={{
+            position: "absolute",
+            ...(staleness.badgePosition === "top-left"
+              ? { top: 4, left: 4 }
+              : staleness.badgePosition === "bottom-left"
+              ? { bottom: 4, left: 4 }
+              : staleness.badgePosition === "bottom-right"
+              ? { bottom: 4, right: 4 }
+              : { top: 4, right: 4 }),
+            background: isStale ? "#dc3545" : "#28a745",
+            color: "white",
+            fontSize: 10,
+            fontWeight: 700,
+            padding: "2px 6px",
+            borderRadius: 3,
+            letterSpacing: "0.05em",
+            zIndex: 3,
+            pointerEvents: "none"
+          }}
+        >
+          {isStale ? "STALE" : "LIVE"}
+        </div>
+      )}
     </div>
   )
 })

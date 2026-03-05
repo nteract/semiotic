@@ -1,13 +1,13 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -39,13 +39,18 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
  * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
 export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 600, height: 600 })
+
   const {
     data,
-    width = 600,
-    height = 600,
-    margin = { top: 50, bottom: 50, left: 50, right: 50 },
+    margin: userMargin,
     className,
-    title,
     layout = "tree",
     orientation = "vertical",
     childrenAccessor = "children",
@@ -56,12 +61,18 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     colorByDepth = false,
     edgeStyle = "curve",
     nodeLabel,
-    showLabels = true,
     nodeSize = 5,
-    enableHover = true,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    onObservation,
+    chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLabels = resolved.showLabels ?? true
+  const title = resolved.title
 
   // Node style function
   const allNodes = useMemo(() => {
@@ -100,6 +111,22 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     return undefined
   }, [layout, valueAccessor])
 
+  // Margin
+  const margin = { ...resolved.marginDefaults, ...userMargin }
+
+  const observationHoverBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (!onObservation) return
+      const now = Date.now()
+      if (d) {
+        onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "TreeDiagram", chartId })
+      } else {
+        onObservation({ type: "hover-end", timestamp: now, chartType: "TreeDiagram", chartId })
+      }
+    },
+    [onObservation, chartId]
+  )
+
   // Validate
   const error = validateObjectData({ componentName: "TreeDiagram", data })
   if (error) return <ChartError componentName="TreeDiagram" message={error} width={width} height={height} />
@@ -125,6 +152,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
       className={className}
       title={title}
       {...frameProps}

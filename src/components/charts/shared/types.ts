@@ -1,4 +1,5 @@
 import type { MarginType } from "../../types/generalTypes"
+import type { OnObservationCallback } from "../../store/ObservationStore"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -35,9 +36,17 @@ export type LinkedBrushProp =
   | { name: string; xField?: string; yField?: string }
 
 /**
+ * Chart display mode — controls default chrome, size, and interaction.
+ * User-provided props always override mode defaults.
+ */
+export type ChartMode = "primary" | "context" | "sparkline"
+
+/**
  * Base props shared across all chart components
  */
 export interface BaseChartProps {
+  /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
+  mode?: ChartMode
   /** Chart width in pixels. Default: 600 */
   width?: number
   /** Chart height in pixels. Default: 400 */
@@ -54,6 +63,11 @@ export interface BaseChartProps {
   linkedHover?: LinkedHoverProp
   /** Produce brush-based selections for cross-filtering */
   linkedBrush?: LinkedBrushProp
+  /** Callback emitting structured observation events on user interaction.
+   * Used by AI agent systems to observe user behavior for insight generation. */
+  onObservation?: OnObservationCallback
+  /** Identifier for this chart instance, included in observation events */
+  chartId?: string
 }
 
 /**

@@ -7,7 +7,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -45,6 +45,10 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   tooltip?: TooltipProp
   /** Marginal distribution plots in axis margins */
   marginalGraphics?: MarginalGraphicsConfig
+  /** Accessor for unique point IDs, used by point-anchored annotations */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
+  /** Annotation objects to render on the chart */
+  annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -62,15 +66,21 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
  * ```
  */
 export function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -81,16 +91,26 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     sizeRange = [3, 15],
     pointRadius = 5,
     pointOpacity = 0.8,
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
     marginalGraphics,
+    pointIdAccessor,
+    annotations,
     frameProps = {},
     selection,
     linkedHover,
-    linkedBrush
+    linkedBrush,
+    onObservation,
+    chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -99,7 +119,8 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "Scatterplot", chartId
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -144,7 +165,8 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -178,7 +200,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     colorScheme,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,
@@ -189,8 +211,10 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
+    ...(pointIdAccessor && { pointIdAccessor }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

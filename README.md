@@ -87,6 +87,16 @@ LLM code generation. AI coding assistants can generate correct Semiotic code on
 the first try. Run `npx semiotic-ai --help` for CLI options or add `semiotic-mcp`
 to your MCP client config for tool-based chart rendering.
 
+**Vega-Lite compatible.** Have existing Vega-Lite specs? `fromVegaLite(spec)`
+translates them to Semiotic chart configs — instant onboarding from notebooks,
+dashboards, or AI-generated specs. Composes with `configToJSX()`,
+`copyConfig()`, and `toURL()` for full round-trip interop.
+
+**Streaming system models.** Turn a streaming Sankey into a live system monitor:
+click-to-inspect `DetailsPanel`, particle speed proportional to edge throughput,
+threshold alerting with animated glow, and automatic topology diffing that
+highlights new services as they appear. Visualization as product navigation.
+
 ## Install
 
 ```bash
@@ -154,6 +164,31 @@ import { ForceDirectedGraph, SankeyDiagram } from "semiotic"
 />
 ```
 
+### Streaming System Monitor
+
+Live service topology with threshold alerting and click-to-inspect:
+
+```jsx
+import { StreamNetworkFrame, ChartContainer, DetailsPanel, LinkedCharts } from "semiotic"
+
+const chartRef = useRef()
+chartRef.current.push({ source: "API", target: "Orders", value: 15 })
+
+<LinkedCharts>
+  <ChartContainer title="System Monitor" status="live"
+    detailsPanel={
+      <DetailsPanel position="right" trigger="click">
+        {(datum) => <div>{datum.id}: {datum.value} req/s</div>}
+      </DetailsPanel>
+    }>
+    <StreamNetworkFrame ref={chartRef} chartType="sankey"
+      showParticles particleStyle={{ proportionalSpeed: true }}
+      thresholds={{ metric: n => n.value, warning: 100, critical: 250 }}
+    />
+  </ChartContainer>
+</LinkedCharts>
+```
+
 ### Standard Charts
 
 Line, bar, scatter, area — all the basics, with sensible defaults:
@@ -184,6 +219,35 @@ import { LineChart, BarChart } from "semiotic"
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
 | **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
+
+### Vega-Lite Translation
+
+Paste a Vega-Lite spec, get a Semiotic chart:
+
+```jsx
+import { fromVegaLite } from "semiotic/data"
+import { configToJSX, fromConfig } from "semiotic"
+
+const config = fromVegaLite({
+  mark: "bar",
+  data: { values: [{ a: "A", b: 28 }, { a: "B", b: 55 }] },
+  encoding: {
+    x: { field: "a", type: "nominal" },
+    y: { field: "b", type: "quantitative" },
+  },
+})
+
+// Render directly
+const { componentName, props } = fromConfig(config)
+// → componentName: "BarChart", props: { data, categoryAccessor: "a", valueAccessor: "b" }
+
+// Or generate JSX code
+configToJSX(config)
+// → <BarChart data={[...]} categoryAccessor="a" valueAccessor="b" />
+```
+
+Supports bar, line, area, point, rect, arc, tick marks with encoding translation
+for color, size, aggregation, and binning.
 
 ## Smaller Bundles
 
@@ -234,7 +298,7 @@ Works with Next.js App Router, Remix, and Astro via `"use client"` directives.
 - [Getting Started](https://semiotic.nteract.io/getting-started)
 - [Charts](https://semiotic.nteract.io/charts) — all 27 chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
-- [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling
+- [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes
 - [Playground](https://semiotic.nteract.io/playground) — interactive prop exploration
 

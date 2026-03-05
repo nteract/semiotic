@@ -4,7 +4,8 @@ import type {
   OrdinalSceneNode,
   OrdinalLayout,
   BoxplotSceneNode,
-  ViolinSceneNode
+  ViolinSceneNode,
+  DistributionStats
 } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
@@ -84,6 +85,17 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, layout: OrdinalLayou
   }
 
   return nodes
+}
+
+function computeDistributionStats(sortedValues: number[]): DistributionStats {
+  const n = sortedValues.length
+  const min = sortedValues[0]
+  const max = sortedValues[n - 1]
+  const q1 = d3Quantile(sortedValues, 0.25) ?? min
+  const median = d3Quantile(sortedValues, 0.5) ?? (min + max) / 2
+  const q3 = d3Quantile(sortedValues, 0.75) ?? max
+  const mean = sortedValues.reduce((s, v) => s + v, 0) / n
+  return { n, min, q1, median, q3, max, mean }
 }
 
 export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
@@ -176,6 +188,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
       translateY: 0,
       bounds: violinBounds,
       iqrLine,
+      stats: computeDistributionStats(values),
       style,
       datum: col.pieceData,
       category: col.name
@@ -317,6 +330,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, layout: OrdinalLay
       translateX: 0,
       translateY: 0,
       bounds: ridgeBounds,
+      stats: computeDistributionStats(values),
       style: { ...style, fillOpacity: style.fillOpacity ?? 0.5 },
       datum: col.pieceData,
       category: col.name

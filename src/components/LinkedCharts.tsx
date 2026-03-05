@@ -3,6 +3,7 @@ import * as React from "react"
 import { useEffect } from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
 import type { ResolutionMode } from "./store/SelectionStore"
+import { ObservationProvider } from "./store/ObservationStore"
 
 // Re-export hooks for convenience
 export { useSelection, useLinkedHover, useBrushSelection, useFilteredData } from "./store/useSelection"
@@ -14,6 +15,10 @@ export type {
   UseBrushSelectionOptions,
   UseBrushSelectionResult
 } from "./store/useSelection"
+
+// Re-export observation hook
+export { useChartObserver } from "./store/useObservation"
+export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
 
 // ── Props ──────────────────────────────────────────────────────────────────
 
@@ -74,8 +79,10 @@ function ResolutionInit({ selections }: { selections: Record<string, { resolutio
 export function LinkedCharts({ children, selections }: LinkedChartsProps) {
   return (
     <SelectionProvider>
-      {selections && <ResolutionInit selections={selections} />}
-      {children}
+      <ObservationProvider>
+        {selections && <ResolutionInit selections={selections} />}
+        {children}
+      </ObservationProvider>
     </SelectionProvider>
   )
 }

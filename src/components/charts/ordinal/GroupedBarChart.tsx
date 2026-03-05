@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -28,18 +28,39 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
 export function GroupedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    categoryLabel: props.categoryLabel,
+    valueLabel: props.valueLabel,
+  })
+
   const {
-    data, width = 600, height = 400, margin: userMargin, className, title,
+    data, margin: userMargin, className,
     categoryAccessor = "category", groupBy, valueAccessor = "value",
-    orientation = "vertical", categoryLabel, valueLabel, valueFormat,
+    orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10", barPadding = 5,
-    enableHover = true, showGrid = false, showLegend = true, tooltip,
-    frameProps = {}, selection, linkedHover
+    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    onObservation, chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const categoryLabel = resolved.categoryLabel
+  const valueLabel = resolved.valueLabel
 
   const safeData = data || []
   const actualColorBy = colorBy || groupBy
@@ -47,7 +68,8 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "GroupedBarChart", chartId
   })
 
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
@@ -65,7 +87,8 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
   )
 
   const { legend, margin } = useChartLegendAndMargin({
-    data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin
+    data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   const defaultTooltipContent = useMemo(
@@ -95,7 +118,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     margin,
     barPadding,
     enableHover,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat as any,
@@ -104,7 +127,8 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

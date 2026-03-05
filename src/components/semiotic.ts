@@ -27,8 +27,19 @@ import { ThemeProvider, useTheme } from "./ThemeProvider"
 // ── Export utility ─────────────────────────────────────────────────────
 import { exportChart } from "./export/exportChart"
 
+// ── Chart state serialization ─────────────────────────────────────────
+import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
+import { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+import { fromVegaLite } from "./data/fromVegaLite"
+
 // ── Error boundary ─────────────────────────────────────────────────────
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
+
+// ── Chart container ───────────────────────────────────────────────────
+import { ChartContainer } from "./ChartContainer"
+
+// ── Details panel ────────────────────────────────────────────────────
+import { DetailsPanel } from "./DetailsPanel"
 
 // ── Tooltip utilities ──────────────────────────────────────────────────
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
@@ -94,8 +105,23 @@ export {
   useTheme,
   // Export utility
   exportChart,
+  // Chart state serialization
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX,
+  serializeSelections,
+  deserializeSelections,
+  // Vega-Lite translator
+  fromVegaLite,
   // Error boundary
   ChartErrorBoundary,
+  // Chart container
+  ChartContainer,
+  // Details panel
+  DetailsPanel,
   // Tooltip
   Tooltip,
   MultiLineTooltip,
@@ -143,7 +169,8 @@ export {
   BaseChartProps,
   AxisConfig,
   Accessor,
-  ChartAccessor
+  ChartAccessor,
+  ChartMode
 } from "./charts"
 
 // ── StreamXYFrame types ────────────────────────────────────────────────
@@ -181,7 +208,8 @@ export type {
   NetworkChartType,
   NetworkSceneNode,
   NetworkSceneEdge,
-  NetworkLabel
+  NetworkLabel,
+  ThresholdAlertConfig
 } from "./stream/networkTypes"
 
 // ── Coordinated views types ────────────────────────────────────────────
@@ -210,6 +238,20 @@ export type {
   UseBrushSelectionResult
 } from "./LinkedCharts"
 
+export {
+  useChartObserver
+} from "./LinkedCharts"
+
+export type {
+  UseChartObserverOptions,
+  UseChartObserverResult
+} from "./LinkedCharts"
+
+export type {
+  ChartObservation,
+  OnObservationCallback
+} from "./store/ObservationStore"
+
 export type {
   ResolutionMode,
   SelectionClause,
@@ -224,6 +266,17 @@ export { LIGHT_THEME, DARK_THEME } from "./ThemeProvider"
 // ── Error boundary types ───────────────────────────────────────────────
 
 export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
+
+// ── Chart container types ─────────────────────────────────────────────
+
+export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+export type { DetailsPanelProps } from "./DetailsPanel"
+
+// ── Chart state serialization types ───────────────────────────────────
+
+export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
+export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
 
 // ── Format utilities ───────────────────────────────────────────────────
 

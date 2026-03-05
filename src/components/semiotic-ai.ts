@@ -52,6 +52,40 @@ export { ThemeProvider, useTheme } from "./ThemeProvider"
 // Export utility
 export { exportChart } from "./export/exportChart"
 
+// Chart container
+export { ChartContainer } from "./ChartContainer"
+export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+
+// Details panel
+export { DetailsPanel } from "./DetailsPanel"
+export type { DetailsPanelProps } from "./DetailsPanel"
+
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
+
+// Chart state serialization
+export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
+export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+
+// Vega-Lite translator
+export { fromVegaLite } from "./data/fromVegaLite"
+export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
+
+// AI Observation hooks
+export { useChartObserver } from "./store/useObservation"
+export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
+export type {
+  ChartObservation,
+  OnObservationCallback,
+  HoverObservation,
+  HoverEndObservation,
+  BrushObservation,
+  BrushEndObservation,
+  SelectionObservation,
+  SelectionEndObservation,
+  ClickObservation,
+  ClickEndObservation
+} from "./store/ObservationStore"

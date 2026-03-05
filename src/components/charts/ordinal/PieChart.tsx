@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -23,17 +23,33 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   enableHover?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
 export function PieChart<TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width ?? 400,
+    height: props.height ?? 400,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+  })
+
   const {
-    data, width = 400, height = 400, margin: userMargin, className, title,
+    data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
-    enableHover = true, showLegend = true, tooltip, frameProps = {},
-    selection, linkedHover
+    tooltip, annotations, frameProps = {},
+    selection, linkedHover,
+    onObservation, chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLegend = resolved.showLegend
+  const title = resolved.title
 
   const safeData = data || []
   const actualColorBy = colorBy || categoryAccessor
@@ -41,7 +57,8 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "PieChart", chartId
   })
 
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
@@ -60,7 +77,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
 
   const { legend, margin } = useChartLegendAndMargin({
     data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin,
-    defaults: { top: 20, bottom: 20, left: 20, right: 20 }
+    defaults: resolved.marginDefaults,
   })
 
   const defaultTooltipContent = useMemo(
@@ -96,7 +113,8 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

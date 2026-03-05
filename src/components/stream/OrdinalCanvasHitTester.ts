@@ -7,6 +7,7 @@ export interface OrdinalHitResult {
   y: number
   distance: number
   category?: string
+  stats?: import("./ordinalTypes").DistributionStats
 }
 
 export function findNearestOrdinalNode(
@@ -118,6 +119,11 @@ function hitTestWedge(node: WedgeSceneNode, px: number, py: number): OrdinalHitR
 
 function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): OrdinalHitResult | null {
   const halfWidth = node.columnWidth / 2
+  const statsWithN = node.stats ? {
+    ...node.stats,
+    n: Array.isArray(node.datum) ? node.datum.length : 0,
+    mean: (node.stats.q1 + node.stats.median + node.stats.q3) / 3  // approximate from quartiles
+  } : undefined
 
   if (node.projection === "vertical") {
     const left = node.x - halfWidth
@@ -131,7 +137,8 @@ function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): Ordinal
         x: node.x,
         y: node.medianPos,
         distance: 0,
-        category: node.category
+        category: node.category,
+        stats: statsWithN
       }
     }
   } else {
@@ -146,7 +153,8 @@ function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): Ordinal
         x: node.medianPos,
         y: node.y,
         distance: 0,
-        category: node.category
+        category: node.category,
+        stats: statsWithN
       }
     }
   }
@@ -166,7 +174,8 @@ function hitTestViolin(node: ViolinSceneNode, px: number, py: number): OrdinalHi
       x: x + width / 2,
       y: y + height / 2,
       distance: 0,
-      category: node.category
+      category: node.category,
+      stats: node.stats
     }
   }
 

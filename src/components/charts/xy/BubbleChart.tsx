@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -116,6 +116,14 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
    */
   marginalGraphics?: MarginalGraphicsConfig
 
+  /** Accessor for unique point IDs, used by point-anchored annotations */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
+
+  /**
+   * Annotation objects to render on the chart
+   */
+  annotations?: Record<string, any>[]
+
   /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
@@ -186,15 +194,21 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * @returns Rendered bubble chart
  */
 export function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -206,16 +220,26 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     bubbleOpacity = 0.6,
     bubbleStrokeWidth = 1,
     bubbleStrokeColor = "white",
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
     marginalGraphics,
+    pointIdAccessor,
+    annotations,
     frameProps = {},
     selection,
     linkedHover,
-    linkedBrush
+    linkedBrush,
+    onObservation,
+    chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -224,7 +248,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "BubbleChart", chartId
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -286,7 +311,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -322,7 +348,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     colorScheme,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,
@@ -333,8 +359,10 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
+    ...(pointIdAccessor && { pointIdAccessor }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

@@ -16,9 +16,13 @@ import type {
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
-import { useChartSelection } from "../shared/hooks"
+import { useChartSelection, useChartMode } from "../shared/hooks"
+import type { ChartMode } from "../shared/types"
+import type { OnObservationCallback } from "../../store/ObservationStore"
 
 export interface RealtimeLineChartProps {
+  /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
+  mode?: ChartMode
   /** Chart dimensions as [width, height] */
   size?: [number, number]
   /** Chart width (alternative to size) */
@@ -29,6 +33,8 @@ export interface RealtimeLineChartProps {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
   className?: string
+  onObservation?: OnObservationCallback
+  chartId?: string
   /** Direction time flows */
   arrowOfTime?: ArrowOfTime
   /** Data retention strategy */
@@ -106,11 +112,17 @@ export interface RealtimeLineChartProps {
  */
 export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineChartProps>(
   function RealtimeLineChart(props, ref) {
+    const resolved = useChartMode(props.mode, {
+      width: props.size?.[0] ?? props.width,
+      height: props.size?.[1] ?? props.height,
+      enableHover: props.enableHover != null ? !!props.enableHover : undefined,
+    })
+
     const {
       size,
       width,
       height,
-      margin,
+      margin: userMargin,
       className,
       arrowOfTime = "right",
       windowMode = "sliding",
@@ -124,9 +136,7 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       stroke = "#007bff",
       strokeWidth = 2,
       strokeDasharray,
-      showAxes = true,
       background,
-      enableHover,
       tooltipContent,
       tooltip,
       onHover,
@@ -138,19 +148,23 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       pulse,
       staleness,
       transition,
-      linkedHover
+      linkedHover,
+      onObservation,
+      chartId
     } = props
 
-    const resolvedSize: [number, number] = width != null && height != null
-      ? [width, height]
-      : size || [500, 300]
+    const showAxes = resolved.showAxes
+    const enableHover = resolved.enableHover
+    const margin = userMargin ?? resolved.marginDefaults
+    const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
     const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      linkedHover, unwrapData: true
+      linkedHover, unwrapData: true,
+      onObservation, chartType: "RealtimeLineChart", chartId
     })
 
     const combinedHoverBehavior = useCallback(

@@ -12,10 +12,22 @@ export interface LineStyle {
 }
 
 export interface AnnotationContext {
-  scales: { time: ScaleLinear<number, number>; value: ScaleLinear<number, number> } | null
-  timeAxis: "x" | "y"
-  width: number
-  height: number
+  scales?: {
+    x?: ScaleLinear<number, number>
+    y?: ScaleLinear<number, number>
+    time?: ScaleLinear<number, number>
+    value?: ScaleLinear<number, number>
+  } | null
+  /** @deprecated Use scales.x / scales.y instead */
+  timeAxis?: "x" | "y"
+  xAccessor?: string
+  yAccessor?: string
+  width?: number
+  height?: number
+  data?: Record<string, any>[]
+  frameType?: "xy" | "ordinal" | "network"
+  /** Point scene nodes for point-anchored annotations */
+  pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
 }
 
 export interface CrosshairStyle {

@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -124,6 +124,11 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
   tooltip?: TooltipProp
 
   /**
+   * Annotation objects to render on the chart
+   */
+  annotations?: Record<string, any>[]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -156,15 +161,21 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
  * ```
  */
 export function StackedAreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -178,14 +189,23 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     showLine = true,
     lineWidth = 2,
     normalize = false,
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
+    annotations,
     frameProps = {},
     selection,
-    linkedHover
+    linkedHover,
+    onObservation,
+    chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -194,7 +214,8 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "StackedAreaChart", chartId
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -268,7 +289,8 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -316,7 +338,7 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     lineStyle,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,
@@ -327,7 +349,8 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

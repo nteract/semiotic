@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -136,6 +136,14 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    */
   tooltip?: TooltipProp
 
+  /** Accessor for unique point IDs, used by point-anchored annotations (when showPoints is true) */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
+
+  /**
+   * Annotation objects to render on the chart
+   */
+  annotations?: Record<string, any>[]
+
   /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
@@ -219,15 +227,21 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  * @returns Rendered line chart
  */
 export function LineChart<TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -242,14 +256,24 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     fillArea = false,
     areaOpacity = 0.3,
     lineWidth = 2,
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
+    pointIdAccessor,
+    annotations,
     frameProps = {},
     selection,
-    linkedHover
+    linkedHover,
+    onObservation,
+    chartId
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -258,7 +282,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "LineChart", chartId
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -358,7 +383,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -413,7 +439,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...(showPoints && { pointStyle }),
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,
@@ -424,7 +450,9 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...(pointIdAccessor && { pointIdAccessor }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

@@ -85,7 +85,13 @@ const navData = [
       { title: "Styling", path: "/features/styling" },
       { title: "Theming", path: "/features/theming" },
       { title: "Legends", path: "/features/legends" },
-      { title: "Realtime Encoding", path: "/features/realtime-encoding" }
+      { title: "Realtime Encoding", path: "/features/realtime-encoding" },
+      { title: "Chart Container", path: "/features/chart-container" },
+      { title: "Chart Modes", path: "/features/chart-modes" },
+      { title: "AI Observation Hooks", path: "/features/observation-hooks" },
+      { title: "Serialization", path: "/features/serialization" },
+      { title: "Vega-Lite Translator", path: "/features/vega-lite" },
+      { title: "Streaming System Model", path: "/features/streaming-system-model" }
     ]
   },
   {
@@ -132,7 +138,8 @@ const navData = [
       { title: "Stacked Area Chart", path: "/playground/stacked-area-chart" },
       { title: "Donut Chart", path: "/playground/donut-chart" },
       { title: "Treemap", path: "/playground/treemap" },
-      { title: "Circle Pack", path: "/playground/circle-pack" }
+      { title: "Circle Pack", path: "/playground/circle-pack" },
+      { title: "Statistical Annotations", path: "/playground/statistical-annotations" }
     ]
   },
   {

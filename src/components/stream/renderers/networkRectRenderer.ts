@@ -36,6 +36,13 @@ export function networkRectRenderer(
       ctx.strokeRect(r.x, r.y, r.w, r.h)
     }
 
+    // Pulse overlay
+    if (r._pulseIntensity && r._pulseIntensity > 0) {
+      ctx.globalAlpha = r._pulseIntensity * 0.3
+      ctx.fillStyle = r._pulseColor || "rgba(255,255,255,0.6)"
+      ctx.fillRect(r.x, r.y, r.w, r.h)
+    }
+
     ctx.restore()
   }
 }

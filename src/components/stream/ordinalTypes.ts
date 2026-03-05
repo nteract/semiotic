@@ -76,6 +76,16 @@ export interface BoxplotSceneNode {
   outliers?: { px: number; py: number; value: number; datum: any }[]
 }
 
+export interface DistributionStats {
+  n: number
+  min: number
+  q1: number
+  median: number
+  q3: number
+  max: number
+  mean: number
+}
+
 export interface ViolinSceneNode {
   type: "violin"
   /** Pre-computed SVG path string for Path2D */
@@ -87,6 +97,8 @@ export interface ViolinSceneNode {
   bounds?: { x: number; y: number; width: number; height: number }
   /** Optional IQR line overlay */
   iqrLine?: { q1Pos: number; medianPos: number; q3Pos: number; centerPos: number; isVertical: boolean }
+  /** Pre-computed distribution statistics for tooltips */
+  stats?: DistributionStats
   style: Style
   datum: any
   category?: string

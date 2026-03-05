@@ -143,12 +143,13 @@ export function buildPointNode(
   xGet: (d: Record<string, any>) => number,
   yGet: (d: Record<string, any>) => number,
   r: number,
-  style: Style
+  style: Style,
+  pointId?: string
 ): PointSceneNode | null {
   const xVal = xGet(datum)
   const yVal = yGet(datum)
   if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) return null
-  return {
+  const node: PointSceneNode = {
     type: "point",
     x: scales.x(xVal),
     y: scales.y(yVal),
@@ -156,6 +157,8 @@ export function buildPointNode(
     style,
     datum
   }
+  if (pointId !== undefined) node.pointId = pointId
+  return node
 }
 
 export function buildRectNode(
