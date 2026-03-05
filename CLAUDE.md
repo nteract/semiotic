@@ -465,6 +465,7 @@ Props: `binSize` (number, **required**),
   `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
   `showAxes` (boolean, true), `background` (string),
   `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
+  `decay` (DecayConfig), `pulse` (PulseConfig), `staleness` (StalenessConfig), `transition` (TransitionConfig),
   `annotations` (object[]), `svgAnnotationRules` (fn),
   `tickFormatTime` (fn), `tickFormatValue` (fn),
   `margin` (object), `className` (string)
@@ -526,6 +527,7 @@ Props: `size` ([number, number], [500, 300]),
   `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
   `showAxes` (boolean, true), `background` (string),
   `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
+  `linkedHover` (boolean|string|{ name?, fields }),
   `decay` (DecayConfig), `pulse` (PulseConfig), `staleness` (StalenessConfig),
   `margin` (object), `className` (string)
 

@@ -13,6 +13,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Package size reduced** — packed size 870 KB → 668 KB, unpacked 3.6 MB → 2.5 MB (30% reduction)
 - `tsconfig.mcp.json` no longer compiles `src/` — MCP build output is 3 flat files in `ai/dist/`
 
+#### HOC Chart Refactoring
+
+Extracted shared logic from all 26 HOC chart components into reusable hooks and utilities, reducing duplication by ~500 lines while improving consistency across chart families.
+
+- **`useChartSelection` hook** — consolidates selection/hover setup (normalizeLinkedHover, useSelection, useLinkedHover, customHoverBehavior) used by 21 charts
+- **`useChartLegendAndMargin` hook** — consolidates legend creation and margin computation with legend-aware auto-expansion, used by 18 charts
+- **`buildOrdinalTooltip` helper** — shared tooltip builder for ordinal charts (BarChart, DotPlot, PieChart, DonutChart, SwarmPlot, StackedBarChart, GroupedBarChart)
+- **Network utilities** (`networkUtils.ts`) — `flattenHierarchy`, `inferNodesFromEdges`, `resolveHierarchySum`, `createEdgeStyleFn` extracted from 5 network chart HOCs
+- **`DEPTH_PALETTE_COLORS`** — unified depth-based color palette constant for Treemap, CirclePack, TreeDiagram (was duplicated inline)
+- Standardized `resolveAccessor()` usage across all ordinal chart tooltips
+
+### Fixed
+
+#### Core Rendering
+- **Chord diagram edge rotation** — removed double `-PI/2` offset in ribbon generation that caused 180° misalignment
+- **Stacked area streaming flicker** — stable sort of groups in `buildStackedAreaScene()` prevents layer swapping during sliding window eviction
+- **Violin plot IQR positioning** — IQR overlay now draws at the category center position instead of x=0
+- **Waterfall custom colors** — `waterfallStyle` props now piped through to PipelineStore; previously silently ignored
+- **Histogram streaming projection** — streaming histograms now correctly use horizontal projection
+- **Canvas clip region** — StreamXYFrame clips rendered data to the chart area, preventing marks from drawing into margins when xExtent/yExtent constrains the view
+- **Sankey particle colors** — particles now inherit edge color by syncing nodeColorMap with store's node ordering after layout
+- **Pulse glow radius** — renderer reads `_pulseGlowRadius` from scene nodes instead of hardcoding 4px
+- **LineChart validation** — `validateArrayData` now checks coordinate arrays (not top-level line objects) when data is in line objects format
+
+#### Theming & Styling
+- **ThemeProvider integration** — SVG overlay axes, ticks, labels, and grid lines now read `--semiotic-*` CSS custom properties; canvas background reads theme variables
+- **Line hover highlighting** — StreamXYFrame supports `hoverAnnotation` array with `type: "highlight"` for bold stroke on hovered lines
+- **Jagged baseline** — SVGOverlay now renders sawtooth zigzag path when axis config includes `jaggedBase: true`
+
+#### Coordinated Views
+- **Small multiples bidirectional hover** — `useChartSelection` always unwraps `d.data || d.datum || d` for consistent datum extraction across XY and ordinal frames
+- **SankeyDiagram tooltip** — now calls `normalizeTooltip` like all other charts (was skipping it, only accepting function tooltips)
+
+#### Consistency
+- **Heatmap margin** — now respects user `margin` prop overrides via `useChartLegendAndMargin`
+- **RealtimeHeatmap `linkedHover`** — new prop enables participation in LinkedCharts coordinated views
+- **RealtimeHistogram encodings** — new `decay`, `pulse`, `staleness`, `transition` props (parity with other realtime charts)
+- **MinimapChart overflow** — brush overlay container clips to chart width
+
+#### Documentation Pages
+- Fixed 20+ docs page issues: tooltips, legends, streaming demos, data formats, nav structure, example styling
+- Removed obsolete styling examples (sketchy rendering, SVG patterns)
+- Removed duplicate TreeDiagram treemap example
+- Added decay/pulse to DotPlot, SwarmPlot, HomerunMap streaming demos
+- Added legends to GroupedBarChart, PieChart, DonutChart streaming demos
+- Fixed ForceDirectedGraph streaming to auto-start
+- Moved Realtime Histogram to XY Charts nav section
+
 ---
 
 ## [3.0.0-beta.2] - 2026-03-04
