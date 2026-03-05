@@ -1,7 +1,5 @@
 import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
-
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
@@ -12,12 +10,12 @@ import { Link } from "react-router-dom"
 // ---------------------------------------------------------------------------
 
 const lineData = [
-  { month: 1, revenue: 12000 },
-  { month: 2, revenue: 18000 },
-  { month: 3, revenue: 14000 },
-  { month: 4, revenue: 22000 },
-  { month: 5, revenue: 19000 },
-  { month: 6, revenue: 27000 },
+  { month: "Jan", revenue: 12000 },
+  { month: "Feb", revenue: 18000 },
+  { month: "Mar", revenue: 14000 },
+  { month: "Apr", revenue: 22000 },
+  { month: "May", revenue: 19000 },
+  { month: "Jun", revenue: 27000 },
 ]
 
 const barData = [
@@ -25,13 +23,6 @@ const barData = [
   { category: "Q2", revenue: 31000 },
   { category: "Q3", revenue: 28000 },
   { category: "Q4", revenue: 36000 },
-]
-
-const frameLineData = [
-  {
-    label: "Revenue",
-    coordinates: lineData.map((d) => ({ step: d.month, value: d.revenue })),
-  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -47,27 +38,28 @@ export default function AccessibilityPage() {
         { label: "Accessibility", path: "/features/accessibility" },
       ]}
       prevPage={{ title: "Responsive", path: "/features/responsive" }}
-      nextPage={{ title: "Canvas Rendering", path: "/features/canvas-rendering" }}
+      nextPage={{ title: "Linked Charts", path: "/features/small-multiples" }}
     >
       <p>
-        Semiotic is committed to making data visualization accessible by
-        default. The library automatically adds ARIA labels, supports
-        keyboard navigation, and provides screen reader descriptions for
-        chart elements. While web standards for interactive chart
-        accessibility are still evolving, Semiotic builds in as much
-        perceivability and operability as possible out of the box.
+        Semiotic renders charts on canvas for performance. Canvas-based rendering
+        presents accessibility challenges because the visual output has no DOM
+        structure for screen readers to traverse. This page documents what
+        Semiotic provides today and what you should add in your application.
       </p>
 
       {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
+      {/* What Semiotic Provides */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="with-charts">With Charts</h2>
+      <h2 id="what-semiotic-provides">What Semiotic Provides</h2>
+
+      <h3 id="aria-labels">ARIA Labels on Chart Containers</h3>
 
       <p>
-        Chart components automatically inherit Semiotic's accessibility
-        features. When you provide a <code>title</code> prop, it is used as
-        the ARIA label for the chart's SVG element. Axis formatting functions
-        are also used to generate ARIA labels for individual data marks.
+        Every Stream Frame and HOC chart renders its root container with{" "}
+        <code>role="img"</code> and an <code>aria-label</code>. When you
+        provide a <code>title</code> prop (as a string), it becomes the
+        aria-label. Without a title, a default is used ("XY chart",
+        "Ordinal chart", or "Network chart").
       </p>
 
       <LiveExample
@@ -75,266 +67,97 @@ export default function AccessibilityPage() {
           data: lineData,
           xAccessor: "month",
           yAccessor: "revenue",
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
           title: "Monthly Revenue Trend",
+          showGrid: true,
         }}
         type={LineChart}
         startHidden={false}
         overrideProps={{
           data: `[
-  { month: 1, revenue: 12000 },
-  { month: 2, revenue: 18000 },
-  // ...more data points
+  { month: "Jan", revenue: 12000 },
+  { month: "Feb", revenue: 18000 },
+  // ...
 ]`,
           title: '"Monthly Revenue Trend"',
         }}
         hiddenProps={{}}
-        title="Chart with ARIA Label from Title"
+        title="Chart with ARIA Label"
       />
 
       <p>
-        To add additional accessibility configuration through Chart
-        components, use the <code>frameProps</code> escape hatch:
+        Inspect the rendered HTML — the root <code>&lt;div&gt;</code> has{" "}
+        <code>role="img"</code> and{" "}
+        <code>aria-label="Monthly Revenue Trend"</code>. This tells screen
+        readers that the element is an image with a meaningful description.
       </p>
 
       <CodeBlock
-        code={`<LineChart
+        code={`// The title prop becomes the aria-label
+<LineChart
   data={salesData}
   xAccessor="month"
   yAccessor="revenue"
-  title="Monthly Revenue Trend"
-  frameProps={{
-    accessibility: {
-      title: "Monthly Revenue Trend",
-      description: "Line chart showing revenue increasing from $12,000 in January to $27,000 in June",
-      elementDescriptionAccessor: d => \`Month \${d.month}: $\${d.revenue.toLocaleString()}\`
-    }
-  }}
-/>`}
+  title="Monthly Revenue Trend"  // → aria-label="Monthly Revenue Trend"
+/>
+
+// Works on all chart types
+<BarChart title="Quarterly Sales" ... />
+<SankeyDiagram title="Budget Flow" ... />
+<RealtimeLineChart title="CPU Usage" ... />`}
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="with-frames">With Frames</h2>
+      <h3 id="svg-overlay-labels">SVG Overlay Labels</h3>
 
-      <h3 id="aria-labels">ARIA Labels</h3>
       <p>
-        Semiotic uses the chart <code>title</code> prop to set an ARIA label
-        on the root SVG element. This gives screen readers a meaningful
-        description of the chart's purpose.
+        While the canvas itself is opaque to assistive technology, Semiotic
+        renders labels, annotations, and axis text in an SVG overlay on top of
+        the canvas. These SVG text elements <em>are</em> accessible to screen
+        readers and provide some structural information about the chart.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: frameLineData,
-          chartType: "line",
-          lineDataAccessor: "coordinates",
-          xAccessor: "step",
-          yAccessor: "value",
-          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
-          margin: { top: 40, bottom: 60, left: 70, right: 20 },
-          showAxes: true,
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
-          title: "Monthly Revenue Trend",
-          enableHover: true,
-        }}
-        type={StreamXYFrame}
-        overrideProps={{
-          lines: `[{
-  label: "Revenue",
-  coordinates: salesData
-}]`,
-          title: '"Monthly Revenue Trend"',
-        }}
-        hiddenProps={{}}
-      />
+      {/* ----------------------------------------------------------------- */}
+      {/* What You Should Do */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="what-you-should-do">What You Should Do</h2>
 
-      <h3 id="keyboard-navigation">Keyboard Navigation</h3>
       <p>
-        Semiotic supports keyboard navigation through chart data points.
-        After a user focuses on the chart (via tab), the left and right arrow
-        keys move focus between data points, triggering the tooltip at each
-        point. This makes it possible for keyboard-only users to explore
-        every data point in the visualization.
+        Semiotic's built-in accessibility covers the baseline — identifying the
+        chart as an image with a description. For production applications, you
+        should provide additional context:
+      </p>
+
+      <h3 id="text-alternatives">Text Alternatives</h3>
+
+      <p>
+        The most effective accessibility strategy for data visualizations is
+        providing a text description or data table alongside the chart. This
+        works regardless of the rendering technology:
       </p>
 
       <CodeBlock
-        code={`// Keyboard navigation is enabled automatically when enableHover is true
-<StreamXYFrame
-  data={data}
-  chartType="line"
-  lineDataAccessor="coordinates"
-  xAccessor="step"
-  yAccessor="value"
-  enableHover={true}
-  tooltipContent={d => (
-    <div role="tooltip">
-      <strong>Month {d.step}</strong>
-      <div>Revenue: \${d.value.toLocaleString()}</div>
-    </div>
-  )}
-  title="Interactive Revenue Chart"
-/>`}
-        language="jsx"
-      />
-
-      <p>
-        Make sure your <code>tooltipContent</code> function handles both
-        piece-level hover and shared hover modes, since keyboard navigation
-        focuses on each piece individually.
-      </p>
-
-      <h3 id="piece-labels">Data Element Labels</h3>
-      <p>
-        Semiotic adds ARIA labels to individual chart elements (bars, points,
-        line segments) based on the formatting functions you provide for axis
-        labels. The axis tick format functions are reused to generate
-        meaningful descriptions of each data point for screen readers.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          oAccessor: "category",
-          rAccessor: "revenue",
-          type: "bar",
-          style: { fill: "#6366f1", stroke: "white" },
-          oLabel: true,
-          margin: { top: 20, bottom: 60, left: 80, right: 20 },
-          axes: [
-            {
-              orient: "left",
-              label: "Revenue ($)",
-              tickFormat: (d) => `$${(d / 1000).toFixed(0)}k`,
-            },
-          ],
-          title: "Quarterly Revenue",
-          hoverAnnotation: true,
-        }}
-        type={StreamOrdinalFrame}
-        overrideProps={{
-          data: `[
-  { category: "Q1", revenue: 24000 },
-  { category: "Q2", revenue: 31000 },
-  { category: "Q3", revenue: 28000 },
-  { category: "Q4", revenue: 36000 }
-]`,
-          title: '"Quarterly Revenue"',
-          axes: `[{
-  orient: "left",
-  label: "Revenue ($)",
-  tickFormat: d => \`$\${(d / 1000).toFixed(0)}k\`
-}]`,
-        }}
-        hiddenProps={{}}
-        title="Bar Chart with Screen Reader Labels"
-      />
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="configuration">Configuration</h2>
-
-      <h3 id="what-semiotic-does">What Semiotic Does Automatically</h3>
-
-      <ul>
-        <li>
-          <strong>ARIA label on the SVG</strong> — uses the <code>title</code>{" "}
-          prop you provide to add an <code>aria-label</code> to the chart's
-          root SVG element.
-        </li>
-        <li>
-          <strong>ARIA labels on data marks</strong> — generates labels for
-          individual bars, points, and line segments using your axis tick
-          format functions.
-        </li>
-        <li>
-          <strong>Keyboard navigation</strong> — left/right arrow keys move
-          focus between data points when the chart is focused, showing the
-          tooltip at each point.
-        </li>
-        <li>
-          <strong>Role attributes</strong> — appropriate ARIA roles are set on
-          chart elements.
-        </li>
-      </ul>
-
-      <h3 id="what-you-should-do">What You Should Do</h3>
-
-      <p>
-        Semiotic handles structural accessibility, but you should also
-        consider these aspects of your visualization:
-      </p>
-
-      <h4>Color and Contrast</h4>
-      <p>
-        Use colors with sufficient contrast ratios and provide additional
-        visual cues beyond color alone (patterns, labels, different shapes).
-        Test with tools like{" "}
-        <a href="https://chrome.google.com/webstore/detail/colorblinding/dgbgleaofjainknadoffbjkclicbbgaa" target="_blank" rel="noopener noreferrer">
-          Colorblinding
-        </a>{" "}
-        for Chrome.
-      </p>
-
-      <CodeBlock
-        code={`// Use patterns or labels in addition to color
-<StreamOrdinalFrame
-  style={d => ({
-    fill: colorScale(d.category),
-    // Add pattern fills for color-blind accessibility
-    fillOpacity: 0.8
-  })}
-  oLabel={true}  // Always show category labels
-/>`}
-        language="jsx"
-      />
-
-      <h4>Animation</h4>
-      <p>
-        Follow WCAG guidelines: nothing should flash more than three times
-        per second. Allow users to interact with content at their own pace.
-        Consider providing a <code>prefers-reduced-motion</code> alternative.
-      </p>
-
-      <h4>Text Alternatives</h4>
-      <p>
-        Provide a text description or data table alongside your chart. This
-        is especially important for complex visualizations where the chart
-        alone may not convey all the information:
-      </p>
-
-      <CodeBlock
-        code={`// Provide a text alternative alongside the chart
-<figure>
-  <StreamXYFrame
+        code={`<figure>
+  <LineChart
+    data={salesData}
+    xAccessor="month"
+    yAccessor="revenue"
     title="Monthly Revenue Trend"
-    data={data}
-    chartType="line"
-    lineDataAccessor="coordinates"
-    {...otherProps}
   />
   <figcaption>
-    Revenue grew steadily from $12,000 in January to $27,000 in June,
+    Revenue grew from $12,000 in January to $27,000 in June,
     with a brief dip in March.
   </figcaption>
 </figure>
 
-// Or provide a data table
+// Or provide an expandable data table
 <details>
   <summary>View data table</summary>
   <table>
-    <thead>
-      <tr><th>Month</th><th>Revenue</th></tr>
-    </thead>
+    <thead><tr><th>Month</th><th>Revenue</th></tr></thead>
     <tbody>
       {data.map(d => (
         <tr key={d.month}>
-          <td>{monthNames[d.month]}</td>
+          <td>{d.month}</td>
           <td>\${d.revenue.toLocaleString()}</td>
         </tr>
       ))}
@@ -344,62 +167,134 @@ export default function AccessibilityPage() {
         language="jsx"
       />
 
-      <h3 id="tooltip-accessibility">Accessible Tooltips</h3>
+      <h3 id="color-contrast">Color and Contrast</h3>
+
       <p>
-        When writing custom <code>tooltipContent</code> functions, include
-        appropriate ARIA attributes:
+        Use colors with sufficient contrast ratios. Provide visual cues beyond
+        color alone — labels, patterns, or different shapes. Test with tools like{" "}
+        <a href="https://www.toptal.com/designers/colorfilter/" target="_blank" rel="noopener noreferrer">
+          Toptal Color Blind Filter
+        </a>.
       </p>
 
       <CodeBlock
-        code={`<StreamXYFrame
-  enableHover={true}
-  tooltipContent={d => (
-    <div
-      role="tooltip"
-      aria-live="polite"
-      style={{ background: "var(--surface-1)", padding: 8, borderRadius: 4 }}
-    >
-      <strong>{d.category}</strong>
-      <div aria-label={\`Value: \${d.value}\`}>
-        {d.value.toLocaleString()}
-      </div>
+        code={`// Always show labels alongside color encoding
+<BarChart
+  data={data}
+  categoryAccessor="region"
+  valueAccessor="sales"
+  colorBy="region"
+  // Labels provide a non-color channel for the category
+/>
+
+// Use colorScheme with sufficient contrast
+<LineChart
+  data={data}
+  xAccessor="x"
+  yAccessor="y"
+  colorScheme={["#1f77b4", "#d62728", "#2ca02c"]}
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="animation">Animation</h3>
+
+      <p>
+        Follow WCAG guidelines: nothing should flash more than three times per
+        second. For streaming charts with <code>pulse</code> encoding, keep
+        pulse durations above 333ms. Consider providing a reduced-motion
+        alternative:
+      </p>
+
+      <CodeBlock
+        code={`// Respect prefers-reduced-motion
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+<RealtimeLineChart
+  ref={chartRef}
+  timeAccessor="time"
+  valueAccessor="value"
+  // Skip pulse animation for users who prefer reduced motion
+  pulse={prefersReducedMotion ? undefined : { duration: 500 }}
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="tooltip-accessibility">Accessible Tooltips</h3>
+
+      <p>
+        When writing custom tooltip functions, include ARIA attributes so screen
+        readers announce tooltip content:
+      </p>
+
+      <CodeBlock
+        code={`<LineChart
+  data={data}
+  xAccessor="month"
+  yAccessor="revenue"
+  tooltip={(d) => (
+    <div role="tooltip" aria-live="polite">
+      <strong>{d.month}</strong>: \${d.revenue.toLocaleString()}
     </div>
   )}
 />`}
         language="jsx"
       />
 
-      <h3 id="testing">Testing Accessibility</h3>
+      {/* ----------------------------------------------------------------- */}
+      {/* Current Limitations */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="limitations">Current Limitations</h2>
 
       <p>
-        Resources and tools for testing the accessibility of your
-        Semiotic visualizations:
+        Semiotic's canvas-based architecture means some accessibility features
+        that SVG-based libraries provide are not yet available:
       </p>
 
       <ul>
         <li>
+          <strong>No keyboard navigation</strong> — data points cannot be
+          traversed with arrow keys. This is a planned feature.
+        </li>
+        <li>
+          <strong>No per-element ARIA</strong> — individual bars, points, and
+          line segments in the canvas do not have ARIA labels. The SVG overlay
+          provides labels for text elements only.
+        </li>
+        <li>
+          <strong>No focus management</strong> — brush and selection interactions
+          are mouse-only. No focus ring or keyboard equivalent.
+        </li>
+      </ul>
+
+      <p>
+        For applications that require WCAG AA compliance where charts are the
+        primary content, provide a data table fallback. For charts used as
+        supplementary illustrations, the <code>role="img"</code> +{" "}
+        <code>aria-label</code> baseline is sufficient under WCAG's "decorative
+        image" guidance.
+      </p>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Testing */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="testing">Testing Accessibility</h2>
+
+      <ul>
+        <li>
           <strong>Screen readers</strong>:{" "}
-          <a href="https://webaim.org/articles/voiceover/" target="_blank" rel="noopener noreferrer">VoiceOver for Mac</a>{" "}
-          or{" "}
-          <a href="https://webaim.org/articles/nvda/" target="_blank" rel="noopener noreferrer">NVDA for Windows</a>
+          <a href="https://webaim.org/articles/voiceover/" target="_blank" rel="noopener noreferrer">VoiceOver (Mac)</a>,{" "}
+          <a href="https://webaim.org/articles/nvda/" target="_blank" rel="noopener noreferrer">NVDA (Windows)</a>
         </li>
         <li>
           <strong>Audit tools</strong>:{" "}
-          <a href="https://chrome.google.com/webstore/detail/axe/lhdoppojpmngadmnindnejefpokejbdd" target="_blank" rel="noopener noreferrer">aXe for Chrome</a>,{" "}
-          <a href="https://www.marcozehe.de/2018/04/11/introducing-the-accessibility-inspector-in-the-firefox-developer-tools/" target="_blank" rel="noopener noreferrer">Firefox Accessibility Inspector</a>
-        </li>
-        <li>
-          <strong>Color contrast</strong>:{" "}
-          <a href="https://chrome.google.com/webstore/detail/colorblinding/dgbgleaofjainknadoffbjkclicbbgaa" target="_blank" rel="noopener noreferrer">Colorblinding Chrome extension</a>
-        </li>
-        <li>
-          <strong>Checklists</strong>:{" "}
-          <a href="https://webaim.org/standards/wcag/checklist" target="_blank" rel="noopener noreferrer">WebAIM WCAG checklist</a>,{" "}
-          <a href="https://accessibility.18f.gov/checklist/" target="_blank" rel="noopener noreferrer">18F accessibility guide</a>
+          <a href="https://chrome.google.com/webstore/detail/axe/lhdoppojpmngadmnindnejefpokejbdd" target="_blank" rel="noopener noreferrer">aXe</a>,{" "}
+          Firefox Accessibility Inspector
         </li>
         <li>
           <strong>Standards</strong>:{" "}
-          <a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank" rel="noopener noreferrer">W3C WCAG guidelines</a>
+          <a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank" rel="noopener noreferrer">WCAG 2.1</a>,{" "}
+          <a href="https://webaim.org/standards/wcag/checklist" target="_blank" rel="noopener noreferrer">WebAIM checklist</a>
         </li>
       </ul>
 
@@ -414,20 +309,12 @@ export default function AccessibilityPage() {
           rendering with accessible markup
         </li>
         <li>
-          <Link to="/features/axes">Axes</Link> — axis formatting functions
-          that feed into ARIA labels
+          <Link to="/features/theming">Theming</Link> — dark mode support
+          for visual contrast
         </li>
         <li>
-          <Link to="/features/responsive">Responsive</Link> — responsive
-          layouts that work across devices
-        </li>
-        <li>
-          <Link to="/frames/xy-frame">StreamXYFrame</Link> — title and
-          accessibility props on XY visualizations
-        </li>
-        <li>
-          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — title and
-          accessibility props on ordinal visualizations
+          <Link to="/features/realtime-encoding">Realtime Encoding</Link> —
+          pulse and decay animation settings
         </li>
       </ul>
     </PageLayout>

@@ -207,5 +207,42 @@ export const processNodes = [
       "nodeLabels",
       "centerContent"
     ]
+  },
+  {
+    label: "Realtime",
+    keys: [
+      "pulse",
+      "decay",
+      "staleness",
+      "transition",
+      "thresholds",
+      "showParticles",
+      "particleStyle",
+      "tensionConfig",
+      "onTopologyChange",
+      "onObservation",
+      "chartId",
+      "initialEdges",
+      "tickFormatTime",
+      "tickFormatValue",
+      "timeExtent",
+      "valueExtent",
+      "stroke",
+      "strokeWidth",
+      "strokeDasharray",
+      "fill",
+      "opacity",
+      "gap",
+      "radius",
+      "positiveColor",
+      "negativeColor",
+      "connectorStroke",
+      "connectorWidth",
+      "heatmapXBins",
+      "heatmapYBins",
+      "aggregation",
+      "colors",
+      "linkedHover"
+    ]
   }
 ]

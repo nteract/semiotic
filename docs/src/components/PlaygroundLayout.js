@@ -82,7 +82,14 @@ export default function PlaygroundLayout({
       v = mapProps(c.name, v)
       if (v === undefined) continue
     }
-    chartProps[c.name] = v
+    // Handle nested propPath (e.g. ["sizeRange", 0] sets chartProps.sizeRange[0])
+    if (c.propPath) {
+      const [prop, index] = c.propPath
+      if (!chartProps[prop]) chartProps[prop] = []
+      chartProps[prop][index] = v
+    } else {
+      chartProps[c.name] = v
+    }
   }
 
   // Apply responsive width

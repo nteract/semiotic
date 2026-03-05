@@ -5,44 +5,8 @@ import { Routes, Route, NavLink, Outlet, Link } from "react-router-dom"
 import Sidebar, { SidebarToggle } from "./components/Sidebar"
 import Landing from "./Landing"
 
-// Existing page components
-import Home from "./Home"
-import { GuidesIndex, ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexPages"
-import Accessibility from "./markdown/accessibility.mdx"
-import Xyframe from "./markdown/xyframe.mdx"
-import Ordinalframe from "./markdown/ordinalframe.mdx"
-import Networkframe from "./markdown/networkframe.mdx"
-import Responsiveframes from "./markdown/responsiveframes.mdx"
-import Sparkframes from "./markdown/sparkframes.mdx"
-
-import LineChart from "./guides/LineChart.mdx"
-import AreaChart from "./guides/AreaChart"
-import Scatterplot from "./guides/Scatterplot"
-import XYSummaries from "./guides/XYSummaries"
-import XYBrushes from "./guides/XYBrushes"
-import BarChart from "./guides/BarChart"
-import PieChart from "./guides/PieChart"
-import OrdinalSummaries from "./guides/OrdinalSummaries"
-import OrdinalBrushes from "./guides/OrdinalBrushes"
-import Sparklines from "./guides/Sparklines.mdx"
-import ForceLayout from "./guides/ForceLayout"
-import PathDiagram from "./guides/PathDiagram"
-import HierarchicalDiagram from "./guides/HierarchicalDiagram"
-import SmallMultiples from "./guides/SmallMultiples"
-import CrossHighlighting from "./guides/CrossHighlighting"
-import Tooltips from "./guides/Tooltips"
-
-import Annotations from "./guides/Annotations.mdx"
-import UsingSketchyPatterns from "./guides/UsingSketchyPatterns"
-import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
-import CanvasRendering from "./guides/CanvasRendering"
-import AxisSettings from "./guides/AxisSettings"
-import XYChartsHOC from "./guides/XYChartsHOC"
-import OrdinalChartsHOC from "./guides/OrdinalChartsHOC"
-import NetworkChartsHOC from "./guides/NetworkChartsHOC"
-import RealtimeChartsHOC from "./guides/RealtimeChartsHOC"
-
-import DividedLine from "./sub-components/DividedLine"
+// Index page components
+import { ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexPages"
 
 // API pages
 import ChartsApiPage from "./pages/api/ChartsApiPage"
@@ -91,7 +55,6 @@ import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
 import AccessibilityPage from "./pages/features/AccessibilityPage"
-import SparklinesPage from "./pages/features/SparklinesPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
@@ -110,7 +73,6 @@ import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
 import CanvasInteractionPage from "./pages/cookbook/CanvasInteractionPage"
 import UncertaintyVisualizationPage from "./pages/cookbook/UncertaintyVisualizationPage"
 import MarginalGraphicsPage from "./pages/cookbook/MarginalGraphicsPage"
-import BarToParallelPage from "./pages/cookbook/BarToParallelPage"
 import SlopeChartPage from "./pages/cookbook/SlopeChartPage"
 import MarimekkoChartPage from "./pages/cookbook/MarimekkoChartPage"
 import SwarmPlotRecipePage from "./pages/cookbook/SwarmPlotRecipePage"
@@ -264,49 +226,7 @@ export default function DocsApp() {
             {/* New landing page */}
             <Route path="/" element={<Landing />} />
 
-            {/* Keep old Home accessible */}
-            <Route path="/home-legacy" element={<Home />} />
-
-            {/* Existing guide routes */}
-            <Route path="guides" element={<Outlet />}>
-              <Route
-                path=""
-                element={
-                  <>
-                    <h1>Guides</h1>
-                    <GuidesIndex />
-                  </>
-                }
-              />
-              <Route path="line-chart" element={<LineChart />} />
-              <Route path="area-chart" element={<AreaChart />} />
-              <Route path="scatterplot" element={<Scatterplot />} />
-              <Route path="xy-summaries" element={<XYSummaries />} />
-              <Route path="xy-brushes" element={<XYBrushes />} />
-              <Route path="bar-chart" element={<BarChart />} />
-              <Route path="pie-chart" element={<PieChart />} />
-              <Route path="ordinal-summaries" element={<OrdinalSummaries />} />
-              <Route path="ordinal-brushes" element={<OrdinalBrushes />} />
-              <Route path="force-layouts" element={<ForceLayout />} />
-              <Route path="path-diagrams" element={<PathDiagram />} />
-              <Route path="hierarchical" element={<HierarchicalDiagram />} />
-              <Route path="axis" element={<AxisSettings />} />
-              <Route path="annotations" element={<Annotations />} />
-              <Route path="tooltips" element={<Tooltips />} />
-              <Route path="highlighting" element={<CrossHighlighting />} />
-              <Route path="accessibility" element={<Accessibility />} />
-              <Route path="small-multiples" element={<SmallMultiples />} />
-              <Route path="canvas-rendering" element={<CanvasRendering />} />
-              <Route path="sparklines" element={<Sparklines />} />
-              <Route path="sketchy-patterns" element={<UsingSketchyPatterns />} />
-              <Route path="foreground-background-svg" element={<ForegroundBackgroundSVG />} />
-              <Route path="xy-charts-hoc" element={<XYChartsHOC />} />
-              <Route path="ordinal-charts-hoc" element={<OrdinalChartsHOC />} />
-              <Route path="network-charts-hoc" element={<NetworkChartsHOC />} />
-              <Route path="realtime-charts-hoc" element={<RealtimeChartsHOC />} />
-            </Route>
-
-            {/* Existing API routes */}
+            {/* API routes */}
             <Route path="api" element={<Outlet />}>
               <Route
                 path=""
@@ -318,12 +238,6 @@ export default function DocsApp() {
                 }
               />
               <Route path="charts" element={<ChartsApiPage />} />
-              <Route path="xyframe" element={<Xyframe />} />
-              <Route path="ordinalframe" element={<Ordinalframe />} />
-              <Route path="networkframe" element={<Networkframe />} />
-              <Route path="responsiveframe" element={<Responsiveframes />} />
-              <Route path="sparkFrame" element={<Sparkframes />} />
-              <Route path="dividedline" element={<DividedLine />} />
             </Route>
 
             {/* Cookbook routes */}
@@ -342,7 +256,6 @@ export default function DocsApp() {
               <Route path="canvas-interaction" element={<CanvasInteractionPage />} />
               <Route path="uncertainty-visualization" element={<UncertaintyVisualizationPage />} />
               <Route path="marginal-graphics" element={<MarginalGraphicsPage />} />
-              <Route path="bar-to-parallel-coordinates" element={<BarToParallelPage />} />
               <Route path="slope-chart" element={<SlopeChartPage />} />
               <Route path="marimekko-chart" element={<MarimekkoChartPage />} />
               <Route path="swarm-plot" element={<SwarmPlotRecipePage />} />
@@ -395,7 +308,6 @@ export default function DocsApp() {
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
               <Route path="accessibility" element={<AccessibilityPage />} />
-              <Route path="sparklines" element={<SparklinesPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
               <Route path="theming" element={<ThemingPage />} />

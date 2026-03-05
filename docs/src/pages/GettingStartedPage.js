@@ -243,9 +243,9 @@ export default function GettingStartedPage() {
             <span className="tier-badge utilities">Utilities</span>
           </h3>
           <p style={styles.cardDescription}>
-            Individual building blocks like <strong>Axis</strong>,{" "}
-            <strong>Legend</strong>, and <strong>DividedLine</strong>. Combine
-            them to build completely custom visualizations from scratch.
+            Shared infrastructure like <strong>ThemeProvider</strong>,{" "}
+            <strong>ChartContainer</strong>, and <strong>LinkedCharts</strong>. Compose
+            them to build coordinated dashboards and themed applications.
           </p>
         </div>
       </div>
