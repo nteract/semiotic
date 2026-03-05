@@ -300,14 +300,15 @@ export default function LegendsPage() {
           data: barData,
           oAccessor: "category",
           rAccessor: "value",
-          type: "clusterbar",
-          style: (d) => ({
+          chartType: "clusterbar",
+          pieceStyle: (d) => ({
             fill: regionColors[d.region],
             stroke: "white",
             strokeWidth: 1,
           }),
           oPadding: 10,
-          axes: [{ orient: "left", label: "Sales ($K)" }],
+          showAxes: true,
+          rLabel: "Sales ($K)",
           margin: { top: 20, bottom: 40, left: 60, right: 130 },
           legend: {
             title: "Region",
@@ -336,7 +337,7 @@ export default function LegendsPage() {
   { category: "Q2", value: 42, region: "North" },
   // ...more data for North, South, East
 ]`,
-          style: `d => ({
+          pieceStyle: `d => ({
   fill: regionColors[d.region],
   stroke: "white",
   strokeWidth: 1,
@@ -359,10 +360,9 @@ export default function LegendsPage() {
     },
   ],
 }`,
-          axes: `[{ orient: "left", label: "Sales ($K)" }]`,
         }}
         functions={{
-          style: (d) => ({
+          pieceStyle: (d) => ({
             fill: regionColors[d.region],
             stroke: "white",
             strokeWidth: 1,

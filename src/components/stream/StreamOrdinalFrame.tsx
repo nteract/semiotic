@@ -466,9 +466,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
       }
 
-      // Background
-      if (background) {
-        ctx.fillStyle = background
+      // Background — use explicit prop, or fall back to semiotic theme background
+      const semioticBg = canvas
+        ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+        : ""
+      const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+      if (effectiveBg) {
+        ctx.fillStyle = effectiveBg
         ctx.fillRect(0, 0, size[0], size[1])
       }
 

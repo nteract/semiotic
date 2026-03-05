@@ -64,8 +64,8 @@ export function useSortedData(
  * Consolidates normalizeLinkedHover, useSelection, useLinkedHover,
  * and the customHoverBehavior callback that every HOC chart repeats.
  *
- * @param unwrapData - If true, passes `d.data || d` to the hover hook
- *   (needed for ordinal charts where the frame wraps data).
+ * @param unwrapData - Deprecated / no-op. Hover data is always unwrapped
+ *   (stream frames wrap the raw datum in { data, time, value, x, y }).
  */
 export function useChartSelection({
   selection,
@@ -100,11 +100,13 @@ export function useChartSelection({
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
       if (linkedHover) {
-        const datum = d && unwrapData ? (d.data || d.datum || d) : d
+        // Stream frames wrap the raw datum in { data: datum, time, value, x, y }.
+        // Always unwrap .data/.datum so onHover sees the original data fields.
+        const datum = d ? (d.data || d.datum || d) : d
         linkedHoverHook.onHover(datum)
       }
     },
-    [linkedHover, linkedHoverHook, unwrapData]
+    [linkedHover, linkedHoverHook]
   )
 
   return { activeSelectionHook, customHoverBehavior }

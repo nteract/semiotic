@@ -37,12 +37,15 @@ const frameProps = {
   oLabel: true,
   chartType: "point",
   connectorAccessor: d => d.name,
-  tooltipContent: d => (
-    <div style={{ padding: "4px 8px", fontSize: 13 }}>
-      <strong>{d.name}</strong>
-      <div>{d.year}: {d.value}%</div>
-    </div>
-  ),
+  tooltipContent: d => {
+    const datum = d.data || d
+    return (
+      <div style={{ padding: "4px 8px", fontSize: 13 }}>
+        <strong>{datum.name}</strong>
+        <div>{datum.year}: {Number(datum.value).toFixed(1)}%</div>
+      </div>
+    )
+  },
   foregroundGraphics: [
     <g transform="translate(400, 73)" key="legend">
       <text key={1} fill={theme[0]}>
@@ -65,12 +68,15 @@ const frameProps = {
 }
 
 const overrideProps = {
-  tooltipContent: `d => (
-    <div style={{ padding: "4px 8px", fontSize: 13 }}>
-      <strong>{d.name}</strong>
-      <div>{d.year}: {d.value}%</div>
-    </div>
-  )`,
+  tooltipContent: `d => {
+    const datum = d.data || d
+    return (
+      <div style={{ padding: "4px 8px", fontSize: 13 }}>
+        <strong>{datum.name}</strong>
+        <div>{datum.year}: {Number(datum.value).toFixed(1)}%</div>
+      </div>
+    )
+  }`,
   foregroundGraphics: ` [
     <g transform="translate(400, 73)" key="legend">
       <text key={1} fill={theme[0]}>

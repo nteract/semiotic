@@ -1117,6 +1117,7 @@ export class PipelineStore {
     if (!this.config.pulse || !this.timestampBuffer) return
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
+    const glowRadius = this.config.pulse.glowRadius ?? 4
 
     // Build datum→index lookup
     const indexMap = new Map<any, number>()
@@ -1134,6 +1135,7 @@ export class PipelineStore {
       if (intensity > 0) {
         (node as any)._pulseIntensity = intensity
         ;(node as any)._pulseColor = pulseColor
+        ;(node as any)._pulseGlowRadius = glowRadius
       }
     }
   }

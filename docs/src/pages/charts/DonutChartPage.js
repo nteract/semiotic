@@ -37,8 +37,21 @@ const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR
 const donutColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 const donutColorMap = Object.fromEntries(budgetCategories.map((s, i) => [s, donutColors[i]]))
 
+const donutLegend = {
+  legendGroups: [{
+    styleFn: d => ({ fill: d.color, stroke: d.color }),
+    type: "fill",
+    items: budgetCategories.map(c => ({ label: c, color: donutColorMap[c] })),
+    label: ""
+  }]
+}
+
 const streamingDonutCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
+
+const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
+const donutColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const donutColorMap = Object.fromEntries(budgetCategories.map((s, i) => [s, donutColors[i]]))
 
 function StreamingDonutDemo() {
   const chartRef = useRef()
@@ -70,8 +83,15 @@ function StreamingDonutDemo() {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
-      colorBy="category"
-      showLegend
+      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      legend={{
+        legendGroups: [{
+          styleFn: d => ({ fill: d.color, stroke: d.color }),
+          type: "fill",
+          items: budgetCategories.map(c => ({ label: c, color: donutColorMap[c] })),
+          label: ""
+        }]
+      }}
     />
   )
 }`
@@ -107,8 +127,8 @@ function StreamingDonutDemo({ width }) {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
-      colorBy="category"
-      showLegend
+      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      legend={donutLegend}
     />
   )
 }

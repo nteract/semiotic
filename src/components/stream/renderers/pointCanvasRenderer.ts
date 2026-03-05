@@ -29,12 +29,13 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout
 
     // Pulse glow ring
     if (node._pulseIntensity && node._pulseIntensity > 0) {
-      const glowRadius = 4
+      const glowRadius = node._pulseGlowRadius ?? 4
+      const pulseR = node.r + glowRadius * node._pulseIntensity
       ctx.beginPath()
-      ctx.arc(node.x, node.y, node.r + glowRadius * node._pulseIntensity, 0, Math.PI * 2)
+      ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2)
       ctx.strokeStyle = node._pulseColor || "rgba(255,255,255,0.6)"
       ctx.lineWidth = 2 * node._pulseIntensity
-      ctx.globalAlpha = node._pulseIntensity * 0.5
+      ctx.globalAlpha = node._pulseIntensity * 0.6
       ctx.stroke()
     }
 

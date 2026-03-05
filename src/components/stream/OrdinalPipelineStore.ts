@@ -663,6 +663,7 @@ export class OrdinalPipelineStore {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     const duration = this.config.pulse.duration ?? 500
     const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
+    const glowRadius = this.config.pulse.glowRadius ?? 4
 
     const indexMap = new Map<any, number>()
     for (let i = 0; i < data.length; i++) {
@@ -680,6 +681,7 @@ export class OrdinalPipelineStore {
         const intensity = 1 - age / duration
         ;(node as any)._pulseIntensity = intensity
         ;(node as any)._pulseColor = pulseColor
+        ;(node as any)._pulseGlowRadius = glowRadius
       }
     }
   }
