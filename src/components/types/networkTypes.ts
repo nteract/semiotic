@@ -1,6 +1,5 @@
 import { RenderPipelineType, DataAccessor } from "./generalTypes"
 import { GeneralFrameProps, GeneralFrameState } from "./generalTypes"
-import { NetworkLayoutMap } from "../processing/layouts/types"
 
 export interface NodeType {
   degree: number
@@ -179,5 +178,5 @@ export interface NetworkFrameProps<TNode = Record<string, any>, TEdge = Record<s
     array?: NodeType[]
   ) => any
   /** @internal Layout map for tree-shaking optimization. Do not use directly. */
-  _layoutMap?: NetworkLayoutMap
+  _layoutMap?: Record<string, any>
 }

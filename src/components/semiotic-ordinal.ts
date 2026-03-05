@@ -1,33 +1,25 @@
 /**
- * Ordinal entry point — for bar charts, pie charts, timelines, etc.
+ * Ordinal entry point — bar charts, pie charts, distribution charts.
  * Import from "semiotic/ordinal" instead of the full bundle to reduce bundle size.
  */
 
 import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 
-// Common utilities
-import Axis from "./Axis"
-import Legend from "./Legend"
-import Annotation from "./Annotation"
-import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-import { calculateDataExtent } from "./data/dataFunctions"
+export { StreamOrdinalFrame }
 
 // Chart HOCs
-import { Histogram } from "./charts/ordinal/Histogram"
-import { ViolinPlot } from "./charts/ordinal/ViolinPlot"
+export { BarChart } from "./charts/ordinal/BarChart"
+export { StackedBarChart } from "./charts/ordinal/StackedBarChart"
+export { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
+export { SwarmPlot } from "./charts/ordinal/SwarmPlot"
+export { BoxPlot } from "./charts/ordinal/BoxPlot"
+export { Histogram } from "./charts/ordinal/Histogram"
+export { ViolinPlot } from "./charts/ordinal/ViolinPlot"
+export { DotPlot } from "./charts/ordinal/DotPlot"
+export { PieChart } from "./charts/ordinal/PieChart"
+export { DonutChart } from "./charts/ordinal/DonutChart"
 
-export {
-  StreamOrdinalFrame,
-  Axis,
-  Legend,
-  Annotation,
-  AnnotationLayer,
-  calculateDataExtent,
-  Histogram,
-  ViolinPlot
-}
-
-// Types
+// Stream Frame types
 export type {
   StreamOrdinalFrameProps,
   StreamOrdinalFrameHandle,
@@ -35,62 +27,3 @@ export type {
   OrdinalScales,
   OrdinalSceneNode
 } from "./stream/ordinalTypes"
-
-export {
-  OExtentObject,
-  PieceTypes,
-  PieceTypeSettings,
-  ProjectedOrdinalSummary,
-  OrdinalFrameProps,
-  OrdinalFrameState
-} from "./types/ordinalTypes"
-
-export {
-  AnnotationType,
-  CustomHoverType,
-  AnnotationTypes,
-  AnnotationHandling,
-  AnnotationProps,
-  AxisProps,
-  AxisGeneratingFunction
-} from "./types/annotationTypes"
-
-export {
-  GenericObject,
-  MarginType,
-  ProjectionTypes,
-  ExtentType,
-  ProjectedPoint,
-  PieceLayoutType,
-  RoughType,
-  CanvasPostProcessTypes,
-  ExtentSettingsType,
-  accessorType,
-  DataAccessor,
-  AccessorFnType,
-  GenericAccessor,
-  VizLayerTypes,
-  RenderPipelineType,
-  OrdinalSummaryTypes,
-  OrdinalSummaryTypeSettings,
-  AxisSummaryTypeSettings,
-  GeneralFrameProps,
-  GeneralFrameState
-} from "./types/generalTypes"
-
-export {
-  AdvancedInteractionSettings,
-  Interactivity,
-  InteractionLayerProps,
-  VoronoiEntryType,
-  BaseColumnType,
-  InteractionLayerState
-} from "./types/interactionTypes"
-
-export {
-  SupportedLegendGlyphs,
-  ItemType,
-  LegendItem,
-  LegendGroup,
-  LegendProps
-} from "./types/legendTypes"

@@ -3,18 +3,6 @@ import StreamXYFrame from "./stream/StreamXYFrame"
 import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
-// ── Utilities ──────────────────────────────────────────────────────────
-import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-import DividedLine from "./DividedLine"
-import Axis from "./Axis"
-import Legend from "./Legend"
-import Annotation from "./Annotation"
-import Brush from "./Brush"
-import { funnelize } from "./geometry/lineDrawing"
-import { calculateDataExtent } from "./data/dataFunctions"
-import { hexbinning, heatmapping } from "./geometry/areaDrawing"
-import { nodesEdgesFromHierarchy } from "./processing/hierarchyUtils"
-
 // ── Chart HOCs ─────────────────────────────────────────────────────────
 import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
 
@@ -60,18 +48,6 @@ export {
   StreamXYFrame,
   StreamOrdinalFrame,
   StreamNetworkFrame,
-  // Utilities
-  AnnotationLayer,
-  DividedLine,
-  Brush,
-  Axis,
-  Annotation,
-  Legend,
-  funnelize,
-  calculateDataExtent,
-  hexbinning,
-  heatmapping,
-  nodesEdgesFromHierarchy,
   // Chart HOCs
   Scatterplot,
   LineChart,
