@@ -26,6 +26,8 @@ export interface AnnotationContext {
   height?: number
   data?: Record<string, any>[]
   frameType?: "xy" | "ordinal" | "network"
+  /** Point scene nodes for point-anchored annotations */
+  pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
 }
 
 export interface CrosshairStyle {

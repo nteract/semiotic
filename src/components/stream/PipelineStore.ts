@@ -10,6 +10,7 @@ import type {
   StreamLayout,
   SceneNode,
   AreaSceneNode,
+  PointSceneNode,
   CandlestickSceneNode,
   CandlestickStyle,
   Style,
@@ -99,6 +100,9 @@ export interface PipelineConfig {
   heatmapAggregation?: "count" | "sum" | "mean"
   heatmapXBins?: number
   heatmapYBins?: number
+
+  // Point identification (for point-anchored annotations)
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -121,6 +125,7 @@ export class PipelineStore {
   private getHigh: ((d: any) => number) | undefined
   private getLow: ((d: any) => number) | undefined
   private getClose: ((d: any) => number) | undefined
+  private getPointId: ((d: any) => string) | undefined
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -166,6 +171,8 @@ export class PipelineStore {
     this.getBounds = config.boundsAccessor
       ? resolveAccessor(config.boundsAccessor, "bounds")
       : undefined
+
+    this.getPointId = resolveStringAccessor(config.pointIdAccessor)
 
     // Candlestick accessors
     if (config.chartType === "candlestick") {
@@ -577,7 +584,8 @@ export class PipelineStore {
         }
       }
 
-      const node = buildPointNode(d, this.scales!, this.getX, this.getY, r, style)
+      const pointId = this.getPointId ? String(this.getPointId(d)) : undefined
+      const node = buildPointNode(d, this.scales!, this.getX, this.getY, r, style, pointId)
       if (node) nodes.push(node)
     }
 
@@ -838,12 +846,14 @@ export class PipelineStore {
         fill = this.config.barColors?.[cat] || fill
       }
 
-      nodes.push({
+      const node: PointSceneNode = {
         type: "point",
         x, y, r: radius,
         style: { fill, opacity, stroke, strokeWidth },
         datum: d
-      })
+      }
+      if (this.getPointId) node.pointId = String(this.getPointId(d))
+      nodes.push(node)
     }
 
     return nodes

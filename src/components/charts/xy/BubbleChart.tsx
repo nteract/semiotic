@@ -116,6 +116,9 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
    */
   marginalGraphics?: MarginalGraphicsConfig
 
+  /** Accessor for unique point IDs, used by point-anchored annotations */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
+
   /**
    * Annotation objects to render on the chart
    */
@@ -216,6 +219,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     showLegend,
     tooltip,
     marginalGraphics,
+    pointIdAccessor,
     annotations,
     frameProps = {},
     selection,
@@ -341,6 +345,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
+    ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

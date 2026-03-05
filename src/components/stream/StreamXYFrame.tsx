@@ -16,6 +16,7 @@ import type {
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
+  PointSceneNode,
   StreamScales,
   MarginalGraphicsConfig
 } from "./types"
@@ -394,7 +395,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
-      marginalGraphics
+      marginalGraphics,
+      pointIdAccessor
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -486,7 +488,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       staleness,
       heatmapAggregation,
       heatmapXBins,
-      heatmapYBins
+      heatmapYBins,
+      pointIdAccessor
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -497,7 +500,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
-      isStreaming
+      isStreaming, pointIdAccessor
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -910,6 +913,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
           yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
           annotationData={storeRef.current?.getData()}
+          pointNodes={storeRef.current?.scene.filter(
+            (n): n is PointSceneNode => n.type === "point"
+          )}
         />
         {(brush || onBrush) && (
           <BrushOverlay

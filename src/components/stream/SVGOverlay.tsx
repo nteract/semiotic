@@ -105,6 +105,7 @@ interface SVGOverlayProps {
   xAccessor?: string
   yAccessor?: string
   annotationData?: Record<string, any>[]
+  pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
 
   children?: ReactNode
 }
@@ -149,6 +150,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     xAccessor: annXAccessor,
     yAccessor: annYAccessor,
     annotationData,
+    pointNodes,
     children
   } = props
 
@@ -187,7 +189,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
       width,
       height,
       data: annotationData,
-      frameType: "xy"
+      frameType: "xy",
+      pointNodes
     }
 
     return annotations

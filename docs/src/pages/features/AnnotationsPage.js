@@ -123,99 +123,130 @@ function StreamingAnnotatedChart({ width }) {
 }
 
 // ---------------------------------------------------------------------------
-// Streaming callout tracking demo
+// Streaming point-anchored callout demo
 // ---------------------------------------------------------------------------
 
-const streamingCalloutCode = `import { useRef, useEffect, useState } from "react"
+const streamingCalloutCode = `import { useRef, useEffect, useCallback, useState } from "react"
 import { StreamXYFrame } from "semiotic"
 
 function StreamingCalloutDemo() {
   const chartRef = useRef()
   const indexRef = useRef(0)
-  const [annotations, setAnnotations] = useState([])
+  const intervalRef = useRef(null)
+  const [, setTick] = useState(0)
 
-  useEffect(() => {
-    const id = setInterval(() => {
+  const start = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    indexRef.current = 0
+    chartRef.current?.clear()
+    intervalRef.current = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const value = 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10
-
-        chartRef.current.push({ time: i, value })
-
-        // When a value crosses the warning threshold, pin a callout to that point.
-        // The callout slides with the data as the window moves.
-        if (value > 70) {
-          setAnnotations(prev => [
-            ...prev.slice(-3),  // keep last 3 callouts
-            { type: "callout", time: i, value, label: \`\${value.toFixed(0)} !\`,
-              color: "#ef4444", radius: 8, dx: 0, dy: -40 }
-          ])
-        }
+        chartRef.current.push({
+          id: \`pt-\${i}\`,
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10,
+        })
       }
     }, 80)
-    return () => clearInterval(id)
+    setTick(t => t + 1)
   }, [])
 
+  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [])
+
+  // Callouts anchored to points #60, #120, and #180 by ID.
   return (
-    <StreamXYFrame
-      ref={chartRef}
-      chartType="line"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      timeAccessor="time"
-      valueAccessor="value"
-      windowSize={150}
-      showAxes
-      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
-      annotations={[
-        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
-        ...annotations,
-      ]}
-    />
+    <>
+      <button onClick={start}>Restart</button>
+      <StreamXYFrame
+        ref={chartRef}
+        chartType="scatter"
+        runtimeMode="streaming"
+        size={[600, 300]}
+        timeAccessor="time"
+        valueAccessor="value"
+        pointIdAccessor="id"
+        windowSize={150}
+        showAxes
+        pointStyle={() => ({ fill: "#6366f1", r: 3, opacity: 0.6 })}
+        annotations={[
+          { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+          { type: "callout", pointId: "pt-60", label: "Point #60",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+          { type: "callout", pointId: "pt-120", label: "Point #120",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+          { type: "callout", pointId: "pt-180", label: "Point #180",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+        ]}
+      />
+    </>
   )
 }`
 
 function StreamingCalloutDemo({ width }) {
   const chartRef = useRef()
   const indexRef = useRef(0)
-  const [annotations, setAnnotations] = useState([])
+  const intervalRef = useRef(null)
+  const [, setTick] = useState(0)
 
-  useEffect(() => {
-    const id = setInterval(() => {
+  const start = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    indexRef.current = 0
+    chartRef.current?.clear()
+    intervalRef.current = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
-        const value = 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10
-
-        chartRef.current.push({ time: i, value })
-
-        if (value > 70) {
-          setAnnotations(prev => [
-            ...prev.slice(-3),
-            { type: "callout", time: i, value, label: `${value.toFixed(0)} !`,
-              color: "#ef4444", radius: 8, dx: 0, dy: -40 }
-          ])
-        }
+        chartRef.current.push({
+          id: `pt-${i}`,
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10,
+        })
       }
     }, 80)
-    return () => clearInterval(id)
+    setTick(t => t + 1)
   }, [])
 
+  useEffect(() => { start(); return () => clearInterval(intervalRef.current) }, [])
+
   return (
-    <StreamXYFrame
-      ref={chartRef}
-      chartType="line"
-      runtimeMode="streaming"
-      size={[width || 600, 300]}
-      timeAccessor="time"
-      valueAccessor="value"
-      windowSize={150}
-      showAxes
-      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
-      annotations={[
-        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
-        ...annotations,
-      ]}
-    />
+    <div>
+      <button
+        onClick={start}
+        style={{
+          padding: "4px 12px",
+          borderRadius: 4,
+          border: "1px solid var(--surface-3, #ccc)",
+          background: "transparent",
+          cursor: "pointer",
+          fontSize: 13,
+          color: "var(--text-primary, #333)",
+          marginBottom: 8,
+        }}
+      >
+        Restart stream
+      </button>
+      <StreamXYFrame
+        ref={chartRef}
+        chartType="scatter"
+        runtimeMode="streaming"
+        size={[width || 600, 300]}
+        timeAccessor="time"
+        valueAccessor="value"
+        pointIdAccessor="id"
+        windowSize={150}
+        showAxes
+        pointStyle={() => ({ fill: "#6366f1", r: 3, opacity: 0.6 })}
+        annotations={[
+          { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+          { type: "callout", pointId: "pt-60", label: "Point #60",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+          { type: "callout", pointId: "pt-120", label: "Point #120",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+          { type: "callout", pointId: "pt-180", label: "Point #180",
+            color: "#8b0000", radius: 10, dx: 20, dy: -30 },
+        ]}
+      />
+    </div>
   )
 }
 
@@ -296,10 +327,12 @@ export default function AnnotationsPage() {
       <h2 id="labels-callouts">Labels & Callouts</h2>
 
       <p>
-        Point annotations let you call attention to individual data points. Use{" "}
-        <code>label</code> for a text annotation with a connector line, or{" "}
-        <code>callout</code> for a callout with a circular subject highlight.
-        Offset the label position with <code>dx</code> and <code>dy</code>.
+        Point annotations let you call attention to individual data points. Set{" "}
+        <code>pointIdAccessor</code> on the chart to identify each point, then
+        use <code>pointId</code> on a <code>label</code> or <code>callout</code>{" "}
+        annotation to anchor it to a specific data point. The annotation only
+        renders when the matching point exists. Offset the label position with{" "}
+        <code>dx</code> and <code>dy</code>.
       </p>
 
       <LiveExample
@@ -309,9 +342,10 @@ export default function AnnotationsPage() {
           yAccessor: "y",
           xLabel: "X Value",
           yLabel: "Y Value",
+          pointIdAccessor: "label",
           annotations: [
-            { type: "label", x: 55, y: 45, label: "Outlier", dx: 30, dy: -30 },
-            { type: "callout", x: 85, y: 50, label: "Peak", radius: 15 },
+            { type: "label", pointId: "D", label: "Outlier", dx: 30, dy: -30 },
+            { type: "callout", pointId: "F", label: "Peak", radius: 15 },
           ],
         }}
         type={Scatterplot}
@@ -325,9 +359,10 @@ export default function AnnotationsPage() {
   { x: 70, y: 30, label: "E" },
   { x: 85, y: 50, label: "F" }
 ]`,
+          pointIdAccessor: `"label"`,
           annotations: `[
-  { type: "label", x: 55, y: 45, label: "Outlier", dx: 30, dy: -30 },
-  { type: "callout", x: 85, y: 50, label: "Peak", radius: 15 }
+  { type: "label", pointId: "D", label: "Outlier", dx: 30, dy: -30 },
+  { type: "callout", pointId: "F", label: "Peak", radius: 15 }
 ]`,
         }}
         hiddenProps={{}}
@@ -549,15 +584,16 @@ export default function AnnotationsPage() {
         code={streamingAnnotationCode}
       />
 
-      <h3 id="tracking-callouts">Tracking Callouts</h3>
+      <h3 id="tracking-callouts">Point-Anchored Callouts</h3>
 
       <p>
-        Data-anchored annotations like <code>callout</code> and{" "}
-        <code>label</code> follow their data point as the window slides.
-        They appear when the point enters the view and automatically hide
-        when it scrolls off-screen. Combine with dynamic annotations (React
-        state) to pin callouts to threshold crossings or anomalies as they
-        occur.
+        Use <code>pointIdAccessor</code> to assign a unique ID to each data
+        point, then reference it with <code>pointId</code> on a callout or
+        label annotation. The annotation appears only when that specific point
+        is in the visible window, slides with it, and disappears when it
+        scrolls off-screen. Below, three callouts are anchored to points #60,
+        #120, and #180 — click Restart to watch them appear, track, and
+        disappear as the stream advances.
       </p>
 
       <StreamingDemo
@@ -632,8 +668,8 @@ export default function AnnotationsPage() {
           {[
             ["y-threshold", "All", "y, label, color", "Horizontal reference line at a value"],
             ["x-threshold", "XY", "x (or data key), label, color", "Vertical reference line at a data point"],
-            ["label", "All", "x, y, label, dx, dy", "Text annotation with connector line"],
-            ["callout", "All", "x, y, label, radius", "Callout with circular subject highlight"],
+            ["label", "All", "x, y (or pointId), label, dx, dy", "Text annotation with connector line"],
+            ["callout", "All", "x, y (or pointId), label, radius", "Callout with circular subject highlight"],
             ["callout-circle", "All", "x, y, label, radius", "Same as callout with explicit circle subject"],
             ["callout-rect", "All", "x, y, label, width, height", "Callout with rectangular subject"],
             ["enclose", "All", "coordinates, label, padding", "Circle enclosing a set of data points"],

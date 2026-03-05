@@ -151,6 +151,8 @@ export interface PointSceneNode {
   r: number
   style: Style
   datum: any
+  /** Optional unique identifier for point-anchored annotations */
+  pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active) */
   _pulseIntensity?: number
   /** Pulse glow color */
@@ -370,6 +372,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+
+  // ── Point identification (for point-anchored annotations) ──
+  /** Accessor for unique point IDs used by point-anchored annotations */
+  pointIdAccessor?: string | ((d: T) => string)
 
   // ── Annotations ──────────────────────────────────
   annotations?: Record<string, any>[]

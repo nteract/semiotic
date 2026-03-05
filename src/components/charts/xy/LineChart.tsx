@@ -136,6 +136,9 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    */
   tooltip?: TooltipProp
 
+  /** Accessor for unique point IDs, used by point-anchored annotations (when showPoints is true) */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
+
   /**
    * Annotation objects to render on the chart
    */
@@ -251,6 +254,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     showGrid = false,
     showLegend,
     tooltip,
+    pointIdAccessor,
     annotations,
     frameProps = {},
     selection,
@@ -431,6 +435,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

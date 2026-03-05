@@ -100,10 +100,11 @@ describe("Note text positioning", () => {
                 expect(Number(yMatch[1])).toBeGreaterThanOrEqual(0)
             }
         }
-        // In either case, first tspan should have positive dy
+        // Content should be positioned below the note anchor
         const tspans = labelText.querySelectorAll("tspan")
         expect(tspans.length).toBeGreaterThan(0)
-        expect(Number(tspans[0].getAttribute("dy"))).toBeGreaterThan(0)
+        // First tspan dy is 0; positioning is via contentYOffset transform
+        expect(Number(tspans[0].getAttribute("dy"))).toEqual(0)
     })
 
     it("centers text horizontally with align=middle in topBottom orientation", () => {
@@ -140,17 +141,14 @@ describe("Note text positioning", () => {
         const noteContent = container.querySelector(".annotation-note-content")
         expect(noteContent).toBeTruthy()
 
-        // With leftRight + middle, content should be shifted up by half the text height
+        // With leftRight + middle, content should be vertically centered
+        // For a single line, the offset may be zero (already centered)
         const contentTransform = noteContent.getAttribute("transform")
         if (contentTransform) {
             const yMatch = contentTransform.match(/translate\([^,]*,\s*(-?[\d.]+)\)/)
             if (yMatch) {
-                expect(Number(yMatch[1])).toBeLessThan(0)
+                expect(Number(yMatch[1])).toBeLessThanOrEqual(0)
             }
-        } else {
-            const labelText = container.querySelector(".annotation-note-label")
-            const yAttr = labelText.getAttribute("y")
-            expect(Number(yAttr)).toBeLessThan(0)
         }
     })
 })

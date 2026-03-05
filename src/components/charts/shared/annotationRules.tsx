@@ -66,8 +66,18 @@ export function createDefaultAnnotationRules(
     switch (ann.type) {
       // ── Label ─────────────────────────────────────────────────────────
       case "label": {
-        const px = resolveX(ann, context)
-        const py = resolveY(ann, context)
+        let px: number | null = null
+        let py: number | null = null
+
+        if (ann.pointId != null && context.pointNodes) {
+          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
+          if (!match) return null
+          px = match.x
+          py = match.y
+        } else {
+          px = resolveX(ann, context)
+          py = resolveY(ann, context)
+        }
         if (px == null || py == null) return null
         if (!isInBounds(px, py, context)) return null
         return (
@@ -93,8 +103,18 @@ export function createDefaultAnnotationRules(
 
       // ── Callout ───────────────────────────────────────────────────────
       case "callout": {
-        const px = resolveX(ann, context)
-        const py = resolveY(ann, context)
+        let px: number | null = null
+        let py: number | null = null
+
+        if (ann.pointId != null && context.pointNodes) {
+          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
+          if (!match) return null
+          px = match.x
+          py = match.y
+        } else {
+          px = resolveX(ann, context)
+          py = resolveY(ann, context)
+        }
         if (px == null || py == null) return null
         if (!isInBounds(px, py, context)) return null
         return (
