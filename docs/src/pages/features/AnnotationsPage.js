@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect, useState, useCallback } from "react"
 import { LineChart, BarChart, Scatterplot, StreamXYFrame } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -117,6 +117,103 @@ function StreamingAnnotatedChart({ width }) {
         { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
         { type: "y-threshold", y: 30, label: "Low", color: "#ef4444" },
         { type: "band", y0: 40, y1: 60, fill: "#22c55e", fillOpacity: 0.1, label: "Normal range" },
+      ]}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Streaming callout tracking demo
+// ---------------------------------------------------------------------------
+
+const streamingCalloutCode = `import { useRef, useEffect, useState } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingCalloutDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [annotations, setAnnotations] = useState([])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const value = 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10
+
+        chartRef.current.push({ time: i, value })
+
+        // When a value crosses the warning threshold, pin a callout to that point.
+        // The callout slides with the data as the window moves.
+        if (value > 70) {
+          setAnnotations(prev => [
+            ...prev.slice(-3),  // keep last 3 callouts
+            { type: "callout", time: i, value, label: \`\${value.toFixed(0)} !\`,
+              color: "#ef4444", radius: 8, dx: 0, dy: -40 }
+          ])
+        }
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+      annotations={[
+        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+        ...annotations,
+      ]}
+    />
+  )
+}`
+
+function StreamingCalloutDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [annotations, setAnnotations] = useState([])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const value = 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10
+
+        chartRef.current.push({ time: i, value })
+
+        if (value > 70) {
+          setAnnotations(prev => [
+            ...prev.slice(-3),
+            { type: "callout", time: i, value, label: `${value.toFixed(0)} !`,
+              color: "#ef4444", radius: 8, dx: 0, dy: -40 }
+          ])
+        }
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[width || 600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+      annotations={[
+        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+        ...annotations,
       ]}
     />
   )
@@ -450,6 +547,22 @@ export default function AnnotationsPage() {
       <StreamingDemo
         renderChart={(w) => <StreamingAnnotatedChart width={w} />}
         code={streamingAnnotationCode}
+      />
+
+      <h3 id="tracking-callouts">Tracking Callouts</h3>
+
+      <p>
+        Data-anchored annotations like <code>callout</code> and{" "}
+        <code>label</code> follow their data point as the window slides.
+        They appear when the point enters the view and automatically hide
+        when it scrolls off-screen. Combine with dynamic annotations (React
+        state) to pin callouts to threshold crossings or anomalies as they
+        occur.
+      </p>
+
+      <StreamingDemo
+        renderChart={(w) => <StreamingCalloutDemo width={w} />}
+        code={streamingCalloutCode}
       />
 
       {/* ----------------------------------------------------------------- */}

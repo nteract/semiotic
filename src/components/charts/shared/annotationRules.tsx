@@ -33,6 +33,22 @@ function resolveY(
   return null
 }
 
+/**
+ * Returns true if a point annotation is within the visible chart area.
+ * Used to hide data-anchored annotations (labels, callouts) that have
+ * scrolled off-screen in a streaming chart.
+ */
+function isInBounds(
+  px: number,
+  py: number,
+  context: AnnotationContext,
+  margin: number = 50
+): boolean {
+  const w = context.width || 0
+  const h = context.height || 0
+  return px >= -margin && px <= w + margin && py >= -margin && py <= h + margin
+}
+
 // ── Default annotation rules factory ──────────────────────────────────
 
 export function createDefaultAnnotationRules(
@@ -53,6 +69,7 @@ export function createDefaultAnnotationRules(
         const px = resolveX(ann, context)
         const py = resolveY(ann, context)
         if (px == null || py == null) return null
+        if (!isInBounds(px, py, context)) return null
         return (
           <Annotation
             key={`ann-${index}`}
@@ -79,6 +96,7 @@ export function createDefaultAnnotationRules(
         const px = resolveX(ann, context)
         const py = resolveY(ann, context)
         if (px == null || py == null) return null
+        if (!isInBounds(px, py, context)) return null
         return (
           <Annotation
             key={`ann-${index}`}

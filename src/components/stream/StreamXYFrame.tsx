@@ -907,8 +907,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
-          xAccessor={typeof xAccessor === "string" ? xAccessor : undefined}
-          yAccessor={typeof yAccessor === "string" ? yAccessor : undefined}
+          xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
+          yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
           annotationData={storeRef.current?.getData()}
         />
         {(brush || onBrush) && (
