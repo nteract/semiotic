@@ -86,7 +86,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Set node positions from arc centroids ────────────────────────
     for (const group of groups) {
       const node = nodes[group.index]
-      const centroid = arcGenerator.centroid(group)
+      const centroid = arcGenerator.centroid(group as any)
 
       node.x = centroid[0] + cx
       node.y = centroid[1] + cy
@@ -224,7 +224,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       // d3-chord's ribbon() internally subtracts PI/2 from all angles
       // (converting from d3's 12-o'clock convention to standard math coords),
       // so we must NOT pre-offset here — otherwise we double-subtract.
-      const rawPath = ribbonGenerator(chordData)
+      const rawPath = ribbonGenerator(chordData) as string | undefined
       if (!rawPath) continue
 
       const pathD = translateSvgPath(rawPath, cx, cy)

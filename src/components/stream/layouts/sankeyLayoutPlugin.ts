@@ -213,10 +213,11 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       // Generate SVG path string using existing helpers
       let pathD: string
       if (edge.circular && edge.circularPathData) {
-        pathD = circularAreaLink(edge)
+        pathD = circularAreaLink(edge) as string
       } else {
-        pathD = areaLink(edge)
+        pathD = areaLink(edge) as string
       }
+      if (!pathD) continue
 
       // Resolve edge fill — use edgeStyle if provided, otherwise
       // inherit from source or target node color

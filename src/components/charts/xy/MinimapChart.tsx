@@ -157,7 +157,7 @@ function BrushOverlay({
       onBrush(domain)
     })
 
-    g.call(brush)
+    g.call(brush as any)
     brushRef.current = brush
 
     // Style the brush selection
