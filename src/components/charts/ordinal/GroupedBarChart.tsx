@@ -38,7 +38,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     height: props.height,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
-    showLegend: props.showLegend ?? true,
+    showLegend: props.showLegend,
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,

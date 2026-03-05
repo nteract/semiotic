@@ -228,11 +228,11 @@ export function useChartMode(
     enableHover: userProps.enableHover ?? m.enableHover,
     showLegend: userProps.showLegend ?? m.showLegend,
     showLabels: userProps.showLabels ?? m.showLabels,
-    title: suppressLabels && userProps.title === undefined ? undefined : userProps.title,
-    xLabel: suppressLabels && userProps.xLabel === undefined ? undefined : userProps.xLabel,
-    yLabel: suppressLabels && userProps.yLabel === undefined ? undefined : userProps.yLabel,
-    categoryLabel: suppressLabels && userProps.categoryLabel === undefined ? undefined : userProps.categoryLabel,
-    valueLabel: suppressLabels && userProps.valueLabel === undefined ? undefined : userProps.valueLabel,
+    title: suppressLabels ? undefined : userProps.title,
+    xLabel: suppressLabels ? undefined : userProps.xLabel,
+    yLabel: suppressLabels ? undefined : userProps.yLabel,
+    categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,
+    valueLabel: suppressLabels ? undefined : userProps.valueLabel,
     marginDefaults: m.marginDefaults,
   }
 }
