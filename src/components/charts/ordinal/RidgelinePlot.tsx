@@ -98,8 +98,22 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
 
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const datum = d.data || d
-      const category = datum.category || d.category || ""
+      const category = d.category || (d.data && d.data[0]?.category) || ""
+      const stats = d.stats
+      if (stats) {
+        return (
+          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+            {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
+            <div>n = {stats.n}</div>
+            <div>Min: {stats.min.toLocaleString()}</div>
+            <div>Q1: {stats.q1.toLocaleString()}</div>
+            <div>Median: {stats.median.toLocaleString()}</div>
+            <div>Q3: {stats.q3.toLocaleString()}</div>
+            <div>Max: {stats.max.toLocaleString()}</div>
+            <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+          </div>
+        )
+      }
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(category)}</div>

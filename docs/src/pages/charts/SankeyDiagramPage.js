@@ -155,6 +155,8 @@ function StreamingSankey() {
         size={[800, 400]}
         showParticles
         edgeOpacity={0.4}
+        pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
+        staleness={{ threshold: 5000, dimOpacity: 0.4, showBadge: true }}
       />
     </>
   )
@@ -192,6 +194,8 @@ function StreamingSankeyDemo({ width }) {
         size={[width, 350]}
         showParticles
         edgeOpacity={0.4}
+        pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
+        staleness={{ threshold: 5000, dimOpacity: 0.4, showBadge: true }}
       />
     </div>
   )
@@ -271,6 +275,7 @@ function PushApiDemo() {
               spawnRate: 0.05,
               speedMultiplier: 0.8
             }}
+            pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
           />
         )}
       </div>
@@ -352,6 +357,8 @@ function ContinuousStreamDemo() {
               speedMultiplier: 1.2
             }}
             tensionConfig={{ threshold: 2.0 }}
+            pulse={{ duration: 400, color: "rgba(100,255,180,0.7)", glowRadius: 4 }}
+            staleness={{ threshold: 3000, dimOpacity: 0.3, showBadge: true }}
           />
         )}
       </div>

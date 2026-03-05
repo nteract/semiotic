@@ -61,6 +61,13 @@ function renderBezierEdge(
     ctx.stroke(path)
   }
 
+  // Pulse overlay
+  if (edge._pulseIntensity && edge._pulseIntensity > 0) {
+    ctx.fillStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
+    ctx.globalAlpha = edge._pulseIntensity * 0.2
+    ctx.fill(path)
+  }
+
   ctx.restore()
 }
 
@@ -83,6 +90,18 @@ function renderLineEdge(
   ctx.moveTo(edge.x1, edge.y1)
   ctx.lineTo(edge.x2, edge.y2)
   ctx.stroke()
+
+  // Pulse glow — thicker bright line on top
+  if (edge._pulseIntensity && edge._pulseIntensity > 0) {
+    ctx.setLineDash([])
+    ctx.strokeStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
+    ctx.lineWidth = (edge.style.strokeWidth ?? 1) + 3 * edge._pulseIntensity
+    ctx.globalAlpha = edge._pulseIntensity * 0.4
+    ctx.beginPath()
+    ctx.moveTo(edge.x1, edge.y1)
+    ctx.lineTo(edge.x2, edge.y2)
+    ctx.stroke()
+  }
 
   ctx.restore()
 }

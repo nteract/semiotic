@@ -91,14 +91,14 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
 
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const datum = d.data || d
-      const stats = datum.stats || {}
-      const category = datum.category || d.category || ""
+      const stats = d.stats || (d.data || d).stats || {}
+      const category = d.category || (d.data || d).category || ""
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{String(category)}</div>
           {stats.median != null && (
             <>
+              {stats.n != null && <div>n = {stats.n}</div>}
               <div>Median: {stats.median.toLocaleString()}</div>
               <div>Q1: {stats.q1.toLocaleString()}</div>
               <div>Q3: {stats.q3.toLocaleString()}</div>

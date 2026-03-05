@@ -117,6 +117,8 @@ function StreamingForce() {
       chartType="force"
       size={[600, 400]}
       enableHover
+      pulse={{ duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 }}
+      staleness={{ threshold: 3000, dimOpacity: 0.4, showBadge: true }}
     />
   )
 }`
@@ -145,6 +147,8 @@ function StreamingForceDemo({ width }) {
       chartType="force"
       size={[width, 400]}
       enableHover
+      pulse={{ duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 }}
+      staleness={{ threshold: 3000, dimOpacity: 0.4, showBadge: true }}
     />
   )
 }

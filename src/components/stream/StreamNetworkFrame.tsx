@@ -219,7 +219,10 @@ const StreamNetworkFrame = forwardRef<
     legend,
     title,
     foregroundGraphics,
-    backgroundGraphics
+    backgroundGraphics,
+    decay,
+    pulse,
+    staleness
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -275,7 +278,10 @@ const StreamNetworkFrame = forwardRef<
       edgeOpacity,
       colorByDepth,
       nodeSize,
-      nodeSizeRange
+      nodeSizeRange,
+      decay,
+      pulse,
+      staleness
     }),
     [
       chartType,
@@ -312,7 +318,10 @@ const StreamNetworkFrame = forwardRef<
       edgeOpacity,
       colorByDepth,
       nodeSize,
-      nodeSizeRange
+      nodeSizeRange,
+      decay,
+      pulse,
+      staleness
     ]
   )
 
@@ -341,6 +350,7 @@ const StreamNetworkFrame = forwardRef<
   } | null>(null)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
+  const [isStale, setIsStale] = useState(false)
 
   const hoverRef = useRef<typeof hoverData>(null)
 
@@ -425,7 +435,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Stable scheduleRender ────────────────────────────────────────────
 
   const isContinuous =
-    chartType === "sankey" && showParticles
+    (chartType === "sankey" && showParticles) || !!pulse
 
   const scheduleRender = useCallback(() => {
     if (rafRef.current && !isContinuous) return
@@ -723,6 +733,23 @@ const StreamNetworkFrame = forwardRef<
       ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
     }
 
+    // Apply realtime encoding (pulse/decay)
+    if (decay) {
+      store.applyDecay()
+    }
+    if (pulse) {
+      store.applyPulse(now)
+    }
+
+    // Staleness dimming
+    const staleThreshold = staleness?.threshold ?? 5000
+    const currentlyStale = staleness && store.lastIngestTime > 0 &&
+      (now - store.lastIngestTime) > staleThreshold
+
+    if (currentlyStale) {
+      ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+    }
+
     // Render edges first (they go behind nodes)
     networkEdgeRenderer(ctx, store.sceneEdges)
 
@@ -753,6 +780,11 @@ const StreamNetworkFrame = forwardRef<
       }
     }
 
+    // Reset staleness dimming
+    if (currentlyStale) {
+      ctx.globalAlpha = 1
+    }
+
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
@@ -761,8 +793,8 @@ const StreamNetworkFrame = forwardRef<
       setAnnotationFrame((f) => f + 1)
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions)
-    if (isContinuous || isTransitioning) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses)
+    if (isContinuous || isTransitioning || store.hasActivePulses) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
@@ -780,6 +812,25 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = true
     scheduleRender()
   }, [chartType, adjustedWidth, adjustedHeight, background, scheduleRender])
+
+  // ── Staleness timer ─────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!staleness) return
+    const interval = setInterval(() => {
+      const store = storeRef.current
+      if (!store || store.lastIngestTime === 0) return
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+      const threshold = staleness.threshold ?? 5000
+      const stale = (now - store.lastIngestTime) > threshold
+      if (stale !== isStale) {
+        setIsStale(stale)
+        dirtyRef.current = true
+        scheduleRender()
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [staleness, isStale, scheduleRender])
 
   // ── Tooltip ──────────────────────────────────────────────────────────
 
@@ -869,6 +920,33 @@ const StreamNetworkFrame = forwardRef<
       />
 
       {tooltipElement}
+
+      {staleness?.showBadge && (
+        <div
+          className="stream-staleness-badge"
+          style={{
+            position: "absolute",
+            ...(staleness.badgePosition === "top-left"
+              ? { top: 4, left: 4 }
+              : staleness.badgePosition === "bottom-left"
+              ? { bottom: 4, left: 4 }
+              : staleness.badgePosition === "bottom-right"
+              ? { bottom: 4, right: 4 }
+              : { top: 4, right: 4 }),
+            background: isStale ? "#dc3545" : "#28a745",
+            color: "white",
+            fontSize: 10,
+            fontWeight: 700,
+            padding: "2px 6px",
+            borderRadius: 3,
+            letterSpacing: "0.05em",
+            zIndex: 3,
+            pointerEvents: "none"
+          }}
+        >
+          {isStale ? "STALE" : "LIVE"}
+        </div>
+      )}
     </div>
   )
 })

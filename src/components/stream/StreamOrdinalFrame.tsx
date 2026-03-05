@@ -75,10 +75,26 @@ const defaultTooltipStyle: React.CSSProperties = {
 
 function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
+  const stats = (hover as any).stats
+  const hoverCategory = (hover as any).category
 
-  // For summary types (boxplot, violin), datum is an array of pieces
+  // For summary types (boxplot, violin, ridgeline), datum is an array of pieces
   if (Array.isArray(d)) {
-    const category = d[0]?.category || ""
+    const category = hoverCategory || d[0]?.category || ""
+    if (stats) {
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
+          <div>n = {stats.n}</div>
+          <div>Min: {stats.min.toLocaleString()}</div>
+          <div>Q1: {stats.q1.toLocaleString()}</div>
+          <div>Median: {stats.median.toLocaleString()}</div>
+          <div>Q3: {stats.q3.toLocaleString()}</div>
+          <div>Max: {stats.max.toLocaleString()}</div>
+          <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+        </div>
+      )
+    }
     const n = d.length
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
@@ -395,8 +411,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         time: hit.x,
         value: hit.y,
         x: hit.x,
-        y: hit.y
-      }
+        y: hit.y,
+        ...(hit.stats && { stats: hit.stats }),
+        ...(hit.category && { category: hit.category })
+      } as any
 
       hoverRef.current = hover
       setHoverPoint(hover)

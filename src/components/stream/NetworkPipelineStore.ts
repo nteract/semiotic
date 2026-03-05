@@ -60,6 +60,12 @@ export class NetworkPipelineStore {
     duration: number
   } | null = null
 
+  // ── Realtime encoding timestamps ──────────────────────────────────────
+
+  lastIngestTime = 0
+  private nodeTimestamps: Map<string, number> = new Map()
+  private edgeTimestamps: Map<string, number> = new Map()
+
   constructor(config: NetworkPipelineConfig) {
     this.config = config
     this.tensionConfig = {
@@ -204,15 +210,19 @@ export class NetworkPipelineStore {
     const { source, target, value } = push
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = now
 
     if (!this.nodes.has(source)) {
       this.nodes.set(source, createNode(source))
+      this.nodeTimestamps.set(source, now)
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }
 
     if (!this.nodes.has(target)) {
       this.nodes.set(target, createNode(target))
+      this.nodeTimestamps.set(target, now)
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }
@@ -222,6 +232,7 @@ export class NetworkPipelineStore {
 
     if (existing) {
       existing.value += value
+      this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.weightChange
     } else {
       this.edges.set(key, {
@@ -232,6 +243,7 @@ export class NetworkPipelineStore {
         y1: 0,
         sankeyWidth: 0
       })
+      this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.newEdge
       topologyChanged = true
     }
@@ -590,6 +602,114 @@ export class NetworkPipelineStore {
     }
   }
 
+  // ── Realtime encoding ─────────────────────────────────────────────────
+
+  /**
+   * Apply pulse glow to scene nodes/edges based on their creation timestamps.
+   */
+  applyPulse(now: number): void {
+    const pulse = this.config.pulse
+    if (!pulse) return
+
+    const duration = pulse.duration ?? 500
+    const pulseColor = pulse.color ?? "rgba(255,255,255,0.6)"
+    const glowRadius = pulse.glowRadius ?? 4
+
+    for (const node of this.sceneNodes) {
+      const nodeId = node.id
+      if (!nodeId) continue
+      const ts = this.nodeTimestamps.get(nodeId)
+      if (!ts) continue
+      const age = now - ts
+      if (age >= duration) continue
+      const intensity = 1 - age / duration
+      ;(node as any)._pulseIntensity = intensity
+      ;(node as any)._pulseColor = pulseColor
+      ;(node as any)._pulseGlowRadius = glowRadius
+    }
+
+    for (const edge of this.sceneEdges) {
+      const edgeDatum = edge.datum
+      if (!edgeDatum) continue
+      const sourceId = typeof edgeDatum.source === "object" ? edgeDatum.source?.id : edgeDatum.source
+      const targetId = typeof edgeDatum.target === "object" ? edgeDatum.target?.id : edgeDatum.target
+      if (!sourceId || !targetId) continue
+      const key = `${sourceId}\0${targetId}`
+      const ts = this.edgeTimestamps.get(key)
+      if (!ts) continue
+      const age = now - ts
+      if (age >= duration) continue
+      const intensity = 1 - age / duration
+      ;(edge as any)._pulseIntensity = intensity
+      ;(edge as any)._pulseColor = pulseColor
+    }
+  }
+
+  /**
+   * Apply decay opacity to scene nodes based on topology age order.
+   * Older nodes (created earlier) are more faded.
+   */
+  applyDecay(): void {
+    const decay = this.config.decay
+    if (!decay) return
+
+    const minOpacity = decay.minOpacity ?? 0.1
+    const nodeCount = this.nodeTimestamps.size
+    if (nodeCount <= 1) return
+
+    // Sort nodes by creation time (oldest first)
+    const sorted = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+    const nodeAgeMap = new Map<string, number>()
+    for (let i = 0; i < sorted.length; i++) {
+      nodeAgeMap.set(sorted[i][0], i)
+    }
+
+    for (const node of this.sceneNodes) {
+      const nodeId = node.id
+      if (!nodeId) continue
+      const ageIndex = nodeAgeMap.get(nodeId)
+      if (ageIndex === undefined) continue
+
+      const age = nodeCount - 1 - ageIndex // 0=newest
+
+      let opacity: number
+      switch (decay.type) {
+        case "linear": {
+          const t = 1 - age / (nodeCount - 1)
+          opacity = minOpacity + t * (1 - minOpacity)
+          break
+        }
+        case "exponential": {
+          const halfLife = decay.halfLife ?? nodeCount / 2
+          const t = Math.pow(0.5, age / halfLife)
+          opacity = minOpacity + t * (1 - minOpacity)
+          break
+        }
+        case "step": {
+          const threshold = decay.stepThreshold ?? nodeCount * 0.5
+          opacity = age < threshold ? 1 : minOpacity
+          break
+        }
+        default:
+          opacity = 1
+      }
+
+      const baseOpacity = node.style?.opacity ?? 1
+      node.style = { ...node.style, opacity: baseOpacity * opacity }
+    }
+  }
+
+  /**
+   * Whether there are active pulse animations (recent ingests within pulse duration).
+   */
+  get hasActivePulses(): boolean {
+    const pulse = this.config.pulse
+    if (!pulse || this.lastIngestTime === 0) return false
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const duration = pulse.duration ?? 500
+    return (now - this.lastIngestTime) < duration
+  }
+
   // ── Public accessors ──────────────────────────────────────────────────
 
   getLayoutData(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] } {
@@ -608,6 +728,9 @@ export class NetworkPipelineStore {
     this.sceneEdges = []
     this.labels = []
     this.transition = null
+    this.lastIngestTime = 0
+    this.nodeTimestamps.clear()
+    this.edgeTimestamps.clear()
     if (this.particlePool) {
       this.particlePool.clear()
     }

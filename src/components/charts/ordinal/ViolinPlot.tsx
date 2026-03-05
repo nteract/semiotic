@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -91,12 +91,25 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
   })
 
   const defaultTooltipContent = useMemo(() => {
-    const getVal = resolveAccessor<number>(valueAccessor)
     return (d: Record<string, any>) => {
-      const datum = d.data || d
-      const category = datum.category || d.category || ""
-      // datum is the array of piece data for the column
-      const pieces = Array.isArray(datum) ? datum : []
+      const category = d.category || (d.data && d.data[0]?.category) || ""
+      const stats = d.stats
+      if (stats) {
+        return (
+          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+            {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
+            <div>n = {stats.n}</div>
+            <div>Min: {stats.min.toLocaleString()}</div>
+            <div>Q1: {stats.q1.toLocaleString()}</div>
+            <div>Median: {stats.median.toLocaleString()}</div>
+            <div>Q3: {stats.q3.toLocaleString()}</div>
+            <div>Max: {stats.max.toLocaleString()}</div>
+            <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+          </div>
+        )
+      }
+      // Fallback: compute from raw data
+      const pieces = Array.isArray(d.data) ? d.data : []
       const values = pieces.map((p: any) => {
         const v = typeof valueAccessor === "function" ? (valueAccessor as Function)(p) : p[valueAccessor as string]
         return Number(v)

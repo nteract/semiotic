@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
-import type { Style } from "./types"
+import type { Style, DecayConfig, PulseConfig, StalenessConfig } from "./types"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -181,6 +181,9 @@ export interface NetworkCircleNode {
   id?: string
   label?: string
   depth?: number
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
 }
 
 /** Rect node — used by sankey, treemap, partition */
@@ -195,6 +198,9 @@ export interface NetworkRectNode {
   id?: string
   label?: string
   depth?: number
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
 }
 
 /** Arc node — used by chord */
@@ -221,6 +227,8 @@ export interface NetworkLineEdge {
   y2: number
   style: Style
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 /** Bezier band edge — used by sankey */
@@ -230,6 +238,8 @@ export interface NetworkBezierEdge {
   bezierCache?: BezierCache
   style: Style
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 /** Ribbon edge — used by chord */
@@ -367,6 +377,11 @@ export interface NetworkPipelineConfig {
   colorByDepth?: boolean
   nodeSize?: number | string | ((d: any) => number)
   nodeSizeRange?: [number, number]
+
+  // ── Realtime encoding ─────────────────────────────
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  staleness?: StalenessConfig
 }
 
 // ── Component props ─────────────────────────────────────────────────
@@ -457,6 +472,11 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   title?: string | ReactNode
   foregroundGraphics?: ReactNode
   backgroundGraphics?: ReactNode
+
+  // ── Realtime encoding ─────────────────────────────
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  staleness?: StalenessConfig
 }
 
 // ── Ref handle ──────────────────────────────────────────────────────
