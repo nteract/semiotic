@@ -160,7 +160,7 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.27.1",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0",
     "marked": "4.0.10",
     "material-design-icons-svg": "1.1.2",
     "parcel": "^2.8.2",
