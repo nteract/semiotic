@@ -86,7 +86,7 @@ export interface ViolinSceneNode {
   /** Bounding box for hit testing */
   bounds?: { x: number; y: number; width: number; height: number }
   /** Optional IQR line overlay */
-  iqrLine?: { q1Pos: number; medianPos: number; q3Pos: number }
+  iqrLine?: { q1Pos: number; medianPos: number; q3Pos: number; centerPos: number; isVertical: boolean }
   style: Style
   datum: any
   category?: string

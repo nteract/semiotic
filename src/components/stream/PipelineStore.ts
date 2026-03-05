@@ -82,6 +82,7 @@ export interface PipelineConfig {
   pointStyle?: (d: any) => Style & { r?: number }
   areaStyle?: (d: any) => Style
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
+  waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
   colorScheme?: string | string[]
   barColors?: Record<string, string>
 
@@ -503,6 +504,10 @@ export class PipelineStore {
 
   private buildStackedAreaScene(data: Record<string, any>[]): SceneNode[] {
     const groups = this.groupData(data)
+    // Sort groups by key to ensure a stable stacking order. Without this,
+    // a sliding window can reorder groups when eviction changes which group
+    // appears first in the buffer, causing layers to swap and flicker.
+    groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
     const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
       this.resolveAreaStyle(group, sampleDatum)
     return buildStackedAreaNodes(
@@ -847,6 +852,7 @@ export class PipelineStore {
   private buildWaterfallScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
     const nodes: SceneNode[] = []
     const scales = this.scales!
+    const ws = this.config.waterfallStyle
 
     // Filter valid data
     const arr = data.filter(d => {
@@ -855,7 +861,11 @@ export class PipelineStore {
     })
     if (arr.length === 0) return nodes
 
-    const gap = 1
+    const positiveColor = ws?.positiveColor ?? "#28a745"
+    const negativeColor = ws?.negativeColor ?? "#dc3545"
+    const gap = ws?.gap ?? 1
+    const barStroke = ws?.stroke
+    const barStrokeWidth = ws?.strokeWidth
     let baseline = 0
 
     for (let i = 0; i < arr.length; i++) {
@@ -889,11 +899,11 @@ export class PipelineStore {
       const rectY = Math.min(yBaseline, yTop)
       const rectH = Math.abs(yBaseline - yTop)
 
-      const fill = delta >= 0 ? "#28a745" : "#dc3545"
+      const fill = delta >= 0 ? positiveColor : negativeColor
       nodes.push(buildRectNode(
         x0, rectY, barWidth, rectH,
-        { fill },
-        { ...d, baseline, cumEnd, delta }
+        { fill, stroke: barStroke, strokeWidth: barStrokeWidth },
+        { ...d, baseline, cumEnd, delta, _connectorStroke: ws?.connectorStroke, _connectorWidth: ws?.connectorWidth }
       ))
 
       baseline = cumEnd

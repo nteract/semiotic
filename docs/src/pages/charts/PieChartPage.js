@@ -63,6 +63,8 @@ function StreamingPieDemo() {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      colorBy="category"
+      showLegend
     />
   )
 }`
@@ -97,6 +99,8 @@ function StreamingPieDemo({ width }) {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      colorBy="category"
+      showLegend
     />
   )
 }

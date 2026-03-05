@@ -26,7 +26,8 @@ const navData = [
           { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
-          { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" }
+          { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" },
+          { title: "Realtime Histogram", path: "/charts/realtime-bar-chart" }
         ]
       },
       {
@@ -42,8 +43,7 @@ const navData = [
           { title: "Dot Plot", path: "/charts/dot-plot" },
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
-          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
-          { title: "Realtime Histogram", path: "/charts/realtime-bar-chart" }
+          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" }
         ]
       },
       {

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import { DotPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -59,7 +59,7 @@ function StreamingDotPlotDemo() {
           value: Math.round((60 + Math.random() * 30) * 10) / 10,
         })
       }
-    }, 500)
+    }, 100)
     return () => clearInterval(id)
   }, [])
 
@@ -73,9 +73,9 @@ function StreamingDotPlotDemo() {
       rAccessor="value"
       windowSize={200}
       showAxes
-      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
-      decay={{ type: "exponential", halfLife: 80, minOpacity: 0.1 }}
-      pulse={{ duration: 400, color: "rgba(99, 102, 241, 0.5)" }}
+      pieceStyle={() => ({ fill: "#6366f1", r: 5, opacity: 0.7 })}
+      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
+      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
     />
   )
 }`
@@ -93,7 +93,7 @@ function StreamingDotPlotDemo({ width }) {
           value: Math.round((60 + Math.random() * 30) * 10) / 10,
         })
       }
-    }, 500)
+    }, 100)
     return () => clearInterval(id)
   }, [])
 
@@ -107,9 +107,9 @@ function StreamingDotPlotDemo({ width }) {
       rAccessor="value"
       windowSize={200}
       showAxes
-      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
-      decay={{ type: "exponential", halfLife: 80, minOpacity: 0.1 }}
-      pulse={{ duration: 400, color: "rgba(99, 102, 241, 0.5)" }}
+      pieceStyle={() => ({ fill: "#6366f1", r: 5, opacity: 0.7 })}
+      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
+      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
     />
   )
 }

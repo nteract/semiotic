@@ -428,6 +428,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointStyle,
       areaStyle,
       swarmStyle,
+      waterfallStyle,
       colorScheme,
       barColors,
       annotations,
@@ -445,7 +446,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, swarmStyle, colorScheme, barColors, annotations,
+      lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       isStreaming
@@ -641,6 +642,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
       }
 
+      // Clip rendering to the chart area so data constrained by xExtent/yExtent
+      // does not draw into the margin region
+      ctx.save()
+      if (typeof ctx.rect === "function") {
+        ctx.beginPath()
+        ctx.rect(0, 0, adjustedWidth, adjustedHeight)
+        ctx.clip()
+      }
+
       // Render data marks via canvas renderers
       const renderers = RENDERERS[chartType]
       if (renderers && store.scales) {
@@ -653,6 +663,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           )
         }
       }
+
+      ctx.restore()
 
       // Reset alpha after staleness dimming
       if (currentlyStale) {

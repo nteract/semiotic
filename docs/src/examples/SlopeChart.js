@@ -5,11 +5,11 @@ import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
 const frameProps = {
-  size: [500, 450],
+  size: [540, 450],
   oAccessor: "year",
   rAccessor: "value",
   rExtent: [0, undefined],
-  margin: { left: 40, top: 50, bottom: 75, right: 120 },
+  margin: { left: 40, top: 50, bottom: 75, right: 160 },
   title: "% of Adults Who Binge Drink",
   data: [
     { name: "New York", color: theme[0], year: 2011, value: 17.9 },
@@ -37,21 +37,27 @@ const frameProps = {
   oLabel: true,
   chartType: "point",
   connectorAccessor: d => d.name,
+  tooltipContent: d => (
+    <div style={{ padding: "4px 8px", fontSize: 13 }}>
+      <strong>{d.name}</strong>
+      <div>{d.year}: {d.value}%</div>
+    </div>
+  ),
   foregroundGraphics: [
-    <g transform="translate(440, 73)" key="legend">
+    <g transform="translate(400, 73)" key="legend">
       <text key={1} fill={theme[0]}>
         New York
       </text>
-      <text key={1} y={20} fill={theme[1]}>
+      <text key={2} y={20} fill={theme[1]}>
         Las Vegas
       </text>
-      <text key={1} y={40} fill={theme[2]}>
+      <text key={3} y={40} fill={theme[2]}>
         San Diego
       </text>
-      <text key={1} y={60} fill={theme[3]}>
+      <text key={4} y={60} fill={theme[3]}>
         Denver
       </text>
-      <text key={1} y={80} fill={theme[4]}>
+      <text key={5} y={80} fill={theme[4]}>
         Oakland
       </text>
     </g>
@@ -59,21 +65,27 @@ const frameProps = {
 }
 
 const overrideProps = {
+  tooltipContent: `d => (
+    <div style={{ padding: "4px 8px", fontSize: 13 }}>
+      <strong>{d.name}</strong>
+      <div>{d.year}: {d.value}%</div>
+    </div>
+  )`,
   foregroundGraphics: ` [
-    <g transform="translate(440, 73)" key="legend">
+    <g transform="translate(400, 73)" key="legend">
       <text key={1} fill={theme[0]}>
         New York
       </text>
-      <text key={1} y={20} fill={theme[1]}>
+      <text key={2} y={20} fill={theme[1]}>
         Las Vegas
       </text>
-      <text key={1} y={40} fill={theme[2]}>
+      <text key={3} y={40} fill={theme[2]}>
         San Diego
       </text>
-      <text key={1} y={60} fill={theme[3]}>
+      <text key={4} y={60} fill={theme[3]}>
         Denver
       </text>
-      <text key={1} y={80} fill={theme[4]}>
+      <text key={5} y={80} fill={theme[4]}>
         Oakland
       </text>
     </g>

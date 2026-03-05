@@ -15,9 +15,14 @@ export const waterfallCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, la
   const rects = nodes.filter(n => n.type === "rect")
   if (rects.length < 2) return
 
+  // Read connector style from the first rect's datum (stashed by PipelineStore)
+  const firstDatum = (rects[0] as any).datum
+  const connectorStroke = firstDatum?._connectorStroke
+  if (!connectorStroke) return // No connector lines requested
+
   ctx.save()
-  ctx.strokeStyle = "#999"
-  ctx.lineWidth = 1
+  ctx.strokeStyle = connectorStroke
+  ctx.lineWidth = firstDatum?._connectorWidth ?? 1
   ctx.setLineDash([])
 
   for (let i = 0; i < rects.length - 1; i++) {

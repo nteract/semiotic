@@ -100,7 +100,7 @@ export function useChartSelection({
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
       if (linkedHover) {
-        const datum = d && unwrapData ? (d.data || d) : d
+        const datum = d && unwrapData ? (d.data || d.datum || d) : d
         linkedHoverHook.onHover(datum)
       }
     },

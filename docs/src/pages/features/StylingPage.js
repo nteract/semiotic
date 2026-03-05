@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamOrdinalFrame, StreamXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -19,8 +19,6 @@ const theme = [
   "#7566ff",
   "#533f82",
 ]
-
-const barData = [5, 8, 2, 3, 10, 5, 8, 2, 3, 10]
 
 const lineData = [
   {
@@ -113,9 +111,8 @@ export default function StylingPage() {
     >
       <p>
         Semiotic provides multiple layers of styling control, from simple inline
-        style objects to SVG patterns, sketchy hand-drawn rendering, and
-        foreground/background graphics layers. This page covers all the ways to
-        customize the visual appearance of your data visualizations.
+        style objects to foreground/background graphics layers. This page covers
+        the ways to customize the visual appearance of your data visualizations.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -164,156 +161,6 @@ export default function StylingPage() {
       {/* With Frames */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
-
-      <h3 id="sketchy-rendering">Sketchy / Hand-Drawn Rendering</h3>
-      <p>
-        Semiotic can render marks in a hand-drawn, "sketchy" style using the{" "}
-        <code>renderMode</code> prop. This uses the{" "}
-        <a
-          href="https://github.com/emeeks/semiotic-mark"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          semiotic-mark
-        </a>{" "}
-        library under the hood. The sketchy fill density reflects the{" "}
-        <code>fillOpacity</code> of each element: higher opacity produces more
-        fill lines.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          type: "bar",
-          renderMode: "sketchy",
-          style: (d, i) => ({
-            fill: theme[i % theme.length],
-            stroke: theme[i % theme.length],
-            fillOpacity: 0.75,
-          }),
-          oPadding: 4,
-          margin: { top: 20, bottom: 20, left: 40, right: 20 },
-          title: "Sketchy Bar Chart",
-        }}
-        type={StreamOrdinalFrame}
-        overrideProps={{
-          data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
-          style: `(d, i) => ({
-  fill: theme[i % theme.length],
-  stroke: theme[i % theme.length],
-  fillOpacity: 0.75,
-})`,
-        }}
-        functions={{
-          style: (d, i) => ({
-            fill: theme[i % theme.length],
-            stroke: theme[i % theme.length],
-            fillOpacity: 0.75,
-          }),
-        }}
-        hiddenProps={{}}
-        startHidden={false}
-      />
-
-      <p>
-        Each frame type has its own render mode props:
-      </p>
-      <ul>
-        <li>
-          <strong>StreamXYFrame:</strong> <code>pointRenderMode</code>,{" "}
-          <code>lineRenderMode</code>, <code>summaryRenderMode</code>
-        </li>
-        <li>
-          <strong>StreamOrdinalFrame:</strong> <code>renderMode</code>,{" "}
-          <code>summaryRenderMode</code>
-        </li>
-        <li>
-          <strong>StreamNetworkFrame:</strong> <code>nodeRenderMode</code>,{" "}
-          <code>edgeRenderMode</code>
-        </li>
-      </ul>
-
-      <p>
-        You can also pass a function to selectively apply sketchy rendering:
-      </p>
-
-      <CodeBlock
-        code={`// Only render items above a threshold as sketchy
-<StreamOrdinalFrame
-  renderMode={d => d.value > 5 ? "sketchy" : undefined}
-  // ...other props
-/>`}
-        language="jsx"
-      />
-
-      <h3 id="svg-patterns-and-gradients">SVG Patterns and Gradients</h3>
-      <p>
-        The <code>additionalDefs</code> prop lets you define SVG{" "}
-        <code>&lt;pattern&gt;</code>, <code>&lt;linearGradient&gt;</code>,{" "}
-        <code>&lt;radialGradient&gt;</code>, and{" "}
-        <code>&lt;filter&gt;</code> elements inside the frame's SVG. Reference
-        them via <code>url(#id)</code> in your style functions.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          type: "bar",
-          style: (d, i) => ({
-            fill: i < 5 ? "url(#gradient)" : "url(#dots)",
-          }),
-          additionalDefs: [
-            <pattern
-              key="dots"
-              id="dots"
-              width="10"
-              height="10"
-              patternUnits="userSpaceOnUse"
-            >
-              <rect fill={theme[1]} width="10" height="10" />
-              <circle fill={theme[4]} r="3" cx="5" cy="5" />
-            </pattern>,
-            <linearGradient
-              key="gradient"
-              x1="0"
-              x2="0"
-              y1="0"
-              y2="1"
-              id="gradient"
-            >
-              <stop stopColor={theme[0]} offset="0%" />
-              <stop stopColor={theme[4]} offset="100%" />
-            </linearGradient>,
-          ],
-          oPadding: 2,
-          margin: 20,
-          title: "Patterns and Gradients",
-        }}
-        type={StreamOrdinalFrame}
-        overrideProps={{
-          data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
-          style: `(d, i) => ({
-  fill: i < 5 ? "url(#gradient)" : "url(#dots)",
-})`,
-          additionalDefs: `[
-  <pattern key="dots" id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
-    <rect fill="#E0488B" width="10" height="10" />
-    <circle fill="#7566ff" r="3" cx="5" cy="5" />
-  </pattern>,
-  <linearGradient key="gradient" x1="0" x2="0" y1="0" y2="1" id="gradient">
-    <stop stopColor="#ac58e5" offset="0%" />
-    <stop stopColor="#7566ff" offset="100%" />
-  </linearGradient>,
-]`,
-        }}
-        functions={{
-          style: (d, i) => ({
-            fill: i < 5 ? "url(#gradient)" : "url(#dots)",
-          }),
-        }}
-        hiddenProps={{}}
-        startHidden
-      />
 
       <h3 id="foreground-background-graphics">
         Foreground and Background Graphics

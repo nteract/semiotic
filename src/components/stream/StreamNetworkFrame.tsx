@@ -401,7 +401,12 @@ const StreamNetworkFrame = forwardRef<
 
   const getParticleColor = useCallback(
     (edge: RealtimeEdge): string => {
-      const colorByMode = particleStyle.colorBy || "source"
+      // When the user hasn't explicitly set particleStyle.colorBy,
+      // inherit the edge color so particles match their edge's fill.
+      if (!particleStyleProp?.colorBy) {
+        return getEdgeColor(edge)
+      }
+      const colorByMode = particleStyle.colorBy!
       const sourceNode = typeof edge.source === "object" ? edge.source : null
       const targetNode = typeof edge.target === "object" ? edge.target : null
 
@@ -413,7 +418,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return "#999"
     },
-    [particleStyle.colorBy, getNodeColor]
+    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
   )
 
   // ── Stable scheduleRender ────────────────────────────────────────────

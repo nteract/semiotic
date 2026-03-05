@@ -169,7 +169,7 @@ export default function TooltipsPage() {
           xLabel: "X Value",
           yLabel: "Y Value",
           enableHover: true,
-          tooltipContent: Tooltip({ title: "category" }),
+          tooltipContent: (hover) => Tooltip({ title: "category" })(hover.data || hover),
         }}
         type={StreamXYFrame}
         overrideProps={{
@@ -179,7 +179,7 @@ export default function TooltipsPage() {
   // ...more points
 ]`,
           pointStyle: `d => ({ fill: colorHash[d.category], r: 5 })`,
-          tooltipContent: `Tooltip({ title: "category" })`,
+          tooltipContent: `hover => Tooltip({ title: "category" })(hover.data || hover)`,
         }}
         hiddenProps={{}}
         pre={`import { StreamXYFrame, Tooltip } from "semiotic"`}
@@ -201,14 +201,17 @@ export default function TooltipsPage() {
           showAxes: true,
           margin: { top: 20, bottom: 80, left: 60, right: 20 },
           enableHover: true,
-          tooltipContent: MultiLineTooltip({
-            title: "category",
-            fields: [
-              { key: "sales", label: "Sales", format: (v) => `$${v}` },
-              { key: "profit", label: "Profit", format: (v) => `$${v}` },
-              { key: "units", label: "Units Sold" },
-            ],
-          }),
+          tooltipContent: (hover) => {
+            const d = hover.data || hover
+            return MultiLineTooltip({
+              title: "category",
+              fields: [
+                { key: "sales", label: "Sales", format: (v) => `$${v}` },
+                { key: "profit", label: "Profit", format: (v) => `$${v}` },
+                { key: "units", label: "Units Sold" },
+              ],
+            })(d)
+          },
         }}
         type={StreamOrdinalFrame}
         overrideProps={{
@@ -219,14 +222,17 @@ export default function TooltipsPage() {
   { category: "Product D", sales: 290, profit: 75, units: 145 },
   { category: "Product E", sales: 610, profit: 180, units: 305 }
 ]`,
-          tooltipContent: `MultiLineTooltip({
-  title: "category",
-  fields: [
-    { key: "sales", label: "Sales", format: v => \`$\${v}\` },
-    { key: "profit", label: "Profit", format: v => \`$\${v}\` },
-    { key: "units", label: "Units Sold" }
-  ]
-})`,
+          tooltipContent: `hover => {
+  const d = hover.data || hover
+  return MultiLineTooltip({
+    title: "category",
+    fields: [
+      { key: "sales", label: "Sales", format: v => \`$\${v}\` },
+      { key: "profit", label: "Profit", format: v => \`$\${v}\` },
+      { key: "units", label: "Units Sold" }
+    ]
+  })(d)
+}`,
         }}
         hiddenProps={{}}
         pre={`import { StreamOrdinalFrame, MultiLineTooltip } from "semiotic"`}

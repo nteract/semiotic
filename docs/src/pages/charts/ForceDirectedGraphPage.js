@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
 import { StreamNetworkFrame } from "semiotic"
 import { ForceDirectedGraph } from "semiotic"
 import { StreamNetworkFrame } from "semiotic"
@@ -86,13 +86,30 @@ const forceDirectedGraphProps = [
 // Streaming demo
 // ---------------------------------------------------------------------------
 
-const streamingForceCode = `import { useRef } from "react"
+const streamingForceNames = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
+
+const streamingForceCode = `import { useRef, useEffect } from "react"
 import { StreamNetworkFrame } from "semiotic"
+
+const names = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
 
 function StreamingForce() {
   const chartRef = useRef()
+  const indexRef = useRef(0)
 
-  chartRef.current?.push({ source: "Alice", target: "Bob", value: 1 })
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          source: names[i % names.length],
+          target: names[(i + 1 + Math.floor(Math.random() * 3)) % names.length],
+          value: 1,
+        })
+      }
+    }, 800)
+    return () => clearInterval(id)
+  }, [])
 
   return (
     <StreamNetworkFrame
@@ -100,38 +117,37 @@ function StreamingForce() {
       chartType="force"
       size={[600, 400]}
       enableHover
+      pulse={{ duration: 500, color: "rgba(255,255,255,0.6)", glowRadius: 4 }}
     />
   )
 }`
 
 function StreamingForceDemo({ width }) {
-  const chartRef = React.useRef()
-  const indexRef = React.useRef(0)
+  const chartRef = useRef()
+  const indexRef = useRef(0)
 
-  const names = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
-  const addEdge = () => {
-    if (!chartRef.current) return
-    const i = indexRef.current++
-    chartRef.current.push({
-      source: names[i % names.length],
-      target: names[(i + 1 + Math.floor(Math.random() * 3)) % names.length],
-      value: 1,
-    })
-  }
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          source: streamingForceNames[i % streamingForceNames.length],
+          target: streamingForceNames[(i + 1 + Math.floor(Math.random() * 3)) % streamingForceNames.length],
+          value: 1,
+        })
+      }
+    }, 800)
+    return () => clearInterval(id)
+  }, [])
 
   return (
-    <div>
-      <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
-        <button className="demo-button" onClick={addEdge}>Add Edge</button>
-        <button className="demo-button" onClick={() => { chartRef.current?.clear(); indexRef.current = 0 }}>Clear</button>
-      </div>
-      <StreamNetworkFrame
-        ref={chartRef}
-        chartType="force"
-        size={[width, 400]}
-        enableHover
-      />
-    </div>
+    <StreamNetworkFrame
+      ref={chartRef}
+      chartType="force"
+      size={[width, 400]}
+      enableHover
+      pulse={{ duration: 500, color: "rgba(255,255,255,0.6)", glowRadius: 4 }}
+    />
   )
 }
 

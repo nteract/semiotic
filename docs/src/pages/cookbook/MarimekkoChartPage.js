@@ -50,18 +50,11 @@ export default function MarimekkoChartPage() {
   rAccessor: "pct",
   oAccessor: "market",
   dynamicColumnWidth: "value",
-  type: "bar",
-  axes: [
-    {
-      orient: "left",
-      tickFormat: d => Math.floor(d * 100) + "%"
-    },
-    {
-      orient: "top",
-      tickFormat: d => d / 1000 + "k"
-    }
-  ],
-  style: d => ({
+  chartType: "bar",
+  showAxes: true,
+  rFormat: d => Math.floor(d * 100) + "%",
+  oLabel: true,
+  pieceStyle: d => ({
     fill: colors[d.segment],
     stroke: "white",
     strokeWidth: 1
@@ -70,9 +63,11 @@ export default function MarimekkoChartPage() {
         language="jsx"
       />
       <p>
-        The top axis shows the absolute value scale (in thousands), making it
-        clear that wider columns represent larger markets. The left axis shows
-        the percentage breakdown within each market.
+        The left axis shows the percentage breakdown within each market.
+        The <code>oLabel</code> prop renders column labels at the correct
+        variable-width positions. Note that the category axis ticks themselves
+        use the uniform band scale and may not align perfectly with dynamic
+        column widths.
       </p>
 
       <h2 id="key-takeaways">Key Takeaways</h2>
@@ -86,8 +81,12 @@ export default function MarimekkoChartPage() {
           encodes two quantitative dimensions simultaneously.
         </li>
         <li>
-          A top axis with a value-based tick format helps readers interpret the
-          variable column widths.
+          <strong>Known limitation:</strong> The category axis ticks
+          use StreamOrdinalFrame's uniform band scale, so they appear at
+          equal-width positions rather than at the actual variable-width column
+          centers. The <code>oLabel</code> prop correctly positions per-column
+          labels using computed column positions. The value (rAccessor) axis
+          is unaffected.
         </li>
         <li>
           Rotated <code>oLabel</code> text prevents overlap when column widths

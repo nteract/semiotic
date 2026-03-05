@@ -40,38 +40,6 @@ const orgData = {
   ],
 }
 
-const fileSystemData = {
-  name: "src",
-  children: [
-    {
-      name: "components",
-      value: 10,
-      children: [
-        { name: "Button.tsx", value: 3 },
-        { name: "Input.tsx", value: 2 },
-        { name: "Modal.tsx", value: 5 },
-      ],
-    },
-    {
-      name: "utils",
-      value: 8,
-      children: [
-        { name: "format.ts", value: 4 },
-        { name: "validate.ts", value: 4 },
-      ],
-    },
-    {
-      name: "pages",
-      value: 15,
-      children: [
-        { name: "Home.tsx", value: 6 },
-        { name: "About.tsx", value: 4 },
-        { name: "Dashboard.tsx", value: 5 },
-      ],
-    },
-  ],
-}
-
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
@@ -224,44 +192,6 @@ export default function TreeDiagramPage() {
           orientation: '"radial"',
           colorByDepth: "true",
           nodeSize: "6",
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="treemap">Treemap Layout</h3>
-      <p>
-        Use <code>layout="treemap"</code> with a <code>valueAccessor</code> to
-        create a space-filling visualization where area encodes each node's
-        value. Treemaps are great for showing proportional sizes within a
-        hierarchy such as disk usage or budget allocation.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: fileSystemData,
-          layout: "treemap",
-          valueAccessor: "value",
-          colorByDepth: true,
-        }}
-        type={TreeDiagram}
-        overrideProps={{
-          data: `{
-  name: "src",
-  children: [
-    {
-      name: "components", value: 10,
-      children: [
-        { name: "Button.tsx", value: 3 },
-        { name: "Input.tsx", value: 2 },
-        { name: "Modal.tsx", value: 5 },
-      ],
-    },
-    // ...more folders and files with value
-  ],
-}`,
-          layout: '"treemap"',
-          valueAccessor: '"value"',
-          colorByDepth: "true",
         }}
         hiddenProps={{}}
       />

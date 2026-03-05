@@ -432,7 +432,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
   const overviewChart = (
     <div
       key="minimap"
-      style={{ position: "relative", width }}
+      style={{ position: "relative", width, overflow: "hidden" }}
     >
       <StreamXYFrame ref={overviewRef} {...overviewProps} />
       <BrushOverlay
@@ -448,7 +448,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
   )
 
   const mainChart = (
-    <div key="main">
+    <div key="main" style={{ overflow: "hidden" }}>
       <StreamXYFrame {...mainProps} />
     </div>
   )

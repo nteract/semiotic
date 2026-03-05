@@ -217,12 +217,10 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const chordData = (edge as any).chordData
       if (!chordData) continue
 
-      // Offset chord angles by -PI/2 to match arc offset (12 o'clock → 3 o'clock)
-      const offsetChord = {
-        source: { ...chordData.source, startAngle: chordData.source.startAngle - Math.PI / 2, endAngle: chordData.source.endAngle - Math.PI / 2 },
-        target: { ...chordData.target, startAngle: chordData.target.startAngle - Math.PI / 2, endAngle: chordData.target.endAngle - Math.PI / 2 }
-      }
-      const rawPath = ribbonGenerator(offsetChord)
+      // d3-chord's ribbon() internally subtracts PI/2 from all angles
+      // (converting from d3's 12-o'clock convention to standard math coords),
+      // so we must NOT pre-offset here — otherwise we double-subtract.
+      const rawPath = ribbonGenerator(chordData)
       if (!rawPath) continue
 
       const pathD = translateSvgPath(rawPath, cx, cy)

@@ -370,9 +370,14 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
 
   // Validate data (after all hooks)
+  // When data is in line objects format, validate against the coordinates
+  // inside the first line object rather than the top-level line objects
+  const validationData = isLineObjectFormat
+    ? (safeData[0]?.[lineDataAccessor] || [])
+    : safeData
   const error = validateArrayData({
     componentName: "LineChart",
-    data: safeData,
+    data: validationData,
     accessors: {
       xAccessor,
       yAccessor,

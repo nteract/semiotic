@@ -159,7 +159,9 @@ export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
       iqrLine = {
         q1Pos: rScale(q1),
         medianPos: rScale(median),
-        q3Pos: rScale(q3)
+        q3Pos: rScale(q3),
+        centerPos: col.middle,
+        isVertical
       }
     }
 

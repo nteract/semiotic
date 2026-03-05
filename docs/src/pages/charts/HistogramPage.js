@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import { Histogram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -35,30 +35,9 @@ const sampleData = [
 ]
 
 const colorData = [
-  { category: "Region A", value: 120, zone: "Urban" },
-  { category: "Region A", value: 135, zone: "Urban" },
-  { category: "Region A", value: 110, zone: "Urban" },
-  { category: "Region A", value: 145, zone: "Urban" },
-  { category: "Region A", value: 128, zone: "Urban" },
-  { category: "Region A", value: 115, zone: "Urban" },
-  { category: "Region A", value: 140, zone: "Urban" },
-  { category: "Region A", value: 132, zone: "Urban" },
-  { category: "Region B", value: 90, zone: "Suburban" },
-  { category: "Region B", value: 105, zone: "Suburban" },
-  { category: "Region B", value: 85, zone: "Suburban" },
-  { category: "Region B", value: 98, zone: "Suburban" },
-  { category: "Region B", value: 112, zone: "Suburban" },
-  { category: "Region B", value: 95, zone: "Suburban" },
-  { category: "Region B", value: 100, zone: "Suburban" },
-  { category: "Region B", value: 88, zone: "Suburban" },
-  { category: "Region C", value: 65, zone: "Rural" },
-  { category: "Region C", value: 72, zone: "Rural" },
-  { category: "Region C", value: 58, zone: "Rural" },
-  { category: "Region C", value: 80, zone: "Rural" },
-  { category: "Region C", value: 68, zone: "Rural" },
-  { category: "Region C", value: 75, zone: "Rural" },
-  { category: "Region C", value: 62, zone: "Rural" },
-  { category: "Region C", value: 70, zone: "Rural" },
+  ...generateNormal(128, 10, 40).map(v => ({ category: "Region A", value: v, zone: "Urban" })),
+  ...generateNormal(95, 8, 40).map(v => ({ category: "Region B", value: v, zone: "Suburban" })),
+  ...generateNormal(68, 7, 40).map(v => ({ category: "Region C", value: v, zone: "Rural" })),
 ]
 
 // ---------------------------------------------------------------------------
@@ -95,6 +74,7 @@ function StreamingHistogramDemo() {
       ref={chartRef}
       chartType="histogram"
       runtimeMode="streaming"
+      projection="horizontal"
       size={[600, 300]}
       oAccessor="category"
       rAccessor="value"
@@ -131,6 +111,7 @@ function StreamingHistogramDemo({ width }) {
       ref={chartRef}
       chartType="histogram"
       runtimeMode="streaming"
+      projection="horizontal"
       size={[width, 300]}
       oAccessor="category"
       rAccessor="value"

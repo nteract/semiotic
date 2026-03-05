@@ -69,7 +69,9 @@ function StreamingGroupedBarDemo() {
       groupBy="product"
       windowSize={200}
       showAxes
+      colorBy="product"
       colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+      showLegend
     />
   )
 }`
@@ -103,7 +105,9 @@ function StreamingGroupedBarDemo({ width }) {
       groupBy="product"
       windowSize={200}
       showAxes
+      colorBy="product"
       colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+      showLegend
     />
   )
 }
@@ -193,6 +197,7 @@ export default function GroupedBarChartPage() {
               categoryAccessor: "category",
               groupBy: "product",
               valueAccessor: "value",
+              barPadding: 8,
               categoryLabel: "Quarter",
               valueLabel: "Units Sold",
             }}

@@ -70,6 +70,8 @@ function StreamingDonutDemo() {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+      colorBy="category"
+      showLegend
     />
   )
 }`
@@ -105,6 +107,8 @@ function StreamingDonutDemo({ width }) {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+      colorBy="category"
+      showLegend
     />
   )
 }
