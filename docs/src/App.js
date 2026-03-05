@@ -101,6 +101,7 @@ import ChartContainersPage from "./pages/features/ChartContainersPage"
 import ChartModesPage from "./pages/features/ChartModesPage"
 import ObservationHooksPage from "./pages/features/ObservationHooksPage"
 import SerializationPage from "./pages/features/SerializationPage"
+import VegaLiteTranslatorPage from "./pages/features/VegaLiteTranslatorPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -403,6 +404,7 @@ export default function DocsApp() {
               <Route path="chart-modes" element={<ChartModesPage />} />
               <Route path="observation-hooks" element={<ObservationHooksPage />} />
               <Route path="serialization" element={<SerializationPage />} />
+              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

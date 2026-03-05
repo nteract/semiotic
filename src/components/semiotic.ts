@@ -30,6 +30,7 @@ import { exportChart } from "./export/exportChart"
 // ── Chart state serialization ─────────────────────────────────────────
 import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
 import { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+import { fromVegaLite } from "./data/fromVegaLite"
 
 // ── Error boundary ─────────────────────────────────────────────────────
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
@@ -110,6 +111,8 @@ export {
   configToJSX,
   serializeSelections,
   deserializeSelections,
+  // Vega-Lite translator
+  fromVegaLite,
   // Error boundary
   ChartErrorBoundary,
   // Chart container
@@ -265,6 +268,7 @@ export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer
 // ── Chart state serialization types ───────────────────────────────────
 
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
 export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
 
 // ── Format utilities ───────────────────────────────────────────────────

@@ -66,6 +66,10 @@ export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartCon
 export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
 export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
 
+// Vega-Lite translator
+export { fromVegaLite } from "./data/fromVegaLite"
+export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
+
 // AI Observation hooks
 export { useChartObserver } from "./store/useObservation"
 export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"

@@ -89,7 +89,8 @@ const navData = [
       { title: "Chart Container", path: "/features/chart-container" },
       { title: "Chart Modes", path: "/features/chart-modes" },
       { title: "AI Observation Hooks", path: "/features/observation-hooks" },
-      { title: "Serialization", path: "/features/serialization" }
+      { title: "Serialization", path: "/features/serialization" },
+      { title: "Vega-Lite Translator", path: "/features/vega-lite" }
     ]
   },
   {
