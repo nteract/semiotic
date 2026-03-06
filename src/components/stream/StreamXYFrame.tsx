@@ -25,6 +25,8 @@ import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
+import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { useResponsiveSize } from "./useResponsiveSize"
 import { SVGOverlay } from "./SVGOverlay"
 
 // Canvas renderers
@@ -347,7 +349,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yExtent,
       extentPadding = 0.1,
       sizeRange,
-      size = [500, 300],
+      size: sizeProp = [500, 300],
+      responsiveWidth,
+      responsiveHeight,
       margin: marginProp,
       className,
       background,
@@ -361,6 +365,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       colorScheme,
       boundsAccessor,
       boundsStyle,
+      y0Accessor,
+      gradientFill,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -398,6 +404,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       marginalGraphics,
       pointIdAccessor
     } = props
+
+    // ── Responsive sizing ──────────────────────────────────────────────────
+    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
 
@@ -469,6 +478,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       normalize,
       boundsAccessor,
       boundsStyle,
+      y0Accessor,
+      gradientFill: typeof gradientFill === "boolean"
+        ? (gradientFill ? { topOpacity: 0.8, bottomOpacity: 0.05 } : undefined)
+        : gradientFill,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -495,7 +508,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
-      boundsAccessor, boundsStyle,
+      boundsAccessor, boundsStyle, y0Accessor, gradientFill,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
@@ -591,7 +604,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           hoverRef.current = null
           hoveredNodeRef.current = null
           setHoverPoint(null)
-          if (customHoverBehavior) customHoverBehavior(null)
+          if (customHoverBehavior) {
+            customHoverBehavior(null)
+            dirtyRef.current = true
+          }
           scheduleRender()
         }
         return
@@ -624,7 +640,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hoverRef.current = hover
       hoveredNodeRef.current = hit.node
       setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
+      if (customHoverBehavior) {
+        customHoverBehavior(hover)
+        dirtyRef.current = true
+      }
       scheduleRender()
     }
 
@@ -633,7 +652,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         hoverRef.current = null
         hoveredNodeRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
     }
@@ -646,6 +665,52 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       () => hoverLeaveRef.current(),
       []
     )
+
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractXYNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current < 0 ? -1 : kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return // unhandled key
+
+      e.preventDefault()
+
+      if (next < 0) {
+        // Escape — clear focus
+        kbFocusIndexRef.current = -1
+        hoverRef.current = null
+        hoveredNodeRef.current = null
+        setHoverPoint(null)
+        if (customHoverBehavior) customHoverBehavior(null)
+        scheduleRender()
+        return
+      }
+
+      // First arrow press when unfocused: start at 0
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+
+      const point = navPoints[idx]
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      if (customHoverBehavior) customHoverBehavior(hover)
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    // Clear keyboard focus on mouse interaction
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      hoverHandlerRef.current(e)
+    }, [])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -852,20 +917,49 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       </div>
     ) : null
 
+    // ── Keyboard focus ring ──────────────────────────────────────────────
+
+    const focusRing = kbFocusIndexRef.current >= 0 && hoverPoint ? (
+      <svg
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: size[0],
+          height: size[1],
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      >
+        <circle
+          cx={hoverPoint.x + margin.left}
+          cy={hoverPoint.y + margin.top}
+          r={8}
+          fill="none"
+          stroke="var(--accent, #6366f1)"
+          strokeWidth={2}
+          strokeDasharray="4,2"
+        />
+      </svg>
+    ) : null
+
     // ── Render ───────────────────────────────────────────────────────────
 
     return (
       <div
+        ref={responsiveRef}
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={typeof title === "string" ? title : "XY chart"}
+        tabIndex={0}
         style={{
           position: "relative",
-          width: size[0],
-          height: size[1]
+          width: responsiveWidth ? "100%" : size[0],
+          height: responsiveHeight ? "100%" : size[1],
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
+        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        onKeyDown={onKeyDown}
       >
         {backgroundGraphics && (
           <svg
@@ -952,6 +1046,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             {isStale ? "STALE" : "LIVE"}
           </div>
         )}
+        {focusRing}
         {tooltipElement}
       </div>
     )

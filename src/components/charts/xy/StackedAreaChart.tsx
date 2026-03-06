@@ -337,6 +337,8 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     normalize,
     lineStyle,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,

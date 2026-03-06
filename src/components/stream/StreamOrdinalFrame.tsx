@@ -24,6 +24,8 @@ import type {
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
+import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { useResponsiveSize } from "./useResponsiveSize"
 import { OrdinalSVGOverlay } from "./OrdinalSVGOverlay"
 
 // Canvas renderers
@@ -167,7 +169,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       valueAccessor,
       categoryAccessor,
       projection = "vertical",
-      size = [600, 400],
+      size: sizeProp = [600, 400],
+      responsiveWidth,
+      responsiveHeight,
       margin: userMargin,
       barPadding,
       innerRadius,
@@ -218,6 +222,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Layout ───────────────────────────────────────────────────────────
 
+    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
     const margin = useMemo(() => ({ ...DEFAULT_MARGIN, ...userMargin }), [userMargin])
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
@@ -418,7 +423,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       hoverRef.current = hover
       setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
+      if (customHoverBehavior) {
+        customHoverBehavior(hover)
+        dirtyRef.current = true // selection state may have changed
+      }
       scheduleRender()
     }
 
@@ -426,7 +434,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          dirtyRef.current = true
+        }
         scheduleRender()
       }
     }
@@ -439,6 +450,47 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       () => hoverLeaveRef.current(),
       []
     )
+
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractOrdinalNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return
+
+      e.preventDefault()
+
+      if (next < 0) {
+        kbFocusIndexRef.current = -1
+        hoverRef.current = null
+        setHoverPoint(null)
+        if (customHoverBehavior) customHoverBehavior(null)
+        scheduleRender()
+        return
+      }
+
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+      const point = navPoints[idx]
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      if (customHoverBehavior) customHoverBehavior(hover)
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      hoverHandlerRef.current(e)
+    }, [])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -610,16 +662,19 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     return (
       <div
+        ref={responsiveRef}
         className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={typeof title === "string" ? title : "Ordinal chart"}
+        tabIndex={0}
         style={{
           position: "relative",
-          width: size[0],
-          height: size[1]
+          width: responsiveWidth ? "100%" : size[0],
+          height: responsiveHeight ? "100%" : size[1],
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
+        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        onKeyDown={onKeyDown}
       >
         {backgroundGraphics && (
           <svg

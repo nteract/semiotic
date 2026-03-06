@@ -25,6 +25,9 @@ import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
 // ── Chart container ───────────────────────────────────────────────────
 import { ChartContainer } from "./ChartContainer"
+import { ChartGrid } from "./ChartGrid"
+import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
+import { ContextLayout } from "./ContextLayout"
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
@@ -96,6 +99,10 @@ export {
   ChartErrorBoundary,
   // Chart container
   ChartContainer,
+  ChartGrid,
+  CategoryColorProvider,
+  useCategoryColors,
+  ContextLayout,
   // Details panel
   DetailsPanel,
   // Tooltip
@@ -246,6 +253,9 @@ export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 // ── Chart container types ─────────────────────────────────────────────
 
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+export type { ChartGridProps } from "./ChartGrid"
+export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
+export type { ContextLayoutProps } from "./ContextLayout"
 export type { DetailsPanelProps } from "./DetailsPanel"
 
 // ── Chart state serialization types ───────────────────────────────────

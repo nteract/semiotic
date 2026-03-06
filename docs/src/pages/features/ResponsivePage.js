@@ -63,7 +63,7 @@ export default function ResponsivePage() {
         { label: "Responsive", path: "/features/responsive" },
       ]}
       prevPage={{ title: "Interaction", path: "/features/interaction" }}
-      nextPage={{ title: "Accessibility", path: "/features/accessibility" }}
+      nextPage={{ title: "Composition", path: "/features/composition" }}
     >
       <p>
         Semiotic provides responsive wrapper components that automatically

@@ -106,6 +106,8 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     pieceStyle,
     startAngle,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     enableHover,
     showAxes: false,

@@ -39,7 +39,8 @@ export function buildAreaNode(
   yGet: (d: Record<string, any>) => number,
   baselineY: number,
   style: Style,
-  group?: string
+  group?: string,
+  y0Get?: (d: Record<string, any>) => number
 ): AreaSceneNode {
   const topPath: [number, number][] = []
   const bottomPath: [number, number][] = []
@@ -49,7 +50,8 @@ export function buildAreaNode(
     if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
     const px = scales.x(xVal)
     topPath.push([px, scales.y(yVal)])
-    bottomPath.push([px, scales.y(baselineY)])
+    const bottomY = y0Get ? y0Get(d) : baselineY
+    bottomPath.push([px, scales.y(bottomY)])
   }
   return { type: "area", topPath, bottomPath, style, datum: data, group }
 }

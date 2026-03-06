@@ -112,6 +112,8 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     startAngle,
     centerContent,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     enableHover,
     showAxes: false,

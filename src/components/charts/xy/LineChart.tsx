@@ -11,6 +11,8 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
+import { SEGMENT_FIELD, buildAnomalyAnnotations, buildForecast, createSegmentLineStyle } from "../shared/statisticalOverlays"
 
 /**
  * LineChart component props
@@ -145,6 +147,19 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   annotations?: Record<string, any>[]
 
   /**
+   * Anomaly detection configuration. Highlights outlier points and shows
+   * a shaded band representing the expected range (mean +/- threshold * stddev).
+   */
+  anomaly?: AnomalyConfig
+
+  /**
+   * Forecast configuration. Splits the line into training (dashed),
+   * observed (solid), and forecast (dotted) segments. Shows a confidence
+   * envelope around the extrapolated forecast region.
+   */
+  forecast?: ForecastConfig
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -259,6 +274,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     tooltip,
     pointIdAccessor,
     annotations,
+    anomaly,
+    forecast,
     frameProps = {},
     selection,
     linkedHover,
@@ -277,6 +294,27 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
 
   const safeData = data || []
 
+  // ── Statistical overlay processing ────────────────────────────────────
+
+  const xAccStr = typeof xAccessor === "string" ? xAccessor : "x"
+  const yAccStr = typeof yAccessor === "string" ? yAccessor : "y"
+
+  const statisticalResult = useMemo(() => {
+    if (forecast) {
+      return buildForecast(safeData as Record<string, any>[], xAccStr, yAccStr, forecast, anomaly)
+    }
+    return null
+  }, [safeData, forecast, anomaly, xAccStr, yAccStr])
+
+  const statisticalAnnotations = useMemo(() => {
+    if (statisticalResult) return statisticalResult.annotations
+    if (anomaly) return buildAnomalyAnnotations(anomaly)
+    return []
+  }, [statisticalResult, anomaly])
+
+  const effectiveData = statisticalResult ? statisticalResult.processedData : safeData
+  const effectiveGroupAccessor = forecast && !lineBy ? SEGMENT_FIELD : lineBy
+
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
@@ -289,24 +327,24 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // ── Core chart logic ───────────────────────────────────────────────────
 
   // Check if data is in line objects format (has lineDataAccessor field)
-  const isLineObjectFormat = safeData[0]?.[lineDataAccessor] !== undefined
+  const isLineObjectFormat = effectiveData[0]?.[lineDataAccessor] !== undefined
 
   // Transform data to line format if needed
   const lineData = useMemo(() => {
     if (isLineObjectFormat) {
       // Data is already in line objects format
-      return safeData
+      return effectiveData
     }
 
-    if (lineBy) {
-      // Group data by lineBy field
-      const grouped = safeData.reduce((acc, d) => {
-        const key = typeof lineBy === "function" ? lineBy(d) : d[lineBy]
+    if (effectiveGroupAccessor) {
+      // Group data by lineBy field (or segment field for forecast)
+      const grouped = (effectiveData as Record<string, any>[]).reduce((acc, d) => {
+        const key = typeof effectiveGroupAccessor === "function" ? effectiveGroupAccessor(d) : d[effectiveGroupAccessor]
         if (!acc[key]) {
           const lineObj: Record<string, any> = { [lineDataAccessor]: [] }
           // Add the grouping field
-          if (typeof lineBy === "string") {
-            lineObj[lineBy] = key
+          if (typeof effectiveGroupAccessor === "string") {
+            lineObj[effectiveGroupAccessor] = key
           }
           acc[key] = lineObj
         }
@@ -318,11 +356,11 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }
 
     // Single line - wrap in line object
-    return [{ [lineDataAccessor]: safeData }]
-  }, [safeData, lineBy, lineDataAccessor, isLineObjectFormat])
+    return [{ [lineDataAccessor]: effectiveData }]
+  }, [effectiveData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat])
 
   // Create color scale if colorBy is specified
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
+  const colorScale = useColorScale(effectiveData as any[], colorBy, colorScheme)
 
   // Line style function
   const baseLineStyle = useMemo(() => {
@@ -348,9 +386,14 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }
   }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity])
 
+  const segmentAwareStyle = useMemo(
+    () => forecast ? createSegmentLineStyle(baseLineStyle, forecast) : baseLineStyle,
+    [baseLineStyle, forecast]
+  )
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, activeSelectionHook, selection),
-    [baseLineStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(segmentAwareStyle, activeSelectionHook, selection),
+    [segmentAwareStyle, activeSelectionHook, selection]
   )
 
   // Point style function (if showPoints is true)
@@ -399,7 +442,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // When data is in line objects format, validate against the coordinates
   // inside the first line object rather than the top-level line objects
   const validationData = isLineObjectFormat
-    ? (safeData[0]?.[lineDataAccessor] || [])
+    ? (effectiveData[0]?.[lineDataAccessor] || [])
     : safeData
   const error = validateArrayData({
     componentName: "LineChart",
@@ -413,19 +456,19 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
 
   // Flatten line data into a single array for StreamXYFrame
   const flattenedData = useMemo(() => {
-    if (isLineObjectFormat || lineBy) {
+    if (isLineObjectFormat || effectiveGroupAccessor) {
       // Already grouped into line objects — flatten coordinates out
       return lineData.flatMap((line: Record<string, any>) => {
         const coords = line[lineDataAccessor] || []
         // Carry grouping field onto each datum
-        if (lineBy && typeof lineBy === "string") {
-          return coords.map((c: Record<string, any>) => ({ ...c, [lineBy]: line[lineBy] }))
+        if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
+          return coords.map((c: Record<string, any>) => ({ ...c, [effectiveGroupAccessor]: line[effectiveGroupAccessor] }))
         }
         return coords
       })
     }
-    return safeData
-  }, [lineData, lineDataAccessor, isLineObjectFormat, lineBy, safeData])
+    return effectiveData
+  }, [lineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData])
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
@@ -433,11 +476,13 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     data: flattenedData,
     xAccessor,
     yAccessor,
-    groupAccessor: lineBy || undefined,
+    groupAccessor: effectiveGroupAccessor || undefined,
     curve,
     lineStyle,
     ...(showPoints && { pointStyle }),
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,
@@ -452,7 +497,9 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...((annotations?.length || statisticalAnnotations.length) && {
+      annotations: [...(annotations || []), ...statisticalAnnotations],
+    }),
     ...frameProps
   }
 

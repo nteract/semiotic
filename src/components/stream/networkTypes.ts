@@ -472,6 +472,8 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Layout ───────────────────────────────────────
   size?: [number, number]
+  responsiveWidth?: boolean
+  responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string

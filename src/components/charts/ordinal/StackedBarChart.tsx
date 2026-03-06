@@ -117,6 +117,8 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     pieceStyle,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     barPadding,
     enableHover,

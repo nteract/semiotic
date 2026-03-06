@@ -138,7 +138,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
         selectPoints(fieldValues)
       }
     },
-    [fields, selectPoints, clear]
+    [fields, selectPoints, clear, selName]
   )
 
   return { onHover, predicate, isActive }

@@ -234,6 +234,8 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
   // Layout
   size?: [number, number]
+  responsiveWidth?: boolean
+  responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   barPadding?: number
   innerRadius?: number

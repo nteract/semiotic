@@ -154,7 +154,7 @@ export default function SankeyDiagramPlayground() {
         { label: "Sankey Diagram", path: "/playground/sankey-diagram" },
       ]}
       prevPage={{ title: "Force Directed Graph Playground", path: "/playground/force-directed-graph" }}
-      nextPage={{ title: "Realtime Line / Waterfall Playground", path: "/playground/realtime-line-chart" }}
+      nextPage={{ title: "Streaming Sankey Playground", path: "/playground/streaming-sankey" }}
       chartComponent={SankeyDiagram}
       componentName="SankeyDiagram"
       controls={controls}

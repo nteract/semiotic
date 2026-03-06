@@ -39,7 +39,7 @@ function ResolutionInit({ selections }: { selections: Record<string, { resolutio
         setResolution(name, config.resolution)
       }
     }
-  }, []) // Run once on mount
+  }, [selections, setResolution])
 
   return null
 }

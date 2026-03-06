@@ -79,8 +79,9 @@ const navData = [
       { title: "Tooltips", path: "/features/tooltips" },
       { title: "Interaction", path: "/features/interaction" },
       { title: "Responsive", path: "/features/responsive" },
+      { title: "Composition", path: "/features/composition" },
       { title: "Accessibility", path: "/features/accessibility" },
-      { title: "Linked Charts", path: "/features/small-multiples" },
+      { title: "Linked Charts", path: "/features/linked-charts" },
       { title: "Styling", path: "/features/styling" },
       { title: "Theming", path: "/features/theming" },
       { title: "Legends", path: "/features/legends" },
@@ -130,6 +131,7 @@ const navData = [
       { title: "Scatterplot", path: "/playground/scatterplot" },
       { title: "Force Directed Graph", path: "/playground/force-directed-graph" },
       { title: "Sankey Diagram", path: "/playground/sankey-diagram" },
+      { title: "Streaming Sankey", path: "/playground/streaming-sankey" },
       { title: "Realtime Line / Waterfall", path: "/playground/realtime-line-chart" },
       { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" },
       { title: "Bubble Chart", path: "/playground/bubble-chart" },
@@ -137,7 +139,8 @@ const navData = [
       { title: "Donut Chart", path: "/playground/donut-chart" },
       { title: "Treemap", path: "/playground/treemap" },
       { title: "Circle Pack", path: "/playground/circle-pack" },
-      { title: "Statistical Annotations", path: "/playground/statistical-annotations" }
+      { title: "Statistical Annotations", path: "/playground/statistical-annotations" },
+      { title: "Forecast & Anomaly", path: "/playground/forecast" }
     ]
   },
   {

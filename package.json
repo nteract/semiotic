@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "3.0.0-beta.4",
+  "version": "3.0.0-beta.5",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
@@ -209,5 +209,8 @@
       "Chrome 90",
       "Safari 14"
     ]
+  },
+  "volta": {
+    "node": "22.22.1"
   }
 }

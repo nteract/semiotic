@@ -73,6 +73,8 @@ const xyFrameProps = [
   { name: "background", type: "string", required: false, default: null, description: "Background fill color." },
   { name: "xExtent", type: "array", required: false, default: null, description: "Fixed x-axis domain as [min, max]." },
   { name: "yExtent", type: "array", required: false, default: null, description: "Fixed y-axis domain as [min, max]." },
+  { name: "y0Accessor", type: "string | function", required: false, default: null, description: 'Per-point area baseline accessor. When set with chartType="area", fills between yAccessor (top) and y0Accessor (bottom) instead of to the axis. Use for percentile bands, confidence ribbons, or any band chart.' },
+  { name: "gradientFill", type: "boolean | object", required: false, default: null, description: 'Gradient fill for area charts. true for default (80%→5%) or { topOpacity, bottomOpacity }. Fill fades from opaque at the line to transparent at the baseline.' },
   { name: "annotations", type: "array", required: false, default: null, description: "Array of annotation objects." },
   { name: "svgAnnotationRules", type: "function", required: false, default: null, description: "Custom SVG annotation render function." },
 ]
@@ -270,6 +272,29 @@ export default function XYFramePage() {
 })`,
         }}
         hiddenProps={{}}
+      />
+
+      <h3 id="percentile-band">Percentile Band</h3>
+      <p>
+        Use <code>y0Accessor</code> with <code>chartType="area"</code> to fill
+        between two y-values per data point. The area renders as a ribbon
+        between the upper (<code>yAccessor</code>) and lower (<code>y0Accessor</code>)
+        bounds — ideal for percentile bands, confidence intervals, or uncertainty
+        ribbons.
+      </p>
+
+      <CodeBlock
+        code={`<StreamXYFrame
+  chartType="area"
+  data={percentileData}
+  xAccessor="month"
+  yAccessor="p95"
+  y0Accessor="p5"
+  lineStyle={{ fill: "#6366f1", fillOpacity: 0.15, stroke: "none" }}
+  showAxes
+  size={[600, 300]}
+/>`}
+        language="jsx"
       />
 
       {/* ----------------------------------------------------------------- */}

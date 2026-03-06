@@ -29,6 +29,8 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
+import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { useResponsiveSize } from "./useResponsiveSize"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 
 // Canvas renderers
@@ -207,7 +209,9 @@ const StreamNetworkFrame = forwardRef<
     nodeSizeRange = [5, 20],
     nodeLabel,
     showLabels = true,
-    size = DEFAULT_SIZE,
+    size: sizeProp = DEFAULT_SIZE,
+    responsiveWidth,
+    responsiveHeight,
     margin: marginProp,
     className,
     background,
@@ -231,6 +235,7 @@ const StreamNetworkFrame = forwardRef<
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
   const margin = { ...baseMargin, ...marginProp }
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom
@@ -682,7 +687,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
       return
@@ -702,7 +707,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
       return
@@ -717,7 +722,7 @@ const StreamNetworkFrame = forwardRef<
 
     hoverRef.current = hover
     setHoverData(hover)
-    if (customHoverBehavior) customHoverBehavior(hover)
+    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
     scheduleRender()
   }
 
@@ -725,7 +730,7 @@ const StreamNetworkFrame = forwardRef<
     if (hoverRef.current) {
       hoverRef.current = null
       setHoverData(null)
-      if (customHoverBehavior) customHoverBehavior(null)
+      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
       scheduleRender()
     }
   }
@@ -787,6 +792,47 @@ const StreamNetworkFrame = forwardRef<
     (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
   )
+
+  // ── Keyboard navigation ───────────────────────────────────────────
+
+  const kbFocusIndexRef = useRef(-1)
+
+  const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const store = storeRef.current
+    if (!store) return
+
+    const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
+    if (navPoints.length === 0) return
+
+    const current = kbFocusIndexRef.current
+    const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+    if (next === null) return
+
+    e.preventDefault()
+
+    if (next < 0) {
+      kbFocusIndexRef.current = -1
+      hoverRef.current = null
+      setHoverData(null)
+      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
+      scheduleRender()
+      return
+    }
+
+    const idx = current < 0 ? 0 : next
+    kbFocusIndexRef.current = idx
+    const point = navPoints[idx]
+    const hover = { type: "node" as const, data: point.datum, x: point.x, y: point.y }
+    hoverRef.current = hover
+    setHoverData(hover)
+    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
+    scheduleRender()
+  }, [customHoverBehavior, scheduleRender])
+
+  const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+    kbFocusIndexRef.current = -1
+    hoverHandlerRef.current(e)
+  }, [])
 
   // ── Render function ──────────────────────────────────────────────────
 
@@ -985,17 +1031,20 @@ const StreamNetworkFrame = forwardRef<
 
   return (
     <div
+      ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
       role="img"
       aria-label={typeof title === "string" ? title : "Network chart"}
+      tabIndex={0}
       style={{
         position: "relative",
-        width: size[0],
-        height: size[1]
+        width: responsiveWidth ? "100%" : size[0],
+        height: responsiveHeight ? "100%" : size[1],
       }}
-      onMouseMove={enableHover ? onMouseMove : undefined}
+      onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}
       onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
+      onKeyDown={onKeyDown}
     >
       {backgroundGraphics && (
         <svg

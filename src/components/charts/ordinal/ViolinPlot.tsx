@@ -144,6 +144,8 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     bins,
     showIQR,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     barPadding: categoryPadding,
     enableHover,

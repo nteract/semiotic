@@ -127,6 +127,23 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
     warnings.push("Vega-Lite transforms are not supported. Pre-transform your data before passing to fromVegaLite().")
   }
 
+  // Unsupported composition features
+  if (spec.layer) {
+    warnings.push("Layered specs (\"layer\") are not supported. Only single-mark specs can be translated.")
+  }
+  if (spec.hconcat || spec.vconcat || spec.concat) {
+    warnings.push("Concatenated views (\"hconcat\"/\"vconcat\"/\"concat\") are not supported. Translate each sub-spec individually.")
+  }
+  if (spec.facet || (spec.encoding && (spec.encoding as any).facet) || (spec.encoding && ((spec.encoding as any).row || (spec.encoding as any).column))) {
+    warnings.push("Faceted views are not supported. Use Semiotic's LinkedCharts or render multiple charts manually.")
+  }
+  if (spec.repeat) {
+    warnings.push("Repeated views (\"repeat\") are not supported. Translate each field combination individually.")
+  }
+  if (spec.params || spec.selection) {
+    warnings.push("Selections/params are not supported. Use Semiotic's LinkedCharts and selection props for interactivity.")
+  }
+
   // Determine component and build props
   const props: Record<string, any> = {}
 
@@ -321,6 +338,11 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       if (data) props.data = data
       break
     }
+    case "geoshape":
+    case "text":
+    case "rule":
+    case "image":
+    case "trail":
     default: {
       warnings.push(`Unsupported mark type "${markType}". Defaulting to Scatterplot.`)
       component = "Scatterplot"
@@ -411,6 +433,9 @@ function buildConfig(
   }
   if (warnings.length > 0) {
     config.warnings = warnings
+    for (const w of warnings) {
+      console.warn(`[semiotic/fromVegaLite] ${w}`)
+    }
   }
   return config
 }

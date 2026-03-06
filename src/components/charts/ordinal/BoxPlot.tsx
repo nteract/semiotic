@@ -128,6 +128,8 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     summaryStyle,
     showOutliers,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     barPadding: categoryPadding,
     enableHover,

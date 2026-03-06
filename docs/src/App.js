@@ -54,6 +54,7 @@ import AnnotationsPage from "./pages/features/AnnotationsPage"
 import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
+import CompositionPage from "./pages/features/CompositionPage"
 import AccessibilityPage from "./pages/features/AccessibilityPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
@@ -93,6 +94,7 @@ import BarChartPlayground from "./pages/playground/BarChartPlayground"
 import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
+import StreamingSankeyPlayground from "./pages/playground/StreamingSankeyPlayground"
 import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
 import RealtimeHistogramPlayground from "./pages/playground/RealtimeHistogramPlayground"
 import BubbleChartPlayground from "./pages/playground/BubbleChartPlayground"
@@ -101,6 +103,7 @@ import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
 import TreemapPlayground from "./pages/playground/TreemapPlayground"
 import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
 import StatisticalAnnotationsPlayground from "./pages/playground/StatisticalAnnotationsPlayground"
+import ForecastPlayground from "./pages/playground/ForecastPlayground"
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -282,6 +285,7 @@ export default function DocsApp() {
               <Route path="scatterplot" element={<ScatterplotPlayground />} />
               <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
+              <Route path="streaming-sankey" element={<StreamingSankeyPlayground />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
               <Route path="realtime-bar-chart" element={<RealtimeHistogramPlayground />} />
               <Route path="bubble-chart" element={<BubbleChartPlayground />} />
@@ -290,6 +294,7 @@ export default function DocsApp() {
               <Route path="treemap" element={<TreemapPlayground />} />
               <Route path="circle-pack" element={<CirclePackPlayground />} />
               <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
+              <Route path="forecast" element={<ForecastPlayground />} />
             </Route>
 
             {/* Frames routes */}
@@ -307,8 +312,10 @@ export default function DocsApp() {
               <Route path="tooltips" element={<TooltipsPage />} />
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
+              <Route path="composition" element={<CompositionPage />} />
               <Route path="accessibility" element={<AccessibilityPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
+              <Route path="linked-charts" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
               <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />

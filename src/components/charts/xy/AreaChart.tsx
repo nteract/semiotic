@@ -78,7 +78,27 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   curve?: "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom"
 
   /**
-   * Area opacity
+   * Per-point lower bound accessor for band/ribbon charts.
+   * When set, the area fills between yAccessor (top) and y0Accessor (bottom)
+   * instead of filling down to the axis. Use for percentile bands (p5–p95),
+   * confidence intervals, or any ribbon visualization.
+   * @example
+   * ```ts
+   * // Data: [{ x: 0, p95: 80, p5: 20 }, ...]
+   * <AreaChart data={d} xAccessor="x" yAccessor="p95" y0Accessor="p5" />
+   * ```
+   */
+  y0Accessor?: ChartAccessor<TDatum, number>
+
+  /**
+   * Gradient fill from line to baseline. Set `true` for default (80% → 5%)
+   * or `{ topOpacity, bottomOpacity }` for custom values.
+   * @default false
+   */
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number }
+
+  /**
+   * Area opacity (flat fill, ignored when gradientFill is set)
    * @default 0.7
    */
   areaOpacity?: number
@@ -176,6 +196,8 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     xAccessor = "x",
     yAccessor = "y",
     areaBy,
+    y0Accessor,
+    gradientFill = false,
     lineDataAccessor = "coordinates",
     colorBy,
     colorScheme = "category10",
@@ -327,9 +349,13 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     xAccessor,
     yAccessor,
     groupAccessor: areaBy || undefined,
+    ...(y0Accessor && { y0Accessor }),
+    ...(gradientFill && { gradientFill }),
     curve,
     lineStyle,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,

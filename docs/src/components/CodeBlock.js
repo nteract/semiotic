@@ -24,10 +24,14 @@ export default function CodeBlock({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Escape HTML entities for safe rendering when Prism isn't available
+  const escapeHtml = (str) =>
+    str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
   const highlighted =
     window.Prism && window.Prism.languages[language]
       ? window.Prism.highlight(code, window.Prism.languages[language], language)
-      : code
+      : escapeHtml(code)
 
   const lines = code.split("\n")
   const highlightedLines =
@@ -39,7 +43,7 @@ export default function CodeBlock({
             language
           )
         )
-      : lines
+      : lines.map(escapeHtml)
 
   const styles = {
     wrapper: {

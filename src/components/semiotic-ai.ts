@@ -57,6 +57,18 @@ export { exportChart } from "./export/exportChart"
 export { ChartContainer } from "./ChartContainer"
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
 
+// Layout
+export { ChartGrid } from "./ChartGrid"
+export type { ChartGridProps } from "./ChartGrid"
+
+// Context layout
+export { ContextLayout } from "./ContextLayout"
+export type { ContextLayoutProps } from "./ContextLayout"
+
+// Shared categorical styles
+export { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
+export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
+
 // Details panel
 export { DetailsPanel } from "./DetailsPanel"
 export type { DetailsPanelProps } from "./DetailsPanel"
@@ -64,6 +76,9 @@ export type { DetailsPanelProps } from "./DetailsPanel"
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
+
+// Statistical overlay types
+export type { AnomalyConfig, ForecastConfig } from "./charts/shared/statisticalOverlays"
 
 // Chart state serialization
 export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"

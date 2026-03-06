@@ -406,12 +406,12 @@ export function circularAreaLink(link) {
     `L${lf - compactHW + ch},${ty - s * fullHW}` +
     `L${tx},${ty - s * fullHW}` +
     // INNER edge (target → around → source, reversed)
-    // Straight cut at full width
+    // Offset inward by compactHW so vertical thickness matches bottom horizontal
     `L${tx},${ty + s * fullHW}` +
-    `L${lf},${ty + s * fullHW}` +
-    `L${lf},${vf - s * compactHW}` +
-    `L${rf},${vf - s * compactHW}` +
-    `L${rf},${sy + s * fullHW}` +
+    `L${lf + compactHW},${ty + s * fullHW}` +
+    `L${lf + compactHW},${vf - s * compactHW}` +
+    `L${rf - compactHW},${vf - s * compactHW}` +
+    `L${rf - compactHW},${sy + s * fullHW}` +
     `L${sx},${sy + s * fullHW}` +
     `Z`
   )

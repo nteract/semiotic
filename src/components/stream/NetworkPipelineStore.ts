@@ -103,13 +103,10 @@ export class NetworkPipelineStore {
       ...config.tensionConfig
     }
 
-    // Create/destroy particle pool based on config
-    if (config.chartType === "sankey" && config.showParticles) {
-      if (!this.particlePool) {
-        this.particlePool = new ParticlePool(2000)
-      }
-    } else {
-      this.particlePool = null
+    // Create particle pool on demand; keep it alive when toggled off
+    // so that toggling showParticles false→true doesn't lose canvas state
+    if (config.chartType === "sankey" && config.showParticles && !this.particlePool) {
+      this.particlePool = new ParticlePool(2000)
     }
   }
 

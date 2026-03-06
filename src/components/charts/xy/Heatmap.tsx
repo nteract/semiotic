@@ -359,6 +359,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     yAccessor,
     valueAccessor,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,

@@ -178,7 +178,7 @@ export default function RealtimeLineChartPlayground() {
         { label: "Playground", path: "/playground" },
         { label: "Realtime Line / Waterfall", path: "/playground/realtime-line-chart" },
       ]}
-      prevPage={{ title: "Sankey Diagram Playground", path: "/playground/sankey-diagram" }}
+      prevPage={{ title: "Streaming Sankey Playground", path: "/playground/streaming-sankey" }}
       nextPage={{ title: "Realtime Bar / Swarm Playground", path: "/playground/realtime-bar-chart" }}
     >
       <p>

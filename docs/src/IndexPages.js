@@ -319,6 +319,11 @@ export function PlaygroundIndex() {
           thumbnail={new URL("../public/assets/img/link.png", import.meta.url)}
         />
         <PageLink
+          href="/playground/streaming-sankey"
+          title="Streaming Sankey"
+          thumbnail={new URL("../public/assets/img/link.png", import.meta.url)}
+        />
+        <PageLink
           href="/playground/realtime-line-chart"
           title="Realtime Line / Waterfall"
           thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}

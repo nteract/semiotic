@@ -7,7 +7,7 @@ import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colo
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -61,7 +61,9 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     tooltip,
     frameProps = {},
     onObservation,
-    chartId
+    chartId,
+    selection,
+    linkedHover,
   } = props
 
   const width = resolved.width
@@ -74,11 +76,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
-  const colorScale = useMemo(() => {
-    if (colorByDepth) return undefined
-    if (!colorBy || typeof colorBy === "function") return undefined
-    return createColorScale(allNodes, colorBy as string, colorScheme)
-  }, [allNodes, colorBy, colorByDepth, colorScheme])
+  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
 
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -106,18 +104,11 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const observationHoverBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
-      if (!onObservation) return
-      const now = Date.now()
-      if (d) {
-        onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "CirclePack", chartId })
-      } else {
-        onObservation({ type: "hover-end", timestamp: now, chartType: "CirclePack", chartId })
-      }
-    },
-    [onObservation, chartId]
-  )
+  const { customHoverBehavior } = useChartSelection({
+    selection, linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: true, onObservation, chartType: "CirclePack", chartId,
+  })
 
   // Validate
   const error = validateObjectData({ componentName: "CirclePack", data })
@@ -128,6 +119,8 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       chartType="circlepack"
       data={data}
       size={[width, height]}
+      responsiveWidth={props.responsiveWidth}
+      responsiveHeight={props.responsiveHeight}
       margin={margin}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
@@ -141,7 +134,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
-      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       className={className}
       title={title}
       {...frameProps}
