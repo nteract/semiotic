@@ -1,5 +1,6 @@
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (element: React.ReactElement) => string }
 
 import { arc as d3Arc } from "d3-shape"
 

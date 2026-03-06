@@ -321,6 +321,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Our community follows the nteract
 Development of this library owes a lot to Susie Lu, Jason Reid, James Womack,
 Matt Herman, Shelby Sturgis, and Tristan Reid.
 
+The Sankey layout engine is based on [sankey-plus](https://github.com/tomshanley/sankey-plus)
+by [Tom Shanley](https://github.com/tomshanley), which improved on his earlier
+`d3-sankey-circular` with better cycle detection, hierarchical arc stacking,
+and dynamic extent adjustment.
+
 _Semiotic icon based on an icon by Andre Schauer._
 
 ## License

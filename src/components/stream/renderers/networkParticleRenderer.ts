@@ -62,7 +62,9 @@ export function spawnNetworkParticles(
     const currentCount = pool.countForEdge(i)
     if (currentCount >= maxPerEdge) continue
 
-    const rate = edge.value * spawnRate * deltaTime
+    // Reduce spawn rate on circular edges — they're visual indicators, not highways
+    const circularDampen = edge.bezier.circular ? 0.3 : 1
+    const rate = edge.value * spawnRate * deltaTime * circularDampen
     const whole = Math.floor(rate)
     const frac = rate - whole
 

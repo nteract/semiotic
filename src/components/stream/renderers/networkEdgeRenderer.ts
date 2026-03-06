@@ -48,8 +48,20 @@ function renderBezierEdge(
 
   // Fill the band
   if (edge.style.fill && edge.style.fill !== "none") {
-    ctx.fillStyle = edge.style.fill
-    ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
+    const grad = (edge as any)._gradient
+    if (grad) {
+      // Gradient fill for stub circular edges
+      const gradient = ctx.createLinearGradient(grad.x0, 0, grad.x1, 0)
+      const baseAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
+      const color = edge.style.fill
+      gradient.addColorStop(0, grad.from === 1 ? color : "transparent")
+      gradient.addColorStop(1, grad.to === 1 ? color : "transparent")
+      ctx.fillStyle = gradient
+      ctx.globalAlpha = baseAlpha
+    } else {
+      ctx.fillStyle = edge.style.fill
+      ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
+    }
     ctx.fill(path)
   }
 
