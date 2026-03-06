@@ -7,7 +7,7 @@ import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colo
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -99,15 +99,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
-  const colorScale = useMemo(() => {
-    if (colorByDepth) return undefined
-    if (!colorBy || typeof colorBy === "function") return undefined
-    // Filter to nodes that have the colorBy field so root/parent nodes without
-    // it don't consume a color slot and shift the palette
-    const field = colorBy as string
-    const nodesWithField = allNodes.filter(n => n[field] != null)
-    return createColorScale(nodesWithField, field, colorScheme)
-  }, [allNodes, colorBy, colorByDepth, colorScheme])
+  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
 
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {

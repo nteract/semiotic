@@ -86,6 +86,7 @@ export function wrapStyleWithSelection(
   return (d: Record<string, any>) => {
     const style = { ...baseStyleFn(d) }
 
+
     if (selectionHook.isActive) {
       if (selectionHook.predicate(d)) {
         // Selected: apply selectedStyle overrides if any
@@ -94,8 +95,10 @@ export function wrapStyleWithSelection(
         }
       } else {
         // Unselected: dim the element
-        style.fillOpacity = config?.unselectedOpacity ?? 0.2
-        style.strokeOpacity = config?.unselectedOpacity ?? 0.2
+        const dimOpacity = config?.unselectedOpacity ?? 0.2
+        style.opacity = dimOpacity
+        style.fillOpacity = dimOpacity
+        style.strokeOpacity = dimOpacity
         if (config?.unselectedStyle) {
           Object.assign(style, config.unselectedStyle)
         }

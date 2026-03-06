@@ -41,21 +41,22 @@ const scatterData = Array.from({ length: 40 }, (_, i) => ({
 }))
 
 const treeData = {
-  name: "Sales",
+  name: "Sales", region: "Sales",
   children: [
-    { name: "North", value: 112 },
-    { name: "South", value: 80 },
-    { name: "East", children: [
-      { name: "E-Online", value: 55 },
-      { name: "E-Retail", value: 40 },
+    { name: "North", region: "North", value: 112 },
+    { name: "South", region: "South", value: 80 },
+    { name: "East", region: "East", children: [
+      { name: "E-Online", region: "East", value: 55 },
+      { name: "E-Retail", region: "East", value: 40 },
     ]},
-    { name: "West", value: 68 },
+    { name: "West", region: "West", value: 68 },
   ]
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
 
 export default function CompositionPage() {
   return (
@@ -90,35 +91,73 @@ export default function CompositionPage() {
         auto-fill based on <code>minCellWidth</code>.
       </p>
 
-      <ChartGrid columns={2} gap={16}>
-        <LineChart
-          data={lineData}
-          xAccessor="month"
-          yAccessor="revenue"
-          lineBy="region"
-          colorBy="region"
-          xLabel="Month"
-          yLabel="Revenue"
-          responsiveWidth
-          height={250}
-        />
-        <BarChart
-          data={barData}
-          categoryAccessor="region"
-          valueAccessor="total"
-          colorBy="region"
-          responsiveWidth
-          height={250}
-        />
-      </ChartGrid>
+      <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+      <LinkedCharts>
+        <ChartGrid columns={2} gap={16}>
+          <LineChart
+            data={lineData}
+            xAccessor="month"
+            yAccessor="revenue"
+            lineBy="region"
+            colorBy="region"
+            linkedHover={{ name: "hl", fields: ["region"] }}
+            selection={{ name: "hl" }}
+
+            xLabel="Month"
+            yLabel="Revenue"
+            responsiveWidth
+            height={300}
+          />
+          <BarChart
+            data={barData}
+            categoryAccessor="region"
+            valueAccessor="total"
+            colorBy="region"
+            linkedHover={{ name: "hl", fields: ["region"] }}
+            selection={{ name: "hl" }}
+
+            responsiveWidth
+            height={300}
+          />
+        </ChartGrid>
+        <ChartGrid columns={2} gap={16} style={{ marginTop: 16 }}>
+          <Treemap
+            data={treeData}
+            childrenAccessor="children"
+            valueAccessor="value"
+            nodeIdAccessor="name"
+            colorBy="region"
+            linkedHover={{ name: "hl", fields: ["region"] }}
+            selection={{ name: "hl" }}
+
+            responsiveWidth
+            height={300}
+          />
+          <Scatterplot
+            data={scatterData}
+            xAccessor="x"
+            yAccessor="y"
+            colorBy="region"
+            linkedHover={{ name: "hl", fields: ["region"] }}
+            selection={{ name: "hl" }}
+
+            responsiveWidth
+            height={300}
+          />
+        </ChartGrid>
+      </LinkedCharts>
+      </CategoryColorProvider>
 
       <CodeBlock
-        code={`import { ChartGrid, LineChart, BarChart } from "semiotic"
+        code={`import { LinkedCharts, ChartGrid, LineChart, BarChart, Treemap } from "semiotic"
 
-<ChartGrid columns={2} gap={16}>
-  <LineChart data={lineData} xAccessor="month" yAccessor="revenue"
-    lineBy="region" colorBy="region" responsiveWidth height={250} />
-  <BarChart data={barData} categoryAccessor="region" valueAccessor="total"
+<LinkedCharts>
+  <ChartGrid columns={3} gap={16}>
+    <LineChart data={lineData} xAccessor="month" yAccessor="revenue"
+      lineBy="region" colorBy="region" responsiveWidth height={250}
+      linkedHover={{ name: "hl", fields: ["region"] }}
+      selection={{ name: "hl" }} />
+    <BarChart data={barData} categoryAccessor="region" valueAccessor="total"
     colorBy="region" responsiveWidth height={250} />
 </ChartGrid>
 
@@ -212,25 +251,31 @@ export default function CompositionPage() {
         East: "#4daf4a",
         West: "#984ea3",
       }}>
-        <ChartGrid columns={2} gap={16}>
-          <LineChart
-            data={lineData}
-            xAccessor="month"
-            yAccessor="revenue"
-            lineBy="region"
-            colorBy="region"
-            responsiveWidth
-            height={250}
-          />
-          <BarChart
-            data={barData}
-            categoryAccessor="region"
-            valueAccessor="total"
-            colorBy="region"
-            responsiveWidth
-            height={250}
-          />
-        </ChartGrid>
+        <LinkedCharts>
+          <ChartGrid columns={2} gap={16}>
+            <LineChart
+              data={lineData}
+              xAccessor="month"
+              yAccessor="revenue"
+              lineBy="region"
+              colorBy="region"
+              linkedHover={{ name: "hl2", fields: ["region"] }}
+              selection={{ name: "hl2" }}
+              responsiveWidth
+              height={250}
+            />
+            <BarChart
+              data={barData}
+              categoryAccessor="region"
+              valueAccessor="total"
+              colorBy="region"
+              linkedHover={{ name: "hl2", fields: ["region"] }}
+              selection={{ name: "hl2" }}
+              responsiveWidth
+              height={250}
+            />
+          </ChartGrid>
+        </LinkedCharts>
       </CategoryColorProvider>
 
       <CodeBlock

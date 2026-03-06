@@ -423,7 +423,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       hoverRef.current = hover
       setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
+      if (customHoverBehavior) {
+        customHoverBehavior(hover)
+        dirtyRef.current = true // selection state may have changed
+      }
       scheduleRender()
     }
 
@@ -431,7 +434,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          dirtyRef.current = true
+        }
         scheduleRender()
       }
     }

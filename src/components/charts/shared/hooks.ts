@@ -98,31 +98,40 @@ export function useChartSelection({
 } {
   const hoverConfig = normalizeLinkedHover(linkedHover, fallbackFields)
 
+  // Selection fields: use the same fields as the hover config so that
+  // the predicate checks the right datum fields for cross-filtering
+  const selectionFields = hoverConfig?.fields || fallbackFields || []
+
   const selectionHook = useSelection({
     name: selection?.name || "__unused__",
-    fields: []
+    fields: selectionFields
   })
 
   const linkedHoverHook = useLinkedHover({
     name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || []
+    fields: hoverConfig?.fields || fallbackFields || []
   })
 
   const pushObservation = useObservationSelector(
     (state: any) => state.pushObservation
   ) as ((obs: ChartObservation) => void) | undefined
 
-  const activeSelectionHook = selection
+  const activeSelectionHook: SelectionHookResult | null = selection
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
     : null
 
+
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
-      // Existing linked hover logic
+      // Linked hover: produce selection on hover, clear on hover-end
       if (linkedHover) {
-        let datum = d ? (d.data || d.datum || d) : d
-        if (Array.isArray(datum)) datum = datum[0]
-        linkedHoverHook.onHover(datum)
+        if (d) {
+          let datum = d.data || d.datum || d
+          if (Array.isArray(datum)) datum = datum[0]
+          linkedHoverHook.onHover(datum)
+        } else {
+          linkedHoverHook.onHover(null)
+        }
       }
 
       // Emit observation events

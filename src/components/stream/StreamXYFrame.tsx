@@ -604,7 +604,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           hoverRef.current = null
           hoveredNodeRef.current = null
           setHoverPoint(null)
-          if (customHoverBehavior) customHoverBehavior(null)
+          if (customHoverBehavior) {
+            customHoverBehavior(null)
+            dirtyRef.current = true
+          }
           scheduleRender()
         }
         return
@@ -637,7 +640,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hoverRef.current = hover
       hoveredNodeRef.current = hit.node
       setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
+      if (customHoverBehavior) {
+        customHoverBehavior(hover)
+        dirtyRef.current = true
+      }
       scheduleRender()
     }
 
@@ -646,7 +652,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         hoverRef.current = null
         hoveredNodeRef.current = null
         setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
     }

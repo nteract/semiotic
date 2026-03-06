@@ -687,7 +687,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
       return
@@ -707,7 +707,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) customHoverBehavior(null)
+        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
         scheduleRender()
       }
       return
@@ -722,7 +722,7 @@ const StreamNetworkFrame = forwardRef<
 
     hoverRef.current = hover
     setHoverData(hover)
-    if (customHoverBehavior) customHoverBehavior(hover)
+    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
     scheduleRender()
   }
 
@@ -730,7 +730,7 @@ const StreamNetworkFrame = forwardRef<
     if (hoverRef.current) {
       hoverRef.current = null
       setHoverData(null)
-      if (customHoverBehavior) customHoverBehavior(null)
+      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
       scheduleRender()
     }
   }
@@ -814,7 +814,7 @@ const StreamNetworkFrame = forwardRef<
       kbFocusIndexRef.current = -1
       hoverRef.current = null
       setHoverData(null)
-      if (customHoverBehavior) customHoverBehavior(null)
+      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
       scheduleRender()
       return
     }
@@ -825,7 +825,7 @@ const StreamNetworkFrame = forwardRef<
     const hover = { type: "node" as const, data: point.datum, x: point.x, y: point.y }
     hoverRef.current = hover
     setHoverData(hover)
-    if (customHoverBehavior) customHoverBehavior(hover)
+    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
     scheduleRender()
   }, [customHoverBehavior, scheduleRender])
 

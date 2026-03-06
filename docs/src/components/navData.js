@@ -81,7 +81,7 @@ const navData = [
       { title: "Responsive", path: "/features/responsive" },
       { title: "Composition", path: "/features/composition" },
       { title: "Accessibility", path: "/features/accessibility" },
-      { title: "Linked Charts", path: "/features/small-multiples" },
+      { title: "Linked Charts", path: "/features/linked-charts" },
       { title: "Styling", path: "/features/styling" },
       { title: "Theming", path: "/features/theming" },
       { title: "Legends", path: "/features/legends" },

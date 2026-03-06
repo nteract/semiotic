@@ -315,6 +315,7 @@ export default function DocsApp() {
               <Route path="composition" element={<CompositionPage />} />
               <Route path="accessibility" element={<AccessibilityPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
+              <Route path="linked-charts" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
               <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />

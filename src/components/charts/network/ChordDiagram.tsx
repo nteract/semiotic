@@ -7,7 +7,7 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -69,7 +69,9 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     tooltip,
     frameProps = {},
     onObservation,
-    chartId
+    chartId,
+    selection,
+    linkedHover,
   } = props
 
   const width = resolved.width
@@ -128,18 +130,11 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const observationHoverBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
-      if (!onObservation) return
-      const now = Date.now()
-      if (d) {
-        onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "ChordDiagram", chartId })
-      } else {
-        onObservation({ type: "hover-end", timestamp: now, chartType: "ChordDiagram", chartId })
-      }
-    },
-    [onObservation, chartId]
-  )
+  const { customHoverBehavior } = useChartSelection({
+    selection, linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: true, onObservation, chartType: "ChordDiagram", chartId,
+  })
 
   // Validate
   const error = validateNetworkData({
@@ -175,7 +170,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
-      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       className={className}
       title={title}
       {...frameProps}

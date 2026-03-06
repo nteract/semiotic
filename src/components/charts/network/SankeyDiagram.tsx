@@ -8,9 +8,7 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
-import { useObservationSelector } from "../../store/ObservationStore"
-import type { ChartObservation } from "../../store/ObservationStore"
+import { useColorScale, useChartMode, useChartLegendAndMargin, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -76,8 +74,10 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     tooltip,
     frameProps = {},
     onObservation,
-    chartId
-  } = props
+    chartId,
+    selection,
+    linkedHover,
+  } = props as any
 
   const width = resolved.width
   const height = resolved.height
@@ -138,41 +138,15 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const pushObservation = useObservationSelector(
-    (state: any) => state.pushObservation
-  ) as ((obs: ChartObservation) => void) | undefined
-
-  const observationHoverBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
-      const now = Date.now()
-      if (d) {
-        const obs: ChartObservation = { type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "SankeyDiagram", chartId }
-        if (onObservation) onObservation(obs)
-        if (pushObservation) pushObservation(obs)
-      } else {
-        const obs: ChartObservation = { type: "hover-end", timestamp: now, chartType: "SankeyDiagram", chartId }
-        if (onObservation) onObservation(obs)
-        if (pushObservation) pushObservation(obs)
-      }
-    },
-    [onObservation, chartId, pushObservation]
-  )
-
-  const observationClickBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
-      const now = Date.now()
-      if (d) {
-        const obs: ChartObservation = { type: "click", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "SankeyDiagram", chartId }
-        if (onObservation) onObservation(obs)
-        if (pushObservation) pushObservation(obs)
-      } else {
-        const obs: ChartObservation = { type: "click-end", timestamp: now, chartType: "SankeyDiagram", chartId }
-        if (onObservation) onObservation(obs)
-        if (pushObservation) pushObservation(obs)
-      }
-    },
-    [onObservation, chartId, pushObservation]
-  )
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: true,
+    onObservation,
+    chartType: "SankeyDiagram",
+    chartId,
+  })
 
   // Validate data (after all hooks)
   const error = validateNetworkData({
@@ -210,8 +184,8 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d: any) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
-      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
-      customClickBehavior={onObservation ? observationClickBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      customClickBehavior={onObservation ? customClickBehavior : undefined}
       className={className}
       title={title}
       {...frameProps}
