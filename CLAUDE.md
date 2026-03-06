@@ -1,7 +1,7 @@
 # Semiotic — AI Assistant Guide
 
 ## Quick Start
-- Install: `npm install semiotic@3.0.0-beta.4`
+- Install: `npm install semiotic`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
 - `semiotic/ai` exports HOC charts + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + validateProps + useChartObserver + DetailsPanel + ChartContainer
 - `semiotic/data` exports: `bin`, `rollup`, `groupBy`, `pivot`
