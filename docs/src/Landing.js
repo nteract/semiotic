@@ -37,7 +37,7 @@ const quickStartSteps = [
   {
     number: 1,
     title: "Install",
-    code: "npm install semiotic@3.0.0-beta.3"
+    code: "npm install semiotic@3.0.0-beta.5"
   },
   {
     number: 2,
@@ -802,8 +802,8 @@ export default function Landing() {
           </div>
 
           <div style={styles.installBlock}>
-            <code style={styles.installText}>npm install semiotic@3.0.0-beta.3</code>
-            <CopyButton text="npm install semiotic@3.0.0-beta.3" style={styles.installCopy} />
+            <code style={styles.installText}>npm install semiotic@3.0.0-beta.5</code>
+            <CopyButton text="npm install semiotic@3.0.0-beta.5" style={styles.installCopy} />
           </div>
 
           <HeroGallery />

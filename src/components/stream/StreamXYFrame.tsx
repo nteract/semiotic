@@ -26,6 +26,7 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { useResponsiveSize } from "./useResponsiveSize"
 import { SVGOverlay } from "./SVGOverlay"
 
 // Canvas renderers
@@ -348,7 +349,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yExtent,
       extentPadding = 0.1,
       sizeRange,
-      size = [500, 300],
+      size: sizeProp = [500, 300],
+      responsiveWidth,
+      responsiveHeight,
       margin: marginProp,
       className,
       background,
@@ -401,6 +404,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       marginalGraphics,
       pointIdAccessor
     } = props
+
+    // ── Responsive sizing ──────────────────────────────────────────────────
+    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
 
@@ -935,14 +941,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     return (
       <div
+        ref={responsiveRef}
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={typeof title === "string" ? title : "XY chart"}
         tabIndex={0}
         style={{
           position: "relative",
-          width: size[0],
-          height: size[1],
+          width: responsiveWidth ? "100%" : size[0],
+          height: responsiveHeight ? "100%" : size[1],
         }}
         onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}

@@ -53,6 +53,10 @@ export interface BaseChartProps {
   height?: number
   /** Margin around the chart. Can be number (same on all sides) or object specifying each side */
   margin?: MarginType
+  /** Auto-match width to parent container. Default: false */
+  responsiveWidth?: boolean
+  /** Auto-match height to parent container (requires parent with explicit height). Default: false */
+  responsiveHeight?: boolean
   /** CSS class name for the chart container */
   className?: string
   /** Chart title displayed at the top */

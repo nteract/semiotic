@@ -139,6 +139,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     summaryStyle,
     bins,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     barPadding: categoryPadding,
     enableHover,

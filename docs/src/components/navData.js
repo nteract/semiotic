@@ -79,6 +79,7 @@ const navData = [
       { title: "Tooltips", path: "/features/tooltips" },
       { title: "Interaction", path: "/features/interaction" },
       { title: "Responsive", path: "/features/responsive" },
+      { title: "Composition", path: "/features/composition" },
       { title: "Accessibility", path: "/features/accessibility" },
       { title: "Linked Charts", path: "/features/small-multiples" },
       { title: "Styling", path: "/features/styling" },

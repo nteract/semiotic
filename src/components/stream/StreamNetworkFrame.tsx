@@ -30,6 +30,7 @@ import {
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { useResponsiveSize } from "./useResponsiveSize"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 
 // Canvas renderers
@@ -208,7 +209,9 @@ const StreamNetworkFrame = forwardRef<
     nodeSizeRange = [5, 20],
     nodeLabel,
     showLabels = true,
-    size = DEFAULT_SIZE,
+    size: sizeProp = DEFAULT_SIZE,
+    responsiveWidth,
+    responsiveHeight,
     margin: marginProp,
     className,
     background,
@@ -232,6 +235,7 @@ const StreamNetworkFrame = forwardRef<
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
   const margin = { ...baseMargin, ...marginProp }
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom
@@ -1027,14 +1031,15 @@ const StreamNetworkFrame = forwardRef<
 
   return (
     <div
+      ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
       role="img"
       aria-label={typeof title === "string" ? title : "Network chart"}
       tabIndex={0}
       style={{
         position: "relative",
-        width: size[0],
-        height: size[1],
+        width: responsiveWidth ? "100%" : size[0],
+        height: responsiveHeight ? "100%" : size[1],
       }}
       onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}

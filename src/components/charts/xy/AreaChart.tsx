@@ -354,6 +354,8 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     curve,
     lineStyle,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,

@@ -343,6 +343,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Layout ───────────────────────────────────────
   size?: [number, number]
+  /** Auto-match width to container. Requires a sized parent element. */
+  responsiveWidth?: boolean
+  /** Auto-match height to container. Requires a parent with explicit height. */
+  responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string

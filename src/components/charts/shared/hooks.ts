@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react"
+import { useCategoryColors } from "../../CategoryColors"
 import { createColorScale, getColor } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
@@ -35,10 +36,15 @@ export function useColorScale(
   colorBy: Accessor<string> | undefined,
   colorScheme: string | string[] = "category10"
 ): ((v: string) => string) | undefined {
+  const categoryColors = useCategoryColors()
   return useMemo(() => {
     if (!colorBy || typeof colorBy === "function") return undefined
+    // If a CategoryColorProvider is present, use its color map as the scale
+    if (categoryColors && Object.keys(categoryColors).length > 0) {
+      return (v: string) => categoryColors[v] || createColorScale(data, colorBy as string, colorScheme)(v)
+    }
     return createColorScale(data, colorBy as string, colorScheme)
-  }, [data, colorBy, colorScheme])
+  }, [data, colorBy, colorScheme, categoryColors])
 }
 
 /**

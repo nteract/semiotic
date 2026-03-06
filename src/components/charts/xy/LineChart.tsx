@@ -481,6 +481,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     lineStyle,
     ...(showPoints && { pointStyle }),
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     showAxes: resolved.showAxes,
     xLabel,

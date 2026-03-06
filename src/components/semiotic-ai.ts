@@ -57,6 +57,18 @@ export { exportChart } from "./export/exportChart"
 export { ChartContainer } from "./ChartContainer"
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
 
+// Layout
+export { ChartGrid } from "./ChartGrid"
+export type { ChartGridProps } from "./ChartGrid"
+
+// Context layout
+export { ContextLayout } from "./ContextLayout"
+export type { ContextLayoutProps } from "./ContextLayout"
+
+// Shared categorical styles
+export { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
+export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
+
 // Details panel
 export { DetailsPanel } from "./DetailsPanel"
 export type { DetailsPanelProps } from "./DetailsPanel"

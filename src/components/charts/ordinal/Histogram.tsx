@@ -126,6 +126,8 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     bins,
     normalize: relative,
     size: [width, height],
+    responsiveWidth: props.responsiveWidth,
+    responsiveHeight: props.responsiveHeight,
     margin,
     barPadding: categoryPadding,
     enableHover,

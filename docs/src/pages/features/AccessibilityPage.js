@@ -37,7 +37,7 @@ export default function AccessibilityPage() {
         { label: "Features", path: "/features" },
         { label: "Accessibility", path: "/features/accessibility" },
       ]}
-      prevPage={{ title: "Responsive", path: "/features/responsive" }}
+      prevPage={{ title: "Composition", path: "/features/composition" }}
       nextPage={{ title: "Linked Charts", path: "/features/small-multiples" }}
     >
       <p>

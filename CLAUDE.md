@@ -17,7 +17,7 @@
 ## Component Reference
 
 ### Common props (all HOCs unless noted)
-`title` (string), `width` (number, 600), `height` (number, 400), `margin` (object), `className` (string), `enableHover` (boolean, true), `tooltip` (fn), `showLegend` (boolean), `showGrid` (boolean, false), `frameProps` (object), `onObservation` (fn), `chartId` (string)
+`title` (string), `width` (number, 600), `height` (number, 400), `responsiveWidth` (boolean, false), `responsiveHeight` (boolean, false), `margin` (object), `className` (string), `enableHover` (boolean, true), `tooltip` (fn), `showLegend` (boolean), `showGrid` (boolean, false), `frameProps` (object), `onObservation` (fn), `chartId` (string)
 
 ### XY Charts (from "semiotic" or "semiotic/xy")
 
@@ -131,6 +131,12 @@ Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 // Theming
 <ThemeProvider theme="dark"><LineChart ... /></ThemeProvider>
 
+// Shared category colors across charts
+<CategoryColorProvider colors={{ North: "#e41a1c", South: "#377eb8" }}>
+  <LineChart data={d1} colorBy="region" />
+  <BarChart data={d2} colorBy="region" />  {/* same colors */}
+</CategoryColorProvider>
+
 // Data transforms
 import { bin, rollup, groupBy, pivot } from "semiotic/data"
 
@@ -167,6 +173,10 @@ ref.current.push({ time: Date.now(), value: 42 })
 **Chart serialization** — `toConfig(name, props)` / `fromConfig(config)` for JSON round-trip. `toURL`/`fromURL` for permalinks. `copyConfig(config, "jsx")` for clipboard. `configToJSX(config)` for code gen. String accessors survive; functions are stripped.
 
 **DetailsPanel** — selection-driven detail panel. Props: `children` (render fn), `position` ("right"|"bottom"|"overlay"), `size` (300), `trigger` ("click"|"hover"), `chartId`, `dismissOnEmpty`, `showClose`. Use inside ChartContainer via `detailsPanel` prop.
+
+**ChartGrid** — responsive grid layout for multiple charts. Props: `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). Works with LinkedCharts.
+
+**ContextLayout** — places a primary chart alongside context chart(s). Props: `context` (ReactNode), `position` ("right"|"left"|"top"|"bottom"), `contextSize` (250), `gap` (12). Context charts use `mode="context"` for compact rendering.
 
 **ChartErrorBoundary** — `fallback` (ReactNode), `onError` (fn)
 

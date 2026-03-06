@@ -54,6 +54,7 @@ import AnnotationsPage from "./pages/features/AnnotationsPage"
 import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
+import CompositionPage from "./pages/features/CompositionPage"
 import AccessibilityPage from "./pages/features/AccessibilityPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
@@ -311,6 +312,7 @@ export default function DocsApp() {
               <Route path="tooltips" element={<TooltipsPage />} />
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
+              <Route path="composition" element={<CompositionPage />} />
               <Route path="accessibility" element={<AccessibilityPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
