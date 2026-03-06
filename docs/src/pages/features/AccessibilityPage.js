@@ -10,12 +10,12 @@ import { Link } from "react-router-dom"
 // ---------------------------------------------------------------------------
 
 const lineData = [
-  { month: "Jan", revenue: 12000 },
-  { month: "Feb", revenue: 18000 },
-  { month: "Mar", revenue: 14000 },
-  { month: "Apr", revenue: 22000 },
-  { month: "May", revenue: 19000 },
-  { month: "Jun", revenue: 27000 },
+  { month: 1, revenue: 12000 },
+  { month: 2, revenue: 18000 },
+  { month: 3, revenue: 14000 },
+  { month: 4, revenue: 22000 },
+  { month: 5, revenue: 19000 },
+  { month: 6, revenue: 27000 },
 ]
 
 const barData = [
@@ -74,8 +74,8 @@ export default function AccessibilityPage() {
         startHidden={false}
         overrideProps={{
           data: `[
-  { month: "Jan", revenue: 12000 },
-  { month: "Feb", revenue: 18000 },
+  { month: 1, revenue: 12000 },
+  { month: 2, revenue: 18000 },
   // ...
 ]`,
           title: '"Monthly Revenue Trend"',
@@ -104,6 +104,30 @@ export default function AccessibilityPage() {
 <BarChart title="Quarterly Sales" ... />
 <SankeyDiagram title="Budget Flow" ... />
 <RealtimeLineChart title="CPU Usage" ... />`}
+        language="jsx"
+      />
+
+      <h3 id="keyboard-navigation">Keyboard Navigation</h3>
+
+      <p>
+        All charts are focusable via <strong>Tab</strong>. Once focused, use
+        arrow keys to navigate between data points — the tooltip follows the
+        keyboard focus, and a dashed ring highlights the active point. Press{" "}
+        <strong>Escape</strong> to clear focus. Mouse interaction automatically
+        clears keyboard focus.
+      </p>
+
+      <CodeBlock
+        code={`// Keyboard navigation is built in — no props needed
+// Tab → focus chart
+// ←/→ or ↑/↓ → move between data points
+// Home/End → jump to first/last point
+// Escape → clear focus
+
+// Works on all chart types:
+<LineChart data={data} xAccessor="x" yAccessor="y" title="Revenue" />
+<BarChart data={data} categoryAccessor="cat" valueAccessor="val" />
+<ForceDirectedGraph nodes={n} edges={e} />`}
         language="jsx"
       />
 
@@ -253,17 +277,19 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 
       <ul>
         <li>
-          <strong>No keyboard navigation</strong> — data points cannot be
-          traversed with arrow keys. This is a planned feature.
-        </li>
-        <li>
           <strong>No per-element ARIA</strong> — individual bars, points, and
           line segments in the canvas do not have ARIA labels. The SVG overlay
           provides labels for text elements only.
         </li>
         <li>
-          <strong>No focus management</strong> — brush and selection interactions
-          are mouse-only. No focus ring or keyboard equivalent.
+          <strong>Brush/selection is mouse-only</strong> — LinkedCharts brush
+          interactions and ScatterplotMatrix crossfilter do not have keyboard
+          equivalents.
+        </li>
+        <li>
+          <strong>Streaming charts</strong> — realtime charts continuously
+          update their scene graph. Keyboard navigation works but the point
+          list refreshes as new data arrives.
         </li>
       </ul>
 

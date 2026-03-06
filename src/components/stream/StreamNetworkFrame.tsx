@@ -29,6 +29,7 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
+import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 
 // Canvas renderers
@@ -788,6 +789,47 @@ const StreamNetworkFrame = forwardRef<
     []
   )
 
+  // ── Keyboard navigation ───────────────────────────────────────────
+
+  const kbFocusIndexRef = useRef(-1)
+
+  const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const store = storeRef.current
+    if (!store) return
+
+    const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
+    if (navPoints.length === 0) return
+
+    const current = kbFocusIndexRef.current
+    const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+    if (next === null) return
+
+    e.preventDefault()
+
+    if (next < 0) {
+      kbFocusIndexRef.current = -1
+      hoverRef.current = null
+      setHoverData(null)
+      if (customHoverBehavior) customHoverBehavior(null)
+      scheduleRender()
+      return
+    }
+
+    const idx = current < 0 ? 0 : next
+    kbFocusIndexRef.current = idx
+    const point = navPoints[idx]
+    const hover = { type: "node" as const, data: point.datum, x: point.x, y: point.y }
+    hoverRef.current = hover
+    setHoverData(hover)
+    if (customHoverBehavior) customHoverBehavior(hover)
+    scheduleRender()
+  }, [customHoverBehavior, scheduleRender])
+
+  const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+    kbFocusIndexRef.current = -1
+    hoverHandlerRef.current(e)
+  }, [])
+
   // ── Render function ──────────────────────────────────────────────────
 
   renderFnRef.current = () => {
@@ -988,14 +1030,16 @@ const StreamNetworkFrame = forwardRef<
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
       role="img"
       aria-label={typeof title === "string" ? title : "Network chart"}
+      tabIndex={0}
       style={{
         position: "relative",
         width: size[0],
-        height: size[1]
+        height: size[1],
       }}
-      onMouseMove={enableHover ? onMouseMove : undefined}
+      onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}
       onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
+      onKeyDown={onKeyDown}
     >
       {backgroundGraphics && (
         <svg

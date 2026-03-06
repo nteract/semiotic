@@ -25,6 +25,7 @@ import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
+import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { SVGOverlay } from "./SVGOverlay"
 
 // Canvas renderers
@@ -653,6 +654,52 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       []
     )
 
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractXYNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current < 0 ? -1 : kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return // unhandled key
+
+      e.preventDefault()
+
+      if (next < 0) {
+        // Escape — clear focus
+        kbFocusIndexRef.current = -1
+        hoverRef.current = null
+        hoveredNodeRef.current = null
+        setHoverPoint(null)
+        if (customHoverBehavior) customHoverBehavior(null)
+        scheduleRender()
+        return
+      }
+
+      // First arrow press when unfocused: start at 0
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+
+      const point = navPoints[idx]
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      if (customHoverBehavior) customHoverBehavior(hover)
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    // Clear keyboard focus on mouse interaction
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      hoverHandlerRef.current(e)
+    }, [])
+
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -858,6 +905,32 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       </div>
     ) : null
 
+    // ── Keyboard focus ring ──────────────────────────────────────────────
+
+    const focusRing = kbFocusIndexRef.current >= 0 && hoverPoint ? (
+      <svg
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: size[0],
+          height: size[1],
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      >
+        <circle
+          cx={hoverPoint.x + margin.left}
+          cy={hoverPoint.y + margin.top}
+          r={8}
+          fill="none"
+          stroke="var(--accent, #6366f1)"
+          strokeWidth={2}
+          strokeDasharray="4,2"
+        />
+      </svg>
+    ) : null
+
     // ── Render ───────────────────────────────────────────────────────────
 
     return (
@@ -865,13 +938,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={typeof title === "string" ? title : "XY chart"}
+        tabIndex={0}
         style={{
           position: "relative",
           width: size[0],
-          height: size[1]
+          height: size[1],
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
+        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        onKeyDown={onKeyDown}
       >
         {backgroundGraphics && (
           <svg
@@ -958,6 +1033,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             {isStale ? "STALE" : "LIVE"}
           </div>
         )}
+        {focusRing}
         {tooltipElement}
       </div>
     )

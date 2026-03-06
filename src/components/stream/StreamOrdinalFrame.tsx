@@ -24,6 +24,7 @@ import type {
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
+import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { OrdinalSVGOverlay } from "./OrdinalSVGOverlay"
 
 // Canvas renderers
@@ -440,6 +441,47 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       []
     )
 
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractOrdinalNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return
+
+      e.preventDefault()
+
+      if (next < 0) {
+        kbFocusIndexRef.current = -1
+        hoverRef.current = null
+        setHoverPoint(null)
+        if (customHoverBehavior) customHoverBehavior(null)
+        scheduleRender()
+        return
+      }
+
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+      const point = navPoints[idx]
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      if (customHoverBehavior) customHoverBehavior(hover)
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      hoverHandlerRef.current(e)
+    }, [])
+
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -613,13 +655,15 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={typeof title === "string" ? title : "Ordinal chart"}
+        tabIndex={0}
         style={{
           position: "relative",
           width: size[0],
-          height: size[1]
+          height: size[1],
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
+        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        onKeyDown={onKeyDown}
       >
         {backgroundGraphics && (
           <svg
