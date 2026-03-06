@@ -63,7 +63,9 @@ export class ParticlePool {
 
       // Advance t — speed is normalized so 1.0 = traverse full path in 1 second
       const edgeSpeed = edgeSpeedMultipliers ? (edgeSpeedMultipliers[p.edgeIndex] ?? 1) : 1
-      p.t += deltaTime * speed * edgeSpeed
+      // Circular paths are much longer — slow particles proportionally
+      const circularFactor = edge.bezier.circular ? 0.3 : 1
+      p.t += deltaTime * speed * edgeSpeed * circularFactor
 
       if (p.t >= 1) {
         p.active = false

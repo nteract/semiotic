@@ -61,6 +61,40 @@ const nodeData = [
   { id: "Facilities", category: "Expense" },
 ]
 
+// ---------------------------------------------------------------------------
+// Circular link examples
+// ---------------------------------------------------------------------------
+
+const circularFeedbackLoop = [
+  { source: "API", target: "Auth", value: 30 },
+  { source: "API", target: "Users", value: 25 },
+  { source: "API", target: "Orders", value: 40 },
+  { source: "Auth", target: "DB", value: 25 },
+  { source: "Users", target: "DB", value: 20 },
+  { source: "Orders", target: "DB", value: 35 },
+  { source: "DB", target: "API", value: 15 },
+]
+
+const circularMultiCycle = [
+  { source: "A", target: "B", value: 100 },
+  { source: "B", target: "C", value: 80 },
+  { source: "C", target: "D", value: 60 },
+  { source: "D", target: "E", value: 50 },
+  { source: "E", target: "F", value: 40 },
+  { source: "A", target: "C", value: 30 },
+  { source: "B", target: "D", value: 25 },
+  { source: "C", target: "E", value: 20 },
+  { source: "D", target: "F", value: 15 },
+  { source: "F", target: "A", value: 50 },
+  { source: "E", target: "B", value: 35 },
+  { source: "D", target: "A", value: 25 },
+  { source: "F", target: "C", value: 20 },
+  { source: "E", target: "A", value: 15 },
+  { source: "F", target: "B", value: 12 },
+  { source: "D", target: "B", value: 8 },
+  { source: "C", target: "A", value: 5 },
+]
+
 const conversionEdges = [
   { source: "Visitors", target: "Signups", value: 1000 },
   { source: "Visitors", target: "Bounced", value: 4000 },
@@ -406,6 +440,64 @@ export default function SankeyDiagramPage() {
         streaming data — push edges imperatively and watch the topology grow
         with animated particles.
       </p>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Circular Links */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="circular-links">Circular Links</h2>
+
+      <p>
+        Semiotic handles cyclic flows — edges that loop back to earlier nodes.
+        The top 4 cycles by value render as full ribbons routed around the
+        outside of the chart. Lower-value cycles render as fade-in/fade-out
+        stubs at the source and target, keeping the layout clean.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          edges: circularFeedbackLoop,
+          width: 700,
+          height: 350,
+        }}
+        type={SankeyDiagram}
+        startHidden
+        overrideProps={{
+          edges: `[
+  { source: "API", target: "Auth", value: 30 },
+  { source: "API", target: "Users", value: 25 },
+  { source: "API", target: "Orders", value: 40 },
+  { source: "Auth", target: "DB", value: 25 },
+  { source: "Users", target: "DB", value: 20 },
+  { source: "Orders", target: "DB", value: 35 },
+  { source: "DB", target: "API", value: 15 },  // cycle
+]`,
+        }}
+        hiddenProps={{}}
+        title="Feedback Loop"
+      />
+
+      <h3 id="many-cycles">Many Cycles</h3>
+
+      <p>
+        With many cycles, the layout shows the top 4 by value as full ribbons
+        and renders the rest as subtle stubs. This prevents visual clutter
+        while still indicating all cyclic connections.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          edges: circularMultiCycle,
+          width: 700,
+          height: 450,
+        }}
+        type={SankeyDiagram}
+        startHidden
+        overrideProps={{
+          edges: "// 9 forward edges + 8 cycles (see source)",
+        }}
+        hiddenProps={{}}
+        title="Multiple Cycles"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}

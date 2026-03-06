@@ -593,27 +593,54 @@ export class NetworkPipelineStore {
   }
 
   private buildCircularBezier(edge: RealtimeEdge): BezierCache {
-    const hw = (edge.sankeyWidth || 1) / 2
+    const hw = ((edge as any)._circularWidth || edge.sankeyWidth || 1) / 2
     const cpd = edge.circularPathData
 
+    // Stub edges: particles travel outbound stub, then teleport to inbound stub
+    if ((edge as any)._circularStub) {
+      const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33))
+      const stubLenT = Math.max(15, Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33))
+
+      // Two segments: outbound stub (t=0..0.5), then teleport to inbound stub (t=0.5..1)
+      const segments: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]> = [
+        // Outbound: source → source+stubLen (first half of t)
+        [
+          { x: cpd.sourceX, y: cpd.sourceY },
+          { x: cpd.sourceX + stubLen * 0.33, y: cpd.sourceY },
+          { x: cpd.sourceX + stubLen * 0.66, y: cpd.sourceY },
+          { x: cpd.sourceX + stubLen, y: cpd.sourceY }
+        ],
+        // Inbound: target-stubLenT → target (second half of t)
+        [
+          { x: cpd.targetX - stubLenT, y: cpd.targetY },
+          { x: cpd.targetX - stubLenT * 0.66, y: cpd.targetY },
+          { x: cpd.targetX - stubLenT * 0.33, y: cpd.targetY },
+          { x: cpd.targetX, y: cpd.targetY }
+        ]
+      ]
+
+      return { circular: true, segments, halfWidth: hw }
+    }
+
+    // Full circular path: source → right → vertical → left → target
     let waypoints: BezierPoint[]
 
     if (edge.direction === "down") {
       waypoints = [
         { x: cpd.sourceY, y: cpd.sourceX },
-        { x: cpd.sourceY, y: cpd.leftFullExtent },
-        { x: cpd.verticalFullExtent, y: cpd.leftFullExtent },
+        { x: cpd.sourceY, y: cpd.rightFullExtent },
         { x: cpd.verticalFullExtent, y: cpd.rightFullExtent },
-        { x: cpd.targetY, y: cpd.rightFullExtent },
+        { x: cpd.verticalFullExtent, y: cpd.leftFullExtent },
+        { x: cpd.targetY, y: cpd.leftFullExtent },
         { x: cpd.targetY, y: cpd.targetX }
       ]
     } else {
       waypoints = [
         { x: cpd.sourceX, y: cpd.sourceY },
-        { x: cpd.leftFullExtent, y: cpd.sourceY },
-        { x: cpd.leftFullExtent, y: cpd.verticalFullExtent },
+        { x: cpd.rightFullExtent, y: cpd.sourceY },
         { x: cpd.rightFullExtent, y: cpd.verticalFullExtent },
-        { x: cpd.rightFullExtent, y: cpd.targetY },
+        { x: cpd.leftFullExtent, y: cpd.verticalFullExtent },
+        { x: cpd.leftFullExtent, y: cpd.targetY },
         { x: cpd.targetX, y: cpd.targetY }
       ]
     }

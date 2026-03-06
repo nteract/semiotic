@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { interpolateNumber } from "d3-interpolate"
-import { line, curveLinearClosed } from "d3-shape"
+import { line, curveLinearClosed, curveLinear } from "d3-shape"
 
 const dedupeRibbonPoints =
   (weight = 1) =>
@@ -336,66 +336,83 @@ export const areaLink = (d) => {
 }
 
 export function circularAreaLink(link) {
-  const linkGenerator = linearRibbon()
+  const fullHW = link.sankeyWidth / 2
+  const compactHW = (link._circularWidth ?? link.sankeyWidth) / 2
+  const cpd = link.circularPathData
+  if (!cpd) return null
 
-  linkGenerator.x((d) => d.x)
-  linkGenerator.y((d) => d.y)
-  linkGenerator.r(() => link.sankeyWidth / 2)
+  if (link.direction === "down") return null
 
-  const xyForLink =
-    link.direction === "down"
-      ? [
-          {
-            x: link.circularPathData.sourceY,
-            y: link.circularPathData.sourceX
-          },
-          {
-            x: link.circularPathData.sourceY,
-            y: link.circularPathData.leftFullExtent
-          },
-          {
-            x: link.circularPathData.verticalFullExtent,
-            y: link.circularPathData.leftFullExtent
-          },
-          {
-            x: link.circularPathData.verticalFullExtent,
-            y: link.circularPathData.rightFullExtent
-          },
-          {
-            x: link.circularPathData.targetY,
-            y: link.circularPathData.rightFullExtent
-          },
-          {
-            x: link.circularPathData.targetY,
-            y: link.circularPathData.targetX
-          }
-        ]
-      : [
-          {
-            x: link.circularPathData.sourceX,
-            y: link.circularPathData.sourceY
-          },
-          {
-            x: link.circularPathData.leftFullExtent,
-            y: link.circularPathData.sourceY
-          },
-          {
-            x: link.circularPathData.leftFullExtent,
-            y: link.circularPathData.verticalFullExtent
-          },
-          {
-            x: link.circularPathData.rightFullExtent,
-            y: link.circularPathData.verticalFullExtent
-          },
-          {
-            x: link.circularPathData.rightFullExtent,
-            y: link.circularPathData.targetY
-          },
-          {
-            x: link.circularPathData.targetX,
-            y: link.circularPathData.targetY
-          }
-        ]
+  // Stub mode: for non-top-4 circular links, return just outbound + inbound stubs
+  if (link._circularStub) {
+    const sx = cpd.sourceX
+    const sy = cpd.sourceY
+    const tx = cpd.targetX
+    const ty = cpd.targetY
+    const sourceNode = typeof link.source === "object" ? link.source : null
+    const targetNode = typeof link.target === "object" ? link.target : null
+    if (!sourceNode || !targetNode) return null
 
-  return linkGenerator(xyForLink)
+    // Stub length: 1/3 of the gap between source right edge and next column
+    // (or a fixed reasonable length)
+    const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - sx) * 0.33))
+    const stubLenT = Math.max(15, Math.min(40, (tx - cpd.leftFullExtent) * 0.33))
+
+    // Outbound stub (source side) — rectangle fading out
+    const outbound =
+      `M${sx},${sy - fullHW}` +
+      `L${sx + stubLen},${sy - fullHW}` +
+      `L${sx + stubLen},${sy + fullHW}` +
+      `L${sx},${sy + fullHW}Z`
+
+    // Inbound stub (target side) — rectangle fading in
+    const inbound =
+      `M${tx},${ty - fullHW}` +
+      `L${tx - stubLenT},${ty - fullHW}` +
+      `L${tx - stubLenT},${ty + fullHW}` +
+      `L${tx},${ty + fullHW}Z`
+
+    // Return both paths separated by M (two separate filled shapes)
+    return outbound + inbound
+  }
+
+  // Full circular ribbon for top cycles:
+
+  const sx = cpd.sourceX
+  const sy = cpd.sourceY
+  const tx = cpd.targetX
+  const ty = cpd.targetY
+  const rf = cpd.rightFullExtent
+  const lf = cpd.leftFullExtent
+  const vf = cpd.verticalFullExtent
+
+  const isBottom = link.circularLinkType === "bottom"
+  const s = isBottom ? 1 : -1
+
+  // Chamfer size — proportional to compact width, clamped
+  const ch = Math.max(4, Math.min(compactHW, 15))
+
+  return (
+    // OUTER edge (source → around → target)
+    // Starts at full width, chamfered corners taper to compact on return route
+    `M${sx},${sy - s * fullHW}` +
+    `L${rf},${sy - s * fullHW}` +
+    `L${rf + compactHW},${sy - s * fullHW + s * ch}` +
+    `L${rf + compactHW},${vf + s * compactHW - s * ch}` +
+    `L${rf + compactHW - ch},${vf + s * compactHW}` +
+    `L${lf - compactHW + ch},${vf + s * compactHW}` +
+    `L${lf - compactHW},${vf + s * compactHW - s * ch}` +
+    `L${lf - compactHW},${ty - s * fullHW + s * ch}` +
+    `L${lf - compactHW + ch},${ty - s * fullHW}` +
+    `L${tx},${ty - s * fullHW}` +
+    // INNER edge (target → around → source, reversed)
+    // Straight cut at full width
+    `L${tx},${ty + s * fullHW}` +
+    `L${lf},${ty + s * fullHW}` +
+    `L${lf},${vf - s * compactHW}` +
+    `L${rf},${vf - s * compactHW}` +
+    `L${rf},${sy + s * fullHW}` +
+    `L${sx},${sy + s * fullHW}` +
+    `Z`
+  )
 }
