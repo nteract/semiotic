@@ -1,968 +1,168 @@
 # Semiotic — AI Assistant Guide
 
 ## Quick Start
-- Install: `npm install semiotic@3.0.0-beta.3`
+- Install: `npm install semiotic@3.0.0-beta.4`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps` + `useChartObserver` + `DetailsPanel` + `ChartContainer`
-- `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
-- `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
+- `semiotic/ai` exports HOC charts + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + validateProps + useChartObserver + DetailsPanel + ChartContainer
+- `semiotic/data` exports: `bin`, `rollup`, `groupBy`, `pivot`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
-- MCP: `npx semiotic-mcp` — MCP server that renders charts to static SVG
+- MCP: `npx semiotic-mcp` — MCP server rendering charts to static SVG
 
 ## Architecture
-- **HOC Charts** (recommended): Simple props, sensible defaults — use these
-- **Stream Frames** (advanced): `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` — full control, only when HOCs aren't enough
+- **HOC Charts** (recommended): Simple props, sensible defaults
+- **Stream Frames** (advanced): `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`
 - Every HOC accepts `frameProps` to pass through to the underlying Stream Frame
-- TypeScript `strict: true` — all source code compiles under strict mode
-- All charts have `role="img"` + `aria-label` for baseline screen reader support
-- Granular entry points (`semiotic/xy`, `semiotic/ordinal`, `semiotic/network`) export only v3 code — no legacy utilities
+- TypeScript `strict: true`; all charts have `role="img"` + `aria-label`
 
 ## Component Reference
 
-### XY Charts (import from "semiotic" or "semiotic/xy")
+### Common props (all HOCs unless noted)
+`title` (string), `width` (number, 600), `height` (number, 400), `margin` (object), `className` (string), `enableHover` (boolean, true), `tooltip` (fn), `showLegend` (boolean), `showGrid` (boolean, false), `frameProps` (object), `onObservation` (fn), `chartId` (string)
 
-#### LineChart
-Line traces with curve interpolation, area fill, and point markers. Use for time series, trends, and continuous data.
+### XY Charts (from "semiotic" or "semiotic/xy")
 
-Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `lineBy` (string|fn), `lineDataAccessor` (string, "coordinates"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom", "linear"),
-  `lineWidth` (number, 2), `showPoints` (boolean, false), `pointRadius` (number, 3),
-  `fillArea` (boolean, false), `areaOpacity` (number, 0.3),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
+**LineChart** — `data` (required), `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme` ("category10"), `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom"), `lineWidth` (2), `showPoints` (false), `pointRadius` (3), `fillArea` (false), `areaOpacity` (0.3), `xLabel`, `yLabel`, `xFormat`, `yFormat`
 
-```jsx
-<LineChart data={sales} xAccessor="month" yAccessor="revenue" curve="monotoneX" />
-```
+**AreaChart** — Same as LineChart plus: `areaBy`, `areaOpacity` (0.7), `showLine` (true), curve default "monotoneX"
 
-#### AreaChart
-Filled area under a line with optional stroke. Use for showing volume or magnitude over time.
+**StackedAreaChart** — Same as AreaChart plus: `normalize` (false)
 
-Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `areaBy` (string|fn), `lineDataAccessor` (string, "coordinates"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom", "monotoneX"),
-  `areaOpacity` (number, 0.7), `showLine` (boolean, true), `lineWidth` (number, 2),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
+**Scatterplot** — `data` (required), `xAccessor` ("x"), `yAccessor` ("y"), `colorBy`, `colorScheme`, `sizeBy`, `sizeRange` ([3,15]), `pointRadius` (5), `pointOpacity` (0.8), `xLabel`, `yLabel`, `marginalGraphics` ({top?,bottom?,left?,right?} — "histogram"|"violin"|"ridgeline"|"boxplot" or config object)
 
-```jsx
-<AreaChart data={temps} xAccessor="date" yAccessor="temp" areaBy="city" />
-```
+**BubbleChart** — Like Scatterplot with `sizeBy` (required), `sizeRange` ([5,40]), `bubbleOpacity` (0.6), `bubbleStrokeWidth` (1), `bubbleStrokeColor` ("white"), `marginalGraphics`
 
-#### StackedAreaChart
-Stacked area chart with optional normalization to 100%. Use for part-to-whole trends over time.
+**Heatmap** — `data` (required), `xAccessor` ("x"), `yAccessor` ("y"), `valueAccessor` ("value"), `colorScheme` ("blues"|"reds"|"greens"|"viridis"|"custom"), `customColorScale`, `showValues` (false), `valueFormat`, `cellBorderColor` ("#fff"), `cellBorderWidth` (1)
 
-Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `areaBy` (string|fn), `lineDataAccessor` (string, "coordinates"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom", "monotoneX"),
-  `areaOpacity` (number, 0.7), `showLine` (boolean, true), `lineWidth` (number, 2),
-  `normalize` (boolean, false),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
+### Ordinal Charts (from "semiotic" or "semiotic/ordinal")
 
-```jsx
-<StackedAreaChart data={revenue} xAccessor="quarter" yAccessor="amount" areaBy="product" normalize />
-```
+**BarChart** — `data` (required), `categoryAccessor` ("category"), `valueAccessor` ("value"), `orientation` ("vertical"|"horizontal"), `colorBy`, `colorScheme`, `sort` (boolean|"asc"|"desc"|fn), `barPadding` (5), `categoryLabel`, `valueLabel`, `valueFormat`
 
-#### Scatterplot
-Individual data points plotted by x/y position with optional size and color encoding.
+**StackedBarChart** — BarChart props plus `stackBy` (required), `normalize` (false)
 
-Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `sizeBy` (string|fn), `sizeRange` ([number, number], [3, 15]),
-  `pointRadius` (number, 5), `pointOpacity` (number, 0.8),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `marginalGraphics` ({ top?, bottom?, left?, right? } — each "histogram"|"violin"|"ridgeline"|"boxplot" or { type, bins?, fill?, fillOpacity?, stroke?, strokeWidth? }),
-  `margin` (object), `className` (string), `frameProps` (object)
+**GroupedBarChart** — BarChart props plus `groupBy` (required)
 
-```jsx
-<Scatterplot data={iris} xAccessor="sepalLength" yAccessor="petalLength" colorBy="species" />
-```
+**SwarmPlot** — `data` (required), `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sizeBy`, `sizeRange` ([3,8]), `pointRadius` (4), `pointOpacity` (0.7), `categoryPadding` (20)
 
-#### BubbleChart
-Like Scatterplot but with required size dimension. Use when a third numeric variable matters.
+**BoxPlot** — `data` (required), `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `showOutliers` (true), `outlierRadius` (3), `categoryPadding` (20)
 
-Props: `data` (TDatum[], required), `sizeBy` (string|fn, **required**),
-  `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `sizeRange` ([number, number], [5, 40]),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `bubbleOpacity` (number, 0.6), `bubbleStrokeWidth` (number, 1), `bubbleStrokeColor` (string, "white"),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `marginalGraphics` ({ top?, bottom?, left?, right? } — each "histogram"|"violin"|"ridgeline"|"boxplot" or { type, bins?, fill?, fillOpacity?, stroke?, strokeWidth? }),
-  `margin` (object), `className` (string), `frameProps` (object)
+**Histogram** — `data` (required), `categoryAccessor`, `valueAccessor`, `bins` (25), `relative` (false), `categoryPadding` (20). Always horizontal.
 
-```jsx
-<BubbleChart data={countries} xAccessor="gdp" yAccessor="life" sizeBy="population" colorBy="continent" />
-```
+**ViolinPlot** — `data` (required), `categoryAccessor`, `valueAccessor`, `orientation`, `bins` (25), `curve` ("catmullRom"), `showIQR` (true), `categoryPadding` (20)
 
-#### Heatmap
-Grid/matrix visualization with color-encoded cell values.
+**DotPlot** — `data` (required), `categoryAccessor`, `valueAccessor`, `orientation` ("horizontal"), `sort` (true), `dotRadius` (5), `categoryPadding` (10), `showGrid` default true
 
-Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (string|fn, "y"),
-  `valueAccessor` (string|fn, "value"),
-  `colorScheme` ("blues"|"reds"|"greens"|"viridis"|"custom", "blues"),
-  `customColorScale` (any), `showValues` (boolean, false), `valueFormat` (fn),
-  `cellBorderColor` (string, "#fff"), `cellBorderWidth` (number, 1),
-  `xLabel` (string), `yLabel` (string), `xFormat` (fn), `yFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
+**PieChart** — `data` (required), `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle` (0), `slicePadding` (2), width/height default 400
+
+**DonutChart** — PieChart props plus `innerRadius` (60), `centerContent` (ReactNode)
+
+### Network Charts (from "semiotic" or "semiotic/network")
+
+**ForceDirectedGraph** — `nodes` (required), `edges` (required), `nodeIDAccessor` ("id"), `sourceAccessor` ("source"), `targetAccessor` ("target"), `nodeLabel`, `colorBy`, `nodeSize` (8), `nodeSizeRange` ([5,20]), `edgeWidth` (1), `edgeColor` ("#999"), `edgeOpacity` (0.6), `iterations` (300), `forceStrength` (0.1), `showLabels` (false). Width/height default 600.
+
+**SankeyDiagram** — `edges` (required), `nodes` (optional), `sourceAccessor`, `targetAccessor`, `valueAccessor` ("value"), `nodeIdAccessor` ("id"), `colorBy`, `edgeColorBy` ("source"|"target"|"gradient"|fn), `orientation` ("horizontal"|"vertical"), `nodeAlign` ("justify"|"left"|"right"|"center"), `nodePaddingRatio` (0.05), `nodeWidth` (15), `nodeLabel`, `showLabels` (true), `edgeOpacity` (0.5), `edgeSort`. Default 800x600.
+
+**ChordDiagram** — `edges` (required), `nodes`, `sourceAccessor`, `targetAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorBy`, `edgeColorBy`, `padAngle` (0.01), `groupWidth` (20), `sortGroups`, `nodeLabel`, `showLabels` (true), `edgeOpacity` (0.5)
+
+**TreeDiagram** — `data` (required, single root with children), `layout` ("tree"|"cluster"|"partition"|"treemap"|"circlepack"), `orientation` ("vertical"|"horizontal"|"radial"), `childrenAccessor` ("children"), `valueAccessor`, `nodeIdAccessor` ("name"), `colorBy`, `colorByDepth` (false), `edgeStyle` ("line"|"curve"), `nodeLabel`, `showLabels` (true), `nodeSize` (5)
+
+**Treemap** — `data` (required, root with children), `childrenAccessor`, `valueAccessor`, `nodeIdAccessor` ("name"), `colorBy`, `colorByDepth` (false), `showLabels` (true), `labelMode` ("leaf"|"parent"|"all"), `nodeLabel`, `padding` (4), `paddingTop` (0, auto 18 for "parent"). Hover shows ancestor breadcrumb.
+
+**CirclePack** — `data` (required), `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorBy`, `colorByDepth` (false), `showLabels` (true), `nodeLabel`, `circleOpacity` (0.7), `padding` (4). Labels hidden below 15px radius. Hover shows ancestor breadcrumb.
+
+### Realtime Charts (from "semiotic" or "semiotic/realtime")
+
+All use ref-based push API + canvas rendering: `chartRef.current.push({ time, value })`
+
+**RealtimeLineChart** — `size` ([500,300]), `timeAccessor`, `valueAccessor`, `windowSize` (200), `windowMode` ("sliding"|"stepping"), `arrowOfTime` ("left"|"right"), `stroke`, `strokeWidth`, `strokeDasharray`, `timeExtent`, `valueExtent`, `extentPadding`, `showAxes`, `background`, `enableHover`, `tooltipContent`, `onHover`, `annotations`, `svgAnnotationRules`, `tickFormatTime`, `tickFormatValue`
+
+**RealtimeTemporalHistogram** — RealtimeLineChart props plus `binSize` (required), `categoryAccessor`, `colors`, `fill`, `gap`, `decay`, `pulse`, `staleness`, `transition`
+
+**RealtimeSwarmChart** — RealtimeLineChart props plus `categoryAccessor`, `colors`, `radius`, `fill`, `opacity`
+
+**RealtimeWaterfallChart** — RealtimeLineChart props plus `positiveColor`, `negativeColor`, `connectorStroke`, `connectorWidth`, `gap`
+
+**RealtimeHeatmap** — RealtimeLineChart props plus `heatmapXBins` (20), `heatmapYBins` (20), `aggregation` ("count"|"sum"|"mean"), `linkedHover`, `decay`, `pulse`, `staleness`
+
+**Streaming Sankey** — Use `StreamNetworkFrame` with `chartType="sankey"`, `showParticles`, `particleStyle`, `tensionConfig`, `thresholds`, `onTopologyChange`. Ref: `push()`, `pushMany()`, `clear()`, `getTopology()`, `relayout()`, `getTension()`
+
+### Realtime Visual Encoding (all streaming charts)
+- `decay` — older data fades (`{ type, halfLife, minOpacity }`)
+- `pulse` — new data flashes (`{ duration, color, glowRadius }`)
+- `transition` — smooth interpolation (`{ duration, easing }`)
+- `staleness` — stale feed detection (`{ threshold, dimOpacity, showBadge }`)
+
+### Coordinated Views (from "semiotic" or "semiotic/ai")
+
+**LinkedCharts** — Wraps charts for coordination. Props: `selections` (Record with resolution: "union"|"intersect"|"crossfilter")
+
+Chart coordination props (on HOCs inside LinkedCharts):
+- `selection` — consume named selection
+- `linkedHover` — produce hover selections
+- `linkedBrush` — produce brush selections (Scatterplot/BubbleChart only)
+
+Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
+
+**ScatterplotMatrix** — `data` (required), `fields` (required), `fieldLabels`, `colorBy`, `cellSize` (150), `cellGap` (4), `pointRadius` (2), `pointOpacity` (0.5), `diagonal` ("histogram"|"density"|"label"), `histogramBins` (20), `hoverMode` (true), `brushMode` ("crossfilter"|"intersect"|false), `unselectedOpacity` (0.1)
+
+## Key Usage Patterns
 
 ```jsx
-<Heatmap data={correlations} xAccessor="var1" yAccessor="var2" valueAccessor="r" colorScheme="viridis" />
-```
+// Multi-line data
+<LineChart data={[{ id: "A", coordinates: [{x:0,y:1},{x:1,y:2}] }]} lineBy="id" xAccessor="x" yAccessor="y" />
 
-### Ordinal/Categorical Charts (import from "semiotic" or "semiotic/ordinal")
+// Hierarchical data (TreeDiagram, Treemap, CirclePack) — single root with children
+<Treemap data={rootNode} childrenAccessor="children" valueAccessor="value" />
 
-#### BarChart
-Vertical or horizontal bars for categorical comparisons.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `sort` (boolean|"asc"|"desc"|fn, false), `barPadding` (number, 5),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<BarChart data={sales} categoryAccessor="region" valueAccessor="total" orientation="horizontal" />
-```
-
-#### StackedBarChart
-Stacked bars for part-to-whole comparisons across categories.
-
-Props: `data` (TDatum[], required), `stackBy` (string|fn, **required**),
-  `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `normalize` (boolean, false), `barPadding` (number, 5),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean, true), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<StackedBarChart data={survey} categoryAccessor="question" stackBy="response" valueAccessor="count" />
-```
-
-#### GroupedBarChart
-Side-by-side bars for comparing sub-categories within categories.
-
-Props: `data` (TDatum[], required), `groupBy` (string|fn, **required**),
-  `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `barPadding` (number, 5),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean, true), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<GroupedBarChart data={results} categoryAccessor="year" groupBy="product" valueAccessor="revenue" />
-```
-
-#### SwarmPlot
-Beeswarm/jittered dot plot showing individual data points within categories.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `sizeBy` (string|fn), `sizeRange` ([number, number], [3, 8]),
-  `pointRadius` (number, 4), `pointOpacity` (number, 0.7), `categoryPadding` (number, 20),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<SwarmPlot data={salaries} categoryAccessor="department" valueAccessor="salary" colorBy="level" />
-```
-
-#### BoxPlot
-Box-and-whisker plots showing statistical distribution per category.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `showOutliers` (boolean, true), `outlierRadius` (number, 3), `categoryPadding` (number, 20),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<BoxPlot data={scores} categoryAccessor="subject" valueAccessor="score" showOutliers />
-```
-
-#### Histogram
-Binned frequency distribution chart showing how values are distributed across bins per category. Always renders horizontally.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `bins` (number, 25), `relative` (boolean, false),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `categoryPadding` (number, 20),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<Histogram data={measurements} categoryAccessor="group" valueAccessor="value" bins={15} />
-```
-
-#### ViolinPlot
-Violin plots showing full distribution shape (kernel density) per category with optional IQR lines.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
-  `bins` (number, 25), `curve` (string, "catmullRom"), `showIQR` (boolean, true),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `categoryPadding` (number, 20),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, false),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<ViolinPlot data={salaries} categoryAccessor="department" valueAccessor="salary" showIQR colorBy="department" />
-```
-
-#### DotPlot
-Cleveland-style dot plot for comparing values across categories.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "horizontal"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `sort` (boolean|"asc"|"desc"|fn, true), `dotRadius` (number, 5), `categoryPadding` (number, 10),
-  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
-  `title` (string), `width` (number, 600), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean), `showGrid` (boolean, true),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<DotPlot data={rankings} categoryAccessor="team" valueAccessor="wins" sort="desc" />
-```
-
-#### PieChart
-Proportional slices in a circle.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `startAngle` (number, 0), `slicePadding` (number, 2),
-  `title` (string), `width` (number, 400), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean, true),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<PieChart data={market} categoryAccessor="brand" valueAccessor="share" />
-```
-
-#### DonutChart
-Pie chart with a hole in the center. Supports center content.
-
-Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `innerRadius` (number, 60), `centerContent` (ReactNode),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `startAngle` (number, 0), `slicePadding` (number, 2),
-  `title` (string), `width` (number, 400), `height` (number, 400),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean, true),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<DonutChart data={budget} categoryAccessor="category" valueAccessor="amount" centerContent={<span>$42K</span>} />
-```
-
-### Network Charts (import from "semiotic" or "semiotic/network")
-
-#### ForceDirectedGraph
-Physics-based node-link diagram. Use for relationships, social networks, knowledge graphs.
-
-Props: `nodes` (TNode[], required), `edges` (TEdge[], required),
-  `nodeIDAccessor` (string|fn, "id"), `sourceAccessor` (string|fn, "source"), `targetAccessor` (string|fn, "target"),
-  `nodeLabel` (string|fn), `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `nodeSize` (number|string|fn, 8), `nodeSizeRange` ([number, number], [5, 20]),
-  `edgeWidth` (number|string|fn, 1), `edgeColor` (string, "#999"), `edgeOpacity` (number, 0.6),
-  `iterations` (number, 300), `forceStrength` (number, 0.1),
-  `showLabels` (boolean, false),
-  `title` (string), `width` (number, 600), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `showLegend` (boolean, true),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<ForceDirectedGraph nodes={people} edges={friendships} colorBy="team" nodeSize={8} showLabels />
-```
-
-#### SankeyDiagram
-Flow diagram showing weighted connections between nodes. Use for flows, budgets, process mapping.
-
-Props: `edges` (TEdge[], required), `nodes` (TNode[]),
-  `sourceAccessor` (string|fn, "source"), `targetAccessor` (string|fn, "target"),
-  `valueAccessor` (string|fn, "value"), `nodeIdAccessor` (string|fn, "id"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `edgeColorBy` ("source"|"target"|"gradient"|fn, "source"),
-  `orientation` ("horizontal"|"vertical", "horizontal"),
-  `nodeAlign` ("justify"|"left"|"right"|"center", "justify"),
-  `nodePaddingRatio` (number, 0.05), `nodeWidth` (number, 15),
-  `nodeLabel` (string|fn), `showLabels` (boolean, true),
-  `edgeOpacity` (number, 0.5), `edgeSort` (fn),
-  `title` (string), `width` (number, 800), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<SankeyDiagram edges={flows} sourceAccessor="from" targetAccessor="to" valueAccessor="amount" />
-```
-
-#### ChordDiagram
-Circular diagram showing inter-relationships between groups.
-
-Props: `edges` (TEdge[], required), `nodes` (TNode[]),
-  `sourceAccessor` (string|fn, "source"), `targetAccessor` (string|fn, "target"),
-  `valueAccessor` (string|fn, "value"), `nodeIdAccessor` (string|fn, "id"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `edgeColorBy` ("source"|"target"|fn, "source"),
-  `padAngle` (number, 0.01), `groupWidth` (number, 20), `sortGroups` (fn),
-  `nodeLabel` (string|fn), `showLabels` (boolean, true),
-  `edgeOpacity` (number, 0.5),
-  `title` (string), `width` (number, 600), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<ChordDiagram edges={trades} sourceAccessor="exporter" targetAccessor="importer" valueAccessor="volume" />
-```
-
-#### TreeDiagram
-Hierarchical tree layout. Supports tree, cluster, partition, and radial orientations.
-
-Props: `data` (TNode, required — single root node with children),
-  `layout` ("tree"|"cluster"|"partition"|"treemap"|"circlepack", "tree"),
-  `orientation` ("vertical"|"horizontal"|"radial", "vertical"),
-  `childrenAccessor` (string|fn, "children"), `valueAccessor` (string|fn, "value"),
-  `nodeIdAccessor` (string|fn, "name"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `colorByDepth` (boolean, false), `edgeStyle` ("line"|"curve", "curve"),
-  `nodeLabel` (string|fn), `showLabels` (boolean, true), `nodeSize` (number, 5),
-  `title` (string), `width` (number, 600), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<TreeDiagram data={orgChart} childrenAccessor="reports" nodeIdAccessor="name" orientation="horizontal" />
-```
-
-#### Treemap
-Space-filling rectangular hierarchy visualization. Labels are centered in cells.
-Hover shows ancestor breadcrumb path (grandparent → parent → **node**) with outline.
-`colorByDepth` uses a pastel palette keyed to hierarchy depth.
-
-Props: `data` (TNode, required — single root node with children),
-  `childrenAccessor` (string|fn, "children"), `valueAccessor` (string|fn, "value"),
-  `nodeIdAccessor` (string|fn, "name"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `colorByDepth` (boolean, false),
-  `showLabels` (boolean, true), `labelMode` ("leaf"|"parent"|"all", "leaf"),
-  `nodeLabel` (string|fn),
-  `padding` (number, 4), `paddingTop` (number, 0 — auto 18 when labelMode="parent"),
-  `title` (string), `width` (number, 600), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<Treemap data={fileSystem} childrenAccessor="children" valueAccessor="size" colorByDepth />
-```
-
-#### CirclePack
-Nested circles representing hierarchical data. Leaf labels are centered; parent labels
-are top-center with white-outlined black text. Circles smaller than 15px radius hide labels.
-Hover shows ancestor breadcrumb path (grandparent → parent → **node**) with circle outline.
-`colorByDepth` uses a pastel palette keyed to hierarchy depth (same as Treemap).
-
-Props: `data` (TNode, required — single root node with children),
-  `childrenAccessor` (string|fn, "children"), `valueAccessor` (string|fn, "value"),
-  `nodeIdAccessor` (string|fn, "name"),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `colorByDepth` (boolean, false),
-  `showLabels` (boolean, true), `nodeLabel` (string|fn),
-  `circleOpacity` (number, 0.7), `padding` (number, 4),
-  `title` (string), `width` (number, 600), `height` (number, 600),
-  `enableHover` (boolean, true), `tooltip` (fn),
-  `margin` (object), `className` (string), `frameProps` (object)
-
-```jsx
-<CirclePack data={taxonomy} childrenAccessor="children" valueAccessor="count" colorByDepth />
-```
-
-### Realtime Charts (import from "semiotic" or "semiotic/realtime")
-
-All realtime charts use a ref-based push API and render on canvas for high performance.
-
-```jsx
-const chartRef = useRef()
-// Push data at any frequency
-chartRef.current.push({ time: Date.now(), value: reading })
-```
-
-#### RealtimeLineChart
-Streaming line chart rendered on canvas.
-
-Props: `size` ([number, number], [500, 300]),
-  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
-  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
-  `arrowOfTime` ("left"|"right", "right"),
-  `stroke` (string, "#007bff"), `strokeWidth` (number, 2), `strokeDasharray` (string),
-  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
-  `showAxes` (boolean, true), `background` (string),
-  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
-  `annotations` (object[]), `svgAnnotationRules` (fn),
-  `tickFormatTime` (fn), `tickFormatValue` (fn),
-  `margin` (object), `className` (string)
-
-```jsx
-<RealtimeLineChart ref={chartRef} timeAccessor="time" valueAccessor="value" windowSize={200} />
-```
-
-#### RealtimeTemporalHistogram
-Streaming temporal histogram with time-binned aggregation. (Previously RealtimeHistogram.)
-
-Props: `binSize` (number, **required**),
-  `size` ([number, number], [500, 300]),
-  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
-  `categoryAccessor` (string|fn), `colors` (Record<string, string>),
-  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
-  `arrowOfTime` ("left"|"right", "right"),
-  `fill` (string), `stroke` (string), `strokeWidth` (number), `gap` (number),
-  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
-  `showAxes` (boolean, true), `background` (string),
-  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
-  `decay` (DecayConfig), `pulse` (PulseConfig), `staleness` (StalenessConfig), `transition` (TransitionConfig),
-  `annotations` (object[]), `svgAnnotationRules` (fn),
-  `tickFormatTime` (fn), `tickFormatValue` (fn),
-  `margin` (object), `className` (string)
-
-```jsx
-<RealtimeTemporalHistogram ref={chartRef} binSize={1000} timeAccessor="time" valueAccessor="count" />
-```
-
-#### RealtimeSwarmChart
-Streaming swarm/scatter chart showing individual data points.
-
-Props: `size` ([number, number], [500, 300]),
-  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
-  `categoryAccessor` (string|fn), `colors` (Record<string, string>),
-  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
-  `arrowOfTime` ("left"|"right", "right"),
-  `radius` (number), `fill` (string), `opacity` (number), `stroke` (string), `strokeWidth` (number),
-  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
-  `showAxes` (boolean, true), `background` (string),
-  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
-  `annotations` (object[]), `svgAnnotationRules` (fn),
-  `tickFormatTime` (fn), `tickFormatValue` (fn),
-  `margin` (object), `className` (string)
-
-```jsx
-<RealtimeSwarmChart ref={chartRef} timeAccessor="time" valueAccessor="latency" categoryAccessor="service" />
-```
-
-#### RealtimeWaterfallChart
-Streaming waterfall chart showing positive/negative changes over time.
-
-Props: `size` ([number, number], [500, 300]),
-  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
-  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
-  `arrowOfTime` ("left"|"right", "right"),
-  `positiveColor` (string), `negativeColor` (string),
-  `connectorStroke` (string), `connectorWidth` (number),
-  `gap` (number), `stroke` (string), `strokeWidth` (number),
-  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
-  `showAxes` (boolean, true), `background` (string),
-  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
-  `annotations` (object[]), `svgAnnotationRules` (fn),
-  `tickFormatTime` (fn), `tickFormatValue` (fn),
-  `margin` (object), `className` (string)
-
-```jsx
-<RealtimeWaterfallChart ref={chartRef} timeAccessor="time" valueAccessor="delta" />
-```
-
-#### RealtimeHeatmap
-Streaming 2D heatmap with grid binning and configurable aggregation (count, sum, mean).
-
-Props: `size` ([number, number], [500, 300]),
-  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
-  `heatmapXBins` (number, 20), `heatmapYBins` (number, 20),
-  `aggregation` ("count"|"sum"|"mean", "count"),
-  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
-  `arrowOfTime` ("left"|"right", "right"),
-  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
-  `showAxes` (boolean, true), `background` (string),
-  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
-  `linkedHover` (boolean|string|{ name?, fields }),
-  `decay` (DecayConfig), `pulse` (PulseConfig), `staleness` (StalenessConfig),
-  `margin` (object), `className` (string)
-
-```jsx
-<RealtimeHeatmap ref={chartRef} timeAccessor="x" valueAccessor="y" heatmapXBins={20} aggregation="count" />
-```
-
-#### Streaming Sankey
-Streaming Sankey diagram using `StreamNetworkFrame` with `chartType="sankey"`. Topology grows
-over time via push API. Particles animate along links proportional to flow value. Tension model
-batches relayouts for smooth performance.
-
-Use `StreamNetworkFrame` directly with `chartType="sankey"` and `showParticles` for streaming
-Sankey visualizations.
-
-Props (on `StreamNetworkFrame`): `chartType` ("sankey", **required for streaming sankey**),
-  `size` ([number, number], [800, 600]),
-  `sourceAccessor` (string, "source"), `targetAccessor` (string, "target"),
-  `valueAccessor` (string, "value"),
-  `orientation` ("horizontal"|"vertical", "horizontal"),
-  `nodeAlign` ("justify"|"left"|"right"|"center", "justify"),
-  `nodePaddingRatio` (number, 0.05), `nodeWidth` (number, 15),
-  `showParticles` (boolean, true),
-  `particleStyle` ({ radius?, color?, opacity?, speedMultiplier?, maxPerEdge?, spawnRate?, proportionalSpeed? }),
-  `tensionConfig` ({ threshold?, newNode?, newEdge?, weightChange?, transitionDuration? }),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `edgeColorBy` ("source"|"target"|fn, "source"), `edgeOpacity` (number, 0.5),
-  `nodeLabel` (string|fn), `showLabels` (boolean, true),
-  `enableHover` (boolean, true), `tooltipContent` (fn),
-  `thresholds` ({ metric: fn, warning?: number, critical?: number, warningColor?, criticalColor?, pulse? }),
-  `onTopologyChange` (fn), `background` (string),
-  `margin` (object), `className` (string)
-
-Ref handle: `push({ source, target, value })`, `pushMany(edges)`, `clear()`,
-  `getTopology()`, `getTopologyDiff()`, `relayout()`, `getTension()`
-
-```jsx
-import { StreamNetworkFrame } from "semiotic"
-
-const chartRef = useRef()
-chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
-
-<StreamNetworkFrame ref={chartRef} chartType="sankey" size={[800, 400]} showParticles edgeOpacity={0.4} />
-```
-
-### Coordinated Views (import from "semiotic" or "semiotic/ai")
-
-#### LinkedCharts
-Context provider for coordinated chart views. Wraps any number of charts at any depth.
-
-Props: `selections` (Record<string, { resolution?: "union"|"intersect"|"crossfilter" }>)
-
-```jsx
-<LinkedCharts selections={{ dash: { resolution: "crossfilter" } }}>
-  <Scatterplot data={d} xAccessor="x" yAccessor="y"
-    linkedHover={{ name: "hl", fields: ["cat"] }}
-    selection={{ name: "hl" }} />
-  <BarChart data={agg} categoryAccessor="cat" valueAccessor="total"
-    selection={{ name: "hl" }} />
-</LinkedCharts>
-```
-
-**Chart coordination props** (available on all XY and ordinal HOCs inside LinkedCharts):
-- `selection` ({ name, unselectedOpacity?, unselectedStyle?, selectedStyle? }) — consume a named selection
-- `linkedHover` (boolean | string | { name?, fields }) — produce hover selections
-- `linkedBrush` (string | { name, xField?, yField? }) — produce brush selections (Scatterplot, BubbleChart only)
-
-**Hooks** (for custom coordinated views):
-- `useSelection({ name, clientId?, fields? })` → { predicate, isActive, selectPoints, selectInterval, clear }
-- `useLinkedHover({ name?, fields })` → { onHover, predicate, isActive }
-- `useBrushSelection({ name, xField?, yField? })` → { brushInteraction, predicate, isActive, clear }
-- `useFilteredData(data, selectionName, clientId?)` → filtered T[]
-
-#### ScatterplotMatrix
-N×N grid of scatterplots for exploring multi-dimensional data. Diagonal shows histograms.
-Two mutually exclusive interaction modes: hover (default) cross-highlights the same datum
-across all cells with a tooltip; brush mode enables crossfilter region selection.
-
-Props: `data` (TDatum[], required), `fields` (string[], required),
-  `fieldLabels` (Record<string, string>),
-  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
-  `cellSize` (number, 150), `cellGap` (number, 4),
-  `pointRadius` (number, 2), `pointOpacity` (number, 0.5),
-  `diagonal` ("histogram"|"density"|"label", "histogram"),
-  `histogramBins` (number, 20),
-  `hoverMode` (boolean, true — cross-highlight with tooltip above hovered point),
-  `brushMode` ("crossfilter"|"intersect"|false, "crossfilter" — active when hoverMode is false),
-  `unselectedOpacity` (number, 0.1),
-  `showGrid` (boolean, false), `tooltip` (fn), `showLegend` (boolean),
-  `width` (number), `height` (number), `className` (string)
-
-```jsx
-// Hover mode (default): cross-highlight on hover with tooltip
-<ScatterplotMatrix
-  data={iris}
-  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
-  colorBy="species"
-  fieldLabels={{ sepalLength: "Sepal Length", sepalWidth: "Sepal Width", petalLength: "Petal Length", petalWidth: "Petal Width" }}
-  cellSize={160}
-/>
-
-// Brush mode: crossfilter region selection
-<ScatterplotMatrix
-  data={iris}
-  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
-  colorBy="species"
-  cellSize={160}
-  hoverMode={false}
-  brushMode="crossfilter"
-/>
-```
-
-### Realtime Visual Encoding
-
-All streaming charts support visual encodings that communicate change over time:
-
-```jsx
-// Decay: older data fades out (linear, exponential, or step)
-<StreamXYFrame decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }} />
-
-// Pulse: newly inserted data flashes with a glow
-<StreamXYFrame pulse={{ duration: 500, color: "rgba(255,255,255,0.6)", glowRadius: 4 }} />
-
-// Transitions: smooth position interpolation on data change
-<StreamXYFrame transition={{ duration: 300, easing: "ease-out" }} />
-
-// Staleness: dim chart + show badge when data feed stops
-<StreamXYFrame staleness={{ threshold: 5000, dimOpacity: 0.5, showBadge: true }} />
-```
-
-Works on StreamXYFrame, StreamOrdinalFrame, and all realtime HOCs. Features compose freely.
-
-## Common Patterns
-
-### Color encoding
-```jsx
-<BarChart data={d} categoryAccessor="name" valueAccessor="value" colorBy="region" />
-// Custom colors:
-<BarChart ... colorScheme={["#e41a1c", "#377eb8", "#4daf4a"]} />
-```
-
-### Tooltips
-```jsx
-import { MultiLineTooltip } from "semiotic"
-
-<LineChart ... tooltip={MultiLineTooltip({ title: "name", fields: ["value"] })} />
-```
-
-### Legends
-Automatic when `colorBy` is set. Control with `showLegend`.
-
-### Grid lines
-```jsx
-<LineChart ... showGrid={true} />
-```
-
-### Marginal graphics
-```jsx
-// Add distribution plots in the margins of scatter/bubble charts
-<Scatterplot data={iris} xAccessor="sepalLength" yAccessor="petalLength"
-  marginalGraphics={{ top: "histogram", right: "violin" }} />
-
-// With custom config
-<Scatterplot data={data} xAccessor="x" yAccessor="y"
-  marginalGraphics={{
-    top: { type: "ridgeline", fill: "#e41a1c", fillOpacity: 0.6 },
-    left: { type: "boxplot", fill: "#377eb8" }
-  }} />
-```
-
-### Multi-line data
-```jsx
-// Array of line objects, each with a coordinates array:
-const data = [
-  { id: "A", coordinates: [{ x: 0, y: 1 }, { x: 1, y: 2 }] },
-  { id: "B", coordinates: [{ x: 0, y: 3 }, { x: 1, y: 1 }] }
-]
-<LineChart data={data} lineBy="id" xAccessor="x" yAccessor="y" />
-```
-
-### Hierarchical data (TreeDiagram, Treemap, CirclePack)
-```jsx
-// Single root object with nested children:
-const data = {
-  name: "root",
-  children: [
-    { name: "A", value: 10 },
-    { name: "B", children: [{ name: "B1", value: 5 }] }
-  ]
-}
-<Treemap data={data} childrenAccessor="children" valueAccessor="value" />
-```
-
-### Network data (ForceDirectedGraph, SankeyDiagram, ChordDiagram)
-```jsx
-const nodes = [{ id: "A" }, { id: "B" }, { id: "C" }]
-const edges = [{ source: "A", target: "B", value: 10 }, { source: "B", target: "C", value: 5 }]
+// Network data
 <SankeyDiagram nodes={nodes} edges={edges} valueAccessor="value" />
-```
 
-### Coordinated views
-```jsx
-// Cross-highlighting: hover one chart, highlight matching data in others
+// Tooltips
+<LineChart ... tooltip={MultiLineTooltip({ title: "name", fields: ["value"] })} />
+
+// Coordinated views
 <LinkedCharts>
-  <Scatterplot data={d} xAccessor="x" yAccessor="y" colorBy="region"
-    linkedHover={{ name: "hl", fields: ["region"] }}
-    selection={{ name: "hl" }} />
-  <BarChart data={agg} categoryAccessor="region" valueAccessor="total"
-    linkedHover={{ name: "hl", fields: ["region"] }}
-    selection={{ name: "hl" }} />
+  <Scatterplot data={d} linkedHover={{ name: "hl", fields: ["cat"] }} selection={{ name: "hl" }} />
+  <BarChart data={agg} selection={{ name: "hl" }} />
 </LinkedCharts>
-```
 
-### ScatterplotMatrix (SPLOM)
-```jsx
-// Hover cross-highlight (default)
-<ScatterplotMatrix
-  data={iris}
-  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
-  colorBy="species"
-  fieldLabels={{ sepalLength: "Sepal Length", sepalWidth: "Sepal Width" }}
-  cellSize={160}
-/>
-// Crossfilter brushing
-<ScatterplotMatrix
-  data={iris}
-  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
-  colorBy="species"
-  hoverMode={false}
-  brushMode="crossfilter"
-/>
-```
+// Marginal graphics
+<Scatterplot data={d} marginalGraphics={{ top: "histogram", right: "violin" }} />
 
-### ThemeProvider (import from "semiotic" or "semiotic/ai")
+// Theming
+<ThemeProvider theme="dark"><LineChart ... /></ThemeProvider>
 
-Global theming for all Semiotic charts. Opt-in — no changes to existing behavior without wrapping.
-
-```jsx
-import { ThemeProvider } from "semiotic"
-
-// Dark mode preset
-<ThemeProvider theme="dark">
-  <LineChart data={d} xAccessor="x" yAccessor="y" />
-</ThemeProvider>
-
-// Custom theme
-<ThemeProvider theme={{ colors: { primary: "#e41a1c", background: "#f5f5f5" } }}>
-  <BarChart data={d} categoryAccessor="cat" valueAccessor="val" />
-</ThemeProvider>
-```
-
-Presets: `"light"` (default), `"dark"`. Use `useTheme()` hook to read the current theme.
-
-### Data Transforms (import from "semiotic/data")
-
-Pure helper functions for common data transformations:
-
-```jsx
+// Data transforms
 import { bin, rollup, groupBy, pivot } from "semiotic/data"
 
-bin(data, { field: "age", bins: 10 })          // → histogram-ready { category, value }[]
-rollup(data, { groupBy: "region", value: "sales", agg: "sum" })  // → aggregated rows
-groupBy(data, { key: "region" })               // → [{ id, coordinates }] for LineChart
-pivot(data, { columns: ["q1", "q2", "q3"] })   // → wide-to-long format
+// Browser export
+await exportChart(el, { format: "png", scale: 2 })
+
+// Realtime
+const ref = useRef()
+ref.current.push({ time: Date.now(), value: 42 })
+<RealtimeLineChart ref={ref} timeAccessor="time" valueAccessor="value" />
 ```
 
-### Browser Export (import from "semiotic" or "semiotic/ai")
+## AI Features
 
-```jsx
-import { exportChart } from "semiotic"
+**onObservation** — callback on all HOCs emitting structured events: hover, hover-end, click, click-end, brush, brush-end, selection, selection-end. Each includes `{ type, datum?, x?, y?, timestamp, chartType, chartId? }`.
 
-// Export chart container to SVG or PNG
-await exportChart(containerElement, { format: "png", scale: 2 })
-await exportChart(containerElement, { format: "svg", filename: "my-chart" })
-```
+**useChartObserver** — aggregates observations across LinkedCharts. Options: `limit` (50), `types`, `chartId`.
 
-### AI Observation Hooks (import from "semiotic" or "semiotic/ai")
+**Chart serialization** — `toConfig(name, props)` / `fromConfig(config)` for JSON round-trip. `toURL`/`fromURL` for permalinks. `copyConfig(config, "jsx")` for clipboard. `configToJSX(config)` for code gen. String accessors survive; functions are stripped.
 
-Every HOC chart accepts `onObservation` — a callback that emits structured events when users interact with the chart. Used by AI agent systems to observe user behavior for insight generation.
+**DetailsPanel** — selection-driven detail panel. Props: `children` (render fn), `position` ("right"|"bottom"|"overlay"), `size` (300), `trigger` ("click"|"hover"), `chartId`, `dismissOnEmpty`, `showClose`. Use inside ChartContainer via `detailsPanel` prop.
 
-**Props (available on all HOC charts):**
-- `onObservation` ((observation: ChartObservation) => void) — callback receiving structured events
-- `chartId` (string) — optional identifier included in observation events
+**ChartErrorBoundary** — `fallback` (ReactNode), `onError` (fn)
 
-**Event types:**
-```ts
-type ChartObservation =
-  | { type: "hover",         datum, x, y, timestamp, chartType, chartId? }
-  | { type: "hover-end",     timestamp, chartType, chartId? }
-  | { type: "click",         datum, x, y, timestamp, chartType, chartId? }
-  | { type: "click-end",     timestamp, chartType, chartId? }
-  | { type: "brush",         extent: { x: [min,max], y: [min,max] }, timestamp, chartType, chartId? }
-  | { type: "brush-end",     timestamp, chartType, chartId? }
-  | { type: "selection",     selection: { name, fields }, timestamp, chartType, chartId? }
-  | { type: "selection-end", selection: { name }, timestamp, chartType, chartId? }
-```
-
-**Standalone usage:**
-```jsx
-<LineChart data={d} xAccessor="x" yAccessor="y"
-  onObservation={(obs) => console.log(obs.type, obs.datum)} />
-```
-
-**Aggregated usage with `useChartObserver` (inside LinkedCharts):**
-```jsx
-import { LinkedCharts, useChartObserver } from "semiotic"
-
-function Dashboard() {
-  return (
-    <LinkedCharts>
-      <Scatterplot data={d} xAccessor="x" yAccessor="y" onObservation={() => {}} chartId="scatter" />
-      <BarChart data={d} categoryAccessor="cat" valueAccessor="val" onObservation={() => {}} chartId="bar" />
-      <InsightPanel />
-    </LinkedCharts>
-  )
-}
-
-function InsightPanel() {
-  const { observations, latest } = useChartObserver({ limit: 20, types: ["hover"] })
-  // Feed observations into an AI agent's context window
-  return <div>Last hovered: {latest?.datum?.name}</div>
-}
-```
-
-**`useChartObserver` options:**
-- `limit` (number, default 50) — max observations returned
-- `types` (string[]) — filter by event type
-- `chartId` (string) — filter by chart instance
-
-### Chart State Serialization (import from "semiotic" or "semiotic/ai")
-
-Serialize any chart's configuration to JSON, reconstruct it, encode as URL, or copy to clipboard.
-
-```jsx
-import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "semiotic"
-
-// Serialize chart props to JSON (strips functions, React elements)
-const config = toConfig("LineChart", {
-  data: salesData,
-  xAccessor: "month",
-  yAccessor: "revenue",
-  width: 600,
-  colorBy: "region",
-})
-// config = { component: "LineChart", props: {...}, version: "1", createdAt: "..." }
-
-// Reconstruct props from config
-const { componentName, props } = fromConfig(config)
-// → componentName: "LineChart", props: { data, xAccessor, yAccessor, width, colorBy }
-
-// URL encoding (base64url)
-const url = `https://app.com/viz?${toURL(config)}`  // → "sc=eyJjb21wb25..."
-const decoded = fromURL(url)
-
-// Clipboard — copy as JSON or JSX code snippet
-await copyConfig(config)           // copies JSON
-await copyConfig(config, "jsx")    // copies <LineChart data={...} xAccessor="month" ... />
-
-// Generate JSX code
-const jsx = configToJSX(config)    // → '<LineChart\n  xAccessor="month"\n  ...\n/>'
-
-// Exclude data for smaller configs (e.g., URL sharing)
-const lightweight = toConfig("LineChart", props, { includeData: false })
-
-// Selection state serialization (for LinkedCharts brush/selection state)
-import { serializeSelections, deserializeSelections } from "semiotic"
-const serialized = serializeSelections(selectionStore.selections)  // Map/Set → JSON
-const config = toConfig("Scatterplot", props, { selections: serialized })
-```
-
-**`toConfig` behavior:** String accessors survive (`xAccessor: "month"`), function accessors are stripped (`xAccessor: d => d.month`). Callbacks (`onObservation`, `tooltip`, format functions) are always excluded. Data is included by default; use `includeData: false` to exclude.
-
-**ChartContainer integration:**
-```jsx
-<ChartContainer title="Revenue" actions={{ copyConfig: true }} chartConfig={toConfig("LineChart", props)}>
-  <LineChart {...props} />
-</ChartContainer>
-```
-
-### DetailsPanel (import from "semiotic" or "semiotic/ai")
-
-Generic selection-driven detail panel. Consumes click observations via `useChartObserver` internally.
-Works inside `LinkedCharts`. Place inside `ChartContainer` via the `detailsPanel` prop.
-
-Props: `children` ((datum, observation) => ReactNode, required — render function),
-  `position` ("right"|"bottom"|"overlay", "right"),
-  `size` (number, 300 — width for right, height for bottom),
-  `trigger` ("click"|"hover", "click"),
-  `chartId` (string — filter observations by chart ID),
-  `dismissOnEmpty` (boolean, true), `showClose` (boolean, true),
-  `onToggle` ((open: boolean) => void),
-  `className` (string), `style` (object)
-
-```jsx
-import { ChartContainer, DetailsPanel, SankeyDiagram, LinkedCharts } from "semiotic"
-
-<LinkedCharts>
-  <ChartContainer title="System" detailsPanel={
-    <DetailsPanel position="right" size={300} trigger="click">
-      {(datum) => <div><h3>{datum.id}</h3><p>{datum.value} req/s</p></div>}
-    </DetailsPanel>
-  }>
-    <SankeyDiagram edges={edges} onObservation={() => {}} chartId="sys" />
-  </ChartContainer>
-</LinkedCharts>
-```
-
-### ChartErrorBoundary (import from "semiotic")
-
-```jsx
-import { ChartErrorBoundary } from "semiotic"
-
-<ChartErrorBoundary fallback={<div>Chart error</div>} onError={logError}>
-  <LineChart data={data} xAccessor="x" yAccessor="y" />
-</ChartErrorBoundary>
-```
+**validateProps(componentName, props)** — returns `{ valid, errors }`
 
 ## What Semiotic Does That Others Don't
-
-When choosing between Semiotic and other React chart libraries (Recharts, Nivo, Visx, ECharts):
-
-- **Network visualization** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack. Other React charting libraries either don't have these or require a separate library. Semiotic gives them the same clean prop API as LineChart.
-- **Streaming data** — RealtimeLineChart, RealtimeTemporalHistogram, RealtimeSwarmChart, RealtimeWaterfallChart, RealtimeHeatmap (canvas-based, 60fps push API). Plus StreamNetworkFrame with `chartType="sankey"` for streaming Sankey diagrams with animated particles.
-- **Realtime visual encoding** — decay (old data fades), pulse (new data flashes), transitions (smooth interpolation), staleness (stale feed detection with badge). These communicate *change over time*, not just current state.
-- **Coordinated views** — LinkedCharts for cross-highlighting and brushing-and-linking between any charts. ScatterplotMatrix with crossfilter brushing. No other React chart library ships this built in.
-- **Statistical summaries** — BoxPlot, ViolinPlot, SwarmPlot, Histogram, RidgelinePlot for distribution analysis. Marginal graphics on Scatterplot/BubbleChart via `marginalGraphics` prop.
-- **Annotation system** — built-in hover, click, and custom annotations
-- **Server-side SVG** — `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
-- **Browser export** — `exportChart()` for SVG/PNG download
-- **Global theming** — `ThemeProvider` with dark mode support
-- **AI observation hooks** — `onObservation` callback on every chart emits structured events (hover, click, brush, selection). `useChartObserver()` aggregates observations across `LinkedCharts` for AI agent insight generation. No other chart library has this.
-- **Streaming system models** — Streaming Sankey with proportional particle speed (`proportionalSpeed`), threshold alerting (`thresholds` with warning/critical levels), automatic topology diffing (green pulse on new nodes), and generic `DetailsPanel` for click-to-inspect. Visualization as product navigation.
-- **Chart state serialization** — `toConfig()`/`fromConfig()` round-trip chart props to JSON, `toURL()`/`fromURL()` encode as permalinks, `copyConfig()` copies to clipboard as JSON or JSX, `configToJSX()` generates pasteable code. Enables AI agents to manipulate chart state programmatically.
-
-For standard bar/line/pie charts in a simple dashboard, Recharts is a fine choice with a larger community. Semiotic is for projects that outgrow those libraries.
+- Network visualization (force, sankey, chord, tree, treemap, circlepack) with same clean API
+- Streaming data (canvas 60fps push API) + streaming Sankey with particles
+- Realtime visual encoding (decay, pulse, transitions, staleness)
+- Coordinated views (LinkedCharts, crossfilter brushing, ScatterplotMatrix)
+- Statistical summaries (box, violin, swarm, histogram, marginal graphics)
+- AI observation hooks + chart state serialization
+- Server-side SVG via `renderToStaticSVG()` (from "semiotic/server")
+- Global theming with ThemeProvider

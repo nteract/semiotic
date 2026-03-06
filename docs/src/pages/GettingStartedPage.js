@@ -8,7 +8,7 @@ import PageLayout from "../components/PageLayout"
 // Code snippets
 // ---------------------------------------------------------------------------
 
-const installSnippet = `npm install semiotic@3.0.0-beta.3`
+const installSnippet = `npm install semiotic@3.0.0-beta.4`
 
 const firstChartSnippet = `import { LineChart } from "semiotic"
 

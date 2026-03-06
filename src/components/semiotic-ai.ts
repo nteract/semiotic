@@ -25,6 +25,7 @@ export { BoxPlot } from "./charts/ordinal/BoxPlot"
 export { Histogram } from "./charts/ordinal/Histogram"
 export { ViolinPlot } from "./charts/ordinal/ViolinPlot"
 export { DotPlot } from "./charts/ordinal/DotPlot"
+export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
 
