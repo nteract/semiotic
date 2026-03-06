@@ -93,6 +93,7 @@ import BarChartPlayground from "./pages/playground/BarChartPlayground"
 import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
+import StreamingSankeyPlayground from "./pages/playground/StreamingSankeyPlayground"
 import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
 import RealtimeHistogramPlayground from "./pages/playground/RealtimeHistogramPlayground"
 import BubbleChartPlayground from "./pages/playground/BubbleChartPlayground"
@@ -282,6 +283,7 @@ export default function DocsApp() {
               <Route path="scatterplot" element={<ScatterplotPlayground />} />
               <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
+              <Route path="streaming-sankey" element={<StreamingSankeyPlayground />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
               <Route path="realtime-bar-chart" element={<RealtimeHistogramPlayground />} />
               <Route path="bubble-chart" element={<BubbleChartPlayground />} />

@@ -130,6 +130,7 @@ const navData = [
       { title: "Scatterplot", path: "/playground/scatterplot" },
       { title: "Force Directed Graph", path: "/playground/force-directed-graph" },
       { title: "Sankey Diagram", path: "/playground/sankey-diagram" },
+      { title: "Streaming Sankey", path: "/playground/streaming-sankey" },
       { title: "Realtime Line / Waterfall", path: "/playground/realtime-line-chart" },
       { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" },
       { title: "Bubble Chart", path: "/playground/bubble-chart" },
