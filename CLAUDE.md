@@ -21,9 +21,9 @@
 
 ### XY Charts (from "semiotic" or "semiotic/xy")
 
-**LineChart** — `data` (required), `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme` ("category10"), `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom"), `lineWidth` (2), `showPoints` (false), `pointRadius` (3), `fillArea` (false), `areaOpacity` (0.3), `xLabel`, `yLabel`, `xFormat`, `yFormat`
+**LineChart** — `data` (required), `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme` ("category10"), `curve` ("linear"|"monotoneX"|"monotoneY"|"step"|"stepAfter"|"stepBefore"|"basis"|"cardinal"|"catmullRom"), `lineWidth` (2), `showPoints` (false), `pointRadius` (3), `fillArea` (false), `areaOpacity` (0.3), `xLabel`, `yLabel`, `xFormat`, `yFormat`, `anomaly` (AnomalyConfig), `forecast` (ForecastConfig)
 
-**AreaChart** — Same as LineChart plus: `areaBy`, `areaOpacity` (0.7), `showLine` (true), curve default "monotoneX"
+**AreaChart** — Same as LineChart plus: `areaBy`, `y0Accessor` (per-point lower bound for band/ribbon charts), `gradientFill` (boolean|{topOpacity,bottomOpacity} — fade fill from line to baseline), `areaOpacity` (0.7), `showLine` (true), curve default "monotoneX"
 
 **StackedAreaChart** — Same as AreaChart plus: `normalize` (false)
 
@@ -141,6 +141,21 @@ await exportChart(el, { format: "png", scale: 2 })
 const ref = useRef()
 ref.current.push({ time: Date.now(), value: 42 })
 <RealtimeLineChart ref={ref} timeAccessor="time" valueAccessor="value" />
+
+// Forecast + anomaly detection (LineChart only)
+// Auto mode: training=dashed, observed=solid, forecast=dotted with confidence envelope
+<LineChart data={timeSeries} xAccessor="time" yAccessor="value"
+  forecast={{ trainEnd: 60, steps: 15, confidence: 0.95 }}
+  anomaly={{ threshold: 2, anomalyColor: "#ef4444" }} />
+
+// Pre-computed mode: bring your own bounds from an ML model
+// Data: { time, value, isTraining?, isForecast?, isAnomaly?, upperBounds?, lowerBounds? }
+// Envelope follows per-point bounds (non-rectilinear)
+<LineChart data={mlOutput} xAccessor="time" yAccessor="value"
+  forecast={{
+    isTraining: "isTraining", isForecast: "isForecast",
+    isAnomaly: "isAnomaly", upperBounds: "upper", lowerBounds: "lower",
+  }} />
 ```
 
 ## AI Features

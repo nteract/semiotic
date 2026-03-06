@@ -65,6 +65,9 @@ export type { DetailsPanelProps } from "./DetailsPanel"
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
 
+// Statistical overlay types
+export type { AnomalyConfig, ForecastConfig } from "./charts/shared/statisticalOverlays"
+
 // Chart state serialization
 export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"

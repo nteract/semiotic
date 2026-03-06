@@ -29,6 +29,20 @@ const simpleData = [
   { month: 12, sales: 11800 },
 ]
 
+// Percentile band data (p5–p95)
+const percentileData = Array.from({ length: 24 }, (_, i) => {
+  const base = 50 + Math.sin(i * 0.25) * 20 + i * 0.5
+  const spread = 8 + Math.sin(i * 0.15) * 4
+  return {
+    month: i + 1,
+    p95: Math.round((base + spread * 2) * 10) / 10,
+    p75: Math.round((base + spread) * 10) / 10,
+    median: Math.round(base * 10) / 10,
+    p25: Math.round((base - spread) * 10) / 10,
+    p5: Math.round((base - spread * 2) * 10) / 10,
+  }
+})
+
 const multiAreaData = [
   { month: 1, sales: 4200, channel: "Online" },
   { month: 2, sales: 5800, channel: "Online" },
@@ -59,6 +73,8 @@ const areaChartProps = [
   { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values from each data point." },
   { name: "yAccessor", type: "string | function", required: false, default: '"y"', description: "Field name or function to access y values from each data point." },
   { name: "areaBy", type: "string | function", required: false, default: null, description: "Field name or function to group data into multiple areas (e.g., by series)." },
+  { name: "y0Accessor", type: "string | function", required: false, default: null, description: "Per-point lower bound accessor. When set, fills between yAccessor (top) and y0Accessor (bottom) instead of to the axis. Use for percentile bands, confidence intervals, or ribbons." },
+  { name: "gradientFill", type: "boolean | object", required: false, default: "false", description: "Gradient fill from line to baseline. true for defaults (80%→5%) or { topOpacity, bottomOpacity } for custom." },
   { name: "lineDataAccessor", type: "string", required: false, default: '"coordinates"', description: "Field name in area objects that contains coordinate arrays." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Field name or function to determine area color for multiple areas." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
@@ -293,6 +309,30 @@ export default function AreaChartPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="gradient-fill">Gradient Fill</h3>
+      <p>
+        Set <code>gradientFill</code> to fade the fill from opaque at the line
+        to transparent at the baseline — the modern area chart look. Use{" "}
+        <code>true</code> for defaults (80% → 5%) or pass custom opacities.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "month",
+          yAccessor: "sales",
+          gradientFill: true,
+          curve: "monotoneX",
+          xLabel: "Month",
+          yLabel: "Sales ($)",
+        }}
+        type={AreaChart}
+        overrideProps={{
+          data: "salesData",
+        }}
+        hiddenProps={{}}
+      />
+
       <h3 id="no-line">Area Without Top Line</h3>
       <p>
         Set <code>showLine</code> to <code>false</code> for a pure filled area
@@ -315,6 +355,64 @@ export default function AreaChartPage() {
           data: "salesData",
         }}
         hiddenProps={{}}
+      />
+
+      <h3 id="percentile-band">Percentile Band (p5–p95)</h3>
+      <p>
+        Use <code>y0Accessor</code> to fill between two values per data point
+        instead of filling down to the axis. This is ideal for percentile
+        bands, confidence intervals, or any ribbon visualization. Layer
+        multiple AreaCharts for nested bands (e.g., p5–p95 and p25–p75).
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: percentileData,
+          xAccessor: "month",
+          yAccessor: "p95",
+          y0Accessor: "p5",
+          areaOpacity: 0.15,
+          showLine: false,
+          colorScheme: ["#6366f1"],
+          xLabel: "Month",
+          yLabel: "Value",
+          showGrid: true,
+        }}
+        type={AreaChart}
+        overrideProps={{
+          data: `[
+  { month: 1, p95: 66, median: 50, p5: 34 },
+  { month: 2, p95: 72, median: 55, p5: 38 },
+  // ...data with percentile fields
+]`,
+          yAccessor: '"p95"',
+          y0Accessor: '"p5"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        For a layered percentile fan, render two AreaCharts — an outer
+        p5–p95 band and an inner p25–p75 band — with a median LineChart
+        on top:
+      </p>
+
+      <CodeBlock
+        code={`import { AreaChart, LineChart } from "semiotic"
+
+// Outer band: 5th–95th percentile
+<AreaChart data={data} xAccessor="month"
+  yAccessor="p95" y0Accessor="p5"
+  areaOpacity={0.12} showLine={false} />
+
+// Inner band: 25th–75th percentile
+<AreaChart data={data} xAccessor="month"
+  yAccessor="p75" y0Accessor="p25"
+  areaOpacity={0.25} showLine={false} />
+
+// Median line
+<LineChart data={data} xAccessor="month" yAccessor="median" />`}
+        language="jsx"
       />
 
       {/* ----------------------------------------------------------------- */}

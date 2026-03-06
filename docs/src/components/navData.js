@@ -138,7 +138,8 @@ const navData = [
       { title: "Donut Chart", path: "/playground/donut-chart" },
       { title: "Treemap", path: "/playground/treemap" },
       { title: "Circle Pack", path: "/playground/circle-pack" },
-      { title: "Statistical Annotations", path: "/playground/statistical-annotations" }
+      { title: "Statistical Annotations", path: "/playground/statistical-annotations" },
+      { title: "Forecast & Anomaly", path: "/playground/forecast" }
     ]
   },
   {

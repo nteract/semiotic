@@ -439,6 +439,63 @@ export function createDefaultAnnotationRules(
         )
       }
 
+      // ── Envelope (per-point upper/lower bounds polygon) ─────────────
+      case "envelope": {
+        const data = context.data || []
+        if (data.length < 2) return null
+        const xAcc = context.xAccessor || "x"
+        const scaleX = context.scales?.x ?? context.scales?.time
+        const scaleY = context.scales?.y ?? context.scales?.value
+        if (!scaleX || !scaleY) return null
+
+        const upperAcc = ann.upperAccessor || "upperBounds"
+        const lowerAcc = ann.lowerAccessor || "lowerBounds"
+        const filterFn = ann.filter as ((d: Record<string, any>) => boolean) | undefined
+
+        // Collect points that have bounds
+        const bounded = data
+          .filter((d) => {
+            if (d[upperAcc] == null || d[lowerAcc] == null) return false
+            if (filterFn && !filterFn(d)) return false
+            return true
+          })
+          .sort((a, b) => (a[xAcc] as number) - (b[xAcc] as number))
+        if (bounded.length < 2) return null
+
+        // Build polygon: upper path forward, lower path reversed
+        const upperPath = bounded
+          .map((d) => `${scaleX(d[xAcc])},${scaleY(d[upperAcc])}`)
+          .join(" L")
+        const lowerPath = bounded
+          .slice()
+          .reverse()
+          .map((d) => `${scaleX(d[xAcc])},${scaleY(d[lowerAcc])}`)
+          .join(" L")
+        const envelopePath = `M${upperPath} L${lowerPath} Z`
+
+        const fillColor = ann.fill || "#6366f1"
+        return (
+          <g key={`ann-${index}`}>
+            <path
+              d={envelopePath}
+              fill={fillColor}
+              fillOpacity={ann.fillOpacity ?? 0.15}
+              stroke="none"
+            />
+            {ann.label && bounded.length > 0 && (
+              <text
+                x={scaleX(bounded[bounded.length - 1][xAcc]) + 4}
+                y={scaleY(bounded[bounded.length - 1][upperAcc]) - 4}
+                fill={fillColor}
+                fontSize={11}
+              >
+                {ann.label}
+              </text>
+            )}
+          </g>
+        )
+      }
+
       // ── Anomaly Band (mean ± N×stddev with outlier dots) ──────────────
       case "anomaly-band": {
         const data = context.data || []

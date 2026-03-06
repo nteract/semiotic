@@ -140,6 +140,8 @@ export interface AreaSceneNode {
   style: Style
   datum: any
   group?: string
+  /** Vertical gradient fill: opacity fades from topOpacity at the line to bottomOpacity at the baseline */
+  fillGradient?: { topOpacity: number; bottomOpacity: number }
   /** When false, skip hit testing (used for decorative bounds areas) */
   interactive?: boolean
 }
@@ -293,6 +295,20 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
    * When set, an uncertainty band is drawn ± this offset from the line.
    */
   boundsAccessor?: string | ((d: T) => number)
+
+  /**
+   * Per-point area baseline accessor. When set, area charts fill between
+   * yAccessor (top) and y0Accessor (bottom) instead of filling to the axis.
+   * Use for percentile bands, confidence ribbons, or any band/ribbon chart.
+   */
+  y0Accessor?: string | ((d: T) => number)
+
+  /**
+   * Gradient fill for area charts. The fill fades from topOpacity at the line
+   * to bottomOpacity at the baseline. Set to `true` for default (0.8 → 0.05)
+   * or `{ topOpacity, bottomOpacity }` for custom values.
+   */
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number }
 
   /**
    * Style for bounds/uncertainty areas.

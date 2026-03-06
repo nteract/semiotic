@@ -78,6 +78,12 @@ export interface PipelineConfig {
   boundsAccessor?: string | ((d: any) => number)
   boundsStyle?: any
 
+  // Per-point area baseline (for band/ribbon charts like percentile bands)
+  y0Accessor?: string | ((d: any) => number)
+
+  // Area gradient fill (opacity fades from top to baseline)
+  gradientFill?: { topOpacity: number; bottomOpacity: number }
+
   // Style
   lineStyle?: any
   pointStyle?: (d: any) => Style & { r?: number }
@@ -121,6 +127,7 @@ export class PipelineStore {
   private getSize: ((d: any) => number) | undefined
   private getColor: ((d: any) => string) | undefined
   private getBounds: ((d: any) => number) | undefined
+  private getY0: ((d: any) => number) | undefined
   private getOpen: ((d: any) => number) | undefined
   private getHigh: ((d: any) => number) | undefined
   private getLow: ((d: any) => number) | undefined
@@ -170,6 +177,9 @@ export class PipelineStore {
     this.getColor = resolveStringAccessor(config.colorAccessor)
     this.getBounds = config.boundsAccessor
       ? resolveAccessor(config.boundsAccessor, "bounds")
+      : undefined
+    this.getY0 = config.y0Accessor
+      ? resolveAccessor(config.y0Accessor, "y0")
       : undefined
 
     this.getPointId = resolveStringAccessor(config.pointIdAccessor)
@@ -223,6 +233,7 @@ export class PipelineStore {
           this.yExtent.push(this.getLow(d))
         } else {
           this.yExtent.push(this.getY(d))
+          if (this.getY0) this.yExtent.push(this.getY0(d))
         }
       }
     } else {
@@ -242,6 +253,7 @@ export class PipelineStore {
           this.yExtent.push(this.getLow(d))
         } else {
           this.yExtent.push(this.getY(d))
+          if (this.getY0) this.yExtent.push(this.getY0(d))
         }
 
         if (evicted != null) {
@@ -503,7 +515,11 @@ export class PipelineStore {
 
     for (const g of groups) {
       const style = this.resolveAreaStyle(g.key, g.data[0])
-      nodes.push(buildAreaNode(g.data, this.scales!, this.getX, this.getY, baseline, style, g.key))
+      const node = buildAreaNode(g.data, this.scales!, this.getX, this.getY, baseline, style, g.key, this.getY0)
+      if (this.config.gradientFill) {
+        node.fillGradient = this.config.gradientFill
+      }
+      nodes.push(node)
     }
 
     return nodes

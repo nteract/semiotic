@@ -361,6 +361,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       colorScheme,
       boundsAccessor,
       boundsStyle,
+      y0Accessor,
+      gradientFill,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -469,6 +471,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       normalize,
       boundsAccessor,
       boundsStyle,
+      y0Accessor,
+      gradientFill: typeof gradientFill === "boolean"
+        ? (gradientFill ? { topOpacity: 0.8, bottomOpacity: 0.05 } : undefined)
+        : gradientFill,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -495,7 +501,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
-      boundsAccessor, boundsStyle,
+      boundsAccessor, boundsStyle, y0Accessor, gradientFill,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,

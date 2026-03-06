@@ -290,6 +290,7 @@ export default function StatisticalAnnotationsPlayground() {
         { label: "Statistical Annotations", path: "/playground/statistical-annotations" },
       ]}
       prevPage={{ title: "Circle Pack Playground", path: "/playground/circle-pack" }}
+      nextPage={{ title: "Forecast & Anomaly Playground", path: "/playground/forecast" }}
     >
       <p>
         Experiment with LOESS smoothing and streaming anomaly detection

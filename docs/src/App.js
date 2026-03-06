@@ -102,6 +102,7 @@ import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
 import TreemapPlayground from "./pages/playground/TreemapPlayground"
 import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
 import StatisticalAnnotationsPlayground from "./pages/playground/StatisticalAnnotationsPlayground"
+import ForecastPlayground from "./pages/playground/ForecastPlayground"
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -292,6 +293,7 @@ export default function DocsApp() {
               <Route path="treemap" element={<TreemapPlayground />} />
               <Route path="circle-pack" element={<CirclePackPlayground />} />
               <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
+              <Route path="forecast" element={<ForecastPlayground />} />
             </Route>
 
             {/* Frames routes */}
