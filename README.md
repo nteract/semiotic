@@ -102,7 +102,7 @@ highlights new services as they appear. Visualization as product navigation.
 ## Install
 
 ```bash
-npm install semiotic@3.0.0-beta.6
+npm install semiotic@3.0.0-beta.7
 ```
 
 Requires React 18.1 or later.
