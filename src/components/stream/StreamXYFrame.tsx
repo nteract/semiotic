@@ -581,9 +581,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     useEffect(() => {
       if (!data) return
-      // Spread creates a new array reference each call, preventing terser's
-      // dedup optimization from short-circuiting on StrictMode remount.
-      adapterRef.current?.setBoundedData([...data])
+      adapterRef.current?.setBoundedData(data)
     }, [data])
 
     // ── Hover handlers ───────────────────────────────────────────────────
