@@ -2,6 +2,9 @@
  * Validates chart data and accessors at render time.
  * Returns null if data is valid, or an error message string if not.
  *
+ * Error messages are designed for AI-agent consumption:
+ * they include the problem, the available fields, AND the suggested fix.
+ *
  * Samples first, last, and a middle element to catch common mistakes
  * (wrong field names, missing data) without iterating the entire dataset.
  */
@@ -13,6 +16,17 @@ function sampleRows(data: any[]): any[] {
   if (data.length <= 3) return data
   const mid = Math.floor(data.length / 2)
   return [data[0], data[mid], data[data.length - 1]]
+}
+
+/** Find the closest match to a string from a list of candidates (Levenshtein-like) */
+function suggestField(target: string, available: string[]): string | null {
+  if (available.length === 0) return null
+  const lower = target.toLowerCase()
+  // Exact substring match
+  const sub = available.find(k => k.toLowerCase().includes(lower) || lower.includes(k.toLowerCase()))
+  if (sub) return sub
+  // First field as fallback if it looks plausible (e.g., numeric for y, string for category)
+  return available[0]
 }
 
 interface ArrayDataValidation {
@@ -50,26 +64,39 @@ export function validateArrayData({
   if (requiredProps) {
     for (const [name, value] of Object.entries(requiredProps)) {
       if (value === undefined || value === null) {
-        return `${name} is required. Provide a field name or function.`
+        return `${componentName}: ${name} is required. Provide a field name or function.`
       }
     }
   }
 
   // Check data exists and is non-empty
   if (!data || !Array.isArray(data) || data.length === 0) {
-    return "No data provided. Pass a non-empty array to the data prop."
+    return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
+  }
+
+  // Check if data is an object but not an array (common hierarchy mistake)
+  if (!Array.isArray(data) && typeof data === "object") {
+    return (
+      `${componentName}: data should be an array, but received an object. ` +
+      `If this is hierarchical data, use TreeDiagram, Treemap, or CirclePack instead.`
+    )
   }
 
   // Check accessors against a sample of data points
   if (accessors) {
-    for (const sample of sampleRows(data)) {
-      if (!sample || typeof sample !== "object") continue
+    const sample = sampleRows(data).find(s => s && typeof s === "object")
+    if (sample) {
+      const available = Object.keys(sample)
       for (const [label, accessor] of Object.entries(accessors)) {
         if (!accessor) continue
         if (typeof accessor === "string" && !(accessor in sample)) {
+          const suggestion = suggestField(accessor, available)
+          const fix = suggestion
+            ? ` Try ${label}="${suggestion}".`
+            : ""
           return (
-            `${label} "${accessor}" not found in data. ` +
-            `Available fields: ${Object.keys(sample).join(", ")}.`
+            `${componentName}: ${label} "${accessor}" not found in data. ` +
+            `Available fields: ${available.join(", ")}.${fix}`
           )
         }
       }
@@ -88,7 +115,17 @@ export function validateObjectData({
   dataLabel = "data",
 }: ObjectDataValidation): string | null {
   if (data === undefined || data === null) {
-    return `No ${dataLabel} provided. Pass a hierarchical data object to the ${dataLabel} prop.`
+    return (
+      `${componentName}: No ${dataLabel} provided. ` +
+      `Pass a hierarchical object with children: { name: "root", children: [...] }.`
+    )
+  }
+  if (Array.isArray(data)) {
+    return (
+      `${componentName}: ${dataLabel} should be a single root object, not an array. ` +
+      `Expected: { name: "root", children: [...] }. ` +
+      `If you have flat data, use LineChart, BarChart, or Scatterplot instead.`
+    )
   }
   return null
 }
@@ -105,23 +142,55 @@ export function validateNetworkData({
   accessors,
 }: NetworkDataValidation): string | null {
   if (edgesRequired && (!edges || !Array.isArray(edges) || edges.length === 0)) {
-    return "No edges provided. Pass a non-empty array to the edges prop."
+    return (
+      `${componentName}: No edges provided. Pass a non-empty array: ` +
+      `edges={[{ source: "A", target: "B", value: 10 }, ...]}.`
+    )
   }
 
   if (nodesRequired && (!nodes || !Array.isArray(nodes) || nodes.length === 0)) {
-    return "No nodes provided. Pass a non-empty array to the nodes prop."
+    return (
+      `${componentName}: No nodes provided. Pass a non-empty array: ` +
+      `nodes={[{ id: "A" }, { id: "B" }, ...]}.`
+    )
   }
 
-  // Check accessors against a sample of node data
-  if (accessors && nodes && nodes.length > 0) {
-    for (const sample of sampleRows(nodes)) {
-      if (!sample || typeof sample !== "object") continue
+  // Check accessors against a sample of edge data
+  if (accessors && edges && edges.length > 0) {
+    const sample = sampleRows(edges).find(s => s && typeof s === "object")
+    if (sample) {
+      const available = Object.keys(sample)
       for (const [label, accessor] of Object.entries(accessors)) {
         if (!accessor) continue
         if (typeof accessor === "string" && !(accessor in sample)) {
+          const suggestion = suggestField(accessor, available)
+          const fix = suggestion
+            ? ` Try ${label}="${suggestion}".`
+            : ""
           return (
-            `${label} "${accessor}" not found in node data. ` +
-            `Available fields: ${Object.keys(sample).join(", ")}.`
+            `${componentName}: ${label} "${accessor}" not found in edge data. ` +
+            `Available fields: ${available.join(", ")}.${fix}`
+          )
+        }
+      }
+    }
+  }
+
+  // Also check node accessors
+  if (accessors && nodes && nodes.length > 0) {
+    const sample = sampleRows(nodes).find(s => s && typeof s === "object")
+    if (sample) {
+      const available = Object.keys(sample)
+      for (const [label, accessor] of Object.entries(accessors)) {
+        if (!accessor) continue
+        if (typeof accessor === "string" && !(accessor in sample)) {
+          const suggestion = suggestField(accessor, available)
+          const fix = suggestion
+            ? ` Try ${label}="${suggestion}".`
+            : ""
+          return (
+            `${componentName}: ${label} "${accessor}" not found in node data. ` +
+            `Available fields: ${available.join(", ")}.${fix}`
           )
         }
       }

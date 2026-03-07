@@ -9,6 +9,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
 import { useColorScale, useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -145,6 +146,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   if (error) return <ChartError componentName="ChordDiagram" message={error} width={width} height={height} />
 
   return (
+    <SafeRender componentName="ChordDiagram" width={width} height={height}>
     <StreamNetworkFrame
       chartType="chord"
       nodes={inferredNodes}
@@ -175,6 +177,6 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       title={title}
       {...frameProps}
     />
-  )
+  </SafeRender>)
 }
 ChordDiagram.displayName = "ChordDiagram"

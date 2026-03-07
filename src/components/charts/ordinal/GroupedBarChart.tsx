@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -134,6 +135,6 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     ...frameProps
   }
 
-  return <StreamOrdinalFrame {...streamProps} />
+  return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
 }
 GroupedBarChart.displayName = "GroupedBarChart"

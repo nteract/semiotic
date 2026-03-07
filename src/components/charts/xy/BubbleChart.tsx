@@ -9,6 +9,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
@@ -368,6 +369,6 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...frameProps
   }
 
-  return <StreamXYFrame {...streamProps} />
+  return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
 }
 BubbleChart.displayName = "BubbleChart"

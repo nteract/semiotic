@@ -9,6 +9,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -356,6 +357,6 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     ...frameProps
   }
 
-  return <StreamXYFrame {...streamProps} />
+  return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
 }
 StackedAreaChart.displayName = "StackedAreaChart"

@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 
 /**
@@ -115,6 +116,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   if (error) return <ChartError componentName="CirclePack" message={error} width={width} height={height} />
 
   return (
+    <SafeRender componentName="CirclePack" width={width} height={height}>
     <StreamNetworkFrame
       chartType="circlepack"
       data={data}
@@ -139,6 +141,6 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       title={title}
       {...frameProps}
     />
-  )
+  </SafeRender>)
 }
 CirclePack.displayName = "CirclePack"

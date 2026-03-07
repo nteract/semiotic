@@ -8,6 +8,7 @@ import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -163,6 +164,6 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     ...frameProps
   }
 
-  return <StreamOrdinalFrame {...streamProps} />
+  return <SafeRender componentName="ViolinPlot" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
 }
 ViolinPlot.displayName = "ViolinPlot"
