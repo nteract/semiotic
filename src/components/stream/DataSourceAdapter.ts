@@ -22,7 +22,8 @@ export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
 
 export class DataSourceAdapter<T = Record<string, any>> {
   private callback: ChangesetCallback<T>
-  private lastBoundedData: T[] | null = null
+  /** Public so useEffect cleanup can reset it for StrictMode compatibility */
+  lastBoundedData: T[] | null = null
   private chunkTimer: number = 0
 
   constructor(callback: ChangesetCallback<T>) {
@@ -30,13 +31,16 @@ export class DataSourceAdapter<T = Record<string, any>> {
   }
 
   /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
-   *  Also cancels any in-flight progressive chunking. */
-  clearLastData(): void {
+   *  Also cancels any in-flight progressive chunking.
+   *  Returns previous data ref (forces terser to treat as non-pure). */
+  clearLastData(): T[] | null {
+    const prev = this.lastBoundedData
     this.lastBoundedData = null
     if (this.chunkTimer) {
       cancelAnimationFrame(this.chunkTimer)
       this.chunkTimer = 0
     }
+    return prev
   }
 
   /**
