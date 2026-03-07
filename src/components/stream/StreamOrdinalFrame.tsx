@@ -363,8 +363,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     useEffect(() => {
       if (!data) return
-      adapterRef.current?.setBoundedData(data)
-      return () => { adapterRef.current?.clearLastData() }
+      adapterRef.current?.setBoundedData([...data])
     }, [data])
 
     // ── Hover handlers ───────────────────────────────────────────────────

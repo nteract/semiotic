@@ -581,10 +581,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     useEffect(() => {
       if (!data) return
-      adapterRef.current?.setBoundedData(data)
-      // On StrictMode unmount/remount, clear the adapter's dedup cache
-      // so the same data reference triggers re-ingestion on remount
-      return () => { adapterRef.current?.clearLastData() }
+      // Spread creates a new array reference each call, preventing terser's
+      // dedup optimization from short-circuiting on StrictMode remount.
+      adapterRef.current?.setBoundedData([...data])
     }, [data])
 
     // ── Hover handlers ───────────────────────────────────────────────────
