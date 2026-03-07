@@ -18,7 +18,10 @@ export function accessorName(acc: string | Function): string {
 
 export function formatVal(v: unknown): string {
   if (v == null) return "–"
-  if (typeof v === "number") return v.toLocaleString()
+  if (typeof v === "number") {
+    // Only add commas for numbers > 9999 to avoid formatting years (2005 → "2,005")
+    return Math.abs(v) > 9999 ? v.toLocaleString() : String(v)
+  }
   if (v instanceof Date) return v.toLocaleDateString()
   return String(v)
 }
