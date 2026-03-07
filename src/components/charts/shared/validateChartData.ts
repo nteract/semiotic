@@ -155,28 +155,7 @@ export function validateNetworkData({
     )
   }
 
-  // Check accessors against a sample of edge data
-  if (accessors && edges && edges.length > 0) {
-    const sample = sampleRows(edges).find(s => s && typeof s === "object")
-    if (sample) {
-      const available = Object.keys(sample)
-      for (const [label, accessor] of Object.entries(accessors)) {
-        if (!accessor) continue
-        if (typeof accessor === "string" && !(accessor in sample)) {
-          const suggestion = suggestField(accessor, available)
-          const fix = suggestion
-            ? ` Try ${label}="${suggestion}".`
-            : ""
-          return (
-            `${componentName}: ${label} "${accessor}" not found in edge data. ` +
-            `Available fields: ${available.join(", ")}.${fix}`
-          )
-        }
-      }
-    }
-  }
-
-  // Also check node accessors
+  // Check accessors against a sample of node data
   if (accessors && nodes && nodes.length > 0) {
     const sample = sampleRows(nodes).find(s => s && typeof s === "object")
     if (sample) {
