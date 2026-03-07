@@ -36,6 +36,13 @@ jobs:
       - name: Add 404.html for SPA routing
         run: cp docs/build/index.html docs/build/404.html
 
+      - name: Add CLAUDE.md and API reference to static docs
+        run: |
+          cp CLAUDE.md docs/build/CLAUDE.md
+          cp ai/schema.json docs/build/schema.json
+          cp ai/system-prompt.md docs/build/api-reference.md
+          cp ai/examples.md docs/build/examples.md
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
