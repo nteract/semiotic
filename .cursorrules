@@ -57,7 +57,7 @@
 Push API: `chartRef.current.push({ time, value })`
 
 **RealtimeLineChart** — `size`, `timeAccessor`, `valueAccessor`, `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
-**RealtimeTemporalHistogram** — + `binSize` (required), `categoryAccessor`, `colors`
+**RealtimeHistogram** — + `binSize` (required), `categoryAccessor`, `colors`
 **RealtimeSwarmChart** — + `categoryAccessor`, `radius`, `opacity`
 **RealtimeWaterfallChart** — + `positiveColor`, `negativeColor`
 **RealtimeHeatmap** — + `heatmapXBins`, `heatmapYBins`, `aggregation`
