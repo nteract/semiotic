@@ -105,7 +105,7 @@ highlights new services as they appear. Visualization as product navigation.
 npm install semiotic@3.0.0-beta.7
 ```
 
-Requires React 18.1 or later.
+Requires React 18.1+ or React 19.
 
 ## Quick Examples
 
