@@ -94,6 +94,7 @@
     "publish-release": "sh ./scripts/publish-release.sh",
     "clean": "rm -rf .parcel-cache docs/build dist && echo 'All caches and build artifacts cleared'",
     "website:clean": "npm run clean && npm run dist:prod",
+    "docs:dev": "parcel serve --target website --no-cache --port 3000",
     "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
     "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
     "website:build": "npm run dist:prod && parcel build --target website",
@@ -113,7 +114,7 @@
     }
   },
   "alias": {
-    "semiotic": "."
+    "semiotic": "./src/components/semiotic.ts"
   },
   "repository": {
     "type": "git",

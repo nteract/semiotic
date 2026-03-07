@@ -966,7 +966,7 @@ const StreamNetworkFrame = forwardRef<
   useEffect(() => {
     scheduleRender()
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
     }
   }, [scheduleRender])
 

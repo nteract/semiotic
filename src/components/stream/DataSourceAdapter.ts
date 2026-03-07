@@ -29,6 +29,16 @@ export class DataSourceAdapter<T = Record<string, any>> {
     this.callback = callback
   }
 
+  /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
+   *  Also cancels any in-flight progressive chunking. */
+  clearLastData(): void {
+    this.lastBoundedData = null
+    if (this.chunkTimer) {
+      cancelAnimationFrame(this.chunkTimer)
+      this.chunkTimer = 0
+    }
+  }
+
   /**
    * Ingest a bounded data array (from props).
    *

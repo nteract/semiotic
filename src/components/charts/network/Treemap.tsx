@@ -126,8 +126,10 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
         if (matches) {
           if (selection?.selectedStyle) Object.assign(style, selection.selectedStyle)
         } else {
-          style.fillOpacity = selection?.unselectedOpacity ?? 0.2
-          style.strokeOpacity = selection?.unselectedOpacity ?? 0.2
+          const dimOpacity = selection?.unselectedOpacity ?? 0.2
+          style.opacity = dimOpacity
+          style.fillOpacity = dimOpacity
+          style.strokeOpacity = dimOpacity
           if (selection?.unselectedStyle) Object.assign(style, selection.unselectedStyle)
         }
       }
