@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 
 /**
@@ -122,7 +123,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   const error = validateObjectData({ componentName: "TreeDiagram", data })
   if (error) return <ChartError componentName="TreeDiagram" message={error} width={width} height={height} />
 
-  return (
+  return (<SafeRender componentName="TreeDiagram" width={width} height={height}>
     <StreamNetworkFrame
       chartType={layout}
       data={data}
@@ -150,6 +151,6 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       title={title}
       {...frameProps}
     />
-  )
+  </SafeRender>)
 }
 TreeDiagram.displayName = "TreeDiagram"

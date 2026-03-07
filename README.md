@@ -84,8 +84,10 @@ snapshots, or coordinated views across chart types.
 **AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
 `import from "semiotic/ai"` entry point, and an MCP server — all designed for
 LLM code generation. AI coding assistants can generate correct Semiotic code on
-the first try. Run `npx semiotic-ai --help` for CLI options or add `semiotic-mcp`
-to your MCP client config for tool-based chart rendering.
+the first try. Run `npx semiotic-ai --help` for CLI options, `npx semiotic-ai --doctor`
+to validate props from the command line, or add `semiotic-mcp` to your MCP client
+config for tool-based chart rendering. Every HOC chart includes a built-in error
+boundary and dev-mode validation warnings with actionable fix suggestions.
 
 **Vega-Lite compatible.** Have existing Vega-Lite specs? `fromVegaLite(spec)`
 translates them to Semiotic chart configs — instant onboarding from notebooks,
@@ -100,7 +102,7 @@ highlights new services as they appear. Visualization as product navigation.
 ## Install
 
 ```bash
-npm install semiotic@3.0.0-beta.4
+npm install semiotic@3.0.0-beta.6
 ```
 
 Requires React 18.1 or later.
@@ -218,6 +220,7 @@ import { LineChart, BarChart } from "semiotic"
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
+| **Layout** | `ChartGrid` `ContextLayout` `CategoryColorProvider` |
 | **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
 
 ### Vega-Lite Translation

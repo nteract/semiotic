@@ -4,6 +4,24 @@ import { ForceDirectedGraph } from "./ForceDirectedGraph"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 describe("ForceDirectedGraph", () => {
+  beforeEach(() => {
+    ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
+      beginPath: jest.fn(), moveTo: jest.fn(), lineTo: jest.fn(),
+      stroke: jest.fn(), fill: jest.fn(), arc: jest.fn(),
+      clearRect: jest.fn(), fillRect: jest.fn(), fillText: jest.fn(),
+      strokeRect: jest.fn(), save: jest.fn(), restore: jest.fn(),
+      scale: jest.fn(), translate: jest.fn(), setLineDash: jest.fn(),
+      closePath: jest.fn(), strokeStyle: "", lineWidth: 1, fillStyle: "",
+      font: "", textAlign: "", textBaseline: "", globalAlpha: 1,
+    }))
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => { cb(performance.now()); return 1 })
+    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+  })
+  afterEach(() => {
+    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
+    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
+  })
+
   const sampleNodes = [
     { id: "A", label: "Node A" },
     { id: "B", label: "Node B" },
@@ -22,7 +40,6 @@ describe("ForceDirectedGraph", () => {
         <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
       </TooltipProvider>
     )
-
     const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })

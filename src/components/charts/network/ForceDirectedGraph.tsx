@@ -8,6 +8,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -151,6 +152,7 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
 
   return (
+    <SafeRender componentName="ForceDirectedGraph" width={width} height={height}>
     <StreamNetworkFrame
       chartType="force"
       nodes={safeNodes}
@@ -180,6 +182,6 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
       title={title}
       {...frameProps}
     />
-  )
+  </SafeRender>)
 }
 ForceDirectedGraph.displayName = "ForceDirectedGraph"

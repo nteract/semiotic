@@ -1,4 +1,5 @@
 import { execSync } from "child_process"
+import { copyFileSync } from "fs"
 import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
 import typescript from "rollup-plugin-typescript2"
@@ -178,7 +179,24 @@ function buildDeclarations() {
   console.log("\u2705 declarations emitted")
 }
 
+/** Sync CLAUDE.md to all AI instruction files */
+function syncAIInstructions() {
+  const source = "CLAUDE.md"
+  const targets = [
+    ".cursorrules",
+    ".github/copilot-instructions.md",
+    ".windsurfrules",
+    ".clinerules",
+  ]
+  for (const target of targets) {
+    try { copyFileSync(source, target) } catch { /* ignore if .github doesn't exist */ }
+  }
+  console.log("\u2705 AI instruction files synced from CLAUDE.md")
+}
+
 async function build() {
+  syncAIInstructions()
+
   const minify = isProduction
   const analyze = isAnalyze
 

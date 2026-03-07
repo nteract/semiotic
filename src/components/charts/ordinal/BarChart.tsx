@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -81,6 +82,10 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   const valueLabel = resolved.valueLabel
 
   const safeData = data || []
+
+  // ── Dev-mode warnings ─────────────────────────────────────────────────
+  warnMissingField("BarChart", safeData, "categoryAccessor", categoryAccessor)
+  warnMissingField("BarChart", safeData, "valueAccessor", valueAccessor)
 
   // ── Selection hooks (always called) ────────────────────────────────────
 
@@ -165,6 +170,6 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     ...frameProps
   }
 
-  return <StreamOrdinalFrame {...streamProps} />
+  return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
 }
 BarChart.displayName = "BarChart"

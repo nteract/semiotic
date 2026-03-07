@@ -9,6 +9,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
@@ -294,6 +295,10 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
 
   const safeData = data || []
 
+  // ── Dev-mode warnings ─────────────────────────────────────────────────
+  warnMissingField("LineChart", safeData, "xAccessor", xAccessor)
+  warnMissingField("LineChart", safeData, "yAccessor", yAccessor)
+
   // ── Statistical overlay processing ────────────────────────────────────
 
   const xAccStr = typeof xAccessor === "string" ? xAccessor : "x"
@@ -503,6 +508,6 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...frameProps
   }
 
-  return <StreamXYFrame {...streamProps} />
+  return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
 }
 LineChart.displayName = "LineChart"

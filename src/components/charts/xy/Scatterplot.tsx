@@ -9,6 +9,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
@@ -113,6 +114,10 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   const yLabel = resolved.yLabel
 
   const safeData = data || []
+
+  // ── Dev-mode warnings ─────────────────────────────────────────────────
+  warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
+  warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
@@ -220,6 +225,6 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...frameProps
   }
 
-  return <StreamXYFrame {...streamProps} />
+  return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
 }
 Scatterplot.displayName = "Scatterplot"

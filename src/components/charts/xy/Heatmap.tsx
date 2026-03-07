@@ -10,6 +10,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -376,6 +377,6 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     ...frameProps
   }
 
-  return <StreamXYFrame {...streamProps} />
+  return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
 }
 Heatmap.displayName = "Heatmap"

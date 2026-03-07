@@ -3,8 +3,9 @@
 ## Quick Start
 - Install: `npm install semiotic`
 - Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- CLI: `npx semiotic-ai [--schema|--compact|--examples]`
+- CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
+- Every HOC has a built-in error boundary (never blanks the page) and dev-mode validation warnings
 
 ## Architecture
 - **HOC Charts**: Simple props, sensible defaults. **Stream Frames**: Full control.
@@ -114,6 +115,7 @@ ref.current.push({ time: Date.now(), value: 42 })
 - `ChartErrorBoundary` — error boundary
 - `exportChart(el, { format: "png"|"svg" })` — browser export
 - `renderToStaticSVG()` — server-side SVG (from `semiotic/server`)
+- `npx semiotic-ai --doctor` — validate component + props JSON from CLI
 
 ## Differentiators
 Network viz, streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation
