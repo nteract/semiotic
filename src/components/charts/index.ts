@@ -13,6 +13,8 @@
 
 export { Scatterplot } from "./xy/Scatterplot"
 export type { ScatterplotProps } from "./xy/Scatterplot"
+export { ConnectedScatterplot } from "./xy/ConnectedScatterplot"
+export type { ConnectedScatterplotProps } from "./xy/ConnectedScatterplot"
 
 export { LineChart } from "./xy/LineChart"
 export type { LineChartProps } from "./xy/LineChart"

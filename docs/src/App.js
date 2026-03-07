@@ -17,6 +17,7 @@ import LineChartPage from "./pages/charts/LineChartPage"
 import AreaChartPage from "./pages/charts/AreaChartPage"
 import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
 import ScatterplotPage from "./pages/charts/ScatterplotPage"
+import ConnectedScatterplotPage from "./pages/charts/ConnectedScatterplotPage"
 import BubbleChartPage from "./pages/charts/BubbleChartPage"
 import HeatmapPage from "./pages/charts/HeatmapPage"
 import ScatterplotMatrixPage from "./pages/charts/ScatterplotMatrixPage"
@@ -92,6 +93,7 @@ import UsingSSRPage from "./pages/UsingSSRPage"
 import LineChartPlayground from "./pages/playground/LineChartPlayground"
 import BarChartPlayground from "./pages/playground/BarChartPlayground"
 import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
+import ConnectedScatterplotPlayground from "./pages/playground/ConnectedScatterplotPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
 import StreamingSankeyPlayground from "./pages/playground/StreamingSankeyPlayground"
@@ -283,6 +285,7 @@ export default function DocsApp() {
               <Route path="line-chart" element={<LineChartPlayground />} />
               <Route path="bar-chart" element={<BarChartPlayground />} />
               <Route path="scatterplot" element={<ScatterplotPlayground />} />
+              <Route path="connected-scatterplot" element={<ConnectedScatterplotPlayground />} />
               <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
               <Route path="streaming-sankey" element={<StreamingSankeyPlayground />} />
@@ -344,6 +347,7 @@ export default function DocsApp() {
               <Route path="area-chart" element={<AreaChartPage />} />
               <Route path="stacked-area-chart" element={<StackedAreaChartPage />} />
               <Route path="scatterplot" element={<ScatterplotPage />} />
+              <Route path="connected-scatterplot" element={<ConnectedScatterplotPage />} />
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
