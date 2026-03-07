@@ -364,6 +364,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useEffect(() => {
       if (!data) return
       adapterRef.current?.setBoundedData(data)
+      return () => { adapterRef.current?.clearLastData() }
     }, [data])
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -595,7 +596,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
       }
     }, [scheduleRender])
 

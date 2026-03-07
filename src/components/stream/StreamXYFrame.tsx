@@ -582,6 +582,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       if (!data) return
       adapterRef.current?.setBoundedData(data)
+      // On StrictMode unmount/remount, clear the adapter's dedup cache
+      // so the same data reference triggers re-ingestion on remount
+      return () => { adapterRef.current?.clearLastData() }
     }, [data])
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -863,7 +866,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
       }
     }, [scheduleRender])
 
