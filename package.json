@@ -97,7 +97,7 @@
     "docs:dev": "parcel serve --target website --no-cache --port 3000",
     "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
     "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
-    "website:build": "npm run dist:prod && parcel build --target website",
+    "website:build": "npm run dist:prod && parcel build --target website && node scripts/prerender.mjs",
     "build:mcp": "tsc -p tsconfig.mcp.json",
     "typescript": "tsc --noEmit",
     "prepublishOnly": "node scripts/build.mjs --production"
