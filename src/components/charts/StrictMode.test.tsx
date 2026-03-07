@@ -43,10 +43,17 @@ function setupMocks() {
     textBaseline: "",
     globalAlpha: 1,
   }))
+  // Path2D not available in jsdom — mock it for network edge rendering
+  if (!(globalThis as any).Path2D) {
+    (globalThis as any).Path2D = class { constructor() {} }
+  }
+
+  let rafId = 0
   jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-    rafCallbacks.push(cb)
-    cb(performance.now())
-    return rafCallbacks.length
+    const id = ++rafId
+    // Execute asynchronously to avoid recursive scheduleRender stack overflow
+    Promise.resolve().then(() => cb(performance.now()))
+    return id
   })
   jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   return rafCallbacks
