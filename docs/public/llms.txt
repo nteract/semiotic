@@ -42,6 +42,7 @@
 - [TreeDiagram](/charts/tree-diagram): Hierarchical tree layouts
 - [Treemap](/charts/treemap): Space-filling rectangles
 - [CirclePack](/charts/circle-pack): Nested circles
+- [OrbitDiagram](/charts/orbit-diagram): Animated orbital hierarchy layout
 
 ## Charts — Realtime
 
@@ -59,6 +60,7 @@
 - [Accessibility](/features/accessibility): Keyboard navigation, ARIA labels
 - [Theming](/features/theming): ThemeProvider, dark mode
 - [Annotations](/features/annotations): Labels, thresholds, trend lines, anomaly bands
+- [Advanced Annotations](/features/advanced-annotations): Widget annotations — place React elements at data coordinates for alerts, comments, actions
 - [Serialization](/features/serialization): toConfig, fromConfig, toURL, copyConfig
 
 ## AI Integration

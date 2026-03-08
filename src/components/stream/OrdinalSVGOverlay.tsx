@@ -120,9 +120,22 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
     const defaultRules = createDefaultAnnotationRules("ordinal")
 
+    // Expose both ordinal (o) and range (r) scales properly.
+    // For vertical bars: x = category center (o + bandwidth/2), y = value (r)
+    // For horizontal bars: x = value (r), y = category center (o + bandwidth/2)
+    const isHoriz = scales?.projection === "horizontal"
+    const oCentered = scales?.o
+      ? ((v: any) => (scales.o(v) ?? 0) + scales.o.bandwidth() / 2) as any
+      : null
+
     const context: AnnotationContext = {
       scales: scales
-        ? { x: scales.r, y: scales.r, time: scales.r, value: scales.r }
+        ? {
+            x: isHoriz ? scales.r : (oCentered || scales.r),
+            y: isHoriz ? (oCentered || scales.r) : scales.r,
+            time: scales.r,
+            value: scales.r,
+          }
         : null,
       timeAxis: "x",
       xAccessor: annXAccessor,

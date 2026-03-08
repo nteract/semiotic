@@ -78,6 +78,7 @@ const navData = [
     children: [
       { title: "Axes", path: "/features/axes" },
       { title: "Annotations", path: "/features/annotations" },
+      { title: "Advanced Annotations", path: "/features/advanced-annotations" },
       { title: "Tooltips", path: "/features/tooltips" },
       { title: "Interaction", path: "/features/interaction" },
       { title: "Responsive", path: "/features/responsive" },

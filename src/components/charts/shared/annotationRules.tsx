@@ -721,6 +721,63 @@ export function createDefaultAnnotationRules(
         )
       }
 
+      // ── Widget (arbitrary HTML/React content at data coordinates) ────
+      case "widget": {
+        let px: number | null = null
+        let py: number | null = null
+
+        if (ann.pointId != null && context.pointNodes) {
+          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
+          if (!match) return null
+          px = match.x
+          py = match.y
+        } else if (ann.px != null && ann.py != null) {
+          // Explicit pixel coordinates
+          px = ann.px
+          py = ann.py
+        } else {
+          px = resolveX(ann, context)
+          py = resolveY(ann, context)
+        }
+        if (px == null || py == null) return null
+        if (!isInBounds(px, py, context)) return null
+
+        const offsetX = ann.dx ?? 0
+        const offsetY = ann.dy ?? 0
+        const widgetWidth = ann.width ?? 32
+        const widgetHeight = ann.height ?? 32
+
+        // Default content: info emoji
+        const content = ann.content ?? (
+          <span style={{ fontSize: 18, cursor: "default" }} title={ann.label || "Info"}>
+            {"ℹ️"}
+          </span>
+        )
+
+        return (
+          <foreignObject
+            key={`ann-${index}`}
+            x={px + offsetX - widgetWidth / 2}
+            y={py + offsetY - widgetHeight / 2}
+            width={widgetWidth}
+            height={widgetHeight}
+            style={{ overflow: "visible", pointerEvents: "auto" }}
+          >
+            <div
+              style={{
+                width: widgetWidth,
+                height: widgetHeight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {content}
+            </div>
+          </foreignObject>
+        )
+      }
+
       // ── Unrecognized type ─────────────────────────────────────────────
       default:
         return null
