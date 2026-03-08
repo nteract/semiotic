@@ -69,8 +69,11 @@ function generatePage(shellHtml, routePath) {
       <p><a href="https://github.com/nteract/semiotic">View on GitHub</a> \u00b7 <code>npx semiotic-ai</code> for CLI access</p>
     </nav>`
 
+  // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
+  const jsonLd = '<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
+
   return shellHtml
-    .replace(/<title>[^<]*<\/title>/, `<title>${fullTitle}</title>`)
+    .replace(/<title>[^<]*<\/title>/, `<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" /><title>${fullTitle}</title>${jsonLd}`)
     .replace(/<noscript>.*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
     .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="https://semiotic3.nteract.io/${routePath}" />`)
 }
