@@ -1,0 +1,36 @@
+# Semiotic docs — allow all crawlers including AI agents
+User-agent: *
+Allow: /
+
+# AI-specific crawlers — explicitly welcome
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Point to AI-readable docs
+# llms.txt standard: https://llmstxt.org/
+# Full API reference for LLM consumption
+Sitemap: https://semiotic3.nteract.io/sitemap.txt
