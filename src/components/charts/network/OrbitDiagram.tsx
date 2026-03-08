@@ -77,6 +77,18 @@ export interface OrbitDiagramProps<TDatum extends Record<string, any> = Record<s
   tooltip?: (node: OrbitNode) => React.ReactNode
   /** Enable hover @default true */
   enableHover?: boolean
+  /** Annotation objects. Supports type: "widget" with content (ReactNode) anchored to a node by nodeId. */
+  annotations?: Array<{
+    type: string
+    nodeId?: string
+    dx?: number
+    dy?: number
+    width?: number
+    height?: number
+    content?: React.ReactNode
+    label?: string
+    [key: string]: any
+  }>
   /** Additional SVG content */
   foregroundGraphics?: React.ReactNode
   /** Frame props passthrough (unused, for API consistency) */
@@ -249,6 +261,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     enableHover: _enableHover,
     foregroundGraphics,
     className,
+    annotations: annotationsProp,
     selection,
     linkedHover,
     onObservation,
@@ -425,6 +438,38 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
                   </text>
                 )}
               </g>
+            )
+          })}
+
+          {/* Widget annotations */}
+          {annotationsProp?.map((ann, i) => {
+            if (ann.type !== "widget") return null
+            const targetNode = ann.nodeId
+              ? nodes.find(n => n.id === ann.nodeId)
+              : null
+            if (!targetNode) return null
+            const dx = ann.dx ?? 0
+            const dy = ann.dy ?? -16
+            const w = ann.width ?? 32
+            const h = ann.height ?? 32
+            const content = ann.content ?? (
+              <span style={{ fontSize: 18, cursor: "default" }} title={ann.label || "Info"}>
+                {"ℹ️"}
+              </span>
+            )
+            return (
+              <foreignObject
+                key={`ann-${i}`}
+                x={targetNode.x + dx - w / 2}
+                y={targetNode.y + dy - h / 2}
+                width={w}
+                height={h}
+                style={{ overflow: "visible", pointerEvents: "auto" }}
+              >
+                <div style={{ width: w, height: h, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {content}
+                </div>
+              </foreignObject>
             )
           })}
 

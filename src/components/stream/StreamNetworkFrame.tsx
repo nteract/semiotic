@@ -1079,6 +1079,7 @@ const StreamNetworkFrame = forwardRef<
         totalHeight={size[1]}
         margin={margin}
         labels={store?.labels || []}
+        sceneNodes={store?.sceneNodes as any}
         title={title}
         legend={legend}
         foregroundGraphics={foregroundGraphics}

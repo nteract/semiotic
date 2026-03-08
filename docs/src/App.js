@@ -53,6 +53,7 @@ import StreamNetworkFramePage from "./pages/frames/NetworkFramePage"
 // New feature pages
 import AxesPage from "./pages/features/AxesPage"
 import AnnotationsPage from "./pages/features/AnnotationsPage"
+import AnnotationFlowPage from "./pages/features/AnnotationFlowPage"
 import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
@@ -315,6 +316,7 @@ export default function DocsApp() {
             <Route path="features" element={<Outlet />}>
               <Route path="axes" element={<AxesPage />} />
               <Route path="annotations" element={<AnnotationsPage />} />
+              <Route path="advanced-annotations" element={<AnnotationFlowPage />} />
               <Route path="tooltips" element={<TooltipsPage />} />
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />

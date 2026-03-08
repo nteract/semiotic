@@ -215,9 +215,9 @@ import { LineChart, BarChart } from "semiotic"
 
 | Category | Components |
 |---|---|
-| **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `BubbleChart` `Heatmap` |
+| **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` |
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
-| **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
+| **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
 | **Layout** | `ChartGrid` `ContextLayout` `CategoryColorProvider` |
