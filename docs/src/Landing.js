@@ -30,19 +30,19 @@ const tierSnippets = {
   />
   <Axis orient="left" scale={yScale} />
   <Legend categories={categories} />
-</svg>`
+</svg>`,
 }
 
 const quickStartSteps = [
   {
     number: 1,
     title: "Install",
-    code: "npm install semiotic@3.0.0-beta.7"
+    code: "npm install semiotic@3.0.0",
   },
   {
     number: 2,
     title: "Import",
-    code: 'import { LineChart } from "semiotic"'
+    code: 'import { LineChart } from "semiotic"',
   },
   {
     number: 3,
@@ -55,8 +55,8 @@ const quickStartSteps = [
   ]}
   xAccessor="month"
   yAccessor="value"
-/>`
-  }
+/>`,
+  },
 ]
 
 const features = [
@@ -71,7 +71,7 @@ const features = [
         <line x1="18" y1="12" x2="18" y2="16" stroke="currentColor" strokeWidth="1.5" />
         <line x1="18" y1="16" x2="23" y2="16" stroke="currentColor" strokeWidth="1.5" />
       </svg>
-    )
+    ),
   },
   {
     title: "Responsive by Default",
@@ -81,9 +81,17 @@ const features = [
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="1" y="4" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
         <rect x="21" y="7" width="6" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="4" y1="20" x2="16" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <line
+          x1="4"
+          y1="20"
+          x2="16"
+          y2="20"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
       </svg>
-    )
+    ),
   },
   {
     title: "Accessibility",
@@ -92,9 +100,15 @@ const features = [
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <circle cx="14" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M7 12h14M14 12v8M10 24l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M7 12h14M14 12v8M10 24l4-4 4 4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
-    )
+    ),
   },
   {
     title: "Canvas & SVG",
@@ -107,7 +121,7 @@ const features = [
         <path d="M13 8h5v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M15 20H10v-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
-    )
+    ),
   },
   {
     title: "Pure React",
@@ -117,10 +131,26 @@ const features = [
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <circle cx="14" cy="14" r="3" fill="currentColor" />
         <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" strokeWidth="1.5" />
-        <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" strokeWidth="1.5" transform="rotate(60 14 14)" />
-        <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" strokeWidth="1.5" transform="rotate(120 14 14)" />
+        <ellipse
+          cx="14"
+          cy="14"
+          rx="12"
+          ry="5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          transform="rotate(60 14 14)"
+        />
+        <ellipse
+          cx="14"
+          cy="14"
+          rx="12"
+          ry="5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          transform="rotate(120 14 14)"
+        />
       </svg>
-    )
+    ),
   },
   {
     title: "TypeScript",
@@ -129,10 +159,19 @@ const features = [
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="3" width="22" height="22" rx="3" stroke="currentColor" strokeWidth="1.5" />
-        <text x="8" y="20" fill="currentColor" fontSize="14" fontWeight="700" fontFamily="var(--font-code)">TS</text>
+        <text
+          x="8"
+          y="20"
+          fill="currentColor"
+          fontSize="14"
+          fontWeight="700"
+          fontFamily="var(--font-code)"
+        >
+          TS
+        </text>
       </svg>
-    )
-  }
+    ),
+  },
 ]
 
 function CopyButton({ text, style: buttonStyle }) {
@@ -172,12 +211,7 @@ function MiniCodeBlock({ code, language = "jsx", showCopy = false }) {
 
   return (
     <div style={styles.miniCodeWrapper}>
-      {showCopy && (
-        <CopyButton
-          text={code}
-          style={styles.miniCopyButton}
-        />
-      )}
+      {showCopy && <CopyButton text={code} style={styles.miniCopyButton} />}
       <pre style={styles.miniPre}>
         <code
           style={styles.miniCode}
@@ -195,18 +229,30 @@ function MiniCodeBlock({ code, language = "jsx", showCopy = false }) {
 // ---------------------------------------------------------------------------
 
 const galleryLineData = [
-  { month: 1, value: 42, series: "Revenue" }, { month: 2, value: 58, series: "Revenue" },
-  { month: 3, value: 53, series: "Revenue" }, { month: 4, value: 71, series: "Revenue" },
-  { month: 5, value: 64, series: "Revenue" }, { month: 6, value: 88, series: "Revenue" },
-  { month: 7, value: 79, series: "Revenue" }, { month: 8, value: 95, series: "Revenue" },
-  { month: 9, value: 102, series: "Revenue" }, { month: 10, value: 89, series: "Revenue" },
-  { month: 11, value: 110, series: "Revenue" }, { month: 12, value: 124, series: "Revenue" },
-  { month: 1, value: 35, series: "Costs" }, { month: 2, value: 38, series: "Costs" },
-  { month: 3, value: 41, series: "Costs" }, { month: 4, value: 44, series: "Costs" },
-  { month: 5, value: 48, series: "Costs" }, { month: 6, value: 52, series: "Costs" },
-  { month: 7, value: 50, series: "Costs" }, { month: 8, value: 55, series: "Costs" },
-  { month: 9, value: 58, series: "Costs" }, { month: 10, value: 54, series: "Costs" },
-  { month: 11, value: 60, series: "Costs" }, { month: 12, value: 63, series: "Costs" },
+  { month: 1, value: 42, series: "Revenue" },
+  { month: 2, value: 58, series: "Revenue" },
+  { month: 3, value: 53, series: "Revenue" },
+  { month: 4, value: 71, series: "Revenue" },
+  { month: 5, value: 64, series: "Revenue" },
+  { month: 6, value: 88, series: "Revenue" },
+  { month: 7, value: 79, series: "Revenue" },
+  { month: 8, value: 95, series: "Revenue" },
+  { month: 9, value: 102, series: "Revenue" },
+  { month: 10, value: 89, series: "Revenue" },
+  { month: 11, value: 110, series: "Revenue" },
+  { month: 12, value: 124, series: "Revenue" },
+  { month: 1, value: 35, series: "Costs" },
+  { month: 2, value: 38, series: "Costs" },
+  { month: 3, value: 41, series: "Costs" },
+  { month: 4, value: 44, series: "Costs" },
+  { month: 5, value: 48, series: "Costs" },
+  { month: 6, value: 52, series: "Costs" },
+  { month: 7, value: 50, series: "Costs" },
+  { month: 8, value: 55, series: "Costs" },
+  { month: 9, value: 58, series: "Costs" },
+  { month: 10, value: 54, series: "Costs" },
+  { month: 11, value: 60, series: "Costs" },
+  { month: 12, value: 63, series: "Costs" },
 ]
 
 const galleryBarData = [
@@ -224,27 +270,53 @@ const galleryScatterData = Array.from({ length: 40 }, (_, i) => ({
 }))
 
 const galleryAreaData = [
-  { week: 1, users: 120, series: "Desktop" }, { week: 2, users: 135, series: "Desktop" },
-  { week: 3, users: 142, series: "Desktop" }, { week: 4, users: 128, series: "Desktop" },
-  { week: 5, users: 155, series: "Desktop" }, { week: 6, users: 168, series: "Desktop" },
-  { week: 7, users: 160, series: "Desktop" }, { week: 8, users: 172, series: "Desktop" },
-  { week: 1, users: 80, series: "Mobile" }, { week: 2, users: 95, series: "Mobile" },
-  { week: 3, users: 110, series: "Mobile" }, { week: 4, users: 105, series: "Mobile" },
-  { week: 5, users: 130, series: "Mobile" }, { week: 6, users: 145, series: "Mobile" },
-  { week: 7, users: 155, series: "Mobile" }, { week: 8, users: 170, series: "Mobile" },
+  { week: 1, users: 120, series: "Desktop" },
+  { week: 2, users: 135, series: "Desktop" },
+  { week: 3, users: 142, series: "Desktop" },
+  { week: 4, users: 128, series: "Desktop" },
+  { week: 5, users: 155, series: "Desktop" },
+  { week: 6, users: 168, series: "Desktop" },
+  { week: 7, users: 160, series: "Desktop" },
+  { week: 8, users: 172, series: "Desktop" },
+  { week: 1, users: 80, series: "Mobile" },
+  { week: 2, users: 95, series: "Mobile" },
+  { week: 3, users: 110, series: "Mobile" },
+  { week: 4, users: 105, series: "Mobile" },
+  { week: 5, users: 130, series: "Mobile" },
+  { week: 6, users: 145, series: "Mobile" },
+  { week: 7, users: 155, series: "Mobile" },
+  { week: 8, users: 170, series: "Mobile" },
 ]
 
 const galleryNetworkNodes = [
-  { id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }, { id: "E" },
-  { id: "F" }, { id: "G" }, { id: "H" }, { id: "I" }, { id: "J" },
-  { id: "K" }, { id: "L" },
+  { id: "A" },
+  { id: "B" },
+  { id: "C" },
+  { id: "D" },
+  { id: "E" },
+  { id: "F" },
+  { id: "G" },
+  { id: "H" },
+  { id: "I" },
+  { id: "J" },
+  { id: "K" },
+  { id: "L" },
 ]
 const galleryNetworkEdges = [
-  { source: "A", target: "B" }, { source: "A", target: "C" }, { source: "A", target: "D" },
-  { source: "B", target: "E" }, { source: "B", target: "F" }, { source: "C", target: "G" },
-  { source: "D", target: "H" }, { source: "E", target: "I" }, { source: "F", target: "J" },
-  { source: "G", target: "K" }, { source: "H", target: "L" }, { source: "I", target: "A" },
-  { source: "J", target: "C" }, { source: "K", target: "E" },
+  { source: "A", target: "B" },
+  { source: "A", target: "C" },
+  { source: "A", target: "D" },
+  { source: "B", target: "E" },
+  { source: "B", target: "F" },
+  { source: "C", target: "G" },
+  { source: "D", target: "H" },
+  { source: "E", target: "I" },
+  { source: "F", target: "J" },
+  { source: "G", target: "K" },
+  { source: "H", target: "L" },
+  { source: "I", target: "A" },
+  { source: "J", target: "C" },
+  { source: "K", target: "E" },
 ]
 
 const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
@@ -264,7 +336,10 @@ const galleryItems = [
         xAccessor="month"
         yAccessor="value"
         groupAccessor="series"
-        lineStyle={(d, group) => ({ stroke: galleryLineColors[group] || galleryColors[0], strokeWidth: 2 })}
+        lineStyle={(d, group) => ({
+          stroke: galleryLineColors[group] || galleryColors[0],
+          strokeWidth: 2,
+        })}
         showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
         enableHover={true}
@@ -278,18 +353,16 @@ const galleryItems = [
       <StreamOrdinalFrame
         size={[w, h]}
         chartType="clusterbar"
-        data={galleryBarData.flatMap(d =>
-          [
-            { region: d.region, quarter: "Q1", value: d.q1 },
-            { region: d.region, quarter: "Q2", value: d.q2 },
-            { region: d.region, quarter: "Q3", value: d.q3 },
-            { region: d.region, quarter: "Q4", value: d.q4 },
-          ]
-        )}
+        data={galleryBarData.flatMap((d) => [
+          { region: d.region, quarter: "Q1", value: d.q1 },
+          { region: d.region, quarter: "Q2", value: d.q2 },
+          { region: d.region, quarter: "Q3", value: d.q3 },
+          { region: d.region, quarter: "Q4", value: d.q4 },
+        ])}
         oAccessor="region"
         rAccessor="value"
         groupBy="quarter"
-        pieceStyle={d => {
+        pieceStyle={(d) => {
           const qi = ["Q1", "Q2", "Q3", "Q4"].indexOf(d.quarter)
           return { fill: galleryColors[qi], stroke: "none" }
         }}
@@ -310,7 +383,7 @@ const galleryItems = [
         data={galleryScatterData}
         xAccessor="x"
         yAccessor="y"
-        pointStyle={d => ({
+        pointStyle={(d) => ({
           fill: galleryScatterColors[d.group] || galleryColors[0],
           fillOpacity: 0.7,
           r: d.size,
@@ -354,7 +427,13 @@ const galleryItems = [
         edges={galleryNetworkEdges}
         iterations={300}
         nodeSize={5}
-        nodeStyle={(d) => ({ fill: galleryColors[galleryNetworkNodes.findIndex(n => n.id === d.id) % galleryColors.length], stroke: "#fff", strokeWidth: 1.5 })}
+        nodeStyle={(d) => ({
+          fill: galleryColors[
+            galleryNetworkNodes.findIndex((n) => n.id === d.id) % galleryColors.length
+          ],
+          stroke: "#fff",
+          strokeWidth: 1.5,
+        })}
         edgeStyle={() => ({ stroke: "var(--text-secondary)", strokeWidth: 1, opacity: 0.4 })}
         nodeIDAccessor="id"
         margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
@@ -380,9 +459,12 @@ function GalleryRealtimeBars({ width, height }) {
         const cat = categories[i % 3]
         chartRef.current.push({
           time: i,
-          value: cat === "errors" ? 2 + Math.random() * 8
-            : cat === "warnings" ? 5 + Math.random() * 15
-            : 10 + Math.random() * 20,
+          value:
+            cat === "errors"
+              ? 2 + Math.random() * 8
+              : cat === "warnings"
+                ? 5 + Math.random() * 15
+                : 10 + Math.random() * 20,
           category: cat,
         })
       }
@@ -411,7 +493,7 @@ function HeroGallery() {
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const observer = new ResizeObserver(entries => {
+    const observer = new ResizeObserver((entries) => {
       for (const entry of entries) setWidth(entry.contentRect.width)
     })
     observer.observe(el)
@@ -497,11 +579,11 @@ const styles = {
   hero: {
     padding: "80px 24px",
     textAlign: "center",
-    background: "linear-gradient(180deg, var(--surface-0) 0%, var(--surface-1) 100%)"
+    background: "linear-gradient(180deg, var(--surface-0) 0%, var(--surface-1) 100%)",
   },
   heroInner: {
     maxWidth: "800px",
-    margin: "0 auto"
+    margin: "0 auto",
   },
   heroHeadline: {
     fontSize: "clamp(2rem, 5vw, 3.25rem)",
@@ -509,7 +591,7 @@ const styles = {
     margin: "0 0 16px",
     color: "var(--text-primary)",
     letterSpacing: "-0.02em",
-    lineHeight: 1.15
+    lineHeight: 1.15,
   },
   heroSubtitle: {
     fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
@@ -518,14 +600,14 @@ const styles = {
     lineHeight: 1.6,
     maxWidth: "600px",
     marginLeft: "auto",
-    marginRight: "auto"
+    marginRight: "auto",
   },
   heroButtons: {
     display: "flex",
     gap: "12px",
     justifyContent: "center",
     flexWrap: "wrap",
-    marginBottom: "32px"
+    marginBottom: "32px",
   },
   btnPrimary: {
     display: "inline-block",
@@ -538,7 +620,7 @@ const styles = {
     textDecoration: "none",
     border: "none",
     cursor: "pointer",
-    transition: "opacity 0.15s ease"
+    transition: "opacity 0.15s ease",
   },
   btnSecondary: {
     display: "inline-block",
@@ -551,7 +633,7 @@ const styles = {
     textDecoration: "none",
     border: "1px solid var(--surface-3)",
     cursor: "pointer",
-    transition: "background 0.15s ease, border-color 0.15s ease"
+    transition: "background 0.15s ease, border-color 0.15s ease",
   },
   installBlock: {
     display: "inline-flex",
@@ -561,14 +643,14 @@ const styles = {
     border: "1px solid var(--surface-3)",
     borderRadius: "8px",
     padding: "10px 16px",
-    marginBottom: "40px"
+    marginBottom: "40px",
   },
   installText: {
     fontFamily: "var(--font-code)",
     fontSize: "14px",
     color: "var(--text-primary)",
     margin: 0,
-    userSelect: "all"
+    userSelect: "all",
   },
   installCopy: {
     background: "none",
@@ -580,7 +662,7 @@ const styles = {
     cursor: "pointer",
     fontFamily: "var(--font-code)",
     transition: "color 0.2s ease, border-color 0.2s ease",
-    lineHeight: "1.4"
+    lineHeight: "1.4",
   },
   vizPlaceholder: {
     maxWidth: "700px",
@@ -595,20 +677,20 @@ const styles = {
     justifyContent: "center",
     color: "var(--text-secondary)",
     fontSize: "14px",
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
 
   /* ---- Section Shell ---- */
   section: {
     padding: "64px 24px",
-    margin: "0 auto"
+    margin: "0 auto",
   },
   sectionTitle: {
     fontSize: "clamp(1.5rem, 3vw, 2rem)",
     fontWeight: 700,
     textAlign: "center",
     margin: "0 0 8px",
-    color: "var(--text-primary)"
+    color: "var(--text-primary)",
   },
   sectionSubtitle: {
     textAlign: "center",
@@ -618,14 +700,14 @@ const styles = {
     maxWidth: "560px",
     marginLeft: "auto",
     marginRight: "auto",
-    lineHeight: 1.6
+    lineHeight: 1.6,
   },
 
   /* ---- Tier Cards ---- */
   tierGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "24px"
+    gap: "24px",
   },
   tierCard: {
     background: "var(--surface-1)",
@@ -635,7 +717,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     minWidth: 0,
-    overflow: "hidden"
+    overflow: "hidden",
   },
   tierLabel: {
     display: "inline-block",
@@ -647,48 +729,48 @@ const styles = {
     color: "#fff",
     lineHeight: "1.6",
     marginBottom: "12px",
-    alignSelf: "flex-start"
+    alignSelf: "flex-start",
   },
   tierHeading: {
     fontSize: "1.15rem",
     fontWeight: 700,
     margin: "0 0 8px",
-    color: "var(--text-primary)"
+    color: "var(--text-primary)",
   },
   tierDescription: {
     fontSize: "14px",
     color: "var(--text-secondary)",
     margin: "0 0 16px",
     lineHeight: 1.6,
-    flex: 1
+    flex: 1,
   },
 
   /* ---- Features ---- */
   featureGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "32px"
+    gap: "32px",
   },
   featureItem: {
     display: "flex",
     flexDirection: "column",
-    gap: "8px"
+    gap: "8px",
   },
   featureIcon: {
     color: "var(--accent)",
-    marginBottom: "4px"
+    marginBottom: "4px",
   },
   featureTitle: {
     fontSize: "15px",
     fontWeight: 700,
     color: "var(--text-primary)",
-    margin: 0
+    margin: 0,
   },
   featureDesc: {
     fontSize: "14px",
     color: "var(--text-secondary)",
     margin: 0,
-    lineHeight: 1.6
+    lineHeight: 1.6,
   },
 
   /* ---- Quick Start ---- */
@@ -697,12 +779,12 @@ const styles = {
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
-    gap: "32px"
+    gap: "32px",
   },
   step: {
     display: "flex",
     gap: "20px",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   stepNumber: {
     width: "36px",
@@ -715,18 +797,18 @@ const styles = {
     justifyContent: "center",
     fontWeight: 700,
     fontSize: "15px",
-    flexShrink: 0
+    flexShrink: 0,
   },
   stepContent: {
     flex: 1,
-    minWidth: 0
+    minWidth: 0,
   },
   stepTitle: {
     fontSize: "16px",
     fontWeight: 700,
     margin: "0 0 8px",
     color: "var(--text-primary)",
-    lineHeight: "36px"
+    lineHeight: "36px",
   },
 
   /* ---- Mini Code Block ---- */
@@ -735,12 +817,12 @@ const styles = {
     background: "var(--surface-2)",
     border: "1px solid var(--surface-3)",
     borderRadius: "8px",
-    overflow: "hidden"
+    overflow: "hidden",
   },
   miniPre: {
     margin: 0,
     padding: "14px 16px",
-    overflowX: "auto"
+    overflowX: "auto",
   },
   miniCode: {
     fontFamily: "var(--font-code)",
@@ -750,7 +832,7 @@ const styles = {
     whiteSpace: "pre",
     background: "none",
     padding: 0,
-    borderRadius: 0
+    borderRadius: 0,
   },
   miniCopyButton: {
     position: "absolute",
@@ -766,7 +848,7 @@ const styles = {
     fontFamily: "var(--font-code)",
     transition: "color 0.2s ease, border-color 0.2s ease",
     lineHeight: "1.4",
-    zIndex: 1
+    zIndex: 1,
   },
 
   /* ---- Footer CTA ---- */
@@ -774,8 +856,8 @@ const styles = {
     padding: "64px 24px",
     textAlign: "center",
     background: "var(--surface-1)",
-    borderTop: "1px solid var(--surface-3)"
-  }
+    borderTop: "1px solid var(--surface-3)",
+  },
 }
 
 export default function Landing() {
@@ -788,8 +870,7 @@ export default function Landing() {
         <div style={styles.heroInner}>
           <h1 style={styles.heroHeadline}>Data Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            From simple charts to custom visualizations — one library,
-            progressive complexity.
+            From simple charts to custom visualizations — one library, progressive complexity.
           </p>
 
           <div style={styles.heroButtons}>
@@ -802,8 +883,8 @@ export default function Landing() {
           </div>
 
           <div style={styles.installBlock}>
-            <code style={styles.installText}>npm install semiotic@3.0.0-beta.7</code>
-            <CopyButton text="npm install semiotic@3.0.0-beta.7" style={styles.installCopy} />
+            <code style={styles.installText}>npm install semiotic@3.0.0</code>
+            <CopyButton text="npm install semiotic@3.0.0" style={styles.installCopy} />
           </div>
 
           <HeroGallery />
@@ -816,8 +897,8 @@ export default function Landing() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>One Library, Three Levels</h2>
         <p style={styles.sectionSubtitle}>
-          Start simple and add complexity only when you need it. Semiotic grows
-          with your requirements.
+          Start simple and add complexity only when you need it. Semiotic grows with your
+          requirements.
         </p>
 
         <div style={styles.tierGrid} className="landing-tier-grid">
@@ -825,21 +906,21 @@ export default function Landing() {
           <div
             style={{
               ...styles.tierCard,
-              borderTop: "3px solid var(--tier-charts)"
+              borderTop: "3px solid var(--tier-charts)",
             }}
           >
             <span
               style={{
                 ...styles.tierLabel,
-                background: "var(--tier-charts)"
+                background: "var(--tier-charts)",
               }}
             >
               Charts
             </span>
             <h3 style={styles.tierHeading}>Simple Props, Instant Results</h3>
             <p style={styles.tierDescription}>
-              20 ready-to-use chart components. Pass your data, set a few props,
-              get a beautiful visualization.
+              20 ready-to-use chart components. Pass your data, set a few props, get a beautiful
+              visualization.
             </p>
             <MiniCodeBlock code={tierSnippets.charts} />
           </div>
@@ -848,21 +929,21 @@ export default function Landing() {
           <div
             style={{
               ...styles.tierCard,
-              borderTop: "3px solid var(--tier-frames)"
+              borderTop: "3px solid var(--tier-frames)",
             }}
           >
             <span
               style={{
                 ...styles.tierLabel,
-                background: "var(--tier-frames)"
+                background: "var(--tier-frames)",
               }}
             >
               Frames
             </span>
             <h3 style={styles.tierHeading}>Full Creative Control</h3>
             <p style={styles.tierDescription}>
-              Four powerful Frame components give you complete control over every
-              aspect of your visualization.
+              Four powerful Frame components give you complete control over every aspect of your
+              visualization.
             </p>
             <MiniCodeBlock code={tierSnippets.frames} />
           </div>
@@ -871,21 +952,21 @@ export default function Landing() {
           <div
             style={{
               ...styles.tierCard,
-              borderTop: "3px solid var(--tier-utilities)"
+              borderTop: "3px solid var(--tier-utilities)",
             }}
           >
             <span
               style={{
                 ...styles.tierLabel,
-                background: "var(--tier-utilities)"
+                background: "var(--tier-utilities)",
               }}
             >
               Utilities
             </span>
             <h3 style={styles.tierHeading}>Build Your Own</h3>
             <p style={styles.tierDescription}>
-              Use individual components like Axis, Legend, Brush, and DividedLine
-              to build completely custom visualizations.
+              Use individual components like Axis, Legend, Brush, and DividedLine to build
+              completely custom visualizations.
             </p>
             <MiniCodeBlock code={tierSnippets.utilities} />
           </div>
@@ -898,8 +979,8 @@ export default function Landing() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Built for Real-World Use</h2>
         <p style={styles.sectionSubtitle}>
-          Everything you need to ship production data visualizations, without
-          reaching for extra libraries.
+          Everything you need to ship production data visualizations, without reaching for extra
+          libraries.
         </p>
 
         <div style={styles.featureGrid} className="landing-feature-grid">
@@ -922,13 +1003,11 @@ export default function Landing() {
           background: "var(--surface-1)",
           maxWidth: "none",
           borderTop: "1px solid var(--surface-3)",
-          borderBottom: "1px solid var(--surface-3)"
+          borderBottom: "1px solid var(--surface-3)",
         }}
       >
         <h2 style={styles.sectionTitle}>Get Up and Running in Minutes</h2>
-        <p style={styles.sectionSubtitle}>
-          Three steps to your first chart.
-        </p>
+        <p style={styles.sectionSubtitle}>Three steps to your first chart.</p>
 
         <div style={styles.stepsContainer}>
           {quickStartSteps.map((step) => (
@@ -951,17 +1030,14 @@ export default function Landing() {
           FOOTER CTA
           ================================================================ */}
       <section style={styles.footerCTA}>
-        <h2 style={{ ...styles.sectionTitle, marginBottom: "12px" }}>
-          Ready to Build?
-        </h2>
+        <h2 style={{ ...styles.sectionTitle, marginBottom: "12px" }}>Ready to Build?</h2>
         <p
           style={{
             ...styles.sectionSubtitle,
-            marginBottom: "32px"
+            marginBottom: "32px",
           }}
         >
-          Explore the guides, browse examples, or dive straight into the API
-          reference.
+          Explore the guides, browse examples, or dive straight into the API reference.
         </p>
         <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
           <Link to="/getting-started" style={styles.btnPrimary}>
