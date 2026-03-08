@@ -56,7 +56,8 @@ const navData = [
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },
-          { title: "Circle Pack", path: "/charts/circle-pack" }
+          { title: "Circle Pack", path: "/charts/circle-pack" },
+          { title: "Orbit Diagram", path: "/charts/orbit-diagram" }
         ]
       }
     ]
@@ -141,6 +142,7 @@ const navData = [
       { title: "Donut Chart", path: "/playground/donut-chart" },
       { title: "Treemap", path: "/playground/treemap" },
       { title: "Circle Pack", path: "/playground/circle-pack" },
+      { title: "Orbit Diagram", path: "/playground/orbit-diagram" },
       { title: "Statistical Annotations", path: "/playground/statistical-annotations" },
       { title: "Forecast & Anomaly", path: "/playground/forecast" }
     ]

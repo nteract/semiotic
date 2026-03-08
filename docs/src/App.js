@@ -18,6 +18,7 @@ import AreaChartPage from "./pages/charts/AreaChartPage"
 import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
 import ScatterplotPage from "./pages/charts/ScatterplotPage"
 import ConnectedScatterplotPage from "./pages/charts/ConnectedScatterplotPage"
+import OrbitDiagramPage from "./pages/charts/OrbitDiagramPage"
 import BubbleChartPage from "./pages/charts/BubbleChartPage"
 import HeatmapPage from "./pages/charts/HeatmapPage"
 import ScatterplotMatrixPage from "./pages/charts/ScatterplotMatrixPage"
@@ -94,6 +95,7 @@ import LineChartPlayground from "./pages/playground/LineChartPlayground"
 import BarChartPlayground from "./pages/playground/BarChartPlayground"
 import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
 import ConnectedScatterplotPlayground from "./pages/playground/ConnectedScatterplotPlayground"
+import OrbitDiagramPlayground from "./pages/playground/OrbitDiagramPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
 import StreamingSankeyPlayground from "./pages/playground/StreamingSankeyPlayground"
@@ -296,6 +298,7 @@ export default function DocsApp() {
               <Route path="donut-chart" element={<DonutChartPlayground />} />
               <Route path="treemap" element={<TreemapPlayground />} />
               <Route path="circle-pack" element={<CirclePackPlayground />} />
+              <Route path="orbit-diagram" element={<OrbitDiagramPlayground />} />
               <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
               <Route path="forecast" element={<ForecastPlayground />} />
             </Route>
@@ -374,6 +377,7 @@ export default function DocsApp() {
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />
+              <Route path="orbit-diagram" element={<OrbitDiagramPage />} />
             </Route>
           </Routes>
         </div>
