@@ -37,6 +37,7 @@ export { SankeyDiagram } from "./charts/network/SankeyDiagram"
 export { TreeDiagram } from "./charts/network/TreeDiagram"
 export { Treemap } from "./charts/network/Treemap"
 export { CirclePack } from "./charts/network/CirclePack"
+export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 
 // Realtime Charts
 export { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"

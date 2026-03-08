@@ -95,6 +95,8 @@ export type { TreemapProps } from "./network/Treemap"
 
 export { CirclePack } from "./network/CirclePack"
 export type { CirclePackProps } from "./network/CirclePack"
+export { OrbitDiagram } from "./network/OrbitDiagram"
+export type { OrbitDiagramProps, OrbitNode } from "./network/OrbitDiagram"
 
 // ============================================================================
 // Realtime Charts

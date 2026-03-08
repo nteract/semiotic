@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -76,6 +76,7 @@ export {
   GroupedBarChart,
   Treemap,
   CirclePack,
+  OrbitDiagram,
   ScatterplotMatrix,
   MinimapChart,
   // Coordinated views

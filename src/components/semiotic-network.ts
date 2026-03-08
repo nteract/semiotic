@@ -14,6 +14,7 @@ export { ChordDiagram } from "./charts/network/ChordDiagram"
 export { TreeDiagram } from "./charts/network/TreeDiagram"
 export { Treemap } from "./charts/network/Treemap"
 export { CirclePack } from "./charts/network/CirclePack"
+export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 
 // Stream Frame types
 export type {
