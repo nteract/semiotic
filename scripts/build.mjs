@@ -186,6 +186,7 @@ function syncAIInstructions() {
     ".cursorrules",
     ".github/copilot-instructions.md",
     ".windsurfrules",
+    "docs/public/llms-full.txt",
     ".clinerules",
   ]
   for (const target of targets) {

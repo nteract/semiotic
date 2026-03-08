@@ -1,0 +1,77 @@
+# Semiotic
+
+> React data visualization library for charts, networks, and streaming data. Simple HOC charts with sensible defaults, canvas-first rendering at 60fps, coordinated views, and AI observation hooks.
+
+## Docs
+
+- [Getting Started](/getting-started): Installation, quick examples, and first chart
+- [Charts](/charts): All chart types with live examples and prop tables
+- [Features](/features): Axes, annotations, tooltips, theming, responsive, composition, accessibility
+- [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API
+- [Cookbook](/cookbook): Advanced patterns and recipes
+- [Playground](/playground): Interactive prop exploration for every chart type
+
+## Charts — XY
+
+- [LineChart](/charts/line-chart): Time series, trends, multi-line with forecast and anomaly detection
+- [AreaChart](/charts/area-chart): Filled areas with gradient fill and percentile bands (y0Accessor)
+- [StackedAreaChart](/charts/stacked-area-chart): Part-to-whole trends with optional normalization
+- [Scatterplot](/charts/scatterplot): XY points with color, size, and marginal graphics
+- [ConnectedScatterplot](/charts/connected-scatterplot): Sequential points with viridis coloring
+- [BubbleChart](/charts/bubble-chart): Scatter with required size dimension
+- [Heatmap](/charts/heatmap): Grid/matrix with color-encoded values
+
+## Charts — Ordinal
+
+- [BarChart](/charts/bar-chart): Vertical or horizontal bars
+- [StackedBarChart](/charts/stacked-bar-chart): Stacked bars with optional normalization
+- [GroupedBarChart](/charts/grouped-bar-chart): Side-by-side bars
+- [SwarmPlot](/charts/swarm-plot): Beeswarm dot plots
+- [BoxPlot](/charts/box-plot): Box-and-whisker distribution
+- [Histogram](/charts/histogram): Binned frequency distribution
+- [ViolinPlot](/charts/violin-plot): Kernel density per category
+- [DotPlot](/charts/dot-plot): Cleveland-style dot plots
+- [PieChart](/charts/pie-chart): Proportional slices
+- [DonutChart](/charts/donut-chart): Pie with center content
+
+## Charts — Network
+
+- [ForceDirectedGraph](/charts/force-directed-graph): Physics-based node-link diagrams
+- [SankeyDiagram](/charts/sankey-diagram): Weighted flow diagrams
+- [ChordDiagram](/charts/chord-diagram): Circular inter-relationships
+- [TreeDiagram](/charts/tree-diagram): Hierarchical tree layouts
+- [Treemap](/charts/treemap): Space-filling rectangles
+- [CirclePack](/charts/circle-pack): Nested circles
+
+## Charts — Realtime
+
+- [RealtimeLineChart](/charts/realtime-line-chart): Streaming line on canvas
+- [RealtimeHistogram](/charts/realtime-bar-chart): Streaming temporal histogram
+- [RealtimeSwarmChart](/charts/realtime-swarm-chart): Streaming scatter
+- [RealtimeWaterfallChart](/charts/realtime-waterfall-chart): Streaming waterfall
+- [RealtimeHeatmap](/charts/realtime-heatmap): Streaming 2D heatmap
+
+## Features
+
+- [Coordinated Views](/features/linked-charts): LinkedCharts, cross-highlighting, crossfilter brushing
+- [Composition](/features/composition): ChartGrid, ContextLayout, CategoryColorProvider
+- [Responsive](/features/responsive): responsiveWidth, responsiveHeight
+- [Accessibility](/features/accessibility): Keyboard navigation, ARIA labels
+- [Theming](/features/theming): ThemeProvider, dark mode
+- [Annotations](/features/annotations): Labels, thresholds, trend lines, anomaly bands
+- [Serialization](/features/serialization): toConfig, fromConfig, toURL, copyConfig
+
+## AI Integration
+
+- [CLAUDE.md](/CLAUDE.md): Full AI assistant guide with all props and patterns
+- [schema.json](/schema.json): Machine-readable component schemas
+- [API Reference](/api-reference.md): Compact system prompt for context-constrained agents
+- [Examples](/examples.md): Copy-paste code examples for every chart type
+
+## Optional
+
+- [Cookbook — Candlestick](/cookbook/candlestick-chart): Financial OHLC charts
+- [Cookbook — Radar](/cookbook/radar-plot): Radar/spider charts
+- [Cookbook — Timeline](/cookbook/timeline): Timeline visualizations
+- [Cookbook — Marginal Graphics](/cookbook/marginal-graphics): Distribution plots in scatter margins
+- [Vega-Lite Translator](/features/vega-lite-translator): Convert Vega-Lite specs to Semiotic
