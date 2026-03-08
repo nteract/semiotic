@@ -1,5 +1,5 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { RealtimeSwarmChart } from "./RealtimeSwarmChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -48,9 +48,9 @@ describe("RealtimeSwarmChart", () => {
   it("push and getData track data", () => {
     const ref = React.createRef<any>()
     render(<TooltipProvider><RealtimeSwarmChart ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    ref.current.pushMany([{ t: 1, v: 10 }, { t: 2, v: 20 }, { t: 3, v: 30 }])
+    act(() => { ref.current.pushMany([{ t: 1, v: 10 }, { t: 2, v: 20 }, { t: 3, v: 30 }]) })
     expect(ref.current.getData().length).toBe(3)
-    ref.current.clear()
+    act(() => { ref.current.clear() })
     expect(ref.current.getData().length).toBe(0)
   })
 

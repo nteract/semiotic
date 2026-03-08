@@ -1,5 +1,5 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { RealtimeHeatmap } from "./RealtimeHeatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -48,16 +48,16 @@ describe("RealtimeHeatmap", () => {
   it("push and getData track data", () => {
     const ref = React.createRef<any>()
     render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    ref.current.push({ t: 1, v: 5 })
-    ref.current.push({ t: 2, v: 10 })
+    act(() => { ref.current.push({ t: 1, v: 5 }) })
+    act(() => { ref.current.push({ t: 2, v: 10 }) })
     expect(ref.current.getData().length).toBe(2)
   })
 
   it("clear empties the buffer", () => {
     const ref = React.createRef<any>()
     render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    ref.current.push({ t: 1, v: 5 })
-    ref.current.clear()
+    act(() => { ref.current.push({ t: 1, v: 5 }) })
+    act(() => { ref.current.clear() })
     expect(ref.current.getData().length).toBe(0)
   })
 

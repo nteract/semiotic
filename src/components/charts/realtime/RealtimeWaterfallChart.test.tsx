@@ -1,5 +1,5 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { RealtimeWaterfallChart } from "./RealtimeWaterfallChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -48,9 +48,9 @@ describe("RealtimeWaterfallChart", () => {
   it("push and getData track data", () => {
     const ref = React.createRef<any>()
     render(<TooltipProvider><RealtimeWaterfallChart ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
-    ref.current.pushMany([{ t: 1, v: 50 }, { t: 2, v: -30 }, { t: 3, v: 20 }])
+    act(() => { ref.current.pushMany([{ t: 1, v: 50 }, { t: 2, v: -30 }, { t: 3, v: 20 }]) })
     expect(ref.current.getData().length).toBe(3)
-    ref.current.clear()
+    act(() => { ref.current.clear() })
     expect(ref.current.getData().length).toBe(0)
   })
 
