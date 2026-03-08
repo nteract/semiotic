@@ -1,5 +1,5 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { RealtimeLineChart } from "./RealtimeLineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -74,8 +74,8 @@ describe("RealtimeLineChart", () => {
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    ref.current.push({ t: 1, v: 10 })
-    ref.current.push({ t: 2, v: 20 })
+    act(() => { ref.current.push({ t: 1, v: 10 }) })
+    act(() => { ref.current.push({ t: 2, v: 20 }) })
     const data = ref.current.getData()
     expect(data.length).toBe(2)
   })
@@ -87,8 +87,8 @@ describe("RealtimeLineChart", () => {
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    ref.current.push({ t: 1, v: 10 })
-    ref.current.clear()
+    act(() => { ref.current.push({ t: 1, v: 10 }) })
+    act(() => { ref.current.clear() })
     expect(ref.current.getData().length).toBe(0)
   })
 
@@ -99,11 +99,13 @@ describe("RealtimeLineChart", () => {
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    ref.current.pushMany([
-      { t: 1, v: 10 },
-      { t: 2, v: 20 },
-      { t: 3, v: 30 }
-    ])
+    act(() => {
+      ref.current.pushMany([
+        { t: 1, v: 10 },
+        { t: 2, v: 20 },
+        { t: 3, v: 30 }
+      ])
+    })
     expect(ref.current.getData().length).toBe(3)
   })
 

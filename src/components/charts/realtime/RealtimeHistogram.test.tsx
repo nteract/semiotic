@@ -1,5 +1,5 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { RealtimeTemporalHistogram } from "./RealtimeHistogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -48,9 +48,9 @@ describe("RealtimeTemporalHistogram", () => {
   it("push and getData track data", () => {
     const ref = React.createRef<any>()
     render(<TooltipProvider><RealtimeTemporalHistogram ref={ref} binSize={100} /></TooltipProvider>)
-    ref.current.pushMany([{ time: 1, value: 10 }, { time: 2, value: 20 }])
+    act(() => { ref.current.pushMany([{ time: 1, value: 10 }, { time: 2, value: 20 }]) })
     expect(ref.current.getData().length).toBe(2)
-    ref.current.clear()
+    act(() => { ref.current.clear() })
     expect(ref.current.getData().length).toBe(0)
   })
 
