@@ -137,7 +137,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^14.3.0",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.4.3",
     "@types/d3-array": "^3.2.0",
     "@types/d3-brush": "^3.0.0",
