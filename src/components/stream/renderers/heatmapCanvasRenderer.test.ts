@@ -1,23 +1,24 @@
+import { vi } from "vitest"
 import { heatmapCanvasRenderer } from "./heatmapCanvasRenderer"
 import { scaleLinear } from "d3-scale"
 import type { HeatcellSceneNode, SceneNode, StreamScales, StreamLayout } from "../types"
 
 function createMockCanvasContext() {
   return {
-    beginPath: jest.fn(),
-    arc: jest.fn(),
-    fill: jest.fn(),
-    fillRect: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    stroke: jest.fn(),
-    save: jest.fn(),
-    restore: jest.fn(),
-    closePath: jest.fn(),
-    setTransform: jest.fn(),
-    clearRect: jest.fn(),
-    strokeRect: jest.fn(),
-    setLineDash: jest.fn(),
+    beginPath: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    fillRect: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    closePath: vi.fn(),
+    setTransform: vi.fn(),
+    clearRect: vi.fn(),
+    strokeRect: vi.fn(),
+    setLineDash: vi.fn(),
     fillStyle: "",
     strokeStyle: "",
     globalAlpha: 1,
@@ -115,7 +116,7 @@ describe("heatmapCanvasRenderer", () => {
   it("uses default pulse color when _pulseColor is absent", () => {
     const ctx = createMockCanvasContext()
     const fillStyles: string[] = []
-    const origFillRect = ctx.fillRect as jest.Mock
+    const origFillRect = ctx.fillRect as ReturnType<typeof vi.fn>
     origFillRect.mockImplementation(() => {
       fillStyles.push(ctx.fillStyle as string)
     })

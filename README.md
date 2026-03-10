@@ -94,7 +94,7 @@ snapshots, or coordinated views across chart types.
 ## Install
 
 ```bash
-npm install semiotic@3.0.0
+npm install semiotic
 ```
 
 Requires React 18.1+ or React 19.

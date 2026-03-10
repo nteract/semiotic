@@ -1,10 +1,11 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { ViolinPlot } from "./ViolinPlot"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 let lastOrdinalFrameProps: any = null
-jest.mock("../../stream/StreamOrdinalFrame", () => {
+vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {

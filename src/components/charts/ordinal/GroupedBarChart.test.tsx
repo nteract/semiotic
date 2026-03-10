@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { GroupedBarChart } from "./GroupedBarChart"
@@ -5,7 +6,7 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../stream/StreamOrdinalFrame", () => {
+vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {

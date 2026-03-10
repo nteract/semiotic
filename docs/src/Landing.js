@@ -37,7 +37,7 @@ const quickStartSteps = [
   {
     number: 1,
     title: "Install",
-    code: "npm install semiotic@3.0.0",
+    code: "npm install semiotic",
   },
   {
     number: 2,
@@ -67,7 +67,12 @@ const features = [
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 10h10M9 14h7M9 18h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path
+          d="M9 10h10M9 14h7M9 18h10"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
         <circle cx="20" cy="14" r="2" fill="currentColor" />
       </svg>
     ),
@@ -93,7 +98,14 @@ const features = [
       "Canvas-rendered realtime charts at 60fps. Push data via refs, with built-in decay, pulse, and staleness encoding for live monitoring dashboards.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <polyline points="3,20 8,12 13,16 18,8 23,14 28,6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline
+          points="3,20 8,12 13,16 18,8 23,14 28,6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <circle cx="23" cy="14" r="2.5" fill="currentColor" opacity="0.6" />
         <circle cx="23" cy="14" r="4" stroke="currentColor" strokeWidth="1" opacity="0.3" />
       </svg>
@@ -109,8 +121,24 @@ const features = [
         <rect x="16" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
         <rect x="2" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
         <rect x="16" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="12" y1="7" x2="16" y2="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
-        <line x1="7" y1="12" x2="7" y2="16" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+        <line
+          x1="12"
+          y1="7"
+          x2="16"
+          y2="7"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="2,2"
+        />
+        <line
+          x1="7"
+          y1="12"
+          x2="7"
+          y2="16"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="2,2"
+        />
       </svg>
     ),
   },
@@ -120,8 +148,20 @@ const features = [
       "Forecast with confidence envelopes, anomaly detection, LOESS smoothing, and trend lines. Auto-computed or pre-computed from your ML model.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M3 22 Q10 8 14 14 Q18 20 25 6" stroke="currentColor" strokeWidth="1.5" fill="none" />
-        <path d="M3 20 Q10 10 14 14 Q18 18 25 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="currentColor" fillOpacity="0.1" />
+        <path
+          d="M3 22 Q10 8 14 14 Q18 20 25 6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M3 20 Q10 10 14 14 Q18 18 25 8"
+          stroke="currentColor"
+          strokeWidth="1"
+          opacity="0.3"
+          fill="currentColor"
+          fillOpacity="0.1"
+        />
         <circle cx="8" cy="16" r="2" fill="currentColor" opacity="0.5" />
       </svg>
     ),
@@ -844,8 +884,8 @@ export default function Landing() {
         <div style={styles.heroInner}>
           <h1 style={styles.heroHeadline}>Data Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            Charts, network graphs, streaming data, and coordinated dashboards — with
-            built-in AI tooling so coding assistants generate correct code on the first try.
+            Charts, network graphs, streaming data, and coordinated dashboards — with built-in AI
+            tooling so coding assistants generate correct code on the first try.
           </p>
 
           <div style={styles.heroButtons}>
@@ -858,8 +898,8 @@ export default function Landing() {
           </div>
 
           <div style={styles.installBlock}>
-            <code style={styles.installText}>npm install semiotic@3.0.0</code>
-            <CopyButton text="npm install semiotic@3.0.0" style={styles.installCopy} />
+            <code style={styles.installText}>npm install semiotic</code>
+            <CopyButton text="npm install semiotic" style={styles.installCopy} />
           </div>
 
           <HeroGallery />
@@ -954,8 +994,8 @@ export default function Landing() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>What Sets Semiotic Apart</h2>
         <p style={styles.sectionSubtitle}>
-          The visualization types, developer workflows, and AI integration
-          that other charting libraries leave you to build from scratch.
+          The visualization types, developer workflows, and AI integration that other charting
+          libraries leave you to build from scratch.
         </p>
 
         <div style={styles.featureGrid} className="landing-feature-grid">
