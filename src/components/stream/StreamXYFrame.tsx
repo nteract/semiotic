@@ -28,6 +28,7 @@ import { findNearestNode, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { SVGOverlay } from "./SVGOverlay"
+import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
@@ -957,6 +958,78 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         />
       </svg>
     ) : null
+
+    // ── SSR path: render SVG instead of canvas ──────────────────────────
+
+    if (isServerEnvironment) {
+      // Compute scene synchronously for server rendering
+      const store = storeRef.current
+      if (store && data) {
+        store.ingest({ inserts: data, bounded: true })
+        store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+      }
+
+      const scene = store?.scene ?? []
+      const scales = store?.scales ?? null
+
+      return (
+        <div
+          className={`stream-xy-frame${className ? ` ${className}` : ""}`}
+          role="img"
+          aria-label={typeof title === "string" ? title : "XY chart"}
+          style={{
+            position: "relative",
+            width: size[0],
+            height: size[1],
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={size[0]}
+            height={size[1]}
+            style={{ position: "absolute", left: 0, top: 0 }}
+          >
+            {backgroundGraphics}
+            <g transform={`translate(${margin.left},${margin.top})`}>
+              {background && (
+                <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
+              )}
+              {scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)}
+            </g>
+          </svg>
+          <SVGOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            scales={scales}
+            showAxes={showAxes}
+            axes={axesConfig}
+            xLabel={xLabel}
+            yLabel={yLabel}
+            xFormat={xFormat || tickFormatTime}
+            yFormat={yFormat || tickFormatValue}
+            showGrid={showGrid}
+            title={title}
+            legend={legend}
+            foregroundGraphics={foregroundGraphics}
+            marginalGraphics={marginalGraphics}
+            xValues={[]}
+            yValues={[]}
+            annotations={annotations}
+            svgAnnotationRules={svgAnnotationRules}
+            annotationFrame={0}
+            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
+            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
+            annotationData={store?.getData()}
+            pointNodes={store?.scene.filter(
+              (n): n is PointSceneNode => n.type === "point"
+            )}
+          />
+        </div>
+      )
+    }
 
     // ── Render ───────────────────────────────────────────────────────────
 

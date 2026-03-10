@@ -111,6 +111,32 @@ const data = [
 
 Key props: `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `showValues`
 
+### ConnectedScatterplot
+
+```jsx
+import { ConnectedScatterplot } from "semiotic/ai"
+
+const data = [
+  { year: 2018, unemployment: 3.9, inflation: 2.4 },
+  { year: 2019, unemployment: 3.7, inflation: 1.8 },
+  { year: 2020, unemployment: 8.1, inflation: 1.2 },
+  { year: 2021, unemployment: 5.4, inflation: 4.7 },
+  { year: 2022, unemployment: 3.6, inflation: 8.0 },
+  { year: 2023, unemployment: 3.6, inflation: 4.1 }
+]
+
+<ConnectedScatterplot
+  data={data}
+  xAccessor="unemployment"
+  yAccessor="inflation"
+  orderAccessor="year"
+  xLabel="Unemployment Rate (%)"
+  yLabel="Inflation Rate (%)"
+/>
+```
+
+Key props: `orderAccessor` sequences points along the path, Viridis gradient from start→end
+
 ---
 
 ## Flat Array — Ordinal Charts
@@ -366,6 +392,55 @@ const taxonomy = {
 ```
 
 Key props: `valueAccessor` controls circle size, nested circles for hierarchy
+
+---
+
+### OrbitDiagram
+
+```jsx
+import { OrbitDiagram } from "semiotic/ai"
+
+const pipeline = {
+  name: "ML Pipeline",
+  children: [
+    {
+      name: "Data Ingestion",
+      children: [
+        { name: "API Feed" },
+        { name: "CSV Upload" },
+        { name: "DB Connector" }
+      ]
+    },
+    {
+      name: "Processing",
+      children: [
+        { name: "Clean" },
+        { name: "Feature Eng" },
+        { name: "Normalize" }
+      ]
+    },
+    {
+      name: "Model",
+      children: [
+        { name: "Train" },
+        { name: "Evaluate" },
+        { name: "Deploy" }
+      ]
+    }
+  ]
+}
+
+<OrbitDiagram
+  data={pipeline}
+  childrenAccessor="children"
+  nodeIdAccessor="name"
+  orbitMode="solar"
+  showLabels
+  colorByDepth
+/>
+```
+
+Key props: `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`, `showRings`
 
 ---
 

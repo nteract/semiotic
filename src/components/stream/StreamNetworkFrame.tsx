@@ -32,6 +32,7 @@ import {
 import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
@@ -1024,6 +1025,81 @@ const StreamNetworkFrame = forwardRef<
         )}
       </div>
     ) : null
+
+  // ── SSR path: render SVG instead of canvas ──────────────────────────
+
+  if (isServerEnvironment) {
+    const store = storeRef.current
+    if (store) {
+      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+      const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
+
+      if (isHierarchical && hierarchyRoot) {
+        store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
+        store.buildScene([adjustedWidth, adjustedHeight])
+      } else {
+        const rawNodes = nodesProp || []
+        const rawEdges = Array.isArray(edgesProp) ? edgesProp : []
+        if (rawNodes.length > 0 || rawEdges.length > 0) {
+          store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
+          store.buildScene([adjustedWidth, adjustedHeight])
+        }
+      }
+    }
+
+    const sceneNodes = store?.sceneNodes ?? []
+    const sceneEdges = store?.sceneEdges ?? []
+    const labels = store?.labels ?? []
+
+    return (
+      <div
+        className={`stream-network-frame${className ? ` ${className}` : ""}`}
+        role="img"
+        aria-label={typeof title === "string" ? title : "Network chart"}
+        style={{
+          position: "relative",
+          width: size[0],
+          height: size[1],
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={size[0]}
+          height={size[1]}
+          style={{ position: "absolute", left: 0, top: 0 }}
+        >
+          {backgroundGraphics && (
+            <g transform={`translate(${margin.left},${margin.top})`}>
+              {backgroundGraphics}
+            </g>
+          )}
+          <g transform={`translate(${margin.left},${margin.top})`}>
+            {background && (
+              <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
+            )}
+            {sceneEdges.map((edge, i) => networkSceneEdgeToSVG(edge, i)).filter(Boolean)}
+            {sceneNodes.map((node, i) => networkSceneNodeToSVG(node, i)).filter(Boolean)}
+            {labels.map((label, i) => networkLabelToSVG(label, i)).filter(Boolean)}
+          </g>
+        </svg>
+        <NetworkSVGOverlay
+          width={adjustedWidth}
+          height={adjustedHeight}
+          totalWidth={size[0]}
+          totalHeight={size[1]}
+          margin={margin}
+          labels={labels}
+          sceneNodes={sceneNodes as any}
+          title={title}
+          legend={legend}
+          foregroundGraphics={foregroundGraphics}
+          annotations={annotations}
+          svgAnnotationRules={svgAnnotationRules}
+          annotationFrame={0}
+        />
+      </div>
+    )
+  }
 
   // ── Render ───────────────────────────────────────────────────────────
 

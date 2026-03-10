@@ -36,7 +36,8 @@ correct visualizations without trial and error:
 - **`semiotic/ai`** — a single import with all 28 chart components, optimized for LLM code generation
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
-- **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line
+- **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
+- **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with 12 checks and actionable fixes
 - **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
 - **`llms.txt`** — machine-readable documentation following the emerging standard
 
@@ -275,7 +276,19 @@ interface Sale { month: number; revenue: number }
 
 ## Server-Side Rendering
 
-Static SVG generation for Node.js (email, OG images, PDF):
+All chart components render SVG automatically in server environments — no
+special imports or configuration needed:
+
+```jsx
+// Works in Next.js App Router, Remix, Astro — same component, same props
+import { LineChart } from "semiotic"
+
+// Server: renders <svg> with path/circle/rect elements
+// Client: renders <canvas> with SVG overlay for axes
+<LineChart data={data} xAccessor="date" yAccessor="value" />
+```
+
+For standalone SVG generation (email, OG images, PDF), use the server entry point:
 
 ```js
 import { renderToStaticSVG } from "semiotic/server"
@@ -288,14 +301,12 @@ const svg = renderToStaticSVG("xy", {
 })
 ```
 
-Works with Next.js App Router, Remix, and Astro via `"use client"` directives.
-
 ## Documentation
 
 [Interactive docs and examples](https://semiotic.nteract.io)
 
 - [Getting Started](https://semiotic.nteract.io/getting-started)
-- [Charts](https://semiotic.nteract.io/charts) — all 27 chart types with live examples
+- [Charts](https://semiotic.nteract.io/charts) — all 28 chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
 - [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes
