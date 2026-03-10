@@ -4,10 +4,11 @@
 [![npm version](https://img.shields.io/npm/v/semiotic.svg)](https://www.npmjs.com/package/semiotic)
 [![TypeScript](https://img.shields.io/badge/TypeScript-built--in-blue.svg)](https://www.typescriptlang.org/)
 
-A React data visualization library for charts, networks, and beyond.
+A React data visualization library designed for AI-assisted development.
 
-Simple charts in 5 lines. Force-directed graphs, Sankey diagrams, treemaps,
-and chord diagrams when you need them. Full D3-level control when you want it.
+Simple charts in 5 lines. Network graphs, streaming data, and coordinated
+dashboards when you need them. Structured schemas and an MCP server so
+AI coding assistants generate correct chart code on the first try.
 
 ```jsx
 import { LineChart } from "semiotic"
@@ -21,31 +22,45 @@ import { LineChart } from "semiotic"
 
 ## Why Semiotic
 
-Most React charting libraries give you bar charts, line charts, and pie charts.
-Semiotic gives you those too — but it's built for the projects where those
-aren't enough.
+Semiotic is a data visualization library for React that combines broad chart
+coverage with first-class AI tooling. It handles the chart types that most
+libraries skip — network graphs, streaming data, statistical distributions,
+coordinated views — and ships with machine-readable schemas so LLMs can
+generate correct code without examples.
 
-### When you need more than standard charts
+### Built for AI-assisted development
 
-**Network visualization.** Show how things connect — org charts,
-dependency graphs, budget flows, taxonomies. Semiotic has force-directed
-graphs, Sankey diagrams, chord diagrams, tree layouts, treemaps, and circle
-packing as React components with the same prop API as LineChart.
+Semiotic ships with everything an AI coding assistant needs to generate
+correct visualizations without trial and error:
 
-**Streaming data.** Monitor live systems — server metrics, sensor feeds,
-financial tickers. Semiotic's realtime charts render on canvas at 60fps with
-a ref-based push API. Old data fades out (decay), new data flashes in
-(pulse), and stale feeds are flagged automatically.
+- **`semiotic/ai`** — a single import with all 28 chart components, optimized for LLM code generation
+- **`ai/schema.json`** — machine-readable prop schemas for every component
+- **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
+- **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line
+- **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
+- **`llms.txt`** — machine-readable documentation following the emerging standard
 
-**Coordinated dashboards.** Hover one chart, highlight matching data in
-others. Brush a scatterplot, filter a bar chart. Semiotic's `LinkedCharts`
-and `ScatterplotMatrix` provide crossfilter coordination that other libraries
-leave you to build from scratch.
+Every chart includes a built-in error boundary and dev-mode validation
+warnings with typo suggestions, so AI-generated code fails gracefully with
+actionable diagnostics instead of a blank screen.
 
-**Statistical summaries.** Box plots, violin plots, swarm plots, ridgeline
-plots, histograms — the distribution charts that data scientists need and
-most charting libraries skip. Add marginal distribution graphics (histogram,
-violin, ridgeline, boxplot) to scatterplot margins with a single prop.
+### Beyond standard charts
+
+**Network visualization.** Force-directed graphs, Sankey diagrams, chord
+diagrams, tree layouts, treemaps, circle packing, and orbit diagrams — all
+as React components with the same prop API as LineChart.
+
+**Streaming data.** Realtime charts render on canvas at 60fps with a
+ref-based push API. Built-in decay, pulse, and staleness encoding for
+monitoring dashboards.
+
+**Coordinated views.** `LinkedCharts` provides hover cross-highlighting,
+brush cross-filtering, and selection synchronization across any combination
+of chart types — zero wiring.
+
+**Statistical summaries.** Box plots, violin plots, swarm plots, histograms,
+LOESS smoothing, forecast with confidence envelopes, and anomaly detection.
+Marginal distribution graphics on scatterplot axes with a single prop.
 
 ### Start simple, go deep
 
@@ -56,6 +71,13 @@ violin, ridgeline, boxplot) to scatterplot margins with a single prop.
 
 Every Chart component accepts a `frameProps` prop to access the underlying
 Frame API without leaving the simpler interface.
+
+### Serialization and interop
+
+Charts serialize to JSON and back: `toConfig`, `fromConfig`, `toURL`,
+`copyConfig`, `configToJSX`. Have Vega-Lite specs? `fromVegaLite(spec)`
+translates them to Semiotic configs — works with `configToJSX()` for
+full round-trip from notebooks and AI-generated specs.
 
 ### When to use something else
 
@@ -68,36 +90,6 @@ handles that scale.
 Semiotic is for projects that outgrow those libraries — when you need
 network graphs alongside time series, streaming data alongside static
 snapshots, or coordinated views across chart types.
-
-### Bundle size comparison
-
-| Library | Packed | Unpacked | What you get |
-|---|---|---|---|
-| Victory | 393 KB | 2.3 MB | Charts only |
-| Lightweight Charts | 586 KB | 3.0 MB | Financial charts only |
-| **Semiotic** | **668 KB** | **2.5 MB** | **Charts + networks + streaming + coordination** |
-| Recharts | 1.4 MB | 6.4 MB | Charts only |
-| Chart.js | 1.6 MB | 6.2 MB | Charts only, no React |
-| ApexCharts | 1.8 MB | 8.4 MB | Charts only |
-| ECharts | 11.4 MB | 57.6 MB | Everything, no React |
-
-**AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
-`import from "semiotic/ai"` entry point, and an MCP server — all designed for
-LLM code generation. AI coding assistants can generate correct Semiotic code on
-the first try. Run `npx semiotic-ai --help` for CLI options, `npx semiotic-ai --doctor`
-to validate props from the command line, or add `semiotic-mcp` to your MCP client
-config for tool-based chart rendering. Every HOC chart includes a built-in error
-boundary and dev-mode validation warnings with actionable fix suggestions.
-
-**Vega-Lite compatible.** Have existing Vega-Lite specs? `fromVegaLite(spec)`
-translates them to Semiotic chart configs — instant onboarding from notebooks,
-dashboards, or AI-generated specs. Composes with `configToJSX()`,
-`copyConfig()`, and `toURL()` for full round-trip interop.
-
-**Streaming system models.** Turn a streaming Sankey into a live system monitor:
-click-to-inspect `DetailsPanel`, particle speed proportional to edge throughput,
-threshold alerting with animated glow, and automatic topology diffing that
-highlights new services as they appear. Visualization as product navigation.
 
 ## Install
 
