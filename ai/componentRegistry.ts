@@ -5,10 +5,10 @@
 import type { ComponentType } from "react"
 
 import {
-  LineChart, AreaChart, StackedAreaChart, Scatterplot, BubbleChart, Heatmap,
+  LineChart, AreaChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap,
   BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
   PieChart, DonutChart,
-  ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack
+  ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
 } from "semiotic/ai"
 
 export interface RegistryEntry {
@@ -23,6 +23,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   Scatterplot: { component: Scatterplot, category: "xy" },
   BubbleChart: { component: BubbleChart, category: "xy" },
   Heatmap: { component: Heatmap, category: "xy" },
+  ConnectedScatterplot: { component: ConnectedScatterplot, category: "xy" },
 
   BarChart: { component: BarChart, category: "ordinal" },
   StackedBarChart: { component: StackedBarChart, category: "ordinal" },
@@ -39,4 +40,5 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   TreeDiagram: { component: TreeDiagram, category: "network" },
   Treemap: { component: Treemap, category: "network" },
   CirclePack: { component: CirclePack, category: "network" },
+  OrbitDiagram: { component: OrbitDiagram, category: "network" },
 }

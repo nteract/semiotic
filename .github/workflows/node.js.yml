@@ -34,3 +34,6 @@ jobs:
 
       - name: Run type check
         run: npm run typescript
+
+      - name: Check schema freshness
+        run: npm run check:schema

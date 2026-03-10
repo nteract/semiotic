@@ -386,6 +386,40 @@
     {
       "type": "function",
       "function": {
+        "name": "ConnectedScatterplot",
+        "description": "Scatterplot where points are connected in order, showing trajectories through 2D space. Viridis-colored start→end, white halo under lines.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": { "type": "string", "description": "Key for x-axis values", "default": "x" },
+            "yAccessor": { "type": "string", "description": "Key for y-axis values", "default": "y" },
+            "orderAccessor": { "type": "string", "description": "Key for point ordering (number or Date field)" },
+            "orderLabel": { "type": "string", "description": "Label for the ordering metric in tooltips" },
+            "pointRadius": { "type": "number", "description": "Point radius", "default": 4 },
+            "pointIdAccessor": { "type": "string", "description": "Accessor for unique point IDs, used by point-anchored annotations" },
+            "annotations": { "type": "array", "description": "Annotation objects to render on the chart" },
+            "colorBy": { "type": "string", "description": "Key to determine color encoding" },
+            "colorScheme": { "type": ["string", "array"], "description": "Named d3 color scheme or array of color strings" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "BarChart",
         "description": "Vertical or horizontal bars for categorical comparisons.",
         "parameters": {
@@ -1115,6 +1149,43 @@
             "showLabels": { "type": "boolean", "default": true },
             "nodeLabel": { "type": "string" },
             "circleOpacity": { "type": "number", "default": 0.7 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "OrbitDiagram",
+        "description": "Animated orbital diagram showing hierarchical data as nodes orbiting a center. Supports flat, solar, atomic, and custom ring arrangements.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "description": "Hierarchical root object with children: { name: 'root', children: [...] }"
+            },
+            "childrenAccessor": { "type": "string", "description": "Key to access children from each datum", "default": "children" },
+            "nodeIdAccessor": { "type": "string", "description": "Key to identify each node", "default": "name" },
+            "colorBy": { "type": "string", "description": "Field or function for node color" },
+            "colorScheme": { "type": ["string", "array"], "description": "Color scheme", "default": "category10" },
+            "colorByDepth": { "type": "boolean", "description": "Color by hierarchy depth", "default": false },
+            "orbitMode": { "type": ["string", "array"], "description": "Ring arrangement: 'flat', 'solar', 'atomic', or number[]", "default": "flat" },
+            "orbitSize": { "type": "number", "description": "Ring size divisor per depth", "default": 2.95 },
+            "speed": { "type": "number", "description": "Orbit speed in degrees per frame", "default": 0.25 },
+            "eccentricity": { "type": "number", "description": "Vertical squash for elliptical orbits (1 = circle)", "default": 1 },
+            "showRings": { "type": "boolean", "description": "Show orbital ring paths", "default": true },
+            "nodeRadius": { "type": "number", "description": "Node radius", "default": 6 },
+            "showLabels": { "type": "boolean", "description": "Show node labels", "default": false },
+            "animated": { "type": "boolean", "description": "Enable animation", "default": true },
+            "annotations": { "type": "array", "description": "Annotations anchored by nodeId" },
             "title": { "type": "string" },
             "width": { "type": "number", "default": 600 },
             "height": { "type": "number", "default": 600 },

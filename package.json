@@ -100,6 +100,7 @@
     "website:build": "npm run dist:prod && parcel build --target website && node scripts/prerender.mjs",
     "build:mcp": "tsc -p tsconfig.mcp.json",
     "typescript": "tsc --noEmit",
+    "check:schema": "node scripts/check-schema-freshness.js",
     "prepublishOnly": "node scripts/build.mjs --production"
   },
   "targets": {
