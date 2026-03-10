@@ -173,7 +173,7 @@
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^4.59.0",
     "rollup-plugin-auto-external": "^2.0.0",
-    "rollup-plugin-typescript2": "^0.34.1",
+    "rollup-plugin-typescript2": "^0.36.0",
     "rollup-plugin-visualizer": "^7.0.0",
     "seedrandom": "^3.0.5",
     "typescript": "~5.9.3",
