@@ -199,6 +199,24 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  ConnectedScatterplot: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      yAccessor: { type: ["string", "function"] },
+      orderAccessor: { type: ["string", "function"] },
+      orderLabel: { type: "string" },
+      pointRadius: { type: "number" },
+      pointIdAccessor: { type: ["string", "function"] },
+      annotations: { type: "array" },
+    },
+  },
+
   // -- Ordinal Charts --
   BarChart: {
     required: ["data"],
@@ -489,6 +507,30 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  OrbitDiagram: {
+    required: ["data"],
+    dataShape: "object",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      data: { type: "object" },
+      childrenAccessor: { type: ["string", "function"] },
+      nodeIdAccessor: { type: ["string", "function"] },
+      orbitMode: { type: ["string", "array"] },
+      speed: { type: "number" },
+      revolution: { type: "function" },
+      eccentricity: { type: ["number", "function"] },
+      orbitSize: { type: ["number", "function"] },
+      nodeRadius: { type: ["number", "function"] },
+      showRings: { type: "boolean" },
+      showLabels: { type: "boolean" },
+      animated: { type: "boolean" },
+      colorByDepth: { type: "boolean" },
+      annotations: { type: "array" },
+      foregroundGraphics: { type: "object" },
+    },
+  },
+
   // -- Realtime Charts --
   RealtimeLineChart: {
     required: [],
@@ -702,6 +744,50 @@ function checkType(value: unknown, expected: PropType | PropType[]): boolean {
   return types.includes(actual as PropType)
 }
 
+/**
+ * Levenshtein edit distance between two strings.
+ * Used for typo-aware prop suggestions.
+ */
+function levenshtein(a: string, b: string): number {
+  const m = a.length
+  const n = b.length
+  const dp: number[] = new Array(n + 1)
+  for (let j = 0; j <= n; j++) dp[j] = j
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0]
+    dp[0] = i
+    for (let j = 1; j <= n; j++) {
+      const tmp = dp[j]
+      dp[j] = a[i - 1] === b[j - 1]
+        ? prev
+        : 1 + Math.min(prev, dp[j], dp[j - 1])
+      prev = tmp
+    }
+  }
+  return dp[n]
+}
+
+/**
+ * Find the closest match from candidates by Levenshtein distance.
+ * Returns the match if distance <= maxDist, otherwise undefined.
+ */
+function closestMatch(
+  input: string,
+  candidates: string[],
+  maxDist = 3
+): string | undefined {
+  let best: string | undefined
+  let bestDist = maxDist + 1
+  for (const c of candidates) {
+    const d = levenshtein(input.toLowerCase(), c.toLowerCase())
+    if (d < bestDist) {
+      bestDist = d
+      best = c
+    }
+  }
+  return bestDist <= maxDist ? best : undefined
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -761,14 +847,17 @@ export function validateProps(
     }
   }
 
-  // 4. Unknown props (warn on typos)
-  const knownProps = new Set(Object.keys(spec.props))
+  // 4. Unknown props (typo-aware suggestions)
+  const knownPropNames = Object.keys(spec.props)
+  const knownProps = new Set(knownPropNames)
   for (const key of Object.keys(props)) {
     if (props[key] === undefined) continue
     if (!knownProps.has(key)) {
-      errors.push(
-        `Unknown prop "${key}" for ${componentName}. Check for typos.`
-      )
+      const suggestion = closestMatch(key, knownPropNames)
+      const msg = suggestion
+        ? `Unknown prop "${key}" for ${componentName}. Did you mean "${suggestion}"?`
+        : `Unknown prop "${key}" for ${componentName}. Valid props: ${knownPropNames.join(", ")}.`
+      errors.push(msg)
     }
   }
 

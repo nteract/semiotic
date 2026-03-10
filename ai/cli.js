@@ -54,46 +54,59 @@ if (flag === "--doctor") {
       process.exit(1)
     }
 
-    // Load validateProps from dist
+    // Load diagnoseConfig from dist (falls back to validateProps)
     const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-    let validateProps
+    let diagnoseConfig, validateProps
     try {
       const mod = require(distPath)
+      diagnoseConfig = mod.diagnoseConfig
       validateProps = mod.validateProps
     } catch (e) {
       console.error("Could not load semiotic/ai dist. Run 'npm run dist' first.")
       process.exit(1)
     }
 
-    if (!validateProps) {
-      console.error("validateProps not found in semiotic/ai exports.")
+    if (!diagnoseConfig && !validateProps) {
+      console.error("diagnoseConfig/validateProps not found in semiotic/ai exports.")
       process.exit(1)
     }
 
-    const result = validateProps(component, props)
-    if (result.valid) {
-      console.log(`✓ ${component}: props are valid.`)
-      // Additional data shape checks
+    if (diagnoseConfig) {
+      // Use the full anti-pattern detector
+      const result = diagnoseConfig(component, props)
+
+      // Show data shape summary
       if (props.data && Array.isArray(props.data) && props.data.length > 0) {
         const sample = props.data[0]
         console.log(`  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`)
-        if (props.xAccessor && typeof props.xAccessor === "string" && !(props.xAccessor in sample)) {
-          console.log(`  ⚠ xAccessor "${props.xAccessor}" not in data keys. Available: ${Object.keys(sample).join(", ")}`)
+      }
+
+      if (result.ok && result.diagnoses.length === 0) {
+        console.log(`✓ ${component}: configuration looks good.`)
+      } else if (result.ok) {
+        console.log(`✓ ${component}: configuration OK with warnings:`)
+        for (const d of result.diagnoses) {
+          console.log(`  ⚠ [${d.code}] ${d.message}`)
+          if (d.fix) console.log(`    Fix: ${d.fix}`)
         }
-        if (props.yAccessor && typeof props.yAccessor === "string" && !(props.yAccessor in sample)) {
-          console.log(`  ⚠ yAccessor "${props.yAccessor}" not in data keys. Available: ${Object.keys(sample).join(", ")}`)
-        }
-        if (props.categoryAccessor && typeof props.categoryAccessor === "string" && !(props.categoryAccessor in sample)) {
-          console.log(`  ⚠ categoryAccessor "${props.categoryAccessor}" not in data keys. Available: ${Object.keys(sample).join(", ")}`)
-        }
-        if (props.valueAccessor && typeof props.valueAccessor === "string" && !(props.valueAccessor in sample)) {
-          console.log(`  ⚠ valueAccessor "${props.valueAccessor}" not in data keys. Available: ${Object.keys(sample).join(", ")}`)
+      } else {
+        console.log(`✗ ${component}: issues detected.`)
+        for (const d of result.diagnoses) {
+          const icon = d.severity === "error" ? "✗" : "⚠"
+          console.log(`  ${icon} [${d.code}] ${d.message}`)
+          if (d.fix) console.log(`    Fix: ${d.fix}`)
         }
       }
     } else {
-      console.log(`✗ ${component}: validation failed.`)
-      for (const err of result.errors) {
-        console.log(`  • ${err}`)
+      // Fallback to validateProps only
+      const result = validateProps(component, props)
+      if (result.valid) {
+        console.log(`✓ ${component}: props are valid.`)
+      } else {
+        console.log(`✗ ${component}: validation failed.`)
+        for (const err of result.errors) {
+          console.log(`  • ${err}`)
+        }
       }
     }
   } catch (err) {

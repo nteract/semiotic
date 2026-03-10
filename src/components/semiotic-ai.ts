@@ -79,6 +79,10 @@ export type { DetailsPanelProps } from "./DetailsPanel"
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
 
+// Anti-pattern diagnostics
+export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
+export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
+
 // Statistical overlay types
 export type { AnomalyConfig, ForecastConfig } from "./charts/shared/statisticalOverlays"
 
