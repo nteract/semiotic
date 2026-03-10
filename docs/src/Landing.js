@@ -61,101 +61,75 @@ const quickStartSteps = [
 
 const features = [
   {
-    title: "Annotations Built In",
+    title: "AI-Ready",
     description:
-      "First-class annotation support with smart label placement, connector lines, and rich formatting. No extra library needed.",
+      "Machine-readable schemas, an MCP server, and instruction files for every major AI coding assistant. LLMs generate correct Semiotic code without examples.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="2" y="6" width="24" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="18" cy="10" r="2" fill="currentColor" />
-        <line x1="18" y1="12" x2="18" y2="16" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="18" y1="16" x2="23" y2="16" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M9 10h10M9 14h7M9 18h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="20" cy="14" r="2" fill="currentColor" />
       </svg>
     ),
   },
   {
-    title: "Responsive by Default",
+    title: "Network Visualization",
     description:
-      "ResponsiveFrame components automatically adapt to container size. Your visualizations look great at any width.",
+      "Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, circle packing, and tree layouts — as React components with the same API as LineChart.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="1" y="4" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="21" y="7" width="6" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <line
-          x1="4"
-          y1="20"
-          x2="16"
-          y2="20"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
+        <circle cx="14" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="7" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="21" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="14" y1="10" x2="7" y2="18" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="14" y1="10" x2="21" y2="18" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="10" y1="21" x2="18" y2="21" stroke="currentColor" strokeWidth="1.5" />
       </svg>
     ),
   },
   {
-    title: "Accessibility",
+    title: "Streaming Data",
     description:
-      "Screen reader support and ARIA attributes for all chart types. Semantic markup ensures your data is accessible to everyone.",
+      "Canvas-rendered realtime charts at 60fps. Push data via refs, with built-in decay, pulse, and staleness encoding for live monitoring dashboards.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M7 12h14M14 12v8M10 24l4-4 4 4"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <polyline points="3,20 8,12 13,16 18,8 23,14 28,6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="23" cy="14" r="2.5" fill="currentColor" opacity="0.6" />
+        <circle cx="23" cy="14" r="4" stroke="currentColor" strokeWidth="1" opacity="0.3" />
       </svg>
     ),
   },
   {
-    title: "Canvas & SVG",
+    title: "Coordinated Views",
     description:
-      "Switch between SVG and Canvas renderers with a single prop. Get the performance of Canvas or the interactivity of SVG.",
+      "Hover one chart, highlight matching data in others. Brush a scatterplot, filter a bar chart. Cross-chart coordination without custom state management.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="15" y="15" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M13 8h5v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M15 20H10v-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="16" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="2" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="16" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="12" y1="7" x2="16" y2="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+        <line x1="7" y1="12" x2="7" y2="16" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
       </svg>
     ),
   },
   {
-    title: "Pure React",
+    title: "Statistical Overlays",
     description:
-      "Not a D3 wrapper. Semiotic is built with React from the ground up, leveraging component composition and the React lifecycle.",
+      "Forecast with confidence envelopes, anomaly detection, LOESS smoothing, and trend lines. Auto-computed or pre-computed from your ML model.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="14" r="3" fill="currentColor" />
-        <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" strokeWidth="1.5" />
-        <ellipse
-          cx="14"
-          cy="14"
-          rx="12"
-          ry="5"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          transform="rotate(60 14 14)"
-        />
-        <ellipse
-          cx="14"
-          cy="14"
-          rx="12"
-          ry="5"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          transform="rotate(120 14 14)"
-        />
+        <path d="M3 22 Q10 8 14 14 Q18 20 25 6" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <path d="M3 20 Q10 10 14 14 Q18 18 25 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="currentColor" fillOpacity="0.1" />
+        <circle cx="8" cy="16" r="2" fill="currentColor" opacity="0.5" />
       </svg>
     ),
   },
   {
     title: "TypeScript",
     description:
-      "Full TypeScript definitions for every component and prop. Get autocompletion, type checking, and inline documentation.",
+      "Built with strict mode. Full type definitions for every component and prop. Generics for type-safe data accessors.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="3" width="22" height="22" rx="3" stroke="currentColor" strokeWidth="1.5" />
@@ -870,7 +844,8 @@ export default function Landing() {
         <div style={styles.heroInner}>
           <h1 style={styles.heroHeadline}>Data Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            From simple charts to custom visualizations — one library, progressive complexity.
+            Charts, network graphs, streaming data, and coordinated dashboards — with
+            built-in AI tooling so coding assistants generate correct code on the first try.
           </p>
 
           <div style={styles.heroButtons}>
@@ -977,10 +952,10 @@ export default function Landing() {
           FEATURES SECTION
           ================================================================ */}
       <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Built for Real-World Use</h2>
+        <h2 style={styles.sectionTitle}>What Sets Semiotic Apart</h2>
         <p style={styles.sectionSubtitle}>
-          Everything you need to ship production data visualizations, without reaching for extra
-          libraries.
+          The visualization types, developer workflows, and AI integration
+          that other charting libraries leave you to build from scratch.
         </p>
 
         <div style={styles.featureGrid} className="landing-feature-grid">

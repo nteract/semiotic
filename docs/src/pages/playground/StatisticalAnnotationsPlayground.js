@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react"
-import { Scatterplot, StreamXYFrame } from "semiotic"
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { Scatterplot, StreamXYFrame, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
@@ -105,6 +105,176 @@ const anomalySignals = [
 ]
 
 // ---------------------------------------------------------------------------
+// Pre-computed forecast dataset
+// ---------------------------------------------------------------------------
+
+function generatePrecomputedDataset() {
+  const total = 80
+  const trainEnd = Math.floor(total * 0.25) // first 25% training
+  const forecastStart = Math.floor(total * 0.9) // last 10% forecast
+  const data = []
+
+  for (let i = 0; i < total; i++) {
+    const base = 40 + Math.sin(i * 0.1) * 15 + i * 0.3
+    const noise = (Math.random() - 0.5) * 10
+    const value = Math.round((base + noise) * 100) / 100
+
+    const isTrain = i < trainEnd
+    const isForecast = i >= forecastStart
+    const isObserved = !isTrain && !isForecast
+
+    // Training: no bounds
+    // Observed: bounds follow the curve shape
+    // Forecast: bounds widen over time
+    let upperBounds = undefined
+    let lowerBounds = undefined
+    let isAnomaly = false
+
+    if (isObserved) {
+      const bandwidth = 8 + Math.abs(Math.sin(i * 0.08)) * 4
+      upperBounds = Math.round((base + bandwidth) * 100) / 100
+      lowerBounds = Math.round((base - bandwidth) * 100) / 100
+      // Flag anomalies: points outside bounds
+      isAnomaly = value > upperBounds || value < lowerBounds
+    }
+
+    if (isForecast) {
+      const stepsIntoForecast = i - forecastStart
+      const widening = 4 + stepsIntoForecast * 1.8
+      upperBounds = Math.round((base + widening) * 100) / 100
+      lowerBounds = Math.round((base - widening) * 100) / 100
+    }
+
+    const datum = {
+      time: i,
+      value: isForecast ? Math.round(base * 100) / 100 : value,
+      isTraining: isTrain,
+      isForecast,
+      isAnomaly,
+      ...(upperBounds != null && { upperBounds }),
+      ...(lowerBounds != null && { lowerBounds }),
+    }
+
+    // Hard-coded anomaly spikes so the demo always shows them
+    if (i === 36) { datum.value = 58; datum.isAnomaly = true }
+    if (i === 62) { datum.value = 40; datum.isAnomaly = true }
+
+    data.push(datum)
+  }
+  return data
+}
+
+// Auto-mode forecast dataset
+function generateAutoDataset() {
+  const data = []
+  for (let i = 0; i < 80; i++) {
+    const base = 20 + i * 0.5 + Math.sin(i * 0.15) * 5
+    const noise = (Math.random() - 0.5) * 8
+    const isAnomaly = Math.random() < 0.06
+    const value = isAnomaly
+      ? base + (Math.random() > 0.5 ? 1 : -1) * (noise * 3 + Math.random() * 10)
+      : base + noise
+    data.push({ time: i, value: Math.round(value * 100) / 100 })
+  }
+  return data
+}
+
+const forecastDatasets = [
+  { label: "Auto: Linear Trend + Anomalies", mode: "auto", trainEnd: 60 },
+  { label: "Pre-computed: ML Model Bounds", mode: "precomputed" },
+]
+
+// ---------------------------------------------------------------------------
+// Forecast controls
+// ---------------------------------------------------------------------------
+
+const forecastControls = [
+  { name: "fSteps", type: "number", label: "Forecast Steps", group: "Forecast",
+    default: 15, min: 3, max: 30, step: 1 },
+  { name: "fConfidence", type: "number", label: "Confidence Level", group: "Forecast",
+    default: 0.95, min: 0.8, max: 0.99, step: 0.01 },
+  { name: "fColor", type: "color", label: "Forecast Color", group: "Forecast",
+    default: "#6366f1" },
+  { name: "fBandOpacity", type: "number", label: "Envelope Opacity", group: "Forecast",
+    default: 0.15, min: 0.05, max: 0.4, step: 0.05 },
+  { name: "fEnableAnomaly", type: "boolean", label: "Enable Anomaly Detection", group: "Anomaly",
+    default: true },
+  { name: "fThreshold", type: "number", label: "Threshold (σ)", group: "Anomaly",
+    default: 2, min: 0.5, max: 4, step: 0.25 },
+  { name: "fAnomalyColor", type: "color", label: "Anomaly Dot Color", group: "Anomaly",
+    default: "#ef4444" },
+  { name: "fAnomalyRadius", type: "number", label: "Anomaly Dot Radius", group: "Anomaly",
+    default: 6, min: 3, max: 15, step: 1 },
+  { name: "fShowGrid", type: "boolean", label: "Show Grid", group: "Layout",
+    default: true },
+  { name: "fCurve", type: "select", label: "Curve", group: "Layout",
+    default: "monotoneX", options: ["linear", "monotoneX", "step", "basis", "cardinal"] },
+]
+
+function generateForecastCode(values, isPrecomputed) {
+  let code = `import { LineChart } from "semiotic"\n\n`
+
+  if (isPrecomputed) {
+    code += `// Data includes segment flags and bounds from your ML model\n`
+    code += `const data = [\n`
+    code += `  // Training segment — no bounds, model hasn't learned yet\n`
+    code += `  { time: 0, value: 42, isTraining: true },\n`
+    code += `  // ...\n`
+    code += `  // Observed segment — model provides bounds\n`
+    code += `  { time: 25, value: 48, upperBounds: 56, lowerBounds: 40, isAnomaly: false },\n`
+    code += `  { time: 26, value: 65, upperBounds: 57, lowerBounds: 41, isAnomaly: true },\n`
+    code += `  // ...\n`
+    code += `  // Forecast segment — bounds widen over time\n`
+    code += `  { time: 72, value: 60, isForecast: true, upperBounds: 68, lowerBounds: 52 },\n`
+    code += `  { time: 78, value: 63, isForecast: true, upperBounds: 78, lowerBounds: 48 },\n`
+    code += `]\n\n`
+    code += `<LineChart\n`
+    code += `  data={data}\n`
+    code += `  xAccessor="time"\n`
+    code += `  yAccessor="value"\n`
+    if (values.fShowGrid) code += `  showGrid\n`
+    if (values.fCurve !== "monotoneX") code += `  curve="${values.fCurve}"\n`
+    code += `  forecast={{\n`
+    code += `    isTraining: "isTraining",\n`
+    code += `    isForecast: "isForecast",\n`
+    code += `    isAnomaly: "isAnomaly",\n`
+    code += `    upperBounds: "upperBounds",\n`
+    code += `    lowerBounds: "lowerBounds",\n`
+    if (values.fColor !== "#6366f1") code += `    color: "${values.fColor}",\n`
+    if (values.fBandOpacity !== 0.15) code += `    bandOpacity: ${values.fBandOpacity},\n`
+    if (values.fAnomalyColor !== "#ef4444") code += `    anomalyColor: "${values.fAnomalyColor}",\n`
+    if (values.fAnomalyRadius !== 6) code += `    anomalyRadius: ${values.fAnomalyRadius},\n`
+    code += `  }}\n`
+    code += `/>`
+  } else {
+    code += `const data = [...] // time series with trend + anomalies\n\n`
+    code += `<LineChart\n`
+    code += `  data={data}\n`
+    code += `  xAccessor="time"\n`
+    code += `  yAccessor="value"\n`
+    if (values.fShowGrid) code += `  showGrid\n`
+    if (values.fCurve !== "monotoneX") code += `  curve="${values.fCurve}"\n`
+    code += `  forecast={{\n`
+    code += `    trainEnd: 60,\n`
+    if (values.fSteps !== 15) code += `    steps: ${values.fSteps},\n`
+    if (values.fConfidence !== 0.95) code += `    confidence: ${values.fConfidence},\n`
+    if (values.fColor !== "#6366f1") code += `    color: "${values.fColor}",\n`
+    if (values.fBandOpacity !== 0.15) code += `    bandOpacity: ${values.fBandOpacity},\n`
+    code += `  }}\n`
+    if (values.fEnableAnomaly) {
+      code += `  anomaly={{\n`
+      if (values.fThreshold !== 2) code += `    threshold: ${values.fThreshold},\n`
+      if (values.fAnomalyColor !== "#ef4444") code += `    anomalyColor: "${values.fAnomalyColor}",\n`
+      if (values.fAnomalyRadius !== 6) code += `    anomalyRadius: ${values.fAnomalyRadius},\n`
+      code += `  }}\n`
+    }
+    code += `/>`
+  }
+
+  return code
+}
+
+// ---------------------------------------------------------------------------
 // Anomaly controls
 // ---------------------------------------------------------------------------
 
@@ -189,6 +359,53 @@ function generateAnomalyCode(values) {
 // Component
 // ---------------------------------------------------------------------------
 
+function ForecastChart({ data, dataset, values, width }) {
+  const isPrecomputed = dataset.mode === "precomputed"
+
+  const forecastConfig = isPrecomputed
+    ? {
+        isTraining: "isTraining",
+        isForecast: "isForecast",
+        isAnomaly: "isAnomaly",
+        upperBounds: "upperBounds",
+        lowerBounds: "lowerBounds",
+        color: values.fColor,
+        bandOpacity: values.fBandOpacity,
+        anomalyColor: values.fAnomalyColor,
+        anomalyRadius: values.fAnomalyRadius,
+      }
+    : {
+        trainEnd: dataset.trainEnd,
+        steps: values.fSteps,
+        confidence: values.fConfidence,
+        color: values.fColor,
+        bandOpacity: values.fBandOpacity,
+      }
+
+  const anomalyConfig = !isPrecomputed && values.fEnableAnomaly ? {
+    threshold: values.fThreshold,
+    anomalyColor: values.fAnomalyColor,
+    anomalyRadius: values.fAnomalyRadius,
+  } : undefined
+
+  return (
+    <LineChart
+      key={`forecast-${dataset.mode}-${values.fCurve}`}
+      data={data}
+      xAccessor="time"
+      yAccessor="value"
+      width={width}
+      height={420}
+      showGrid={values.fShowGrid}
+      curve={values.fCurve}
+      xLabel="Time"
+      yLabel="Value"
+      forecast={forecastConfig}
+      anomaly={anomalyConfig}
+    />
+  )
+}
+
 export default function StatisticalAnnotationsPlayground() {
   // ---- LOESS state ----
   const loessDefaults = {}
@@ -209,6 +426,17 @@ export default function StatisticalAnnotationsPlayground() {
   const chartRef = useRef(null)
   const tickRef = useRef(0)
 
+  // ---- Forecast state ----
+  const forecastDefaults = {}
+  for (const c of forecastControls) forecastDefaults[c.name] = c.default
+  const [forecastValues, setForecastValues] = useState(forecastDefaults)
+  const [forecastDatasetIndex, setForecastDatasetIndex] = useState(0)
+  const [forecastWidth, setForecastWidth] = useState(null)
+  const forecastVizRef = useRef(null)
+
+  const precomputedData = useMemo(() => generatePrecomputedDataset(), [])
+  const autoData = useMemo(() => generateAutoDataset(), [])
+
   // Responsive widths
   useEffect(() => {
     const observers = []
@@ -224,6 +452,13 @@ export default function StatisticalAnnotationsPlayground() {
         for (const e of entries) setAnomalyWidth(e.contentRect.width)
       })
       obs.observe(anomalyVizRef.current)
+      observers.push(obs)
+    }
+    if (forecastVizRef.current) {
+      const obs = new ResizeObserver((entries) => {
+        for (const e of entries) setForecastWidth(e.contentRect.width)
+      })
+      obs.observe(forecastVizRef.current)
       observers.push(obs)
     }
     return () => observers.forEach((o) => o.disconnect())
@@ -293,9 +528,10 @@ export default function StatisticalAnnotationsPlayground() {
       nextPage={{ title: "Forecast & Anomaly Playground", path: "/playground/forecast" }}
     >
       <p>
-        Experiment with LOESS smoothing and streaming anomaly detection
-        annotations. Adjust the controls below each chart to see how the
-        parameters affect the visualization, then copy the generated code.
+        Experiment with LOESS smoothing, streaming anomaly detection, and
+        forecast/anomaly overlays on LineChart. Adjust the controls below
+        each chart to see how the parameters affect the visualization, then
+        copy the generated code.
       </p>
 
       {/* ================================================================= */}
@@ -434,6 +670,75 @@ export default function StatisticalAnnotationsPlayground() {
       <h3 id="anomaly-code">Generated Code</h3>
       <CodeBlock
         code={generateAnomalyCode(anomalyValues)}
+        language="jsx"
+      />
+
+      {/* ================================================================= */}
+      {/* Forecast & Anomaly Section */}
+      {/* ================================================================= */}
+      <h2 id="forecast-anomaly">Forecast & Anomaly Detection</h2>
+
+      <p>
+        The <code>forecast</code> and <code>anomaly</code> props on{" "}
+        <code>LineChart</code> provide built-in statistical overlays.{" "}
+        <strong>Auto mode</strong> computes regression from training data and
+        extrapolates with a confidence envelope. <strong>Pre-computed mode</strong>{" "}
+        reads segment flags and bounds directly from your data — use this when
+        bounds come from an external ML model.
+      </p>
+      <p>
+        In pre-computed mode, the line is styled by segment: <em>training</em>{" "}
+        (dashed, no bounds), <em>observed</em> (solid, with model bounds and
+        anomaly flags), and <em>forecast</em> (dotted, with widening bounds).
+      </p>
+
+      {/* Dataset picker */}
+      <div className="playground-dataset-picker">
+        <label htmlFor="pg-forecast-dataset">Dataset:</label>
+        <select
+          id="pg-forecast-dataset"
+          className="playground-select"
+          value={forecastDatasetIndex}
+          onChange={(e) => setForecastDatasetIndex(parseInt(e.target.value, 10))}
+        >
+          {forecastDatasets.map((ds, i) => (
+            <option key={i} value={i}>{ds.label}</option>
+          ))}
+        </select>
+        <span style={{ marginLeft: 16, fontSize: 13, color: "var(--text-secondary)" }}>
+          {forecastDatasets[forecastDatasetIndex].mode === "precomputed"
+            ? `Pre-computed bounds · ${precomputedData.length} points`
+            : `Train/Forecast split at x=${forecastDatasets[forecastDatasetIndex].trainEnd} · ${autoData.length} points`}
+        </span>
+      </div>
+
+      {/* Forecast chart */}
+      <div ref={forecastVizRef} className="playground-chart-container">
+        {forecastWidth ? (
+          <ForecastChart
+            data={forecastDatasets[forecastDatasetIndex].mode === "precomputed" ? precomputedData : autoData}
+            dataset={forecastDatasets[forecastDatasetIndex]}
+            values={forecastValues}
+            width={forecastWidth}
+          />
+        ) : null}
+      </div>
+
+      {/* Forecast controls — filter by mode */}
+      <PropControls
+        controls={forecastDatasets[forecastDatasetIndex].mode === "precomputed"
+          ? forecastControls.filter(c =>
+              !["fSteps", "fConfidence", "fEnableAnomaly", "fThreshold"].includes(c.name))
+          : forecastControls}
+        values={forecastValues}
+        onChange={(name, value) => setForecastValues((prev) => ({ ...prev, [name]: value }))}
+        onReset={() => setForecastValues(forecastDefaults)}
+      />
+
+      {/* Forecast generated code */}
+      <h3 id="forecast-code">Generated Code</h3>
+      <CodeBlock
+        code={generateForecastCode(forecastValues, forecastDatasets[forecastDatasetIndex].mode === "precomputed")}
         language="jsx"
       />
     </PageLayout>

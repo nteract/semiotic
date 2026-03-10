@@ -1,6 +1,6 @@
 # Semiotic
 
-> React data visualization library for charts, networks, and streaming data. Simple HOC charts with sensible defaults, canvas-first rendering at 60fps, coordinated views, and AI observation hooks.
+> React data visualization library designed for AI-assisted development. Charts, network graphs, streaming data, and coordinated dashboards with machine-readable schemas, an MCP server, and structured instruction files so LLMs generate correct code without examples.
 
 ## Docs
 

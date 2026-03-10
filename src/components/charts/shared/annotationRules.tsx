@@ -3,6 +3,8 @@ import Annotation from "../../Annotation"
 import { packEnclose } from "d3-hierarchy"
 import type { AnnotationContext } from "../../realtime/types"
 import { loess } from "./loess"
+// @ts-expect-error — no type declarations for regression
+import regression from "regression"
 
 // ── Coordinate resolution helpers ──────────────────────────────────────
 
@@ -365,20 +367,12 @@ export function createDefaultAnnotationRules(
         if (method === "loess") {
           trendPoints = loess(points, ann.bandwidth ?? 0.3)
         } else {
-          // Lazy require to avoid loading regression unless needed
-          let result: { points: [number, number][] }
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const regressionModule = require("regression")
-            result =
-              method === "polynomial"
-                ? regressionModule.polynomial(points, {
-                    order: ann.order || 2
-                  })
-                : regressionModule.linear(points)
-          } catch {
-            return null
-          }
+          const result =
+            method === "polynomial"
+              ? regression.polynomial(points, {
+                  order: ann.order || 2
+                })
+              : regression.linear(points)
           trendPoints = result.points
         }
 
@@ -599,21 +593,15 @@ export function createDefaultAnnotationRules(
         let predict: (x: number) => number
 
         if (forecastMethod === "polynomial") {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const regressionModule = require("regression")
-            const result = regressionModule.polynomial(points, {
-              order: ann.order || 2
-            })
-            const coeffs: number[] = result.equation
-            predict = (x: number) =>
-              coeffs.reduce(
-                (sum: number, c: number, i: number) => sum + c * Math.pow(x, i),
-                0
-              )
-          } catch {
-            return null
-          }
+          const result = regression.polynomial(points, {
+            order: ann.order || 2
+          })
+          const coeffs: number[] = result.equation
+          predict = (x: number) =>
+            coeffs.reduce(
+              (sum: number, c: number, i: number) => sum + c * Math.pow(x, i),
+              0
+            )
         } else {
           // Linear regression (inline — no dependency needed)
           const n = points.length

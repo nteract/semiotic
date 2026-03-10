@@ -137,7 +137,7 @@ function buildPrecomputed(
   } = config
 
   // Tag each datum with segment
-  const processedData: Record<string, any>[] = data.map((d) => {
+  const tagged: Record<string, any>[] = data.map((d) => {
     let segment: SegmentType = "observed"
     if (isForecastAcc && readBool(d, isForecastAcc)) {
       segment = "forecast"
@@ -146,6 +146,16 @@ function buildPrecomputed(
     }
     return { ...d, [SEGMENT_FIELD]: segment }
   })
+
+  // Duplicate boundary points so adjacent segments share an endpoint (no gap)
+  const processedData: Record<string, any>[] = []
+  for (let i = 0; i < tagged.length; i++) {
+    processedData.push(tagged[i])
+    if (i < tagged.length - 1 && tagged[i][SEGMENT_FIELD] !== tagged[i + 1][SEGMENT_FIELD]) {
+      // Insert a copy of the current point tagged with the NEXT segment
+      processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
+    }
+  }
 
   const annotations: Record<string, any>[] = []
 
@@ -328,7 +338,26 @@ function buildAutoForecast(
     })
   }
 
-  const processedData = [...training, ...observed, ...forecastPoints]
+  // Duplicate boundary points so adjacent segments share an endpoint (no gap)
+  const processedData: Record<string, any>[] = []
+
+  // Training → Observed boundary
+  processedData.push(...training)
+  if (training.length > 0 && observed.length > 0) {
+    // Copy last training point into observed segment
+    processedData.push({ ...training[training.length - 1], [SEGMENT_FIELD]: "observed" as SegmentType })
+  }
+  processedData.push(...observed)
+
+  // Observed → Forecast boundary
+  if (forecastPoints.length > 0) {
+    const lastObserved = observed.length > 0 ? observed[observed.length - 1] : training[training.length - 1]
+    if (lastObserved) {
+      processedData.push({ ...lastObserved, [SEGMENT_FIELD]: "forecast" as SegmentType })
+    }
+    processedData.push(...forecastPoints)
+  }
+
   return { processedData, annotations }
 }
 
