@@ -163,7 +163,7 @@
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.27.1",
     "marked": "4.0.10",
-    "material-design-icons-svg": "1.1.2",
+    "material-design-icons-svg": "3.3.1",
     "parcel": "^2.16.4",
     "playwright-chromium": "^1.17.1",
     "prettier": "^3.8.1",
