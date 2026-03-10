@@ -428,6 +428,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
     const rafRef = useRef(0)
     const dirtyRef = useRef(false)
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -717,10 +718,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     renderFnRef.current = () => {
       rafRef.current = 0
       const canvas = canvasRef.current
-      if (!canvas) return
-
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return
+      const interactionCanvas = interactionCanvasRef.current
+      if (!canvas || !interactionCanvas) return
 
       const store = storeRef.current
       if (!store) return
@@ -730,97 +729,113 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Advance transition animation (before scene rebuild)
       const isTransitioning = store.advanceTransition(now)
 
-      // Compute scene graph (scales + scene nodes) — skip if mid-transition
-      if (!isTransitioning) {
+      // Determine if data canvas needs repaint (data/props changed or animating)
+      const needsDataRepaint = dirtyRef.current || isTransitioning
+
+      // Compute scene graph (scales + scene nodes) — only when data changed
+      if (needsDataRepaint && !isTransitioning) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 
-      // DPR setup
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-      canvas.width = size[0] * dpr
-      canvas.height = size[1] * dpr
-      canvas.style.width = `${size[0]}px`
-      canvas.style.height = `${size[1]}px`
-      ctx.scale(dpr, dpr)
-      ctx.translate(margin.left, margin.top)
-      ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
-
       const theme = resolveThemeColors(canvas)
 
-      // Staleness dimming
+      // Staleness check (used by both canvases)
       const staleThreshold = staleness?.threshold ?? 5000
       const currentlyStale = staleness && store.lastIngestTime > 0 &&
         (now - store.lastIngestTime) > staleThreshold
 
-      if (currentlyStale) {
-        ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
-      }
+      // ── Data canvas: only repaint when data/props changed ─────────────
+      if (needsDataRepaint) {
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          canvas.width = size[0] * dpr
+          canvas.height = size[1] * dpr
+          canvas.style.width = `${size[0]}px`
+          canvas.style.height = `${size[1]}px`
+          ctx.scale(dpr, dpr)
+          ctx.translate(margin.left, margin.top)
+          ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-      // Background — use explicit prop, or fall back to semiotic theme background
-      const bgColor = background || (theme !== LIGHT_THEME ? theme.axisStroke : null)
-      const semioticBg = canvas
-        ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-        : ""
-      const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-      if (effectiveBg) {
-        ctx.fillStyle = effectiveBg
-        ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
-      }
+          if (currentlyStale) {
+            ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+          }
 
-      // Clip rendering to the chart area so data constrained by xExtent/yExtent
-      // does not draw into the margin region
-      ctx.save()
-      if (typeof ctx.rect === "function") {
-        ctx.beginPath()
-        ctx.rect(0, 0, adjustedWidth, adjustedHeight)
-        ctx.clip()
-      }
+          // Background
+          const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+          const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+          if (effectiveBg) {
+            ctx.fillStyle = effectiveBg
+            ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+          }
 
-      // Render data marks via canvas renderers
-      const renderers = RENDERERS[chartType]
-      if (renderers && store.scales) {
-        for (const renderer of renderers) {
-          renderer(
-            ctx,
-            store.scene,
-            store.scales,
-            { width: adjustedWidth, height: adjustedHeight }
-          )
+          // Clip and render data marks
+          ctx.save()
+          if (typeof ctx.rect === "function") {
+            ctx.beginPath()
+            ctx.rect(0, 0, adjustedWidth, adjustedHeight)
+            ctx.clip()
+          }
+
+          const renderers = RENDERERS[chartType]
+          if (renderers && store.scales) {
+            for (const renderer of renderers) {
+              renderer(
+                ctx,
+                store.scene,
+                store.scales,
+                { width: adjustedWidth, height: adjustedHeight }
+              )
+            }
+          }
+
+          ctx.restore()
+
+          if (currentlyStale) {
+            ctx.globalAlpha = 1
+          }
         }
       }
 
-      ctx.restore()
+      // ── Interaction canvas: always repaint (crosshair + highlights) ──
+      {
+        const ictx = interactionCanvas.getContext("2d")
+        if (ictx) {
+          interactionCanvas.width = size[0] * dpr
+          interactionCanvas.height = size[1] * dpr
+          interactionCanvas.style.width = `${size[0]}px`
+          interactionCanvas.style.height = `${size[1]}px`
+          ictx.scale(dpr, dpr)
+          ictx.translate(margin.left, margin.top)
 
-      // Reset alpha after staleness dimming
-      if (currentlyStale) {
-        ctx.globalAlpha = 1
-      }
+          // Crosshair on hover
+          if (effectiveHoverAnnotation && hoverRef.current && store.scales) {
+            const config: HoverAnnotationConfig =
+              typeof effectiveHoverAnnotation === "object" ? effectiveHoverAnnotation : {}
+            drawCrosshair(
+              ictx,
+              hoverRef.current,
+              adjustedWidth,
+              adjustedHeight,
+              config,
+              "#007bff",
+              theme
+            )
+          }
 
-      // Draw crosshair on hover
-      if (effectiveHoverAnnotation && hoverRef.current && store.scales) {
-        const config: HoverAnnotationConfig =
-          typeof effectiveHoverAnnotation === "object" ? effectiveHoverAnnotation : {}
-        drawCrosshair(
-          ctx,
-          hoverRef.current,
-          adjustedWidth,
-          adjustedHeight,
-          config,
-          "#007bff",
-          theme
-        )
-      }
-
-      // Draw line highlight on hover when hoverAnnotation includes { type: "highlight" }
-      if (hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
-        const highlightEntry = hoverAnnotation.find(
-          (a: any) => a && typeof a === "object" && a.type === "highlight"
-        )
-        if (highlightEntry) {
-          drawLineHighlight(ctx, store.scene, hoveredNodeRef.current, highlightEntry)
+          // Line highlight on hover
+          if (hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
+            const highlightEntry = hoverAnnotation.find(
+              (a: any) => a && typeof a === "object" && a.type === "highlight"
+            )
+            if (highlightEntry) {
+              drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry)
+            }
+          }
         }
       }
 
+      // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
       dirtyRef.current = false
 
@@ -981,6 +996,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             position: "absolute",
             left: 0,
             top: 0
+          }}
+        />
+        <canvas
+          ref={interactionCanvasRef}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            pointerEvents: "none"
           }}
         />
         <SVGOverlay

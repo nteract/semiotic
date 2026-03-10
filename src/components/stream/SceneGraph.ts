@@ -20,16 +20,27 @@ export function buildLineNode(
   style: Style,
   group?: string
 ): LineSceneNode {
-  const path: [number, number][] = []
-  const rawValues: number[] = []
+  // Build indexed entries so we can sort by x while keeping datum alignment
+  const entries: { px: number; py: number; rawY: number; d: Record<string, any> }[] = []
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
     if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
-    path.push([scales.x(xVal), scales.y(yVal)])
-    rawValues.push(yVal)
+    entries.push({ px: scales.x(xVal), py: scales.y(yVal), rawY: yVal, d })
   }
-  return { type: "line", path, rawValues, style, datum: data, group }
+  // Sort by x pixel coordinate to guarantee binary search correctness
+  entries.sort((a, b) => a.px - b.px)
+
+  const path: [number, number][] = new Array(entries.length)
+  const rawValues: number[] = new Array(entries.length)
+  const sortedData: Record<string, any>[] = new Array(entries.length)
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i]
+    path[i] = [e.px, e.py]
+    rawValues[i] = e.rawY
+    sortedData[i] = e.d
+  }
+  return { type: "line", path, rawValues, style, datum: sortedData, group }
 }
 
 export function buildAreaNode(
@@ -42,16 +53,25 @@ export function buildAreaNode(
   group?: string,
   y0Get?: (d: Record<string, any>) => number
 ): AreaSceneNode {
-  const topPath: [number, number][] = []
-  const bottomPath: [number, number][] = []
+  // Build indexed entries so we can sort by x for binary search correctness
+  const entries: { px: number; topY: number; botY: number }[] = []
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
     if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
     const px = scales.x(xVal)
-    topPath.push([px, scales.y(yVal)])
     const bottomY = y0Get ? y0Get(d) : baselineY
-    bottomPath.push([px, scales.y(bottomY)])
+    entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY) })
+  }
+  // Sort by x pixel coordinate
+  entries.sort((a, b) => a.px - b.px)
+
+  const topPath: [number, number][] = new Array(entries.length)
+  const bottomPath: [number, number][] = new Array(entries.length)
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i]
+    topPath[i] = [e.px, e.topY]
+    bottomPath[i] = [e.px, e.botY]
   }
   return { type: "area", topPath, bottomPath, style, datum: data, group }
 }

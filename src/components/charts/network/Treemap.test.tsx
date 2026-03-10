@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { Treemap } from "./Treemap"
@@ -5,7 +6,7 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps: any = null
-jest.mock("../../stream/StreamNetworkFrame", () => {
+vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {

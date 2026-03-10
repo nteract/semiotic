@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { Scatterplot } from "./Scatterplot"
@@ -13,23 +14,23 @@ describe("Scatterplot", () => {
   let rafCallbacks: Function[] = []
   beforeEach(() => {
     rafCallbacks = []
-    ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      fill: jest.fn(),
-      arc: jest.fn(),
-      clearRect: jest.fn(),
-      fillRect: jest.fn(),
-      fillText: jest.fn(),
-      strokeRect: jest.fn(),
-      save: jest.fn(),
-      restore: jest.fn(),
-      scale: jest.fn(),
-      translate: jest.fn(),
-      setLineDash: jest.fn(),
-      closePath: jest.fn(),
+    ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      fill: vi.fn(),
+      arc: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      fillText: vi.fn(),
+      strokeRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      scale: vi.fn(),
+      translate: vi.fn(),
+      setLineDash: vi.fn(),
+      closePath: vi.fn(),
       strokeStyle: "",
       lineWidth: 1,
       fillStyle: "",
@@ -38,12 +39,12 @@ describe("Scatterplot", () => {
       textBaseline: "",
       globalAlpha: 1
     }))
-    jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
       rafCallbacks.push(cb)
       cb(performance.now())
       return 0
     })
-    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   })
 
   afterEach(() => {

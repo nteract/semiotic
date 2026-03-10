@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 /**
  * StrictMode compatibility test suite.
  *
@@ -17,24 +18,24 @@ import { render, act } from "@testing-library/react"
 
 function setupMocks() {
   const rafCallbacks: Function[] = []
-  ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
-    beginPath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    stroke: jest.fn(),
-    fill: jest.fn(),
-    arc: jest.fn(),
-    clearRect: jest.fn(),
-    fillRect: jest.fn(),
-    fillText: jest.fn(),
-    strokeRect: jest.fn(),
-    save: jest.fn(),
-    restore: jest.fn(),
-    scale: jest.fn(),
-    translate: jest.fn(),
-    setLineDash: jest.fn(),
-    closePath: jest.fn(),
-    createLinearGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    fill: vi.fn(),
+    arc: vi.fn(),
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    fillText: vi.fn(),
+    strokeRect: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    scale: vi.fn(),
+    translate: vi.fn(),
+    setLineDash: vi.fn(),
+    closePath: vi.fn(),
+    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     strokeStyle: "",
     lineWidth: 1,
     fillStyle: "",
@@ -49,13 +50,13 @@ function setupMocks() {
   }
 
   let rafId = 0
-  jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
     const id = ++rafId
     // Execute asynchronously to avoid recursive scheduleRender stack overflow
     Promise.resolve().then(() => cb(performance.now()))
     return id
   })
-  jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+  vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   return rafCallbacks
 }
 

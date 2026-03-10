@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "strict": true
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*"],

@@ -144,6 +144,10 @@ export class PipelineStore {
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
 
+  // ── Resize optimization ──────────────────────────────────────────────
+  private needsFullRebuild = true
+  private lastLayout: StreamLayout | null = null
+
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
@@ -205,6 +209,7 @@ export class PipelineStore {
   ingest(changeset: Changeset): boolean {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
+    this.needsFullRebuild = true
 
     if (changeset.bounded) {
       // Full replacement for bounded data
@@ -276,6 +281,19 @@ export class PipelineStore {
    */
   computeScene(layout: StreamLayout): void {
     const { config, buffer } = this
+
+    // Fast path: if only layout dimensions changed (no data or config change),
+    // remap existing scene node coordinates instead of rebuilding from scratch.
+    if (
+      !this.needsFullRebuild &&
+      this.lastLayout &&
+      this.scene.length > 0 &&
+      this.scales &&
+      (this.lastLayout.width !== layout.width || this.lastLayout.height !== layout.height)
+    ) {
+      this.remapScene(layout)
+      return
+    }
 
     // Recalculate dirty extents
     if (this.xExtent.dirty) {
@@ -437,6 +455,64 @@ export class PipelineStore {
       this.startTransition()
     }
 
+    this.needsFullRebuild = false
+    this.lastLayout = { width: layout.width, height: layout.height }
+    this.version++
+  }
+
+  /**
+   * Remap existing scene node coordinates for a new layout size.
+   * Proportionally scales all pixel coordinates without rebuilding from data.
+   */
+  private remapScene(layout: StreamLayout): void {
+    const oldW = this.lastLayout!.width
+    const oldH = this.lastLayout!.height
+    const wRatio = layout.width / oldW
+    const hRatio = layout.height / oldH
+
+    for (const node of this.scene) {
+      switch (node.type) {
+        case "line":
+          for (const p of node.path) { p[0] *= wRatio; p[1] *= hRatio }
+          break
+        case "area":
+          for (const p of node.topPath) { p[0] *= wRatio; p[1] *= hRatio }
+          for (const p of node.bottomPath) { p[0] *= wRatio; p[1] *= hRatio }
+          break
+        case "point":
+          node.x *= wRatio; node.y *= hRatio
+          break
+        case "rect":
+          node.x *= wRatio; node.y *= hRatio
+          node.w *= wRatio; node.h *= hRatio
+          break
+        case "heatcell":
+          node.x *= wRatio; node.y *= hRatio
+          node.w *= wRatio; node.h *= hRatio
+          break
+        case "candlestick":
+          node.x *= wRatio
+          node.openY *= hRatio; node.closeY *= hRatio
+          node.highY *= hRatio; node.lowY *= hRatio
+          break
+      }
+    }
+
+    // Rebuild scales with new pixel ranges (same data domain)
+    const xDomain = this.scales!.x.domain() as [number, number]
+    const yDomain = this.scales!.y.domain() as [number, number]
+    const oldXRange = this.scales!.x.range() as [number, number]
+    const oldYRange = this.scales!.y.range() as [number, number]
+    this.scales = {
+      x: scaleLinear().domain(xDomain).range([
+        oldXRange[0] * wRatio, oldXRange[1] * wRatio
+      ]),
+      y: scaleLinear().domain(yDomain).range([
+        oldYRange[0] * hRatio, oldYRange[1] * hRatio
+      ])
+    }
+
+    this.lastLayout = { width: layout.width, height: layout.height }
     this.version++
   }
 
@@ -1447,6 +1523,8 @@ export class PipelineStore {
     this.prevPositionMap.clear()
     this.activeTransition = null
     this.lastIngestTime = 0
+    this.needsFullRebuild = true
+    this.lastLayout = null
     this.scales = null
     this.scene = []
     this.version++
@@ -1474,5 +1552,6 @@ export class PipelineStore {
 
   updateConfig(config: Partial<PipelineConfig>): void {
     Object.assign(this.config, config)
+    this.needsFullRebuild = true
   }
 }
