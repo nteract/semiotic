@@ -8,6 +8,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **StackedAreaChart** — `xAccessor`, `yAccessor`, `areaBy` (required), `normalize`
 - **Scatterplot** — `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`
 - **BubbleChart** — `xAccessor`, `yAccessor`, **`sizeBy`** (required), `sizeRange`
+- **ConnectedScatterplot** — `xAccessor`, `yAccessor`, `orderAccessor` (sequencing field), `pointRadius`
 - **Heatmap** — `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis")
 - **BarChart** — `categoryAccessor`, `valueAccessor`, `orientation`, `sort`
 - **StackedBarChart** — `categoryAccessor`, `valueAccessor`, **`stackBy`** (required), `normalize`
@@ -24,6 +25,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **TreeDiagram** — `childrenAccessor`, `nodeIdAccessor`, `layout` ("tree"|"cluster"|"partition"), `orientation`
 - **Treemap** — `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorByDepth`
 - **CirclePack** — `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorByDepth`
+- **OrbitDiagram** — `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`
 
 ## Network Data (`nodes: object[]`, `edges: object[]`)
 - **ForceDirectedGraph** — **`nodes`**, **`edges`** (both required), `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`
@@ -35,6 +37,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **RealtimeHistogram** — **`binSize`** (required), `timeAccessor`, `valueAccessor`
 - **RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`
 - **RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
+- **RealtimeHeatmap** — `timeAccessor`, `valueAccessor`, `heatmapXBins`, `heatmapYBins`, `aggregation`
 - **StreamNetworkFrame** (`chartType="sankey"`) — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor` (import from `semiotic`)
 
 ## Common Props (all components)

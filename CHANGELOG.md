@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0-beta.4] - 2026-03-10
+
+### Added
+
+#### Server-Side Rendering Overhaul
+
+Stream Frames now render SVG natively in server environments — no separate rendering path needed.
+
+- **Component-level SSR** — `StreamXYFrame`, `StreamOrdinalFrame`, and `StreamNetworkFrame` detect server context (`typeof window === "undefined"`) and render `<svg>` elements with scene nodes instead of `<canvas>`
+- **Shared SceneToSVG converters** (`src/components/stream/SceneToSVG.tsx`) — single source of truth for scene→SVG conversion, used by both Stream Frames and `renderToStaticSVG`
+  - `xySceneNodeToSVG` — line, area, point, rect, heatcell, candlestick
+  - `ordinalSceneNodeToSVG` — rect, point, wedge, boxplot, violin, connector
+  - `networkSceneNodeToSVG` — circle, rect, arc nodes
+  - `networkSceneEdgeToSVG` — line, bezier, ribbon, curved edges
+  - `networkLabelToSVG` — text labels
+- **19 component-level SSR tests** proving HOC charts produce visible SVG marks (not empty canvas tags) via `ReactDOMServer.renderToStaticMarkup` in a Node environment
+- **`renderToStaticSVG` rewritten** to use shared SceneToSVG converters, eliminating duplicated conversion code
+
+#### AI Tooling Improvements
+
+- **Levenshtein typo suggestions** — `validateProps` now suggests closest prop name when an unknown prop is passed (e.g., `"linewidth"` → `'Did you mean "lineWidth"?'`)
+- **`diagnoseConfig` anti-pattern detector** — checks 12 common failure modes with severity, code, message, and actionable fix:
+  - `EMPTY_DATA`, `EMPTY_EDGES`, `BAD_WIDTH`, `BAD_HEIGHT`, `BAD_SIZE`
+  - `ACCESSOR_MISSING`, `HIERARCHY_FLAT_ARRAY`, `NETWORK_NO_EDGES`
+  - `DATE_NO_FORMAT`, `LINKED_HOVER_NO_SELECTION`, `MARGIN_OVERFLOW_H`, `MARGIN_OVERFLOW_V`
+- **MCP `renderChart` tool** — generic tool accepting `{ component, props }`, renders any chart to SVG
+- **MCP `diagnoseConfig` tool** — anti-pattern detector available as MCP tool for AI assistants
+- **Schema freshness CI** (`scripts/check-schema-freshness.js`) — cross-references `schema.json`, `VALIDATION_MAP`, and `CLAUDE.md` to catch drift
+- **ConnectedScatterplot and OrbitDiagram** added to `VALIDATION_MAP`, `schema.json`, and `componentRegistry`
+- **`npx semiotic-ai --doctor`** upgraded to use `diagnoseConfig` in addition to `validateProps`
+
+---
+
 ## [3.0.0-beta.3] - 2026-03-04
 
 ### Changed

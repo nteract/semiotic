@@ -27,6 +27,7 @@ import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { OrdinalSVGOverlay } from "./OrdinalSVGOverlay"
+import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
@@ -657,6 +658,91 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         {tooltipRendered}
       </div>
     ) : null
+
+    // ── SSR path: render SVG instead of canvas ──────────────────────────
+
+    if (isServerEnvironment) {
+      const store = storeRef.current
+      if (store && data) {
+        store.ingest({ inserts: data, bounded: true })
+        store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+      }
+
+      const scene = store?.scene ?? []
+      const scales = store?.scales ?? null
+      const isRadial = projection === "radial"
+      const translateX = isRadial ? margin.left + adjustedWidth / 2 : margin.left
+      const translateY = isRadial ? margin.top + adjustedHeight / 2 : margin.top
+
+      return (
+        <div
+          className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
+          role="img"
+          aria-label={typeof title === "string" ? title : "Ordinal chart"}
+          style={{
+            position: "relative",
+            width: size[0],
+            height: size[1],
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={size[0]}
+            height={size[1]}
+            style={{ position: "absolute", left: 0, top: 0 }}
+          >
+            {backgroundGraphics && (
+              <g transform={`translate(${margin.left},${margin.top})`}>
+                {backgroundGraphics}
+              </g>
+            )}
+            <g transform={`translate(${translateX},${translateY})`}>
+              {background && (
+                <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
+              )}
+              {scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)}
+            </g>
+          </svg>
+          <OrdinalSVGOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            scales={scales}
+            showAxes={showAxes}
+            oLabel={oLabel}
+            rLabel={rLabel}
+            oFormat={oFormat}
+            rFormat={rFormat}
+            showGrid={showGrid}
+            title={title}
+            legend={legend}
+            foregroundGraphics={foregroundGraphics}
+            annotations={annotations}
+            svgAnnotationRules={svgAnnotationRules}
+            annotationFrame={0}
+            xAccessor={typeof oAccessor === "string" ? oAccessor : undefined}
+            yAccessor={typeof rAccessor === "string" ? rAccessor : undefined}
+            annotationData={store?.getData()}
+          />
+          {centerContent && projection === "radial" && (
+            <div
+              style={{
+                position: "absolute",
+                left: margin.left + adjustedWidth / 2,
+                top: margin.top + adjustedHeight / 2,
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+                textAlign: "center"
+              }}
+            >
+              {centerContent}
+            </div>
+          )}
+        </div>
+      )
+    }
 
     // ── Render ───────────────────────────────────────────────────────────
 
