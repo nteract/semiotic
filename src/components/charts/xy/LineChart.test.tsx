@@ -4,6 +4,18 @@ import { render } from "@testing-library/react"
 import { LineChart } from "./LineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
+// Mock XYFrame to capture props
+let lastXYFrameProps: any = null
+vi.mock("../../stream/StreamXYFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastXYFrameProps = props
+      return <div className="stream-xy-frame"><svg /></div>
+    }
+  }
+})
+
 describe("LineChart", () => {
   const sampleData = [
     { x: 1, y: 10 },
@@ -11,56 +23,8 @@ describe("LineChart", () => {
     { x: 3, y: 15 }
   ]
 
-  let rafCallbacks: Function[] = []
   beforeEach(() => {
-    rafCallbacks = []
-    ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
-      beginPath: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      stroke: vi.fn(),
-      fill: vi.fn(),
-      arc: vi.fn(),
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
-      fillText: vi.fn(),
-      strokeRect: vi.fn(),
-      save: vi.fn(),
-      restore: vi.fn(),
-      scale: vi.fn(),
-      translate: vi.fn(),
-      setLineDash: vi.fn(),
-      closePath: vi.fn(),
-      strokeStyle: "",
-      lineWidth: 1,
-      fillStyle: "",
-      font: "",
-      textAlign: "",
-      textBaseline: "",
-      globalAlpha: 1
-    }))
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
-      cb(performance.now())
-      return 0
-    })
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
-    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
-  })
-
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    lastXYFrameProps = null
   })
 
   it("handles empty data gracefully", () => {
@@ -74,161 +38,189 @@ describe("LineChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("applies custom width and height", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} width={800} height={600} />
-      </TooltipProvider>
-    )
+  // ── Mock-based behavioral assertions ──────────────────────────────────
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-    const canvas = frame?.querySelector("canvas")
-    expect(canvas).toBeTruthy()
-  })
+  describe("StreamXYFrame prop forwarding", () => {
+    it("sets chartType to 'line' by default", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("line")
+    })
 
-  it("accepts xLabel and yLabel props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart
-          data={sampleData}
-          xLabel="Time"
-          yLabel="Value"
-        />
-      </TooltipProvider>
-    )
+    it("sets chartType to 'area' when fillArea is true", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} fillArea={true} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("area")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards xAccessor and yAccessor", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} xAccessor="x" yAccessor="y" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.xAccessor).toBe("x")
+      expect(lastXYFrameProps.yAccessor).toBe("y")
+    })
 
-  it("handles multiple lines with lineBy prop", () => {
-    const multiSeriesData = [
-      { x: 1, y: 10, series: "A" },
-      { x: 2, y: 20, series: "A" },
-      { x: 1, y: 15, series: "B" },
-      { x: 2, y: 25, series: "B" }
-    ]
+    it("forwards function accessors", () => {
+      const xFn = (d: any) => d.x * 2
+      const yFn = (d: any) => d.y + 1
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} xAccessor={xFn} yAccessor={yFn} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.xAccessor).toBe(xFn)
+      expect(lastXYFrameProps.yAccessor).toBe(yFn)
+    })
 
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart
-          data={multiSeriesData}
-          lineBy="series"
-          colorBy="series"
-          showLegend={false}
-        />
-      </TooltipProvider>
-    )
+    it("sets groupAccessor when lineBy is provided", () => {
+      const multiSeriesData = [
+        { x: 1, y: 10, series: "A" },
+        { x: 2, y: 20, series: "A" },
+        { x: 1, y: 15, series: "B" },
+        { x: 2, y: 25, series: "B" }
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart data={multiSeriesData} lineBy="series" showLegend={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.groupAccessor).toBe("series")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards curve prop", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} curve="stepAfter" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.curve).toBe("stepAfter")
+    })
 
-  it("applies color encoding", () => {
-    const coloredData = [
-      { x: 1, y: 10, category: "A" },
-      { x: 2, y: 20, category: "A" }
-    ]
+    it("defaults curve to 'linear'", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.curve).toBe("linear")
+    })
 
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={coloredData} colorBy="category" />
-      </TooltipProvider>
-    )
+    it("forwards width and height as size", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} width={900} height={500} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.size).toEqual([900, 500])
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards enableHover", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} enableHover={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.enableHover).toBe(false)
+    })
 
-  it("shows points when showPoints is true", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} showPoints={true} />
-      </TooltipProvider>
-    )
+    it("forwards showGrid", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} showGrid={true} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.showGrid).toBe(true)
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("passes pointStyle when showPoints is true", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} showPoints={true} pointRadius={5} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.pointStyle).toBeDefined()
+      expect(typeof lastXYFrameProps.pointStyle).toBe("function")
+    })
 
-  it("fills area when fillArea is true", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} fillArea={true} />
-      </TooltipProvider>
-    )
+    it("does not pass pointStyle when showPoints is false", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} showPoints={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.pointStyle).toBeUndefined()
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards xLabel and yLabel", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} xLabel="Time" yLabel="Revenue" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.xLabel).toBe("Time")
+      expect(lastXYFrameProps.yLabel).toBe("Revenue")
+    })
 
-  it("applies custom curve interpolation", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} curve="monotoneX" />
-      </TooltipProvider>
-    )
+    it("passes title when provided", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} title="Sales Trend" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.title).toBe("Sales Trend")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("provides a tooltipContent function", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+    })
 
-  it("allows XYFrame prop overrides via frameProps", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart
-          data={sampleData}
-          frameProps={{
-            hoverAnnotation: false
-          }}
-        />
-      </TooltipProvider>
-    )
+    it("forwards forecast config by setting groupAccessor to segment field", () => {
+      const tsData = Array.from({ length: 10 }, (_, i) => ({ x: i, y: Math.random() * 100 }))
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={tsData}
+            forecast={{ trainEnd: 7, steps: 3 }}
+          />
+        </TooltipProvider>
+      )
+      // When forecast is active and lineBy is not provided, groupAccessor should be the segment field
+      expect(lastXYFrameProps.groupAccessor).toBe("__forecastSegment")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("passes lineStyle as a function", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} lineWidth={3} />
+        </TooltipProvider>
+      )
+      expect(typeof lastXYFrameProps.lineStyle).toBe("function")
+    })
 
-  it("updates when data changes", () => {
-    const initialData = [
-      { x: 1, y: 10 },
-      { x: 2, y: 20 }
-    ]
-
-    const { container, rerender } = render(
-      <TooltipProvider>
-        <LineChart data={initialData} />
-      </TooltipProvider>
-    )
-
-    const initialFrame = container.querySelector(".stream-xy-frame")
-    expect(initialFrame).toBeTruthy()
-
-    const newData = [
-      { x: 1, y: 10 },
-      { x: 2, y: 20 },
-      { x: 3, y: 30 }
-    ]
-
-    rerender(
-      <TooltipProvider>
-        <LineChart data={newData} />
-      </TooltipProvider>
-    )
-
-    const updatedFrame = container.querySelector(".stream-xy-frame")
-    expect(updatedFrame).toBeTruthy()
-  })
-
-  it("disables hover when enableHover is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <LineChart data={sampleData} enableHover={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    it("merges frameProps into StreamXYFrame props", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={sampleData}
+            frameProps={{ hoverAnnotation: false }}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.hoverAnnotation).toBe(false)
+    })
   })
 })
