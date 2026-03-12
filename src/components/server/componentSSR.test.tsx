@@ -23,9 +23,14 @@ import { PieChart } from "../charts/ordinal/PieChart"
 import { DonutChart } from "../charts/ordinal/DonutChart"
 import { BoxPlot } from "../charts/ordinal/BoxPlot"
 import { DotPlot } from "../charts/ordinal/DotPlot"
+import { ForceDirectedGraph } from "../charts/network/ForceDirectedGraph"
+import { SankeyDiagram } from "../charts/network/SankeyDiagram"
+import { TreeDiagram } from "../charts/network/TreeDiagram"
+import { Treemap } from "../charts/network/Treemap"
+import { CirclePack } from "../charts/network/CirclePack"
 
 // Standalone SSR for equivalence tests
-import { renderXYToStaticSVG, renderOrdinalToStaticSVG } from "./renderToStaticSVG"
+import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG } from "./renderToStaticSVG"
 
 // ── Test data ───────────────────────────────────────────────────────────
 
@@ -416,5 +421,284 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
 
     expect(componentCircles).toBe(standaloneCircles)
     expect(componentCircles).toBe(5) // 5 data points
+  })
+})
+
+// ── Network Chart SSR ──────────────────────────────────────────────────
+
+const networkNodes = [
+  { id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }
+]
+const networkEdges = [
+  { source: "A", target: "B" },
+  { source: "B", target: "C" },
+  { source: "C", target: "D" },
+  { source: "A", target: "D" },
+]
+
+const sankeyEdges = [
+  { source: "Revenue", target: "Product", value: 80 },
+  { source: "Revenue", target: "Services", value: 50 },
+  { source: "Product", target: "Profit", value: 60 },
+  { source: "Services", target: "Profit", value: 40 },
+]
+
+const treeData = {
+  id: "root",
+  children: [
+    { id: "A", children: [{ id: "A1" }, { id: "A2" }] },
+    { id: "B", children: [{ id: "B1" }] },
+  ]
+}
+
+describe("Component SSR — Network Charts", () => {
+  it("ForceDirectedGraph renders node circles and edge lines", () => {
+    const html = renderComponent(
+      <ForceDirectedGraph
+        nodes={networkNodes}
+        edges={networkEdges}
+        width={400}
+        height={400}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(4)
+  })
+
+  it("SankeyDiagram renders node rects and edge paths", () => {
+    const html = renderComponent(
+      <SankeyDiagram
+        edges={sankeyEdges}
+        width={500}
+        height={300}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    // 5 unique nodes inferred from edges
+    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
+    // 4 edges = 4 paths
+    expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(4)
+  })
+
+  it("TreeDiagram renders nodes and edges", () => {
+    const html = renderComponent(
+      <TreeDiagram
+        data={treeData}
+        width={400}
+        height={400}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    // 6 nodes total (root + A + A1 + A2 + B + B1)
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
+  })
+
+  it("Treemap renders rect elements for each leaf", () => {
+    const html = renderComponent(
+      <Treemap
+        data={{
+          id: "root",
+          children: [
+            { id: "A", value: 30 },
+            { id: "B", value: 50 },
+            { id: "C", value: 20 },
+          ]
+        }}
+        width={400}
+        height={400}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(3)
+  })
+
+  it("CirclePack renders circle elements", () => {
+    const html = renderComponent(
+      <CirclePack
+        data={{
+          id: "root",
+          children: [
+            { id: "A", value: 30 },
+            { id: "B", value: 50 },
+            { id: "C", value: 20 },
+          ]
+        }}
+        width={400}
+        height={400}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    // root + 3 children = at least 3 circles
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(3)
+  })
+})
+
+// ── Network SSR — Node inference from edges ────────────────────────────
+
+describe("Component SSR — Network node inference", () => {
+  it("SankeyDiagram with edges-only infers nodes (no explicit nodes prop)", () => {
+    const html = renderComponent(
+      <SankeyDiagram
+        edges={sankeyEdges}
+        width={500}
+        height={300}
+      />
+    )
+
+    // Should have rects for each unique node (Revenue, Product, Services, Profit)
+    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
+    // Should have edge paths
+    expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(4)
+  })
+
+  it("ForceDirectedGraph with edges-only shows validation message (nodes required)", () => {
+    // The HOC requires explicit nodes — node inference only happens in standalone SSR.
+    // The error boundary catches the validation and renders a helpful message.
+    const html = renderComponent(
+      <ForceDirectedGraph
+        edges={networkEdges}
+        width={400}
+        height={400}
+      />
+    )
+
+    expect(html).toContain("ForceDirectedGraph")
+    expect(html).toContain("No nodes provided")
+    expect(html).not.toContain("<canvas")
+  })
+})
+
+// ── Standalone Network SSR — Node inference regression ─────────────────
+
+describe("Standalone SSR — Network node inference from edges", () => {
+  it("sankey renders nodes and edges when only edges are provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      edges: sankeyEdges,
+      size: [500, 300],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    // 4 unique nodes
+    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
+    // 4 edge paths
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(4)
+  })
+
+  it("sankey with explicit nodes still works", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      nodes: [{ id: "Revenue" }, { id: "Product" }, { id: "Services" }, { id: "Profit" }],
+      edges: sankeyEdges,
+      size: [500, 300],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(4)
+  })
+
+  it("force renders circles when only edges are provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      edges: networkEdges,
+      size: [400, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(4)
+  })
+
+  it("edges-only with no edges returns empty SVG", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      edges: [],
+      size: [500, 300],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect((svg.match(/<rect /g) || []).length).toBe(0)
+    expect((svg.match(/<path /g) || []).length).toBe(0)
+  })
+})
+
+// ── Mark count contracts ───────────────────────────────────────────────
+
+describe("SSR mark count contracts", () => {
+  it("N scatter points → N circles", () => {
+    for (const n of [3, 7, 12]) {
+      const data = Array.from({ length: n }, (_, i) => ({ x: i, y: i * 2 }))
+      const svg = renderXYToStaticSVG({
+        chartType: "scatter",
+        data,
+        xAccessor: "x",
+        yAccessor: "y",
+        size: [400, 300],
+      })
+      expect((svg.match(/<circle /g) || []).length).toBe(n)
+    }
+  })
+
+  it("N bar categories → N rects", () => {
+    for (const n of [2, 5, 8]) {
+      const data = Array.from({ length: n }, (_, i) => ({
+        category: `Cat${i}`,
+        value: (i + 1) * 10,
+      }))
+      const svg = renderOrdinalToStaticSVG({
+        chartType: "bar",
+        data,
+        oAccessor: "category",
+        rAccessor: "value",
+        size: [400, 300],
+      })
+      const rects = (svg.match(/<rect [^>]*fill="#[0-9a-f]{6}"/gi) || []).length
+      expect(rects).toBe(n)
+    }
+  })
+
+  it("N pie categories → N wedge paths", () => {
+    for (const n of [3, 5]) {
+      const data = Array.from({ length: n }, (_, i) => ({
+        category: `Slice${i}`,
+        value: (i + 1) * 10,
+      }))
+      const svg = renderOrdinalToStaticSVG({
+        chartType: "pie",
+        data,
+        oAccessor: "category",
+        rAccessor: "value",
+        projection: "radial",
+        size: [400, 400],
+      })
+      expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(n)
+    }
+  })
+
+  it("sankey: E edges → E path elements", () => {
+    const edges = [
+      { source: "A", target: "B", value: 10 },
+      { source: "A", target: "C", value: 20 },
+      { source: "B", target: "D", value: 15 },
+    ]
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      edges,
+      size: [500, 300],
+    } as any)
+
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
+    // 4 unique nodes → 4 rects
+    expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
   })
 })

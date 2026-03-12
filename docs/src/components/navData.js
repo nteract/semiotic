@@ -150,7 +150,10 @@ const navData = [
   },
   {
     title: "Server-Side Rendering",
-    path: "/using-ssr"
+    path: "/using-ssr",
+    children: [
+      { title: "SSR Gallery", path: "/ssr-gallery" }
+    ]
   },
   {
     title: "API Reference",
