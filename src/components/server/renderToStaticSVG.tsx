@@ -327,8 +327,10 @@ function renderNetworkFrame(props: StreamNetworkFrameProps): string {
     if (propsNodes.length === 0 && edges.length > 0) {
       const nodeIds = new Set<string>()
       for (const e of edges) {
-        nodeIds.add(e.source)
-        nodeIds.add(e.target)
+        const src = typeof e.source === "string" ? e.source : e.source.id
+        const tgt = typeof e.target === "string" ? e.target : e.target.id
+        nodeIds.add(src)
+        nodeIds.add(tgt)
       }
       nodes = Array.from(nodeIds).map((id) => ({
         id,
