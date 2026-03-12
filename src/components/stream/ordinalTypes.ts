@@ -53,6 +53,10 @@ export interface WedgeSceneNode {
   style: Style
   datum: any
   category?: string
+  /** Pulse intensity 0–1 (set when aggregated category value changes) */
+  _pulseIntensity?: number
+  /** Pulse color */
+  _pulseColor?: string
 }
 
 export interface BoxplotSceneNode {

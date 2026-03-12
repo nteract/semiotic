@@ -1228,7 +1228,28 @@ export class PipelineStore {
     }
 
     for (const node of nodes) {
-      if (node.type === "line" || node.type === "area") continue
+      if (node.type === "line") continue
+
+      // Area nodes: datum is an array of data points for the group.
+      // Pulse the area when any constituent point was recently inserted.
+      if (node.type === "area") {
+        const datumArr = Array.isArray(node.datum) ? node.datum : [node.datum]
+        let bestIntensity = 0
+        for (const d of datumArr) {
+          const idx = indexMap.get(d)
+          if (idx == null) continue
+          const insertTime = this.timestampBuffer.get(idx)
+          if (insertTime == null) continue
+          const intensity = this.computePulseIntensity(insertTime, now)
+          if (intensity > bestIntensity) bestIntensity = intensity
+        }
+        if (bestIntensity > 0) {
+          node._pulseIntensity = bestIntensity
+          node._pulseColor = pulseColor
+        }
+        continue
+      }
+
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const insertTime = this.timestampBuffer.get(idx)

@@ -105,6 +105,7 @@ function StreamingRevenue() {
         strokeWidth: 1,
       })}
       windowSize={100}
+      pulse={{ duration: 600, color: "rgba(255,255,255,0.6)" }}
       showAxes
     />
   )
@@ -146,6 +147,7 @@ function StreamingStackedDemo({ width }) {
         strokeWidth: 1,
       })}
       windowSize={100}
+      pulse={{ duration: 600, color: "rgba(255,255,255,0.6)" }}
       showAxes={true}
     />
   )

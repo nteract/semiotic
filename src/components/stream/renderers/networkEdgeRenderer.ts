@@ -141,6 +141,13 @@ function renderRibbonEdge(
     ctx.stroke(path)
   }
 
+  // Pulse overlay
+  if ((edge as any)._pulseIntensity && (edge as any)._pulseIntensity > 0) {
+    ctx.fillStyle = (edge as any)._pulseColor || "rgba(255,255,255,0.6)"
+    ctx.globalAlpha = (edge as any)._pulseIntensity * 0.25
+    ctx.fill(path)
+  }
+
   ctx.restore()
 }
 
