@@ -397,3 +397,69 @@ describe("renderNetworkToStaticSVG - regression", () => {
     expect(svg).toContain("stream-network-frame")
   })
 })
+
+// ── Network SSR: Node inference from edges ──────────────────────────
+
+describe("renderNetworkToStaticSVG - node inference", () => {
+  it("sankey infers nodes from edge source/target when no nodes provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      edges: [
+        { source: "Revenue", target: "Product", value: 80 },
+        { source: "Revenue", target: "Services", value: 50 },
+        { source: "Product", target: "Profit", value: 60 },
+        { source: "Services", target: "Profit", value: 40 },
+      ],
+      size: [500, 300]
+    } as any)
+
+    expect(svg).toContain("<svg")
+    // 4 unique nodes: Revenue, Product, Services, Profit
+    expect(countMatches(svg, /<rect /g)).toBeGreaterThanOrEqual(4)
+    // 4 edges
+    expect(countMatches(svg, /<path /g)).toBeGreaterThanOrEqual(4)
+    // Labels for nodes
+    expect(svg).toContain("Revenue")
+    expect(svg).toContain("Product")
+    expect(svg).toContain("Profit")
+  })
+
+  it("force infers nodes from edges when no nodes provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      edges: [
+        { source: "A", target: "B" },
+        { source: "B", target: "C" },
+        { source: "C", target: "A" },
+      ],
+      size: [400, 400]
+    } as any)
+
+    expect(svg).toContain("<svg")
+    // 3 unique nodes
+    expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
+  })
+
+  it("returns empty SVG when neither nodes nor edges provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "sankey",
+      size: [500, 300]
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect(countMatches(svg, /<rect /g)).toBe(0)
+    expect(countMatches(svg, /<path /g)).toBe(0)
+  })
+
+  it("prefers explicit nodes when both nodes and edges provided", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "force",
+      nodes: [{ id: "X" }, { id: "Y" }],
+      edges: [{ source: "X", target: "Y" }],
+      size: [400, 400]
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(2)
+  })
+})

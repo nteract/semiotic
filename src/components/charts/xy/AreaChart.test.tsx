@@ -4,6 +4,18 @@ import { render } from "@testing-library/react"
 import { AreaChart } from "./AreaChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
+// Mock XYFrame to capture props
+let lastXYFrameProps: any = null
+vi.mock("../../stream/StreamXYFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastXYFrameProps = props
+      return <div className="stream-xy-frame"><svg /></div>
+    }
+  }
+})
+
 describe("AreaChart", () => {
   const sampleData = [
     { x: 1, y: 10 },
@@ -11,56 +23,8 @@ describe("AreaChart", () => {
     { x: 3, y: 15 }
   ]
 
-  let rafCallbacks: Function[] = []
   beforeEach(() => {
-    rafCallbacks = []
-    ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
-      beginPath: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      stroke: vi.fn(),
-      fill: vi.fn(),
-      arc: vi.fn(),
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
-      fillText: vi.fn(),
-      strokeRect: vi.fn(),
-      save: vi.fn(),
-      restore: vi.fn(),
-      scale: vi.fn(),
-      translate: vi.fn(),
-      setLineDash: vi.fn(),
-      closePath: vi.fn(),
-      strokeStyle: "",
-      lineWidth: 1,
-      fillStyle: "",
-      font: "",
-      textAlign: "",
-      textBaseline: "",
-      globalAlpha: 1
-    }))
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
-      cb(performance.now())
-      return 0
-    })
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
-    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
-  })
-
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    lastXYFrameProps = null
   })
 
   it("handles empty data gracefully", () => {
@@ -74,161 +38,149 @@ describe("AreaChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("applies custom width and height", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} width={800} height={600} />
-      </TooltipProvider>
-    )
+  // ── Mock-based behavioral assertions ──────────────────────────────────
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-    const canvas = frame?.querySelector("canvas")
-    expect(canvas).toBeTruthy()
-  })
+  describe("StreamXYFrame prop forwarding", () => {
+    it("sets chartType to 'area'", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("area")
+    })
 
-  it("accepts xLabel and yLabel props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart
-          data={sampleData}
-          xLabel="Time"
-          yLabel="Value"
-        />
-      </TooltipProvider>
-    )
+    it("forwards y0Accessor for ribbon/band charts", () => {
+      const bandData = [
+        { x: 1, p95: 80, p5: 20 },
+        { x: 2, p95: 85, p5: 25 },
+        { x: 3, p95: 90, p5: 30 }
+      ]
+      render(
+        <TooltipProvider>
+          <AreaChart data={bandData} xAccessor="x" yAccessor="p95" y0Accessor="p5" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.y0Accessor).toBe("p5")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("does not include y0Accessor when not provided", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.y0Accessor).toBeUndefined()
+    })
 
-  it("handles multiple areas with areaBy prop", () => {
-    const multiSeriesData = [
-      { x: 1, y: 10, category: "A" },
-      { x: 2, y: 20, category: "A" },
-      { x: 1, y: 15, category: "B" },
-      { x: 2, y: 25, category: "B" }
-    ]
+    it("forwards gradientFill when set to true", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} gradientFill={true} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toBe(true)
+    })
 
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart
-          data={multiSeriesData}
-          areaBy="category"
-          colorBy="category"
-          showLegend={false}
-        />
-      </TooltipProvider>
-    )
+    it("forwards gradientFill with custom opacity settings", () => {
+      const gradient = { topOpacity: 0.9, bottomOpacity: 0.1 }
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} gradientFill={gradient} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toEqual(gradient)
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("does not include gradientFill when not set", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toBeUndefined()
+    })
 
-  it("applies color encoding", () => {
-    const coloredData = [
-      { x: 1, y: 10, category: "A" },
-      { x: 2, y: 20, category: "A" }
-    ]
+    it("reflects areaOpacity in lineStyle function output", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} areaOpacity={0.4} />
+        </TooltipProvider>
+      )
+      expect(typeof lastXYFrameProps.lineStyle).toBe("function")
+      const style = lastXYFrameProps.lineStyle({})
+      expect(style.fillOpacity).toBe(0.4)
+    })
 
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={coloredData} colorBy="category" />
-      </TooltipProvider>
-    )
+    it("defaults areaOpacity to 0.7 in lineStyle", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({})
+      expect(style.fillOpacity).toBe(0.7)
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards curve prop", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} curve="step" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.curve).toBe("step")
+    })
 
-  it("applies custom curve interpolation", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} curve="basis" />
-      </TooltipProvider>
-    )
+    it("defaults curve to 'monotoneX'", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.curve).toBe("monotoneX")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards xAccessor and yAccessor", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} xAccessor="x" yAccessor="y" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.xAccessor).toBe("x")
+      expect(lastXYFrameProps.yAccessor).toBe("y")
+    })
 
-  it("hides line when showLine is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} showLine={false} />
-      </TooltipProvider>
-    )
+    it("sets groupAccessor when areaBy is provided", () => {
+      const multiData = [
+        { x: 1, y: 10, cat: "A" },
+        { x: 2, y: 20, cat: "A" },
+        { x: 1, y: 15, cat: "B" },
+        { x: 2, y: 25, cat: "B" }
+      ]
+      render(
+        <TooltipProvider>
+          <AreaChart data={multiData} areaBy="cat" showLegend={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.groupAccessor).toBe("cat")
+    })
 
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards width and height as size", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} width={700} height={350} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.size).toEqual([700, 350])
+    })
 
-  it("applies custom area opacity", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} areaOpacity={0.5} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("allows XYFrame prop overrides via frameProps", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart
-          data={sampleData}
-          frameProps={{
-            hoverAnnotation: false
-          }}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("updates when data changes", () => {
-    const initialData = [
-      { x: 1, y: 10 },
-      { x: 2, y: 20 }
-    ]
-
-    const { container, rerender } = render(
-      <TooltipProvider>
-        <AreaChart data={initialData} />
-      </TooltipProvider>
-    )
-
-    const initialFrame = container.querySelector(".stream-xy-frame")
-    expect(initialFrame).toBeTruthy()
-
-    const newData = [
-      { x: 1, y: 10 },
-      { x: 2, y: 20 },
-      { x: 3, y: 30 }
-    ]
-
-    rerender(
-      <TooltipProvider>
-        <AreaChart data={newData} />
-      </TooltipProvider>
-    )
-
-    const updatedFrame = container.querySelector(".stream-xy-frame")
-    expect(updatedFrame).toBeTruthy()
-  })
-
-  it("disables hover when enableHover is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart data={sampleData} enableHover={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    it("forwards enableHover", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} enableHover={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.enableHover).toBe(false)
+    })
   })
 })

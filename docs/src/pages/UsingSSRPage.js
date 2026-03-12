@@ -11,7 +11,7 @@ export default function UsingSSRPage() {
         { label: "Server-Side Rendering", path: "/using-ssr" }
       ]}
       prevPage={{ title: "Matrix", path: "/cookbook/matrix" }}
-      nextPage={{ title: "API Reference", path: "/api" }}
+      nextPage={{ title: "SSR Gallery", path: "/ssr-gallery" }}
     >
       <p>
         Semiotic works in server-side rendering environments like Next.js App
@@ -484,6 +484,16 @@ renderNetworkToStaticSVG(networkProps)       // => string`}
 
       <p>
         All functions are synchronous and return a complete SVG string.
+      </p>
+
+      {/* -------------------------------------------------------------- */}
+      <h2 id="ssr-gallery">SSR Output Gallery</h2>
+
+      <p>
+        See the <Link to="/ssr-gallery">SSR Gallery</Link> for live examples of
+        every chart type rendered using <code>renderToStaticSVG</code>. Each
+        chart includes the exact code that produced it, so you can copy and
+        adapt for your own server rendering needs.
       </p>
 
       {/* -------------------------------------------------------------- */}

@@ -90,6 +90,7 @@ import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
+import SSRGalleryPage from "./pages/SSRGalleryPage"
 
 // Playground pages
 import LineChartPlayground from "./pages/playground/LineChartPlayground"
@@ -338,6 +339,7 @@ export default function DocsApp() {
 
             {/* Using Server-Side Rendering */}
             <Route path="using-ssr" element={<UsingSSRPage />} />
+            <Route path="ssr-gallery" element={<SSRGalleryPage />} />
 
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />

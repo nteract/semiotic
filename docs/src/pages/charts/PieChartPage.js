@@ -76,6 +76,7 @@ function StreamingPieDemo() {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      pulse={{ duration: 800, color: "rgba(255,255,255,0.7)" }}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
       legend={{
         legendGroups: [{
@@ -119,6 +120,7 @@ function StreamingPieDemo({ width }) {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      pulse={{ duration: 800, color: "rgba(255,255,255,0.7)" }}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
       legend={pieLegend}
     />

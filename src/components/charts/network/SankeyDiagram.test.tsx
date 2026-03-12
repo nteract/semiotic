@@ -1,24 +1,26 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { SankeyDiagram } from "./SankeyDiagram"
 import { TooltipProvider } from "../../store/TooltipStore"
 
-// JSDOM does not support SVG measurement methods used by node labels
-beforeAll(() => {
-  const proto = SVGElement.prototype as any
-  if (!proto.getComputedTextLength) {
-    proto.getComputedTextLength = function () {
-      return 0
-    }
-  }
-  if (!proto.getBBox) {
-    proto.getBBox = function () {
-      return { x: 0, y: 0, width: 0, height: 0 }
+// Mock NetworkFrame to capture props
+let lastNetworkFrameProps: any = null
+vi.mock("../../stream/StreamNetworkFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastNetworkFrameProps = props
+      return <div className="stream-network-frame"><svg /></div>
     }
   }
 })
 
 describe("SankeyDiagram", () => {
+  beforeEach(() => {
+    lastNetworkFrameProps = null
+  })
+
   const sampleEdges = [
     { source: "A", target: "D", value: 100 },
     { source: "B", target: "D", value: 80 },
@@ -36,228 +38,42 @@ describe("SankeyDiagram", () => {
     { id: "F", category: "Target" }
   ]
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
   it("handles empty edges gracefully", () => {
     const { container } = render(
       <TooltipProvider>
         <SankeyDiagram edges={[]} />
       </TooltipProvider>
     )
-
     const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
-  it("applies custom width and height", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} width={1000} height={800} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts nodes prop", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodes={sampleNodes} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("infers nodes from edges when nodes not provided", () => {
-    const { container } = render(
+  it("sets chartType to sankey", () => {
+    render(
       <TooltipProvider>
         <SankeyDiagram edges={sampleEdges} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.chartType).toBe("sankey")
   })
 
-  it("applies color encoding", () => {
-    const { container } = render(
+  it("forwards sourceAccessor and targetAccessor defaults", () => {
+    render(
       <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodes={sampleNodes} colorBy="category" />
+        <SankeyDiagram edges={sampleEdges} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.sourceAccessor).toBe("source")
+    expect(lastNetworkFrameProps.targetAccessor).toBe("target")
   })
 
-  it("supports horizontal orientation (default)", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} orientation="horizontal" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("supports vertical orientation", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} orientation="vertical" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies edge color by source", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} edgeColorBy="source" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies edge color by target", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} edgeColorBy="target" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies edge color with gradient", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} edgeColorBy="gradient" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies nodeAlign justify", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodeAlign="justify" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies nodeAlign left", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodeAlign="left" />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom nodeWidth", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodeWidth={25} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom nodePaddingRatio", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} nodePaddingRatio={0.1} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom edge opacity", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} edgeOpacity={0.7} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom edgeSort", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram
-          edges={sampleEdges}
-          edgeSort={(a: any, b: any) => b.value - a.value}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("allows NetworkFrame prop overrides via frameProps", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram
-          edges={sampleEdges}
-          nodeWidth={20}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("disables hover when enableHover is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <SankeyDiagram edges={sampleEdges} enableHover={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("uses custom accessors", () => {
+  it("forwards custom sourceAccessor, targetAccessor, and valueAccessor", () => {
     const customEdges = [
       { from: "A", to: "B", flow: 100 },
       { from: "B", to: "C", flow: 80 }
     ]
 
-    const { container } = render(
+    render(
       <TooltipProvider>
         <SankeyDiagram
           edges={customEdges}
@@ -267,9 +83,185 @@ describe("SankeyDiagram", () => {
         />
       </TooltipProvider>
     )
+    expect(lastNetworkFrameProps.sourceAccessor).toBe("from")
+    expect(lastNetworkFrameProps.targetAccessor).toBe("to")
+    expect(lastNetworkFrameProps.valueAccessor).toBe("flow")
+  })
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+  it("defaults valueAccessor to 'value'", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.valueAccessor).toBe("value")
+  })
+
+  it("forwards orientation prop", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} orientation="horizontal" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.orientation).toBe("horizontal")
+  })
+
+  it("forwards vertical orientation", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} orientation="vertical" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.orientation).toBe("vertical")
+  })
+
+  it("defaults orientation to horizontal", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.orientation).toBe("horizontal")
+  })
+
+  it("forwards nodeAlign prop", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} nodeAlign="left" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeAlign).toBe("left")
+  })
+
+  it("defaults nodeAlign to justify", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeAlign).toBe("justify")
+  })
+
+  it("forwards nodeWidth prop", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} nodeWidth={25} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeWidth).toBe(25)
+  })
+
+  it("defaults nodeWidth to 15", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeWidth).toBe(15)
+  })
+
+  it("accepts nodes prop and passes it through", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} nodes={sampleNodes} />
+      </TooltipProvider>
+    )
+    // When nodes are provided, they should be used
+    expect(lastNetworkFrameProps.nodes).toBeDefined()
+    expect(lastNetworkFrameProps.nodes.length).toBeGreaterThan(0)
+  })
+
+  it("infers nodes from edges when nodes not provided", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    // Should infer nodes from the edge source/target values
+    expect(lastNetworkFrameProps.nodes).toBeDefined()
+    expect(lastNetworkFrameProps.nodes.length).toBeGreaterThan(0)
+  })
+
+  it("forwards edgeColorBy", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} edgeColorBy="target" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.edgeColorBy).toBe("target")
+  })
+
+  it("defaults edgeColorBy to source", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.edgeColorBy).toBe("source")
+  })
+
+  it("forwards edgeOpacity", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} edgeOpacity={0.7} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.edgeOpacity).toBe(0.7)
+  })
+
+  it("forwards nodePaddingRatio", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} nodePaddingRatio={0.1} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodePaddingRatio).toBe(0.1)
+  })
+
+  it("applies custom width and height", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} width={1000} height={800} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.size).toEqual([1000, 800])
+  })
+
+  it("defaults to 800x600", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.size).toEqual([800, 600])
+  })
+
+  it("enables hover by default", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.enableHover).toBe(true)
+  })
+
+  it("disables hover when enableHover is false", () => {
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} enableHover={false} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.enableHover).toBe(false)
+  })
+
+  it("forwards edgeSort", () => {
+    const sortFn = (a: any, b: any) => b.value - a.value
+    render(
+      <TooltipProvider>
+        <SankeyDiagram edges={sampleEdges} edgeSort={sortFn} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.edgeSort).toBe(sortFn)
   })
 
   describe("tooltip", () => {
@@ -280,9 +272,9 @@ describe("SankeyDiagram", () => {
           <SankeyDiagram edges={sampleEdges} tooltip={customTooltip} />
         </TooltipProvider>
       )
-
       const frame = container.querySelector(".stream-network-frame")
       expect(frame).toBeTruthy()
+      expect(typeof lastNetworkFrameProps.tooltipContent).toBe("function")
     })
   })
 })

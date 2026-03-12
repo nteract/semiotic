@@ -671,7 +671,34 @@ export class OrdinalPipelineStore {
     }
 
     for (const node of nodes) {
-      if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
+      if (node.type === "connector" || node.type === "violin" || node.type === "boxplot") continue
+
+      // Wedge nodes: datum is a representative point for the category.
+      // Pulse the wedge when any data point in that category was recently inserted.
+      if (node.type === "wedge") {
+        const cat = node.category
+        if (!cat) continue
+        let bestIntensity = 0
+        for (let i = 0; i < data.length; i++) {
+          const d = data[i]
+          const oAcc = this.config.oAccessor
+          const dCat = typeof oAcc === "function" ? oAcc(d) : d[oAcc || "category"]
+          if (dCat !== cat) continue
+          const insertTime = this.timestampBuffer.get(i)
+          if (insertTime == null) continue
+          const age = now - insertTime
+          if (age < duration) {
+            const intensity = 1 - age / duration
+            if (intensity > bestIntensity) bestIntensity = intensity
+          }
+        }
+        if (bestIntensity > 0) {
+          node._pulseIntensity = bestIntensity
+          node._pulseColor = pulseColor
+        }
+        continue
+      }
+
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const insertTime = this.timestampBuffer.get(idx)

@@ -5,8 +5,12 @@ import {
   useContext,
   useMemo,
   useState,
+  useEffect,
   useLayoutEffect
 } from "react"
+
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect
 
 interface Source<T> {
   getState(): T
@@ -18,7 +22,7 @@ function useSyncExternalStoreShim<T>(
   getSnapshot: () => T
 ): T {
   const [value, setValue] = useState<T>(getSnapshot)
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     return subscribe(() => setValue(getSnapshot))
   }, [subscribe])
   return value

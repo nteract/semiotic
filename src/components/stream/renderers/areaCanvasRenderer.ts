@@ -74,6 +74,22 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     }
     ctx.fill()
 
+    // Pulse overlay — brightened fill flash when aggregated value changes
+    if (node._pulseIntensity && node._pulseIntensity > 0) {
+      ctx.beginPath()
+      ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
+      for (let i = 1; i < node.topPath.length; i++) {
+        ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+      }
+      for (let i = node.bottomPath.length - 1; i >= 0; i--) {
+        ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
+      }
+      ctx.closePath()
+      ctx.globalAlpha = node._pulseIntensity * 0.35
+      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
+      ctx.fill()
+    }
+
     // Stroke on top
     if (node.style.stroke && node.style.stroke !== "none") {
       ctx.globalAlpha = 1

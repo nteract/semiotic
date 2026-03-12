@@ -144,6 +144,10 @@ export interface AreaSceneNode {
   fillGradient?: { topOpacity: number; bottomOpacity: number }
   /** When false, skip hit testing (used for decorative bounds areas) */
   interactive?: boolean
+  /** Pulse intensity 0–1 (set when aggregated group value changes) */
+  _pulseIntensity?: number
+  /** Pulse color */
+  _pulseColor?: string
 }
 
 export interface PointSceneNode {

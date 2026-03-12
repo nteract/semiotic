@@ -4,23 +4,21 @@ import { render } from "@testing-library/react"
 import { ForceDirectedGraph } from "./ForceDirectedGraph"
 import { TooltipProvider } from "../../store/TooltipStore"
 
+// Mock NetworkFrame to capture props
+let lastNetworkFrameProps: any = null
+vi.mock("../../stream/StreamNetworkFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastNetworkFrameProps = props
+      return <div className="stream-network-frame"><svg /></div>
+    }
+  }
+})
+
 describe("ForceDirectedGraph", () => {
   beforeEach(() => {
-    ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
-      beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
-      stroke: vi.fn(), fill: vi.fn(), arc: vi.fn(),
-      clearRect: vi.fn(), fillRect: vi.fn(), fillText: vi.fn(),
-      strokeRect: vi.fn(), save: vi.fn(), restore: vi.fn(),
-      scale: vi.fn(), translate: vi.fn(), setLineDash: vi.fn(),
-      closePath: vi.fn(), strokeStyle: "", lineWidth: 1, fillStyle: "",
-      font: "", textAlign: "", textBaseline: "", globalAlpha: 1,
-    }))
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => { cb(performance.now()); return 1 })
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-  })
-  afterEach(() => {
-    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
-    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
+    lastNetworkFrameProps = null
   })
 
   const sampleNodes = [
@@ -35,24 +33,12 @@ describe("ForceDirectedGraph", () => {
     { source: "C", target: "A" }
   ]
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
   it("handles empty nodes gracefully", () => {
     const { container } = render(
       <TooltipProvider>
         <ForceDirectedGraph nodes={[]} edges={sampleEdges} />
       </TooltipProvider>
     )
-
-    // Should not render frame when nodes are empty
     const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
@@ -63,81 +49,54 @@ describe("ForceDirectedGraph", () => {
         <ForceDirectedGraph nodes={sampleNodes} edges={[]} />
       </TooltipProvider>
     )
-
-    // Should not render frame when edges are empty
     const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
-  it("applies custom width and height", () => {
-    const { container } = render(
+  it("sets chartType to force", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          width={800}
-          height={800}
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.chartType).toBe("force")
   })
 
-  it("accepts custom node ID accessor", () => {
-    const customNodes = [
-      { nodeId: "A", label: "Node A" },
-      { nodeId: "B", label: "Node B" }
-    ]
-
-    const customEdges = [
-      { source: "A", target: "B" }
-    ]
-
-    const { container } = render(
+  it("forwards nodeIDAccessor", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={customNodes}
-          edges={customEdges}
-          nodeIDAccessor="nodeId"
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} nodeIDAccessor="id" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")
   })
 
-  it("accepts custom source and target accessors", () => {
-    const customEdges = [
-      { from: "A", to: "B" },
-      { from: "B", to: "C" }
-    ]
-
-    const { container } = render(
+  it("forwards iterations", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={customEdges}
-          sourceAccessor="from"
-          targetAccessor="to"
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} iterations={500} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.iterations).toBe(500)
   })
 
-  it("applies color encoding", () => {
+  it("defaults iterations to 300", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.iterations).toBe(300)
+  })
+
+  it("nodeStyle produces correct fill from colorBy", () => {
     const coloredNodes = [
-      { id: "A", label: "Node A", group: "1" },
-      { id: "B", label: "Node B", group: "2" },
-      { id: "C", label: "Node C", group: "1" }
+      { id: "A", group: "X" },
+      { id: "B", group: "Y" },
+      { id: "C", group: "X" }
     ]
 
-    const { container } = render(
+    render(
       <TooltipProvider>
         <ForceDirectedGraph
           nodes={coloredNodes}
@@ -147,95 +106,38 @@ describe("ForceDirectedGraph", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    const styleFn = lastNetworkFrameProps.nodeStyle
+    expect(typeof styleFn).toBe("function")
+    // When colorBy is set, fill should be a string (a color)
+    const style = styleFn({ data: { group: "X" } })
+    expect(typeof style.fill).toBe("string")
+    expect(style.fill).not.toBe("")
   })
 
-  it("applies fixed node size", () => {
-    const { container } = render(
+  it("nodeStyle uses DEFAULT_COLOR when no colorBy", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          nodeSize={15}
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    const style = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+    expect(style.fill).toBe("#007bff")
   })
 
-  it("applies dynamic node sizing", () => {
-    const sizedNodes = [
-      { id: "A", label: "Node A", importance: 5 },
-      { id: "B", label: "Node B", importance: 10 },
-      { id: "C", label: "Node C", importance: 8 }
-    ]
-
-    const { container } = render(
+  it("nodeStyle includes r when nodeSize is a number", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sizedNodes}
-          edges={sampleEdges}
-          nodeSize="importance"
-          nodeSizeRange={[5, 25]}
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} nodeSize={15} />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    const style = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
+    expect(style.r).toBe(15)
   })
 
-  it("shows labels when showLabels is true", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          nodeLabel="label"
-          showLabels={true}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts custom iterations", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          iterations={500}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts custom force strength", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          forceStrength={0.2}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom edge styling", () => {
-    const { container } = render(
+  it("edgeStyle produces correct stroke and width", () => {
+    render(
       <TooltipProvider>
         <ForceDirectedGraph
           nodes={sampleNodes}
@@ -247,23 +149,90 @@ describe("ForceDirectedGraph", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    const styleFn = lastNetworkFrameProps.edgeStyle
+    expect(typeof styleFn).toBe("function")
+    const style = styleFn({})
+    expect(style.stroke).toBe("#000")
+    expect(style.strokeWidth).toBe(2)
+    expect(style.opacity).toBe(0.8)
   })
 
-  it("allows NetworkFrame prop overrides via frameProps", () => {
-    const { container } = render(
+  it("edgeStyle defaults", () => {
+    render(
       <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          iterations={400}
-        />
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    const style = lastNetworkFrameProps.edgeStyle({})
+    expect(style.stroke).toBe("#999")
+    expect(style.strokeWidth).toBe(1)
+    expect(style.opacity).toBe(0.6)
+  })
+
+  it("applies custom width and height", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} width={800} height={800} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.size).toEqual([800, 800])
+  })
+
+  it("defaults to 600x600", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.size).toEqual([600, 600])
+  })
+
+  it("forwards sourceAccessor and targetAccessor", () => {
+    const customEdges = [
+      { from: "A", to: "B" },
+      { from: "B", to: "C" }
+    ]
+
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph
+          nodes={sampleNodes}
+          edges={customEdges}
+          sourceAccessor="from"
+          targetAccessor="to"
+        />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.sourceAccessor).toBe("from")
+    expect(lastNetworkFrameProps.targetAccessor).toBe("to")
+  })
+
+  it("forwards forceStrength", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} forceStrength={0.2} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.forceStrength).toBe(0.2)
+  })
+
+  it("enables hover by default", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.enableHover).toBe(true)
+  })
+
+  it("disables hover when enableHover is false", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} enableHover={false} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.enableHover).toBe(false)
   })
 
   it("updates when nodes change", () => {
@@ -271,27 +240,21 @@ describe("ForceDirectedGraph", () => {
       { id: "A", label: "Node A" },
       { id: "B", label: "Node B" }
     ]
+    const initialEdges = [{ source: "A", target: "B" }]
 
-    const initialEdges = [
-      { source: "A", target: "B" }
-    ]
-
-    const { container, rerender } = render(
+    const { rerender } = render(
       <TooltipProvider>
         <ForceDirectedGraph nodes={initialNodes} edges={initialEdges} />
       </TooltipProvider>
     )
 
-    const initialFrame = container.querySelector(".stream-network-frame")
-    expect(initialFrame).toBeTruthy()
+    expect(lastNetworkFrameProps.nodes).toEqual(initialNodes)
 
-    // Update with more nodes
     const newNodes = [
       { id: "A", label: "Node A" },
       { id: "B", label: "Node B" },
       { id: "C", label: "Node C" }
     ]
-
     const newEdges = [
       { source: "A", target: "B" },
       { source: "B", target: "C" }
@@ -303,23 +266,8 @@ describe("ForceDirectedGraph", () => {
       </TooltipProvider>
     )
 
-    const updatedFrame = container.querySelector(".stream-network-frame")
-    expect(updatedFrame).toBeTruthy()
-  })
-
-  it("disables hover when enableHover is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <ForceDirectedGraph
-          nodes={sampleNodes}
-          edges={sampleEdges}
-          enableHover={false}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-network-frame")
-    expect(frame).toBeTruthy()
+    expect(lastNetworkFrameProps.nodes).toEqual(newNodes)
+    expect(lastNetworkFrameProps.edges).toEqual(newEdges)
   })
 
   // Legend Tests
@@ -336,7 +284,7 @@ describe("ForceDirectedGraph", () => {
     ]
 
     it("shows legend automatically when colorBy is specified", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <ForceDirectedGraph
             nodes={coloredNodes}
@@ -345,14 +293,11 @@ describe("ForceDirectedGraph", () => {
           />
         </TooltipProvider>
       )
-
-      // Canvas-based frame renders; just check the frame is present
-      const frame = container.querySelector(".stream-network-frame")
-      expect(frame).toBeTruthy()
+      expect(lastNetworkFrameProps.legend).toBeDefined()
     })
 
     it("does not show legend when colorBy is not specified", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <ForceDirectedGraph
             nodes={sampleNodes}
@@ -360,14 +305,11 @@ describe("ForceDirectedGraph", () => {
           />
         </TooltipProvider>
       )
-
-      // Legend items should not be present
-      const legendItems = container.querySelectorAll(".legend-item")
-      expect(legendItems.length).toBe(0)
+      expect(lastNetworkFrameProps.legend).toBeUndefined()
     })
 
     it("respects showLegend=false even when colorBy is specified", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <ForceDirectedGraph
             nodes={coloredNodes}
@@ -377,26 +319,7 @@ describe("ForceDirectedGraph", () => {
           />
         </TooltipProvider>
       )
-
-      // Legend items should not be present
-      const legendItems = container.querySelectorAll(".legend-item")
-      expect(legendItems.length).toBe(0)
-    })
-
-    it("adjusts right margin when legend is present", () => {
-      const { container } = render(
-        <TooltipProvider>
-          <ForceDirectedGraph
-            nodes={coloredNodes}
-            edges={coloredEdges}
-            colorBy="group"
-          />
-        </TooltipProvider>
-      )
-
-      // The frame should render with sufficient right margin for legend
-      const frame = container.querySelector(".stream-network-frame")
-      expect(frame).toBeTruthy()
+      expect(lastNetworkFrameProps.legend).toBeUndefined()
     })
   })
 })

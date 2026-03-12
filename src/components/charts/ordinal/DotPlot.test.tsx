@@ -1,7 +1,20 @@
+import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { DotPlot } from "./DotPlot"
 import { TooltipProvider } from "../../store/TooltipStore"
+
+// Mock OrdinalFrame to capture props
+let lastOrdinalFrameProps: any = null
+vi.mock("../../stream/StreamOrdinalFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastOrdinalFrameProps = props
+      return <div className="stream-ordinal-frame"><svg /></div>
+    }
+  }
+})
 
 describe("DotPlot", () => {
   const sampleData = [
@@ -12,15 +25,8 @@ describe("DotPlot", () => {
     { category: "Item E", value: 35 }
   ]
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+  beforeEach(() => {
+    lastOrdinalFrameProps = null
   })
 
   it("handles empty data gracefully", () => {
@@ -34,19 +40,8 @@ describe("DotPlot", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("applies custom width and height", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} width={800} height={600} />
-      </TooltipProvider>
-    )
-
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
-  })
-
   it("accepts categoryLabel and valueLabel props", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <DotPlot
           data={sampleData}
@@ -56,188 +51,136 @@ describe("DotPlot", () => {
       </TooltipProvider>
     )
 
-    const axes = container.querySelectorAll("canvas")
-    expect(axes.length).toBeGreaterThan(0)
+    expect(lastOrdinalFrameProps.oLabel).toBe("Items")
+    expect(lastOrdinalFrameProps.rLabel).toBe("Score")
   })
 
-  it("supports horizontal orientation (default)", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} orientation="horizontal" />
-      </TooltipProvider>
-    )
+  // ── Mock-based behavioral assertions ──────────────────────────────────
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+  describe("StreamOrdinalFrame prop forwarding", () => {
+    it("sets chartType to 'point'", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.chartType).toBe("point")
+    })
 
-  it("supports vertical orientation", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} orientation="vertical" />
-      </TooltipProvider>
-    )
+    it("defaults to horizontal orientation", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.projection).toBe("horizontal")
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("maps vertical orientation to 'vertical' projection", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} orientation="vertical" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.projection).toBe("vertical")
+    })
 
-  it("applies color encoding", () => {
-    const dataWithColor = sampleData.map(d => ({ ...d, type: d.value > 30 ? "high" : "low" }))
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={dataWithColor} colorBy="type" />
-      </TooltipProvider>
-    )
+    it("defaults sort to true", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.oSort).toBe(true)
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards sort=false as oSort", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} sort={false} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.oSort).toBe(false)
+    })
 
-  it("sorts in descending order by default", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} sort={true} />
-      </TooltipProvider>
-    )
+    it("forwards sort='asc' as oSort", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} sort="asc" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.oSort).toBe("asc")
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards custom accessors as oAccessor and rAccessor", () => {
+      const customData = [
+        { name: "A", score: 25 },
+        { name: "B", score: 40 }
+      ]
+      render(
+        <TooltipProvider>
+          <DotPlot data={customData} categoryAccessor="name" valueAccessor="score" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.oAccessor).toBe("name")
+      expect(lastOrdinalFrameProps.rAccessor).toBe("score")
+    })
 
-  it("sorts in ascending order", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} sort="asc" />
-      </TooltipProvider>
-    )
+    it("passes pieceStyle with dotRadius", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} dotRadius={8} />
+        </TooltipProvider>
+      )
+      expect(typeof lastOrdinalFrameProps.pieceStyle).toBe("function")
+      const style = lastOrdinalFrameProps.pieceStyle({ category: "Item A", value: 25 })
+      expect(style.r).toBe(8)
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("defaults dotRadius to 5", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      const style = lastOrdinalFrameProps.pieceStyle({ category: "Item A", value: 25 })
+      expect(style.r).toBe(5)
+    })
 
-  it("sorts in descending order", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} sort="desc" />
-      </TooltipProvider>
-    )
+    it("defaults showGrid to true", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.showGrid).toBe(true)
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
+    it("forwards enableHover", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} enableHover={false} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.enableHover).toBe(false)
+    })
 
-  it("supports custom sort function", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} sort={(a, b) => a.value - b.value} />
-      </TooltipProvider>
-    )
+    it("forwards width and height as size", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} width={700} height={500} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([700, 500])
+    })
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("disables sorting when sort is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} sort={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom dotRadius", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} dotRadius={8} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom categoryPadding", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} categoryPadding={15} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("shows grid by default", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} showGrid={true} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("hides grid when showGrid is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} showGrid={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("allows OrdinalFrame prop overrides via frameProps", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot
-          data={sampleData}
-          frameProps={{
-            hoverAnnotation: true
-          }}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("disables hover when enableHover is false", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot data={sampleData} enableHover={false} />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("uses custom accessors", () => {
-    const customData = [
-      { name: "A", score: 25 },
-      { name: "B", score: 40 },
-      { name: "C", score: 15 }
-    ]
-
-    const { container } = render(
-      <TooltipProvider>
-        <DotPlot
-          data={customData}
-          categoryAccessor="name"
-          valueAccessor="score"
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    it("forwards categoryPadding as barPadding", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} categoryPadding={15} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.barPadding).toBe(15)
+    })
   })
 })

@@ -321,8 +321,25 @@ function renderNetworkFrame(props: StreamNetworkFrameProps): string {
       )
     }
 
-    nodes = buildRealtimeNodes(propsNodes, config)
     edges = buildRealtimeEdges(propsEdges, config)
+
+    // Infer nodes from edges when no explicit nodes provided (common for sankey/force)
+    if (propsNodes.length === 0 && edges.length > 0) {
+      const nodeIds = new Set<string>()
+      for (const e of edges) {
+        const src = typeof e.source === "string" ? e.source : e.source.id
+        const tgt = typeof e.target === "string" ? e.target : e.target.id
+        nodeIds.add(src)
+        nodeIds.add(tgt)
+      }
+      nodes = Array.from(nodeIds).map((id) => ({
+        id,
+        x: 0, y: 0, x0: 0, x1: 0, y0: 0, y1: 0,
+        width: 0, height: 0, value: 0, data: { id }
+      }))
+    } else {
+      nodes = buildRealtimeNodes(propsNodes, config)
+    }
   }
 
   plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
