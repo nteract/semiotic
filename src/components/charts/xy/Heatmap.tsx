@@ -5,12 +5,13 @@ import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
-import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -115,6 +116,14 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   tooltip?: TooltipProp
 
   /**
+   * Legend interaction mode.
+   * - "highlight": hover dims non-hovered categories to 30% opacity
+   * - "isolate": click toggles category visibility with checkmark indicators
+   * - "none": static legend (default)
+   */
+  legendInteraction?: LegendInteractionMode
+
+  /**
    * Annotation objects to render on the chart
    */
   annotations?: Record<string, any>[]
@@ -217,7 +226,10 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     selection,
     linkedHover,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -226,6 +238,12 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   const title = resolved.title
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -243,6 +261,15 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     fallbackFields: [],
     onObservation, chartType: "Heatmap", chartId
   })
+
+  // Legend interaction (no-op for Heatmap since no colorBy categories)
+  const legendState = useLegendInteraction(legendInteraction, undefined, [])
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -306,8 +333,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   }, [getValueFn, colorScale, cellBorderColor, cellBorderWidth])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, activeSelectionHook, selection),
-    [baseSummaryStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, effectiveSelectionHook, selection),
+    [baseSummaryStyle, effectiveSelectionHook, selection]
   )
 
   // Summary render function (for value labels)

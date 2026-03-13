@@ -4,12 +4,13 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -28,6 +29,7 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -51,7 +53,9 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10", barPadding = 5,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId
+    onObservation, chartId,
+    loading, emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -62,6 +66,12 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
   const title = resolved.title
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
   const actualColorBy = colorBy || groupBy
@@ -75,6 +85,25 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
 
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
 
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!actualColorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeData as Record<string, any>[]) {
+      const v = typeof actualColorBy === "function" ? actualColorBy(d) : d[actualColorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeData, actualColorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, actualColorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       if (actualColorBy) return { fill: getColor(d, actualColorBy, colorScale) }
@@ -83,8 +112,8 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
   }, [actualColorBy, colorScale])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, activeSelectionHook, selection),
-    [basePieceStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, effectiveSelectionHook, selection),
+    [basePieceStyle, effectiveSelectionHook, selection]
   )
 
   const { legend, margin } = useChartLegendAndMargin({
@@ -127,6 +156,12 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     rFormat: valueFormat as any,
     showGrid,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,

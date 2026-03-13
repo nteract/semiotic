@@ -2,6 +2,7 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
+import Legend from "../Legend"
 import type { LegendGroup } from "../types/legendTypes"
 
 export interface NetworkSVGOverlayProps {
@@ -19,6 +20,10 @@ export interface NetworkSVGOverlayProps {
 
   /** Legend configuration */
   legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
 
   /** User-provided SVG elements on top */
   foregroundGraphics?: ReactNode
@@ -52,6 +57,10 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     labels,
     title,
     legend,
+    legendHoverBehavior,
+    legendClickBehavior,
+    legendHighlightedCategory,
+    legendIsolatedCategories,
     foregroundGraphics,
     sceneNodes,
     annotations,
@@ -129,40 +138,21 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       ) : null}
 
       {/* Legend */}
-      {legend && typeof legend === "object" && "legendGroups" in (legend as any) ? (
+      {legend && (
         <g transform={`translate(${totalWidth - margin.right + 10},${margin.top})`}>
-          {((legend as any).legendGroups as LegendGroup[]).map(
-            (group, gi) => (
-              <g key={`legend-group-${gi}`}>
-                {group.items?.map((item: any, ii: number) => (
-                  <g key={`legend-item-${ii}`} transform={`translate(0,${ii * 20})`}>
-                    <rect
-                      x={0}
-                      y={0}
-                      width={12}
-                      height={12}
-                      fill={item.color}
-                      rx={2}
-                    />
-                    <text
-                      x={18}
-                      y={10}
-                      fontSize={11}
-                      fill="currentColor"
-                    >
-                      {item.label}
-                    </text>
-                  </g>
-                ))}
-              </g>
-            )
-          )}
+          {typeof legend === "object" && !React.isValidElement(legend) && "legendGroups" in (legend as any)
+            ? <Legend
+                legendGroups={(legend as any).legendGroups}
+                title=""
+                width={100}
+                customHoverBehavior={legendHoverBehavior}
+                customClickBehavior={legendClickBehavior}
+                highlightedCategory={legendHighlightedCategory}
+                isolatedCategories={legendIsolatedCategories}
+              />
+            : (legend as React.ReactNode)}
         </g>
-      ) : legend ? (
-        <g transform={`translate(${totalWidth - margin.right + 10},${margin.top})`}>
-          {legend as React.ReactNode}
-        </g>
-      ) : null}
+      )}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG */}
     {annotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {

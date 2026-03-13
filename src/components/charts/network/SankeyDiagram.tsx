@@ -8,9 +8,10 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartLegendAndMargin, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartLegendAndMargin, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -33,6 +34,7 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean
+  legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
   edgeSort?: (a: any, b: any) => number
   tooltip?: TooltipProp
@@ -78,6 +80,9 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     chartId,
     selection,
     linkedHover,
+    loading,
+    emptyContent,
+    legendInteraction,
   } = props as any
 
   const width = resolved.width
@@ -85,6 +90,12 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(edges, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   // Safe data defaults (hooks must always run)
   const safeEdges = edges || []
@@ -97,6 +108,19 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
 
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of inferredNodes as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [inferredNodes, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
   // Node style function
   // d is a RealtimeNode — user data lives on d.data
@@ -188,6 +212,12 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       tooltipContent={tooltip ? (d: any) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       customClickBehavior={onObservation ? customClickBehavior : undefined}
+      {...(legendInteraction && legendInteraction !== "none" && {
+        legendHoverBehavior: legendState.onLegendHover,
+        legendClickBehavior: legendState.onLegendClick,
+        legendHighlightedCategory: legendState.highlightedCategory,
+        legendIsolatedCategories: legendState.isolatedCategories,
+      })}
       className={className}
       title={title}
       {...frameProps}

@@ -100,27 +100,6 @@ const hierarchyData = {
   ],
 }
 
-// ── Helper: render in StrictMode and check canvas got sized ──────────────
-
-function assertCanvasSized(container: HTMLElement, componentName: string) {
-  const canvas = container.querySelector("canvas")
-  expect(canvas).toBeTruthy()
-
-  // Canvas should have width/height set by the render function.
-  // The HTML default is 300x150 — if we see that, the render never ran.
-  const style = canvas!.style
-  const hasDimensions =
-    (style.width && style.width !== "") ||
-    (canvas!.width !== 300 && canvas!.height !== 150)
-
-  if (!hasDimensions) {
-    // Also check if the render function set canvas.width directly
-    // (jsdom may not reflect inline styles the same way)
-    // Accept any non-default canvas.width as success
-    expect(canvas!.width).not.toBe(300)
-  }
-}
-
 // ── Import all HOC charts ────────────────────────────────────────────────
 
 import { LineChart } from "./xy/LineChart"

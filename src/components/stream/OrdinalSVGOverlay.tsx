@@ -31,6 +31,10 @@ interface OrdinalSVGOverlayProps {
 
   // Legend
   legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
 
   // Foreground graphics
   foregroundGraphics?: ReactNode
@@ -81,6 +85,10 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     showGrid,
     title,
     legend,
+    legendHoverBehavior,
+    legendClickBehavior,
+    legendHighlightedCategory,
+    legendIsolatedCategories,
     foregroundGraphics,
     annotations,
     svgAnnotationRules,
@@ -352,7 +360,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       {legend && (
         <g transform={`translate(${totalWidth - margin.right + 10}, ${margin.top})`}>
           {isLegendConfig(legend)
-            ? <Legend legendGroups={legend.legendGroups} title="" width={100} />
+            ? <Legend
+                legendGroups={legend.legendGroups}
+                title=""
+                width={100}
+                customHoverBehavior={legendHoverBehavior}
+                customClickBehavior={legendClickBehavior}
+                highlightedCategory={legendHighlightedCategory}
+                isolatedCategories={legendIsolatedCategories}
+              />
             : (legend as ReactNode)}
         </g>
       )}

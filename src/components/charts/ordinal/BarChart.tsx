@@ -4,12 +4,13 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -31,6 +32,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -69,7 +71,10 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     selection,
     linkedHover,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -80,6 +85,12 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   const title = resolved.title
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -101,6 +112,25 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   const sortedData = useSortedData(safeData, sort, valueAccessor)
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeData as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeData, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
@@ -114,8 +144,8 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   }, [colorBy, colorScale])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, activeSelectionHook, selection),
-    [basePieceStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, effectiveSelectionHook, selection),
+    [basePieceStyle, effectiveSelectionHook, selection]
   )
 
   const { legend, margin } = useChartLegendAndMargin({
@@ -162,6 +192,12 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     showGrid,
     oSort: sort as any,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,

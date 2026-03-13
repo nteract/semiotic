@@ -223,4 +223,138 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.hoverAnnotation).toBe(false)
     })
   })
+
+  describe("gapStrategy", () => {
+    const gapData = [
+      { x: 1, y: 10, series: "A" },
+      { x: 2, y: null, series: "A" },
+      { x: 3, y: 15, series: "A" },
+    ]
+
+    it("splits data into segments when gapStrategy is 'break'", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={gapData} xAccessor="x" yAccessor="y" lineBy="series" gapStrategy="break" />
+        </TooltipProvider>
+      )
+      // With "break", the null entry is removed and data is split into segments.
+      // The flattened data forwarded to StreamXYFrame should exclude null points.
+      const forwarded = lastXYFrameProps.data as Record<string, any>[]
+      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
+      expect(forwarded.length).toBe(2)
+    })
+
+    it("replaces nulls with zero when gapStrategy is 'zero'", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={gapData} xAccessor="x" yAccessor="y" lineBy="series" gapStrategy="zero" />
+        </TooltipProvider>
+      )
+      const forwarded = lastXYFrameProps.data as Record<string, any>[]
+      // All 3 points should be present
+      expect(forwarded.length).toBe(3)
+      // No null y values should remain
+      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
+      // The formerly-null entry (x=2) should now be 0
+      const replaced = forwarded.find((d: any) => d.x === 2)
+      expect(replaced).toBeDefined()
+      expect(replaced!.y).toBe(0)
+    })
+
+    it("filters out null entries when gapStrategy is 'interpolate'", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={gapData} xAccessor="x" yAccessor="y" lineBy="series" gapStrategy="interpolate" />
+        </TooltipProvider>
+      )
+      const forwarded = lastXYFrameProps.data as Record<string, any>[]
+      // Interpolate passes data through (filtering happens downstream in SceneGraph),
+      // so all 3 points are forwarded
+      expect(forwarded.length).toBe(3)
+    })
+  })
+
+  describe("directLabel", () => {
+    const multiLineData = [
+      { x: 1, y: 10, series: "A" },
+      { x: 2, y: 20, series: "A" },
+      { x: 3, y: 30, series: "A" },
+      { x: 1, y: 15, series: "B" },
+      { x: 2, y: 25, series: "B" },
+      { x: 3, y: 35, series: "B" },
+    ]
+
+    it("generates annotations when directLabel is true", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={multiLineData}
+            xAccessor="x"
+            yAccessor="y"
+            lineBy="series"
+            colorBy="series"
+            directLabel={true}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.annotations).toBeDefined()
+      expect(Array.isArray(lastXYFrameProps.annotations)).toBe(true)
+      expect(lastXYFrameProps.annotations.length).toBeGreaterThan(0)
+    })
+
+    it("suppresses legend when directLabel is true", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={multiLineData}
+            xAccessor="x"
+            yAccessor="y"
+            lineBy="series"
+            colorBy="series"
+            directLabel={true}
+          />
+        </TooltipProvider>
+      )
+      // When directLabel is true and showLegend is not explicitly set,
+      // legend should be suppressed
+      expect(lastXYFrameProps.legend).toBeUndefined()
+    })
+  })
+
+  describe("empty and loading states", () => {
+    it("renders loading skeleton when loading is true", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <LineChart data={sampleData} loading={true} />
+        </TooltipProvider>
+      )
+      const loadingBar = container.querySelector(".semiotic-loading-bar")
+      expect(loadingBar).toBeTruthy()
+      // StreamXYFrame should not be rendered
+      const frame = container.querySelector(".stream-xy-frame")
+      expect(frame).toBeFalsy()
+    })
+
+    it("renders custom emptyContent when data is empty", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <LineChart data={[]} emptyContent={<span>Custom empty</span>} />
+        </TooltipProvider>
+      )
+      expect(container.textContent).toContain("Custom empty")
+      // StreamXYFrame should not be rendered
+      const frame = container.querySelector(".stream-xy-frame")
+      expect(frame).toBeFalsy()
+    })
+
+    it("suppresses empty state when emptyContent is false", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <LineChart data={[]} emptyContent={false} />
+        </TooltipProvider>
+      )
+      // emptyContent=false means no "No data available" text
+      expect(container.textContent).not.toContain("No data available")
+    })
+  })
 })

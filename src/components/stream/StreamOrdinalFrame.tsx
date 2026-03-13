@@ -209,6 +209,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       svgAnnotationRules,
       showGrid = false,
       legend,
+      legendHoverBehavior,
+      legendClickBehavior,
+      legendHighlightedCategory,
+      legendIsolatedCategories,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -718,6 +722,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             showGrid={showGrid}
             title={title}
             legend={legend}
+            legendHoverBehavior={legendHoverBehavior}
+            legendClickBehavior={legendClickBehavior}
+            legendHighlightedCategory={legendHighlightedCategory}
+            legendIsolatedCategories={legendIsolatedCategories}
             foregroundGraphics={foregroundGraphics}
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
@@ -805,6 +813,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           showGrid={showGrid}
           title={title}
           legend={legend}
+          legendHoverBehavior={legendHoverBehavior}
+          legendClickBehavior={legendClickBehavior}
+          legendHighlightedCategory={legendHighlightedCategory}
+          legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={foregroundGraphics}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}

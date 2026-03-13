@@ -17,6 +17,9 @@ export interface AxisConfig {
   tickFormat?: (d: any) => string
   baseline?: boolean | "under"
   jaggedBase?: boolean
+  /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
+   * `true` auto-detects Date boundaries. A function receives (value, index) and returns true for landmark ticks. */
+  landmarkTicks?: boolean | ((value: any, index: number) => boolean)
 }
 
 // ── Jagged baseline helper ────────────────────────────────────────────────
@@ -83,6 +86,14 @@ interface SVGOverlayProps {
 
   // Legend
   legend?: ReactNode | { legendGroups: LegendGroup[] }
+  /** Callback when hovering a legend item */
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  /** Callback when clicking a legend item */
+  legendClickBehavior?: (item: { label: string }) => void
+  /** Currently highlighted category label (for hover dimming) */
+  legendHighlightedCategory?: string | null
+  /** Set of isolated category labels (for click isolation) */
+  legendIsolatedCategories?: Set<string>
 
   // Foreground graphics (rendered on top in SVG overlay)
   foregroundGraphics?: ReactNode
@@ -123,6 +134,18 @@ function defaultTickFormat(v: number): string {
   return String(Math.round(v * 100) / 100)
 }
 
+/** Detect whether a tick marks a time boundary (new month, year, day) compared to the previous tick */
+function isTimeLandmark(value: any, prevValue: any): boolean {
+  if (!(value instanceof Date)) return false
+  if (!prevValue || !(prevValue instanceof Date)) return true
+  // New year, new month, or new day
+  return (
+    value.getFullYear() !== prevValue.getFullYear() ||
+    value.getMonth() !== prevValue.getMonth() ||
+    value.getDate() !== prevValue.getDate()
+  )
+}
+
 export function SVGOverlay(props: SVGOverlayProps) {
   const {
     width,
@@ -140,6 +163,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
     showGrid,
     title,
     legend,
+    legendHoverBehavior,
+    legendClickBehavior,
+    legendHighlightedCategory,
+    legendIsolatedCategories,
     foregroundGraphics,
     marginalGraphics,
     xValues,
@@ -260,6 +287,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const showBottomBaseline = bottomAxis ? bottomAxis.baseline !== false : true
           const leftJagged = leftAxis?.jaggedBase || false
           const bottomJagged = bottomAxis?.jaggedBase || false
+          const bottomLandmark = bottomAxis?.landmarkTicks
+          const leftLandmark = leftAxis?.landmarkTicks
 
           const axisStroke = "var(--semiotic-border, #ccc)"
           const tickColor = "var(--semiotic-text-secondary, #666)"
@@ -274,20 +303,28 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {bottomJagged && (
               <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
-            {xTicks.map((tick, i) => (
+            {xTicks.map((tick, i) => {
+              const isLandmark = bottomLandmark
+                ? typeof bottomLandmark === "function"
+                  ? bottomLandmark(tick.value, i)
+                  : isTimeLandmark(tick.value, i > 0 ? xTicks[i - 1].value : undefined)
+                : false
+              return (
               <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${height})`}>
                 <line y2={5} stroke={axisStroke} strokeWidth={1} />
                 <text
                   y={18}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={isLandmark ? 11 : 10}
+                  fontWeight={isLandmark ? 600 : 400}
                   fill={tickColor}
                   style={{ userSelect: "none" }}
                 >
                   {tick.label}
                 </text>
               </g>
-            ))}
+              )
+            })}
             {xLabel && (
               <text
                 x={width / 2}
@@ -308,21 +345,29 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {leftJagged && (
               <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
-            {yTicks.map((tick, i) => (
+            {yTicks.map((tick, i) => {
+              const isLandmark = leftLandmark
+                ? typeof leftLandmark === "function"
+                  ? leftLandmark(tick.value, i)
+                  : isTimeLandmark(tick.value, i > 0 ? yTicks[i - 1].value : undefined)
+                : false
+              return (
               <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
                 <line x2={-5} stroke={axisStroke} strokeWidth={1} />
                 <text
                   x={-8}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={10}
+                  fontSize={isLandmark ? 11 : 10}
+                  fontWeight={isLandmark ? 600 : 400}
                   fill={tickColor}
                   style={{ userSelect: "none" }}
                 >
                   {tick.label}
                 </text>
               </g>
-            ))}
+              )
+            })}
             {yLabel && (
               <text
                 x={-margin.left + 15}
@@ -422,7 +467,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {legend && (
         <g transform={`translate(${totalWidth - margin.right + 10}, ${margin.top})`}>
           {isLegendConfig(legend)
-            ? <Legend legendGroups={legend.legendGroups} title="" width={100} />
+            ? <Legend
+                legendGroups={legend.legendGroups}
+                title=""
+                width={100}
+                customHoverBehavior={legendHoverBehavior}
+                customClickBehavior={legendClickBehavior}
+                highlightedCategory={legendHighlightedCategory}
+                isolatedCategories={legendIsolatedCategories}
+              />
             : (legend as ReactNode)}
         </g>
       )}

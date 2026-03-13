@@ -205,6 +205,62 @@ function checkLinkedChartsWithoutSelection(
   }
 }
 
+const BAR_AREA_COMPONENTS = new Set([
+  "BarChart", "StackedBarChart", "GroupedBarChart",
+  "AreaChart", "StackedAreaChart"
+])
+
+const XY_COMPONENTS = new Set([
+  "LineChart", "AreaChart", "StackedAreaChart"
+])
+
+function checkDataGaps(
+  component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (!XY_COMPONENTS.has(component)) return
+  if (props.gapStrategy) return // explicit strategy set, no warning needed
+  const data = props.data
+  if (!data || !Array.isArray(data) || data.length === 0) return
+
+  const yAcc = props.yAccessor || "y"
+  if (typeof yAcc !== "string") return
+
+  const hasGap = data.some((d: Record<string, any>) => {
+    const v = d[yAcc]
+    return v == null || Number.isNaN(v)
+  })
+
+  if (hasGap) {
+    out.push({
+      severity: "warning",
+      code: "DATA_GAPS",
+      message: `Data contains null/undefined/NaN values in "${yAcc}". Default behavior breaks the line at gaps.`,
+      fix: `Set gapStrategy="break" (default), "interpolate", or "zero" to control gap handling.`,
+    })
+  }
+}
+
+function checkNonZeroBaseline(
+  component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (!BAR_AREA_COMPONENTS.has(component)) return
+
+  // Check if rExtent or yExtent explicitly sets a non-zero minimum
+  const extent = props.rExtent || props.yExtent
+  if (extent && Array.isArray(extent) && extent.length >= 1 && extent[0] != null && extent[0] !== 0) {
+    out.push({
+      severity: "warning",
+      code: "NON_ZERO_BASELINE",
+      message: `${component} has a non-zero baseline (${extent[0]}). Bar and area charts should start at zero to avoid exaggerating differences.`,
+      fix: `Remove the custom extent minimum or set it to 0: rExtent={[0, ${extent[1] ?? "auto"}]}. For trend-focused charts, use LineChart instead.`,
+    })
+  }
+}
+
 function checkMarginOverflow(
   _component: string,
   props: Record<string, any>,
@@ -275,6 +331,8 @@ export function diagnoseConfig(
   checkNetworkMissingEdges(componentName, props, diagnoses)
   checkDateWithoutFormat(componentName, props, diagnoses)
   checkLinkedChartsWithoutSelection(componentName, props, diagnoses)
+  checkNonZeroBaseline(componentName, props, diagnoses)
+  checkDataGaps(componentName, props, diagnoses)
   checkMarginOverflow(componentName, props, diagnoses)
 
   return {

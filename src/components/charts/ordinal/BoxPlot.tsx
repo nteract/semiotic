@@ -4,11 +4,12 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -28,6 +29,7 @@ export interface BoxPlotProps<TDatum extends Record<string, any> = Record<string
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -52,7 +54,9 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     colorBy, colorScheme = "category10",
     showOutliers = true, outlierRadius = 3, categoryPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId
+    onObservation, chartId,
+    loading, emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -63,6 +67,12 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
   const title = resolved.title
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -75,6 +85,25 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
 
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeData as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeData, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
+
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
@@ -83,8 +112,8 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
   }, [colorBy, colorScale])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, activeSelectionHook, selection),
-    [baseSummaryStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, effectiveSelectionHook, selection),
+    [baseSummaryStyle, effectiveSelectionHook, selection]
   )
 
   const { legend, margin } = useChartLegendAndMargin({
@@ -140,6 +169,12 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     rFormat: valueFormat as any,
     showGrid,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,

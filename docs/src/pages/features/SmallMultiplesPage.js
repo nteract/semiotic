@@ -5,6 +5,7 @@ import {
   Scatterplot,
   BarChart,
   LineChart,
+  CategoryColorProvider,
 } from "semiotic"
 import { useFilteredData } from "semiotic"
 
@@ -69,6 +70,46 @@ const linkedChartsProps = [
     description:
       'Pre-configure named selections with a resolution mode. For cross-filtering dashboards, use { mySelection: { resolution: "crossfilter" } }.',
   },
+  {
+    name: "showLegend",
+    type: "boolean",
+    required: false,
+    default: "true (when CategoryColorProvider present)",
+    description:
+      "Show a unified legend for all linked charts. When true, child chart legends are automatically suppressed unless explicitly set.",
+  },
+  {
+    name: "legendPosition",
+    type: '"top" | "bottom"',
+    required: false,
+    default: '"top"',
+    description:
+      "Position of the unified legend relative to the linked charts.",
+  },
+  {
+    name: "legendInteraction",
+    type: '"highlight" | "isolate" | "none"',
+    required: false,
+    default: '"none"',
+    description:
+      'Legend interaction mode. "highlight" dims non-hovered categories across all linked charts on hover. "isolate" toggles category visibility on click.',
+  },
+  {
+    name: "legendSelectionName",
+    type: "string",
+    required: false,
+    default: '"legend"',
+    description:
+      "Selection name that the unified legend produces on. Child charts must use the same name in their selection prop.",
+  },
+  {
+    name: "legendField",
+    type: "string",
+    required: false,
+    default: '"category"',
+    description:
+      'Field name that the unified legend uses for cross-chart highlighting. Must match the field used in child charts\' linkedHover.fields / colorBy.',
+  },
 ]
 
 const splomProps = [
@@ -129,6 +170,31 @@ const splomProps = [
     description: "Opacity for non-matching points when a selection is active.",
   },
 ]
+
+// ---------------------------------------------------------------------------
+// Brush-and-link helper
+// ---------------------------------------------------------------------------
+
+function FilteredBarChart({ data }) {
+  const filtered = useFilteredData(data, "brush")
+  const totals = ["North", "South", "East", "West"].map((r) => ({
+    region: r,
+    total: filtered
+      .filter((d) => d.region === r)
+      .reduce((s, d) => s + d.revenue, 0),
+  }))
+  return (
+    <BarChart
+      data={totals}
+      categoryAccessor="region"
+      valueAccessor="total"
+      colorBy="region"
+      width={320}
+      height={300}
+      valueLabel="Revenue"
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -267,26 +333,63 @@ linkedBrush="selectionName" // shorthand`}
 
       <h3 id="brush-and-link">Brush-and-Link</h3>
       <p>
-        Brush a region in one chart to filter data in another. Use the{" "}
-        <code>useFilteredData</code> hook to access the filtered subset:
+        Drag to brush a region in the scatterplot below — the bar chart updates
+        to show only data within the brushed area:
       </p>
 
-      <CodeBlock
-        code={`import { LinkedCharts, LineChart, Scatterplot, useFilteredData } from "semiotic"
+      <div style={{ marginBottom: 32 }}>
+        <LinkedCharts>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <Scatterplot
+              data={salesData}
+              xAccessor="revenue"
+              yAccessor="spend"
+              colorBy="region"
+              pointRadius={6}
+              width={360}
+              height={300}
+              xLabel="Revenue"
+              yLabel="Spend"
+              linkedBrush={{ name: "brush", xField: "revenue", yField: "spend" }}
+              selection={{ name: "brush" }}
+            />
+            <FilteredBarChart data={salesData} />
+          </div>
+        </LinkedCharts>
+      </div>
 
-function FilteredDetail({ data }) {
-  const filtered = useFilteredData(data, "timeRange")
-  return <Scatterplot data={filtered} xAccessor="x" yAccessor="y" />
+      <CodeBlock
+        code={`import { LinkedCharts, Scatterplot, BarChart, useFilteredData } from "semiotic"
+
+function FilteredBarChart({ data }) {
+  const filtered = useFilteredData(data, "brush")
+  const totals = ["North", "South", "East", "West"].map(r => ({
+    region: r,
+    total: filtered.filter(d => d.region === r).reduce((s, d) => s + d.revenue, 0),
+  }))
+  return (
+    <BarChart
+      data={totals}
+      categoryAccessor="region"
+      valueAccessor="total"
+      colorBy="region"
+      width={320}
+      height={300}
+      valueLabel="Revenue"
+    />
+  )
 }
 
 <LinkedCharts>
-  <LineChart
-    data={data}
-    xAccessor="date"
-    yAccessor="value"
-    linkedBrush={{ name: "timeRange", xField: "date" }}
+  <Scatterplot
+    data={salesData}
+    xAccessor="revenue"
+    yAccessor="spend"
+    colorBy="region"
+    linkedBrush={{ name: "brush", xField: "revenue", yField: "spend" }}
+    selection={{ name: "brush" }}
   />
-  <FilteredDetail data={data} />
+  <FilteredBarChart data={salesData} />
 </LinkedCharts>`}
         language="jsx"
       />
@@ -315,6 +418,90 @@ function FilteredDetail({ data }) {
 </LinkedCharts>`}
         language="jsx"
       />
+
+      <h3 id="unified-legend">Unified Legend</h3>
+      <p>
+        When charts inside <code>LinkedCharts</code> share categories (via{" "}
+        <code>CategoryColorProvider</code>), LinkedCharts renders a single
+        unified legend and automatically suppresses individual chart legends.
+        The unified legend supports the same <code>legendInteraction</code>{" "}
+        modes as individual charts — hover a legend item below to highlight
+        that region across both charts:
+      </p>
+
+      <div style={{ marginBottom: 32 }}>
+        <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+          <LinkedCharts
+            showLegend
+            legendPosition="top"
+            legendInteraction="highlight"
+            legendSelectionName="hl"
+            legendField="region"
+          >
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <Scatterplot
+                data={salesData}
+                xAccessor="revenue"
+                yAccessor="spend"
+                colorBy="region"
+                pointRadius={6}
+                width={360}
+                height={280}
+                xLabel="Revenue"
+                yLabel="Spend"
+                linkedHover={{ name: "hl", fields: ["region"] }}
+                selection={{ name: "hl" }}
+              />
+              <BarChart
+                data={regionTotals}
+                categoryAccessor="region"
+                valueAccessor="total"
+                colorBy="region"
+                width={320}
+                height={280}
+                valueLabel="Total Revenue"
+                linkedHover={{ name: "hl", fields: ["region"] }}
+                selection={{ name: "hl" }}
+              />
+            </div>
+          </LinkedCharts>
+        </CategoryColorProvider>
+      </div>
+
+      <CodeBlock
+        code={`import { LinkedCharts, CategoryColorProvider, Scatterplot, BarChart } from "semiotic"
+
+<CategoryColorProvider categories={["North", "South", "East", "West"]}>
+  <LinkedCharts
+    showLegend
+    legendInteraction="highlight"  // or "isolate"
+    legendSelectionName="hl"       // matches child selection names
+    legendField="region"           // field to filter on
+  >
+    <Scatterplot
+      data={salesData}
+      colorBy="region"
+      linkedHover={{ name: "hl", fields: ["region"] }}
+      selection={{ name: "hl" }}
+    />
+    <BarChart
+      data={regionTotals}
+      colorBy="region"
+      linkedHover={{ name: "hl", fields: ["region"] }}
+      selection={{ name: "hl" }}
+    />
+  </LinkedCharts>
+</CategoryColorProvider>`}
+        language="jsx"
+      />
+
+      <p>
+        Use <code>legendInteraction="isolate"</code> to let users click legend
+        items to toggle category visibility with checkmark indicators. Set{" "}
+        <code>legendPosition="bottom"</code> to place the legend below the
+        charts. Set <code>showLegend={`{false}`}</code> to disable the unified
+        legend entirely and let child charts manage their own.
+      </p>
 
       <h3 id="linked-charts-props">LinkedCharts Props</h3>
       <PropTable

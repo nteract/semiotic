@@ -58,6 +58,14 @@ describe("extractXYNavPoints", () => {
     expect(result[1]).toEqual({ x: 50, y: 40, datum: { v: "b" } })
   })
 
+  it("handles area with non-array datum gracefully", () => {
+    const scene = [
+      { type: "area", topPath: [[10, 20]], datum: "not-an-array" }
+    ]
+    const result = extractXYNavPoints(scene)
+    expect(result).toHaveLength(0)
+  })
+
   it("extracts center of rect nodes", () => {
     const scene = [
       { type: "rect", x: 20, y: 10, w: 40, h: 60, datum: { cat: "A" } }
@@ -178,6 +186,24 @@ describe("extractOrdinalNavPoints", () => {
     expect(result[0].y).toBeCloseTo(50)
   })
 
+  it("returns empty array for empty scene", () => {
+    expect(extractOrdinalNavPoints([])).toEqual([])
+  })
+
+  it("skips rect nodes with null x", () => {
+    const scene = [
+      { type: "rect", x: null, y: 10, w: 20, h: 20, datum: { skip: true } }
+    ]
+    expect(extractOrdinalNavPoints(scene)).toEqual([])
+  })
+
+  it("skips wedge nodes with null cx", () => {
+    const scene = [
+      { type: "wedge", cx: null, cy: 50, startAngle: 0, endAngle: Math.PI, datum: { skip: true } }
+    ]
+    expect(extractOrdinalNavPoints(scene)).toEqual([])
+  })
+
 })
 
 describe("extractNetworkNavPoints", () => {
@@ -219,6 +245,34 @@ describe("extractNetworkNavPoints", () => {
     expect(extractNetworkNavPoints(scene)).toEqual([])
   })
 
+  it("returns empty array for empty scene", () => {
+    expect(extractNetworkNavPoints([])).toEqual([])
+  })
+
+  it("skips circle nodes without coordinates", () => {
+    const scene = [
+      { type: "circle", cx: null, cy: 100, r: 5, datum: { id: "no-x" } },
+      { type: "circle", cx: 50, cy: 75, r: 5, datum: { id: "valid" } }
+    ]
+    const result = extractNetworkNavPoints(scene)
+    expect(result).toHaveLength(1)
+    expect(result[0].datum.id).toBe("valid")
+  })
+
+  it("skips rect nodes with null x", () => {
+    const scene = [
+      { type: "rect", x: null, y: 0, w: 10, h: 10, datum: { id: "skip" } }
+    ]
+    expect(extractNetworkNavPoints(scene)).toEqual([])
+  })
+
+  it("skips arc nodes with null cx", () => {
+    const scene = [
+      { type: "arc", cx: null, cy: 200, datum: { id: "skip" } }
+    ]
+    expect(extractNetworkNavPoints(scene)).toEqual([])
+  })
+
   it("handles mixed node types", () => {
     const scene = [
       { type: "circle", cx: 300, cy: 100, r: 5, datum: { id: "c" } },
@@ -243,12 +297,29 @@ describe("nextIndex", () => {
     expect(nextIndex("ArrowRight", 4, 5)).toBe(4)
   })
 
+  it("ArrowDown increments index", () => {
+    expect(nextIndex("ArrowDown", 0, 5)).toBe(1)
+    expect(nextIndex("ArrowDown", 3, 5)).toBe(4)
+  })
+
+  it("ArrowDown clamps at end", () => {
+    expect(nextIndex("ArrowDown", 4, 5)).toBe(4)
+  })
+
   it("ArrowLeft decrements index", () => {
     expect(nextIndex("ArrowLeft", 3, 5)).toBe(2)
   })
 
   it("ArrowLeft clamps at start", () => {
     expect(nextIndex("ArrowLeft", 0, 5)).toBe(0)
+  })
+
+  it("ArrowUp decrements index", () => {
+    expect(nextIndex("ArrowUp", 3, 5)).toBe(2)
+  })
+
+  it("ArrowUp clamps at start", () => {
+    expect(nextIndex("ArrowUp", 0, 5)).toBe(0)
   })
 
   it("Home returns 0", () => {

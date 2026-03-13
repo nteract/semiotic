@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, LineChart, BarChart } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -489,13 +489,80 @@ export default function LegendsPage() {
         language="jsx"
       />
 
-      <h3 id="click-behavior">Interactive Legends</h3>
+      <h3 id="legend-interaction">Legend Interaction (Charts)</h3>
       <p>
-        While the <code>legend</code> prop itself does not include built-in
-        toggle behavior, Semiotic&apos;s Legend component supports a{" "}
-        <code>customClickBehavior</code> callback. You can use this in
-        combination with state management to create interactive legends that
-        filter or highlight data:
+        Chart components support built-in legend interaction via the{" "}
+        <code>legendInteraction</code> prop. This provides two interaction modes
+        inspired by the Carbon Design System.
+      </p>
+
+      <h4>Highlight on Hover</h4>
+      <p>
+        Hover over a legend item to dim all other categories to 30% opacity:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: flatLineData,
+          xAccessor: "month",
+          yAccessor: "value",
+          lineBy: "label",
+          colorBy: "label",
+          legendInteraction: "highlight",
+          xLabel: "Month",
+          yLabel: "Value",
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { month: 1, value: 12, label: "Revenue" },
+  { month: 2, value: 18, label: "Revenue" },
+  // ...flat data with label field
+]`,
+          legendInteraction: '"highlight"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h4>Isolate on Click</h4>
+      <p>
+        Click legend items to toggle category visibility. A checkmark indicates
+        active categories. When all categories are re-selected, the legend resets.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: barData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          colorBy: "region",
+          legendInteraction: "isolate",
+        }}
+        type={BarChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { category: "Q1", value: 35, region: "North" },
+  { category: "Q2", value: 42, region: "North" },
+  // ...data with region field
+]`,
+          legendInteraction: '"isolate"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        Legend interaction integrates with the selection system, so it composes
+        naturally with <code>LinkedCharts</code> cross-highlighting. Both the
+        legend interaction and linked hover predicates are merged — a datum must
+        satisfy both to remain at full opacity.
+      </p>
+
+      <h3 id="click-behavior">Custom Interactive Legends (Frames)</h3>
+      <p>
+        For Frame-level charts, use the <code>customClickBehavior</code>{" "}
+        callback on the legend configuration with your own state management:
       </p>
 
       <CodeBlock

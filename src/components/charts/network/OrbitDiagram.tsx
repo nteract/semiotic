@@ -6,7 +6,7 @@ import type { BaseChartProps } from "../shared/types"
 import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { getColor } from "../shared/colorUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 
 // ── Orbit layout types ──────────────────────────────────────────────────
@@ -267,11 +267,16 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     onObservation,
     chartId,
     frameProps = {},
+    loading,
   } = props
 
   const width = resolved.width
   const height = resolved.height
   const title = resolved.title
+
+  // ── Loading state ───────────────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
 
   const childrenFn = useMemo(() =>
     typeof childrenAccessor === "function"

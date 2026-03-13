@@ -72,6 +72,11 @@ export interface BaseChartProps {
   onObservation?: OnObservationCallback
   /** Identifier for this chart instance, included in observation events */
   chartId?: string
+
+  /** Show a loading skeleton placeholder */
+  loading?: boolean
+  /** Custom content to render when data is empty. Set to `false` to disable empty state. */
+  emptyContent?: React.ReactNode | false
 }
 
 /**

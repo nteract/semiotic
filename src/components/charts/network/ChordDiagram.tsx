@@ -7,9 +7,10 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -31,6 +32,7 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean
+  legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -73,6 +75,9 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     chartId,
     selection,
     linkedHover,
+    loading,
+    emptyContent,
+    legendInteraction,
   } = props
 
   const width = resolved.width
@@ -80,6 +85,12 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(edges, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeEdges = edges || []
 
@@ -90,6 +101,19 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   )
 
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of inferredNodes as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [inferredNodes, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
@@ -173,6 +197,12 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      {...(legendInteraction && legendInteraction !== "none" && {
+        legendHoverBehavior: legendState.onLegendHover,
+        legendClickBehavior: legendState.onLegendClick,
+        legendHighlightedCategory: legendState.highlightedCategory,
+        legendIsolatedCategories: legendState.isolatedCategories,
+      })}
       className={className}
       title={title}
       {...frameProps}

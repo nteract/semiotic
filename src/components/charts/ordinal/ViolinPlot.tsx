@@ -8,7 +8,7 @@ import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
@@ -53,7 +53,8 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     valueFormat,
     colorBy, colorScheme = "category10", categoryPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId
+    onObservation, chartId,
+    loading, emptyContent
   } = props
 
   const width = resolved.width
@@ -64,6 +65,12 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
   const title = resolved.title
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 

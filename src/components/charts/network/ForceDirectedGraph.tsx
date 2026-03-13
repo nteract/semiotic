@@ -6,9 +6,10 @@ import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -33,6 +34,7 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
   showLabels?: boolean
   enableHover?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "nodes" | "edges" | "size">>
 }
@@ -76,6 +78,9 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     chartId,
     selection,
     linkedHover,
+    loading,
+    emptyContent,
+    legendInteraction,
   } = props
 
   const width = resolved.width
@@ -85,10 +90,29 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   const showLabels = resolved.showLabels ?? false
   const title = resolved.title
 
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(edges, width, height, emptyContent)
+  if (emptyEl) return emptyEl
+
   const safeNodes = nodes || []
   const safeEdges = edges || []
 
   const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeNodes as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeNodes, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
@@ -178,6 +202,12 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       legend={legend}
+      {...(legendInteraction && legendInteraction !== "none" && {
+        legendHoverBehavior: legendState.onLegendHover,
+        legendClickBehavior: legendState.onLegendClick,
+        legendHighlightedCategory: legendState.highlightedCategory,
+        legendIsolatedCategories: legendState.isolatedCategories,
+      })}
       className={className}
       title={title}
       {...frameProps}

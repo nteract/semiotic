@@ -1,7 +1,7 @@
 // @ts-nocheck
 import * as React from "react"
 
-import { LegendGroup, ItemType, LegendProps } from "./types/legendTypes"
+import { LegendGroup, LegendItem, ItemType, LegendProps } from "./types/legendTypes"
 
 const typeHash = {
   fill: (style: Object) => <rect style={style} width={20} height={20} />,
@@ -25,15 +25,51 @@ function renderType(
   return renderedType
 }
 
+/** Checkmark SVG for isolated items */
+function CheckMark() {
+  return (
+    <path
+      d="M2,6 L5,9 L10,3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      transform="translate(-14, 5)"
+    />
+  )
+}
+
+/** Compute opacity for a legend item based on highlight/isolate state */
+function itemOpacity(
+  item: LegendItem,
+  highlightedCategory: string | null | undefined,
+  isolatedCategories: Set<string> | undefined
+): number {
+  // Isolation mode: dim items not in the isolated set
+  if (isolatedCategories && isolatedCategories.size > 0) {
+    return isolatedCategories.has(item.label) ? 1 : 0.3
+  }
+  // Highlight mode: dim non-highlighted items
+  if (highlightedCategory != null) {
+    return item.label === highlightedCategory ? 1 : 0.3
+  }
+  return 1
+}
+
 const renderLegendGroupVertical = (
   legendGroup: LegendGroup,
-  customClickBehavior?: Function
+  customClickBehavior?: Function,
+  customHoverBehavior?: (item: LegendItem | null) => void,
+  highlightedCategory?: string | null,
+  isolatedCategories?: Set<string>
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems = []
   let itemOffset = 0
+  const interactive = !!(customClickBehavior || customHoverBehavior)
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
+    const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
+    const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
     renderedItems.push(
       <g
         key={`legend-item-${i}`}
@@ -41,10 +77,20 @@ const renderLegendGroupVertical = (
         onClick={
           customClickBehavior ? () => customClickBehavior(item) : undefined
         }
+        onMouseEnter={
+          customHoverBehavior ? () => customHoverBehavior(item) : undefined
+        }
+        onMouseLeave={
+          customHoverBehavior ? () => customHoverBehavior(null) : undefined
+        }
         style={{
-          cursor: customClickBehavior ? "pointer" : "default"
+          cursor: interactive ? "pointer" : "default",
+          opacity,
+          transition: "opacity 150ms ease",
+          pointerEvents: "all",
         }}
       >
+        {isIsolated && <CheckMark />}
         {renderedType}
         <text y={15} x={30}>
           {item.label}
@@ -58,13 +104,19 @@ const renderLegendGroupVertical = (
 
 const renderLegendGroupHorizontal = (
   legendGroup: LegendGroup,
-  customClickBehavior?: Function
+  customClickBehavior?: Function,
+  customHoverBehavior?: (item: LegendItem | null) => void,
+  highlightedCategory?: string | null,
+  isolatedCategories?: Set<string>
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems = []
   let itemOffset = 0
+  const interactive = !!(customClickBehavior || customHoverBehavior)
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
+    const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
+    const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
     renderedItems.push(
       <g
         key={`legend-item-${i}`}
@@ -72,10 +124,20 @@ const renderLegendGroupHorizontal = (
         onClick={
           customClickBehavior ? () => customClickBehavior(item) : undefined
         }
+        onMouseEnter={
+          customHoverBehavior ? () => customHoverBehavior(item) : undefined
+        }
+        onMouseLeave={
+          customHoverBehavior ? () => customHoverBehavior(null) : undefined
+        }
         style={{
-          cursor: customClickBehavior ? "pointer" : "default"
+          cursor: interactive ? "pointer" : "default",
+          opacity,
+          transition: "opacity 150ms ease",
+          pointerEvents: "all",
         }}
       >
+        {isIsolated && <CheckMark />}
         {renderedType}
         <text y={15} x={25}>
           {item.label}
@@ -91,11 +153,17 @@ const renderLegendGroupHorizontal = (
 const renderVerticalGroup = ({
   legendGroups,
   width,
-  customClickBehavior
+  customClickBehavior,
+  customHoverBehavior,
+  highlightedCategory,
+  isolatedCategories
 }: {
   legendGroups: LegendGroup[]
   width: number
   customClickBehavior?: Function
+  customHoverBehavior?: (item: LegendItem | null) => void
+  highlightedCategory?: string | null
+  isolatedCategories?: Set<string>
 }) => {
   let offset = 30
 
@@ -134,7 +202,7 @@ const renderVerticalGroup = ({
         className="legend-item"
         transform={`translate(0,${offset})`}
       >
-        {renderLegendGroupVertical(l, customClickBehavior)}
+        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)}
       </g>
     )
     offset += l.items.length * 25 + 10
@@ -147,12 +215,18 @@ const renderHorizontalGroup = ({
   legendGroups,
   title,
   height,
-  customClickBehavior
+  customClickBehavior,
+  customHoverBehavior,
+  highlightedCategory,
+  isolatedCategories
 }: {
   legendGroups: LegendGroup[]
   title: string | boolean
   height: number
   customClickBehavior?: Function
+  customHoverBehavior?: (item: LegendItem | null) => void
+  highlightedCategory?: string | null
+  isolatedCategories?: Set<string>
 }) => {
   let offset = 0
 
@@ -175,7 +249,7 @@ const renderHorizontalGroup = ({
       offset += 20
     }
 
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior)
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)
 
     renderedGroups.push(
       <g
@@ -224,6 +298,9 @@ export default function Legend(props: LegendProps) {
   const {
     legendGroups,
     customClickBehavior,
+    customHoverBehavior,
+    highlightedCategory,
+    isolatedCategories,
     title = "Legend",
     width = 100,
     height = 20,
@@ -234,13 +311,19 @@ export default function Legend(props: LegendProps) {
       ? renderVerticalGroup({
           legendGroups,
           width,
-          customClickBehavior
+          customClickBehavior,
+          customHoverBehavior,
+          highlightedCategory,
+          isolatedCategories
         })
       : renderHorizontalGroup({
           legendGroups,
           title,
           height,
-          customClickBehavior
+          customClickBehavior,
+          customHoverBehavior,
+          highlightedCategory,
+          isolatedCategories
         })
 
   return (
