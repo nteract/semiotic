@@ -150,7 +150,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
+    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

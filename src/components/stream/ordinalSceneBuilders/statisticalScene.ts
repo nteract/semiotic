@@ -62,7 +62,7 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, layout: OrdinalLayou
       medianPos: rScale(median),
       q3Pos: rScale(q3),
       maxPos: rScale(whiskerMax),
-      stats: { min: whiskerMin, q1, median, q3, max: whiskerMax },
+      stats: { n: values.length, min: whiskerMin, q1, median, q3, max: whiskerMax, mean: values.reduce((s, v) => s + v, 0) / values.length },
       style,
       datum: col.pieceData,
       category: col.name,

@@ -471,7 +471,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   }, [lineData, gapStrategy, lineDataAccessor, isGap, effectiveGroupAccessor, yAccessor])
 
   // Create color scale if colorBy is specified
-  const colorScale = useColorScale(effectiveData as any[], colorBy, colorScheme)
+  const colorScale = useColorScale(effectiveData as Record<string, any>[], colorBy, colorScheme)
 
   // Legend interaction
   const allCategories = useMemo(() => {
@@ -688,7 +688,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
+    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {

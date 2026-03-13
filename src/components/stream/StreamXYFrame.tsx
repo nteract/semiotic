@@ -27,6 +27,7 @@ import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
+import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
@@ -454,7 +455,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const hoveredNodeRef = useRef<SceneNode | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
 
-    // Staleness state
+    // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
 
     // Marginal data values
@@ -902,22 +903,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, scheduleRender])
 
     // Staleness check timer
-    useEffect(() => {
-      if (!staleness) return
-      const interval = setInterval(() => {
-        const store = storeRef.current
-        if (!store || store.lastIngestTime === 0) return
-        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-        const threshold = staleness.threshold ?? 5000
-        const stale = (now - store.lastIngestTime) > threshold
-        if (stale !== isStale) {
-          setIsStale(stale)
-          dirtyRef.current = true
-          scheduleRender()
-        }
-      }, 1000)
-      return () => clearInterval(interval)
-    }, [staleness, isStale, scheduleRender])
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 

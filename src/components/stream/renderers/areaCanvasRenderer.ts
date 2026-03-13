@@ -23,27 +23,26 @@ function parseColor(color: string): [number, number, number] {
  * Renders AreaSceneNode as filled regions between topPath and bottomPath.
  * Supports both overlapping areas and stacked areas.
  */
+/** Trace the closed area path (top forward + bottom backward) onto the current context. */
+function traceAreaPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): void {
+  ctx.beginPath()
+  ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
+  for (let i = 1; i < node.topPath.length; i++) {
+    ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+  }
+  for (let i = node.bottomPath.length - 1; i >= 0; i--) {
+    ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
+  }
+  ctx.closePath()
+}
+
 export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const areaNodes = nodes.filter((n): n is AreaSceneNode => n.type === "area")
 
   for (const node of areaNodes) {
     if (node.topPath.length < 2) continue
 
-    ctx.beginPath()
-
-    // Draw top path forward
-    const [startX, startY] = node.topPath[0]
-    ctx.moveTo(startX, startY)
-    for (let i = 1; i < node.topPath.length; i++) {
-      ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
-    }
-
-    // Draw bottom path backward to close the area
-    for (let i = node.bottomPath.length - 1; i >= 0; i--) {
-      ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
-    }
-
-    ctx.closePath()
+    traceAreaPath(ctx, node)
 
     // Fill
     const fillColor = node.style.fill || "#4e79a7"
@@ -76,15 +75,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     // Pulse overlay — brightened fill flash when aggregated value changes
     if (node._pulseIntensity && node._pulseIntensity > 0) {
-      ctx.beginPath()
-      ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
-      for (let i = 1; i < node.topPath.length; i++) {
-        ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
-      }
-      for (let i = node.bottomPath.length - 1; i >= 0; i--) {
-        ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
-      }
-      ctx.closePath()
+      traceAreaPath(ctx, node)
       ctx.globalAlpha = node._pulseIntensity * 0.35
       ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
       ctx.fill()

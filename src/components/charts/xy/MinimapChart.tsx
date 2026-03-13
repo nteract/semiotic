@@ -243,10 +243,10 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     renderBefore = false,
     onBrush,
     brushExtent: controlledExtent,
-    frameProps = {}
+    frameProps = {},
+    loading,
+    emptyContent,
   } = props
-
-  const { loading, emptyContent } = props as any
 
   // ── Loading / empty states ──────────────────────────────────────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -417,7 +417,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     showGrid,
     ...(legend && { legend }),
     ...(title && { title }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) || undefined }),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
     ...frameProps

@@ -150,9 +150,9 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,
-    rFormat: valueFormat as any,
+    rFormat: valueFormat,
     showGrid,
-    oSort: sort as any,
+    oSort: sort,
     ...(legend && { legend }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
@@ -162,7 +162,7 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
+    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

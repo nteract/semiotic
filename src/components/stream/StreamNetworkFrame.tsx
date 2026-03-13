@@ -31,6 +31,7 @@ import {
 } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
+import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 
@@ -378,7 +379,7 @@ const StreamNetworkFrame = forwardRef<
 
   const getNodeColor = useCallback(
     (node: RealtimeNode): string => {
-      if (typeof colorBy === "function") return colorBy(node)
+      if (typeof colorBy === "function") return String(colorBy(node))
       if (typeof colorBy === "string" && node.data) {
         const val = node.data[colorBy]
         if (val !== undefined) {
@@ -982,22 +983,7 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Staleness timer ─────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!staleness) return
-    const interval = setInterval(() => {
-      const store = storeRef.current
-      if (!store || store.lastIngestTime === 0) return
-      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-      const threshold = staleness.threshold ?? 5000
-      const stale = (now - store.lastIngestTime) > threshold
-      if (stale !== isStale) {
-        setIsStale(stale)
-        dirtyRef.current = true
-        scheduleRender()
-      }
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [staleness, isStale, scheduleRender])
+  useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
   // ── Tooltip ──────────────────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
 import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode, StreamScales } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
+import { hitTestRect as sharedHitTestRect } from "./hitTestUtils"
 
 export interface HitResult {
   node: SceneNode
@@ -88,20 +89,17 @@ function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | n
 }
 
 function hitTestRect(node: RectSceneNode, px: number, py: number): HitResult | null {
-  if (px >= node.x && px <= node.x + node.w && py >= node.y && py <= node.y + node.h) {
-    // Center of rect
-    const cx = node.x + node.w / 2
-    const cy = node.y + node.h / 2
-    return { node, datum: node.datum, x: cx, y: cy, distance: 0 }
+  const r = sharedHitTestRect(px, py, node)
+  if (r.hit) {
+    return { node, datum: node.datum, x: r.cx, y: r.cy, distance: 0 }
   }
   return null
 }
 
 function hitTestHeatcell(node: HeatcellSceneNode, px: number, py: number): HitResult | null {
-  if (px >= node.x && px <= node.x + node.w && py >= node.y && py <= node.y + node.h) {
-    const cx = node.x + node.w / 2
-    const cy = node.y + node.h / 2
-    return { node, datum: node.datum, x: cx, y: cy, distance: 0 }
+  const r = sharedHitTestRect(px, py, node)
+  if (r.hit) {
+    return { node, datum: node.datum, x: r.cx, y: r.cy, distance: 0 }
   }
   return null
 }

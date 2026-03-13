@@ -388,17 +388,25 @@ export type TooltipProp =
   | TooltipConfig
 
 /**
- * Convert a tooltip prop to the format Semiotic expects
+ * The function signature that Stream Frames expect for tooltipContent.
+ * Compatible with HoverData and any Record-based hover object.
  */
-export function normalizeTooltip(tooltip: TooltipProp): boolean | Function {
+export type TooltipContentFn = (d: Record<string, any>) => React.ReactNode
+
+/**
+ * Convert a tooltip prop to the format Semiotic expects.
+ * Returns `false` to disable, or a `TooltipContentFn` compatible with
+ * all Stream Frame `tooltipContent` signatures.
+ */
+export function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn {
   if (tooltip === true) {
-    // Enable default tooltip
-    return true
+    // Enable default tooltip — return generic Tooltip function
+    return Tooltip()
   }
 
   if (typeof tooltip === "function") {
     // Already a tooltip function, use it as tooltipContent
-    return tooltip
+    return tooltip as TooltipContentFn
   }
 
   if (tooltip === false || tooltip === undefined) {
@@ -412,6 +420,6 @@ export function normalizeTooltip(tooltip: TooltipProp): boolean | Function {
     return Tooltip(config)
   }
 
-  // Should not reach here but return true to enable default tooltip
-  return true
+  // Should not reach here but return a generic tooltip
+  return Tooltip()
 }

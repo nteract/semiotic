@@ -390,7 +390,7 @@ export interface NetworkPipelineConfig {
   showLabels?: boolean
 
   // ── Color ────────────────────────────────────────
-  colorBy?: string | ((d: any) => string)
+  colorBy?: string | ((d: any) => string | number)
   colorScheme?: string | string[]
   edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
   edgeOpacity?: number
@@ -458,7 +458,7 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   // ── Style ────────────────────────────────────────
   nodeStyle?: (d: any) => Record<string, any>
   edgeStyle?: (d: any) => Record<string, any>
-  colorBy?: string | ((d: any) => string)
+  colorBy?: string | ((d: any) => string | number)
   colorScheme?: string | string[]
   edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
   edgeOpacity?: number

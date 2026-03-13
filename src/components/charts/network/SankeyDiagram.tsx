@@ -83,7 +83,7 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     loading,
     emptyContent,
     legendInteraction,
-  } = props as any
+  } = props
 
   const width = resolved.width
   const height = resolved.height

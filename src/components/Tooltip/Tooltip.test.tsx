@@ -175,8 +175,9 @@ describe("MultiLineTooltip with piece hover data", () => {
 })
 
 describe("normalizeTooltip", () => {
-  it("returns true for boolean true", () => {
-    expect(normalizeTooltip(true)).toBe(true)
+  it("returns a default tooltip function for boolean true", () => {
+    const result = normalizeTooltip(true)
+    expect(typeof result).toBe("function")
   })
 
   it("returns false for boolean false", () => {
