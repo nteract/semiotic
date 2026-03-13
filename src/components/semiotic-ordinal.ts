@@ -18,6 +18,7 @@ export { ViolinPlot } from "./charts/ordinal/ViolinPlot"
 export { DotPlot } from "./charts/ordinal/DotPlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
+export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 
 // Stream Frame types
 export type {
