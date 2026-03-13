@@ -8,6 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
+import Tabs from "../../components/Tabs"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -405,45 +406,109 @@ export default function LineChartPage() {
       <p>
         Real-world data often has missing values. The <code>gapStrategy</code> prop
         controls how LineChart handles <code>null</code>, <code>undefined</code>,
-        or <code>NaN</code> values in your y-accessor field.
+        or <code>NaN</code> values in your y-accessor field. Three strategies
+        are available: <strong>break</strong> (default) splits the line at gaps,{" "}
+        <strong>interpolate</strong> connects across them, and{" "}
+        <strong>zero</strong> drops to the baseline.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: gapData,
-          xAccessor: "month",
-          yAccessor: "revenue",
-          lineBy: "product",
-          colorBy: "product",
-          gapStrategy: "break",
-          showPoints: true,
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
-        }}
-        type={LineChart}
-        overrideProps={{
-          data: `[
+      <Tabs tabs={["Break (default)", "Interpolate", "Zero"]}>
+        <div>
+          <p>
+            Splits the line into segments at gap boundaries. Each contiguous run of
+            valid data renders as its own line. This is the safest default — it makes
+            missing data visible rather than hiding it behind a smooth connection.
+          </p>
+          <LiveExample
+            frameProps={{
+              data: gapData,
+              xAccessor: "month",
+              yAccessor: "revenue",
+              lineBy: "product",
+              colorBy: "product",
+              gapStrategy: "break",
+              showPoints: true,
+              xLabel: "Month",
+              yLabel: "Revenue ($)",
+            }}
+            type={LineChart}
+            overrideProps={{
+              data: `[
   { month: 1, revenue: 12000, product: "Widget" },
   { month: 2, revenue: 18000, product: "Widget" },
   { month: 3, revenue: null, product: "Widget" },  // gap
   { month: 4, revenue: null, product: "Widget" },  // gap
   { month: 5, revenue: 19000, product: "Widget" },
   { month: 6, revenue: 27000, product: "Widget" },
-  // ...
 ]`,
-          gapStrategy: '"break"',
-        }}
-        hiddenProps={{}}
-      />
+              gapStrategy: '"break"',
+            }}
+            hiddenProps={{}}
+          />
+        </div>
+        <div>
+          <p>
+            Connects across gaps by skipping missing points. The line draws directly
+            from the last valid value to the next valid value. Use this when the
+            missing values don't represent a meaningful absence — for example,
+            sparse sampling of a continuous signal.
+          </p>
+          <LiveExample
+            frameProps={{
+              data: gapData,
+              xAccessor: "month",
+              yAccessor: "revenue",
+              lineBy: "product",
+              colorBy: "product",
+              gapStrategy: "interpolate",
+              showPoints: true,
+              xLabel: "Month",
+              yLabel: "Revenue ($)",
+            }}
+            type={LineChart}
+            overrideProps={{
+              data: `gapData  // same data with null values`,
+              gapStrategy: '"interpolate"',
+            }}
+            hiddenProps={{}}
+          />
+        </div>
+        <div>
+          <p>
+            Drops to zero at gap boundaries. The line falls to the baseline at the
+            start of a gap and rises back up at the end. Use this for cumulative
+            metrics or event counts where a gap genuinely means "nothing happened."
+          </p>
+          <LiveExample
+            frameProps={{
+              data: gapData,
+              xAccessor: "month",
+              yAccessor: "revenue",
+              lineBy: "product",
+              colorBy: "product",
+              gapStrategy: "zero",
+              showPoints: true,
+              xLabel: "Month",
+              yLabel: "Revenue ($)",
+            }}
+            type={LineChart}
+            overrideProps={{
+              data: `gapData  // same data with null values`,
+              gapStrategy: '"zero"',
+            }}
+            hiddenProps={{}}
+          />
+        </div>
+      </Tabs>
 
       <CodeBlock
-        code={`// Break the line at gaps (default)
+        code={`// Break the line at gaps (default) — makes missing data visible
 <LineChart data={data} gapStrategy="break" />
 
-// Connect across gaps (interpolate through missing values)
+// Connect across gaps — use for sparse but continuous signals
 <LineChart data={data} gapStrategy="interpolate" />
 
-// Drop to zero at gaps
+// Drop to zero at gaps — use for event counts or cumulative metrics
 <LineChart data={data} gapStrategy="zero" />`}
         language="jsx"
       />
@@ -490,51 +555,11 @@ export default function LineChartPage() {
       <h2 id="empty-loading">Empty and Loading States</h2>
 
       <p>
-        All chart components handle empty data and loading states gracefully.
-        When <code>data</code> is an empty array, a centered "No data available"
-        message is shown. Set <code>loading</code> to show a skeleton placeholder
-        while data is being fetched.
+        All chart components support built-in <code>loading</code> and{" "}
+        <code>emptyContent</code> props. See the{" "}
+        <Link to="/features/chart-states">Chart States</Link> page for full
+        documentation and examples.
       </p>
-
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 24 }}>
-        <div>
-          <h4 style={{ marginTop: 0 }}>Empty State</h4>
-          <LineChart data={[]} xAccessor="x" yAccessor="y" width={280} height={200} />
-        </div>
-        <div>
-          <h4 style={{ marginTop: 0 }}>Loading Skeleton</h4>
-          <LineChart data={[]} loading width={280} height={200} />
-        </div>
-        <div>
-          <h4 style={{ marginTop: 0 }}>Custom Empty Content</h4>
-          <LineChart
-            data={[]}
-            width={280}
-            height={200}
-            emptyContent={
-              <span style={{ color: "#888" }}>No results match your filters</span>
-            }
-          />
-        </div>
-      </div>
-
-      <CodeBlock
-        code={`// Empty state (automatic)
-<LineChart data={[]} xAccessor="x" yAccessor="y" />
-
-// Loading skeleton
-<LineChart data={[]} loading />
-
-// Custom empty content
-<LineChart
-  data={[]}
-  emptyContent={<span>No results match your filters</span>}
-/>
-
-// Disable the default empty message
-<LineChart data={[]} emptyContent={false} />`}
-        language="jsx"
-      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

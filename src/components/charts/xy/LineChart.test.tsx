@@ -268,9 +268,9 @@ describe("LineChart", () => {
         </TooltipProvider>
       )
       const forwarded = lastXYFrameProps.data as Record<string, any>[]
-      // Interpolate passes data through (filtering happens downstream in SceneGraph),
-      // so all 3 points are forwarded
-      expect(forwarded.length).toBe(3)
+      // Interpolate filters out null points so the line connects across gaps
+      expect(forwarded.length).toBe(2)
+      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
     })
   })
 

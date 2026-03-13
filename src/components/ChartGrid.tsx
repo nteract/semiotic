@@ -1,6 +1,8 @@
 "use client"
 import * as React from "react"
 
+export type ChartEmphasis = "primary" | "secondary"
+
 export interface ChartGridProps {
   /** Chart components to arrange in the grid */
   children: React.ReactNode
@@ -23,15 +25,16 @@ export interface ChartGridProps {
  * Each cell automatically gets `responsiveWidth` behavior since the grid
  * manages the cell dimensions.
  *
- * Works naturally with `LinkedCharts` for coordinated views:
+ * Children can set `emphasis="primary"` to span two columns and receive
+ * higher visual weight, following the F-pattern reading layout recommended
+ * by Carbon Design guidelines.
  *
  * ```tsx
- * <LinkedCharts>
- *   <ChartGrid columns={2}>
- *     <LineChart data={d} xAccessor="x" yAccessor="y" responsiveWidth />
- *     <BarChart data={d} categoryAccessor="cat" valueAccessor="val" responsiveWidth />
- *   </ChartGrid>
- * </LinkedCharts>
+ * <ChartGrid columns={2}>
+ *   <LineChart data={d} emphasis="primary" responsiveWidth />
+ *   <BarChart data={d} responsiveWidth />
+ *   <ScatterChart data={d} responsiveWidth />
+ * </ChartGrid>
  * ```
  */
 export function ChartGrid({
@@ -42,6 +45,7 @@ export function ChartGrid({
   className,
   style,
 }: ChartGridProps) {
+  const numColumns = typeof columns === "number" ? columns : undefined
   const gridTemplateColumns =
     columns === "auto"
       ? `repeat(auto-fill, minmax(${minCellWidth}px, 1fr))`
@@ -58,7 +62,18 @@ export function ChartGrid({
         ...style,
       }}
     >
-      {children}
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return child
+        const emphasis = (child.props as any).emphasis as ChartEmphasis | undefined
+        if (emphasis === "primary" && (numColumns === undefined || numColumns >= 2)) {
+          return (
+            <div style={{ gridColumn: "span 2" }}>
+              {child}
+            </div>
+          )
+        }
+        return child
+      })}
     </div>
   )
 }

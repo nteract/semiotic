@@ -766,6 +766,26 @@ export function createDefaultAnnotationRules(
         )
       }
 
+      // ── Text (plain label at data coordinates) ──────────────────────
+      case "text": {
+        const px = resolveX(ann, context)
+        const py = resolveY(ann, context)
+        if (px == null || py == null) return null
+        return (
+          <text
+            key={`ann-text-${index}`}
+            x={px + (ann.dx || 0)}
+            y={py + (ann.dy || 0)}
+            fill={ann.color || "var(--semiotic-text, #333)"}
+            fontSize={ann.fontSize || 11}
+            dominantBaseline="middle"
+            style={{ fontFamily: "inherit" }}
+          >
+            {ann.label}
+          </text>
+        )
+      }
+
       // ── Unrecognized type ─────────────────────────────────────────────
       default:
         return null

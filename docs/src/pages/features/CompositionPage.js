@@ -1,7 +1,7 @@
 import React from "react"
 import {
   LineChart, BarChart, Scatterplot, Treemap,
-  ChartGrid, ContextLayout, CategoryColorProvider, LinkedCharts,
+  ChartGrid, ContextLayout, CategoryColorProvider, LinkedCharts
 } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
@@ -166,6 +166,80 @@ export default function CompositionPage() {
   <LineChart ... responsiveWidth />
   <BarChart ... responsiveWidth />
   <Scatterplot ... responsiveWidth />
+</ChartGrid>`}
+        language="jsx"
+      />
+
+      {/* ================================================================= */}
+      {/* Emphasis */}
+      {/* ================================================================= */}
+      <h2 id="emphasis">Visual Hierarchy with Emphasis</h2>
+
+      <p>
+        Following Carbon Design guidelines, the most important chart in a dashboard
+        should have the highest contrast and occupy the largest area. Set{" "}
+        <code>emphasis="primary"</code> on a chart inside a <code>ChartGrid</code>{" "}
+        to have it span two columns, creating a natural F-pattern reading layout.
+      </p>
+
+      <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+        <LinkedCharts>
+          <ChartGrid columns={2} gap={16}>
+            <LineChart
+              data={lineData}
+              xAccessor="month"
+              yAccessor="revenue"
+              lineBy="region"
+              colorBy="region"
+              emphasis="primary"
+              showLegend={false}
+              xLabel="Month"
+              yLabel="Revenue"
+              linkedHover={{ name: "emph", fields: ["region"] }}
+              selection={{ name: "emph" }}
+              responsiveWidth
+              height={300}
+            />
+            <BarChart
+              data={barData}
+              categoryAccessor="region"
+              valueAccessor="total"
+              colorBy="region"
+              showLegend={false}
+              linkedHover={{ name: "emph", fields: ["region"] }}
+              selection={{ name: "emph" }}
+              responsiveWidth
+              height={250}
+            />
+            <Scatterplot
+              data={scatterData}
+              xAccessor="x"
+              yAccessor="y"
+              colorBy="region"
+              showLegend={false}
+              linkedHover={{ name: "emph", fields: ["region"] }}
+              selection={{ name: "emph" }}
+              responsiveWidth
+              height={250}
+            />
+          </ChartGrid>
+        </LinkedCharts>
+      </CategoryColorProvider>
+
+      <CodeBlock
+        code={`import { ChartGrid, LineChart, BarChart, Scatterplot } from "semiotic"
+
+<ChartGrid columns={2}>
+  {/* Primary chart spans both columns */}
+  <LineChart
+    data={timeSeries}
+    emphasis="primary"
+    responsiveWidth
+    height={300}
+  />
+  {/* Secondary charts fill the second row */}
+  <BarChart data={totals} responsiveWidth height={250} />
+  <Scatterplot data={scatter} responsiveWidth height={250} />
 </ChartGrid>`}
         language="jsx"
       />

@@ -65,6 +65,7 @@ import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
 import ChartContainersPage from "./pages/features/ChartContainersPage"
+import ChartStatesPage from "./pages/features/ChartStatesPage"
 import ChartModesPage from "./pages/features/ChartModesPage"
 import ObservationHooksPage from "./pages/features/ObservationHooksPage"
 import SerializationPage from "./pages/features/SerializationPage"
@@ -330,6 +331,7 @@ export default function DocsApp() {
               <Route path="legends" element={<LegendsPage />} />
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
               <Route path="chart-container" element={<ChartContainersPage />} />
+              <Route path="chart-states" element={<ChartStatesPage />} />
               <Route path="chart-modes" element={<ChartModesPage />} />
               <Route path="observation-hooks" element={<ObservationHooksPage />} />
               <Route path="serialization" element={<SerializationPage />} />
