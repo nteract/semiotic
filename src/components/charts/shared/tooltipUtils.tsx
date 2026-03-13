@@ -4,7 +4,7 @@ import type { HoverData } from "../../realtime/types"
 
 export interface TooltipFieldConfig {
   label: string
-  accessor: string | ((d: Record<string, any>) => any)
+  accessor: string | ((d: any) => any)
   role?: "x" | "y" | "color" | "size" | "group" | "value"
 }
 

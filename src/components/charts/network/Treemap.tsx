@@ -108,7 +108,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
-  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
+  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
 
   // Legend interaction
   const allCategories = useMemo(() => {
@@ -188,7 +188,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       padding={paddingProp}
       paddingTop={resolvedPaddingTop}
       nodeStyle={nodeStyle}
-      colorBy={colorBy as any}
+      colorBy={colorBy}
       colorScheme={colorScheme}
       colorByDepth={colorByDepth}
       nodeLabel={showLabels ? (nodeLabel || nodeIdAccessor) : undefined}

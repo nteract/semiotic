@@ -34,7 +34,7 @@ export function resolveAccessor<T = any>(
  */
 export function useColorScale(
   data: Array<Record<string, any>>,
-  colorBy: Accessor<string> | undefined,
+  colorBy: string | ((d: any, i?: number) => any) | undefined,
   colorScheme: string | string[] = "category10"
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()

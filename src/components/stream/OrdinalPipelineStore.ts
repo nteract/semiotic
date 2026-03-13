@@ -793,17 +793,18 @@ export class OrdinalPipelineStore {
       ? rawT
       : 1 - Math.pow(1 - rawT, 3)
 
-    for (const node of this.scene) {
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
       if (node.type === "point") {
         if (node._targetX === undefined) continue
-        const key = `p:${0}`
+        const key = `p:${i}`
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
         node.x = prev.x + (node._targetX - prev.x) * t
         node.y = prev.y + (node._targetY! - prev.y) * t
       } else if (node.type === "rect") {
         if (node._targetX === undefined) continue
-        const key = `r:${node.group || ""}:${node.datum?.category ?? 0}`
+        const key = `r:${node.group || ""}:${node.datum?.category ?? i}`
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
         node.x = prev.x + (node._targetX - prev.x) * t

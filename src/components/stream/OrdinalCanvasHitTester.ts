@@ -1,5 +1,6 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode, HoverData } from "./types"
+import { hitTestRect as sharedHitTestRect, normalizeAngle } from "./hitTestUtils"
 
 export interface OrdinalHitResult {
   datum: any
@@ -50,10 +51,11 @@ export function findNearestOrdinalNode(
 }
 
 function hitTestRect(node: RectSceneNode, px: number, py: number): OrdinalHitResult | null {
-  if (px >= node.x && px <= node.x + node.w && py >= node.y && py <= node.y + node.h) {
+  const r = sharedHitTestRect(px, py, node)
+  if (r.hit) {
     return {
       datum: node.datum,
-      x: node.x + node.w / 2,
+      x: r.cx,
       y: node.y,
       distance: 0,
       category: node.group
@@ -89,14 +91,11 @@ function hitTestWedge(node: WedgeSceneNode, px: number, py: number): OrdinalHitR
 
   // Check angle bounds
   // atan2 returns [-π, π], normalize to [0, 2π]
-  let angle = Math.atan2(dy, dx)
-  if (angle < 0) angle += Math.PI * 2
+  const angle = normalizeAngle(Math.atan2(dy, dx))
 
   // Normalize start/end angles to [0, 2π]
-  let start = node.startAngle % (Math.PI * 2)
-  let end = node.endAngle % (Math.PI * 2)
-  if (start < 0) start += Math.PI * 2
-  if (end < 0) end += Math.PI * 2
+  const start = normalizeAngle(node.startAngle)
+  const end = normalizeAngle(node.endAngle)
 
   // Check if angle is within the arc
   const inArc = start <= end
@@ -119,11 +118,6 @@ function hitTestWedge(node: WedgeSceneNode, px: number, py: number): OrdinalHitR
 
 function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): OrdinalHitResult | null {
   const halfWidth = node.columnWidth / 2
-  const statsWithN = node.stats ? {
-    ...node.stats,
-    n: Array.isArray(node.datum) ? node.datum.length : 0,
-    mean: (node.stats.q1 + node.stats.median + node.stats.q3) / 3  // approximate from quartiles
-  } : undefined
 
   if (node.projection === "vertical") {
     const left = node.x - halfWidth
@@ -138,7 +132,7 @@ function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): Ordinal
         y: node.medianPos,
         distance: 0,
         category: node.category,
-        stats: statsWithN
+        stats: node.stats
       }
     }
   } else {
@@ -154,7 +148,7 @@ function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): Ordinal
         y: node.y,
         distance: 0,
         category: node.category,
-        stats: statsWithN
+        stats: node.stats
       }
     }
   }

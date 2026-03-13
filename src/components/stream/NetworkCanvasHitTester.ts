@@ -6,6 +6,7 @@ import type {
   NetworkArcNode,
   NetworkBezierEdge
 } from "./networkTypes"
+import { hitTestRect as sharedHitTestRect, normalizeAngle } from "./hitTestUtils"
 
 export interface NetworkHitResult {
   type: "node" | "edge"
@@ -110,17 +111,13 @@ function hitTestRect(
   px: number,
   py: number
 ): NetworkHitResult | null {
-  if (
-    px >= node.x &&
-    px <= node.x + node.w &&
-    py >= node.y &&
-    py <= node.y + node.h
-  ) {
+  const r = sharedHitTestRect(px, py, node)
+  if (r.hit) {
     return {
       type: "node",
       datum: node.datum,
-      x: node.x + node.w / 2,
-      y: node.y + node.h / 2,
+      x: r.cx,
+      y: r.cy,
       distance: 0
     }
   }
@@ -141,23 +138,14 @@ function hitTestArc(
   if (radius < node.innerR - 2 || radius > node.outerR + 2) return null
 
   // Check angle bounds
-  let angle = Math.atan2(dy, dx)
-  // Normalize angle to be positive
-  if (angle < 0) angle += Math.PI * 2
+  const angle = normalizeAngle(Math.atan2(dy, dx))
 
-  let start = node.startAngle
-  let end = node.endAngle
-  // Normalize start/end angles
-  if (start < 0) start += Math.PI * 2
-  if (end < 0) end += Math.PI * 2
+  const start = normalizeAngle(node.startAngle)
+  const end = normalizeAngle(node.endAngle)
 
-  let inArc: boolean
-  if (start <= end) {
-    inArc = angle >= start && angle <= end
-  } else {
-    // Wraps around 0
-    inArc = angle >= start || angle <= end
-  }
+  const inArc = start <= end
+    ? angle >= start && angle <= end
+    : angle >= start || angle <= end
 
   if (inArc) {
     const midAngle = (node.startAngle + node.endAngle) / 2
@@ -172,6 +160,21 @@ function hitTestArc(
   }
 
   return null
+}
+
+// ── Shared offscreen canvas for isPointInPath checks ────────────────────
+
+let _hitCanvas: HTMLCanvasElement | null = null
+let _hitCtx: CanvasRenderingContext2D | null = null
+
+function getHitContext(): CanvasRenderingContext2D | null {
+  if (!_hitCtx) {
+    _hitCanvas = document.createElement("canvas")
+    _hitCanvas.width = 1
+    _hitCanvas.height = 1
+    _hitCtx = _hitCanvas.getContext("2d")
+  }
+  return _hitCtx
 }
 
 // ── Edge hit testing ────────────────────────────────────────────────────
@@ -205,11 +208,7 @@ function hitTestBezierEdge(
 
   try {
     const path = new Path2D(edge.pathD)
-    // Create an offscreen canvas context for isPointInPath
-    // For performance, use a simple bounding-box approximation
-    // and rely on the filled path test
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
+    const ctx = getHitContext()
     if (!ctx) return null
 
     if (ctx.isPointInPath(path, px, py)) {
@@ -281,8 +280,7 @@ function hitTestPathEdge(
 
   try {
     const path = new Path2D(edge.pathD)
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
+    const ctx = getHitContext()
     if (!ctx) return null
 
     if (ctx.isPointInPath(path, px, py)) {

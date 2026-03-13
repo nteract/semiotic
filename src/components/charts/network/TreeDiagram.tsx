@@ -90,7 +90,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
-  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
+  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
 
   // Legend interaction
   const allCategories = useMemo(() => {
@@ -159,7 +159,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       edgeType={edgeStyle}
       nodeStyle={nodeStyleFn}
       edgeStyle={edgeStyleFn}
-      colorBy={colorBy as any}
+      colorBy={colorBy}
       colorScheme={colorScheme}
       colorByDepth={colorByDepth}
       nodeSize={nodeSize}

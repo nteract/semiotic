@@ -73,7 +73,7 @@ export interface BoxplotSceneNode {
   medianPos: number
   q3Pos: number
   maxPos: number
-  stats: { min: number; q1: number; median: number; q3: number; max: number }
+  stats: DistributionStats
   style: Style
   datum: any
   category?: string
@@ -188,8 +188,8 @@ export interface OrdinalPipelineConfig {
   showIQR?: boolean
   amplitude?: number
 
-  // Sort
-  oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc"
+  // Sort — comparator receives category names (strings)
+  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc"
 
   // Connectors
   connectorAccessor?: string | ((d: any) => string)
@@ -258,8 +258,8 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   oExtent?: string[]
   extentPadding?: number
 
-  // Sort
-  oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc"
+  // Sort — comparator receives category names (strings)
+  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc"
 
   // Streaming
   arrowOfTime?: ArrowOfTime
@@ -281,7 +281,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   oLabel?: string
   rLabel?: string
   oFormat?: (d: string) => string
-  rFormat?: (d: number) => string
+  rFormat?: (d: number | string) => string
 
   // Interaction
   enableHover?: boolean

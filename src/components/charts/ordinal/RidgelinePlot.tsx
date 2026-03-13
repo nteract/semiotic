@@ -155,20 +155,18 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,
-    rFormat: valueFormat as any,
+    rFormat: valueFormat,
     showGrid,
     oSort: false,
+    amplitude,
     ...(legend && { legend }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
+    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
-  } as any
-
-  // Pass amplitude through (not in typed props, handled by store cast)
-  ;(streamProps as any).amplitude = amplitude
+  }
 
   return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
 }

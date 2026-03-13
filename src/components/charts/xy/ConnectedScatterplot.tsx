@@ -283,7 +283,7 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
     { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
     { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
-    ...(orderAccessor ? [{ label: resolvedOrderLabel, accessor: orderAccessor as any, role: "group" as const }] : []),
+    ...(orderAccessor ? [{ label: resolvedOrderLabel, accessor: orderAccessor, role: "group" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, orderAccessor, resolvedOrderLabel])
 
   // ── Validate ──────────────────────────────────────────────────────────
@@ -323,7 +323,7 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     showGrid,
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
+    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     annotations: allAnnotations,

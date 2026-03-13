@@ -234,7 +234,7 @@ function tickNodes(
 export function OrbitDiagram<TDatum extends Record<string, any> = Record<string, any>>(
   props: OrbitDiagramProps<TDatum>
 ) {
-  const resolved = useChartMode(props.mode as any, {
+  const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
@@ -318,7 +318,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     return flat
   }, [data, childrenFn])
 
-  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
+  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
 
   // ── Layout ────────────────────────────────────────────────────────────
 

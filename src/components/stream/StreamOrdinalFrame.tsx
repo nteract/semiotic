@@ -26,6 +26,7 @@ import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
+import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
@@ -610,22 +611,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, scheduleRender])
 
     // Staleness check timer
-    useEffect(() => {
-      if (!staleness) return
-      const interval = setInterval(() => {
-        const store = storeRef.current
-        if (!store || store.lastIngestTime === 0) return
-        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-        const threshold = staleness.threshold ?? 5000
-        const stale = (now - store.lastIngestTime) > threshold
-        if (stale !== isStale) {
-          setIsStale(stale)
-          dirtyRef.current = true
-          scheduleRender()
-        }
-      }, 1000)
-      return () => clearInterval(interval)
-    }, [staleness, isStale, scheduleRender])
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 

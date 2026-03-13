@@ -18,25 +18,7 @@ function sampleRows(data: any[]): any[] {
   return [data[0], data[mid], data[data.length - 1]]
 }
 
-/** Levenshtein edit distance between two strings */
-function levenshtein(a: string, b: string): number {
-  const m = a.length
-  const n = b.length
-  const dp: number[] = new Array(n + 1)
-  for (let j = 0; j <= n; j++) dp[j] = j
-  for (let i = 1; i <= m; i++) {
-    let prev = dp[0]
-    dp[0] = i
-    for (let j = 1; j <= n; j++) {
-      const tmp = dp[j]
-      dp[j] = a[i - 1] === b[j - 1]
-        ? prev
-        : 1 + Math.min(prev, dp[j], dp[j - 1])
-      prev = tmp
-    }
-  }
-  return dp[n]
-}
+import { closestMatch } from "./stringDistance"
 
 /** Find the closest match to a string from a list of candidates */
 function suggestField(target: string, available: string[]): string | null {
@@ -46,16 +28,7 @@ function suggestField(target: string, available: string[]): string | null {
   const sub = available.find(k => k.toLowerCase().includes(lower) || lower.includes(k.toLowerCase()))
   if (sub) return sub
   // Levenshtein distance match (max 3 edits)
-  let best: string | null = null
-  let bestDist = 4
-  for (const c of available) {
-    const d = levenshtein(lower, c.toLowerCase())
-    if (d < bestDist) {
-      bestDist = d
-      best = c
-    }
-  }
-  return best
+  return closestMatch(target, available, 3) ?? null
 }
 
 interface ArrayDataValidation {
