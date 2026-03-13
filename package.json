@@ -156,6 +156,7 @@
     "@typescript-eslint/eslint-plugin": "^5.4.6",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/ui": "^4.0.18",
+    "jsdom": "^26.1.0",
     "d3-dsv": "1.0.5",
     "d3-flextree-v4": "^1.0.1",
     "eslint": "^8.0.0",
