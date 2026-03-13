@@ -250,9 +250,9 @@ for color, size, aggregation, and binning.
 Import only what you need:
 
 ```jsx
-import { LineChart } from "semiotic/xy"                 // 123 KB
-import { BarChart } from "semiotic/ordinal"              // 118 KB
-import { ForceDirectedGraph } from "semiotic/network"    // 127 KB
+import { LineChart } from "semiotic/xy"                 // 124 KB
+import { BarChart } from "semiotic/ordinal"              // 100 KB
+import { ForceDirectedGraph } from "semiotic/network"    // 104 KB
 import { LineChart } from "semiotic/ai"                  // HOC-only surface for AI generation
 ```
 

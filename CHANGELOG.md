@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-03-12
+
+### Added
+
+- **`emphasis` prop** — all charts accept `emphasis="primary" | "secondary"`. `ChartGrid` detects `emphasis="primary"` on children and spans them across two grid columns for F-pattern dashboard layouts.
+- **`directLabel` rendering** — new `"text"` annotation type in `annotationRules.tsx` so `directLabel` labels actually render. Automatic right margin expansion prevents label clipping.
+- **`gapStrategy` fixes** — `"break"` now correctly splits lines at null boundaries using synthetic `_gapSegment` group keys. `"interpolate"` filters gap points in the HOC before data enters the pipeline, preventing `resolveAccessor`'s unary `+` from coercing `null` to `0`.
+- **Chart States docs page** (`/features/chart-states`) — dedicated page for empty, loading, and error state documentation. Moved from LineChart and ChartContainer pages.
+- **Gap strategy tabs** — consolidated three separate subsections in LineChart docs into a tabbed interface.
+- **Tabs component** — reusable tab switcher for docs pages.
+
+### Changed
+
+- **Export default format** — `exportChart()` now defaults to PNG instead of SVG. PNG export composites the canvas data layer underneath the SVG overlay, producing a complete chart image. SVG export only captures the overlay (axes, labels).
+- **Type widening** — eliminated `as any` casts at HOC/Frame boundaries by widening `rFormat`, `oSort`, `colorBy`, and `TooltipFieldConfig.accessor` types in stream type definitions.
+
+### Fixed
+
+- **Export captured only axes** — PNG export now finds the `<canvas>` element and draws it as the base layer before compositing the SVG overlay on top.
+- **`directLabel` annotations silently dropped** — `type: "text"` was not a recognized annotation type; it fell through to the default case and returned `null`.
+- **`gapStrategy="break"` drew lines through gaps** — flattening re-merged segments because the Frame re-grouped by the original `groupAccessor`.
+- **`gapStrategy="interpolate"` dropped to zero** — `resolveAccessor` used `+(d)[key]` which converted `null` to `0`.
+- **`colorBy` type mismatch in network charts** — hierarchy charts that color by depth index returned a number, but the type expected a string. Added `String()` coercion.
+- **Duplicate `amplitude` property** in `StreamOrdinalFrameProps`.
+
 ## [3.0.0] - 2026-03-10
 
 Complete rewrite of Semiotic. Stream-first canvas architecture, 28 HOC chart
@@ -165,7 +190,7 @@ const svg = renderToStaticSVG("xy", {
 - `useChartObserver` — aggregates observations across LinkedCharts
 - `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX` — chart serialization
 - `fromVegaLite(spec)` — translate Vega-Lite specs to Semiotic configs
-- `exportChart()` — download charts as SVG or PNG
+- `exportChart()` — download charts as PNG (default) or SVG
 - `ChartErrorBoundary` — React error boundary
 - `DetailsPanel` — click-driven detail panel inside `ChartContainer`
 - Data transform helpers (`semiotic/data`): `bin`, `rollup`, `groupBy`, `pivot`
