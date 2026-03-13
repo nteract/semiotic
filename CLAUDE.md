@@ -12,7 +12,7 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip`, `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate")
+`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip`, `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `emphasis` ("primary"|"secondary")
 
 ## XY Charts (`semiotic/xy`)
 
@@ -75,7 +75,7 @@ Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `
 
 ## Layout & Composition
 
-**ChartGrid** — CSS Grid layout. `columns` (number|"auto"), `minCellWidth` (300), `gap` (16)
+**ChartGrid** — CSS Grid layout. `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). Children with `emphasis="primary"` span two columns.
 **ContextLayout** — primary + context panel. `context` (ReactNode), `position`, `contextSize` (250)
 
 ## Key Patterns
@@ -129,7 +129,7 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - `validateProps(componentName, props)` — prop validation with Levenshtein typo suggestions
 - `diagnoseConfig(componentName, props)` — anti-pattern detector (12 checks: empty data, bad dimensions, missing accessors, margin overflow, etc.)
 - `ChartErrorBoundary` — error boundary
-- `exportChart(el, { format: "png"|"svg" })` — browser export
+- `exportChart(el, { format: "png"|"svg" })` — browser export (default: PNG, composites canvas + SVG layers)
 - `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
 
 ## Differentiators
