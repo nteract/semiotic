@@ -176,6 +176,15 @@ async function createBundle(options = {}) {
 
 function buildDeclarations() {
   execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
+  // Copy entry-point declarations from dist/components/ to dist/ so package.json
+  // "types" fields resolve correctly (tsc emits into dist/components/ due to rootDir)
+  const entryPoints = [
+    "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
+    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server"
+  ]
+  for (const name of entryPoints) {
+    try { copyFileSync(`dist/components/${name}.d.ts`, `dist/${name}.d.ts`) } catch { /* may not exist */ }
+  }
   console.log("\u2705 declarations emitted")
 }
 
