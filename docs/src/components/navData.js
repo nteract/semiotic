@@ -90,6 +90,7 @@ const navData = [
       { title: "Legends", path: "/features/legends" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
       { title: "Chart Container", path: "/features/chart-container" },
+      { title: "Chart States", path: "/features/chart-states" },
       { title: "Chart Modes", path: "/features/chart-modes" },
       { title: "AI Observation Hooks", path: "/features/observation-hooks" },
       { title: "Serialization", path: "/features/serialization" },

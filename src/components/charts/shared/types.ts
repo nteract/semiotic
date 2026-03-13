@@ -77,6 +77,9 @@ export interface BaseChartProps {
   loading?: boolean
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: React.ReactNode | false
+
+  /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
+  emphasis?: "primary" | "secondary"
 }
 
 /**

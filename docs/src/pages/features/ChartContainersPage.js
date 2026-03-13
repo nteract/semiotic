@@ -333,6 +333,13 @@ export default function ChartContainersPage() {
         language="jsx"
       />
 
+      <p>
+        Individual charts also support built-in <code>loading</code> and{" "}
+        <code>emptyContent</code> props. See{" "}
+        <Link to="/features/chart-states">Chart States</Link> for full
+        documentation on empty, loading, and error patterns.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Status badge */}
       {/* ----------------------------------------------------------------- */}

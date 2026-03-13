@@ -1,5 +1,10 @@
 /**
- * Export a semiotic chart to SVG or PNG from the browser.
+ * Export a semiotic chart to PNG (default) or SVG from the browser.
+ *
+ * PNG export composites the canvas data layer underneath the SVG overlay,
+ * producing a complete image. SVG export captures only the SVG overlay
+ * (axes, labels, annotations) since canvas content cannot be represented
+ * as SVG.
  *
  * @example
  * ```tsx
@@ -11,14 +16,14 @@
 export async function exportChart(
   container: HTMLElement,
   options?: {
-    format?: "svg" | "png"       // default "svg"
+    format?: "svg" | "png"       // default "png"
     filename?: string            // default "chart"
     scale?: number               // default 2 (for PNG retina)
     background?: string          // default "white"
   }
 ): Promise<void> {
   const {
-    format = "svg",
+    format = "png",
     filename = "chart",
     scale = 2,
     background = "white"
@@ -56,10 +61,27 @@ export async function exportChart(
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
     downloadBlob(blob, `${filename}.svg`)
   } else {
-    // PNG: render SVG to canvas
+    // PNG: composite canvas data layer + SVG overlay
     const width = bbox.width * scale
     const height = bbox.height * scale
 
+    const exportCanvas = document.createElement("canvas")
+    exportCanvas.width = width
+    exportCanvas.height = height
+    const ctx = exportCanvas.getContext("2d")!
+
+    // Fill background
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, width, height)
+    ctx.scale(scale, scale)
+
+    // Layer 1: Draw the data canvas (contains all rendered marks)
+    const dataCanvas = container.querySelector("canvas")
+    if (dataCanvas) {
+      ctx.drawImage(dataCanvas, 0, 0, bbox.width, bbox.height)
+    }
+
+    // Layer 2: Draw the SVG overlay (axes, labels, annotations) on top
     const serializer = new XMLSerializer()
     const svgString = serializer.serializeToString(clone)
     const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
@@ -71,20 +93,9 @@ export async function exportChart(
 
     await new Promise<void>((resolve, reject) => {
       img.onload = () => {
-        const canvas = document.createElement("canvas")
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext("2d")!
-
-        // Fill background
-        ctx.fillStyle = background
-        ctx.fillRect(0, 0, width, height)
-
-        // Scale and draw
-        ctx.scale(scale, scale)
         ctx.drawImage(img, 0, 0)
 
-        canvas.toBlob((blob) => {
+        exportCanvas.toBlob((blob) => {
           if (blob) {
             downloadBlob(blob, `${filename}.png`)
             resolve()

@@ -412,44 +412,74 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   }, [effectiveData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat])
 
   // Apply gap strategy to line data
-  const gapProcessedLineData = useMemo(() => {
+  //
+  // "break" splits each line into separate segment objects with unique group
+  //   keys so the Frame renders them as independent lines (with gaps between).
+  // "interpolate" filters out null points so the line connects across gaps.
+  //   Filtering must happen here because the pipeline accessor coerces null→0.
+  // "zero" replaces null y-values with 0 so the line drops to the baseline.
+  //
+  // hasGaps tracks whether any null/NaN values were found, so we only switch
+  // the group accessor to _gapSegment when gaps actually exist (avoids
+  // interfering with forecast segmentation or normal grouping).
+  const { gapProcessedLineData, hasGaps } = useMemo(() => {
     if (gapStrategy === "interpolate") {
-      // Just filter out gaps — the pipeline already skips null/NaN in SceneGraph
-      return lineData
+      // Filter out gap points from each line's coordinates so the line
+      // connects directly from the last valid point to the next valid one.
+      // We can't rely on SceneGraph filtering because resolveAccessor uses
+      // unary + which converts null→0 before SceneGraph ever sees it.
+      let found = false
+      const result: Record<string, any>[] = []
+      for (const line of lineData) {
+        const coords: Record<string, any>[] = line[lineDataAccessor] || []
+        const filtered = coords.filter(d => {
+          if (isGap(d)) { found = true; return false }
+          return true
+        })
+        if (filtered.length > 0) {
+          result.push({ ...line, [lineDataAccessor]: filtered })
+        }
+      }
+      return { gapProcessedLineData: result, hasGaps: found }
     }
 
     if (gapStrategy === "break") {
-      // Split each line into segments at gap boundaries
+      // Split each line into segments at gap boundaries. Each segment gets
+      // a unique _gapSegment key injected into its coordinates so that when
+      // the data is flattened and re-grouped by the Frame, segments stay separate.
+      let found = false
       const result: Record<string, any>[] = []
       for (const line of lineData) {
         const coords: Record<string, any>[] = line[lineDataAccessor] || []
         let segment: Record<string, any>[] = []
         let segIdx = 0
+        const groupVal = effectiveGroupAccessor && typeof effectiveGroupAccessor === "string"
+          ? line[effectiveGroupAccessor]
+          : undefined
 
         for (const d of coords) {
           if (isGap(d)) {
+            found = true
             if (segment.length > 0) {
-              const segLine = { ...line, [lineDataAccessor]: segment }
-              if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
-                segLine[effectiveGroupAccessor] = line[effectiveGroupAccessor]
-              }
-              result.push(segLine)
+              result.push({ ...line, [lineDataAccessor]: segment })
               segment = []
               segIdx++
             }
           } else {
-            segment.push(d)
+            const segKey = groupVal != null ? `${groupVal}__seg${segIdx}` : `__seg${segIdx}`
+            segment.push({ ...d, _gapSegment: segKey })
           }
         }
         if (segment.length > 0) {
           result.push({ ...line, [lineDataAccessor]: segment })
         }
       }
-      return result
+      return { gapProcessedLineData: result, hasGaps: found }
     }
 
     if (gapStrategy === "zero") {
-      // Insert zero-valued points at gap boundaries
+      // Replace null y-values with 0 so the line drops to the baseline
+      let found = false
       const yField = typeof yAccessor === "string" ? yAccessor : "y"
       const result: Record<string, any>[] = []
       for (const line of lineData) {
@@ -457,6 +487,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
         const processed: Record<string, any>[] = []
         for (const d of coords) {
           if (isGap(d)) {
+            found = true
             processed.push({ ...d, [yField]: 0 })
           } else {
             processed.push(d)
@@ -464,10 +495,10 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
         }
         result.push({ ...line, [lineDataAccessor]: processed })
       }
-      return result
+      return { gapProcessedLineData: result, hasGaps: found }
     }
 
-    return lineData
+    return { gapProcessedLineData: lineData, hasGaps: false }
   }, [lineData, gapStrategy, lineDataAccessor, isGap, effectiveGroupAccessor, yAccessor])
 
   // Create color scale if colorBy is specified
@@ -608,14 +639,29 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // Suppress legend when directLabel is active (unless explicitly overridden)
   const effectiveShowLegend = directLabel && showLegend === undefined ? false : showLegend
 
-  // Legend + margin
+  // Legend + margin — add extra right/left margin for direct labels
+  const directLabelMarginDefaults = useMemo(() => {
+    if (!directLabel) return resolved.marginDefaults
+    // Estimate the widest label to calculate needed margin
+    const maxLabelWidth = directLabelAnnotations.reduce((max, a) => {
+      const est = (a.label?.length || 0) * (directLabelFontSize * 0.6)
+      return Math.max(max, est)
+    }, 0)
+    const extra = maxLabelWidth + 10
+    const side = directLabelPosition === "end" ? "right" : "left"
+    return {
+      ...resolved.marginDefaults,
+      [side]: Math.max(resolved.marginDefaults[side] || 0, extra),
+    }
+  }, [directLabel, directLabelAnnotations, directLabelFontSize, directLabelPosition, resolved.marginDefaults])
+
   const { legend, margin } = useChartLegendAndMargin({
     data: gapProcessedLineData,
     colorBy,
     colorScale,
     showLegend: effectiveShowLegend,
     userMargin,
-    defaults: resolved.marginDefaults,
+    defaults: directLabelMarginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -642,13 +688,15 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   })
   if (error) return <ChartError componentName="LineChart" message={error} width={width} height={height} />
 
-  // Flatten line data into a single array for StreamXYFrame
+  // Flatten line data into a single array for StreamXYFrame.
+  // When gapStrategy is "break" or "interpolate", we always flatten from
+  // gapProcessedLineData (which has segments split or gaps filtered).
   const flattenedData = useMemo(() => {
-    if (isLineObjectFormat || effectiveGroupAccessor) {
-      // Already grouped into line objects — flatten coordinates out
+    const needsFlatten = isLineObjectFormat || effectiveGroupAccessor || hasGaps
+
+    if (needsFlatten) {
       return gapProcessedLineData.flatMap((line: Record<string, any>) => {
         const coords = line[lineDataAccessor] || []
-        // Carry grouping field onto each datum
         if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
           return coords.map((c: Record<string, any>) => ({ ...c, [effectiveGroupAccessor]: line[effectiveGroupAccessor] }))
         }
@@ -656,7 +704,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
       })
     }
     return effectiveData
-  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData])
+  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData, hasGaps])
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
@@ -664,7 +712,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     data: flattenedData,
     xAccessor,
     yAccessor,
-    groupAccessor: effectiveGroupAccessor || undefined,
+    groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
     curve,
     lineStyle,
     ...(showPoints && { pointStyle }),
