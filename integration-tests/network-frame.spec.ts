@@ -4,7 +4,7 @@ import { test, expect, Page } from "@playwright/test"
 async function waitForVisualization(page: Page, testId: string) {
   const testCase = page.locator(`[data-testid="${testId}"]`)
   await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas")
+  const canvas = testCase.locator("canvas").first()
   await expect(canvas).toBeVisible({ timeout: 10000 })
   // Network layouts (especially force-directed) need more time to settle
   await page.waitForTimeout(2000)
@@ -27,7 +27,7 @@ test.describe("Network Charts - Force-Directed", () => {
     await waitForVisualization(page, "network-force-hover")
 
     const testCase = page.locator('[data-testid="network-force-hover"]')
-    const canvas = testCase.locator("canvas")
+    const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
     if (box) {
       // Hover near the center of the chart where nodes cluster

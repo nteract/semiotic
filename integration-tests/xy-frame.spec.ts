@@ -4,7 +4,7 @@ import { test, expect, Page } from "@playwright/test"
 async function waitForVisualization(page: Page, testId: string) {
   const testCase = page.locator(`[data-testid="${testId}"]`)
   await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas")
+  const canvas = testCase.locator("canvas").first()
   await expect(canvas).toBeVisible({ timeout: 5000 })
   await page.waitForTimeout(500)
 }
@@ -84,7 +84,7 @@ test.describe("XY Charts - Interactivity", () => {
     await waitForVisualization(page, "xy-scatter-hover")
 
     const testCase = page.locator('[data-testid="xy-scatter-hover"]')
-    const canvas = testCase.locator("canvas")
+    const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
     if (box) {
       // Hover near the center of the chart
