@@ -1,15 +1,16 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
@@ -135,6 +136,14 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   showLegend?: boolean
 
   /**
+   * Legend interaction mode.
+   * - "highlight": hover dims non-hovered categories to 30% opacity
+   * - "isolate": click toggles category visibility with checkmark indicators
+   * - "none": static legend (default)
+   */
+  legendInteraction?: LegendInteractionMode
+
+  /**
    * Tooltip configuration
    */
   tooltip?: TooltipProp
@@ -146,6 +155,26 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * Annotation objects to render on the chart
    */
   annotations?: Record<string, any>[]
+
+  /**
+   * Place category labels directly at line endpoints instead of using a separate legend.
+   * When true, auto-hides the legend (override with `showLegend: true`).
+   * Pass an object for fine-grained control.
+   */
+  directLabel?: boolean | {
+    /** Where to place labels relative to the line. @default "end" */
+    position?: "end" | "start"
+    /** Font size for labels. @default 11 */
+    fontSize?: number
+  }
+
+  /**
+   * How to handle null/undefined/NaN values in the data.
+   * - "break": break the line at gaps (default)
+   * - "interpolate": connect across gaps (skip missing points)
+   * - "zero": drop to zero at gap boundaries
+   */
+  gapStrategy?: "break" | "interpolate" | "zero"
 
   /**
    * Anomaly detection configuration. Highlights outlier points and shows
@@ -275,13 +304,18 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     tooltip,
     pointIdAccessor,
     annotations,
+    directLabel,
+    gapStrategy = "break",
     anomaly,
     forecast,
     frameProps = {},
     selection,
     linkedHover,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -292,6 +326,12 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   const title = resolved.title
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -329,6 +369,13 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     onObservation, chartType: "LineChart", chartId
   })
 
+  // ── Gap handling helper ──────────────────────────────────────────────
+  const isGap = useCallback((d: Record<string, any>) => {
+    const xVal = typeof xAccessor === "function" ? xAccessor(d) : d[xAccessor as string]
+    const yVal = typeof yAccessor === "function" ? yAccessor(d) : d[yAccessor as string]
+    return xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)
+  }, [xAccessor, yAccessor])
+
   // ── Core chart logic ───────────────────────────────────────────────────
 
   // Check if data is in line objects format (has lineDataAccessor field)
@@ -364,8 +411,86 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     return [{ [lineDataAccessor]: effectiveData }]
   }, [effectiveData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat])
 
+  // Apply gap strategy to line data
+  const gapProcessedLineData = useMemo(() => {
+    if (gapStrategy === "interpolate") {
+      // Just filter out gaps — the pipeline already skips null/NaN in SceneGraph
+      return lineData
+    }
+
+    if (gapStrategy === "break") {
+      // Split each line into segments at gap boundaries
+      const result: Record<string, any>[] = []
+      for (const line of lineData) {
+        const coords: Record<string, any>[] = line[lineDataAccessor] || []
+        let segment: Record<string, any>[] = []
+        let segIdx = 0
+
+        for (const d of coords) {
+          if (isGap(d)) {
+            if (segment.length > 0) {
+              const segLine = { ...line, [lineDataAccessor]: segment }
+              if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
+                segLine[effectiveGroupAccessor] = line[effectiveGroupAccessor]
+              }
+              result.push(segLine)
+              segment = []
+              segIdx++
+            }
+          } else {
+            segment.push(d)
+          }
+        }
+        if (segment.length > 0) {
+          result.push({ ...line, [lineDataAccessor]: segment })
+        }
+      }
+      return result
+    }
+
+    if (gapStrategy === "zero") {
+      // Insert zero-valued points at gap boundaries
+      const yField = typeof yAccessor === "string" ? yAccessor : "y"
+      const result: Record<string, any>[] = []
+      for (const line of lineData) {
+        const coords: Record<string, any>[] = line[lineDataAccessor] || []
+        const processed: Record<string, any>[] = []
+        for (const d of coords) {
+          if (isGap(d)) {
+            processed.push({ ...d, [yField]: 0 })
+          } else {
+            processed.push(d)
+          }
+        }
+        result.push({ ...line, [lineDataAccessor]: processed })
+      }
+      return result
+    }
+
+    return lineData
+  }, [lineData, gapStrategy, lineDataAccessor, isGap, effectiveGroupAccessor, yAccessor])
+
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(effectiveData as any[], colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of effectiveData as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [effectiveData, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   // Line style function
   const baseLineStyle = useMemo(() => {
@@ -397,8 +522,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   )
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(segmentAwareStyle, activeSelectionHook, selection),
-    [segmentAwareStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(segmentAwareStyle, effectiveSelectionHook, selection),
+    [segmentAwareStyle, effectiveSelectionHook, selection]
   )
 
   // Point style function (if showPoints is true)
@@ -425,12 +550,70 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // Determine chart type for StreamXYFrame
   const chartType = fillArea ? "area" as const : "line" as const
 
+  // Direct labeling — generate annotations at line endpoints
+  const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
+  const directLabelPosition = directLabelConfig.position || "end"
+  const directLabelFontSize = directLabelConfig.fontSize || 11
+
+  const directLabelAnnotations = useMemo(() => {
+    if (!directLabel || !colorBy) return []
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => d[xAccessor as string]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => d[yAccessor as string]
+    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Record<string, any>) => d[colorBy as string]
+
+    // Get the endpoint of each line (by group)
+    const groupEndpoints = new Map<string, Record<string, any>>()
+    for (const line of gapProcessedLineData) {
+      const coords: Record<string, any>[] = line[lineDataAccessor] || []
+      if (coords.length === 0) continue
+      const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
+      const label = colorAcc(endpoint) ?? colorAcc(line) ?? ""
+      if (label && !groupEndpoints.has(String(label))) {
+        groupEndpoints.set(String(label), endpoint)
+      }
+    }
+
+    // Build text annotations at endpoints with simple collision avoidance
+    const labels = Array.from(groupEndpoints.entries())
+      .map(([label, d]) => ({
+        type: "text" as const,
+        label,
+        [typeof xAccessor === "string" ? xAccessor : "x"]: xAcc(d),
+        [typeof yAccessor === "string" ? yAccessor : "y"]: yAcc(d),
+        dx: directLabelPosition === "end" ? 6 : -6,
+        dy: 0,
+        color: colorScale ? colorScale(label) : DEFAULT_COLOR,
+        fontSize: directLabelFontSize,
+      }))
+
+    // Simple vertical collision avoidance: offset labels that are too close
+    labels.sort((a, b) => {
+      const yField = typeof yAccessor === "string" ? yAccessor : "y"
+      return (a[yField] as number) - (b[yField] as number)
+    })
+    for (let i = 1; i < labels.length; i++) {
+      const yField = typeof yAccessor === "string" ? yAccessor : "y"
+      const prev = labels[i - 1]
+      const curr = labels[i]
+      const prevY = prev[yField] as number + prev.dy
+      const currY = curr[yField] as number + curr.dy
+      if (Math.abs(currY - prevY) < directLabelFontSize + 2) {
+        curr.dy += directLabelFontSize + 2
+      }
+    }
+
+    return labels
+  }, [directLabel, colorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
+
+  // Suppress legend when directLabel is active (unless explicitly overridden)
+  const effectiveShowLegend = directLabel && showLegend === undefined ? false : showLegend
+
   // Legend + margin
   const { legend, margin } = useChartLegendAndMargin({
-    data: lineData,
+    data: gapProcessedLineData,
     colorBy,
     colorScale,
-    showLegend,
+    showLegend: effectiveShowLegend,
     userMargin,
     defaults: resolved.marginDefaults,
   })
@@ -463,7 +646,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   const flattenedData = useMemo(() => {
     if (isLineObjectFormat || effectiveGroupAccessor) {
       // Already grouped into line objects — flatten coordinates out
-      return lineData.flatMap((line: Record<string, any>) => {
+      return gapProcessedLineData.flatMap((line: Record<string, any>) => {
         const coords = line[lineDataAccessor] || []
         // Carry grouping field onto each datum
         if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
@@ -473,7 +656,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
       })
     }
     return effectiveData
-  }, [lineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData])
+  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData])
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
@@ -497,13 +680,19 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     enableHover,
     showGrid,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...((annotations?.length || statisticalAnnotations.length) && {
-      annotations: [...(annotations || []), ...statisticalAnnotations],
+    ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
+      annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
     }),
     ...frameProps
   }

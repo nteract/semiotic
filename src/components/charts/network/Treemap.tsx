@@ -7,9 +7,10 @@ import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colo
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 
 /**
@@ -29,6 +30,7 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
   padding?: number
   paddingTop?: number
   enableHover?: boolean
+  legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
 }
@@ -67,7 +69,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     selection,
     linkedHover,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    legendInteraction,
   } = props
 
   const width = resolved.width
@@ -75,6 +79,10 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+
+  // ── Loading state ───────────────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
 
   const { activeSelectionHook, customHoverBehavior: baseHoverBehavior } = useChartSelection({
     selection,
@@ -101,6 +109,19 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy as any, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy || colorByDepth) return []
+    const vals = new Set<string>()
+    for (const d of allNodes as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [allNodes, colorBy, colorByDepth])
+
+  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: any) => string) | undefined, allCategories)
 
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -175,6 +196,12 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
       {...((linkedHover || onObservation) && { customHoverBehavior })}
+      {...(legendInteraction && legendInteraction !== "none" && {
+        legendHoverBehavior: legendState.onLegendHover,
+        legendClickBehavior: legendState.onLegendClick,
+        legendHighlightedCategory: legendState.highlightedCategory,
+        legendIsolatedCategories: legendState.isolatedCategories,
+      })}
       className={className}
       title={title}
       {...frameProps}

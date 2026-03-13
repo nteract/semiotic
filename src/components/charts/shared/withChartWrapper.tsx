@@ -34,6 +34,93 @@ export function SafeRender({ componentName, width, height, children }: SafeRende
   )
 }
 
+// ── Empty & loading state helpers ────────────────────────────────────────
+
+const EMPTY_STYLE: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "var(--semiotic-text-secondary, #999)",
+  fontSize: 13,
+  fontFamily: "inherit",
+  border: "1px dashed var(--semiotic-border, #ddd)",
+  borderRadius: 4,
+  boxSizing: "border-box" as const,
+}
+
+const LOADING_BAR_STYLE: React.CSSProperties = {
+  background: "var(--semiotic-border, #e0e0e0)",
+  borderRadius: 2,
+}
+
+/**
+ * Renders a "No data available" placeholder when data is empty.
+ * Returns null when data is present or emptyContent is `false`.
+ */
+export function renderEmptyState(
+  data: any[] | undefined | null,
+  width: number,
+  height: number,
+  emptyContent?: React.ReactNode | false
+): React.ReactElement | null {
+  if (emptyContent === false) return null
+  if (data && Array.isArray(data) && data.length > 0) return null
+  if (data && !Array.isArray(data)) return null // hierarchy data (object)
+
+  return (
+    <div style={{ ...EMPTY_STYLE, width, height }}>
+      {emptyContent || "No data available"}
+    </div>
+  )
+}
+
+/**
+ * Renders a shimmer/skeleton loading placeholder.
+ * Returns null when loading is false.
+ */
+export function renderLoadingState(
+  loading: boolean | undefined,
+  width: number,
+  height: number
+): React.ReactElement | null {
+  if (!loading) return null
+  // Simple skeleton: a few horizontal bars at varying widths
+  const barCount = Math.min(5, Math.floor(height / 40))
+  const barHeight = Math.max(8, Math.floor(height / (barCount * 3)))
+  const gap = Math.max(6, Math.floor(height / (barCount * 2.5)))
+  const startY = Math.floor((height - (barCount * (barHeight + gap) - gap)) / 2)
+
+  return (
+    <div
+      style={{
+        width,
+        height,
+        position: "relative",
+        overflow: "hidden",
+        border: "1px solid var(--semiotic-border, #e0e0e0)",
+        borderRadius: 4,
+        boxSizing: "border-box",
+      }}
+    >
+      {Array.from({ length: barCount }, (_, i) => (
+        <div
+          key={i}
+          className="semiotic-loading-bar"
+          style={{
+            ...LOADING_BAR_STYLE,
+            position: "absolute",
+            top: startY + i * (barHeight + gap),
+            left: Math.floor(width * 0.1),
+            width: `${30 + Math.round(Math.random() * 50)}%`,
+            height: barHeight,
+            opacity: 0.5 + (i % 2) * 0.2,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 // ── Dev warning helpers ──────────────────────────────────────────────────
 
 /** Warn if a string accessor isn't found in the first data element */

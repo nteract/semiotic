@@ -499,6 +499,10 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Legend / title ───────────────────────────────
   legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
   title?: string | ReactNode
   foregroundGraphics?: ReactNode
   backgroundGraphics?: ReactNode

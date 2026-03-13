@@ -300,6 +300,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   // Visual extras
   showGrid?: boolean
   legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
   backgroundGraphics?: ReactNode
   foregroundGraphics?: ReactNode
   title?: string | ReactNode

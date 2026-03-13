@@ -226,6 +226,10 @@ const StreamNetworkFrame = forwardRef<
     annotations,
     svgAnnotationRules,
     legend,
+    legendHoverBehavior,
+    legendClickBehavior,
+    legendHighlightedCategory,
+    legendIsolatedCategories,
     title,
     foregroundGraphics,
     backgroundGraphics,
@@ -1092,6 +1096,10 @@ const StreamNetworkFrame = forwardRef<
           sceneNodes={sceneNodes as any}
           title={title}
           legend={legend}
+          legendHoverBehavior={legendHoverBehavior}
+          legendClickBehavior={legendClickBehavior}
+          legendHighlightedCategory={legendHighlightedCategory}
+          legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={foregroundGraphics}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
@@ -1158,6 +1166,10 @@ const StreamNetworkFrame = forwardRef<
         sceneNodes={store?.sceneNodes as any}
         title={title}
         legend={legend}
+        legendHoverBehavior={legendHoverBehavior}
+        legendClickBehavior={legendClickBehavior}
+        legendHighlightedCategory={legendHighlightedCategory}
+        legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

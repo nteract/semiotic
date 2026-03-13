@@ -80,4 +80,83 @@ describe("diagnoseConfig", () => {
     expect(result.diagnoses[0].code).toBe("VALIDATION")
     expect(result.diagnoses[0].message).toContain("Unknown component")
   })
+
+  it("warns about non-zero baseline in bar charts", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 50 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      rExtent: [10, 100],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("NON_ZERO_BASELINE")
+    const diag = result.diagnoses.find(d => d.code === "NON_ZERO_BASELINE")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("does not warn about non-zero baseline for LineChart", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      rExtent: [10, 100],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("NON_ZERO_BASELINE")
+  })
+
+  it("does not warn when baseline is zero", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 50 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      rExtent: [0, 100],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("NON_ZERO_BASELINE")
+  })
+
+  it("warns about data gaps in LineChart", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [
+        { x: 1, y: 10 },
+        { x: 2, y: null },
+        { x: 3, y: 30 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("DATA_GAPS")
+    const diag = result.diagnoses.find(d => d.code === "DATA_GAPS")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("does not warn about data gaps when gapStrategy is set", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [
+        { x: 1, y: 10 },
+        { x: 2, y: null },
+        { x: 3, y: 30 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      gapStrategy: "break",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("DATA_GAPS")
+  })
+
+  it("does not warn about data gaps in BarChart", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [
+        { category: "A", value: 10 },
+        { category: "B", value: null },
+      ],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("DATA_GAPS")
+  })
 })

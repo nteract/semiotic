@@ -8,6 +8,7 @@ import {
   useChartSelection,
   useChartLegendAndMargin,
   useChartMode,
+  useLegendInteraction,
   DEFAULT_COLOR,
 } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
@@ -503,5 +504,156 @@ describe("useChartMode", () => {
     const result = useChartMode("sparkline", {}, { width: 800, height: 500 })
     expect(result.width).toBe(120)
     expect(result.height).toBe(24)
+  })
+})
+
+// ── useLegendInteraction ─────────────────────────────────────────────────
+
+describe("useLegendInteraction", () => {
+  const allCategories = ["A", "B", "C"]
+
+  it("returns null legendSelectionHook when mode is undefined", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction(undefined, "cat", allCategories)
+    )
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("returns null legendSelectionHook when mode is 'none'", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("none", "cat", allCategories)
+    )
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("highlight mode: onLegendHover sets highlightedCategory", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+    expect(result.current.highlightedCategory).toBeNull()
+
+    act(() => {
+      result.current.onLegendHover({ label: "A" })
+    })
+
+    expect(result.current.highlightedCategory).toBe("A")
+  })
+
+  it("highlight mode: onLegendHover(null) clears highlight", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendHover({ label: "B" })
+    })
+    expect(result.current.highlightedCategory).toBe("B")
+
+    act(() => {
+      result.current.onLegendHover(null)
+    })
+    expect(result.current.highlightedCategory).toBeNull()
+  })
+
+  it("highlight mode: legendSelectionHook predicate matches highlighted category", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendHover({ label: "A" })
+    })
+
+    const hook = result.current.legendSelectionHook
+    expect(hook).not.toBeNull()
+    expect(hook!.isActive).toBe(true)
+    expect(hook!.predicate({ cat: "A" })).toBe(true)
+    expect(hook!.predicate({ cat: "B" })).toBe(false)
+  })
+
+  it("highlight mode: onLegendClick is a no-op", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+    })
+
+    // isolatedCategories should remain empty, no state change
+    expect(result.current.isolatedCategories.size).toBe(0)
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("isolate mode: onLegendClick toggles category in isolatedCategories", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("isolate", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+    })
+    expect(result.current.isolatedCategories.has("A")).toBe(true)
+    expect(result.current.isolatedCategories.size).toBe(1)
+
+    // Click again to remove
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+    })
+    expect(result.current.isolatedCategories.has("A")).toBe(false)
+    expect(result.current.isolatedCategories.size).toBe(0)
+  })
+
+  it("isolate mode: clicking all categories resets to empty set (Carbon behavior)", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("isolate", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+    })
+    act(() => {
+      result.current.onLegendClick({ label: "B" })
+    })
+    act(() => {
+      result.current.onLegendClick({ label: "C" })
+    })
+
+    // All 3 categories selected => resets to empty
+    expect(result.current.isolatedCategories.size).toBe(0)
+  })
+
+  it("isolate mode: legendSelectionHook predicate matches isolated categories", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("isolate", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+    })
+    act(() => {
+      result.current.onLegendClick({ label: "C" })
+    })
+
+    const hook = result.current.legendSelectionHook
+    expect(hook).not.toBeNull()
+    expect(hook!.isActive).toBe(true)
+    expect(hook!.predicate({ cat: "A" })).toBe(true)
+    expect(hook!.predicate({ cat: "B" })).toBe(false)
+    expect(hook!.predicate({ cat: "C" })).toBe(true)
+  })
+
+  it("isolate mode: onLegendHover is a no-op", () => {
+    const { result } = renderHook(() =>
+      useLegendInteraction("isolate", "cat", allCategories)
+    )
+
+    act(() => {
+      result.current.onLegendHover({ label: "A" })
+    })
+
+    // highlightedCategory should remain null, no state change
+    expect(result.current.highlightedCategory).toBeNull()
+    expect(result.current.legendSelectionHook).toBeNull()
   })
 })

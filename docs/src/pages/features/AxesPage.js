@@ -27,6 +27,23 @@ const lineData = [
   { month: 12, sales: 12100 },
 ]
 
+// Time series data spanning multiple months for landmark ticks demo
+const timeSeriesData = (() => {
+  const data = []
+  const start = new Date(2024, 0, 1)
+  for (let i = 0; i < 90; i++) {
+    const d = new Date(start)
+    d.setDate(d.getDate() + i)
+    data.push({ date: d, value: 100 + Math.sin(i * 0.1) * 40 + Math.random() * 15 })
+  }
+  return data
+})()
+
+const timeSeriesFrameData = [{
+  label: "Metric",
+  coordinates: timeSeriesData.map(d => ({ date: d.date.getTime(), value: d.value })),
+}]
+
 const barData = [
   { category: "Q1", revenue: 24000 },
   { category: "Q2", revenue: 31000 },
@@ -58,6 +75,7 @@ const axisProps = [
   { name: "axisAnnotationFunction", type: "function", required: false, default: null, description: "Enables hover interaction on the axis. Called with { className, type, value } on click." },
   { name: "glyphFunction", type: "function", required: false, default: null, description: "Custom hover glyph on axis. Receives { lineWidth, lineHeight, value } and returns JSX." },
   { name: "marginalSummaryGraphics", type: "object", required: false, default: null, description: "Add an ordinal summary (histogram, violin, etc.) to the axis margin." },
+  { name: "landmarkTicks", type: "boolean | function", required: false, default: "false", description: "Highlight ticks at time boundaries with semibold styling. Set to true for auto-detection (Date boundaries), or pass a function (d, i) => boolean for custom landmark logic." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -388,6 +406,79 @@ export default function AxesPage() {
     }
   ]}
 />`}
+        language="jsx"
+      />
+
+      <h3 id="landmark-ticks">Landmark Ticks for Time Series</h3>
+      <p>
+        When displaying time series data, <code>landmarkTicks</code> applies
+        semibold styling to tick labels at time boundaries (e.g., when the month,
+        year, or day changes). This provides hierarchical context that
+        dramatically improves readability of long time axes. Notice how "Feb"
+        and "Mar" are rendered bolder than regular day ticks:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: timeSeriesFrameData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          xAccessor: "date",
+          yAccessor: "value",
+          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+          margin: { top: 20, bottom: 60, left: 60, right: 20 },
+          showAxes: true,
+          axes: [
+            { orient: "left", label: "Value" },
+            {
+              orient: "bottom",
+              label: "Date",
+              landmarkTicks: true,
+              tickFormat: (d) => {
+                const date = new Date(d)
+                return `${date.toLocaleString("en", { month: "short" })} ${date.getDate()}`
+              },
+              ticks: 8,
+            },
+          ],
+        }}
+        type={StreamXYFrame}
+        startHidden={false}
+        overrideProps={{
+          data: `[{
+  label: "Metric",
+  coordinates: timeSeriesData  // 90 days spanning Jan–Mar
+}]`,
+          axes: `[
+  { orient: "left", label: "Value" },
+  {
+    orient: "bottom",
+    label: "Date",
+    landmarkTicks: true,  // auto-bold at month boundaries
+    tickFormat: d => {
+      const date = new Date(d)
+      return \`\${date.toLocaleString("en", { month: "short" })} \${date.getDate()}\`
+    },
+    ticks: 8,
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        Landmark ticks render at <code>fontSize: 11</code> with{" "}
+        <code>fontWeight: 600</code> (semibold), while regular ticks remain at{" "}
+        <code>fontSize: 10</code> with normal weight. You can also pass a custom
+        function:
+      </p>
+
+      <CodeBlock
+        code={`// Custom landmark detection
+axes={[{
+  orient: "bottom",
+  landmarkTicks: (d, i) => d.getMonth() === 0,  // bold only January ticks
+}]}`}
         language="jsx"
       />
 

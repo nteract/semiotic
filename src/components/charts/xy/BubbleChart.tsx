@@ -4,12 +4,13 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
@@ -121,6 +122,14 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
   pointIdAccessor?: ChartAccessor<TDatum, string>
 
   /**
+   * Legend interaction mode.
+   * - "highlight": hover dims non-hovered categories to 30% opacity
+   * - "isolate": click toggles category visibility with checkmark indicators
+   * - "none": static legend (default)
+   */
+  legendInteraction?: LegendInteractionMode
+
+  /**
    * Annotation objects to render on the chart
    */
   annotations?: Record<string, any>[]
@@ -230,7 +239,10 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     linkedHover,
     linkedBrush,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -241,6 +253,12 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   const title = resolved.title
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -265,6 +283,25 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
 
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeData as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeData, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   // Calculate size domain
   const sizeDomain = useMemo(() => {
@@ -302,8 +339,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, activeSelectionHook, selection),
-    [basePointStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
+    [basePointStyle, effectiveSelectionHook, selection]
   )
 
   // Legend + margin
@@ -359,6 +396,12 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     enableHover,
     showGrid,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,

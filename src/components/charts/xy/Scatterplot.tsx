@@ -1,15 +1,16 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
@@ -48,6 +49,8 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   marginalGraphics?: MarginalGraphicsConfig
   /** Accessor for unique point IDs, used by point-anchored annotations */
   pointIdAccessor?: ChartAccessor<TDatum, string>
+  /** Legend interaction mode */
+  legendInteraction?: LegendInteractionMode
   /** Annotation objects to render on the chart */
   annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props for advanced customization */
@@ -101,7 +104,10 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     linkedHover,
     linkedBrush,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -112,6 +118,12 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   const title = resolved.title
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const safeData = data || []
 
@@ -136,9 +148,56 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     yField: brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)
   })
 
+  // Translate StreamXYFrame onBrush format to useBrushSelection format
+  const brushDimension = brushConfig
+    ? (brushHook.brushInteraction.brush === "xyBrush" ? "xy" : brushHook.brushInteraction.brush === "xBrush" ? "x" : "y")
+    : undefined
+
+  // Stabilize with ref so the callback identity never changes —
+  // otherwise the BrushOverlay effect re-runs and clears the active brush
+  const brushInteractionRef = React.useRef(brushHook.brushInteraction)
+  brushInteractionRef.current = brushHook.brushInteraction
+
+  const onBrush = useCallback(
+    (extent: { x: [number, number]; y: [number, number] } | null) => {
+      const bi = brushInteractionRef.current
+      if (!extent) {
+        bi.end(null)
+        return
+      }
+      if (bi.brush === "xyBrush") {
+        bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
+      } else if (bi.brush === "xBrush") {
+        bi.end(extent.x)
+      } else {
+        bi.end(extent.y)
+      }
+    },
+    [] // stable — reads from ref
+  )
+
   // ── Core chart logic ───────────────────────────────────────────────────
 
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
+
+  // Legend interaction
+  const allCategories = useMemo(() => {
+    if (!colorBy) return []
+    const vals = new Set<string>()
+    for (const d of safeData as Record<string, any>[]) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [safeData, colorBy])
+
+  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   const sizeDomain = useMemo(() => {
     if (!sizeBy || safeData.length === 0) return undefined
@@ -160,8 +219,8 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, activeSelectionHook, selection),
-    [basePointStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
+    [basePointStyle, effectiveSelectionHook, selection]
   )
 
   // Legend + margin
@@ -215,6 +274,12 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     enableHover,
     showGrid,
     ...(legend && { legend }),
+    ...(legendInteraction && legendInteraction !== "none" && {
+      legendHoverBehavior: legendState.onLegendHover,
+      legendClickBehavior: legendState.onLegendClick,
+      legendHighlightedCategory: legendState.highlightedCategory,
+      legendIsolatedCategories: legendState.isolatedCategories,
+    }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
@@ -222,6 +287,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),
     ...frameProps
   }
 

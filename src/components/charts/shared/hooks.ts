@@ -1,5 +1,6 @@
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useState } from "react"
 import { useCategoryColors } from "../../CategoryColors"
+import { useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
@@ -215,7 +216,11 @@ export function useChartLegendAndMargin({
   legend: ReturnType<typeof createLegend> | undefined
   margin: { top: number; bottom: number; left: number; right: number }
 } {
-  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
+  const linkedLegendActive = useLinkedLegendSuppression()
+  // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
+  const shouldShowLegend = showLegend !== undefined
+    ? showLegend
+    : linkedLegendActive ? false : !!colorBy
 
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
@@ -229,6 +234,97 @@ export function useChartLegendAndMargin({
   }, [defaults, userMargin, legend])
 
   return { legend, margin }
+}
+
+// ── Legend interaction ──────────────────────────────────────────────────
+
+export type LegendInteractionMode = "highlight" | "isolate" | "none"
+
+export interface LegendInteractionState {
+  highlightedCategory: string | null
+  isolatedCategories: Set<string>
+  onLegendHover: (item: { label: string } | null) => void
+  onLegendClick: (item: { label: string }) => void
+  /** Selection predicate that dims non-matching data — use with wrapStyleWithSelection */
+  legendSelectionHook: { isActive: boolean; predicate: (d: Record<string, any>) => boolean } | null
+}
+
+/**
+ * Hook managing legend highlight/isolate interaction.
+ * - "highlight": hover over legend item dims everything else to 30% opacity
+ * - "isolate": click toggles category visibility; click all to reset
+ */
+export function useLegendInteraction(
+  mode: LegendInteractionMode | undefined,
+  colorBy: string | ((d: any) => string) | undefined,
+  allCategories: string[]
+): LegendInteractionState {
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null)
+  const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(new Set())
+
+  const onLegendHover = useCallback(
+    (item: { label: string } | null) => {
+      if (mode !== "highlight") return
+      setHighlightedCategory(item ? item.label : null)
+    },
+    [mode]
+  )
+
+  const onLegendClick = useCallback(
+    (item: { label: string }) => {
+      if (mode !== "isolate") return
+      setIsolatedCategories(prev => {
+        const next = new Set(prev)
+        if (next.has(item.label)) {
+          next.delete(item.label)
+        } else {
+          next.add(item.label)
+        }
+        // If all categories selected, reset to show all (Carbon behavior)
+        if (next.size === allCategories.length) {
+          return new Set()
+        }
+        return next
+      })
+    },
+    [mode, allCategories.length]
+  )
+
+  const legendSelectionHook = useMemo(() => {
+    if (!mode || mode === "none" || !colorBy) return null
+
+    const colorField = typeof colorBy === "string" ? colorBy : null
+
+    if (mode === "highlight" && highlightedCategory != null) {
+      return {
+        isActive: true,
+        predicate: (d: Record<string, any>) => {
+          const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          return val === highlightedCategory
+        }
+      }
+    }
+
+    if (mode === "isolate" && isolatedCategories.size > 0) {
+      return {
+        isActive: true,
+        predicate: (d: Record<string, any>) => {
+          const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
+          return isolatedCategories.has(val)
+        }
+      }
+    }
+
+    return null
+  }, [mode, colorBy, highlightedCategory, isolatedCategories])
+
+  return {
+    highlightedCategory: mode === "highlight" ? highlightedCategory : null,
+    isolatedCategories: mode === "isolate" ? isolatedCategories : new Set(),
+    onLegendHover,
+    onLegendClick,
+    legendSelectionHook
+  }
 }
 
 // ── Mode defaults ──────────────────────────────────────────────────────

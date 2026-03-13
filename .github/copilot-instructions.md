@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
+- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 - Every HOC has a built-in error boundary (never blanks the page) and dev-mode validation warnings
@@ -116,16 +116,21 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 // OrbitDiagram: annotations={[{ type: "widget", nodeId: "Pipeline", content: <Alert /> }]}
 ```
 
+## Server-Side Rendering
+- All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
+- `renderToStaticSVG()`, `renderXYToStaticSVG()`, `renderOrdinalToStaticSVG()`, `renderNetworkToStaticSVG()` — standalone SVG generation from `semiotic/server`
+- Works with Next.js App Router, Remix, Astro — same component on server and client
+
 ## AI Features
 - `onObservation` — structured events (hover, click, brush, selection) on all HOCs
 - `useChartObserver` — aggregates observations across LinkedCharts
 - `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX` — chart state serialization
 - `DetailsPanel` — click-driven detail panel inside `ChartContainer`
-- `validateProps(componentName, props)` — prop validation
+- `validateProps(componentName, props)` — prop validation with Levenshtein typo suggestions
+- `diagnoseConfig(componentName, props)` — anti-pattern detector (12 checks: empty data, bad dimensions, missing accessors, margin overflow, etc.)
 - `ChartErrorBoundary` — error boundary
 - `exportChart(el, { format: "png"|"svg" })` — browser export
-- `renderToStaticSVG()` — server-side SVG (from `semiotic/server`)
-- `npx semiotic-ai --doctor` — validate component + props JSON from CLI
+- `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
 
 ## Differentiators
 Network viz, streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation

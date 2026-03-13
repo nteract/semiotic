@@ -248,6 +248,13 @@ function BrushOverlay({
   const svgRef = useRef<SVGSVGElement>(null)
   const brushRef = useRef<any>(null)
 
+  // Stabilize onBrush and scales with refs so callback/scale changes
+  // don't tear down and recreate the d3 brush (which clears the active selection)
+  const onBrushRef = useRef(onBrush)
+  onBrushRef.current = onBrush
+  const scalesRef = useRef(scales)
+  scalesRef.current = scales
+
   useEffect(() => {
     if (!svgRef.current) return
 
@@ -263,10 +270,11 @@ function BrushOverlay({
     brushFn.extent([[0, 0], [width, height]])
 
     brushFn.on("brush end", (event: any) => {
-      if (!scales) return
+      const s = scalesRef.current
+      if (!s) return
 
       if (!event.selection) {
-        onBrush(null)
+        onBrushRef.current(null)
         return
       }
 
@@ -275,19 +283,19 @@ function BrushOverlay({
 
       if (dimension === "x") {
         const [px0, px1] = event.selection as [number, number]
-        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
-        yRange = [scales.y.invert(height), scales.y.invert(0)]
+        xRange = [s.x.invert(px0), s.x.invert(px1)]
+        yRange = [s.y.invert(height), s.y.invert(0)]
       } else if (dimension === "y") {
         const [py0, py1] = event.selection as [number, number]
-        xRange = [scales.x.invert(0), scales.x.invert(width)]
-        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+        xRange = [s.x.invert(0), s.x.invert(width)]
+        yRange = [s.y.invert(py1), s.y.invert(py0)]
       } else {
         const [[px0, py0], [px1, py1]] = event.selection as [[number, number], [number, number]]
-        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
-        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+        xRange = [s.x.invert(px0), s.x.invert(px1)]
+        yRange = [s.y.invert(py1), s.y.invert(py0)]
       }
 
-      onBrush({ x: xRange, y: yRange })
+      onBrushRef.current({ x: xRange, y: yRange })
     })
 
     g.call(brushFn as any)
@@ -304,7 +312,7 @@ function BrushOverlay({
       brushFn.on("brush end", null)
       brushRef.current = null
     }
-  }, [width, height, dimension, scales, onBrush])
+  }, [width, height, dimension])
 
   return (
     <svg
@@ -389,6 +397,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       svgAnnotationRules,
       showGrid,
       legend,
+      legendHoverBehavior,
+      legendClickBehavior,
+      legendHighlightedCategory,
+      legendIsolatedCategories,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -1013,6 +1025,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             showGrid={showGrid}
             title={title}
             legend={legend}
+            legendHoverBehavior={legendHoverBehavior}
+            legendClickBehavior={legendClickBehavior}
+            legendHighlightedCategory={legendHighlightedCategory}
+            legendIsolatedCategories={legendIsolatedCategories}
             foregroundGraphics={foregroundGraphics}
             marginalGraphics={marginalGraphics}
             xValues={[]}
@@ -1096,6 +1112,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           showGrid={showGrid}
           title={title}
           legend={legend}
+          legendHoverBehavior={legendHoverBehavior}
+          legendClickBehavior={legendClickBehavior}
+          legendHighlightedCategory={legendHighlightedCategory}
+          legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={foregroundGraphics}
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}

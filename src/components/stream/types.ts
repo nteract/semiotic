@@ -412,6 +412,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
   legend?: ReactNode | { legendGroups: any[] }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
 
   // ── Background / foreground graphics ───────────
   /** SVG elements rendered behind the canvas (in pixel space) */

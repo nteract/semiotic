@@ -69,6 +69,21 @@ const multiLineData = [
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
+const gapData = [
+  { month: 1, revenue: 12000, product: "Widget" },
+  { month: 2, revenue: 18000, product: "Widget" },
+  { month: 3, revenue: null, product: "Widget" },
+  { month: 4, revenue: null, product: "Widget" },
+  { month: 5, revenue: 19000, product: "Widget" },
+  { month: 6, revenue: 27000, product: "Widget" },
+  { month: 1, revenue: 8000, product: "Gadget" },
+  { month: 2, revenue: 11000, product: "Gadget" },
+  { month: 3, revenue: 15000, product: "Gadget" },
+  { month: 4, revenue: null, product: "Gadget" },
+  { month: 5, revenue: 17000, product: "Gadget" },
+  { month: 6, revenue: 21000, product: "Gadget" },
+]
+
 const lineChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points or array of line objects with coordinates." },
   { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values from each data point." },
@@ -87,6 +102,11 @@ const lineChartProps = [
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-line)", description: "Show a legend. Defaults to true when multiple lines are present." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
+  { name: "gapStrategy", type: '"break" | "interpolate" | "zero"', required: false, default: '"break"', description: 'How to handle null/undefined/NaN values in data. "break" splits the line at gaps, "interpolate" connects across gaps, "zero" drops to zero.' },
+  { name: "directLabel", type: "boolean", required: false, default: "false", description: "Place category labels at line endpoints instead of using a separate legend. Auto-hides the legend when enabled." },
+  { name: "legendInteraction", type: '"highlight" | "isolate" | "none"', required: false, default: '"none"', description: 'Legend interaction mode. "highlight" dims non-hovered categories to 30% opacity. "isolate" toggles category visibility on click.' },
+  { name: "loading", type: "boolean", required: false, default: "false", description: "Show a skeleton loading placeholder instead of the chart." },
+  { name: "emptyContent", type: "ReactNode | false", required: false, default: null, description: 'Custom content to show when data is empty. Set to false to disable the default "No data available" message.' },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
@@ -376,6 +396,145 @@ export default function LineChartPage() {
         uncertainty, or any scenario where you want to show a range around a
         trend.
       </p>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Gap Strategy */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="gap-strategy">Data Gap Handling</h2>
+
+      <p>
+        Real-world data often has missing values. The <code>gapStrategy</code> prop
+        controls how LineChart handles <code>null</code>, <code>undefined</code>,
+        or <code>NaN</code> values in your y-accessor field.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: gapData,
+          xAccessor: "month",
+          yAccessor: "revenue",
+          lineBy: "product",
+          colorBy: "product",
+          gapStrategy: "break",
+          showPoints: true,
+          xLabel: "Month",
+          yLabel: "Revenue ($)",
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `[
+  { month: 1, revenue: 12000, product: "Widget" },
+  { month: 2, revenue: 18000, product: "Widget" },
+  { month: 3, revenue: null, product: "Widget" },  // gap
+  { month: 4, revenue: null, product: "Widget" },  // gap
+  { month: 5, revenue: 19000, product: "Widget" },
+  { month: 6, revenue: 27000, product: "Widget" },
+  // ...
+]`,
+          gapStrategy: '"break"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock
+        code={`// Break the line at gaps (default)
+<LineChart data={data} gapStrategy="break" />
+
+// Connect across gaps (interpolate through missing values)
+<LineChart data={data} gapStrategy="interpolate" />
+
+// Drop to zero at gaps
+<LineChart data={data} gapStrategy="zero" />`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Direct Labels */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="direct-label">Direct Labels</h2>
+
+      <p>
+        Instead of a separate legend, <code>directLabel</code> places category
+        names at the end of each line. This follows the data visualization best
+        practice of labeling data directly when space allows. The legend is
+        auto-hidden when direct labels are active.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: multiLineData,
+          xAccessor: "month",
+          yAccessor: "revenue",
+          lineBy: "product",
+          colorBy: "product",
+          directLabel: true,
+          xLabel: "Month",
+          yLabel: "Revenue ($)",
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `[
+  { month: 1, revenue: 12000, product: "Widget" },
+  { month: 1, revenue: 8000, product: "Gadget" },
+  { month: 1, revenue: 5000, product: "Doohickey" },
+  // ...data with product field
+]`,
+          directLabel: "true",
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Empty & Loading States */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="empty-loading">Empty and Loading States</h2>
+
+      <p>
+        All chart components handle empty data and loading states gracefully.
+        When <code>data</code> is an empty array, a centered "No data available"
+        message is shown. Set <code>loading</code> to show a skeleton placeholder
+        while data is being fetched.
+      </p>
+
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 24 }}>
+        <div>
+          <h4 style={{ marginTop: 0 }}>Empty State</h4>
+          <LineChart data={[]} xAccessor="x" yAccessor="y" width={280} height={200} />
+        </div>
+        <div>
+          <h4 style={{ marginTop: 0 }}>Loading Skeleton</h4>
+          <LineChart data={[]} loading width={280} height={200} />
+        </div>
+        <div>
+          <h4 style={{ marginTop: 0 }}>Custom Empty Content</h4>
+          <LineChart
+            data={[]}
+            width={280}
+            height={200}
+            emptyContent={
+              <span style={{ color: "#888" }}>No results match your filters</span>
+            }
+          />
+        </div>
+      </div>
+
+      <CodeBlock
+        code={`// Empty state (automatic)
+<LineChart data={[]} xAccessor="x" yAccessor="y" />
+
+// Loading skeleton
+<LineChart data={[]} loading />
+
+// Custom empty content
+<LineChart
+  data={[]}
+  emptyContent={<span>No results match your filters</span>}
+/>
+
+// Disable the default empty message
+<LineChart data={[]} emptyContent={false} />`}
+        language="jsx"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

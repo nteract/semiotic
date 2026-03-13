@@ -6,9 +6,10 @@ import type { StreamXYFrameProps } from "../../stream/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useChartSelection, useChartMode } from "../shared/hooks"
+import { useChartSelection, useChartMode, useLegendInteraction } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { interpolateViridis } from "d3-scale-chromatic"
@@ -41,6 +42,8 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
   tooltip?: TooltipProp
   /** Accessor for unique point IDs, used by point-anchored annotations */
   pointIdAccessor?: ChartAccessor<TDatum, string>
+  /** Legend interaction mode */
+  legendInteraction?: LegendInteractionMode
   /** Annotation objects to render on the chart */
   annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props for advanced customization */
@@ -97,7 +100,10 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     selection,
     linkedHover,
     onObservation,
-    chartId
+    chartId,
+    loading,
+    emptyContent,
+    legendInteraction
   } = props
 
   const width = resolved.width
@@ -107,6 +113,12 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
   const title = resolved.title
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
+
+  // ── Loading / empty states ──────────────────────────────────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const rawData = (data || []) as Record<string, any>[]
 
@@ -137,6 +149,15 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     fallbackFields: [],
     onObservation, chartType: "ConnectedScatterplot", chartId
   })
+
+  // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
+  const legendState = useLegendInteraction(legendInteraction, undefined, [])
+
+  // Merge legend selection with cross-chart selection
+  const effectiveSelectionHook = useMemo(() => {
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Viridis color assignment ──────────────────────────────────────────
 
@@ -247,8 +268,8 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
   }, [safeData, pointColors, pointRadius])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, activeSelectionHook, selection),
-    [basePointStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
+    [basePointStyle, effectiveSelectionHook, selection]
   )
 
   // ── Margin ────────────────────────────────────────────────────────────

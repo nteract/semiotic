@@ -13,9 +13,18 @@ describe("normalizeLinkedHover", () => {
     expect(normalizeLinkedHover(undefined)).toBeNull()
   })
 
+  it("returns null for false", () => {
+    expect(normalizeLinkedHover(false)).toBeNull()
+  })
+
   it("normalizes true to default hover config", () => {
     const result = normalizeLinkedHover(true)
     expect(result).toEqual({ name: "hover", fields: [] })
+  })
+
+  it("normalizes true with fallbackFields", () => {
+    const result = normalizeLinkedHover(true, ["region", "year"])
+    expect(result).toEqual({ name: "hover", fields: ["region", "year"] })
   })
 
   it("normalizes a string to a named config", () => {
