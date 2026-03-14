@@ -639,6 +639,7 @@ export class PipelineStore {
     }
 
     // Build color map from colorAccessor if no pointStyle handles it
+    // Sort categories alphabetically for stable palette assignment across frames
     let colorMap: Map<string, string> | null = null
     if (this.getColor && !this.config.pointStyle) {
       const categories = new Set<string>()
@@ -646,13 +647,12 @@ export class PipelineStore {
         const c = this.getColor(d)
         if (c) categories.add(c)
       }
+      const sorted = Array.from(categories).sort()
       const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
         : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
       colorMap = new Map()
-      let ci = 0
-      for (const cat of categories) {
-        colorMap.set(cat, palette[ci % palette.length])
-        ci++
+      for (let ci = 0; ci < sorted.length; ci++) {
+        colorMap.set(sorted[ci], palette[ci % palette.length])
       }
     }
 
