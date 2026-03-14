@@ -149,7 +149,8 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     if (!showLabels) return undefined
     const accessor = nodeLabel || nodeIdAccessor
     if (typeof accessor === "function") return accessor
-    return (d: Record<string, any>) => d[accessor]
+    // d is a RealtimeNode — user data lives at d.data, fall back to d.id
+    return (d: Record<string, any>) => d.data?.[accessor] ?? d[accessor] ?? d.id
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Margin

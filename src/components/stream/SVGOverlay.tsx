@@ -181,24 +181,36 @@ export function SVGOverlay(props: SVGOverlayProps) {
     children
   } = props
 
-  // Generate axis ticks
+  // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap
   const xTicks = useMemo(() => {
     if (!showAxes || !scales) return []
-    return scales.x.ticks(5).map(v => ({
+    const bottomAxis = axes?.find(a => a.orient === "bottom")
+    const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
+    // Estimate max ticks that fit: ~70px per x-axis label
+    const maxFit = Math.max(2, Math.floor(width / 70))
+    const requested = bottomAxis?.ticks ?? 5
+    const tickCount = Math.min(requested, maxFit)
+    return scales.x.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.x(v),
-      label: (xFormat || defaultTickFormat)(v)
+      label: fmt(v)
     }))
-  }, [showAxes, scales, xFormat])
+  }, [showAxes, scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
-    return scales.y.ticks(5).map(v => ({
+    const leftAxis = axes?.find(a => a.orient === "left")
+    const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
+    // Estimate max ticks that fit: ~30px per y-axis label
+    const maxFit = Math.max(2, Math.floor(height / 30))
+    const requested = leftAxis?.ticks ?? 5
+    const tickCount = Math.min(requested, maxFit)
+    return scales.y.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.y(v),
-      label: (yFormat || defaultTickFormat)(v)
+      label: fmt(v)
     }))
-  }, [showAxes, scales, yFormat])
+  }, [showAxes, scales, axes, yFormat, height])
 
   // Render annotations
   const renderedAnnotations = useMemo(() => {

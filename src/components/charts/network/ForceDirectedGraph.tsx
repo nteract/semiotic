@@ -143,7 +143,8 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   const nodeLabelFn = useMemo(() => {
     if (!showLabels || !nodeLabel) return undefined
     if (typeof nodeLabel === "function") return nodeLabel
-    return (d: Record<string, any>) => d[nodeLabel]
+    // d is a RealtimeNode — user data lives at d.data, fall back to d.id
+    return (d: Record<string, any>) => d.data?.[nodeLabel] ?? d[nodeLabel] ?? d.id
   }, [showLabels, nodeLabel])
 
   // Legend & margin

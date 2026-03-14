@@ -9,6 +9,7 @@
 
 ## Architecture
 - **HOC Charts**: Simple props, sensible defaults. **Stream Frames**: Full control.
+- **Always use HOC charts** (`ForceDirectedGraph`, `SankeyDiagram`, `LineChart`, `RealtimeLineChart`, etc.) unless you need sophisticated control they don't expose. Stream Frames (`StreamNetworkFrame`, `StreamXYFrame`, `StreamOrdinalFrame`) are low-level escape hatches — they accept raw `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data objects directly.
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
@@ -20,7 +21,7 @@
 
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}), `areaOpacity` (0.7), `showLine` (true)
 
-**StackedAreaChart** — AreaChart + `normalize` (false)
+**StackedAreaChart** — flat array data + `areaBy` (required, groups into stacked areas), `colorBy`, `normalize` (false). Do NOT use `lineBy` or `lineDataAccessor` — those are LineChart props.
 
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 
@@ -45,7 +46,7 @@
 
 ## Network Charts (`semiotic/network`)
 
-**ForceDirectedGraph** — `nodes`, `edges`, `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `nodeSize`, `edgeWidth`, `iterations`, `showLabels`
+**ForceDirectedGraph** — `nodes`, `edges`, `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `colorScheme`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeColor`, `edgeOpacity`, `iterations` (300), `forceStrength` (0.1), `showLabels`, `nodeLabel`, `tooltip`, `showLegend`, `legendInteraction`
 **SankeyDiagram** — `edges`, `nodes`, `valueAccessor`, `edgeColorBy`, `orientation`, `nodeAlign`, `nodeWidth`, `showLabels`, `edgeOpacity`
 **ChordDiagram** — `edges`, `nodes`, `valueAccessor`, `edgeColorBy`, `padAngle`, `groupWidth`, `showLabels`
 **TreeDiagram** — `data` (root), `layout`, `orientation`, `childrenAccessor`, `colorBy`, `colorByDepth`, `edgeStyle`
@@ -57,14 +58,39 @@
 
 Push API: `chartRef.current.push({ time, value })`
 
-**RealtimeLineChart** — `size`, `timeAccessor`, `valueAccessor`, `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
-**RealtimeHistogram** — + `binSize` (required), `categoryAccessor`, `colors`
-**RealtimeSwarmChart** — + `categoryAccessor`, `radius`, `opacity`
-**RealtimeWaterfallChart** — + `positiveColor`, `negativeColor`
-**RealtimeHeatmap** — + `heatmapXBins`, `heatmapYBins`, `aggregation`
-**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles`, `particleStyle`, `tensionConfig`, `thresholds`
+**IMPORTANT**: All pushed data must include a time field (default: `"time"`). If your data uses a different field name, set `timeAccessor` explicitly. Without a valid time field, charts render blank with no error.
+
+**RealtimeLineChart** — `size`, **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
+**RealtimeHistogram** — **`binSize`** (required), **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `colors`. Time field is required even though this shows a distribution — it's used for windowing.
+**RealtimeSwarmChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `radius`, `opacity`
+**RealtimeWaterfallChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `positiveColor`, `negativeColor`
+**RealtimeHeatmap** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `heatmapXBins`, `heatmapYBins`, `aggregation`. Both accessors must match your data fields or the chart renders blank.
+**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), `tensionConfig`, `thresholds`
 
 Realtime encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
+
+### Realtime data shape
+```jsx
+// Every pushed datum should have a time field
+ref.current.push({ time: Date.now(), value: 42 })              // line, waterfall
+ref.current.push({ time: Date.now(), value: 42, category: "A" }) // histogram, swarm
+ref.current.push({ time: Date.now(), value: 42 })              // heatmap (time=x, value=y)
+```
+
+### Any chart can stream via Stream Frames
+The Realtime* HOCs are convenience wrappers. For streaming versions of ANY chart type (scatter, stacked area, bar, etc.), use the corresponding Stream Frame (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and push data via ref.
+
+## Stream Frame Callbacks (advanced — prefer HOCs)
+Stream Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as function, `colorBy` as function, `nodeLabel` as function) receive **`RealtimeNode`/`RealtimeEdge`** wrappers, NOT your raw data. Access your original data via `.data`:
+```jsx
+// WRONG: nodeSize={(d) => d.weight}         — d is RealtimeNode, d.weight is undefined
+// RIGHT: nodeSize={(d) => d.data?.weight}   — d.data is your original node object
+// RIGHT: nodeSize="weight"                  — string accessor handles this automatically
+// WRONG: nodeStyle={(d) => ({ fill: d.datum.color })}  — .datum does not exist
+// RIGHT: nodeStyle={(d) => ({ fill: d.data?.color })}  — use .data
+```
+`customHoverBehavior` and `customClickBehavior` receive `{ type: "node"|"edge", data: <your raw object>, x, y } | null`.
+`tooltipContent` receives `{ type: "node"|"edge", data: <your raw object> }`.
 
 ## Coordinated Views
 
@@ -72,6 +98,12 @@ Realtime encoding: `decay`, `pulse`, `transition`, `staleness` — compose freel
 **CategoryColorProvider** — stable category→color mapping. Props: `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
+
+## ChartContainer
+
+**ChartContainer** — wrapper with title, subtitle, status indicator, toolbar actions. Props: `title`, `subtitle`, `height` (default **400** — set this to match your chart's height or you'll get extra whitespace), `width` (default "100%"), `status` ("live"|"stale"|"error"), `loading`, `error`, `errorBoundary`, `actions` (`{ export, fullscreen, copyConfig }`), `controls`, `style`, `className`
+
+When using `ChartContainer` with a chart that has `size={[w, h]}`, always set `height={h}` on the container to avoid a mismatch.
 
 ## Layout & Composition
 
@@ -81,6 +113,22 @@ Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `
 ## Key Patterns
 
 ```jsx
+// Force-directed graph with custom sizing and hover
+<ForceDirectedGraph
+  nodes={[{ id: "A", group: "eng", weight: 10 }, { id: "B", group: "design", weight: 5 }]}
+  edges={[{ source: "A", target: "B" }]}
+  colorBy="group"
+  nodeSize="weight"           // string accessor → reads node.weight, scales to nodeSizeRange
+  nodeSizeRange={[5, 25]}
+  showLabels
+  showLegend
+  tooltip={(d) => <div>{d.data.id}: {d.data.weight}</div>}
+  frameProps={{
+    customClickBehavior: (d) => { if (d?.type === "node") console.log(d.data) },
+    background: "#f5f5f5",
+  }}
+/>
+
 // Cross-highlighting dashboard
 <CategoryColorProvider categories={["North", "South", "East"]}>
 <LinkedCharts>
@@ -100,13 +148,30 @@ Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `
 <LineChart data={ml} xAccessor="time" yAccessor="value"
   forecast={{ isTraining: "isTraining", isForecast: "isForecast", isAnomaly: "isAnomaly", upperBounds: "upper", lowerBounds: "lower" }} />
 
+// Stacked area (flat array + areaBy, NOT lineBy)
+<StackedAreaChart data={flatData} xAccessor="month" yAccessor="value"
+  areaBy="category" colorBy="category" />
+
 // Gradient area + percentile band
 <AreaChart data={d} xAccessor="x" yAccessor="p95" y0Accessor="p5" gradientFill />
 
-// Realtime
+// Realtime — always include time field in pushed data
 const ref = useRef()
 ref.current.push({ time: Date.now(), value: 42 })
 <RealtimeLineChart ref={ref} timeAccessor="time" valueAccessor="value" />
+
+// Realtime histogram — time field required even for distribution charts
+const histRef = useRef()
+histRef.current.push({ time: Date.now(), value: Math.abs(delta) })
+<RealtimeHistogram ref={histRef} timeAccessor="time" valueAccessor="value" binSize={100} />
+
+// Streaming sankey with particles
+<StreamNetworkFrame
+  ref={sankeyRef}
+  chartType="sankey"
+  showParticles={true}
+  particleStyle={{ radius: 2, colorBy: "source", speedMultiplier: 1.5 }}
+/>
 ```
 
 ## Annotations

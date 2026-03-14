@@ -111,6 +111,63 @@ const data = [
 
 Key props: `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `showValues`
 
+### AreaChart
+
+```jsx
+import { AreaChart } from "semiotic/ai"
+
+const data = [
+  { month: 1, revenue: 4200 },
+  { month: 2, revenue: 5800 },
+  { month: 3, revenue: 5200 },
+  { month: 4, revenue: 7100 },
+  { month: 5, revenue: 6800 },
+  { month: 6, revenue: 7500 }
+]
+
+<AreaChart
+  data={data}
+  xAccessor="month"
+  yAccessor="revenue"
+  gradientFill
+  xLabel="Month"
+  yLabel="Revenue ($)"
+/>
+```
+
+Key props: `areaBy` (group into multiple areas), `y0Accessor` (band/ribbon), `gradientFill`, `areaOpacity` (0.7)
+
+### StackedAreaChart
+
+```jsx
+import { StackedAreaChart } from "semiotic/ai"
+
+// IMPORTANT: Use a flat array with an areaBy field for grouping.
+// Do NOT use lineBy or lineDataAccessor — those are LineChart props.
+const data = [
+  { month: 1, value: 20, category: "Product" },
+  { month: 2, value: 25, category: "Product" },
+  { month: 3, value: 30, category: "Product" },
+  { month: 1, value: 15, category: "Service" },
+  { month: 2, value: 12, category: "Service" },
+  { month: 3, value: 18, category: "Service" },
+  { month: 1, value: 8, category: "Consulting" },
+  { month: 2, value: 10, category: "Consulting" },
+  { month: 3, value: 7, category: "Consulting" }
+]
+
+<StackedAreaChart
+  data={data}
+  xAccessor="month"
+  yAccessor="value"
+  areaBy="category"
+  colorBy="category"
+  showLegend
+/>
+```
+
+Key props: **`areaBy`** (required — groups flat data into stacked areas), `colorBy`, `normalize` (100% stacked). Data must be a flat array, not pre-grouped objects.
+
 ### ConnectedScatterplot
 
 ```jsx
@@ -452,11 +509,11 @@ Key props: `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`, 
 import { ForceDirectedGraph } from "semiotic/ai"
 
 const nodes = [
-  { id: "Alice", team: "Engineering" },
-  { id: "Bob", team: "Engineering" },
-  { id: "Carol", team: "Design" },
-  { id: "Dave", team: "Design" },
-  { id: "Eve", team: "Product" }
+  { id: "Alice", team: "Engineering", influence: 10 },
+  { id: "Bob", team: "Engineering", influence: 6 },
+  { id: "Carol", team: "Design", influence: 8 },
+  { id: "Dave", team: "Design", influence: 4 },
+  { id: "Eve", team: "Product", influence: 12 }
 ]
 
 const edges = [
@@ -472,12 +529,51 @@ const edges = [
   nodes={nodes}
   edges={edges}
   colorBy="team"
-  nodeSize={10}
+  nodeSize="influence"
+  nodeSizeRange={[5, 25]}
   showLabels
+  showLegend
+  edgeOpacity={0.4}
+  tooltip={(d) => <div><strong>{d.data.id}</strong><br/>Team: {d.data.team}</div>}
 />
 ```
 
-Key props: **`nodes`** and **`edges`** (both required), `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`
+Key props: **`nodes`** and **`edges`** (both required), `nodeIDAccessor` (default "id"), `sourceAccessor` (default "source"), `targetAccessor` (default "target"), `colorBy`, `nodeSize` (number, string field name, or function), `nodeSizeRange`, `showLabels`, `showLegend`, `tooltip`
+
+**Note**: Always use `ForceDirectedGraph` (not `StreamNetworkFrame`) unless you need sophisticated control it doesn't expose. `StreamNetworkFrame` is a low-level escape hatch whose callbacks receive internal `RealtimeNode` wrappers — access your data via `.data` (e.g., `nodeStyle={(d) => ({ fill: d.data?.color })}`). HOC components like `ForceDirectedGraph` handle this automatically.
+
+### ForceDirectedGraph with custom click/hover
+
+```jsx
+import { useState } from "react"
+import { ForceDirectedGraph } from "semiotic/ai"
+
+const [selected, setSelected] = useState(null)
+
+<ForceDirectedGraph
+  nodes={nodes}
+  edges={edges}
+  colorBy="team"
+  nodeSize="influence"
+  nodeSizeRange={[5, 25]}
+  showLabels
+  width={800}
+  height={600}
+  frameProps={{
+    customClickBehavior: (d) => {
+      // d is { type: "node"|"edge", data: <your raw node/edge>, x, y } or null
+      if (d?.type === "node") setSelected(d.data)
+    },
+    customHoverBehavior: (d) => {
+      // same shape as click — d.data is your original object
+      if (d?.type === "node") console.log("Hovering:", d.data.id)
+    },
+    background: "#1a1a2e",
+  }}
+/>
+```
+
+Key props: `frameProps` passes through to the underlying `StreamNetworkFrame` for advanced control (custom click/hover, background, annotations). Callback `d.data` is always your original node/edge object.
 
 ### SankeyDiagram
 
@@ -531,7 +627,98 @@ Key props: **`edges`** (required), shows bidirectional relationships in a circle
 
 ## Realtime — Push API via Ref
 
-### Streaming Sankey (StreamNetworkFrame)
+### RealtimeLineChart
+
+```jsx
+import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic/ai"
+
+const chartRef = useRef()
+
+// Push data — MUST include a time field
+useEffect(() => {
+  const interval = setInterval(() => {
+    chartRef.current?.push({ time: Date.now(), value: Math.random() * 100 })
+  }, 500)
+  return () => clearInterval(interval)
+}, [])
+
+<RealtimeLineChart
+  ref={chartRef}
+  size={[600, 300]}
+  timeAccessor="time"
+  valueAccessor="value"
+  windowSize={120}
+  stroke="#76b7b2"
+/>
+```
+
+Key props: `timeAccessor`, `valueAccessor`, `windowSize`, `stroke`, `strokeWidth`
+
+### RealtimeHistogram
+
+```jsx
+import { useRef, useEffect } from "react"
+import { RealtimeHistogram } from "semiotic/ai"
+
+const chartRef = useRef()
+
+// IMPORTANT: Include time field even though this shows a distribution — it's used for windowing
+useEffect(() => {
+  const interval = setInterval(() => {
+    chartRef.current?.push({
+      time: Date.now(),
+      value: Math.random() * 1000
+    })
+  }, 200)
+  return () => clearInterval(interval)
+}, [])
+
+<RealtimeHistogram
+  ref={chartRef}
+  size={[400, 250]}
+  timeAccessor="time"
+  valueAccessor="value"
+  binSize={100}
+/>
+```
+
+Key props: **`binSize`** (required), `timeAccessor` ("time"), `valueAccessor` ("value"). Without a time field in your data, the chart renders blank.
+
+### RealtimeHeatmap
+
+```jsx
+import { useRef, useEffect } from "react"
+import { RealtimeHeatmap } from "semiotic/ai"
+
+const chartRef = useRef()
+
+// IMPORTANT: Data must have fields matching timeAccessor and valueAccessor (defaults: "time" and "value")
+useEffect(() => {
+  const interval = setInterval(() => {
+    chartRef.current?.push({
+      time: Date.now(),
+      value: Math.random() * 500
+    })
+  }, 100)
+  return () => clearInterval(interval)
+}, [])
+
+<RealtimeHeatmap
+  ref={chartRef}
+  size={[400, 250]}
+  timeAccessor="time"
+  valueAccessor="value"
+  heatmapXBins={30}
+  heatmapYBins={10}
+/>
+```
+
+Key props: `timeAccessor` ("time"), `valueAccessor` ("value"), `heatmapXBins`, `heatmapYBins`. Both accessors must match your data fields or the chart renders blank.
+
+### Streaming Sankey with Particles (StreamNetworkFrame)
+
+Use `StreamNetworkFrame` only when you need low-level control that HOC charts don't expose. For most cases, use `ForceDirectedGraph`, `SankeyDiagram`, or `ChordDiagram` instead.
 
 ```jsx
 import { useRef, useEffect } from "react"
@@ -539,7 +726,6 @@ import { StreamNetworkFrame } from "semiotic"
 
 const chartRef = useRef()
 
-// Push edges at any frequency
 useEffect(() => {
   const edges = [
     { source: "Salary", target: "Budget", value: 5000 },
@@ -558,7 +744,42 @@ useEffect(() => {
   chartType="sankey"
   size={[800, 400]}
   edgeOpacity={0.4}
+  showParticles={true}
+  particleStyle={{
+    radius: 2,
+    opacity: 0.8,
+    speedMultiplier: 1.5,
+    maxPerEdge: 4,
+    colorBy: "source"
+  }}
 />
 ```
 
-Key props: push via ref (`push`, `pushMany`, `clear`), `chartType="sankey"`, uses `StreamNetworkFrame` from `semiotic`
+Key props: `chartType="sankey"`, `showParticles` (boolean — enables animated particles flowing along edges), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), push via ref (`push`, `pushMany`, `clear`)
+
+### Streaming any chart type via Stream Frames
+
+The Realtime* HOCs are convenience wrappers. For streaming versions of scatter, stacked area, bar, or any other chart, use the corresponding Stream Frame with `runtimeMode="streaming"`:
+
+```jsx
+import { useRef } from "react"
+import { StreamXYFrame } from "semiotic/xy"
+
+const chartRef = useRef()
+
+// Push data via ref — same push API as Realtime* HOCs
+chartRef.current?.push({ time: Date.now(), size: 42, category: "A" })
+
+<StreamXYFrame
+  ref={chartRef}
+  chartType="scatter"
+  runtimeMode="streaming"
+  xAccessor="time"
+  yAccessor="size"
+  colorAccessor="category"
+  size={[600, 300]}
+  margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+/>
+```
+
+Available Stream Frames: `StreamXYFrame` (line, area, stackedArea, scatter), `StreamOrdinalFrame` (bar, grouped bar), `StreamNetworkFrame` (sankey, force, chord)
