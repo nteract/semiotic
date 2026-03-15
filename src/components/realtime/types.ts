@@ -28,6 +28,8 @@ export interface AnnotationContext {
   frameType?: "xy" | "ordinal" | "network"
   /** Point scene nodes for point-anchored annotations */
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
+  /** Curve interpolation type from the parent chart */
+  curve?: string
 }
 
 export interface CrosshairStyle {

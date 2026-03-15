@@ -1028,6 +1028,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
             )}
+            curve={typeof curve === "string" ? curve : undefined}
           />
         </div>
       )
@@ -1115,6 +1116,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           pointNodes={storeRef.current?.scene.filter(
             (n): n is PointSceneNode => n.type === "point"
           )}
+          curve={typeof curve === "string" ? curve : undefined}
         />
         {(brush || onBrush) && (
           <BrushOverlay

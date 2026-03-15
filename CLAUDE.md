@@ -13,7 +13,20 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip`, `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `emphasis` ("primary"|"secondary")
+`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation` (callback, see below), `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `emphasis` ("primary"|"secondary")
+
+### tooltip
+`tooltip` accepts: `true` (default tooltip), `false` (disabled), a **function** `(datum: Record<string, any>) => ReactNode`, or a config `{ fields?: string[], title?: accessor, format?: fn, style?: CSSProperties }`. The function form receives your raw data object directly.
+
+### onObservation
+`onObservation` receives a `ChartObservation` with `type` and event-specific fields:
+- **hover**: `{ type: "hover", datum: <your data>, x, y, timestamp, chartType, chartId }`
+- **hover-end**: `{ type: "hover-end", timestamp, chartType, chartId }`
+- **click**: `{ type: "click", datum: <your data>, x, y, timestamp, chartType, chartId }`
+- **brush**: `{ type: "brush", extent: { x: [min, max], y: [min, max] }, timestamp, chartType }`
+- **selection**: `{ type: "selection", selection: { name, fields }, timestamp, chartType }`
+
+The `datum` field contains your original data object (not a wrapper).
 
 ## XY Charts (`semiotic/xy`)
 
@@ -38,11 +51,11 @@
 **GroupedBarChart** — + `groupBy` (required)
 **SwarmPlot** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
 **BoxPlot** — + `showOutliers`, `outlierRadius`
-**Histogram** — + `bins` (25), `relative`. Always horizontal.
+**Histogram** — + `bins` (25), `relative`. Always horizontal. `categoryAccessor` is optional (defaults to `"category"`) — for a single-group histogram, either omit it or ensure your data has a `category` field with a single value.
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
 **PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
-**DonutChart** — PieChart + `innerRadius` (60), `centerContent`
+**DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode — any React element, e.g. `<div>50%</div>`)
 
 ## Network Charts (`semiotic/network`)
 
@@ -52,7 +65,7 @@
 **TreeDiagram** — `data` (root), `layout`, `orientation`, `childrenAccessor`, `colorBy`, `colorByDepth`, `edgeStyle`
 **Treemap** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `showLabels`, `labelMode`
 **CirclePack** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `circleOpacity`
-**OrbitDiagram** — `data` (root), `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed` (0.25), `revolution`, `eccentricity`, `orbitSize`, `nodeRadius`, `showRings`, `showLabels`, `animated` (true), `colorBy`, `colorByDepth`, `annotations` (widget annotations anchor by nodeId)
+**OrbitDiagram** — animated radial/orbital hierarchy. Use this (not TreeDiagram) when you want animated orbiting nodes. `data` (root), `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed` (0.25), `revolution`, `eccentricity`, `orbitSize`, `nodeRadius`, `showRings`, `showLabels`, `animated` (true), `colorBy`, `colorByDepth`, `annotations` (widget annotations anchor by nodeId). For static radial trees, use `TreeDiagram layout="radial"` instead.
 
 ## Realtime Charts (`semiotic/realtime`)
 
@@ -60,12 +73,14 @@ Push API: `chartRef.current.push({ time, value })`
 
 **IMPORTANT**: All pushed data must include a time field (default: `"time"`). If your data uses a different field name, set `timeAccessor` explicitly. Without a valid time field, charts render blank with no error.
 
-**RealtimeLineChart** — `size`, **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
+Sizing: all Realtime HOCs accept both `size={[600, 400]}` (tuple) and `width={600} height={400}`. Either works.
+
+**RealtimeLineChart** — `size`|`width`+`height`, **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
 **RealtimeHistogram** — **`binSize`** (required), **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `colors`. Time field is required even though this shows a distribution — it's used for windowing.
 **RealtimeSwarmChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `radius`, `opacity`
 **RealtimeWaterfallChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `positiveColor`, `negativeColor`
 **RealtimeHeatmap** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `heatmapXBins`, `heatmapYBins`, `aggregation`. Both accessors must match your data fields or the chart renders blank.
-**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), `tensionConfig`, `thresholds`
+**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), `tensionConfig`, `thresholds`. Push **individual edges**: `ref.current.push({ source: "A", target: "B", value: 42 })`. Use `ref.current.pushMany([...edges])` for batches.
 
 Realtime encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
 
@@ -129,12 +144,14 @@ When using `ChartContainer` with a chart that has `size={[w, h]}`, always set `h
   }}
 />
 
-// Cross-highlighting dashboard
+// Cross-highlighting dashboard with column spanning
+// emphasis="primary" makes a chart span 2 columns in ChartGrid
 <CategoryColorProvider categories={["North", "South", "East"]}>
 <LinkedCharts>
   <ChartGrid columns={2}>
-    <LineChart data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} responsiveWidth />
+    <LineChart data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} emphasis="primary" responsiveWidth />
     <BarChart data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} responsiveWidth />
+    <Scatterplot data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} responsiveWidth />
   </ChartGrid>
 </LinkedCharts>
 </CategoryColorProvider>
@@ -152,8 +169,16 @@ When using `ChartContainer` with a chart that has `size={[w, h]}`, always set `h
 <StackedAreaChart data={flatData} xAccessor="month" yAccessor="value"
   areaBy="category" colorBy="category" />
 
-// Gradient area + percentile band
-<AreaChart data={d} xAccessor="x" yAccessor="p95" y0Accessor="p5" gradientFill />
+// Percentile band (p5–p95) with main line (p50) — MUST layer two charts
+// AreaChart with y0Accessor renders the band; showLine only draws the TOP edge (p95), not p50
+// To show a separate main line, add a LineChart on top:
+<>
+  <AreaChart data={d} xAccessor="x" yAccessor="p95" y0Accessor="p5"
+    showLine={false} areaOpacity={0.3} gradientFill />
+  <LineChart data={d} xAccessor="x" yAccessor="p50" lineWidth={2} />
+</>
+// Simple gradient area (no band):
+<AreaChart data={d} xAccessor="x" yAccessor="y" gradientFill />
 
 // Realtime — always include time field in pushed data
 const ref = useRef()
@@ -165,13 +190,26 @@ const histRef = useRef()
 histRef.current.push({ time: Date.now(), value: Math.abs(delta) })
 <RealtimeHistogram ref={histRef} timeAccessor="time" valueAccessor="value" binSize={100} />
 
-// Streaming sankey with particles
+// Streaming sankey with particles — push individual edges, NOT full snapshots
+const sankeyRef = useRef()
+sankeyRef.current.push({ source: "Web", target: "API", value: 1 })    // one edge at a time
+sankeyRef.current.pushMany([                                            // or batch
+  { source: "Web", target: "API", value: 3 },
+  { source: "API", target: "DB", value: 2 },
+])
 <StreamNetworkFrame
   ref={sankeyRef}
   chartType="sankey"
   showParticles={true}
   particleStyle={{ radius: 2, colorBy: "source", speedMultiplier: 1.5 }}
+  width={600} height={400}
 />
+
+// SSR — renderToStaticSVG takes frame type string, not component name
+import { renderOrdinalToStaticSVG } from "semiotic/server"
+const svg = renderOrdinalToStaticSVG({
+  data, categoryAccessor: "category", valueAccessor: "value", width: 600, height: 400
+})
 ```
 
 ## Annotations
@@ -183,7 +221,9 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 
 ## Server-Side Rendering
 - All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
-- `renderToStaticSVG()`, `renderXYToStaticSVG()`, `renderOrdinalToStaticSVG()`, `renderNetworkToStaticSVG()` — standalone SVG generation from `semiotic/server`
+- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` (NOT a component name like "BarChart")
+- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`
+- For a bar chart: `renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })`
 - Works with Next.js App Router, Remix, Astro — same component on server and client
 
 ## AI Features
@@ -194,7 +234,7 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - `validateProps(componentName, props)` — prop validation with Levenshtein typo suggestions
 - `diagnoseConfig(componentName, props)` — anti-pattern detector (12 checks: empty data, bad dimensions, missing accessors, margin overflow, etc.)
 - `ChartErrorBoundary` — error boundary
-- `exportChart(el, { format: "png"|"svg" })` — browser export (default: PNG, composites canvas + SVG layers)
+- `exportChart(containerDiv, { format: "png"|"svg" })` — pass the **wrapper div** (not the SVG element); it finds canvas + SVG internally. Default: PNG, composites canvas + SVG layers
 - `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
 
 ## Differentiators

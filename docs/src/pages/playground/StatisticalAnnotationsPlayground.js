@@ -209,6 +209,8 @@ const forecastControls = [
     default: true },
   { name: "fCurve", type: "select", label: "Curve", group: "Layout",
     default: "monotoneX", options: ["linear", "monotoneX", "step", "basis", "cardinal"] },
+  { name: "fMode", type: "select", label: "Chart Mode", group: "Layout",
+    default: "primary", options: ["primary", "context", "sparkline"] },
 ]
 
 function generateForecastCode(values, isPrecomputed) {
@@ -232,6 +234,7 @@ function generateForecastCode(values, isPrecomputed) {
     code += `  data={data}\n`
     code += `  xAccessor="time"\n`
     code += `  yAccessor="value"\n`
+    if (values.fMode && values.fMode !== "primary") code += `  mode="${values.fMode}"\n`
     if (values.fShowGrid) code += `  showGrid\n`
     if (values.fCurve !== "monotoneX") code += `  curve="${values.fCurve}"\n`
     code += `  forecast={{\n`
@@ -252,6 +255,7 @@ function generateForecastCode(values, isPrecomputed) {
     code += `  data={data}\n`
     code += `  xAccessor="time"\n`
     code += `  yAccessor="value"\n`
+    if (values.fMode && values.fMode !== "primary") code += `  mode="${values.fMode}"\n`
     if (values.fShowGrid) code += `  showGrid\n`
     if (values.fCurve !== "monotoneX") code += `  curve="${values.fCurve}"\n`
     code += `  forecast={{\n`
@@ -388,14 +392,17 @@ function ForecastChart({ data, dataset, values, width }) {
     anomalyRadius: values.fAnomalyRadius,
   } : undefined
 
+  const mode = values.fMode || "primary"
+
   return (
     <LineChart
-      key={`forecast-${dataset.mode}-${values.fCurve}`}
+      key={`forecast-${dataset.mode}-${values.fCurve}-${mode}`}
       data={data}
       xAccessor="time"
       yAccessor="value"
-      width={width}
-      height={420}
+      mode={mode}
+      width={mode === "primary" ? width : undefined}
+      height={mode === "primary" ? 420 : undefined}
       showGrid={values.fShowGrid}
       curve={values.fCurve}
       xLabel="Time"

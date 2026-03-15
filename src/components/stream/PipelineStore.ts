@@ -875,9 +875,11 @@ export class PipelineStore {
 
       const rawX0 = scales.x(clampedStart)
       const rawX1 = scales.x(clampedEnd)
-      const x0 = Math.min(rawX0, rawX1) + gap / 2
-      const x1 = Math.max(rawX0, rawX1) - gap / 2
-      const barWidth = x1 - x0
+      const rawWidth = Math.abs(rawX1 - rawX0)
+      // When bins are narrow, reduce gap to preserve visibility (min 1px bar)
+      const effectiveGap = rawWidth > gap + 1 ? gap : 0
+      const x0 = Math.min(rawX0, rawX1) + effectiveGap / 2
+      const barWidth = Math.max(rawWidth - effectiveGap, 1)
       if (barWidth <= 0) continue
 
       if (categoryOrder && bin.categories.size > 0) {

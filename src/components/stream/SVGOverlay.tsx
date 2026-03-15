@@ -117,6 +117,8 @@ interface SVGOverlayProps {
   yAccessor?: string
   annotationData?: Record<string, any>[]
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
+  /** Curve interpolation type for envelope annotations */
+  curve?: string
 
   children?: ReactNode
 }
@@ -178,6 +180,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     yAccessor: annYAccessor,
     annotationData,
     pointNodes,
+    curve: annCurve,
     children
   } = props
 
@@ -229,7 +232,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
       height,
       data: annotationData,
       frameType: "xy",
-      pointNodes
+      pointNodes,
+      curve: annCurve
     }
 
     return annotations

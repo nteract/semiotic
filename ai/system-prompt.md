@@ -15,17 +15,17 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **GroupedBarChart** — `categoryAccessor`, `valueAccessor`, **`groupBy`** (required)
 - **SwarmPlot** — `categoryAccessor`, `valueAccessor`, `pointRadius`
 - **BoxPlot** — `categoryAccessor`, `valueAccessor`, `showOutliers`
-- **Histogram** — `categoryAccessor`, `valueAccessor`, `bins` (default 25), `relative`
+- **Histogram** — `categoryAccessor` (optional, defaults to `"category"` — omit for single-group), `valueAccessor`, `bins` (default 25), `relative`
 - **ViolinPlot** — `categoryAccessor`, `valueAccessor`, `bins`, `curve`, `showIQR`
 - **DotPlot** — `categoryAccessor`, `valueAccessor`, `sort`, `dotRadius`
 - **PieChart** — `categoryAccessor`, `valueAccessor`
-- **DonutChart** — `categoryAccessor`, `valueAccessor`, `innerRadius`, `centerContent`
+- **DonutChart** — `categoryAccessor`, `valueAccessor`, `innerRadius`, `centerContent` (ReactNode, e.g. `<div>50%</div>`)
 
 ## Hierarchical Data (`data: { children: [...] }`)
 - **TreeDiagram** — `childrenAccessor`, `nodeIdAccessor`, `layout` ("tree"|"cluster"|"partition"), `orientation`
 - **Treemap** — `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorByDepth`
 - **CirclePack** — `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorByDepth`
-- **OrbitDiagram** — `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`
+- **OrbitDiagram** — animated radial/orbital hierarchy (use this, not TreeDiagram, for animated orbiting nodes). `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`. For static radial trees use `TreeDiagram layout="radial"`.
 
 ## Network Data (`nodes: object[]`, `edges: object[]`)
 - **ForceDirectedGraph** — **`nodes`**, **`edges`** (both required), `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeOpacity`, `iterations`, `forceStrength`, `showLabels`, `nodeLabel`, `tooltip`, `showLegend`
@@ -38,12 +38,14 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 
 **IMPORTANT**: All pushed data must include a time field (default: `"time"`). Set `timeAccessor` if your field is named differently. Without a valid time field, charts silently render blank.
 
+Sizing: all Realtime HOCs accept both `size={[600, 400]}` (tuple) and `width={600} height={400}`.
+
 - **RealtimeLineChart** — `ref.current.push(datum)`, **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `windowSize`
 - **RealtimeHistogram** — **`binSize`** (required), **`timeAccessor`** ("time"), **`valueAccessor`** ("value"). Time field required even though this is a distribution — it's used for windowing.
 - **RealtimeSwarmChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`
 - **RealtimeWaterfallChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `positiveColor`, `negativeColor`
 - **RealtimeHeatmap** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `heatmapXBins`, `heatmapYBins`, `aggregation`. Both must match your data fields.
-- **StreamNetworkFrame** (`chartType="sankey"`) — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`) (import from `semiotic`)
+- **StreamNetworkFrame** (`chartType="sankey"`) — push **individual edges**: `ref.current.push({ source, target, value })`. Use `ref.current.pushMany([...edges])` for batches. Do NOT push full edge snapshots. Props: `sourceAccessor`, `targetAccessor`, `valueAccessor`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`) (import from `semiotic`)
 
 Pushed data shape: `{ time: Date.now(), value: 42 }` for line/waterfall/heatmap, add `category` for histogram/swarm.
 
@@ -54,4 +56,18 @@ Any chart type can stream via Stream Frames (`StreamXYFrame`, `StreamOrdinalFram
 - When using with `size={[w, h]}`, set `height={h}` on the container or you'll get extra whitespace.
 
 ## Common Props (all components)
-`width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`
+`width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`, `onObservation`, `emphasis` ("primary"|"secondary")
+
+### tooltip
+`true` (default) | `false` | `(datum) => ReactNode` (function receives your raw data) | config `{ fields?, title?, format?, style? }`
+
+### onObservation
+Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selection", datum: <your data>, x, y, timestamp, chartType, chartId }`. The `datum` field is your original data object. Hover-end/click-end events omit `datum`.
+
+### emphasis
+`emphasis="primary"` makes a chart span two columns inside a `ChartGrid`.
+
+## Key Patterns
+- **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
+- **SSR**: `renderToStaticSVG("ordinal", props)` or `renderOrdinalToStaticSVG(props)` from `semiotic/server`. Frame type is `"xy"` | `"ordinal"` | `"network"` (NOT component name).
+- **exportChart**: Pass the wrapper div, not the SVG element: `exportChart(wrapperDiv, { format: "png" })`. It finds canvas+SVG internally.
