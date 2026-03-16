@@ -418,6 +418,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
+      showValues,
+      heatmapValueFormat,
       marginalGraphics,
       pointIdAccessor,
       xScaleType,
@@ -524,6 +526,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
+      showValues,
+      heatmapValueFormat,
       pointIdAccessor,
       curve
     }), [
@@ -537,6 +541,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
+      showValues, heatmapValueFormat,
       isStreaming, pointIdAccessor, curve
     ])
 

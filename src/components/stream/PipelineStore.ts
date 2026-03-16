@@ -114,6 +114,10 @@ export interface PipelineConfig {
   heatmapXBins?: number
   heatmapYBins?: number
 
+  // Heatmap value labels
+  showValues?: boolean
+  heatmapValueFormat?: (v: number) => string
+
   // Point identification (for point-anchored annotations)
   pointIdAccessor?: string | ((d: any) => string)
 
@@ -851,7 +855,12 @@ export class PipelineStore {
           cellW,
           cellH,
           fill,
-          entry.datum
+          entry.datum,
+          {
+            value: entry.val,
+            showValues: this.config.showValues,
+            valueFormat: this.config.heatmapValueFormat
+          }
         ))
       }
     }
@@ -937,7 +946,12 @@ export class PipelineStore {
         cellW,
         cellH,
         fill,
-        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data }
+        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data },
+        {
+          value: val,
+          showValues: this.config.showValues,
+          valueFormat: this.config.heatmapValueFormat
+        }
       ))
     }
 

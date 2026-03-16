@@ -9,7 +9,8 @@ import type {
   SwarmStyle,
   HoverAnnotationConfig,
   HoverData,
-  AnnotationContext
+  AnnotationContext,
+  AnnotationAnchorMode
 } from "../realtime/types"
 
 // ── Realtime encoding configs ─────────────────────────────────────────
@@ -207,6 +208,12 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: any
+  /** Numeric cell value (for canvas text rendering when showValues is enabled) */
+  value?: number
+  /** Whether to render the value as text inside the cell */
+  showValues?: boolean
+  /** Format function for the displayed value */
+  valueFormat?: (v: number) => string
   _pulseIntensity?: number
   _pulseColor?: string
   /** Animation target fields (set during transitions) */
@@ -470,6 +477,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   heatmapXBins?: number
   /** Number of y-axis bins for streaming heatmap (default: 20) */
   heatmapYBins?: number
+
+  // ── Heatmap value labels ──────────────────────────
+  /** Show numeric values inside heatmap cells (rendered natively on canvas) */
+  showValues?: boolean
+  /** Format function for heatmap cell value labels */
+  heatmapValueFormat?: (v: number) => string
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────
@@ -502,5 +515,6 @@ export type {
   SwarmStyle,
   HoverAnnotationConfig,
   HoverData,
-  AnnotationContext
+  AnnotationContext,
+  AnnotationAnchorMode
 }

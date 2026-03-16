@@ -205,9 +205,16 @@ export function buildHeatcellNode(
   w: number,
   h: number,
   fill: string,
-  datum: any
+  datum: any,
+  options?: { value?: number; showValues?: boolean; valueFormat?: (v: number) => string }
 ): HeatcellSceneNode {
-  return { type: "heatcell", x, y, w, h, fill, datum }
+  const node: HeatcellSceneNode = { type: "heatcell", x, y, w, h, fill, datum }
+  if (options?.showValues) {
+    node.showValues = true
+    node.value = options.value
+    if (options.valueFormat) node.valueFormat = options.valueFormat
+  }
+  return node
 }
 
 // ── Scene graph container ──────────────────────────────────────────────

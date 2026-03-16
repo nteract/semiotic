@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
@@ -346,6 +346,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     }))
   }, [showAxes, scales, axes, yFormat, height])
 
+  // Persistent cache for sticky annotation positions (survives re-renders)
+  const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+
   // Render annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
@@ -364,7 +367,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
       data: annotationData,
       frameType: "xy",
       pointNodes,
-      curve: annCurve
+      curve: annCurve,
+      stickyPositionCache: stickyPositionCacheRef.current
     }
 
     return annotations

@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
@@ -220,6 +220,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     }))
   }, [showAxes, scales, rFormat, isRadial])
 
+  // Persistent cache for sticky annotation positions
+  const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+
   // Annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
@@ -249,7 +252,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       width,
       height,
       data: annotationData,
-      frameType: "ordinal"
+      frameType: "ordinal",
+      stickyPositionCache: stickyPositionCacheRef.current
     }
 
     return annotations

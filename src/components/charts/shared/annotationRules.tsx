@@ -51,6 +51,93 @@ function resolveY(
 }
 
 /**
+ * For "latest" anchor mode, resolve coordinates from the most recent datum
+ * in the buffer rather than from the annotation's own coordinate fields.
+ */
+function resolveLatest(
+  context: AnnotationContext
+): { x: number; y: number } | null {
+  const data = context.data
+  if (!data || data.length === 0) return null
+
+  const latestDatum = data[data.length - 1]
+  const scaleX = context.scales?.x ?? context.scales?.time
+  const scaleY = context.scales?.y ?? context.scales?.value
+  if (!scaleX || !scaleY) return null
+
+  const xAcc = context.xAccessor || "x"
+  const yAcc = context.yAccessor || "y"
+
+  const xVal = latestDatum[xAcc]
+  const yVal = latestDatum[yAcc]
+  if (xVal == null || yVal == null) return null
+
+  return { x: scaleX(xVal), y: scaleY(yVal) }
+}
+
+/**
+ * Resolve annotation position respecting anchor mode.
+ * - "fixed" (default): resolve from annotation's own fields
+ * - "latest": resolve from the most recent datum in the buffer
+ * - "sticky": resolve from annotation fields; if not found, use cached position
+ *
+ * Returns resolved pixel coordinates and optionally updates the sticky cache.
+ */
+function resolveAnchoredPosition(
+  ann: Record<string, any>,
+  index: number,
+  context: AnnotationContext
+): { x: number; y: number } | null {
+  const anchor = ann.anchor || "fixed"
+
+  if (anchor === "latest") {
+    // For "latest" with pointId, use the last point node
+    if (ann.pointId != null && context.pointNodes && context.pointNodes.length > 0) {
+      const lastNode = context.pointNodes[context.pointNodes.length - 1]
+      return { x: lastNode.x, y: lastNode.y }
+    }
+    const pos = resolveLatest(context)
+    if (pos) {
+      // Update sticky cache so "latest" positions are also cached
+      context.stickyPositionCache?.set(index, pos)
+    }
+    return pos
+  }
+
+  // For "fixed" and "sticky", try normal resolution first
+  let px: number | null = null
+  let py: number | null = null
+
+  if (ann.pointId != null && context.pointNodes) {
+    const match = context.pointNodes.find(p => p.pointId === ann.pointId)
+    if (match) {
+      px = match.x
+      py = match.y
+    }
+  }
+
+  if (px == null || py == null) {
+    px = resolveX(ann, context)
+    py = resolveY(ann, context)
+  }
+
+  if (px != null && py != null) {
+    // Successfully resolved — update sticky cache
+    context.stickyPositionCache?.set(index, { x: px, y: py })
+    return { x: px, y: py }
+  }
+
+  // Resolution failed — datum may have been evicted from the window
+  if (anchor === "sticky") {
+    const cached = context.stickyPositionCache?.get(index)
+    if (cached) return cached
+  }
+
+  // "fixed" mode: return null (annotation disappears)
+  return null
+}
+
+/**
  * Returns true if a point annotation is within the visible chart area.
  * Used to hide data-anchored annotations (labels, callouts) that have
  * scrolled off-screen in a streaming chart.
@@ -83,19 +170,9 @@ export function createDefaultAnnotationRules(
     switch (ann.type) {
       // ── Label ─────────────────────────────────────────────────────────
       case "label": {
-        let px: number | null = null
-        let py: number | null = null
-
-        if (ann.pointId != null && context.pointNodes) {
-          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
-          if (!match) return null
-          px = match.x
-          py = match.y
-        } else {
-          px = resolveX(ann, context)
-          py = resolveY(ann, context)
-        }
-        if (px == null || py == null) return null
+        const pos = resolveAnchoredPosition(ann, index, context)
+        if (!pos) return null
+        const { x: px, y: py } = pos
         if (!isInBounds(px, py, context)) return null
         return (
           <Annotation
@@ -120,19 +197,9 @@ export function createDefaultAnnotationRules(
 
       // ── Callout ───────────────────────────────────────────────────────
       case "callout": {
-        let px: number | null = null
-        let py: number | null = null
-
-        if (ann.pointId != null && context.pointNodes) {
-          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
-          if (!match) return null
-          px = match.x
-          py = match.y
-        } else {
-          px = resolveX(ann, context)
-          py = resolveY(ann, context)
-        }
-        if (px == null || py == null) return null
+        const pos = resolveAnchoredPosition(ann, index, context)
+        if (!pos) return null
+        const { x: px, y: py } = pos
         if (!isInBounds(px, py, context)) return null
         return (
           <Annotation
@@ -727,18 +794,15 @@ export function createDefaultAnnotationRules(
         let px: number | null = null
         let py: number | null = null
 
-        if (ann.pointId != null && context.pointNodes) {
-          const match = context.pointNodes.find(p => p.pointId === ann.pointId)
-          if (!match) return null
-          px = match.x
-          py = match.y
-        } else if (ann.px != null && ann.py != null) {
-          // Explicit pixel coordinates
+        if (ann.px != null && ann.py != null) {
+          // Explicit pixel coordinates bypass anchor resolution
           px = ann.px
           py = ann.py
         } else {
-          px = resolveX(ann, context)
-          py = resolveY(ann, context)
+          const pos = resolveAnchoredPosition(ann, index, context)
+          if (!pos) return null
+          px = pos.x
+          py = pos.y
         }
         if (px == null || py == null) return null
         if (!isInBounds(px, py, context)) return null
@@ -781,9 +845,9 @@ export function createDefaultAnnotationRules(
 
       // ── Text (plain label at data coordinates) ──────────────────────
       case "text": {
-        const px = resolveX(ann, context)
-        const py = resolveY(ann, context)
-        if (px == null || py == null) return null
+        const pos = resolveAnchoredPosition(ann, index, context)
+        if (!pos) return null
+        const { x: px, y: py } = pos
         return (
           <text
             key={`ann-text-${index}`}

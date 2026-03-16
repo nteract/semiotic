@@ -85,6 +85,9 @@ export class NetworkPipelineStore {
   private previousNodeIds: Set<string> = new Set()
   private previousEdgeKeys: Set<string> = new Set()
 
+  /** Snapshot of node positions from the last layout — used for force warm-start */
+  _lastPositionSnapshot: Map<string, { x: number; y: number }> | null = null
+
   constructor(config: NetworkPipelineConfig) {
     this.config = config
     this.tensionConfig = {
@@ -291,8 +294,42 @@ export class NetworkPipelineStore {
     // Save previous positions for transition
     this.prepareForRelayout()
 
+    // For force layout warm-start: collect previous node positions into a Map
+    // and stash on config so the plugin can restore positions for nodes that
+    // were recreated (e.g. bounded re-ingestion clears and recreates nodes).
+    // Streaming ingestion preserves existing nodes so their x/y are already set.
+    if (plugin.supportsStreaming && !plugin.hierarchical) {
+      const prevPositions = new Map<string, { x: number; y: number }>()
+      for (const node of nodesArr) {
+        if (node._prevX0 !== undefined) {
+          // Use the center of the previous bounding box
+          const prevW = (node._prevX1 ?? 0) - (node._prevX0 ?? 0)
+          const prevH = (node._prevY1 ?? 0) - (node._prevY0 ?? 0)
+          prevPositions.set(node.id, {
+            x: (node._prevX0 ?? 0) + prevW / 2,
+            y: (node._prevY0 ?? 0) + prevH / 2
+          })
+        } else if (node.x !== 0 || node.y !== 0) {
+          prevPositions.set(node.id, { x: node.x, y: node.y })
+        }
+      }
+      // Also include positions from the previous layout's node set (covers
+      // nodes that existed before but may have been removed in this update)
+      if (this._lastPositionSnapshot) {
+        for (const [id, pos] of this._lastPositionSnapshot) {
+          if (!prevPositions.has(id)) {
+            prevPositions.set(id, pos)
+          }
+        }
+      }
+      ;(this.config as any).__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
+    }
+
     // Execute layout — hierarchical plugins push into the arrays directly
     plugin.computeLayout(nodesArr, edgesArr, this.config, size)
+
+    // Clean up the stashed positions from config
+    delete (this.config as any).__previousPositions
 
     // After hierarchical layout, sync the populated arrays back into the
     // store's Maps so buildScene and getLayoutData work correctly.
@@ -312,6 +349,15 @@ export class NetworkPipelineStore {
 
     // Finalize — update derived properties and bezier caches
     this.finalizeLayout()
+
+    // Snapshot node positions for future warm-start relayouts
+    const posSnapshot = new Map<string, { x: number; y: number }>()
+    for (const node of this.nodes.values()) {
+      if (node.x !== 0 || node.y !== 0) {
+        posSnapshot.set(node.id, { x: node.x, y: node.y })
+      }
+    }
+    this._lastPositionSnapshot = posSnapshot
 
     // Save target positions for animation
     this.saveTargetPositions()
@@ -900,6 +946,7 @@ export class NetworkPipelineStore {
     this.labels = []
     this.transition = null
     this.lastIngestTime = 0
+    this._lastPositionSnapshot = null
     this.nodeTimestamps.clear()
     this.edgeTimestamps.clear()
     if (this.particlePool) {
