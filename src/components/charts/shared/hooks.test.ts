@@ -76,12 +76,33 @@ describe("useColorScale", () => {
     expect(result.current).toBeUndefined()
   })
 
-  it("returns undefined when colorBy is a function", () => {
+  it("returns a color scale when colorBy is a function", () => {
     const { result } = renderHook(
       () => useColorScale(data, (d: any) => d.cat),
       { wrapper: createWrapper() }
     )
-    expect(result.current).toBeUndefined()
+    // After the fix, function colorBy now derives categories and builds a scale
+    expect(typeof result.current).toBe("function")
+  })
+
+  it("function colorBy scale returns different colors for different categories", () => {
+    const { result } = renderHook(
+      () => useColorScale(data, (d: any) => d.cat),
+      { wrapper: createWrapper() }
+    )
+    const scale = result.current!
+    expect(scale("A")).not.toBe(scale("B"))
+    expect(scale("B")).not.toBe(scale("C"))
+  })
+
+  it("function colorBy uses CategoryColorProvider when available", () => {
+    const categoryColors = { A: "#ff0000", B: "#00ff00", C: "#0000ff" }
+    const { result } = renderHook(
+      () => useColorScale(data, (d: any) => d.cat),
+      { wrapper: createWrapper({ categoryColors }) }
+    )
+    expect(result.current!("A")).toBe("#ff0000")
+    expect(result.current!("B")).toBe("#00ff00")
   })
 
   it("returns a color scale function when colorBy is a string", () => {
