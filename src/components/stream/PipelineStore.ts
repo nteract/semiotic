@@ -1,5 +1,6 @@
 import { scaleLinear, scaleLog, scaleSequential, type ScaleLinear } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBins, computeBinExtent } from "../realtime/BinAccumulator"
@@ -20,7 +21,8 @@ import type {
   DecayConfig,
   PulseConfig,
   TransitionConfig,
-  StalenessConfig
+  StalenessConfig,
+  CurveType
 } from "./types"
 import {
   buildLineNode,
@@ -112,8 +114,15 @@ export interface PipelineConfig {
   heatmapXBins?: number
   heatmapYBins?: number
 
+  // Heatmap value labels
+  showValues?: boolean
+  heatmapValueFormat?: (v: number) => string
+
   // Point identification (for point-anchored annotations)
   pointIdAccessor?: string | ((d: any) => string)
+
+  // Curve interpolation for line/area charts
+  curve?: CurveType
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -149,13 +158,22 @@ export class PipelineStore {
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
 
-  // ── Resize optimization ──────────────────────────────────────────────
+  // ── Color map caching ──────────────────────────────────────────────
+  private _pointColorCache: { key: string; map: Map<string, string> } | null = null
+  private _barCategoryCache: { key: string; order: string[] } | null = null
+
+
+  // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
   private lastLayout: StreamLayout | null = null
 
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
+
+  // ── Quadtree spatial index for O(log n) point hit testing ──────────
+  private _quadtree: Quadtree<PointSceneNode> | null = null
+  private static readonly QUADTREE_THRESHOLD = 500
 
   constructor(config: PipelineConfig) {
     this.config = config
@@ -317,6 +335,9 @@ export class PipelineStore {
       }
     }
 
+    // Materialize buffer once for all downstream consumers
+    const bufferArray = buffer.toArray()
+
     // Resolve domains — merge user-specified extents with data extents
     const dataXDomain = this.xExtent.extent
     const dataYDomain = this.yExtent.extent
@@ -344,8 +365,7 @@ export class PipelineStore {
         // Normalized: all stacks sum to 1.0
         yDomain = [0, 1 + config.extentPadding]
       } else {
-        const data = buffer.toArray()
-        const groups = this.groupData(data)
+        const groups = this.groupData(bufferArray)
 
         // Build per-x-value totals across all groups
         const xTotals = new Map<number, number>()
@@ -383,8 +403,7 @@ export class PipelineStore {
     } else if (!yFullySpecified && yDomain[0] !== Infinity) {
       // Expand extent to include bounds/uncertainty offsets
       if (this.getBounds) {
-        const data = buffer.toArray()
-        for (const d of data) {
+        for (const d of bufferArray) {
           const y = this.getY(d)
           const offset = this.getBounds(d)
           if (y == null || Number.isNaN(y) || !offset) continue
@@ -450,17 +469,16 @@ export class PipelineStore {
     }
 
     // Build scene graph based on chart type
-    const data = buffer.toArray()
-    this.scene = this.buildSceneNodes(layout)
+    this.scene = this.buildSceneNodes(layout, bufferArray)
 
     // Apply decay opacity to discrete nodes
     if (this.config.decay) {
-      this.applyDecay(this.scene, data)
+      this.applyDecay(this.scene, bufferArray)
     }
 
     // Apply pulse glow to discrete nodes
     if (this.config.pulse) {
-      this.applyPulse(this.scene, data)
+      this.applyPulse(this.scene, bufferArray)
     }
 
     // Start transition animation from old to new positions
@@ -468,9 +486,46 @@ export class PipelineStore {
       this.startTransition()
     }
 
+    // Build quadtree spatial index for scatter/bubble with many points
+    this.rebuildQuadtree()
+
     this.needsFullRebuild = false
     this.lastLayout = { width: layout.width, height: layout.height }
     this.version++
+  }
+
+  /**
+   * Build or clear the quadtree spatial index for point scene nodes.
+   * Only built for scatter/bubble charts with >QUADTREE_THRESHOLD points.
+   */
+  private rebuildQuadtree(): void {
+    const ct = this.config.chartType
+    if (ct !== "scatter" && ct !== "bubble") {
+      this._quadtree = null
+      return
+    }
+
+    const pointNodes = this.scene.filter(
+      (n): n is PointSceneNode => n.type === "point"
+    )
+
+    if (pointNodes.length <= PipelineStore.QUADTREE_THRESHOLD) {
+      this._quadtree = null
+      return
+    }
+
+    this._quadtree = d3Quadtree<PointSceneNode>()
+      .x(n => n.x)
+      .y(n => n.y)
+      .addAll(pointNodes)
+  }
+
+  /**
+   * Get the quadtree spatial index, if available.
+   * Returns null when chart type is not scatter/bubble or point count is below threshold.
+   */
+  get quadtree(): Quadtree<PointSceneNode> | null {
+    return this._quadtree
   }
 
   /**
@@ -526,14 +581,16 @@ export class PipelineStore {
     }
 
     this.lastLayout = { width: layout.width, height: layout.height }
+
+    // Rebuild quadtree with remapped coordinates
+    this.rebuildQuadtree()
+
     this.version++
   }
 
-  private buildSceneNodes(layout: StreamLayout): SceneNode[] {
-    const { config, buffer, scales } = this
-    if (!scales || buffer.size === 0) return []
-
-    const data = buffer.toArray()
+  private buildSceneNodes(layout: StreamLayout, data: Record<string, any>[]): SceneNode[] {
+    const { config, scales } = this
+    if (!scales || data.length === 0) return []
 
     switch (config.chartType) {
       case "line":
@@ -588,6 +645,10 @@ export class PipelineStore {
       if (colorThresholds && colorThresholds.length > 0) {
         lineNode.colorThresholds = colorThresholds
       }
+      // Attach curve type for canvas renderer interpolation
+      if (this.config.curve && this.config.curve !== "linear") {
+        lineNode.curve = this.config.curve
+      }
       nodes.push(lineNode)
     }
 
@@ -608,6 +669,10 @@ export class PipelineStore {
       if (this.config.gradientFill) {
         node.fillGradient = this.config.gradientFill
       }
+      // Attach curve type for canvas renderer interpolation
+      if (this.config.curve && this.config.curve !== "linear") {
+        node.curve = this.config.curve
+      }
       nodes.push(node)
     }
 
@@ -622,13 +687,15 @@ export class PipelineStore {
     groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
     const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
       this.resolveAreaStyle(group, sampleDatum)
+    const curveType = (this.config.curve && this.config.curve !== "linear") ? this.config.curve : undefined
     return buildStackedAreaNodes(
       groups,
       this.scales!,
       this.getX,
       this.getY,
       styleFn,
-      this.config.normalize
+      this.config.normalize,
+      curveType
     )
   }
 
@@ -661,11 +728,17 @@ export class PipelineStore {
         if (c) categories.add(c)
       }
       const sorted = Array.from(categories).sort()
-      const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
-        : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
-      colorMap = new Map()
-      for (let ci = 0; ci < sorted.length; ci++) {
-        colorMap.set(sorted[ci], palette[ci % palette.length])
+      const cacheKey = sorted.join('\0')
+      if (this._pointColorCache && this._pointColorCache.key === cacheKey) {
+        colorMap = this._pointColorCache.map
+      } else {
+        const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
+          : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+        colorMap = new Map()
+        for (let ci = 0; ci < sorted.length; ci++) {
+          colorMap.set(sorted[ci], palette[ci % palette.length])
+        }
+        this._pointColorCache = { key: cacheKey, map: colorMap }
       }
     }
 
@@ -764,13 +837,17 @@ export class PipelineStore {
 
         const fill = heatColor(entry.val)
 
+        const labelOpts = this.config.showValues
+          ? { value: entry.val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
+          : undefined
         nodes.push(buildHeatcellNode(
           xi * cellW,
           (yValues.length - 1 - yi) * cellH,
           cellW,
           cellH,
           fill,
-          entry.datum
+          entry.datum,
+          labelOpts
         ))
       }
     }
@@ -850,13 +927,17 @@ export class PipelineStore {
       const fill = `rgb(${r},${g},${b})`
 
       const cell = grid.get(key)!
+      const streamLabelOpts = this.config.showValues
+        ? { value: val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
+        : undefined
       nodes.push(buildHeatcellNode(
         xi * cellW,
         (yBins - 1 - yi) * cellH,
         cellW,
         cellH,
         fill,
-        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data }
+        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data },
+        streamLabelOpts
       ))
     }
 
@@ -886,7 +967,13 @@ export class PipelineStore {
       const colorKeys = this.config.barColors ? Object.keys(this.config.barColors) : []
       const listed = new Set(colorKeys)
       const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
-      categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+      const cacheKey = colorKeys.join('\0') + '\x01' + unlisted.join('\0')
+      if (this._barCategoryCache && this._barCategoryCache.key === cacheKey) {
+        categoryOrder = this._barCategoryCache.order
+      } else {
+        categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+        this._barCategoryCache = { key: cacheKey, order: categoryOrder }
+      }
     }
 
     const nodes: SceneNode[] = []
@@ -1209,7 +1296,69 @@ export class PipelineStore {
     }
 
     for (const node of nodes) {
-      if (node.type === "line" || node.type === "area") continue
+      // Per-vertex decay for line nodes
+      if (node.type === "line") {
+        const datumArr = Array.isArray(node.datum) ? node.datum : []
+        if (datumArr.length < 2) continue
+        const opacities = new Array<number>(datumArr.length)
+        let hasDecay = false
+        for (let i = 0; i < datumArr.length; i++) {
+          const idx = indexMap.get(datumArr[i])
+          if (idx != null) {
+            opacities[i] = this.computeDecayOpacity(idx, bufferSize)
+            if (opacities[i] < 1) hasDecay = true
+          } else {
+            opacities[i] = 1
+          }
+        }
+        if (hasDecay) {
+          node._decayOpacities = opacities
+        }
+        continue
+      }
+
+      // Per-vertex decay for area nodes
+      if (node.type === "area") {
+        const datumArr = Array.isArray(node.datum) ? node.datum : []
+        const vertexCount = node.topPath ? node.topPath.length : datumArr.length
+        if (vertexCount < 2) continue
+
+        if (datumArr.length === vertexCount) {
+          // Datum array aligns with path vertices — per-vertex decay
+          const opacities = new Array<number>(vertexCount)
+          let hasDecay = false
+          for (let i = 0; i < datumArr.length; i++) {
+            const idx = indexMap.get(datumArr[i])
+            if (idx != null) {
+              opacities[i] = this.computeDecayOpacity(idx, bufferSize)
+              if (opacities[i] < 1) hasDecay = true
+            } else {
+              opacities[i] = 1
+            }
+          }
+          if (hasDecay) {
+            node._decayOpacities = opacities
+          }
+        } else {
+          // Datum/path length mismatch (e.g. stacked areas) — use uniform decay
+          // based on the newest mappable datum
+          let minOpacity = 1
+          for (const d of datumArr) {
+            const idx = indexMap.get(d)
+            if (idx != null) {
+              const op = this.computeDecayOpacity(idx, bufferSize)
+              if (op < minOpacity) minOpacity = op
+            }
+          }
+          if (minOpacity < 1) {
+            const opacities = new Array<number>(vertexCount)
+            opacities.fill(minOpacity)
+            node._decayOpacities = opacities
+          }
+        }
+        continue
+      }
+
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
@@ -1572,10 +1721,12 @@ export class PipelineStore {
     this.prevPositionMap.clear()
     this.activeTransition = null
     this.lastIngestTime = 0
+
     this.needsFullRebuild = true
     this.lastLayout = null
     this.scales = null
     this.scene = []
+    this._quadtree = null
     this.version++
   }
 
@@ -1600,6 +1751,15 @@ export class PipelineStore {
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
+    // Invalidate color map caches when relevant config changes
+    if (config.colorScheme !== undefined) {
+      this._pointColorCache = null
+    }
+    if (config.barColors !== undefined || config.colorScheme !== undefined) {
+      this._barCategoryCache = null
+    }
+    // Invalidate stacked area extent cache on config changes (e.g. normalize)
+
     Object.assign(this.config, config)
     this.needsFullRebuild = true
   }

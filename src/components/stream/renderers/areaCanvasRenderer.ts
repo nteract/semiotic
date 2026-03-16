@@ -1,5 +1,38 @@
-import type { SceneNode, AreaSceneNode } from "../types"
+import type { SceneNode, AreaSceneNode, CurveType } from "../types"
 import type { StreamRendererFn } from "./types"
+import { area as d3Area, line as d3Line } from "d3-shape"
+import {
+  curveMonotoneX,
+  curveMonotoneY,
+  curveCardinal,
+  curveCatmullRom,
+  curveStep,
+  curveStepBefore,
+  curveStepAfter,
+  curveBasis,
+  curveNatural
+} from "d3-shape"
+import type { CurveFactory } from "d3-shape"
+
+/** Map CurveType strings to d3-shape curve factories. */
+function resolveCurveFactory(curve: CurveType | undefined): CurveFactory | null {
+  switch (curve) {
+    case "monotoneX": return curveMonotoneX
+    case "monotoneY": return curveMonotoneY
+    case "cardinal": return curveCardinal
+    case "catmullRom": return curveCatmullRom
+    case "step": return curveStep
+    case "stepBefore": return curveStepBefore
+    case "stepAfter": return curveStepAfter
+    case "basis": return curveBasis
+    case "natural": return curveNatural
+    case "linear":
+    case undefined:
+      return null
+    default:
+      return null
+  }
+}
 
 /** Parse a CSS color string to [r, g, b]. Handles #hex and rgb(). */
 function parseColor(color: string): [number, number, number] {
@@ -22,18 +55,37 @@ function parseColor(color: string): [number, number, number] {
  * Canvas area renderer.
  * Renders AreaSceneNode as filled regions between topPath and bottomPath.
  * Supports both overlapping areas and stacked areas.
+ * Supports d3-shape curve interpolation when node.curve is set.
  */
+
 /** Trace the closed area path (top forward + bottom backward) onto the current context. */
 function traceAreaPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): void {
-  ctx.beginPath()
-  ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
-  for (let i = 1; i < node.topPath.length; i++) {
-    ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+  const curveFactory = resolveCurveFactory(node.curve)
+
+  if (curveFactory && node.topPath.length >= 2 && node.bottomPath.length >= 2) {
+    // Use d3-shape area generator for curved interpolation.
+    // Pass topPath as data; derive bottom y via index into bottomPath.
+    const areaGenerator = d3Area<[number, number]>()
+      .x(d => d[0])
+      .y0((_d, i) => node.bottomPath[i][1])
+      .y1(d => d[1])
+      .curve(curveFactory)
+      .context(ctx)
+
+    ctx.beginPath()
+    areaGenerator(node.topPath)
+  } else {
+    // Linear fallback: manual moveTo/lineTo
+    ctx.beginPath()
+    ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
+    for (let i = 1; i < node.topPath.length; i++) {
+      ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+    }
+    for (let i = node.bottomPath.length - 1; i >= 0; i--) {
+      ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
+    }
+    ctx.closePath()
   }
-  for (let i = node.bottomPath.length - 1; i >= 0; i--) {
-    ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
-  }
-  ctx.closePath()
 }
 
 export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
@@ -42,10 +94,49 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
   for (const node of areaNodes) {
     if (node.topPath.length < 2) continue
 
+    const fillColor = node.style.fill || "#4e79a7"
+    const decayOpacities = node._decayOpacities
+
+    // Decay path: render area as vertical strips with per-strip opacity
+    if (decayOpacities && decayOpacities.length === node.topPath.length) {
+      const baseFillOpacity = node.style.fillOpacity ?? 0.7
+      ctx.fillStyle = fillColor
+
+      for (let i = 0; i < node.topPath.length - 1; i++) {
+        const stripAlpha = (decayOpacities[i] + decayOpacities[i + 1]) * 0.5 * baseFillOpacity
+        ctx.globalAlpha = stripAlpha
+        ctx.beginPath()
+        ctx.moveTo(node.topPath[i][0], node.topPath[i][1])
+        ctx.lineTo(node.topPath[i + 1][0], node.topPath[i + 1][1])
+        ctx.lineTo(node.bottomPath[i + 1][0], node.bottomPath[i + 1][1])
+        ctx.lineTo(node.bottomPath[i][0], node.bottomPath[i][1])
+        ctx.closePath()
+        ctx.fill()
+      }
+
+      // Stroke on top with per-segment decay
+      if (node.style.stroke && node.style.stroke !== "none") {
+        ctx.strokeStyle = node.style.stroke
+        ctx.lineWidth = node.style.strokeWidth || 2
+        ctx.setLineDash([])
+        for (let i = 0; i < node.topPath.length - 1; i++) {
+          const segAlpha = (decayOpacities[i] + decayOpacities[i + 1]) * 0.5
+          ctx.globalAlpha = segAlpha
+          ctx.beginPath()
+          ctx.moveTo(node.topPath[i][0], node.topPath[i][1])
+          ctx.lineTo(node.topPath[i + 1][0], node.topPath[i + 1][1])
+          ctx.stroke()
+        }
+      }
+
+      ctx.globalAlpha = 1
+      continue
+    }
+
+    // Standard path (no decay): single filled area
     traceAreaPath(ctx, node)
 
     // Fill
-    const fillColor = node.style.fill || "#4e79a7"
     if (node.fillGradient) {
       // Vertical gradient: topOpacity at the line, bottomOpacity at the baseline
       const topY = Math.min(...node.topPath.map(p => p[1]))
@@ -88,11 +179,23 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])
 
-      // Only stroke the top path (not the baseline)
+      const curveFactory = resolveCurveFactory(node.curve)
+
       ctx.beginPath()
-      ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
-      for (let i = 1; i < node.topPath.length; i++) {
-        ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+      if (curveFactory) {
+        // Use d3-shape line generator for curved top edge stroke
+        const lineGenerator = d3Line<[number, number]>()
+          .x(d => d[0])
+          .y(d => d[1])
+          .curve(curveFactory)
+          .context(ctx)
+        lineGenerator(node.topPath)
+      } else {
+        // Only stroke the top path (not the baseline)
+        ctx.moveTo(node.topPath[0][0], node.topPath[0][1])
+        for (let i = 1; i < node.topPath.length; i++) {
+          ctx.lineTo(node.topPath[i][0], node.topPath[i][1])
+        }
       }
       ctx.stroke()
     }

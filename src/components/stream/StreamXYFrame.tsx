@@ -341,6 +341,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       chartType,
       runtimeMode,
       data,
+      chunkThreshold,
+      chunkSize,
       xAccessor,
       yAccessor,
       colorAccessor,
@@ -416,6 +418,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
+      showValues,
+      heatmapValueFormat,
       marginalGraphics,
       pointIdAccessor,
       xScaleType,
@@ -522,7 +526,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
-      pointIdAccessor
+      showValues,
+      heatmapValueFormat,
+      pointIdAccessor,
+      curve
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -534,7 +541,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
-      isStreaming, pointIdAccessor
+      showValues, heatmapValueFormat,
+      isStreaming, pointIdAccessor, curve
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -569,8 +577,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           dirtyRef.current = true
           scheduleRender()
         }
-      })
+      }, { chunkThreshold, chunkSize })
     }
+
+    // Update chunk options on the existing adapter when props change
+    useEffect(() => {
+      adapterRef.current?.updateChunkOptions({ chunkThreshold, chunkSize })
+    }, [chunkThreshold, chunkSize])
 
     // ── Push API (ref handle) ────────────────────────────────────────────
 
@@ -637,8 +650,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      // Hit test against scene graph
-      const hit = findNearestNode(store.scene, chartX, chartY)
+      // Hit test against scene graph — use quadtree for O(log n) point lookup when available
+      const hit = findNearestNode(store.scene, chartX, chartY, 30, store.quadtree)
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null
@@ -863,7 +876,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
-        setCurrentScales(store.scales)
+        const scalesChanged = !currentScales ||
+          currentScales.x.domain()[0] !== store.scales.x.domain()[0] ||
+          currentScales.x.domain()[1] !== store.scales.x.domain()[1] ||
+          currentScales.y.domain()[0] !== store.scales.y.domain()[0] ||
+          currentScales.y.domain()[1] !== store.scales.y.domain()[1] ||
+          currentScales.x.range()[0] !== store.scales.x.range()[0] ||
+          currentScales.x.range()[1] !== store.scales.x.range()[1] ||
+          currentScales.y.range()[0] !== store.scales.y.range()[0] ||
+          currentScales.y.range()[1] !== store.scales.y.range()[1]
+        if (scalesChanged) {
+          setCurrentScales(store.scales)
+        }
 
         // Extract x/y values for marginal graphics
         if (marginalGraphics) {

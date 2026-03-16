@@ -356,28 +356,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     [baseSummaryStyle, effectiveSelectionHook, selection]
   )
 
-  // Summary render function (for value labels)
-  const summaryRenderMode = useMemo(() => {
-    if (!showValues) return undefined
-
-    const midpoint = (valueDomain[0] + valueDomain[1]) / 2
-
-    return (d: Record<string, any>, i: number) => {
-      const value = getValueFn(d)
-      const displayValue = valueFormat ? valueFormat(value) : String(value)
-
-      return (
-        <text
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill={getValueFn(d) > midpoint ? "#fff" : "#000"}
-          fontSize="12px"
-        >
-          {displayValue}
-        </text>
-      )
-    }
-  }, [showValues, getValueFn, valueFormat, valueDomain])
+  // showValues is now handled natively by the canvas renderer and SSR SVG path.
+  // No SVG summaryRenderMode overlay needed.
 
   // Default tooltip showing x, y, and value
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
@@ -418,6 +398,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     yAccessor,
     valueAccessor,
     colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
+    showValues,
+    heatmapValueFormat: valueFormat,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,

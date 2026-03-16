@@ -1,5 +1,6 @@
 import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode, StreamScales } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
+import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect } from "./hitTestUtils"
 
 export interface HitResult {
@@ -13,20 +14,43 @@ export interface HitResult {
 /**
  * Find the nearest scene node to the given pixel coordinates.
  * Dispatches to type-specific hit testers for optimal performance.
+ *
+ * When a quadtree spatial index is provided (for scatter/bubble charts with
+ * many points), point hit testing uses O(log n) quadtree.find() instead of
+ * iterating all nodes. Non-point node types (line, rect, area, etc.) still
+ * use the linear scan.
  */
 export function findNearestNode(
   scene: SceneNode[],
   px: number,
   py: number,
-  maxDistance: number = 30
+  maxDistance: number = 30,
+  pointQuadtree?: Quadtree<PointSceneNode> | null
 ): HitResult | null {
   let best: HitResult | null = null
+  let quadtreeHitConfirmed = false
+
+  // Fast path: use quadtree for point nodes when available
+  if (pointQuadtree) {
+    // Use maxDistance as the quadtree search radius.
+    // Callers should set maxDistance to account for point radius + hit tolerance.
+    const found = pointQuadtree.find(px, py, maxDistance)
+    if (found) {
+      const result = hitTestPoint(found, px, py)
+      if (result && result.distance < maxDistance) {
+        best = result
+        quadtreeHitConfirmed = true
+      }
+    }
+  }
 
   for (const node of scene) {
     let result: HitResult | null = null
 
     switch (node.type) {
       case "point":
+        // Skip linear point scan only when quadtree confirmed a hit
+        if (pointQuadtree && quadtreeHitConfirmed) break
         result = hitTestPoint(node, px, py)
         break
       case "line":

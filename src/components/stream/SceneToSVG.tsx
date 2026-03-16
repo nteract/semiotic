@@ -39,6 +39,21 @@ import type {
   ConnectorSceneNode
 } from "./ordinalTypes"
 
+// ── Color parsing helper (for heatcell contrast text) ───────────────────
+
+function parseHeatcellColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    let hex = color.slice(1)
+    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+    if (hex.length === 6) {
+      return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
+    }
+  }
+  const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
+  if (m) return [+m[1], +m[2], +m[3]]
+  return [128, 128, 128]
+}
+
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
 
 export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
@@ -109,6 +124,33 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
     }
     case "heatcell": {
       const n = node as HeatcellSceneNode
+      if (n.showValues && n.value != null && n.w >= 20 && n.h >= 20) {
+        const formatted = n.valueFormat
+          ? n.valueFormat(n.value)
+          : Number.isInteger(n.value) ? String(n.value)
+            : Math.abs(n.value) >= 100 ? n.value.toFixed(0)
+            : Math.abs(n.value) >= 1 ? n.value.toFixed(1)
+            : n.value.toPrecision(3)
+        const [r, g, b] = parseHeatcellColor(n.fill)
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        const textColor = luminance > 128 ? "#000" : "#fff"
+        const fontSize = Math.max(10, Math.min(16, Math.min(n.w, n.h) * 0.3))
+        return (
+          <g key={`heatcell-${i}`}>
+            <rect x={n.x} y={n.y} width={n.w} height={n.h} fill={n.fill} />
+            <text
+              x={n.x + n.w / 2}
+              y={n.y + n.h / 2}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill={textColor}
+              fontSize={`${fontSize}px`}
+            >
+              {formatted}
+            </text>
+          </g>
+        )
+      }
       return (
         <rect
           key={`heatcell-${i}`}

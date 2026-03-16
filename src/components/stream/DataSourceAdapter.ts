@@ -24,9 +24,19 @@ export class DataSourceAdapter<T = Record<string, any>> {
   private callback: ChangesetCallback<T>
   private lastBoundedData: T[] | null = null
   private chunkTimer: number = 0
+  private chunkThreshold: number
+  private chunkSize: number
 
-  constructor(callback: ChangesetCallback<T>) {
+  constructor(callback: ChangesetCallback<T>, options?: { chunkThreshold?: number; chunkSize?: number }) {
     this.callback = callback
+    this.chunkThreshold = options?.chunkThreshold ?? CHUNK_THRESHOLD
+    this.chunkSize = options?.chunkSize ?? CHUNK_SIZE
+  }
+
+  /** Update chunking options without recreating the adapter. */
+  updateChunkOptions(options: { chunkThreshold?: number; chunkSize?: number }): void {
+    if (options.chunkThreshold != null) this.chunkThreshold = options.chunkThreshold
+    if (options.chunkSize != null) this.chunkSize = options.chunkSize
   }
 
   /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
@@ -57,7 +67,7 @@ export class DataSourceAdapter<T = Record<string, any>> {
       this.chunkTimer = 0
     }
 
-    if (data.length <= CHUNK_THRESHOLD) {
+    if (data.length <= this.chunkThreshold) {
       // Small dataset — ingest all at once
       this.callback({ inserts: data, bounded: true })
       return
@@ -66,15 +76,15 @@ export class DataSourceAdapter<T = Record<string, any>> {
     // Large dataset — progressive chunked ingestion.
     // First chunk is bounded: true (resets buffer and sizes it to full length).
     // Subsequent chunks are bounded: false (appends without clearing).
-    this.callback({ inserts: data.slice(0, CHUNK_SIZE), bounded: true, totalSize: data.length })
+    this.callback({ inserts: data.slice(0, this.chunkSize), bounded: true, totalSize: data.length })
 
-    let offset = CHUNK_SIZE
+    let offset = this.chunkSize
     const scheduleNext = () => {
       if (offset >= data.length) return
       // Check that this is still the active dataset
       if (data !== this.lastBoundedData) return
 
-      const end = Math.min(offset + CHUNK_SIZE, data.length)
+      const end = Math.min(offset + this.chunkSize, data.length)
       this.callback({ inserts: data.slice(offset, end), bounded: false })
       offset = end
 

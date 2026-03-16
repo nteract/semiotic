@@ -69,6 +69,83 @@ describe("PipelineStore — Decay", () => {
     })
   })
 
+  describe("line/area _decayOpacities", () => {
+    it("line nodes get _decayOpacities with per-vertex gradient", () => {
+      const store = new PipelineStore(makeConfig({
+        chartType: "line",
+        decay: { type: "linear", minOpacity: 0.1 },
+        xAccessor: "x",
+        yAccessor: "y"
+      }))
+
+      const data = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i * 2 }))
+      store.ingest({ inserts: data, bounded: true })
+      store.computeScene({ width: 200, height: 200 })
+
+      const lines = store.scene.filter(n => n.type === "line")
+      expect(lines.length).toBeGreaterThan(0)
+
+      for (const line of lines) {
+        if (line.type !== "line") continue
+        expect(line._decayOpacities).toBeDefined()
+        expect(line._decayOpacities!.length).toBe(line.path.length)
+        // Values should increase from oldest (low) to newest (high)
+        for (let i = 1; i < line._decayOpacities!.length; i++) {
+          expect(line._decayOpacities![i]).toBeGreaterThanOrEqual(line._decayOpacities![i - 1])
+        }
+        // Newest should be 1, oldest should be close to minOpacity
+        expect(line._decayOpacities![line._decayOpacities!.length - 1]).toBe(1)
+        expect(line._decayOpacities![0]).toBeCloseTo(0.1, 1)
+      }
+    })
+
+    it("area nodes get _decayOpacities matching topPath length", () => {
+      const store = new PipelineStore(makeConfig({
+        chartType: "area",
+        decay: { type: "linear", minOpacity: 0.1 },
+        xAccessor: "x",
+        yAccessor: "y"
+      }))
+
+      const data = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i * 2 }))
+      store.ingest({ inserts: data, bounded: true })
+      store.computeScene({ width: 200, height: 200 })
+
+      const areas = store.scene.filter(n => n.type === "area")
+      expect(areas.length).toBeGreaterThan(0)
+
+      for (const area of areas) {
+        if (area.type !== "area") continue
+        expect(area._decayOpacities).toBeDefined()
+        expect(area._decayOpacities!.length).toBe(area.topPath.length)
+        // Values should increase from oldest to newest
+        for (let i = 1; i < area._decayOpacities!.length; i++) {
+          expect(area._decayOpacities![i]).toBeGreaterThanOrEqual(area._decayOpacities![i - 1])
+        }
+      }
+    })
+
+    it("line _decayOpacities not set when no decay configured", () => {
+      const store = new PipelineStore(makeConfig({
+        chartType: "line",
+        xAccessor: "x",
+        yAccessor: "y"
+      }))
+
+      const data = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i * 2 }))
+      store.ingest({ inserts: data, bounded: true })
+      store.computeScene({ width: 200, height: 200 })
+
+      const lines = store.scene.filter(n => n.type === "line")
+      expect(lines.length).toBeGreaterThan(0)
+
+      for (const line of lines) {
+        if (line.type !== "line") continue
+        expect(line._decayOpacities).toBeUndefined()
+      }
+    })
+  })
+
   describe("decay applied to scene nodes", () => {
     it("modifies point opacity based on buffer position", () => {
       const store = new PipelineStore(makeConfig({

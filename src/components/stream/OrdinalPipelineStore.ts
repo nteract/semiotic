@@ -723,14 +723,31 @@ export class OrdinalPipelineStore {
 
   // ── Transitions ─────────────────────────────────────────────────────
 
+  /** Build a stable identity key for a scene node based on its content, not array index */
+  private getNodeKey(node: OrdinalSceneNode, keyCounts: Map<string, number>): string | null {
+    if (node.type === "point") {
+      const cat = node.datum ? this.getO(node.datum) : ""
+      const val = node.datum ? this.getR(node.datum) : 0
+      const baseKey = `p:${cat}:${val}`
+      const count = keyCounts.get(baseKey) || 0
+      keyCounts.set(baseKey, count + 1)
+      return `${baseKey}:${count}`
+    } else if (node.type === "rect") {
+      return `r:${node.group || ""}:${node.datum?.category ?? ""}`
+    }
+    return null
+  }
+
   private snapshotPositions(): void {
     this.prevPositionMap.clear()
+    const keyCounts = new Map<string, number>()
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
+      const key = this.getNodeKey(node, keyCounts)
+      if (!key) continue
       if (node.type === "point") {
-        this.prevPositionMap.set(`p:${i}`, { x: node.x, y: node.y, r: node.r })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r })
       } else if (node.type === "rect") {
-        const key = `r:${node.group || ""}:${node.datum?.category ?? i}`
         this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
       }
     }
@@ -741,14 +758,10 @@ export class OrdinalPipelineStore {
     const duration = this.config.transition.duration ?? 300
 
     let hasChanges = false
+    const keyCounts = new Map<string, number>()
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
-      let key: string | null = null
-      if (node.type === "point") {
-        key = `p:${i}`
-      } else if (node.type === "rect") {
-        key = `r:${node.group || ""}:${node.datum?.category ?? i}`
-      }
+      const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
       const prev = this.prevPositionMap.get(key)
       if (!prev) continue
@@ -793,20 +806,20 @@ export class OrdinalPipelineStore {
       ? rawT
       : 1 - Math.pow(1 - rawT, 3)
 
+    const keyCounts = new Map<string, number>()
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
+      // Always call getNodeKey to keep duplicate counters in sync
+      const key = this.getNodeKey(node, keyCounts)
+      if (!key) continue
+      const prev = this.prevPositionMap.get(key)
+      if (!prev) continue
       if (node.type === "point") {
         if (node._targetX === undefined) continue
-        const key = `p:${i}`
-        const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
         node.x = prev.x + (node._targetX - prev.x) * t
         node.y = prev.y + (node._targetY! - prev.y) * t
       } else if (node.type === "rect") {
         if (node._targetX === undefined) continue
-        const key = `r:${node.group || ""}:${node.datum?.category ?? i}`
-        const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
         node.x = prev.x + (node._targetX - prev.x) * t
         node.y = prev.y + (node._targetY! - prev.y) * t
         if (prev.w !== undefined) {

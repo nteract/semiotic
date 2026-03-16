@@ -9,7 +9,8 @@ import type {
   SwarmStyle,
   HoverAnnotationConfig,
   HoverData,
-  AnnotationContext
+  AnnotationContext,
+  AnnotationAnchorMode
 } from "../realtime/types"
 
 // ── Realtime encoding configs ─────────────────────────────────────────
@@ -131,6 +132,10 @@ export interface LineSceneNode {
   style: Style
   datum: any
   group?: string
+  /** Curve interpolation type (default: linear / straight segments) */
+  curve?: CurveType
+  /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
+  _decayOpacities?: number[]
 }
 
 export interface AreaSceneNode {
@@ -148,6 +153,10 @@ export interface AreaSceneNode {
   _pulseIntensity?: number
   /** Pulse color */
   _pulseColor?: string
+  /** Curve interpolation type (default: linear / straight segments) */
+  curve?: CurveType
+  /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
+  _decayOpacities?: number[]
 }
 
 export interface PointSceneNode {
@@ -199,6 +208,12 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: any
+  /** Numeric cell value (for canvas text rendering when showValues is enabled) */
+  value?: number
+  /** Whether to render the value as text inside the cell */
+  showValues?: boolean
+  /** Format function for the displayed value */
+  valueFormat?: (v: number) => string
   _pulseIntensity?: number
   _pulseColor?: string
   /** Animation target fields (set during transitions) */
@@ -270,6 +285,7 @@ export type CurveType =
   | "basis"
   | "cardinal"
   | "catmullRom"
+  | "natural"
 
 // ── StreamXYFrame props ────────────────────────────────────────────────
 
@@ -280,6 +296,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Data (bounded mode) ──────────────────────────
   data?: T[]
+
+  // ── Chunking (progressive ingestion) ────────────
+  /** Datasets larger than this are chunked for progressive rendering (default 5000) */
+  chunkThreshold?: number
+  /** Number of items per progressive chunk (default 5000) */
+  chunkSize?: number
 
   // ── Accessors ────────────────────────────────────
   xAccessor?: string | ((d: T) => number)
@@ -455,6 +477,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   heatmapXBins?: number
   /** Number of y-axis bins for streaming heatmap (default: 20) */
   heatmapYBins?: number
+
+  // ── Heatmap value labels ──────────────────────────
+  /** Show numeric values inside heatmap cells (rendered natively on canvas) */
+  showValues?: boolean
+  /** Format function for heatmap cell value labels */
+  heatmapValueFormat?: (v: number) => string
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────
@@ -487,5 +515,6 @@ export type {
   SwarmStyle,
   HoverAnnotationConfig,
   HoverData,
-  AnnotationContext
+  AnnotationContext,
+  AnnotationAnchorMode
 }

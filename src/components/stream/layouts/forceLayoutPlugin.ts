@@ -27,9 +27,20 @@ import type { Style } from "../types"
  * Produces circle scene nodes and line scene edges. Runs the force simulation
  * synchronously for a configurable number of iterations, using phyllotaxis
  * spiral for deterministic initial positions.
+ *
+ * Supports warm-start mode for incremental streaming updates: when most nodes
+ * already have positions, existing nodes keep their positions, new nodes are
+ * placed near their connected neighbors, and fewer iterations are run.
  */
+
+/** Number of iterations for warm-start relayout */
+const WARM_START_ITERATIONS = 40
+
+/** Fraction of new nodes above which a cold start (full re-simulation) is used */
+const COLD_START_THRESHOLD = 0.3
+
 export const forceLayoutPlugin: NetworkLayoutPlugin = {
-  supportsStreaming: false,
+  supportsStreaming: true,
   hierarchical: false,
 
   computeLayout(
@@ -40,34 +51,95 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
   ): void {
     if (nodes.length === 0) return
 
-    // Adaptive iteration count: reduce iterations for large networks
+    const forceStrength = config.forceStrength ?? 0.1
+    const cx = size[0] / 2
+    const cy = size[1] / 2
+
+    // Retrieve previous positions if stashed by the pipeline store
+    // (used for bounded re-ingestion where nodes are recreated)
+    const previousPositions: Map<string, { x: number; y: number }> | undefined =
+      (config as any).__previousPositions
+
+    // Classify nodes: positioned (have non-zero x/y or a previous position) vs new
+    let positionedCount = 0
+    const newNodes: RealtimeNode[] = []
+
+    for (const node of nodes) {
+      const hasCurrentPos = node.x != null && node.y != null && (node.x !== 0 || node.y !== 0)
+      const prevPos = previousPositions?.get(node.id)
+
+      if (hasCurrentPos) {
+        positionedCount++
+      } else if (prevPos) {
+        // Restore from previous positions map (bounded re-ingestion case)
+        node.x = prevPos.x
+        node.y = prevPos.y
+        positionedCount++
+      } else {
+        newNodes.push(node)
+      }
+    }
+
+    // Decide warm vs cold start
+    const newFraction = nodes.length > 0 ? newNodes.length / nodes.length : 1
+    const useWarmStart = positionedCount > 0 && newFraction <= COLD_START_THRESHOLD
+
+    if (useWarmStart) {
+      // Warm start: place new nodes near the centroid of their connected neighbors
+      const nodeMap = new Map<string, RealtimeNode>()
+      for (const n of nodes) nodeMap.set(n.id, n)
+
+      for (const node of newNodes) {
+        const neighbors = findNeighborPositions(node.id, edges, nodeMap)
+
+        if (neighbors.length > 0) {
+          // Place near centroid of connected neighbors with a small offset
+          let sumX = 0, sumY = 0
+          for (const pos of neighbors) {
+            sumX += pos.x
+            sumY += pos.y
+          }
+          // Add a small deterministic offset based on the node id hash to avoid
+          // stacking multiple new nodes at exactly the same point
+          const hash = simpleHash(node.id)
+          const offsetAngle = (hash % 360) * (Math.PI / 180)
+          const offsetR = 10 + (hash % 20)
+          node.x = sumX / neighbors.length + offsetR * Math.cos(offsetAngle)
+          node.y = sumY / neighbors.length + offsetR * Math.sin(offsetAngle)
+        } else {
+          // No positioned neighbors — place near center
+          const hash = simpleHash(node.id)
+          const offsetAngle = (hash % 360) * (Math.PI / 180)
+          const offsetR = 15 + (hash % 30)
+          node.x = cx + offsetR * Math.cos(offsetAngle)
+          node.y = cy + offsetR * Math.sin(offsetAngle)
+        }
+      }
+    } else {
+      // Cold start: deterministic phyllotaxis spiral for all unpositioned nodes.
+      // d3-force uses Math.random() for unpositioned nodes which produces
+      // different layouts on every render. A phyllotaxis spiral gives
+      // evenly-distributed starting positions based on index alone.
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        if (node.x == null || node.y == null || (node.x === 0 && node.y === 0)) {
+          const r = Math.sqrt(i + 0.5) * 10
+          const theta = i * goldenAngle
+          node.x = cx + r * Math.cos(theta)
+          node.y = cy + r * Math.sin(theta)
+        }
+      }
+    }
+
+    // Adaptive iteration count: reduce iterations for large networks (cold start only)
     const nodeCount = nodes.length
-    const adaptiveIterations = Math.max(
+    const coldIterations = config.iterations ?? Math.max(
       50,
       Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
     )
-
-    const iterations = config.iterations ?? adaptiveIterations
-    const forceStrength = config.forceStrength ?? 0.1
-
-    // Set deterministic initial positions using phyllotaxis spiral.
-    // d3-force uses Math.random() for unpositioned nodes which produces
-    // different layouts on every render. A phyllotaxis spiral gives
-    // evenly-distributed starting positions based on index alone.
-    // RealtimeNode initialises x/y to 0, so we treat (0,0) as "unpositioned".
-    const cx = size[0] / 2
-    const cy = size[1] / 2
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i]
-      if (node.x == null || node.y == null || (node.x === 0 && node.y === 0)) {
-        const r = Math.sqrt(i + 0.5) * 10
-        const theta = i * goldenAngle
-        node.x = cx + r * Math.cos(theta)
-        node.y = cy + r * Math.sin(theta)
-      }
-    }
+    const iterations = useWarmStart ? WARM_START_ITERATIONS : coldIterations
 
     // Build node size accessor for charge strength
     const nodeSizeFn = resolveNodeSizeFn(
@@ -108,8 +180,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       ;(simulation.force("link") as any).links(linkData)
     }
 
-    // Reset alpha if too cold
-    if (simulation.alpha() < 0.1) {
+    // For warm start, use a lower initial alpha since the layout is mostly converged
+    if (useWarmStart) {
+      simulation.alpha(0.3)
+    } else if (simulation.alpha() < 0.1) {
       simulation.alpha(1)
     }
 
@@ -122,16 +196,16 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
     // Resolve edge source/target to node object references so that
     // HOC style functions can access d.source.data for color lookups.
-    const nodeMap = new Map<string, RealtimeNode>()
-    for (const n of nodes) nodeMap.set(n.id, n)
+    const resolveMap = new Map<string, RealtimeNode>()
+    for (const n of nodes) resolveMap.set(n.id, n)
 
     for (const edge of edges) {
       if (typeof edge.source === "string") {
-        const n = nodeMap.get(edge.source)
+        const n = resolveMap.get(edge.source)
         if (n) edge.source = n
       }
       if (typeof edge.target === "string") {
-        const n = nodeMap.get(edge.target as string)
+        const n = resolveMap.get(edge.target as string)
         if (n) edge.target = n
       }
     }
@@ -253,6 +327,47 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Find positioned neighbors of a node by scanning edges.
+ * Returns an array of {x, y} for neighbors that have non-zero positions.
+ */
+function findNeighborPositions(
+  nodeId: string,
+  edges: RealtimeEdge[],
+  nodeMap: Map<string, RealtimeNode>
+): Array<{ x: number; y: number }> {
+  const positions: Array<{ x: number; y: number }> = []
+
+  for (const edge of edges) {
+    const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
+    const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+
+    let neighborId: string | null = null
+    if (srcId === nodeId) neighborId = tgtId
+    else if (tgtId === nodeId) neighborId = srcId
+
+    if (neighborId) {
+      const neighbor = nodeMap.get(neighborId)
+      if (neighbor && (neighbor.x !== 0 || neighbor.y !== 0)) {
+        positions.push({ x: neighbor.x, y: neighbor.y })
+      }
+    }
+  }
+
+  return positions
+}
+
+/**
+ * Simple deterministic hash for a string — used for spreading new node offsets.
+ */
+function simpleHash(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
 
 function resolveLabelFn(
   nodeLabel: string | ((d: any) => string) | undefined

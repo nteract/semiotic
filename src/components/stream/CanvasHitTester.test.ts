@@ -1,5 +1,6 @@
 import { findNearestNode } from "./CanvasHitTester"
-import type { LineSceneNode, AreaSceneNode, PointSceneNode } from "./types"
+import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode } from "./types"
+import { quadtree } from "d3-quadtree"
 
 describe("CanvasHitTester — findNearestNode", () => {
   it("finds nearest point on a sorted line path", () => {
@@ -91,5 +92,84 @@ describe("CanvasHitTester — findNearestNode", () => {
     }
     const result = findNearestNode([line], 50, 50)
     expect(result).toBeNull()
+  })
+
+  it("quadtree fast path returns nearest point", () => {
+    const points: PointSceneNode[] = [
+      { type: "point", x: 10, y: 10, r: 5, style: { fill: "red" }, datum: { id: "a" } },
+      { type: "point", x: 50, y: 50, r: 5, style: { fill: "blue" }, datum: { id: "b" } },
+      { type: "point", x: 90, y: 90, r: 5, style: { fill: "green" }, datum: { id: "c" } },
+      { type: "point", x: 200, y: 200, r: 5, style: { fill: "purple" }, datum: { id: "d" } }
+    ]
+
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .addAll(points)
+
+    const result = findNearestNode(points, 52, 48, 30, qt)
+    expect(result).not.toBeNull()
+    expect(result!.datum.id).toBe("b")
+    expect(result!.distance).toBeLessThan(10)
+  })
+
+  it("falls back to linear scan when quadtree candidate fails hitTestPoint", () => {
+    // Point A is closest in Euclidean distance but has r=1, so hitTestPoint
+    // rejects it (dist > r + 5 = 6). Point B is farther but has r=20 so it passes.
+    const pointA: PointSceneNode = {
+      type: "point", x: 100, y: 100, r: 1, style: { fill: "red" }, datum: { id: "a" }
+    }
+    const pointB: PointSceneNode = {
+      type: "point", x: 120, y: 100, r: 20, style: { fill: "blue" }, datum: { id: "b" }
+    }
+
+    const points: PointSceneNode[] = [pointA, pointB]
+
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .addAll(points)
+
+    // Query at (110, 100): 10px from A (r=1, hit radius = 6 → miss),
+    // 10px from B (r=20, hit radius = 25 → hit).
+    // Quadtree returns A (nearest center), hitTestPoint rejects A,
+    // so linear scan should find B.
+    const result = findNearestNode(points, 110, 100, 30, qt)
+    expect(result).not.toBeNull()
+    expect(result!.datum.id).toBe("b")
+  })
+
+  it("quadtree does not interfere with non-point node types", () => {
+    const point: PointSceneNode = {
+      type: "point", x: 200, y: 200, r: 5, style: { fill: "red" }, datum: { id: "pt" }
+    }
+    const rect: RectSceneNode = {
+      type: "rect", x: 40, y: 40, w: 30, h: 30,
+      style: { fill: "blue" }, datum: { id: "rect" }
+    }
+    const line: LineSceneNode = {
+      type: "line",
+      path: [[50, 10], [50, 50], [50, 90]],
+      style: { stroke: "#000" },
+      datum: [{ id: "l1" }, { id: "l2" }, { id: "l3" }]
+    }
+
+    const scene = [point, rect, line]
+
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .addAll([point])
+
+    // Query near the rect center (55, 55) — point is far away at (200,200).
+    // The rect should be hit via linear scan despite the quadtree being present.
+    const rectResult = findNearestNode(scene, 55, 55, 30, qt)
+    expect(rectResult).not.toBeNull()
+    expect(rectResult!.datum.id).toBe("rect")
+
+    // Query near the line path at (50, 5) — outside the rect, near line's first point (50,10)
+    const lineResult = findNearestNode(scene, 50, 5, 30, qt)
+    expect(lineResult).not.toBeNull()
+    expect(lineResult!.datum.id).toBe("l1")
   })
 })

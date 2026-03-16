@@ -294,6 +294,7 @@ export type {
   WaterfallStyle,
   SwarmStyle,
   AnnotationContext,
+  AnnotationAnchorMode,
   CrosshairStyle,
   HoverAnnotationConfig,
   HoverData

@@ -11,6 +11,17 @@ export interface LineStyle {
   strokeDasharray?: string
 }
 
+/**
+ * Anchoring mode for streaming annotations.
+ * - `"fixed"` (default): anchored to specific datum coordinates; disappears when out of view.
+ * - `"latest"`: annotation attaches to the most recent datum in the buffer.
+ *   On each frame, the annotation's position is re-resolved to the latest data point.
+ *   Useful for "current value" labels.
+ * - `"sticky"`: annotation stays at its last known pixel position after the target datum
+ *   is evicted from the window. It freezes in place rather than disappearing.
+ */
+export type AnnotationAnchorMode = "fixed" | "latest" | "sticky"
+
 export interface AnnotationContext {
   scales?: {
     x?: ScaleLinear<number, number>
@@ -30,6 +41,8 @@ export interface AnnotationContext {
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
   /** Curve interpolation type from the parent chart */
   curve?: string
+  /** Cache of last known pixel positions for sticky annotations, keyed by annotation index */
+  stickyPositionCache?: Map<number, { x: number; y: number }>
 }
 
 export interface CrosshairStyle {
