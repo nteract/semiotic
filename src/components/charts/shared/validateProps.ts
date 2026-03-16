@@ -196,6 +196,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       valueFormat: { type: "function" },
       cellBorderColor: { type: "string" },
       cellBorderWidth: { type: "number" },
+      showLegend: { type: "boolean" },
+      legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] },
     },
   },
 
