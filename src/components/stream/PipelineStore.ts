@@ -1,5 +1,6 @@
 import { scaleLinear, scaleLog, scaleSequential, type ScaleLinear } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBins, computeBinExtent } from "../realtime/BinAccumulator"
@@ -20,7 +21,8 @@ import type {
   DecayConfig,
   PulseConfig,
   TransitionConfig,
-  StalenessConfig
+  StalenessConfig,
+  CurveType
 } from "./types"
 import {
   buildLineNode,
@@ -114,6 +116,9 @@ export interface PipelineConfig {
 
   // Point identification (for point-anchored annotations)
   pointIdAccessor?: string | ((d: any) => string)
+
+  // Curve interpolation for line/area charts
+  curve?: CurveType
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -163,6 +168,10 @@ export class PipelineStore {
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
+
+  // ── Quadtree spatial index for O(log n) point hit testing ──────────
+  private _quadtree: Quadtree<PointSceneNode> | null = null
+  private static readonly QUADTREE_THRESHOLD = 500
 
   constructor(config: PipelineConfig) {
     this.config = config
@@ -485,9 +494,46 @@ export class PipelineStore {
       this.startTransition()
     }
 
+    // Build quadtree spatial index for scatter/bubble with many points
+    this.rebuildQuadtree()
+
     this.needsFullRebuild = false
     this.lastLayout = { width: layout.width, height: layout.height }
     this.version++
+  }
+
+  /**
+   * Build or clear the quadtree spatial index for point scene nodes.
+   * Only built for scatter/bubble charts with >QUADTREE_THRESHOLD points.
+   */
+  private rebuildQuadtree(): void {
+    const ct = this.config.chartType
+    if (ct !== "scatter" && ct !== "bubble") {
+      this._quadtree = null
+      return
+    }
+
+    const pointNodes = this.scene.filter(
+      (n): n is PointSceneNode => n.type === "point"
+    )
+
+    if (pointNodes.length <= PipelineStore.QUADTREE_THRESHOLD) {
+      this._quadtree = null
+      return
+    }
+
+    this._quadtree = d3Quadtree<PointSceneNode>()
+      .x(n => n.x)
+      .y(n => n.y)
+      .addAll(pointNodes)
+  }
+
+  /**
+   * Get the quadtree spatial index, if available.
+   * Returns null when chart type is not scatter/bubble or point count is below threshold.
+   */
+  get quadtree(): Quadtree<PointSceneNode> | null {
+    return this._quadtree
   }
 
   /**
@@ -543,6 +589,10 @@ export class PipelineStore {
     }
 
     this.lastLayout = { width: layout.width, height: layout.height }
+
+    // Rebuild quadtree with remapped coordinates
+    this.rebuildQuadtree()
+
     this.version++
   }
 
@@ -603,6 +653,10 @@ export class PipelineStore {
       if (colorThresholds && colorThresholds.length > 0) {
         lineNode.colorThresholds = colorThresholds
       }
+      // Attach curve type for canvas renderer interpolation
+      if (this.config.curve && this.config.curve !== "linear") {
+        lineNode.curve = this.config.curve
+      }
       nodes.push(lineNode)
     }
 
@@ -623,6 +677,10 @@ export class PipelineStore {
       if (this.config.gradientFill) {
         node.fillGradient = this.config.gradientFill
       }
+      // Attach curve type for canvas renderer interpolation
+      if (this.config.curve && this.config.curve !== "linear") {
+        node.curve = this.config.curve
+      }
       nodes.push(node)
     }
 
@@ -637,13 +695,15 @@ export class PipelineStore {
     groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
     const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
       this.resolveAreaStyle(group, sampleDatum)
+    const curveType = (this.config.curve && this.config.curve !== "linear") ? this.config.curve : undefined
     return buildStackedAreaNodes(
       groups,
       this.scales!,
       this.getX,
       this.getY,
       styleFn,
-      this.config.normalize
+      this.config.normalize,
+      curveType
     )
   }
 
@@ -1236,7 +1296,48 @@ export class PipelineStore {
     }
 
     for (const node of nodes) {
-      if (node.type === "line" || node.type === "area") continue
+      // Per-vertex decay for line nodes
+      if (node.type === "line") {
+        const datumArr = Array.isArray(node.datum) ? node.datum : []
+        if (datumArr.length < 2) continue
+        const opacities = new Array<number>(datumArr.length)
+        let hasDecay = false
+        for (let i = 0; i < datumArr.length; i++) {
+          const idx = indexMap.get(datumArr[i])
+          if (idx != null) {
+            opacities[i] = this.computeDecayOpacity(idx, bufferSize)
+            if (opacities[i] < 1) hasDecay = true
+          } else {
+            opacities[i] = 1
+          }
+        }
+        if (hasDecay) {
+          node._decayOpacities = opacities
+        }
+        continue
+      }
+
+      // Per-vertex decay for area nodes
+      if (node.type === "area") {
+        const datumArr = Array.isArray(node.datum) ? node.datum : []
+        if (datumArr.length < 2) continue
+        const opacities = new Array<number>(datumArr.length)
+        let hasDecay = false
+        for (let i = 0; i < datumArr.length; i++) {
+          const idx = indexMap.get(datumArr[i])
+          if (idx != null) {
+            opacities[i] = this.computeDecayOpacity(idx, bufferSize)
+            if (opacities[i] < 1) hasDecay = true
+          } else {
+            opacities[i] = 1
+          }
+        }
+        if (hasDecay) {
+          node._decayOpacities = opacities
+        }
+        continue
+      }
+
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
@@ -1604,6 +1705,7 @@ export class PipelineStore {
     this.lastLayout = null
     this.scales = null
     this.scene = []
+    this._quadtree = null
     this.version++
   }
 

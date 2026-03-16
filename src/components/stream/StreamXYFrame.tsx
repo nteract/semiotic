@@ -524,7 +524,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
-      pointIdAccessor
+      pointIdAccessor,
+      curve
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -536,7 +537,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
-      isStreaming, pointIdAccessor
+      isStreaming, pointIdAccessor, curve
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -639,8 +640,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      // Hit test against scene graph
-      const hit = findNearestNode(store.scene, chartX, chartY)
+      // Hit test against scene graph — use quadtree for O(log n) point lookup when available
+      const hit = findNearestNode(store.scene, chartX, chartY, 30, store.quadtree)
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null

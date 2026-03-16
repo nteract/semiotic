@@ -131,6 +131,10 @@ export interface LineSceneNode {
   style: Style
   datum: any
   group?: string
+  /** Curve interpolation type (default: linear / straight segments) */
+  curve?: CurveType
+  /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
+  _decayOpacities?: number[]
 }
 
 export interface AreaSceneNode {
@@ -148,6 +152,10 @@ export interface AreaSceneNode {
   _pulseIntensity?: number
   /** Pulse color */
   _pulseColor?: string
+  /** Curve interpolation type (default: linear / straight segments) */
+  curve?: CurveType
+  /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
+  _decayOpacities?: number[]
 }
 
 export interface PointSceneNode {
@@ -270,6 +278,7 @@ export type CurveType =
   | "basis"
   | "cardinal"
   | "catmullRom"
+  | "natural"
 
 // ── StreamXYFrame props ────────────────────────────────────────────────
 

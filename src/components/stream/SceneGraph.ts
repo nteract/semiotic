@@ -7,7 +7,8 @@ import type {
   HeatcellSceneNode,
   Style,
   StreamScales,
-  StreamLayout
+  StreamLayout,
+  CurveType
 } from "./types"
 
 // ── Scene node builders ────────────────────────────────────────────────
@@ -82,7 +83,8 @@ export function buildStackedAreaNodes(
   xGet: (d: Record<string, any>) => number,
   yGet: (d: Record<string, any>) => number,
   styleFn: (group: string, sampleDatum?: Record<string, any>) => Style,
-  normalize?: boolean
+  normalize?: boolean,
+  curve?: CurveType
 ): AreaSceneNode[] {
   // Collect all unique x values
   const xSet = new Set<number>()
@@ -146,14 +148,16 @@ export function buildStackedAreaNodes(
       baselines.set(x, base + rawY)
     }
 
-    nodes.push({
+    const areaNode: AreaSceneNode = {
       type: "area",
       topPath,
       bottomPath,
       style: styleFn(g.key, g.data[0]),
       datum: g.data,
       group: g.key
-    })
+    }
+    if (curve) areaNode.curve = curve
+    nodes.push(areaNode)
   }
 
   return nodes

@@ -66,6 +66,10 @@ export class NetworkPipelineStore {
   private nodeTimestamps: Map<string, number> = new Map()
   private edgeTimestamps: Map<string, number> = new Map()
 
+  // ── Decay sort cache ──────────────────────────────────────────────────
+  /** Cached sorted node-timestamp entries for applyDecay(); null = needs rebuild */
+  private _decaySortedNodes: Array<[string, number]> | null = null
+
   // ── Topology diffing ───────────────────────────────────────────────────
 
   /** Node IDs added in the most recent layout */
@@ -122,6 +126,7 @@ export class NetworkPipelineStore {
   ): void {
     this.nodes.clear()
     this.edges.clear()
+    this._decaySortedNodes = null
 
     // Stash hierarchy root on config for the plugin to read
     ;(this.config as any).__hierarchyRoot = rootData
@@ -166,6 +171,7 @@ export class NetworkPipelineStore {
 
     this.nodes.clear()
     this.edges.clear()
+    this._decaySortedNodes = null
 
     // Build node map
     for (const raw of rawNodes) {
@@ -228,6 +234,7 @@ export class NetworkPipelineStore {
     if (!this.nodes.has(source)) {
       this.nodes.set(source, createNode(source))
       this.nodeTimestamps.set(source, now)
+      this._decaySortedNodes = null
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }
@@ -235,6 +242,7 @@ export class NetworkPipelineStore {
     if (!this.nodes.has(target)) {
       this.nodes.set(target, createNode(target))
       this.nodeTimestamps.set(target, now)
+      this._decaySortedNodes = null
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }
@@ -291,6 +299,7 @@ export class NetworkPipelineStore {
     if (plugin.hierarchical && nodesArr.length > 0) {
       this.nodes.clear()
       this.edges.clear()
+      this._decaySortedNodes = null
       for (const node of nodesArr) {
         this.nodes.set(node.id, node)
       }
@@ -726,8 +735,11 @@ export class NetworkPipelineStore {
     const nodeCount = this.nodeTimestamps.size
     if (nodeCount <= 1) return
 
-    // Sort nodes by creation time (oldest first)
-    const sorted = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+    // Sort nodes by creation time (oldest first) — cached when topology is stable
+    if (!this._decaySortedNodes) {
+      this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+    }
+    const sorted = this._decaySortedNodes
     const nodeAgeMap = new Map<string, number>()
     for (let i = 0; i < sorted.length; i++) {
       nodeAgeMap.set(sorted[i][0], i)
@@ -880,6 +892,7 @@ export class NetworkPipelineStore {
   clear(): void {
     this.nodes.clear()
     this.edges.clear()
+    this._decaySortedNodes = null
     this.tension = 0
     this.layoutVersion = 0
     this.sceneNodes = []

@@ -62,10 +62,18 @@ export class RingBuffer<T> {
     }
   }
 
+  forEach(callback: (value: T, index: number) => void): void {
+    const start = (this.head - this._size + this._capacity) % this._capacity
+    for (let i = 0; i < this._size; i++) {
+      callback(this.buffer[(start + i) % this._capacity]!, i)
+    }
+  }
+
   toArray(): T[] {
-    const result: T[] = []
-    for (const item of this) {
-      result.push(item)
+    const result = new Array<T>(this._size)
+    const start = (this.head - this._size + this._capacity) % this._capacity
+    for (let i = 0; i < this._size; i++) {
+      result[i] = this.buffer[(start + i) % this._capacity]!
     }
     return result
   }
