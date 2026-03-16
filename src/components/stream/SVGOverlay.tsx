@@ -4,8 +4,9 @@ import { useMemo } from "react"
 import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import Legend from "../Legend"
-import type { LegendGroup } from "../types/legendTypes"
+import Legend, { GradientLegend } from "../Legend"
+import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 
@@ -85,7 +86,7 @@ interface SVGOverlayProps {
   title?: string | ReactNode
 
   // Legend
-  legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   /** Callback when hovering a legend item */
   legendHoverBehavior?: (item: { label: string } | null) => void
   /** Callback when clicking a legend item */
@@ -94,6 +95,8 @@ interface SVGOverlayProps {
   legendHighlightedCategory?: string | null
   /** Set of isolated category labels (for click isolation) */
   legendIsolatedCategories?: Set<string>
+  /** Legend position relative to chart area */
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   // Foreground graphics (rendered on top in SVG overlay)
   foregroundGraphics?: ReactNode
@@ -120,17 +123,143 @@ interface SVGOverlayProps {
   /** Curve interpolation type for envelope annotations */
   curve?: string
 
+  /** When true, grid lines and axis baselines are skipped (rendered by SVGUnderlay instead) */
+  underlayRendered?: boolean
+
   children?: ReactNode
 }
 
-function isLegendConfig(value: unknown): value is { legendGroups: LegendGroup[] } {
+// ── SVGUnderlay ─────────────────────────────────────────────────────────
+// Renders ONLY grid lines and axis baseline lines behind the canvas.
+
+interface SVGUnderlayProps {
+  width: number
+  height: number
+  totalWidth: number
+  totalHeight: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  scales: StreamScales | null
+  showAxes?: boolean
+  axes?: AxisConfig[]
+  showGrid?: boolean
+  xFormat?: (d: any) => string
+  yFormat?: (d: any) => string
+}
+
+export function SVGUnderlay(props: SVGUnderlayProps) {
+  const {
+    width,
+    height,
+    totalWidth,
+    totalHeight,
+    margin,
+    scales,
+    showAxes,
+    axes,
+    showGrid,
+    xFormat,
+    yFormat
+  } = props
+
+  const xTicks = useMemo(() => {
+    if (!scales) return []
+    const bottomAxis = axes?.find(a => a.orient === "bottom")
+    const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
+    const maxFit = Math.max(2, Math.floor(width / 70))
+    const requested = bottomAxis?.ticks ?? 5
+    const tickCount = Math.min(requested, maxFit)
+    return scales.x.ticks(tickCount).map(v => ({
+      value: v,
+      pixel: scales.x(v),
+      label: fmt(v)
+    }))
+  }, [scales, axes, xFormat, width])
+
+  const yTicks = useMemo(() => {
+    if (!scales) return []
+    const leftAxis = axes?.find(a => a.orient === "left")
+    const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
+    const maxFit = Math.max(2, Math.floor(height / 30))
+    const requested = leftAxis?.ticks ?? 5
+    const tickCount = Math.min(requested, maxFit)
+    return scales.y.ticks(tickCount).map(v => ({
+      value: v,
+      pixel: scales.y(v),
+      label: fmt(v)
+    }))
+  }, [scales, axes, yFormat, height])
+
+  const hasGrid = showGrid && scales
+  const hasBaselines = showAxes && scales
+
+  if (!hasGrid && !hasBaselines) return null
+
+  const bottomAxis = axes?.find(a => a.orient === "bottom")
+  const leftAxis = axes?.find(a => a.orient === "left")
+  const showBottomBaseline = hasBaselines && (bottomAxis ? bottomAxis.baseline !== false : true)
+  const showLeftBaseline = hasBaselines && (leftAxis ? leftAxis.baseline !== false : true)
+  const bottomJagged = bottomAxis?.jaggedBase || false
+  const leftJagged = leftAxis?.jaggedBase || false
+  const axisStroke = "var(--semiotic-border, #ccc)"
+
   return (
-    typeof value === "object" &&
-    value !== null &&
-    !React.isValidElement(value) &&
-    "legendGroups" in value
+    <svg
+      width={totalWidth}
+      height={totalHeight}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        pointerEvents: "none"
+      }}
+    >
+      <g transform={`translate(${margin.left},${margin.top})`}>
+        {/* Grid lines */}
+        {hasGrid && (
+          <g className="stream-grid">
+            {xTicks.map((tick, i) => (
+              <line
+                key={`xgrid-${i}`}
+                x1={tick.pixel}
+                y1={0}
+                x2={tick.pixel}
+                y2={height}
+                stroke="var(--semiotic-grid, #e0e0e0)"
+                strokeWidth={1}
+              />
+            ))}
+            {yTicks.map((tick, i) => (
+              <line
+                key={`ygrid-${i}`}
+                x1={0}
+                y1={tick.pixel}
+                x2={width}
+                y2={tick.pixel}
+                stroke="var(--semiotic-grid, #e0e0e0)"
+                strokeWidth={1}
+              />
+            ))}
+          </g>
+        )}
+
+        {/* Axis baselines */}
+        {showBottomBaseline && !bottomJagged && (
+          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+        )}
+        {bottomJagged && (
+          <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+        )}
+        {showLeftBaseline && !leftJagged && (
+          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} />
+        )}
+        {leftJagged && (
+          <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+        )}
+      </g>
+    </svg>
   )
 }
+
 
 function defaultTickFormat(v: number): string {
   return String(Math.round(v * 100) / 100)
@@ -169,6 +298,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
+    legendPosition = "right",
     foregroundGraphics,
     marginalGraphics,
     xValues,
@@ -181,6 +311,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     annotationData,
     pointNodes,
     curve: annCurve,
+    underlayRendered,
     children
   } = props
 
@@ -266,8 +397,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
       }}
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
-        {/* Grid lines */}
-        {showGrid && scales && (
+        {/* Grid lines (skipped when underlayRendered — they're in SVGUnderlay) */}
+        {showGrid && scales && !underlayRendered && (
           <g className="stream-grid">
             {xTicks.map((tick, i) => (
               <line
@@ -312,11 +443,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
           return (
           <g className="stream-axes">
-            {/* X axis baseline */}
-            {showBottomBaseline && !bottomJagged && (
+            {/* X axis baseline (skipped when underlayRendered) */}
+            {!underlayRendered && showBottomBaseline && !bottomJagged && (
               <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
             )}
-            {bottomJagged && (
+            {!underlayRendered && bottomJagged && (
               <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
             {xTicks.map((tick, i) => {
@@ -354,11 +485,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
               </text>
             )}
 
-            {/* Y axis baseline */}
-            {showLeftBaseline && !leftJagged && (
+            {/* Y axis baseline (skipped when underlayRendered) */}
+            {!underlayRendered && showLeftBaseline && !leftJagged && (
               <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} />
             )}
-            {leftJagged && (
+            {!underlayRendered && leftJagged && (
               <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
             {yTicks.map((tick, i) => {
@@ -480,21 +611,42 @@ export function SVGOverlay(props: SVGOverlayProps) {
       )}
 
       {/* Legend */}
-      {legend && (
-        <g transform={`translate(${totalWidth - margin.right + 10}, ${margin.top})`}>
-          {isLegendConfig(legend)
-            ? <Legend
-                legendGroups={legend.legendGroups}
-                title=""
-                width={100}
-                customHoverBehavior={legendHoverBehavior}
-                customClickBehavior={legendClickBehavior}
-                highlightedCategory={legendHighlightedCategory}
-                isolatedCategories={legendIsolatedCategories}
-              />
-            : (legend as ReactNode)}
-        </g>
-      )}
+      {legend && (() => {
+        const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
+        let tx: number, ty: number
+        if (legendPosition === "left") {
+          tx = 4; ty = margin.top
+        } else if (legendPosition === "top") {
+          tx = 0; ty = 8
+        } else if (legendPosition === "bottom") {
+          tx = 0; ty = totalHeight - margin.bottom + 50
+        } else {
+          // right (default)
+          tx = totalWidth - margin.right + 10; ty = margin.top
+        }
+        return (
+          <g transform={`translate(${tx}, ${ty})`}>
+            {isGradientLegendConfig(legend)
+              ? <GradientLegend
+                  config={legend.gradient}
+                  orientation={isHorizontal ? "horizontal" : "vertical"}
+                  width={isHorizontal ? totalWidth : 100}
+                />
+              : isLegendConfig(legend)
+              ? <Legend
+                  legendGroups={legend.legendGroups}
+                  title=""
+                  width={isHorizontal ? totalWidth : 100}
+                  orientation={isHorizontal ? "horizontal" : "vertical"}
+                  customHoverBehavior={legendHoverBehavior}
+                  customClickBehavior={legendClickBehavior}
+                  highlightedCategory={legendHighlightedCategory}
+                  isolatedCategories={legendIsolatedCategories}
+                />
+              : (legend as ReactNode)}
+          </g>
+        )
+      })()}
     </svg>
   )
 }

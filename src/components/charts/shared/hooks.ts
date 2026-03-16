@@ -198,11 +198,14 @@ export function useChartSelection({
  * Consolidates the shouldShowLegend / createLegend / margin merge / right-margin
  * expansion pattern that every chart with color encoding repeats.
  */
+export type LegendPosition = "right" | "left" | "top" | "bottom"
+
 export function useChartLegendAndMargin({
   data,
   colorBy,
   colorScale,
   showLegend,
+  legendPosition = "right",
   userMargin,
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
 }: {
@@ -210,11 +213,13 @@ export function useChartLegendAndMargin({
   colorBy: Accessor<string> | undefined
   colorScale: ((v: string) => string) | undefined
   showLegend: boolean | undefined
+  legendPosition?: LegendPosition
   userMargin: MarginType | undefined
   defaults?: { top: number; bottom: number; left: number; right: number }
 }): {
   legend: ReturnType<typeof createLegend> | undefined
   margin: { top: number; bottom: number; left: number; right: number }
+  legendPosition: LegendPosition
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
   // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
@@ -229,11 +234,16 @@ export function useChartLegendAndMargin({
 
   const margin = useMemo(() => {
     const finalMargin = { ...defaults, ...userMargin }
-    if (legend && finalMargin.right < 120) finalMargin.right = 120
+    if (legend) {
+      if (legendPosition === "right" && finalMargin.right < 110) finalMargin.right = 110
+      else if (legendPosition === "left" && finalMargin.left < 110) finalMargin.left = 110
+      else if (legendPosition === "top" && finalMargin.top < 50) finalMargin.top = 50
+      else if (legendPosition === "bottom" && finalMargin.bottom < 80) finalMargin.bottom = 80
+    }
     return finalMargin
-  }, [defaults, userMargin, legend])
+  }, [defaults, userMargin, legend, legendPosition])
 
-  return { legend, margin }
+  return { legend, margin, legendPosition }
 }
 
 // ── Legend interaction ──────────────────────────────────────────────────

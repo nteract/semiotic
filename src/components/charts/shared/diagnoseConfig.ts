@@ -261,6 +261,136 @@ function checkNonZeroBaseline(
   }
 }
 
+const ORDINAL_BAR_COMPONENTS = new Set([
+  "BarChart", "StackedBarChart", "GroupedBarChart"
+])
+
+function checkDegenerateExtent(
+  component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  const spec = VALIDATION_MAP[component]
+  if (!spec || spec.dataShape !== "array") return
+  const data = props.data
+  if (!data || !Array.isArray(data) || data.length === 0) return
+
+  const accessors: Array<{ prop: string; name: string }> = []
+  if (props.xAccessor && typeof props.xAccessor === "string") {
+    accessors.push({ prop: "xAccessor", name: props.xAccessor })
+  }
+  if (props.yAccessor && typeof props.yAccessor === "string") {
+    accessors.push({ prop: "yAccessor", name: props.yAccessor })
+  }
+  if (props.valueAccessor && typeof props.valueAccessor === "string") {
+    accessors.push({ prop: "valueAccessor", name: props.valueAccessor })
+  }
+
+  const sampleSize = Math.min(data.length, 5)
+  for (const acc of accessors) {
+    let allNaN = true
+    for (let i = 0; i < sampleSize; i++) {
+      const v = data[i]?.[acc.name]
+      if (typeof v === "number" && Number.isFinite(v)) {
+        allNaN = false
+        break
+      }
+    }
+    if (allNaN) {
+      out.push({
+        severity: "error",
+        code: "DEGENERATE_EXTENT",
+        message: `${acc.prop}="${acc.name}" produces NaN or non-finite values for all sampled data points — chart extents will be invalid.`,
+        fix: `Ensure data[].${acc.name} contains finite numbers, or use a function accessor to transform values.`,
+      })
+    }
+  }
+}
+
+function checkBarPaddingInvisible(
+  component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (!ORDINAL_BAR_COMPONENTS.has(component)) return
+  const padding = props.barPadding
+  if (typeof padding === "number" && padding < 10) {
+    out.push({
+      severity: "warning",
+      code: "BAR_PADDING_INVISIBLE",
+      message: `barPadding=${padding} is very small — bars may appear to have no spacing between them.`,
+      fix: `Increase barPadding to at least 10 for visible gaps, e.g. barPadding={12}.`,
+    })
+  }
+}
+
+function checkBottomMarginWithLegend(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (props.legendPosition !== "bottom") return
+  const m = props.margin
+  if (!m || typeof m !== "object") return
+  const bottom = m.bottom
+  if (typeof bottom === "number" && bottom < 70) {
+    out.push({
+      severity: "warning",
+      code: "BOTTOM_MARGIN_WITH_LEGEND",
+      message: `legendPosition="bottom" with margin.bottom=${bottom}px — legend may overlap axis labels.`,
+      fix: `Increase margin.bottom to at least 70, e.g. margin={{ ...margin, bottom: 80 }}.`,
+    })
+  }
+}
+
+function checkLegendMarginTight(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (!props.showLegend) return
+  const pos = props.legendPosition ?? "right"
+  if (pos !== "right") return
+  const m = props.margin
+  if (!m || typeof m !== "object") return
+  const right = m.right
+  if (typeof right === "number" && right < 100) {
+    out.push({
+      severity: "warning",
+      code: "LEGEND_MARGIN_TIGHT",
+      message: `showLegend is true with legendPosition="right" but margin.right=${right}px — legend may be clipped or overlap the chart.`,
+      fix: `Increase margin.right to at least 100, e.g. margin={{ ...margin, right: 120 }}.`,
+    })
+  }
+}
+
+function checkHeatmapStringAccessor(
+  component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  if (component !== "Heatmap") return
+  const data = props.data
+  if (!data || !Array.isArray(data) || data.length === 0) return
+
+  const sample = data[0]
+  if (!sample || typeof sample !== "object") return
+
+  for (const accProp of ["xAccessor", "yAccessor"] as const) {
+    const accValue = props[accProp]
+    if (typeof accValue !== "string") continue
+    const v = sample[accValue]
+    if (typeof v === "string") {
+      out.push({
+        severity: "warning",
+        code: "HEATMAP_STRING_ACCESSOR",
+        message: `${accProp}="${accValue}" resolves to string values (e.g. "${v}"). Heatmap will use categorical axis handling which may produce unexpected cell layout.`,
+        fix: `If you intend categorical axes this is fine. Otherwise, convert values to numbers before passing data.`,
+      })
+    }
+  }
+}
+
 function checkMarginOverflow(
   _component: string,
   props: Record<string, any>,
@@ -334,6 +464,11 @@ export function diagnoseConfig(
   checkNonZeroBaseline(componentName, props, diagnoses)
   checkDataGaps(componentName, props, diagnoses)
   checkMarginOverflow(componentName, props, diagnoses)
+  checkDegenerateExtent(componentName, props, diagnoses)
+  checkBarPaddingInvisible(componentName, props, diagnoses)
+  checkBottomMarginWithLegend(componentName, props, diagnoses)
+  checkLegendMarginTight(componentName, props, diagnoses)
+  checkHeatmapStringAccessor(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

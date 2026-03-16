@@ -344,21 +344,23 @@ describe("nextIndex", () => {
 
 describe("navPointToHover", () => {
   it("converts NavPoint to HoverData", () => {
-    const point: NavPoint = { x: 42, y: 99, datum: { id: "test", value: 10 } }
+    const point: NavPoint = { x: 42, y: 99, datum: { id: "test", val: 10 } }
     const hover = navPointToHover(point)
-    expect(hover).toEqual({
-      data: { id: "test", value: 10 },
-      x: 42,
-      y: 99,
-      time: 42,
-      value: 99
-    })
+    // Spreads raw datum fields + adds normalized keys
+    expect(hover.data).toEqual({ id: "test", val: 10 })
+    expect(hover.id).toBe("test")
+    expect(hover.val).toBe(10)
+    expect(hover.x).toBe(42)
+    expect(hover.y).toBe(99)
+    expect(hover.time).toBe(42)
+    expect(hover.value).toBe(99)
   })
 
   it("handles null datum", () => {
     const point: NavPoint = { x: 0, y: 0, datum: null }
     const hover = navPointToHover(point)
-    expect(hover.data).toBeNull()
+    // null datum falls back to {} via || {}
+    expect(hover.data).toEqual({})
     expect(hover.x).toBe(0)
     expect(hover.y).toBe(0)
     expect(hover.time).toBe(0)

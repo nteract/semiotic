@@ -339,6 +339,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   windowSize?: number
   timeAccessor?: string | ((d: T) => number)
 
+  // ── Scale types ─────────────────────────────────
+  xScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log"
+
   // ── Extents ──────────────────────────────────────
   xExtent?: [number | undefined, number | undefined] | [number]
   yExtent?: [number | undefined, number | undefined] | [number]
@@ -411,11 +415,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
-  legend?: ReactNode | { legendGroups: any[] }
+  legend?: ReactNode | { legendGroups: any[] } | { gradient: import("../types/legendTypes").GradientLegendConfig }
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   // ── Background / foreground graphics ───────────
   /** SVG elements rendered behind the canvas (in pixel space) */

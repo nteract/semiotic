@@ -83,6 +83,8 @@ const heatmapProps = [
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "showLegend", type: "boolean", required: false, default: "false", description: "Show a gradient color legend for the value scale." },
+  { name: "legendPosition", type: '"right" | "left" | "top" | "bottom"', required: false, default: '"right"', description: "Position of the gradient legend relative to the chart." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -244,6 +246,35 @@ export default function HeatmapPage() {
           colorScheme: '"reds"',
           cellBorderColor: '"#333"',
           cellBorderWidth: "2",
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="gradient-legend">Gradient Legend</h3>
+      <p>
+        Set <code>showLegend</code> to display a gradient color legend that
+        represents the continuous value scale. Use <code>legendPosition</code> to
+        control where the legend appears relative to the chart.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "day",
+          yAccessor: "hour",
+          valueAccessor: "value",
+          colorScheme: "viridis",
+          showLegend: true,
+          legendPosition: "right",
+          xLabel: "Day",
+          yLabel: "Hour",
+        }}
+        type={Heatmap}
+        overrideProps={{
+          data: "activityData",
+          colorScheme: '"viridis"',
+          showLegend: "true",
+          legendPosition: '"right"',
         }}
         hiddenProps={{}}
       />

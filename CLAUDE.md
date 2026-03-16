@@ -13,7 +13,7 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation` (callback, see below), `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `emphasis` ("primary"|"secondary")
+`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation` (callback, see below), `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom", default "right"), `emphasis` ("primary"|"secondary")
 
 ### tooltip
 `tooltip` accepts: `true` (default tooltip), `false` (disabled), a **function** `(datum: Record<string, any>) => ReactNode`, or a config `{ fields?: string[], title?: accessor, format?: fn, style?: CSSProperties }`. The function form receives your raw data object directly.
@@ -30,7 +30,7 @@ The `datum` field contains your original data object (not a wrapper).
 
 ## XY Charts (`semiotic/xy`)
 
-**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea`, `areaOpacity` (0.3), `anomaly` (AnomalyConfig), `forecast` (ForecastConfig), `directLabel` (boolean|{position,fontSize}), `gapStrategy` ("break"|"interpolate"|"zero")
+**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea`, `areaOpacity` (0.3), `anomaly` (AnomalyConfig), `forecast` (ForecastConfig), `directLabel` (boolean|{position,fontSize}), `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType` ("linear"|"log"), `yScaleType` ("linear"|"log")
 
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}), `areaOpacity` (0.7), `showLine` (true)
 
@@ -42,13 +42,13 @@ The `datum` field contains your original data object (not a wrapper).
 
 **ConnectedScatterplot** — `data`, `xAccessor`, `yAccessor`, `orderAccessor` (number|Date field for sequencing), `pointRadius` (4). Viridis colored start→end, line width = point radius, white halo under lines when <100 points.
 
-**Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
+**Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis" or custom), `showValues`, `cellBorderColor`. Accessors can be string field names (including string/categorical fields) or functions.
 
 ## Ordinal Charts (`semiotic/ordinal`)
 
-**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding`
-**StackedBarChart** — + `stackBy` (required), `normalize`
-**GroupedBarChart** — + `groupBy` (required)
+**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40)
+**StackedBarChart** — + `stackBy` (required), `normalize`, `barPadding` (40)
+**GroupedBarChart** — + `groupBy` (required), `barPadding` (60)
 **SwarmPlot** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
 **BoxPlot** — + `showOutliers`, `outlierRadius`
 **Histogram** — + `bins` (25), `relative`. Always horizontal. `categoryAccessor` is optional (defaults to `"category"`) — for a single-group histogram, either omit it or ensure your data has a `category` field with a single value.
@@ -236,6 +236,24 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - `ChartErrorBoundary` — error boundary
 - `exportChart(containerDiv, { format: "png"|"svg" })` — pass the **wrapper div** (not the SVG element); it finds canvas + SVG internally. Default: PNG, composites canvas + SVG layers
 - `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
+
+## Known Pitfalls
+
+**Tooltip datum shape**: HOC tooltip functions receive your raw data object. When using `frameProps.tooltipContent` on Stream Frames, the datum may be wrapped — access your data via `d.data`. HOC `tooltip` functions don't need this.
+
+**Legend positioning**: `legendPosition` controls where the legend renders. When set to "bottom", the chart automatically expands the bottom margin to ~80px to clear axis labels. For "top", margin expands to ~50px. If you need more space, override `margin` explicitly.
+
+**Log scale and zero**: `xScaleType="log"` / `yScaleType="log"` clamp domain minimums to 1e-6 because log(0) is undefined. Data with zero or negative values will be clamped.
+
+**Heatmap with string axes**: Heatmap supports string/categorical x and y values (e.g., weekday names, hour labels). The `colorScheme` prop accepts d3-scale-chromatic names: "blues", "reds", "greens", "viridis".
+
+**barPadding is in pixels**: `barPadding` on ordinal charts is an absolute pixel value divided by the chart width to compute a band scale padding ratio. The defaults (40 for bar/stacked, 60 for grouped) work well at 600px width. For very small charts, you may need to reduce it.
+
+**Horizontal bar charts need wider left margins**: When using `orientation="horizontal"` with long category labels, increase the left margin manually: `margin={{ left: 120 }}`. There is no auto-measurement of label width.
+
+**LinkedCharts suppresses child legends**: When a `CategoryColorProvider` wraps `LinkedCharts`, individual chart legends are suppressed in favor of a unified legend. To force a child chart to show its own legend, set `showLegend={true}` explicitly.
+
+**`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
 
 ## Differentiators
 Network viz, streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend

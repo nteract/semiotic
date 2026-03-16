@@ -4,8 +4,9 @@ import { useMemo } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import Legend from "../Legend"
-import type { LegendGroup } from "../types/legendTypes"
+import Legend, { GradientLegend } from "../Legend"
+import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 
 interface OrdinalSVGOverlayProps {
@@ -30,11 +31,12 @@ interface OrdinalSVGOverlayProps {
   title?: string | ReactNode
 
   // Legend
-  legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   // Foreground graphics
   foregroundGraphics?: ReactNode
@@ -53,17 +55,111 @@ interface OrdinalSVGOverlayProps {
   yAccessor?: string
   annotationData?: Record<string, any>[]
 
+  /** When true, grid lines and axis baselines are skipped (rendered by OrdinalSVGUnderlay instead) */
+  underlayRendered?: boolean
+
   children?: ReactNode
 }
 
-function isLegendConfig(value: unknown): value is { legendGroups: LegendGroup[] } {
+// ── OrdinalSVGUnderlay ──────────────────────────────────────────────────
+// Renders ONLY grid lines and axis baseline lines behind the canvas.
+
+interface OrdinalSVGUnderlayProps {
+  width: number
+  height: number
+  totalWidth: number
+  totalHeight: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  scales: OrdinalScales | null
+  showAxes?: boolean
+  showGrid?: boolean
+  rFormat?: (d: number) => string
+}
+
+export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
+  const {
+    width,
+    height,
+    totalWidth,
+    totalHeight,
+    margin,
+    scales,
+    showAxes,
+    showGrid,
+    rFormat
+  } = props
+
+  const isRadial = scales?.projection === "radial"
+  const isHorizontal = scales?.projection === "horizontal"
+
+  const valueTicks = useMemo(() => {
+    if (!scales || isRadial) return []
+    return scales.r.ticks(5).map(v => ({
+      value: v,
+      pixel: scales.r(v),
+      label: (rFormat || defaultRFormat)(v)
+    }))
+  }, [scales, rFormat, isRadial])
+
+  const hasGrid = showGrid && scales && !isRadial
+  const hasBaselines = showAxes && scales && !isRadial
+
+  if (!hasGrid && !hasBaselines) return null
+
   return (
-    typeof value === "object" &&
-    value !== null &&
-    !React.isValidElement(value) &&
-    "legendGroups" in value
+    <svg
+      width={totalWidth}
+      height={totalHeight}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        pointerEvents: "none"
+      }}
+    >
+      <g transform={`translate(${margin.left},${margin.top})`}>
+        {/* Grid lines */}
+        {hasGrid && (
+          <g className="ordinal-grid">
+            {valueTicks.map((tick, i) => (
+              <line
+                key={`grid-${i}`}
+                x1={isHorizontal ? tick.pixel : 0}
+                y1={isHorizontal ? 0 : tick.pixel}
+                x2={isHorizontal ? tick.pixel : width}
+                y2={isHorizontal ? height : tick.pixel}
+                stroke="var(--semiotic-grid, #e0e0e0)"
+                strokeWidth={1}
+              />
+            ))}
+          </g>
+        )}
+
+        {/* Axis baselines */}
+        {hasBaselines && (
+          <>
+            {isHorizontal ? (
+              <>
+                {/* Horizontal: category axis baseline (left) */}
+                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Horizontal: value axis baseline (bottom) */}
+                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+              </>
+            ) : (
+              <>
+                {/* Vertical: category axis baseline (bottom) */}
+                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Vertical: value axis baseline (left) */}
+                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+              </>
+            )}
+          </>
+        )}
+      </g>
+    </svg>
   )
 }
+
 
 function defaultRFormat(v: number): string {
   return String(Math.round(v * 100) / 100)
@@ -89,6 +185,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
+    legendPosition = "right",
     foregroundGraphics,
     annotations,
     svgAnnotationRules,
@@ -96,6 +193,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     xAccessor: annXAccessor,
     yAccessor: annYAccessor,
     annotationData,
+    underlayRendered,
     children
   } = props
 
@@ -182,8 +280,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       }}
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
-        {/* Grid lines */}
-        {showGrid && scales && !isRadial && (
+        {/* Grid lines (skipped when underlayRendered — they're in OrdinalSVGUnderlay) */}
+        {showGrid && scales && !isRadial && !underlayRendered && (
           <g className="ordinal-grid">
             {valueTicks.map((tick, i) => (
               <line
@@ -205,8 +303,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             {isHorizontal ? (
               <>
                 {/* Horizontal: categories on left, values on bottom */}
-                {/* Category axis (left) */}
-                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Category axis baseline (left) — skipped when underlayRendered */}
+                {!underlayRendered && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(0,${tick.pixel})`}>
                     <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -236,8 +334,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                   </text>
                 )}
 
-                {/* Value axis (bottom) */}
-                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Value axis baseline (bottom) — skipped when underlayRendered */}
+                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -268,8 +366,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             ) : (
               <>
                 {/* Vertical: categories on bottom, values on left */}
-                {/* Category axis (bottom) */}
-                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Category axis baseline (bottom) — skipped when underlayRendered */}
+                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -297,8 +395,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                   </text>
                 )}
 
-                {/* Value axis (left) */}
-                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Value axis baseline (left) — skipped when underlayRendered */}
+                {!underlayRendered && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(0,${tick.pixel})`}>
                     <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -357,21 +455,41 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       )}
 
       {/* Legend */}
-      {legend && (
-        <g transform={`translate(${totalWidth - margin.right + 10}, ${margin.top})`}>
-          {isLegendConfig(legend)
-            ? <Legend
-                legendGroups={legend.legendGroups}
-                title=""
-                width={100}
-                customHoverBehavior={legendHoverBehavior}
-                customClickBehavior={legendClickBehavior}
-                highlightedCategory={legendHighlightedCategory}
-                isolatedCategories={legendIsolatedCategories}
-              />
-            : (legend as ReactNode)}
-        </g>
-      )}
+      {legend && (() => {
+        const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
+        let tx: number, ty: number
+        if (legendPosition === "left") {
+          tx = 4; ty = margin.top
+        } else if (legendPosition === "top") {
+          tx = 0; ty = 8
+        } else if (legendPosition === "bottom") {
+          tx = 0; ty = totalHeight - margin.bottom + 50
+        } else {
+          tx = totalWidth - margin.right + 10; ty = margin.top
+        }
+        return (
+          <g transform={`translate(${tx}, ${ty})`}>
+            {isGradientLegendConfig(legend)
+              ? <GradientLegend
+                  config={legend.gradient}
+                  orientation={isHorizontal ? "horizontal" : "vertical"}
+                  width={isHorizontal ? totalWidth : 100}
+                />
+              : isLegendConfig(legend)
+              ? <Legend
+                  legendGroups={legend.legendGroups}
+                  title=""
+                  width={isHorizontal ? totalWidth : 100}
+                  orientation={isHorizontal ? "horizontal" : "vertical"}
+                  customHoverBehavior={legendHoverBehavior}
+                  customClickBehavior={legendClickBehavior}
+                  highlightedCategory={legendHighlightedCategory}
+                  isolatedCategories={legendIsolatedCategories}
+                />
+              : (legend as ReactNode)}
+          </g>
+        )
+      })()}
     </svg>
   )
 }

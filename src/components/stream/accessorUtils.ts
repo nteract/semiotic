@@ -9,6 +9,15 @@ export function resolveAccessor<T>(
   return (d: T) => +(d as any)[key]
 }
 
+export function resolveRawAccessor<T>(
+  accessor: string | ((d: T) => any) | undefined,
+  fallback: string
+): (d: T) => any {
+  if (typeof accessor === "function") return accessor
+  const key = accessor || fallback
+  return (d: T) => (d as any)[key]
+}
+
 export function resolveStringAccessor<T>(
   accessor: string | ((d: T) => string) | undefined,
   fallback?: string

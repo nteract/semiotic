@@ -111,6 +111,24 @@ const data = [
 
 Key props: `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `showValues`
 
+### Heatmap with Gradient Legend
+
+```jsx
+import { Heatmap } from "semiotic/ai"
+
+<Heatmap
+  data={data}
+  xAccessor="hour"
+  yAccessor="day"
+  valueAccessor="count"
+  colorScheme="viridis"
+  showLegend
+  legendPosition="right"
+/>
+```
+
+Key props: `showLegend` enables gradient legend, `legendPosition` ("right"|"left"|"top"|"bottom")
+
 ### AreaChart
 
 ```jsx

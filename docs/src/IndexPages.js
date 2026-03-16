@@ -280,6 +280,14 @@ export function RecipesIndex() {
           title="Network Explorer"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+
+        <div className="sub-header">Dashboards</div>
+
+        <PageLink
+          href="/recipes/benchmark-dashboard"
+          title="Benchmark Dashboard"
+          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
+        />
       </div>
     </div>
   )

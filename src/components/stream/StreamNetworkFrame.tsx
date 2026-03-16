@@ -719,9 +719,11 @@ const StreamNetworkFrame = forwardRef<
       return
     }
 
+    const rawDatum = hit.datum || {}
     const hover = {
+      ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
       type: hit.type,
-      data: hit.datum,
+      data: rawDatum,
       x: hit.x,
       y: hit.y
     }
@@ -775,9 +777,11 @@ const StreamNetworkFrame = forwardRef<
     )
 
     if (hit) {
+      const rawDatum = hit.datum || {}
       customClickBehavior({
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
         type: hit.type,
-        data: hit.datum,
+        data: rawDatum,
         x: hit.x,
         y: hit.y
       })
@@ -828,7 +832,14 @@ const StreamNetworkFrame = forwardRef<
     const idx = current < 0 ? 0 : next
     kbFocusIndexRef.current = idx
     const point = navPoints[idx]
-    const hover = { type: "node" as const, data: point.datum, x: point.x, y: point.y }
+    const rawDatum = point.datum || {}
+    const hover = {
+      ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+      type: "node" as const,
+      data: rawDatum,
+      x: point.x,
+      y: point.y
+    }
     hoverRef.current = hover
     setHoverData(hover)
     if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }

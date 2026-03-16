@@ -104,8 +104,13 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLa
   }
   const groupCount = groupKeys.length || 1
 
+  // Inner padding between bars within a group (fraction of sub-bar width)
+  const innerPadRatio = 0.2
+
   for (const col of Object.values(columns)) {
     const subWidth = col.width / groupCount
+    const innerPad = subWidth * innerPadRatio
+    const barWidth = subWidth - innerPad
     const grouped = new Map<string, Record<string, any>[]>()
     for (const d of col.pieceData) {
       const key = getGroup ? getGroup(d) : "_default"
@@ -120,19 +125,19 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLa
         const style = resolvePieceStyle(d, col.name)
 
         if (isVertical) {
-          const barX = col.x + gi * subWidth
+          const barX = col.x + gi * subWidth + innerPad / 2
           const zeroY = rScale(0)
           const valY = rScale(val)
           nodes.push(buildRectNode(
-            barX, Math.min(zeroY, valY), subWidth, Math.abs(zeroY - valY),
+            barX, Math.min(zeroY, valY), barWidth, Math.abs(zeroY - valY),
             style, d, groupKeys[gi]
           ))
         } else {
-          const barY = col.x + gi * subWidth
+          const barY = col.x + gi * subWidth + innerPad / 2
           const zeroX = rScale(0)
           const valX = rScale(val)
           nodes.push(buildRectNode(
-            Math.min(zeroX, valX), barY, Math.abs(valX - zeroX), subWidth,
+            Math.min(zeroX, valX), barY, Math.abs(valX - zeroX), barWidth,
             style, d, groupKeys[gi]
           ))
         }

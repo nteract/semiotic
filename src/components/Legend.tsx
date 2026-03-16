@@ -1,11 +1,13 @@
 // @ts-nocheck
 import * as React from "react"
 
-import { LegendGroup, LegendItem, ItemType, LegendProps } from "./types/legendTypes"
+import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig } from "./types/legendTypes"
+
+const SWATCH = 16
 
 const typeHash = {
-  fill: (style: Object) => <rect style={style} width={20} height={20} />,
-  line: (style: Object) => <line style={style} x1={0} y1={0} x2={20} y2={20} />
+  fill: (style: Object) => <rect style={style} width={SWATCH} height={SWATCH} />,
+  line: (style: Object) => <line style={style} x1={0} y1={0} x2={SWATCH} y2={SWATCH} />
 }
 
 function renderType(
@@ -25,15 +27,16 @@ function renderType(
   return renderedType
 }
 
-/** Checkmark SVG for isolated items */
+/** Checkmark SVG for isolated items — centered on the swatch */
 function CheckMark() {
   return (
     <path
-      d="M2,6 L5,9 L10,3"
+      d={`M${SWATCH * 0.25},${SWATCH * 0.55} L${SWATCH * 0.45},${SWATCH * 0.75} L${SWATCH * 0.8},${SWATCH * 0.3}`}
       fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      transform="translate(-14, 5)"
+      stroke="white"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   )
 }
@@ -66,6 +69,7 @@ const renderLegendGroupVertical = (
   const renderedItems = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
+  const ROW_HEIGHT = 22
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
@@ -90,14 +94,14 @@ const renderLegendGroupVertical = (
           pointerEvents: "all",
         }}
       >
-        {isIsolated && <CheckMark />}
         {renderedType}
-        <text y={15} x={30}>
+        {isIsolated && <CheckMark />}
+        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
     )
-    itemOffset += 25
+    itemOffset += ROW_HEIGHT
   })
   return renderedItems
 }
@@ -137,15 +141,14 @@ const renderLegendGroupHorizontal = (
           pointerEvents: "all",
         }}
       >
-        {isIsolated && <CheckMark />}
         {renderedType}
-        <text y={15} x={25}>
+        {isIsolated && <CheckMark />}
+        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
     )
-    itemOffset += 35
-    itemOffset += item.label.length * 8
+    itemOffset += SWATCH + 10 + item.label.length * 7
   })
   return { items: renderedItems, offset: itemOffset }
 }
@@ -165,7 +168,7 @@ const renderVerticalGroup = ({
   highlightedCategory?: string | null
   isolatedCategories?: Set<string>
 }) => {
-  let offset = 30
+  let offset = 24
 
   const renderedGroups = []
 
@@ -181,19 +184,21 @@ const renderVerticalGroup = ({
         y2={offset}
       />
     )
-    offset += 10
+    offset += 8
     if (l.label) {
-      offset += 20
+      offset += 16
       renderedGroups.push(
         <text
           key={`legend-text-${i}`}
           y={offset}
           className="legend-group-label"
+          fontSize={12}
+          fill="var(--semiotic-text, #333)"
         >
           {l.label}
         </text>
       )
-      offset += 10
+      offset += 8
     }
 
     renderedGroups.push(
@@ -205,7 +210,7 @@ const renderVerticalGroup = ({
         {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)}
       </g>
     )
-    offset += l.items.length * 25 + 10
+    offset += l.items.length * 22 + 8
   })
 
   return renderedGroups
@@ -215,6 +220,7 @@ const renderHorizontalGroup = ({
   legendGroups,
   title,
   height,
+  width,
   customClickBehavior,
   customHoverBehavior,
   highlightedCategory,
@@ -223,18 +229,34 @@ const renderHorizontalGroup = ({
   legendGroups: LegendGroup[]
   title: string | boolean
   height: number
+  width: number
   customClickBehavior?: Function
   customHoverBehavior?: (item: LegendItem | null) => void
   highlightedCategory?: string | null
   isolatedCategories?: Set<string>
 }) => {
-  let offset = 0
+  // First pass: compute total width of all items
+  let totalItemsWidth = 0
+  const groupResults: { label?: string; items: any; offset: number }[] = []
+
+  legendGroups.forEach((l) => {
+    let groupWidth = 0
+    if (l.label) groupWidth += 16
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)
+    groupWidth += renderedItems.offset + 5
+    groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth })
+    totalItemsWidth += groupWidth + 12
+  })
+
+  // Center horizontally
+  const startOffset = Math.max(0, (width - totalItemsWidth) / 2)
+  let offset = startOffset
 
   const renderedGroups = []
+  const verticalOffset = 0
 
-  const verticalOffset = title === false ? 10 : 40
-
-  legendGroups.forEach((l, i) => {
+  groupResults.forEach((result, i) => {
+    const l = legendGroups[i]
     if (l.label) {
       renderedGroups.push(
         <text
@@ -242,11 +264,13 @@ const renderHorizontalGroup = ({
           transform={`translate(${offset},${verticalOffset}) rotate(90)`}
           textAnchor="start"
           className="legend-group-label"
+          fontSize={12}
+          fill="var(--semiotic-text, #333)"
         >
           {l.label}
         </text>
       )
-      offset += 20
+      offset += 16
     }
 
     const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)
@@ -268,28 +292,106 @@ const renderHorizontalGroup = ({
           key={`legend-top-line legend-symbol-${i}`}
           stroke="gray"
           x1={offset}
-          y1={verticalOffset - 10}
+          y1={verticalOffset - 8}
           x2={offset}
-          y2={height + verticalOffset + 10}
+          y2={height + verticalOffset + 8}
         />
       )
     }
-    offset += 15
+    offset += 12
   })
 
   return (
     <g>
-      {title !== false && (
-        <line
-          x1={0}
-          x2={offset + 10}
-          y1={verticalOffset - 10}
-          y2={verticalOffset - 10}
-          stroke="gray"
-          className="title-neatline"
-        />
-      )}
       {renderedGroups}
+    </g>
+  )
+}
+
+/** Gradient legend for continuous/sequential color scales */
+export function GradientLegend({
+  config,
+  orientation = "vertical",
+  width = 100,
+}: {
+  config: GradientLegendConfig
+  orientation?: "vertical" | "horizontal"
+  width?: number
+}) {
+  const { colorFn, domain, label, format } = config
+  const fmt = format || ((v: number) => String(Math.round(v * 100) / 100))
+  const STEPS = 64
+  const gradientId = `grad-legend-${Math.random().toString(36).slice(2, 8)}`
+
+  if (orientation === "horizontal") {
+    const BAR_HEIGHT = 12
+    const barWidth = Math.min(width, 200)
+    const totalWidth = barWidth
+    const startX = Math.max(0, (width - totalWidth) / 2)
+
+    const stops = []
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS
+      stops.push(
+        <stop key={i} offset={`${t * 100}%`} stopColor={colorFn(domain[0] + t * (domain[1] - domain[0]))} />
+      )
+    }
+
+    return (
+      <g>
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            {stops}
+          </linearGradient>
+        </defs>
+        {label && (
+          <text x={startX + barWidth / 2} y={-4} textAnchor="middle" fontSize={11} fill="var(--semiotic-text, #333)">
+            {label}
+          </text>
+        )}
+        <rect x={startX} y={0} width={barWidth} height={BAR_HEIGHT} fill={`url(#${gradientId})`} rx={2} />
+        <text x={startX} y={BAR_HEIGHT + 12} textAnchor="start" fontSize={10} fill="var(--semiotic-text-secondary, #666)">
+          {fmt(domain[0])}
+        </text>
+        <text x={startX + barWidth} y={BAR_HEIGHT + 12} textAnchor="end" fontSize={10} fill="var(--semiotic-text-secondary, #666)">
+          {fmt(domain[1])}
+        </text>
+      </g>
+    )
+  }
+
+  // Vertical
+  const BAR_WIDTH = 14
+  const BAR_HEIGHT = 100
+
+  const stops = []
+  for (let i = 0; i <= STEPS; i++) {
+    const t = i / STEPS
+    // SVG gradient goes top to bottom, so top = max, bottom = min
+    stops.push(
+      <stop key={i} offset={`${t * 100}%`} stopColor={colorFn(domain[1] - t * (domain[1] - domain[0]))} />
+    )
+  }
+
+  return (
+    <g>
+      {label && (
+        <text x={BAR_WIDTH / 2} y={-6} textAnchor="middle" fontSize={11} fill="var(--semiotic-text, #333)">
+          {label}
+        </text>
+      )}
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          {stops}
+        </linearGradient>
+      </defs>
+      <rect x={0} y={0} width={BAR_WIDTH} height={BAR_HEIGHT} fill={`url(#${gradientId})`} rx={2} />
+      <text x={BAR_WIDTH + 5} y={10} fontSize={10} fill="var(--semiotic-text-secondary, #666)">
+        {fmt(domain[1])}
+      </text>
+      <text x={BAR_WIDTH + 5} y={BAR_HEIGHT} fontSize={10} fill="var(--semiotic-text-secondary, #666)">
+        {fmt(domain[0])}
+      </text>
     </g>
   )
 }
@@ -320,6 +422,7 @@ export default function Legend(props: LegendProps) {
           legendGroups,
           title,
           height,
+          width,
           customClickBehavior,
           customHoverBehavior,
           highlightedCategory,
@@ -328,12 +431,14 @@ export default function Legend(props: LegendProps) {
 
   return (
     <g>
-      {title !== undefined && (
+      {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"
-          y={20}
-          x={orientation === "horizontal" ? 0 : width / 2}
-          textAnchor={orientation === "horizontal" ? "start" : "middle"}
+          y={16}
+          x={width / 2}
+          textAnchor="middle"
+          fontSize={12}
+          fill="var(--semiotic-text, #333)"
         >
           {title}
         </text>

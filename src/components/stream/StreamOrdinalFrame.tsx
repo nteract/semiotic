@@ -27,7 +27,7 @@ import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
-import { OrdinalSVGOverlay } from "./OrdinalSVGOverlay"
+import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
@@ -214,6 +214,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       legendClickBehavior,
       legendHighlightedCategory,
       legendIsolatedCategories,
+      legendPosition,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -417,8 +418,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         return
       }
 
+      const rawDatum = hit.datum || {}
       const hover: HoverData = {
-        data: hit.datum,
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+        data: rawDatum,
         time: hit.x,
         value: hit.y,
         x: hit.x,
@@ -712,6 +715,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
+            legendPosition={legendPosition}
             foregroundGraphics={foregroundGraphics}
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
@@ -773,6 +777,18 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           </svg>
         )}
 
+        <OrdinalSVGUnderlay
+          width={adjustedWidth}
+          height={adjustedHeight}
+          totalWidth={size[0]}
+          totalHeight={size[1]}
+          margin={margin}
+          scales={currentScales}
+          showAxes={showAxes}
+          showGrid={showGrid}
+          rFormat={rFormat}
+        />
+
         <canvas
           ref={canvasRef}
           style={{
@@ -803,6 +819,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
+          legendPosition={legendPosition}
           foregroundGraphics={foregroundGraphics}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
@@ -810,6 +827,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           xAccessor={typeof oAccessor === "string" ? oAccessor : undefined}
           yAccessor={typeof rAccessor === "string" ? rAccessor : undefined}
           annotationData={storeRef.current?.getData()}
+          underlayRendered
         />
 
         {/* Donut center content */}

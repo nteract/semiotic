@@ -90,6 +90,7 @@ import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
+import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
 
@@ -282,6 +283,7 @@ export default function DocsApp() {
               <Route path="kpi-card-sparkline" element={<KpiCardSparklinePage />} />
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
+              <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
             </Route>
 
             {/* Playground routes */}

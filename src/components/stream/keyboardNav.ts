@@ -145,8 +145,10 @@ export function nextIndex(
  * Convert a NavPoint to HoverData for the tooltip system.
  */
 export function navPointToHover(point: NavPoint): HoverData {
+  const rawDatum = point.datum || {}
   return {
-    data: point.datum,
+    ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+    data: rawDatum,
     x: point.x,
     y: point.y,
     time: point.x,
