@@ -149,7 +149,14 @@ export class PipelineStore {
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
 
-  // ── Resize optimization ──────────────────────────────────────────────
+  // ── Color map caching ──────────────────────────────────────────────
+  private _pointColorCache: { key: string; map: Map<string, string> } | null = null
+  private _barCategoryCache: { key: string; order: string[] } | null = null
+
+  // ── Stacked area extent cache ─────────────────────────────────────────
+  private _stackExtentCache: { size: number; maxSum: number } | null = null
+
+  // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
   private lastLayout: StreamLayout | null = null
 
@@ -317,6 +324,9 @@ export class PipelineStore {
       }
     }
 
+    // Materialize buffer once for all downstream consumers
+    const bufferArray = buffer.toArray()
+
     // Resolve domains — merge user-specified extents with data extents
     const dataXDomain = this.xExtent.extent
     const dataYDomain = this.yExtent.extent
@@ -344,24 +354,33 @@ export class PipelineStore {
         // Normalized: all stacks sum to 1.0
         yDomain = [0, 1 + config.extentPadding]
       } else {
-        const data = buffer.toArray()
-        const groups = this.groupData(data)
+        let maxStacked: number
 
-        // Build per-x-value totals across all groups
-        const xTotals = new Map<number, number>()
-        for (const g of groups) {
-          for (const d of g.data) {
-            const x = this.getX(d)
-            const y = this.getY(d)
-            if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
-              xTotals.set(x, (xTotals.get(x) || 0) + y)
+        // Reuse cached maxSum when buffer size hasn't changed (bounded mode optimization).
+        // In streaming mode buffer.size changes on every push, so the cache misses (correct).
+        if (this._stackExtentCache && buffer.size === this._stackExtentCache.size) {
+          maxStacked = this._stackExtentCache.maxSum
+        } else {
+          const groups = this.groupData(bufferArray)
+
+          // Build per-x-value totals across all groups
+          const xTotals = new Map<number, number>()
+          for (const g of groups) {
+            for (const d of g.data) {
+              const x = this.getX(d)
+              const y = this.getY(d)
+              if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+                xTotals.set(x, (xTotals.get(x) || 0) + y)
+              }
             }
           }
-        }
 
-        let maxStacked = 0
-        for (const total of xTotals.values()) {
-          if (total > maxStacked) maxStacked = total
+          maxStacked = 0
+          for (const total of xTotals.values()) {
+            if (total > maxStacked) maxStacked = total
+          }
+
+          this._stackExtentCache = { size: buffer.size, maxSum: maxStacked }
         }
 
         const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
@@ -383,8 +402,7 @@ export class PipelineStore {
     } else if (!yFullySpecified && yDomain[0] !== Infinity) {
       // Expand extent to include bounds/uncertainty offsets
       if (this.getBounds) {
-        const data = buffer.toArray()
-        for (const d of data) {
+        for (const d of bufferArray) {
           const y = this.getY(d)
           const offset = this.getBounds(d)
           if (y == null || Number.isNaN(y) || !offset) continue
@@ -450,17 +468,16 @@ export class PipelineStore {
     }
 
     // Build scene graph based on chart type
-    const data = buffer.toArray()
-    this.scene = this.buildSceneNodes(layout)
+    this.scene = this.buildSceneNodes(layout, bufferArray)
 
     // Apply decay opacity to discrete nodes
     if (this.config.decay) {
-      this.applyDecay(this.scene, data)
+      this.applyDecay(this.scene, bufferArray)
     }
 
     // Apply pulse glow to discrete nodes
     if (this.config.pulse) {
-      this.applyPulse(this.scene, data)
+      this.applyPulse(this.scene, bufferArray)
     }
 
     // Start transition animation from old to new positions
@@ -529,11 +546,9 @@ export class PipelineStore {
     this.version++
   }
 
-  private buildSceneNodes(layout: StreamLayout): SceneNode[] {
-    const { config, buffer, scales } = this
-    if (!scales || buffer.size === 0) return []
-
-    const data = buffer.toArray()
+  private buildSceneNodes(layout: StreamLayout, data: Record<string, any>[]): SceneNode[] {
+    const { config, scales } = this
+    if (!scales || data.length === 0) return []
 
     switch (config.chartType) {
       case "line":
@@ -661,11 +676,17 @@ export class PipelineStore {
         if (c) categories.add(c)
       }
       const sorted = Array.from(categories).sort()
-      const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
-        : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
-      colorMap = new Map()
-      for (let ci = 0; ci < sorted.length; ci++) {
-        colorMap.set(sorted[ci], palette[ci % palette.length])
+      const cacheKey = sorted.join('\0')
+      if (this._pointColorCache && this._pointColorCache.key === cacheKey) {
+        colorMap = this._pointColorCache.map
+      } else {
+        const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
+          : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+        colorMap = new Map()
+        for (let ci = 0; ci < sorted.length; ci++) {
+          colorMap.set(sorted[ci], palette[ci % palette.length])
+        }
+        this._pointColorCache = { key: cacheKey, map: colorMap }
       }
     }
 
@@ -886,7 +907,13 @@ export class PipelineStore {
       const colorKeys = this.config.barColors ? Object.keys(this.config.barColors) : []
       const listed = new Set(colorKeys)
       const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
-      categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+      const cacheKey = colorKeys.join('\0') + '\x01' + unlisted.join('\0')
+      if (this._barCategoryCache && this._barCategoryCache.key === cacheKey) {
+        categoryOrder = this._barCategoryCache.order
+      } else {
+        categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+        this._barCategoryCache = { key: cacheKey, order: categoryOrder }
+      }
     }
 
     const nodes: SceneNode[] = []
@@ -1572,6 +1599,7 @@ export class PipelineStore {
     this.prevPositionMap.clear()
     this.activeTransition = null
     this.lastIngestTime = 0
+    this._stackExtentCache = null
     this.needsFullRebuild = true
     this.lastLayout = null
     this.scales = null
@@ -1600,6 +1628,15 @@ export class PipelineStore {
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
+    // Invalidate color map caches when relevant config changes
+    if (config.colorScheme !== undefined) {
+      this._pointColorCache = null
+    }
+    if (config.barColors !== undefined || config.colorScheme !== undefined) {
+      this._barCategoryCache = null
+    }
+    // Invalidate stacked area extent cache on config changes (e.g. normalize)
+    this._stackExtentCache = null
     Object.assign(this.config, config)
     this.needsFullRebuild = true
   }

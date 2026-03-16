@@ -281,6 +281,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   // ── Data (bounded mode) ──────────────────────────
   data?: T[]
 
+  // ── Chunking (progressive ingestion) ────────────
+  /** Datasets larger than this are chunked for progressive rendering (default 5000) */
+  chunkThreshold?: number
+  /** Number of items per progressive chunk (default 5000) */
+  chunkSize?: number
+
   // ── Accessors ────────────────────────────────────
   xAccessor?: string | ((d: T) => number)
   yAccessor?: string | ((d: T) => number)

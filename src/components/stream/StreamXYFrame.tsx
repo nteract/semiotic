@@ -341,6 +341,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       chartType,
       runtimeMode,
       data,
+      chunkThreshold,
+      chunkSize,
       xAccessor,
       yAccessor,
       colorAccessor,
@@ -569,7 +571,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           dirtyRef.current = true
           scheduleRender()
         }
-      })
+      }, { chunkThreshold, chunkSize })
     }
 
     // ── Push API (ref handle) ────────────────────────────────────────────
@@ -863,7 +865,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
-        setCurrentScales(store.scales)
+        const scalesChanged = !currentScales ||
+          currentScales.x.domain()[0] !== store.scales.x.domain()[0] ||
+          currentScales.x.domain()[1] !== store.scales.x.domain()[1] ||
+          currentScales.y.domain()[0] !== store.scales.y.domain()[0] ||
+          currentScales.y.domain()[1] !== store.scales.y.domain()[1] ||
+          currentScales.x.range()[0] !== store.scales.x.range()[0] ||
+          currentScales.x.range()[1] !== store.scales.x.range()[1] ||
+          currentScales.y.range()[0] !== store.scales.y.range()[0] ||
+          currentScales.y.range()[1] !== store.scales.y.range()[1]
+        if (scalesChanged) {
+          setCurrentScales(store.scales)
+        }
 
         // Extract x/y values for marginal graphics
         if (marginalGraphics) {

@@ -4,6 +4,7 @@ import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
 import MarginalGraphics from "../../examples/MarginalGraphics"
+import StreamingMarginalGraphics from "../../examples/StreamingMarginalGraphics"
 
 export default function MarginalGraphicsPage() {
   return (
@@ -116,6 +117,59 @@ export default function MarginalGraphicsPage() {
         language="jsx"
       />
 
+      <h2 id="streaming">Streaming Marginal Graphics</h2>
+      <p>
+        Marginal graphics work with streaming data too. When using{" "}
+        <code>runtimeMode="streaming"</code> on a <code>StreamXYFrame</code>,
+        the marginals update live as new data arrives via the{" "}
+        <code>ref.push()</code> API. The distributions reflect the current
+        sliding window of data, recomputing on every render frame.
+      </p>
+      <div
+        style={{
+          background: "var(--surface-1)",
+          borderRadius: "8px",
+          padding: "16px",
+          border: "1px solid var(--surface-3)",
+        }}
+      >
+        <StreamingMarginalGraphics />
+      </div>
+      <CodeBlock
+        code={`const chartRef = useRef()
+
+// Push bivariate data points
+useEffect(() => {
+  const id = setInterval(() => {
+    const x = Math.random() * 100
+    const y = x * 0.8 + (Math.random() - 0.5) * 25
+    chartRef.current.push({ time: Date.now(), x, y })
+  }, 80)
+  return () => clearInterval(id)
+}, [])
+
+<StreamXYFrame
+  ref={chartRef}
+  chartType="scatter"
+  runtimeMode="streaming"
+  xAccessor="x"
+  yAccessor="y"
+  windowSize={200}
+  marginalGraphics={{
+    top: { type: "ridgeline", fill: "#9fd0cb", fillOpacity: 0.5 },
+    right: { type: "histogram", fill: "#9fd0cb", fillOpacity: 0.5 }
+  }}
+  margin={{ left: 70, right: 70, top: 70, bottom: 60 }}
+  size={[700, 400]}
+/>`}
+        language="jsx"
+      />
+      <p>
+        You can use any of the four marginal types (histogram, ridgeline,
+        violin, boxplot) in streaming mode. Each side updates independently
+        as the window slides forward.
+      </p>
+
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
@@ -132,6 +186,11 @@ export default function MarginalGraphicsPage() {
         <li>
           Margins auto-expand to 60px minimum to ensure enough room for the
           visualization.
+        </li>
+        <li>
+          Streaming mode (<code>runtimeMode="streaming"</code>) updates
+          marginals live as data arrives via{" "}
+          <code>ref.push()</code>.
         </li>
       </ul>
 
