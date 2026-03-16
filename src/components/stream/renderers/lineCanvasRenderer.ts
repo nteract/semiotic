@@ -79,6 +79,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     }
 
     ctx.lineWidth = lineWidth
+    ctx.lineCap = (node.style.strokeLinecap as CanvasLineCap) || "butt"
 
     const curveFactory = resolveCurveFactory(node.curve)
     const hasThresholds = thresholds && thresholds.length > 0 && rawValues && rawValues.length === node.path.length
@@ -228,5 +229,6 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     ctx.globalAlpha = 1
     ctx.setLineDash([])
+    ctx.lineCap = "butt"
   }
 }

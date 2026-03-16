@@ -97,6 +97,7 @@ import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
+import MinardsMarchPage from "./pages/recipes/MinardsMarchPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
 
@@ -292,6 +293,7 @@ export default function DocsApp() {
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
+              <Route path="minards-march" element={<MinardsMarchPage />} />
             </Route>
 
             {/* Playground routes */}

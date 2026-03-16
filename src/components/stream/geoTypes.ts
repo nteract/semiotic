@@ -15,6 +15,7 @@ import type {
   HoverData,
   AnnotationContext
 } from "../realtime/types"
+import type { GeoParticleStyle } from "./GeoParticlePool"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -99,6 +100,8 @@ export interface GeoScales {
 export interface GeoPipelineConfig {
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
 
   xAccessor?: string | ((d: any) => number)
   yAccessor?: string | ((d: any) => number)
@@ -131,6 +134,8 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   // ── Projection ──
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
 
   // ── Data ──
   areas?: GeoJSON.Feature[]
@@ -156,6 +161,12 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
    */
   dragRotate?: boolean
   projectionTransform?: DistanceCartogramConfig
+
+  // ── Particles ──
+  /** Show animated particles flowing along line paths */
+  showParticles?: boolean
+  /** Particle appearance and behavior config */
+  particleStyle?: GeoParticleStyle
 
   // ── Tiles ──
   /** Raster tile URL template or function. Enables tile basemap (Mercator only). */

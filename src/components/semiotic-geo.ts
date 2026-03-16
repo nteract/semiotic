@@ -27,6 +27,9 @@ export type {
   GeoPipelineConfig
 } from "./stream/geoTypes"
 
+// Particle types
+export type { GeoParticleStyle } from "./stream/GeoParticlePool"
+
 // Geo data helpers
 export { mergeData } from "./geo/mergeData"
 export { resolveReferenceGeography } from "./geo/referenceGeography"

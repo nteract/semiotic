@@ -47,7 +47,9 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   tooltip?: TooltipProp
   /** Show legend */
   showLegend?: boolean
-  /** Enable zoom/pan @default false */
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
+  /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
   zoomable?: boolean
   /** [minZoom, maxZoom] @default [1, 8] */
   zoomExtent?: [number, number]
@@ -92,7 +94,8 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     lineMode = "straight",
     projection = "mercator",
     graticule,
-    zoomable,
+    fitPadding,
+    zoomable: zoomableProp,
     zoomExtent,
     onZoom: onZoomProp,
     dragRotate,
@@ -115,6 +118,9 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     emptyContent,
     frameProps = {}
   } = props
+
+  // Tile maps default to zoomable; non-tile maps default to not zoomable
+  const zoomable = zoomableProp ?? (tileURL ? true : false)
 
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
   if (loadingEl) return loadingEl
@@ -219,7 +225,8 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     projectionTransform: cartogramConfig,
     ...(transitionDuration && { transition: { duration: transitionDuration } }),
     ...(graticule != null && { graticule }),
-    ...(zoomable && { zoomable }),
+    ...(fitPadding != null && { fitPadding }),
+    ...(zoomable && { zoomable: true }),
     ...(zoomExtent && { zoomExtent }),
     ...(onZoomProp && { onZoom: onZoomProp }),
     ...(dragRotate != null && { dragRotate }),

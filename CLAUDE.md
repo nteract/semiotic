@@ -73,12 +73,14 @@ Geographic visualization with d3-geo projections. Canvas-rendered via `StreamGeo
 
 **ChoroplethMap** — `areas` (GeoJSON Feature[]), `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `projection` ("mercator"), `graticule`, `tooltip`, `showLegend`
 **ProportionalSymbolMap** — `points`, `xAccessor` ("lon"), `yAccessor` ("lat"), `sizeBy`, `sizeRange` ([3,20]), `colorBy`, `areas` (optional background), `projection`
-**FlowMap** — `nodes`, `edges` ({source, target, value}), `xAccessor`, `yAccessor`, `nodeIdAccessor` ("id"), `edgeWidthRange` ([1,8]), `lineType` ("geo"|"line"), `areas` (optional background)
+**FlowMap** — `flows` ({source, target, value}), `nodes`, `xAccessor`, `yAccessor`, `nodeIdAccessor` ("id"), `valueAccessor` ("value"), `edgeColorBy`, `edgeOpacity` (0.6), `edgeWidthRange` ([1,8]), `edgeLinecap` ("round"), `lineType` ("geo"|"line"), `areas` (optional background), `showParticles`, `particleStyle` ({ radius, color, opacity, speedMultiplier, maxPerLine, spawnRate }). Particle `color` accepts a string, `"source"` (inherit line stroke), or `(datum) => string`.
 **DistanceCartogram** — `points`, `center` (id of center node), `costAccessor`, `strength` (0-1), `lineMode` ("straight"|"fractional"), `nodeIdAccessor` ("id"), `lines`, `projection`
 
-All geo HOCs support: `selection`, `linkedHover`, `onObservation`, `showLegend`, `legendInteraction`, `tooltip`, `loading`, `emptyContent`, `frameProps`, `zoomable`, `zoomExtent`, `onZoom`, `dragRotate`, `graticule`, `tileURL`, `tileAttribution`, `tileCacheSize`
+All geo HOCs support: `selection`, `linkedHover`, `onObservation`, `showLegend`, `legendInteraction`, `tooltip`, `loading`, `emptyContent`, `frameProps`, `fitPadding` (0–1 fraction, insets auto-fit projection from edges), `zoomable` (defaults true with tileURL, false otherwise), `zoomExtent`, `onZoom`, `dragRotate`, `graticule`, `tileURL`, `tileAttribution`, `tileCacheSize`
 
-**Zoom/Pan**: All geo charts accept `zoomable` (boolean), `zoomExtent` ([minZoom, maxZoom], default [1, 8]), and `onZoom` (callback with `{ projection, zoom }`). Uses hybrid approach: CSS transform during gesture for 60fps, full projection re-fit on zoom end. Imperative API: `ref.current.getZoom()`, `ref.current.resetZoom()`.
+**Zoom/Pan**: All geo charts accept `zoomable` (boolean), `zoomExtent` ([minZoom, maxZoom], default [1, 8]), and `onZoom` (callback with `{ projection, zoom }`). Re-renders projection directly on every zoom tick (no CSS transform). Imperative API: `ref.current.getZoom()`, `ref.current.resetZoom()`.
+
+**Geo Particles**: `FlowMap` and `StreamGeoFrame` support `showParticles` (boolean) and `particleStyle` to animate dots flowing along line paths. Uses `GeoParticlePool` — an object-pool polyline particle system. Particle `color` accepts: `"source"` (inherit line stroke), a CSS string, or `(datum) => string` for per-line color.
 
 **Drag Rotate (Globe Spinning)**: `dragRotate` (boolean) — when true, drag gestures rotate the projection (globe spinning) instead of panning. **Defaults to true for orthographic projection.** Scroll-wheel zoom still works normally. Explicitly set `dragRotate={false}` on orthographic to get standard pan behavior, or `dragRotate={true}` on other projections to enable rotation. Latitude rotation is clamped to [-90, 90] to prevent flipping.
 

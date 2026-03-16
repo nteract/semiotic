@@ -323,8 +323,11 @@ export class GeoPipelineStore {
         type: "FeatureCollection",
         features: allFeatures
       }
+      const pad = config.fitPadding ?? 0
+      const px = layout.width * pad
+      const py = layout.height * pad
       proj.fitExtent(
-        [[0, 0], [layout.width, layout.height]],
+        [[px, py], [layout.width - px, layout.height - py]],
         collection
       )
     }

@@ -10,6 +10,7 @@ import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import type { Style } from "../../stream/types"
+import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
 import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
@@ -40,13 +41,23 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   edgeColorBy?: ChartAccessor<any, string>
   /** Edge opacity @default 0.6 */
   edgeOpacity?: number
+  /** Min/max pixel width for proportional edge width @default [1, 8] */
+  edgeWidthRange?: [number, number]
+  /** Line cap style for flow edges @default "round" */
+  edgeLinecap?: "butt" | "round" | "square"
   /** Color scheme for edges @default "category10" */
   colorScheme?: string | string[]
+  /** Show animated particles along flow lines */
+  showParticles?: boolean
+  /** Particle appearance and behavior */
+  particleStyle?: GeoParticleStyle
   /** Tooltip */
   tooltip?: TooltipProp
   /** Show legend */
   showLegend?: boolean
-  /** Enable zoom/pan @default false */
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
+  /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
   zoomable?: boolean
   /** [minZoom, maxZoom] @default [1, 8] */
   zoomExtent?: [number, number]
@@ -88,7 +99,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     valueAccessor = "value",
     projection = "equalEarth",
     graticule,
-    zoomable,
+    fitPadding,
+    zoomable: zoomableProp,
     zoomExtent,
     onZoom: onZoomProp,
     dragRotate,
@@ -100,7 +112,11 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     areaStyle = { fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 },
     edgeColorBy,
     edgeOpacity = 0.6,
+    edgeWidthRange = [1, 8],
+    edgeLinecap = "round",
     colorScheme = "category10",
+    showParticles,
+    particleStyle,
     tooltip,
     annotations,
     margin: userMargin,
@@ -113,6 +129,9 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     emptyContent,
     frameProps = {}
   } = props
+
+  // Tile maps default to zoomable; non-tile maps default to not zoomable
+  const zoomable = zoomableProp ?? (tileURL ? true : false)
 
   const resolvedAreas = useReferenceAreas(areas)
 
@@ -162,17 +181,18 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   // Edge width scale
   const widthScale = useMemo(() => {
     const vals = flows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
-    if (vals.length === 0) return () => 1.5
+    if (vals.length === 0) return () => edgeWidthRange[0]
     return scaleLinear()
       .domain([Math.min(...vals), Math.max(...vals)])
-      .range([1, 6])
-  }, [flows, valueAccessor])
+      .range(edgeWidthRange)
+  }, [flows, valueAccessor, edgeWidthRange])
 
   const lineStyleFn = useMemo(() => (d: any): Style => ({
     stroke: edgeColorBy ? getColor(d, edgeColorBy, colorScale) : DEFAULT_COLOR,
     strokeWidth: widthScale(d[valueAccessor] ?? 0),
+    strokeLinecap: edgeLinecap,
     opacity: edgeOpacity
-  }), [edgeColorBy, colorScale, widthScale, valueAccessor, edgeOpacity])
+  }), [edgeColorBy, colorScale, widthScale, valueAccessor, edgeOpacity, edgeLinecap])
 
   const defaultTooltip = useMemo(() => (d: any) => (
     <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
@@ -198,10 +218,13 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     pointStyle: () => ({ fill: "#333", r: 3, fillOpacity: 0.8 }),
     ...(resolvedAreas && { areas: resolvedAreas, areaStyle }),
     ...(graticule != null && { graticule }),
-    ...(zoomable && { zoomable }),
+    ...(fitPadding != null && { fitPadding }),
+    ...(zoomable && { zoomable: true }),
     ...(zoomExtent && { zoomExtent }),
     ...(onZoomProp && { onZoom: onZoomProp }),
     ...(dragRotate != null && { dragRotate }),
+    ...(showParticles && { showParticles }),
+    ...(particleStyle && { particleStyle }),
     ...(tileURL && { tileURL }),
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),

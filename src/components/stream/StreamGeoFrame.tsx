@@ -34,6 +34,8 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+import { GeoParticlePool } from "./GeoParticlePool"
+import type { LineSceneNode } from "./types"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -104,6 +106,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Projection
       projection,
       projectionExtent,
+      fitPadding,
       projectionTransform,
 
       // Data
@@ -124,6 +127,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       zoomExtent,
       onZoom,
       dragRotate: dragRotateProp,
+
+      // Particles
+      showParticles,
+      particleStyle,
 
       // Tiles
       tileURL,
@@ -205,6 +212,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const pipelineConfig: GeoPipelineConfig = useMemo(() => ({
       projection,
       projectionExtent,
+      fitPadding,
       xAccessor,
       yAccessor,
       lineDataAccessor,
@@ -221,7 +229,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       annotations,
       pointIdAccessor
     }), [
-      projection, projectionExtent, xAccessor, yAccessor, lineDataAccessor,
+      projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
       projectionTransform, decay, pulse, transition, annotations, pointIdAccessor
     ])
@@ -255,6 +263,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // Drag-rotate state (globe spinning)
     const dragStartRef = useRef<{ x: number; y: number; rotation: [number, number, number] } | null>(null)
+
+    // Particle pool
+    const particlePoolRef = useRef<GeoParticlePool | null>(null)
+    const lastParticleTimeRef = useRef(0)
+    if (showParticles && !particlePoolRef.current) {
+      const maxPerLine = particleStyle?.maxPerLine ?? 30
+      particlePoolRef.current = new GeoParticlePool(maxPerLine * 50)
+    }
 
     // Hover state
     const hoverRef = useRef<HoverData | null>(null)
@@ -512,6 +528,64 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       geoCanvasRenderer(ctx, scene, scales, layout)
       lineCanvasRenderer(ctx, scene as any, scales as any, layout)
       pointCanvasRenderer(ctx, scene as any, scales as any, layout)
+
+      // ── Geo particles ──
+      if (showParticles && particlePoolRef.current) {
+        const pool = particlePoolRef.current
+        const lineNodes = scene.filter(
+          (n): n is LineSceneNode => n.type === "line"
+        )
+
+        if (lineNodes.length > 0) {
+          const pStyle = particleStyle || {}
+          const speed = (pStyle.speedMultiplier ?? 1) * 0.3
+          const maxPerLine = pStyle.maxPerLine ?? 30
+          const spawnRate = pStyle.spawnRate ?? 0.15
+          const radius = pStyle.radius ?? 2
+          const opacity = pStyle.opacity ?? 0.7
+
+          // Compute deltaTime
+          const nowMs = now / 1000
+          const dt = lastParticleTimeRef.current > 0
+            ? Math.min(nowMs - lastParticleTimeRef.current, 0.1)
+            : 0.016
+          lastParticleTimeRef.current = nowMs
+
+          // Build path and width arrays
+          const paths = lineNodes.map(n => n.path)
+          const widths = lineNodes.map(n => n.style.strokeWidth || 2)
+
+          // Spawn particles
+          for (let li = 0; li < lineNodes.length; li++) {
+            if (Math.random() < spawnRate && pool.countForLine(li) < maxPerLine) {
+              pool.spawn(li)
+            }
+          }
+
+          // Step
+          pool.step(dt, speed, paths, widths)
+
+          // Render
+          ctx.globalAlpha = opacity
+          for (let i = 0; i < pool.particles.length; i++) {
+            const p = pool.particles[i]
+            if (!p.active) continue
+            const lineNode = lineNodes[p.lineIndex]
+            const color = typeof pStyle.color === "function"
+              ? pStyle.color(lineNode?.datum)
+              : pStyle.color === "source" || !pStyle.color
+                ? (lineNode?.style.stroke || "#fff")
+                : pStyle.color
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+            ctx.fillStyle = color
+            ctx.fill()
+          }
+          ctx.globalAlpha = 1
+
+          needsContinuation = true
+        }
+      }
 
       ctx.restore()
 

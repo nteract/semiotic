@@ -43,7 +43,9 @@ export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> =
   showLegend?: boolean
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
-  /** Enable zoom/pan @default false */
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
+  /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
   zoomable?: boolean
   /** [minZoom, maxZoom] @default [1, 8] */
   zoomExtent?: [number, number]
@@ -86,7 +88,8 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
     colorScheme = "category10",
     projection = "equalEarth",
     graticule,
-    zoomable,
+    fitPadding,
+    zoomable: zoomableProp,
     zoomExtent,
     onZoom: onZoomProp,
     dragRotate,
@@ -108,6 +111,9 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
     legendInteraction,
     frameProps = {}
   } = props
+
+  // Tile maps default to zoomable; non-tile maps default to not zoomable
+  const zoomable = zoomableProp ?? (tileURL ? true : false)
 
   const resolvedAreas = useReferenceAreas(areas)
 
@@ -195,7 +201,8 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
     pointStyle: pointStyleFn,
     ...(resolvedAreas && { areas: resolvedAreas, areaStyle }),
     ...(graticule != null && { graticule }),
-    ...(zoomable && { zoomable }),
+    ...(fitPadding != null && { fitPadding }),
+    ...(zoomable && { zoomable: true }),
     ...(zoomExtent && { zoomExtent }),
     ...(onZoomProp && { onZoom: onZoomProp }),
     ...(dragRotate != null && { dragRotate }),

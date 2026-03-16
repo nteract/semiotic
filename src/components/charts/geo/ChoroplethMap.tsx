@@ -40,7 +40,9 @@ export interface ChoroplethMapProps extends BaseChartProps {
   showLegend?: boolean
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
-  /** Enable zoom/pan @default false */
+  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  fitPadding?: number
+  /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
   zoomable?: boolean
   /** [minZoom, maxZoom] @default [1, 8] */
   zoomExtent?: [number, number]
@@ -77,7 +79,8 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
     colorScheme = "blues",
     projection = "equalEarth",
     graticule,
-    zoomable,
+    fitPadding,
+    zoomable: zoomableProp,
     zoomExtent,
     onZoom: onZoomProp,
     dragRotate,
@@ -96,6 +99,9 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
     emptyContent,
     frameProps = {}
   } = props
+
+  // Tile maps default to zoomable; non-tile maps default to not zoomable
+  const zoomable = zoomableProp ?? (tileURL ? true : false)
 
   // Resolve string reference ("world-110m") or use features directly
   const resolvedAreas = useReferenceAreas(areas)
@@ -178,7 +184,8 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
     enableHover: true,
     tooltipContent: tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(graticule != null && { graticule }),
-    ...(zoomable && { zoomable }),
+    ...(fitPadding != null && { fitPadding }),
+    ...(zoomable && { zoomable: true }),
     ...(zoomExtent && { zoomExtent }),
     ...(onZoomProp && { onZoom: onZoomProp }),
     ...(dragRotate != null && { dragRotate }),

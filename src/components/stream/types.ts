@@ -99,6 +99,7 @@ export interface Style {
   stroke?: string
   strokeWidth?: number
   strokeDasharray?: string
+  strokeLinecap?: "butt" | "round" | "square"
   fill?: string
   fillOpacity?: number
   opacity?: number
