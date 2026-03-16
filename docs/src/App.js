@@ -293,7 +293,7 @@ export default function DocsApp() {
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
-              <Route path="minards-march" element={<MinardsMarchPage />} />
+              <Route path="minards-map" element={<MinardsMarchPage />} />
             </Route>
 
             {/* Playground routes */}

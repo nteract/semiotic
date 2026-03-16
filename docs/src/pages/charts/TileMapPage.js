@@ -118,12 +118,10 @@ function ChoroplethTileMap({ width = 700, height = 450 }) {
       tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       tileAttribution="&copy; OpenStreetMap contributors"
       zoomable
+      areaOpacity={0.55}
       tooltip
       width={width}
       height={height}
-      frameProps={{
-        areaOpacity: 0.55,
-      }}
     />
   )
 }
@@ -242,7 +240,7 @@ const tileProps = [
   { name: "tileAttribution", type: "string", required: false, default: null, description: "Attribution text displayed in the bottom-right corner of the map. Required by most tile providers (e.g. OpenStreetMap)." },
   { name: "tileCacheSize", type: "number", required: false, default: "256", description: "Maximum number of tile images to cache in memory. LRU eviction removes least-recently-used tiles when the limit is exceeded." },
   { name: "projection", type: '"mercator"', required: true, default: null, description: 'Must be "mercator" when using tiles. Web map tiles use the Mercator (EPSG:3857) tiling scheme. A dev warning is emitted for non-Mercator projections.' },
-  { name: "zoomable", type: "boolean", required: false, default: "false", description: "Enable pan and zoom. Strongly recommended with tiles so users can explore the map at different zoom levels." },
+  { name: "zoomable", type: "boolean", required: false, default: "true with tileURL, false otherwise", description: "Enable pan and zoom. Defaults to true when tileURL is set. Can be set to false to disable." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -355,7 +353,7 @@ const earthquakes = [
         Layer a <Link to="/charts/choropleth-map">ChoroplethMap</Link> on top
         of tiles by reducing the area opacity. The geographic context from the
         tile layer shows through, providing labels and terrain while the
-        choropleth encodes your data. Use <code>frameProps.areaOpacity</code>{" "}
+        choropleth encodes your data. Use <code>areaOpacity</code>{" "}
         to control transparency.
       </p>
 
@@ -378,10 +376,8 @@ const areas = mergeData(worldFeatures, countryGDP, {
   tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
   tileAttribution="&copy; OpenStreetMap contributors"
   zoomable
+  areaOpacity={0.55}   // semi-transparent so tiles show through
   tooltip
-  frameProps={{
-    areaOpacity: 0.55,   // semi-transparent so tiles show through
-  }}
 />`}
         language="jsx"
       />
@@ -489,7 +485,7 @@ const areas = mergeData(worldFeatures, countryGDP, {
         When overlaying a choropleth or dense point cloud, use a minimal tile
         style like CartoDB Positron or Stamen Toner Lite so tiles provide
         context without competing with your data layer. For choropleths, reduce
-        area opacity via <code>frameProps</code> so tiles show through.
+        area opacity via <code>areaOpacity</code> so tiles show through.
       </p>
 
       <h3>Attribution is required</h3>

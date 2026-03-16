@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { DistanceCartogram } from "semiotic/geo"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -105,71 +105,103 @@ const railRoutes = [
 ]
 
 // ---------------------------------------------------------------------------
-// Streaming demo — strength interpolation
+// Streaming demo — accumulate points and lines over time
 // ---------------------------------------------------------------------------
 
-const streamingCartogramCode = `import { useRef, useEffect, useState } from "react"
+const streamingCartogramCode = `import { useState, useEffect } from "react"
 import { DistanceCartogram } from "semiotic/geo"
 
-function AnimatedCartogram() {
-  const [strength, setStrength] = useState(0)
+const cities = [
+  { id: "London", lon: -0.1, lat: 51.5, flightHours: 0 },
+  { id: "Paris", lon: 2.35, lat: 48.86, flightHours: 1.2 },
+  { id: "New York", lon: -74.0, lat: 40.71, flightHours: 7.5 },
+  { id: "Tokyo", lon: 139.69, lat: 35.69, flightHours: 11.5 },
+  // ...more cities
+]
+
+const routes = [
+  { source: "London", target: "Paris" },
+  { source: "London", target: "New York" },
+  { source: "London", target: "Tokyo" },
+  // ...more routes
+]
+
+function StreamingCartogram() {
+  const [points, setPoints] = useState([cities[0]]) // start with center
+  const [lines, setLines] = useState([])
 
   useEffect(() => {
-    let frame
-    let t = 0
-    const animate = () => {
-      t += 0.02
-      // Oscillate strength between 0 and 1
-      setStrength((Math.sin(t) + 1) / 2)
-      frame = requestAnimationFrame(animate)
-    }
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
+    let i = 1
+    const id = setInterval(() => {
+      if (i < cities.length) {
+        const city = cities[i]
+        setPoints(prev => [...prev, city])
+        // Add any routes that connect to already-visible cities
+        const visibleIds = new Set(cities.slice(0, i + 1).map(c => c.id))
+        const newLines = routes.filter(
+          r => visibleIds.has(r.source) && visibleIds.has(r.target)
+        )
+        setLines(newLines)
+        i++
+      } else {
+        clearInterval(id)
+      }
+    }, 800)
+    return () => clearInterval(id)
   }, [])
 
   return (
     <DistanceCartogram
-      points={cities}
+      points={points}
+      lines={lines}
       center="London"
       costAccessor="flightHours"
-      strength={strength}
-      lines={routes}
+      costLabel="hrs"
       projection="mercator"
+      transition={400}
+      tooltip
       width={600}
       height={400}
-      zoomable
-      tooltip
     />
   )
 }`
 
-function AnimatedCartogramDemo({ width }) {
-  const [strength, setStrength] = React.useState(0)
+function StreamingCartogramDemo({ width }) {
+  const [points, setPoints] = useState([worldCities[0]])
+  const [lines, setLines] = useState([])
 
   useEffect(() => {
-    let frame
-    let t = 0
-    const animate = () => {
-      t += 0.015
-      setStrength((Math.sin(t) + 1) / 2)
-      frame = requestAnimationFrame(animate)
-    }
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
+    let i = 1
+    const id = setInterval(() => {
+      if (i < worldCities.length) {
+        const city = worldCities[i]
+        setPoints(prev => [...prev, city])
+        // Add routes whose endpoints are both visible
+        const visibleIds = new Set(worldCities.slice(0, i + 1).map(c => c.id))
+        const newLines = flightRoutes.filter(
+          r => visibleIds.has(r.source) && visibleIds.has(r.target)
+        )
+        setLines(newLines)
+        i++
+      } else {
+        clearInterval(id)
+      }
+    }, 600)
+    return () => clearInterval(id)
   }, [])
 
   return (
     <DistanceCartogram
-      points={worldCities}
+      points={points}
+      lines={lines}
       center="London"
       costAccessor="flightHours"
-      strength={strength}
-      lines={flightRoutes}
+      costLabel="hrs"
       projection="mercator"
+      transition={400}
+      tooltip
       width={width}
       height={400}
-      zoomable
-      tooltip
     />
   )
 }
@@ -189,11 +221,15 @@ const distanceCartogramProps = [
   { name: "yAccessor", type: "string | function", required: false, default: '"lat"', description: "Latitude accessor." },
   { name: "lines", type: "array", required: false, default: null, description: "Array of { source, target } objects for connecting lines between points." },
   { name: "projection", type: "string | object | function", required: false, default: '"mercator"', description: "Base geographic projection before cartogram distortion." },
-  { name: "zoomable", type: "boolean", required: false, default: "false", description: "Enable mouse wheel zoom and pan on the cartogram." },
+  { name: "zoomable", type: "boolean", required: false, default: "true with tileURL, false otherwise", description: "Enable mouse wheel zoom and pan on the cartogram. Defaults to true when tileURL is set." },
   { name: "transition", type: "number", required: false, default: null, description: "Transition duration in ms when center or strength changes." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Field name or function for point color." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme." },
   { name: "pointRadius", type: "number", required: false, default: "5", description: "Base circle radius." },
+  { name: "showRings", type: "boolean | number | number[]", required: false, default: "true", description: "Concentric distance rings around center. true for auto, number for ring count, or number[] for explicit cost values." },
+  { name: "ringStyle", type: "object", required: false, default: null, description: "Ring style: { stroke, strokeWidth, strokeDasharray, labelColor, labelSize }." },
+  { name: "showNorth", type: "boolean", required: false, default: "true", description: "Show a north-pointing compass indicator." },
+  { name: "costLabel", type: "string", required: false, default: null, description: 'Unit label for ring values (e.g. "hrs", "km").' },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Tooltip configuration." },
   { name: "showLegend", type: "boolean", required: false, default: "false", description: "Show a legend." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title." },
@@ -263,9 +299,9 @@ export default function DistanceCartogramPage() {
               points: worldCities,
               center: "London",
               costAccessor: "flightHours",
+              costLabel: "hrs",
               lines: flightRoutes,
               projection: "mercator",
-              zoomable: true,
               tooltip: true,
               width: 600,
               height: 400,
@@ -289,14 +325,14 @@ export default function DistanceCartogramPage() {
 ]`,
               center: '"London"',
               costAccessor: '"flightHours"',
-              zoomable: "true",
+              costLabel: '"hrs"',
             }}
             hiddenProps={{}}
           />
         }
         streamingContent={
           <StreamingDemo
-            renderChart={(w) => <AnimatedCartogramDemo width={w} />}
+            renderChart={(w) => <StreamingCartogramDemo width={w} />}
             code={streamingCartogramCode}
           />
         }
@@ -311,7 +347,7 @@ export default function DistanceCartogramPage() {
       <p>
         <code>strength=0</code> shows pure geographic positions.{" "}
         <code>strength=1</code> shows full cartogram distortion. Values between
-        blend the two. The streaming demo above animates this continuously.
+        blend the two.
         Notice how Paris (1.2 hrs) stays close to London while Sydney (22 hrs)
         moves far away in the distorted view.
       </p>
@@ -321,10 +357,10 @@ export default function DistanceCartogramPage() {
           points: worldCities,
           center: "London",
           costAccessor: "flightHours",
+          costLabel: "hrs",
           strength: 0,
           lines: flightRoutes,
           projection: "mercator",
-          zoomable: true,
           tooltip: true,
           title: "strength=0 (geographic)",
           width: 600,
@@ -337,7 +373,7 @@ export default function DistanceCartogramPage() {
           center: '"London"',
           costAccessor: '"flightHours"',
           strength: "0",
-          zoomable: "true",
+
           title: '"strength=0 (geographic)"',
         }}
         hiddenProps={{}}
@@ -356,9 +392,9 @@ export default function DistanceCartogramPage() {
           points: europeanCities,
           center: "Paris",
           costAccessor: "railHours",
+          costLabel: "hrs",
           lines: railRoutes,
           projection: "mercator",
-          zoomable: true,
           tooltip: true,
           pointRadius: 6,
           width: 600,
@@ -376,7 +412,7 @@ export default function DistanceCartogramPage() {
 ]`,
           center: '"Paris"',
           costAccessor: '"railHours"',
-          zoomable: "true",
+
         }}
         hiddenProps={{}}
       />
@@ -394,9 +430,9 @@ export default function DistanceCartogramPage() {
           points: worldCities,
           center: "London",
           costAccessor: "flightHours",
+          costLabel: "hrs",
           lines: flightRoutes,
           projection: "mercator",
-          zoomable: true,
           colorBy: (d) => d.flightHours === 0 ? "Hub" : d.flightHours <= 5 ? "Short-haul" : d.flightHours <= 10 ? "Medium-haul" : "Long-haul",
           showLegend: true,
           tooltip: true,
@@ -409,7 +445,7 @@ export default function DistanceCartogramPage() {
           lines: "flightRoutes",
           center: '"London"',
           costAccessor: '"flightHours"',
-          zoomable: "true",
+
           colorBy: '(d) => d.flightHours === 0 ? "Hub" : d.flightHours <= 5 ? "Short-haul" : d.flightHours <= 10 ? "Medium-haul" : "Long-haul"',
           showLegend: "true",
         }}
@@ -437,7 +473,7 @@ export default function DistanceCartogramPage() {
         This means geographic direction is preserved but distance is distorted —
         Paris remains northwest of London but at strength=1 it appears much
         closer than New York, even though New York is farther geographically.
-        The <code>zoomable</code> prop lets users pan and zoom to explore
+        Set <code>zoomable</code> to enable pan and zoom for exploring
         dense clusters.
       </p>
 
@@ -470,9 +506,9 @@ export default function DistanceCartogramPage() {
   points={cities}
   center="London"
   costAccessor="flightHours"
+  costLabel="hrs"
   strength={0.8}
   lines={routes}
-  zoomable
   tooltip
 />`}
             language="jsx"

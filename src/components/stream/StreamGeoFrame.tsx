@@ -334,6 +334,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       clear: clearAll,
       getProjection: () => storeRef.current?.scales?.projection ?? null,
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
+      getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
       getZoom: () => zoomTransformRef.current.k,
       resetZoom: () => {
         const container = containerRef.current
@@ -401,7 +402,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             y = chartY
           }
 
-          const hover = { ...rawData, data: rawData, x, y, time: 0 }
+          // Flatten GeoJSON feature properties so custom tooltips
+          // can access d.name, d.population etc. directly
+          const hover = {
+            ...rawData,
+            ...(rawData?.properties || {}),
+            data: rawData, x, y, time: 0
+          }
           hoverRef.current = hover
           hoveredNodeRef.current = node
           setHoverPoint(hover)
@@ -472,7 +479,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       // Recompute scene when dirty
       if (dirtyRef.current && !isTransitioning) {
-        store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        const layout = { width: adjustedWidth, height: adjustedHeight }
+        store.computeScene(layout)
+        // Preserve zoom — computeScene resets to base projection, so
+        // re-apply the current zoom transform if user has zoomed/panned
+        const zt = zoomTransformRef.current
+        if (zt.k !== 1 || zt.x !== 0 || zt.y !== 0) {
+          store.applyZoomTransform(zt, layout)
+        }
         dirtyRef.current = false
       }
 

@@ -54,7 +54,6 @@ function WorldSymbolMap({ width = 600, height = 400, ...props }) {
     <ProportionalSymbolMap
       areas={worldAreas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
-      zoomable
       width={width}
       height={height}
       {...props}
@@ -77,7 +76,7 @@ const proportionalSymbolMapProps = [
   { name: "projection", type: "string | object | function", required: false, default: '"equalEarth"', description: "Map projection." },
   { name: "areas", type: "GeoJSON.Feature[]", required: false, default: null, description: "Optional background geography (country/state boundaries)." },
   { name: "areaStyle", type: "object", required: false, default: '{ fill: "#f0f0f0", stroke: "#ccc" }', description: "Style for background areas." },
-  { name: "zoomable", type: "boolean", required: false, default: "false", description: "Enable pan and zoom on the map." },
+  { name: "zoomable", type: "boolean", required: false, default: "true with tileURL, false otherwise", description: "Enable pan and zoom on the map. Defaults to true when tileURL is set." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Tooltip configuration." },
   { name: "showLegend", type: "boolean", required: false, default: "false", description: "Show a color legend." },
   { name: "legendInteraction", type: '"none" | "highlight" | "isolate"', required: false, default: '"none"', description: "Legend interaction mode." },
@@ -176,7 +175,6 @@ function WorldSymbolMap() {
       areas={worldAreas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
       tooltip
-      zoomable
     />
   )
 }`}
@@ -216,7 +214,6 @@ function WorldSymbolMap() {
   areas={worldAreas}
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   tooltip
-  zoomable
 />`}
         language="jsx"
       />
@@ -248,7 +245,6 @@ function WorldSymbolMap() {
   areas={worldAreas}
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   tooltip
-  zoomable
 />`}
         language="jsx"
       />
@@ -288,7 +284,6 @@ function WorldSymbolMap() {
   )}
   areas={worldAreas}
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
-  zoomable
 />`}
         language="jsx"
       />
@@ -329,7 +324,6 @@ const worldAreas = await resolveReferenceGeography("world-110m")
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   showLegend
   tooltip
-  zoomable
 />`}
             language="jsx"
           />

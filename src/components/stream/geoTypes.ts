@@ -228,6 +228,8 @@ export interface StreamGeoFrameHandle {
   clear(): void
   getProjection(): GeoProjection | null
   getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null
+  /** Get cartogram layout info (center position, max cost, radius) */
+  getCartogramLayout(): { cx: number; cy: number; maxCost: number; availableRadius: number } | null
   /** Get current zoom level (1 = default) */
   getZoom(): number
   /** Animate back to initial view */

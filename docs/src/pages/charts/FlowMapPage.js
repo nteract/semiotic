@@ -6,6 +6,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -100,6 +102,108 @@ const loadingStyle = {
 }
 
 // ---------------------------------------------------------------------------
+// Streaming demo — push flows incrementally
+// ---------------------------------------------------------------------------
+
+const streamingFlowCode = `import { useState, useEffect } from "react"
+import { FlowMap, resolveReferenceGeography } from "semiotic/geo"
+
+const airports = [
+  { id: "JFK", name: "New York JFK", lon: -73.779, lat: 40.640 },
+  { id: "LHR", name: "London Heathrow", lon: -0.461, lat: 51.470 },
+  { id: "NRT", name: "Tokyo Narita", lon: 140.386, lat: 35.772 },
+  // ...more airports
+]
+
+const flights = [
+  { source: "JFK", target: "LHR", passengers: 18000 },
+  { source: "LAX", target: "NRT", passengers: 14000 },
+  // ...more routes
+]
+
+function StreamingFlowMap() {
+  const [areas, setAreas] = useState(null)
+  const [flows, setFlows] = useState([])
+
+  useEffect(() => {
+    resolveReferenceGeography("world-110m").then(setAreas)
+  }, [])
+
+  useEffect(() => {
+    if (!areas) return
+    let i = 0
+    const id = setInterval(() => {
+      if (i < flights.length) {
+        setFlows(prev => [...prev, flights[i]])
+        i++
+      } else clearInterval(id)
+    }, 500)
+    return () => clearInterval(id)
+  }, [areas])
+
+  if (!areas) return <div>Loading...</div>
+
+  return (
+    <FlowMap
+      nodes={airports}
+      flows={flows}
+      areas={areas}
+      areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
+      valueAccessor="passengers"
+      edgeColorBy="source"
+      showParticles
+      particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.5 }}
+      tooltip
+      width={600}
+      height={400}
+    />
+  )
+}`
+
+function StreamingFlowDemo({ width }) {
+  const [areas, setAreas] = useState(null)
+  const [flows, setFlows] = useState([])
+
+  useEffect(() => {
+    resolveReferenceGeography("world-110m").then(setAreas)
+  }, [])
+
+  useEffect(() => {
+    if (!areas) return
+    let i = 0
+    const id = setInterval(() => {
+      if (i < internationalFlights.length) {
+        setFlows(prev => [...prev, internationalFlights[i]])
+        i++
+      } else {
+        clearInterval(id)
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [areas])
+
+  if (!areas) {
+    return <div style={{ ...loadingStyle, width, height: 400 }}>Loading world map...</div>
+  }
+
+  return (
+    <FlowMap
+      nodes={airports}
+      flows={flows}
+      areas={areas}
+      areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
+      valueAccessor="passengers"
+      edgeColorBy="source"
+      showParticles
+      particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.5 }}
+      tooltip
+      width={width}
+      height={400}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // World FlowMap wrapper — loads basemap asynchronously
 // ---------------------------------------------------------------------------
 
@@ -118,7 +222,6 @@ function WorldFlowMap({ width = 700, height = 400, ...props }) {
     <FlowMap
       areas={worldAreas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
-      zoomable
       width={width}
       height={height}
       {...props}
@@ -145,7 +248,6 @@ function DomesticFlowMap({ width = 600, height = 400, ...props }) {
     <FlowMap
       areas={worldAreas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
-      zoomable
       width={width}
       height={height}
       {...props}
@@ -172,12 +274,14 @@ const flowMapProps = [
   { name: "projection", type: "string | object | function", required: false, default: '"equalEarth"', description: "Map projection." },
   { name: "areas", type: "GeoJSON.Feature[]", required: false, default: null, description: "Optional background geography (e.g. from resolveReferenceGeography)." },
   { name: "areaStyle", type: "object", required: false, default: null, description: "Style object applied to background geography areas." },
-  { name: "zoomable", type: "boolean", required: false, default: "false", description: "Enable pan and zoom interaction on the map." },
+  { name: "zoomable", type: "boolean", required: false, default: "true with tileURL, false otherwise", description: "Enable pan and zoom interaction on the map. Defaults to true when tileURL is set." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Tooltip configuration." },
   { name: "showLegend", type: "boolean", required: false, default: "false", description: "Show a legend." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height." },
+  { name: "showParticles", type: "boolean", required: false, default: "false", description: "Animate dots flowing along each route to convey directionality." },
+  { name: "particleStyle", type: "object", required: false, default: null, description: "Particle appearance: { radius, color, opacity, speedMultiplier, maxPerLine, spawnRate }. Set color to \"source\" to inherit each line's stroke." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamGeoFrame props." },
 ]
 
@@ -232,18 +336,21 @@ export default function FlowMapPage() {
         endpoints from the node list.
       </p>
 
-      <WorldFlowMap
-        nodes={airports}
-        flows={internationalFlights}
-        nodeIdAccessor="id"
-        valueAccessor="passengers"
-        tooltip={true}
-        projection="equalEarth"
-        title="Major International Flight Routes"
-      />
+      <StreamingToggle
+        staticContent={
+          <>
+            <WorldFlowMap
+              nodes={airports}
+              flows={internationalFlights}
+              nodeIdAccessor="id"
+              valueAccessor="passengers"
+              tooltip={true}
+              projection="equalEarth"
+              title="Major International Flight Routes"
+            />
 
-      <CodeBlock
-        code={`import { FlowMap, resolveReferenceGeography } from "semiotic/geo"
+            <CodeBlock
+              code={`import { FlowMap, resolveReferenceGeography } from "semiotic/geo"
 
 function WorldFlowMap() {
   const [worldAreas, setWorldAreas] = useState(null)
@@ -272,12 +379,20 @@ function WorldFlowMap() {
       areas={worldAreas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
       valueAccessor="passengers"
-      zoomable
       tooltip
     />
   )
 }`}
-        language="jsx"
+              language="jsx"
+            />
+          </>
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingFlowDemo width={w} />}
+            code={streamingFlowCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -288,8 +403,8 @@ function WorldFlowMap() {
       <h3 id="domestic-routes">US Domestic Routes</h3>
       <p>
         The same component works at any scale. Here we show US domestic flights
-        with the world basemap providing geographic context. The{" "}
-        <code>zoomable</code> prop lets users pan and zoom to explore.
+        with the world basemap providing geographic context. Set{" "}
+        <code>zoomable</code> to enable pan and zoom on non-tile maps.
       </p>
 
       <DomesticFlowMap
@@ -310,7 +425,6 @@ function WorldFlowMap() {
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   valueAccessor="passengers"
   projection="albersUsa"
-  zoomable
   tooltip
 />`}
         language="jsx"
@@ -343,7 +457,6 @@ function WorldFlowMap() {
   valueAccessor="passengers"
   edgeColorBy="source"
   showLegend
-  zoomable
   tooltip
 />`}
         language="jsx"
@@ -374,7 +487,6 @@ function WorldFlowMap() {
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   valueAccessor="passengers"
   lineType="line"
-  zoomable
   tooltip
 />`}
         language="jsx"
@@ -417,7 +529,43 @@ function WorldFlowMap() {
   areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
   edgeColorBy="source"
   showLegend
-  zoomable
+  tooltip
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="particles">Animated Particles</h3>
+      <p>
+        Add <code>showParticles</code> to animate dots flowing along each
+        route, conveying directionality and volume. Customize appearance
+        with <code>particleStyle</code> — set <code>color</code> to{" "}
+        <code>"source"</code> to inherit each line's stroke color.
+      </p>
+
+      <WorldFlowMap
+        nodes={airports}
+        flows={internationalFlights}
+        nodeIdAccessor="id"
+        valueAccessor="passengers"
+        edgeColorBy="source"
+        edgeOpacity={0.5}
+        showParticles
+        particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.5 }}
+        tooltip={true}
+        title="Flight Routes with Animated Particles"
+      />
+
+      <CodeBlock
+        code={`<FlowMap
+  nodes={airports}
+  flows={flights}
+  areas={worldAreas}
+  areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
+  valueAccessor="passengers"
+  edgeColorBy="source"
+  edgeOpacity={0.5}
+  showParticles
+  particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.5 }}
   tooltip
 />`}
         language="jsx"
@@ -464,7 +612,6 @@ useEffect(() => {
     stroke: "#ccc", strokeWidth: 0.5 }}
   valueAccessor="passengers"
   lineType="geo"
-  zoomable
   tooltip
 />`}
             language="jsx"
@@ -493,7 +640,6 @@ useEffect(() => {
     strokeWidth: widthScale(d.value),
     strokeOpacity: 0.6,
   })}
-  zoomable
   size={[600, 400]}
 />`}
             language="jsx"

@@ -139,12 +139,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(flows, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
-
   // ── Selection hooks (custom for flow-aware hover) ───────────────────
+  // All hooks must be called unconditionally (before any early returns)
 
   const hoverConfig = normalizeLinkedHover(linkedHover)
 
@@ -299,6 +295,13 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     top: 10, right: 10, bottom: 10, left: 10,
     ...userMargin
   }), [userMargin])
+
+  // ── Early returns (after all hooks) ─────────────────────────────────
+
+  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(flows, resolved.width, resolved.height, emptyContent)
+  if (emptyEl) return emptyEl
 
   const streamProps: StreamGeoFrameProps = {
     projection,

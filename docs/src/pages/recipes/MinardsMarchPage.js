@@ -2,6 +2,7 @@ import React from "react"
 import { Link } from "react-router-dom"
 import RecipeLayout from "../../components/RecipeLayout"
 import MinardsMarch from "../../examples/recipes/MinardsMarch"
+import MinardsMarchStreaming from "../../examples/recipes/MinardsMarchStreaming"
 
 const fullSourceCode = `import React from "react"
 import {
@@ -122,10 +123,10 @@ export default function MinardsMarch({ width = 900 }) {
 export default function MinardsMarchPage() {
   return (
     <RecipeLayout
-      title="Minard's March"
+      title="Minard's Map"
       breadcrumbs={[
         { label: "Recipes", path: "/recipes" },
-        { label: "Minard's March", path: "/recipes/minards-march" },
+        { label: "Minard's Map", path: "/recipes/minards-map" },
       ]}
       prevPage={{ title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" }}
       dependencies={["semiotic", "semiotic/geo", "react"]}
@@ -234,6 +235,29 @@ export default function MinardsMarchPage() {
         Both charts share the <code>"city-hl"</code> selection
         via <code>LinkedCharts</code>. Hovering either chart highlights matching
         data in the other.
+      </p>
+
+      <h2 id="streaming">Streaming Version</h2>
+      <p>
+        The same campaign data, revealed progressively using <code>StreamGeoFrame</code> and{" "}
+        <code>ConnectedScatterplot</code>. Each step adds a march segment to the map;
+        the retreat scatterplot appears once the army turns back from Moscow. No particles —
+        the animation comes from the data itself arriving over time.
+      </p>
+      <div style={{
+        background: "var(--surface-1)",
+        borderRadius: "8px",
+        padding: "16px",
+        border: "1px solid var(--surface-3)",
+      }}>
+        <MinardsMarchStreaming />
+      </div>
+      <p style={{ marginTop: 12 }}>
+        Use <strong>Play</strong> for automatic playback (600 ms per segment),{" "}
+        <strong>Step</strong> to advance one segment at a time, or{" "}
+        <strong>Reset</strong> to start over. The map uses bounded <code>lines</code> and{" "}
+        <code>points</code> props that grow with each step, while the scatterplot
+        accumulates retreat data points as they are revealed.
       </p>
 
       <h2 id="related">Related</h2>

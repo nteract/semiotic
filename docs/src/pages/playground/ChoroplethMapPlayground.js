@@ -18,7 +18,7 @@ const controls = [
   { name: "enableHover", type: "boolean", label: "Enable Hover", group: "Interaction",
     default: true },
   { name: "zoomable", type: "boolean", label: "Enable Zoom/Pan", group: "Interaction",
-    default: true },
+    default: false },
   { name: "title", type: "string", label: "Title", group: "Layout",
     default: "" },
 ]

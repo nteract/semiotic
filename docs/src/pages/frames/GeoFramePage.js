@@ -126,7 +126,6 @@ function StreamingEarthquakes() {
       xAccessor="lon"
       yAccessor="lat"
       runtimeMode="streaming"
-      zoomable
       size={[600, 400]}
       areaStyle={() => ({ fill: "#1a1a2e", stroke: "#333", strokeWidth: 0.5 })}
       pointStyle={(d) => ({
@@ -186,7 +185,6 @@ function StreamingGeoDemo({ width }) {
       xAccessor="lon"
       yAccessor="lat"
       runtimeMode="streaming"
-      zoomable
       size={[width, 400]}
       areaStyle={() => ({ fill: "#1a1a2e", stroke: "#333", strokeWidth: 0.5 })}
       pointStyle={(d) => ({
@@ -320,7 +318,7 @@ export default function GeoFramePage() {
       <p>
         Combine all three data layers on a real world basemap: areas as
         country boundaries, points as notable earthquake locations, and
-        lines as connecting routes. The <code>zoomable</code> prop enables
+        lines as connecting routes. Set <code>zoomable</code> to enable
         mouse/touch zoom and pan.
       </p>
 
@@ -393,7 +391,6 @@ function StreamingMap() {
       xAccessor="lon"
       yAccessor="lat"
       runtimeMode="streaming"
-      zoomable
       pointStyle={(d) => ({
         fill: d.magnitude > 5 ? "#ef4444" : "#6366f1",
         r: Math.max(2, d.magnitude),
@@ -551,7 +548,6 @@ function QuickStartExample() {
           stroke: "#fff",
           strokeWidth: 0.5,
         }),
-        zoomable: true,
         enableHover: true,
         size: [600, 400],
       }}
@@ -611,7 +607,6 @@ function MixedLayersExample() {
           strokeWidth: 1.5,
         }),
         lineStyle: () => ({ stroke: "#6366f1", strokeWidth: 2, strokeOpacity: 0.5 }),
-        zoomable: true,
         enableHover: true,
         size: [600, 400],
       }}
@@ -654,7 +649,6 @@ function ProjectionsExample() {
         areas: worldAreas,
         areaStyle: () => ({ fill: "#10b981", fillOpacity: 0.6, stroke: "#fff", strokeWidth: 0.5 }),
         graticule: true,
-        zoomable: true,
         enableHover: true,
         size: [600, 400],
       }}
@@ -697,7 +691,6 @@ function GraticuleExample() {
           strokeWidth: 1,
         }),
         graticule: true,
-        zoomable: true,
         enableHover: true,
         size: [600, 400],
       }}

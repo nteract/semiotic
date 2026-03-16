@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, ProjectionProp, DistanceCartogramConfig } from "../../stream/geoTypes"
+import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp, DistanceCartogramConfig } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
@@ -66,6 +66,14 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   tileAttribution?: string
   /** Max cached tiles @default 256 */
   tileCacheSize?: number
+  /** Show concentric distance rings around center. true for auto intervals, number for ring count, or number[] for explicit cost values. @default true */
+  showRings?: boolean | number | number[]
+  /** Ring style overrides */
+  ringStyle?: { stroke?: string; strokeWidth?: number; strokeDasharray?: string; labelColor?: string; labelSize?: number }
+  /** Show north indicator arrow @default true */
+  showNorth?: boolean
+  /** Label for cost units shown on rings (e.g. "hrs", "km") */
+  costLabel?: string
   /** Annotations */
   annotations?: Record<string, any>[]
   /** Passthrough */
@@ -107,6 +115,10 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     colorScheme = "category10",
     pointRadius = 5,
     tooltip,
+    showRings = true,
+    ringStyle,
+    showNorth = true,
+    costLabel,
     annotations,
     margin: userMargin,
     className,
@@ -214,6 +226,131 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     )
   }, [costAccessor, nodeIdAccessor])
 
+  // ── Ref + layout state for overlay rendering ─────────────────────
+  const geoRef = useRef<StreamGeoFrameHandle>(null)
+  const [cartogramLayout, setCartogramLayout] = useState<{
+    cx: number; cy: number; maxCost: number; availableRadius: number
+  } | null>(null)
+
+  // Read layout after each render cycle (store computes it synchronously in computeScene)
+  const readLayout = useCallback(() => {
+    const layout = geoRef.current?.getCartogramLayout?.()
+    if (layout) {
+      setCartogramLayout(prev => {
+        if (prev && prev.cx === layout.cx && prev.cy === layout.cy &&
+            prev.maxCost === layout.maxCost && prev.availableRadius === layout.availableRadius) return prev
+        return layout
+      })
+    }
+  }, [])
+
+  // Re-read when inputs that affect layout change
+  useEffect(() => {
+    // Use rAF to read after the frame renders
+    const id = requestAnimationFrame(readLayout)
+    return () => cancelAnimationFrame(id)
+  }, [readLayout, strength, center, resolved.width, resolved.height, safeData])
+
+  // ── Compute ring radii ──────────────────────────────────────────
+  const ringValues = useMemo(() => {
+    if (!showRings || !cartogramLayout) return []
+    const { maxCost, availableRadius } = cartogramLayout
+    if (maxCost <= 0) return []
+
+    if (Array.isArray(showRings)) return showRings.filter(v => v > 0 && v <= maxCost)
+
+    // Auto or explicit count
+    const count = typeof showRings === "number" ? showRings : Math.min(5, Math.max(2, Math.ceil(maxCost / 5)))
+    const step = maxCost / count
+    const values: number[] = []
+    for (let i = 1; i <= count; i++) {
+      values.push(Math.round(step * i * 10) / 10)
+    }
+    return values
+  }, [showRings, cartogramLayout])
+
+  // ── Foreground SVG overlay ──────────────────────────────────────
+  const overlayGraphics = useMemo(() => {
+    if (!cartogramLayout) return frameProps.foregroundGraphics || null
+    const { cx, cy, maxCost, availableRadius } = cartogramLayout
+    const rs = {
+      stroke: "#999",
+      strokeWidth: 0.8,
+      strokeDasharray: "4,3",
+      labelColor: "#777",
+      labelSize: 10,
+      ...ringStyle
+    }
+
+    // Adjust positions for margin
+    const mx = margin.left ?? 10
+    const my = margin.top ?? 10
+
+    return (
+      <g>
+        {/* Concentric distance rings */}
+        {ringValues.map((cost) => {
+          const r = (cost / maxCost) * availableRadius
+          return (
+            <g key={cost}>
+              <circle
+                cx={cx + mx}
+                cy={cy + my}
+                r={r}
+                fill="none"
+                stroke={rs.stroke}
+                strokeWidth={rs.strokeWidth}
+                strokeDasharray={rs.strokeDasharray}
+                opacity={0.5}
+              />
+              <text
+                x={cx + mx + r + 3}
+                y={cy + my - 2}
+                fontSize={rs.labelSize}
+                fill={rs.labelColor}
+                fontFamily="system-ui, sans-serif"
+              >
+                {cost}{costLabel ? ` ${costLabel}` : ""}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* North indicator */}
+        {showNorth && (
+          <g transform={`translate(${mx + 24}, ${my + 24})`}>
+            {/* Circle background */}
+            <circle r={16} fill="white" fillOpacity={0.85} stroke="#bbb" strokeWidth={0.8} />
+            {/* Arrow pointing up (north) */}
+            <path
+              d="M0,-11 L3,-3 L1,-4 L1,7 L-1,7 L-1,-4 L-3,-3 Z"
+              fill="#555"
+              stroke="none"
+            />
+            {/* N label */}
+            <text
+              y={-12}
+              textAnchor="middle"
+              fontSize={7}
+              fontWeight={700}
+              fill="#555"
+              fontFamily="system-ui, sans-serif"
+            >
+              N
+            </text>
+            {/* Tick marks for E, S, W */}
+            <line x1={11} y1={0} x2={13} y2={0} stroke="#bbb" strokeWidth={0.8} />
+            <line x1={-11} y1={0} x2={-13} y2={0} stroke="#bbb" strokeWidth={0.8} />
+            <line x1={0} y1={11} x2={0} y2={13} stroke="#bbb" strokeWidth={0.8} />
+          </g>
+        )}
+
+        {/* Pass through any user foregroundGraphics */}
+        {frameProps.foregroundGraphics}
+      </g>
+    )
+  }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, margin, frameProps.foregroundGraphics])
+
   const streamProps: StreamGeoFrameProps = {
     projection,
     points: safeData,
@@ -242,12 +379,14 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(className && { className }),
-    ...frameProps
+    ...frameProps,
+    // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)
+    ...(overlayGraphics && { foregroundGraphics: overlayGraphics })
   }
 
   return (
     <SafeRender componentName="DistanceCartogram" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame {...streamProps} />
+      <StreamGeoFrame ref={geoRef} {...streamProps} />
     </SafeRender>
   )
 }

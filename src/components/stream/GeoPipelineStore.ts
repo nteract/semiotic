@@ -130,6 +130,14 @@ export class GeoPipelineStore {
   // Current zoom level for onZoom callbacks
   currentZoom = 1
 
+  // Cartogram layout info — exposed for overlay rendering (concentric circles, etc.)
+  cartogramLayout: {
+    cx: number
+    cy: number
+    maxCost: number
+    availableRadius: number
+  } | null = null
+
   // Bounded data
   private areas: GeoJSON.Feature[] = []
   private pointData: Record<string, any>[] = []
@@ -614,6 +622,9 @@ export class GeoPipelineStore {
     const availableRadius = Math.min(layout.width, layout.height) / 2
 
     const costScale = scaleLinear().domain([0, maxCost]).range([0, availableRadius])
+
+    // Expose layout info for overlay rendering
+    this.cartogramLayout = { cx, cy, maxCost, availableRadius }
 
     // Warn about areas in cartogram mode
     if (this.areas.length > 0 && process.env.NODE_ENV !== "production") {

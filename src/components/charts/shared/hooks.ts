@@ -39,7 +39,17 @@ export function useColorScale(
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()
   return useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") return undefined
+    if (!colorBy) return undefined
+    // When colorBy is a function, derive categories from data and build an ordinal scale
+    if (typeof colorBy === "function") {
+      const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
+      if (categoryColors && Object.keys(categoryColors).length > 0) {
+        return (v: string) => categoryColors[v] || "#999"
+      }
+      // Build a synthetic data array so createColorScale can derive unique values
+      const syntheticData = categories.map(c => ({ _cat: c }))
+      return createColorScale(syntheticData, "_cat", colorScheme)
+    }
     // If a CategoryColorProvider is present, use its color map as the scale
     if (categoryColors && Object.keys(categoryColors).length > 0) {
       return (v: string) => categoryColors[v] || createColorScale(data, colorBy as string, colorScheme)(v)

@@ -137,7 +137,7 @@ const navData = [
       { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
       { title: "Network Explorer", path: "/recipes/network-explorer" },
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
-      { title: "Minard's March", path: "/recipes/minards-march" }
+      { title: "Minard's Map", path: "/recipes/minards-map" }
     ]
   },
   {

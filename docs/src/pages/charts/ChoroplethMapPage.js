@@ -78,7 +78,6 @@ function WorldChoropleth({ colorScheme = "viridis", graticule = false, width = 7
       graticule={graticule}
       projection="equalEarth"
       tooltip={tooltip}
-      zoomable
       width={width}
       height={height}
       {...rest}

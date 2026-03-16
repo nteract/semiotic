@@ -59,6 +59,8 @@ export interface ChoroplethMapProps extends BaseChartProps {
   tileAttribution?: string
   /** Max cached tiles @default 256 */
   tileCacheSize?: number
+  /** Fill opacity for area polygons. Useful for layering over tile basemaps. @default 1 */
+  areaOpacity?: number
   /** Annotations */
   annotations?: Record<string, any>[]
   /** Passthrough to StreamGeoFrame */
@@ -88,6 +90,7 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
     tileAttribution,
     tileCacheSize,
     tooltip,
+    areaOpacity = 1,
     annotations,
     margin: userMargin,
     className,
@@ -106,16 +109,7 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
   // Resolve string reference ("world-110m") or use features directly
   const resolvedAreas = useReferenceAreas(areas)
 
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-
-  // Show loading state while reference geography loads
-  if (!resolvedAreas) {
-    return renderLoadingState(true, resolved.width, resolved.height) || null
-  }
-
-  const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
+  // ── All hooks must be called unconditionally (before any early returns) ──
 
   const valAcc = useMemo(() =>
     typeof valueAccessor === "function"
@@ -126,6 +120,7 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
 
   // Build sequential color scale
   const colorScale = useMemo(() => {
+    if (!resolvedAreas) return scaleSequential(interpolateBlues).domain([0, 1])
     const values = resolvedAreas.map(f => valAcc(f)).filter(v => v != null && isFinite(v))
     const [min, max] = extent(values) as [number, number]
     const interpolator = SCHEME_MAP[colorScheme] || interpolateBlues
@@ -142,21 +137,21 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
   })
 
   // Area style
-  const areaStyle = useMemo(() => {
+  const areaStyleFn = useMemo(() => {
     const base = (d: any): Style => {
       const val = valAcc(d)
       return {
         fill: val != null && isFinite(val) ? colorScale(val) : "#ccc",
         stroke: "#999",
         strokeWidth: 0.5,
-        fillOpacity: 1
+        fillOpacity: areaOpacity
       }
     }
     if (activeSelectionHook) {
       return wrapStyleWithSelection(base, activeSelectionHook, selection) as (d: any) => Style
     }
     return base
-  }, [valAcc, colorScale, activeSelectionHook, selection])
+  }, [valAcc, colorScale, activeSelectionHook, selection, areaOpacity])
 
   // Default tooltip
   const defaultTooltip = useMemo(() => (d: any) => {
@@ -175,10 +170,23 @@ export function ChoroplethMap(props: ChoroplethMapProps) {
     ...userMargin
   }), [userMargin])
 
+  // ── Early returns (after all hooks) ─────────────────────────────────
+
+  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
+  if (loadingEl) return loadingEl
+
+  // Show loading state while reference geography loads
+  if (!resolvedAreas) {
+    return renderLoadingState(true, resolved.width, resolved.height) || null
+  }
+
+  const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
+  if (emptyEl) return emptyEl
+
   const streamProps: StreamGeoFrameProps = {
     projection,
     areas: resolvedAreas,
-    areaStyle,
+    areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,
     enableHover: true,

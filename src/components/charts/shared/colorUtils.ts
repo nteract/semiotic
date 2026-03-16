@@ -67,7 +67,12 @@ export function getColor(
   colorScale?: (v: any) => string
 ): string {
   if (typeof colorBy === "function") {
-    return colorBy(dataPoint)
+    const value = colorBy(dataPoint)
+    // If the function returned a category name (not a CSS color), map through colorScale
+    if (colorScale && value && typeof value === "string" && !value.startsWith("#") && !value.startsWith("rgb") && !value.startsWith("hsl")) {
+      return colorScale(value)
+    }
+    return value
   }
 
   const colorValue = dataPoint[colorBy]
