@@ -44,11 +44,17 @@ import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
 import TreemapPage from "./pages/charts/TreemapPage"
 import CirclePackPage from "./pages/charts/CirclePackPage"
+import ChoroplethMapPage from "./pages/charts/ChoroplethMapPage"
+import ProportionalSymbolMapPage from "./pages/charts/ProportionalSymbolMapPage"
+import FlowMapPage from "./pages/charts/FlowMapPage"
+import DistanceCartogramPage from "./pages/charts/DistanceCartogramPage"
+import TileMapPage from "./pages/charts/TileMapPage"
 
 // New frame pages
 import StreamXYFramePage from "./pages/frames/XYFramePage"
 import StreamOrdinalFramePage from "./pages/frames/OrdinalFramePage"
 import StreamNetworkFramePage from "./pages/frames/NetworkFramePage"
+import StreamGeoFramePage from "./pages/frames/GeoFramePage"
 
 // New feature pages
 import AxesPage from "./pages/features/AxesPage"
@@ -112,6 +118,8 @@ import TreemapPlayground from "./pages/playground/TreemapPlayground"
 import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
 import StatisticalAnnotationsPlayground from "./pages/playground/StatisticalAnnotationsPlayground"
 import ForecastPlayground from "./pages/playground/ForecastPlayground"
+import ChoroplethMapPlayground from "./pages/playground/ChoroplethMapPlayground"
+import DistanceCartogramPlayground from "./pages/playground/DistanceCartogramPlayground"
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -306,6 +314,8 @@ export default function DocsApp() {
               <Route path="orbit-diagram" element={<OrbitDiagramPlayground />} />
               <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
               <Route path="forecast" element={<ForecastPlayground />} />
+              <Route path="choropleth-map" element={<ChoroplethMapPlayground />} />
+              <Route path="distance-cartogram" element={<DistanceCartogramPlayground />} />
             </Route>
 
             {/* Frames routes */}
@@ -313,6 +323,7 @@ export default function DocsApp() {
               <Route path="xy-frame" element={<StreamXYFramePage />} />
               <Route path="ordinal-frame" element={<StreamOrdinalFramePage />} />
               <Route path="network-frame" element={<StreamNetworkFramePage />} />
+              <Route path="geo-frame" element={<StreamGeoFramePage />} />
               {/* StreamXYFrame page removed — content merged into chart pages */}
             </Route>
 
@@ -386,6 +397,12 @@ export default function DocsApp() {
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />
               <Route path="orbit-diagram" element={<OrbitDiagramPage />} />
+              {/* Geo Charts */}
+              <Route path="choropleth-map" element={<ChoroplethMapPage />} />
+              <Route path="proportional-symbol-map" element={<ProportionalSymbolMapPage />} />
+              <Route path="flow-map" element={<FlowMapPage />} />
+              <Route path="distance-cartogram" element={<DistanceCartogramPage />} />
+              <Route path="tile-map" element={<TileMapPage />} />
             </Route>
           </Routes>
         </div>

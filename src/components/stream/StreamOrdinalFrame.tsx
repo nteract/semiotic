@@ -31,6 +31,7 @@ import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
+import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
@@ -526,7 +527,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
 
       // DPR setup
-      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+      const dpr = getDevicePixelRatio()
       canvas.width = size[0] * dpr
       canvas.height = size[1] * dpr
       canvas.style.width = `${size[0]}px`

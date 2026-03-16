@@ -31,6 +31,9 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
+// Canvas setup
+import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+
 // Canvas renderers
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
@@ -772,7 +775,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 
-      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+      const dpr = getDevicePixelRatio()
       const theme = resolveThemeColors(canvas)
 
       // Staleness check (used by both canvases)
@@ -782,14 +785,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // ── Data canvas: only repaint when data/props changed ─────────────
       if (needsDataRepaint) {
-        const ctx = canvas.getContext("2d")
+        const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (ctx) {
-          canvas.width = size[0] * dpr
-          canvas.height = size[1] * dpr
-          canvas.style.width = `${size[0]}px`
-          canvas.style.height = `${size[1]}px`
-          ctx.scale(dpr, dpr)
-          ctx.translate(margin.left, margin.top)
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
           if (currentlyStale) {
@@ -834,14 +831,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // ── Interaction canvas: always repaint (crosshair + highlights) ──
       {
-        const ictx = interactionCanvas.getContext("2d")
+        const ictx = prepareCanvas(interactionCanvas, size, margin, dpr)
         if (ictx) {
-          interactionCanvas.width = size[0] * dpr
-          interactionCanvas.height = size[1] * dpr
-          interactionCanvas.style.width = `${size[0]}px`
-          interactionCanvas.style.height = `${size[1]}px`
-          ictx.scale(dpr, dpr)
-          ictx.translate(margin.left, margin.top)
 
           // Crosshair on hover
           if (effectiveHoverAnnotation && hoverRef.current && store.scales) {

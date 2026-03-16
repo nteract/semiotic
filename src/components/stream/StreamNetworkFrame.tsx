@@ -35,6 +35,9 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 
+// Canvas setup
+import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+
 // Canvas renderers
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
 import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
@@ -858,6 +861,7 @@ const StreamNetworkFrame = forwardRef<
     const canvas = canvasRef.current
     if (!canvas) return
 
+    // ctx obtained here for early null-check; prepareCanvas resets transform below
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
@@ -877,15 +881,9 @@ const StreamNetworkFrame = forwardRef<
       store.buildScene([adjustedWidth, adjustedHeight])
     }
 
-    // DPR setup
-    const dpr =
-      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-    canvas.width = size[0] * dpr
-    canvas.height = size[1] * dpr
-    canvas.style.width = `${size[0]}px`
-    canvas.style.height = `${size[1]}px`
-    ctx.scale(dpr, dpr)
-    ctx.translate(margin.left, margin.top)
+    // DPR setup — prepareCanvas sets size, DPR transform, and margin translate
+    const dpr = getDevicePixelRatio()
+    if (!prepareCanvas(canvas, size, margin, dpr)) return
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
     // Background

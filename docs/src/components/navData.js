@@ -59,6 +59,17 @@ const navData = [
           { title: "Circle Pack", path: "/charts/circle-pack" },
           { title: "Orbit Diagram", path: "/charts/orbit-diagram" }
         ]
+      },
+      {
+        title: "Geo",
+        category: "geo",
+        children: [
+          { title: "Choropleth Map", path: "/charts/choropleth-map" },
+          { title: "Proportional Symbol Map", path: "/charts/proportional-symbol-map" },
+          { title: "Flow Map", path: "/charts/flow-map" },
+          { title: "Distance Cartogram", path: "/charts/distance-cartogram" },
+          { title: "Tile Maps", path: "/charts/tile-map" }
+        ]
       }
     ]
   },
@@ -69,7 +80,8 @@ const navData = [
     children: [
       { title: "StreamXYFrame", path: "/frames/xy-frame" },
       { title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
-      { title: "StreamNetworkFrame", path: "/frames/network-frame" }
+      { title: "StreamNetworkFrame", path: "/frames/network-frame" },
+      { title: "StreamGeoFrame", path: "/frames/geo-frame" }
     ]
   },
   {
@@ -147,7 +159,9 @@ const navData = [
       { title: "Circle Pack", path: "/playground/circle-pack" },
       { title: "Orbit Diagram", path: "/playground/orbit-diagram" },
       { title: "Statistical Annotations", path: "/playground/statistical-annotations" },
-      { title: "Forecast & Anomaly", path: "/playground/forecast" }
+      { title: "Forecast & Anomaly", path: "/playground/forecast" },
+      { title: "Choropleth Map", path: "/playground/choropleth-map" },
+      { title: "Distance Cartogram", path: "/playground/distance-cartogram" }
     ]
   },
   {

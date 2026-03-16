@@ -180,7 +180,8 @@ function buildDeclarations() {
   // "types" fields resolve correctly (tsc emits into dist/components/ due to rootDir)
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
-    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server"
+    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
+    "semiotic-geo"
   ]
   for (const name of entryPoints) {
     try { copyFileSync(`dist/components/${name}.d.ts`, `dist/${name}.d.ts`) } catch { /* may not exist */ }
@@ -218,7 +219,8 @@ async function build() {
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify },
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
-    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify }
+    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
+    { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify }
   ]
 
   await Promise.all([
