@@ -91,10 +91,16 @@ function resolveAnchoredPosition(
   const anchor = ann.anchor || "fixed"
 
   if (anchor === "latest") {
-    // For "latest" with pointId, use the last point node
+    // For "latest" with pointId, find the most recent point node matching that ID
     if (ann.pointId != null && context.pointNodes && context.pointNodes.length > 0) {
-      const lastNode = context.pointNodes[context.pointNodes.length - 1]
-      return { x: lastNode.x, y: lastNode.y }
+      for (let i = context.pointNodes.length - 1; i >= 0; i--) {
+        const node = context.pointNodes[i]
+        if (node.pointId === ann.pointId) {
+          const pos = { x: node.x, y: node.y }
+          context.stickyPositionCache?.set(index, pos)
+          return pos
+        }
+      }
     }
     const pos = resolveLatest(context)
     if (pos) {

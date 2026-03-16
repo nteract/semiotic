@@ -580,6 +580,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }, { chunkThreshold, chunkSize })
     }
 
+    // Update chunk options on the existing adapter when props change
+    useEffect(() => {
+      adapterRef.current?.updateChunkOptions({ chunkThreshold, chunkSize })
+    }, [chunkThreshold, chunkSize])
+
     // ── Push API (ref handle) ────────────────────────────────────────────
 
     const pushPoint = useCallback((datum: Record<string, any>) => {

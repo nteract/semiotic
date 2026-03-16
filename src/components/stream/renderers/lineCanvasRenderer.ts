@@ -10,8 +10,7 @@ import {
   curveStepBefore,
   curveStepAfter,
   curveBasis,
-  curveNatural,
-  curveLinear
+  curveNatural
 } from "d3-shape"
 import type { CurveFactory } from "d3-shape"
 

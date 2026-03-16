@@ -162,8 +162,6 @@ export class PipelineStore {
   private _pointColorCache: { key: string; map: Map<string, string> } | null = null
   private _barCategoryCache: { key: string; order: string[] } | null = null
 
-  // ── Stacked area extent cache ─────────────────────────────────────────
-  private _stackExtentCache: { size: number; maxSum: number } | null = null
 
   // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
@@ -367,33 +365,23 @@ export class PipelineStore {
         // Normalized: all stacks sum to 1.0
         yDomain = [0, 1 + config.extentPadding]
       } else {
-        let maxStacked: number
+        const groups = this.groupData(bufferArray)
 
-        // Reuse cached maxSum when buffer size hasn't changed (bounded mode optimization).
-        // In streaming mode buffer.size changes on every push, so the cache misses (correct).
-        if (this._stackExtentCache && buffer.size === this._stackExtentCache.size) {
-          maxStacked = this._stackExtentCache.maxSum
-        } else {
-          const groups = this.groupData(bufferArray)
-
-          // Build per-x-value totals across all groups
-          const xTotals = new Map<number, number>()
-          for (const g of groups) {
-            for (const d of g.data) {
-              const x = this.getX(d)
-              const y = this.getY(d)
-              if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
-                xTotals.set(x, (xTotals.get(x) || 0) + y)
-              }
+        // Build per-x-value totals across all groups
+        const xTotals = new Map<number, number>()
+        for (const g of groups) {
+          for (const d of g.data) {
+            const x = this.getX(d)
+            const y = this.getY(d)
+            if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+              xTotals.set(x, (xTotals.get(x) || 0) + y)
             }
           }
+        }
 
-          maxStacked = 0
-          for (const total of xTotals.values()) {
-            if (total > maxStacked) maxStacked = total
-          }
-
-          this._stackExtentCache = { size: buffer.size, maxSum: maxStacked }
+        let maxStacked = 0
+        for (const total of xTotals.values()) {
+          if (total > maxStacked) maxStacked = total
         }
 
         const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
@@ -1714,7 +1702,7 @@ export class PipelineStore {
     this.prevPositionMap.clear()
     this.activeTransition = null
     this.lastIngestTime = 0
-    this._stackExtentCache = null
+
     this.needsFullRebuild = true
     this.lastLayout = null
     this.scales = null
@@ -1752,7 +1740,7 @@ export class PipelineStore {
       this._barCategoryCache = null
     }
     // Invalidate stacked area extent cache on config changes (e.g. normalize)
-    this._stackExtentCache = null
+
     Object.assign(this.config, config)
     this.needsFullRebuild = true
   }

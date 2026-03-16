@@ -33,6 +33,12 @@ export class DataSourceAdapter<T = Record<string, any>> {
     this.chunkSize = options?.chunkSize ?? CHUNK_SIZE
   }
 
+  /** Update chunking options without recreating the adapter. */
+  updateChunkOptions(options: { chunkThreshold?: number; chunkSize?: number }): void {
+    if (options.chunkThreshold != null) this.chunkThreshold = options.chunkThreshold
+    if (options.chunkSize != null) this.chunkSize = options.chunkSize
+  }
+
   /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
    *  Also cancels any in-flight progressive chunking. */
   clearLastData(): void {

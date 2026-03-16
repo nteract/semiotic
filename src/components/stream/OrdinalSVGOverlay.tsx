@@ -223,6 +223,13 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   // Persistent cache for sticky annotation positions
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
 
+  // Clear sticky cache when annotations array changes to avoid mismatched indices
+  const prevAnnotationsRef = useRef(annotations)
+  if (prevAnnotationsRef.current !== annotations) {
+    prevAnnotationsRef.current = annotations
+    stickyPositionCacheRef.current = new Map()
+  }
+
   // Annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null

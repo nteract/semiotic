@@ -31,8 +31,8 @@ export function findNearestNode(
 
   // Fast path: use quadtree for point nodes when available
   if (pointQuadtree) {
-    // Compute max search radius: largest point radius + hit tolerance (5px)
-    // We use maxDistance as a safe upper bound; quadtree.find respects this radius.
+    // Use maxDistance as the quadtree search radius.
+    // Callers should set maxDistance to account for point radius + hit tolerance.
     const found = pointQuadtree.find(px, py, maxDistance)
     if (found) {
       const result = hitTestPoint(found, px, py)

@@ -349,6 +349,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // Persistent cache for sticky annotation positions (survives re-renders)
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
 
+  // Clear sticky cache when annotations array changes to avoid mismatched indices
+  const prevAnnotationsRef = useRef(annotations)
+  if (prevAnnotationsRef.current !== annotations) {
+    prevAnnotationsRef.current = annotations
+    stickyPositionCacheRef.current = new Map()
+  }
+
   // Render annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
