@@ -144,6 +144,62 @@ describe("PipelineStore — Streaming Heatmap", () => {
     expect(heatcells.length).toBe(4)
   })
 
+  it("heatcell nodes include showValues and value when showValues enabled", () => {
+    const store = new PipelineStore(makeConfig({
+      heatmapAggregation: "count",
+      heatmapXBins: 5,
+      heatmapYBins: 5,
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+      showValues: true
+    }))
+
+    const data = [
+      { x: 1, y: 1, value: 10 },
+      { x: 1.1, y: 1.1, value: 20 },
+      { x: 5, y: 5, value: 30 }
+    ]
+    store.ingest({ inserts: data, bounded: false })
+    store.computeScene({ width: 100, height: 100 })
+
+    const heatcells = store.scene.filter(n => n.type === "heatcell")
+    expect(heatcells.length).toBeGreaterThan(0)
+
+    for (const cell of heatcells) {
+      if (cell.type !== "heatcell") continue
+      expect(cell.showValues).toBe(true)
+      expect(typeof cell.value).toBe("number")
+    }
+  })
+
+  it("heatcell nodes omit showValues fields when showValues not set", () => {
+    const store = new PipelineStore(makeConfig({
+      heatmapAggregation: "count",
+      heatmapXBins: 5,
+      heatmapYBins: 5,
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value"
+    }))
+
+    const data = [
+      { x: 1, y: 1, value: 10 },
+      { x: 5, y: 5, value: 30 }
+    ]
+    store.ingest({ inserts: data, bounded: false })
+    store.computeScene({ width: 100, height: 100 })
+
+    const heatcells = store.scene.filter(n => n.type === "heatcell")
+    expect(heatcells.length).toBeGreaterThan(0)
+
+    for (const cell of heatcells) {
+      if (cell.type !== "heatcell") continue
+      expect(cell.showValues).toBeUndefined()
+      expect(cell.value).toBeUndefined()
+    }
+  })
+
   it("cell dimensions respect bin count", () => {
     const store = new PipelineStore(makeConfig({
       heatmapAggregation: "count",

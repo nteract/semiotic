@@ -64,19 +64,16 @@ function traceAreaPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): void
 
   if (curveFactory && node.topPath.length >= 2 && node.bottomPath.length >= 2) {
     // Use d3-shape area generator for curved interpolation.
-    // Build paired data: index i maps to topPath[i] (top) and bottomPath[i] (bottom).
-    // topPath and bottomPath share the same x coordinates at each index.
-    const areaGenerator = d3Area<number>()
-      .x((_d, i) => node.topPath[i][0])
+    // Pass topPath as data; derive bottom y via index into bottomPath.
+    const areaGenerator = d3Area<[number, number]>()
+      .x(d => d[0])
       .y0((_d, i) => node.bottomPath[i][1])
-      .y1((_d, i) => node.topPath[i][1])
+      .y1(d => d[1])
       .curve(curveFactory)
       .context(ctx)
 
     ctx.beginPath()
-    // Pass an array of indices as data
-    const indices = Array.from({ length: node.topPath.length }, (_, i) => i)
-    areaGenerator(indices)
+    areaGenerator(node.topPath)
   } else {
     // Linear fallback: manual moveTo/lineTo
     ctx.beginPath()

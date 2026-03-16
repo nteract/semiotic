@@ -837,6 +837,9 @@ export class PipelineStore {
 
         const fill = heatColor(entry.val)
 
+        const labelOpts = this.config.showValues
+          ? { value: entry.val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
+          : undefined
         nodes.push(buildHeatcellNode(
           xi * cellW,
           (yValues.length - 1 - yi) * cellH,
@@ -844,11 +847,7 @@ export class PipelineStore {
           cellH,
           fill,
           entry.datum,
-          {
-            value: entry.val,
-            showValues: this.config.showValues,
-            valueFormat: this.config.heatmapValueFormat
-          }
+          labelOpts
         ))
       }
     }
@@ -928,6 +927,9 @@ export class PipelineStore {
       const fill = `rgb(${r},${g},${b})`
 
       const cell = grid.get(key)!
+      const streamLabelOpts = this.config.showValues
+        ? { value: val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
+        : undefined
       nodes.push(buildHeatcellNode(
         xi * cellW,
         (yBins - 1 - yi) * cellH,
@@ -935,11 +937,7 @@ export class PipelineStore {
         cellH,
         fill,
         { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data },
-        {
-          value: val,
-          showValues: this.config.showValues,
-          valueFormat: this.config.heatmapValueFormat
-        }
+        streamLabelOpts
       ))
     }
 
@@ -1322,20 +1320,41 @@ export class PipelineStore {
       // Per-vertex decay for area nodes
       if (node.type === "area") {
         const datumArr = Array.isArray(node.datum) ? node.datum : []
-        if (datumArr.length < 2) continue
-        const opacities = new Array<number>(datumArr.length)
-        let hasDecay = false
-        for (let i = 0; i < datumArr.length; i++) {
-          const idx = indexMap.get(datumArr[i])
-          if (idx != null) {
-            opacities[i] = this.computeDecayOpacity(idx, bufferSize)
-            if (opacities[i] < 1) hasDecay = true
-          } else {
-            opacities[i] = 1
+        const vertexCount = node.topPath ? node.topPath.length : datumArr.length
+        if (vertexCount < 2) continue
+
+        if (datumArr.length === vertexCount) {
+          // Datum array aligns with path vertices — per-vertex decay
+          const opacities = new Array<number>(vertexCount)
+          let hasDecay = false
+          for (let i = 0; i < datumArr.length; i++) {
+            const idx = indexMap.get(datumArr[i])
+            if (idx != null) {
+              opacities[i] = this.computeDecayOpacity(idx, bufferSize)
+              if (opacities[i] < 1) hasDecay = true
+            } else {
+              opacities[i] = 1
+            }
           }
-        }
-        if (hasDecay) {
-          node._decayOpacities = opacities
+          if (hasDecay) {
+            node._decayOpacities = opacities
+          }
+        } else {
+          // Datum/path length mismatch (e.g. stacked areas) — use uniform decay
+          // based on the newest mappable datum
+          let minOpacity = 1
+          for (const d of datumArr) {
+            const idx = indexMap.get(d)
+            if (idx != null) {
+              const op = this.computeDecayOpacity(idx, bufferSize)
+              if (op < minOpacity) minOpacity = op
+            }
+          }
+          if (minOpacity < 1) {
+            const opacities = new Array<number>(vertexCount)
+            opacities.fill(minOpacity)
+            node._decayOpacities = opacities
+          }
         }
         continue
       }

@@ -349,10 +349,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // Persistent cache for sticky annotation positions (survives re-renders)
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
 
-  // Clear sticky cache when annotations array changes to avoid mismatched indices
-  const prevAnnotationsRef = useRef(annotations)
-  if (prevAnnotationsRef.current !== annotations) {
-    prevAnnotationsRef.current = annotations
+  // Clear sticky cache when annotation count changes to avoid mismatched indices.
+  // We compare length (not reference) to avoid clearing on every render when
+  // callers pass inline annotation arrays.
+  const prevAnnotationsLenRef = useRef(annotations?.length ?? 0)
+  const currentLen = annotations?.length ?? 0
+  if (prevAnnotationsLenRef.current !== currentLen) {
+    prevAnnotationsLenRef.current = currentLen
     stickyPositionCacheRef.current = new Map()
   }
 

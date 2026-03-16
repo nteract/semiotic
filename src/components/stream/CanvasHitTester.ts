@@ -28,6 +28,7 @@ export function findNearestNode(
   pointQuadtree?: Quadtree<PointSceneNode> | null
 ): HitResult | null {
   let best: HitResult | null = null
+  let quadtreeHitConfirmed = false
 
   // Fast path: use quadtree for point nodes when available
   if (pointQuadtree) {
@@ -38,6 +39,7 @@ export function findNearestNode(
       const result = hitTestPoint(found, px, py)
       if (result && result.distance < maxDistance) {
         best = result
+        quadtreeHitConfirmed = true
       }
     }
   }
@@ -47,8 +49,8 @@ export function findNearestNode(
 
     switch (node.type) {
       case "point":
-        // Skip linear point scan when quadtree handled it above
-        if (pointQuadtree) break
+        // Skip linear point scan only when quadtree confirmed a hit
+        if (pointQuadtree && quadtreeHitConfirmed) break
         result = hitTestPoint(node, px, py)
         break
       case "line":
