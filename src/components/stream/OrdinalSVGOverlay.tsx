@@ -457,11 +457,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       {/* Legend */}
       {legend && (() => {
         const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
+        const hasTitle = Boolean(title)
         let tx: number, ty: number
         if (legendPosition === "left") {
           tx = 4; ty = margin.top
         } else if (legendPosition === "top") {
-          tx = 0; ty = 8
+          tx = 0; ty = hasTitle ? 32 : 8
         } else if (legendPosition === "bottom") {
           tx = 0; ty = totalHeight - margin.bottom + 50
         } else {

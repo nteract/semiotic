@@ -15,8 +15,8 @@ export interface LegendGroup {
 
 /** Configuration for a gradient (continuous) legend */
 export interface GradientLegendConfig {
-  /** The color interpolation function: (t: 0→1) => color string */
-  colorFn: (t: number) => string
+  /** Color function: receives a value in `domain` range and returns a color string */
+  colorFn: (value: number) => string
   /** Data domain [min, max] */
   domain: [number, number]
   /** Optional label for the gradient */

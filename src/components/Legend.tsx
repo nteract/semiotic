@@ -273,18 +273,16 @@ const renderHorizontalGroup = ({
       offset += 16
     }
 
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)
-
     renderedGroups.push(
       <g
         key={`legend-group-${i}`}
         className="legend-item"
         transform={`translate(${offset},${verticalOffset})`}
       >
-        {renderedItems.items}
+        {result.items}
       </g>
     )
-    offset += renderedItems.offset + 5
+    offset += result.offset + 5
 
     if (legendGroups[i + 1]) {
       renderedGroups.push(
@@ -321,7 +319,8 @@ export function GradientLegend({
   const { colorFn, domain, label, format } = config
   const fmt = format || ((v: number) => String(Math.round(v * 100) / 100))
   const STEPS = 64
-  const gradientId = `grad-legend-${Math.random().toString(36).slice(2, 8)}`
+  const reactId = React.useId()
+  const gradientId = `grad-legend-${reactId}`
 
   if (orientation === "horizontal") {
     const BAR_HEIGHT = 12

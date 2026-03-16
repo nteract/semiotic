@@ -409,7 +409,7 @@ export class PipelineStore {
 
     // Build scales
     // For streaming charts, use time/value axes based on arrowOfTime
-    const isStreaming = config.arrowOfTime !== undefined
+    const isStreaming = config.runtimeMode === "streaming"
     if (isStreaming) {
       const timeAxis = getTimeAxis(config.arrowOfTime)
       if (timeAxis === "x") {
@@ -732,7 +732,7 @@ export class PipelineStore {
     // Build value lookup
     const valueMap = new Map<string, { val: number; datum: any }>()
     for (const d of data) {
-      const key = `${getRawX(d)}_${getRawY(d)}`
+      const key = JSON.stringify([getRawX(d), getRawY(d)])
       valueMap.set(key, { val: getVal(d), datum: d })
     }
 
@@ -758,7 +758,7 @@ export class PipelineStore {
 
     for (let xi = 0; xi < xValues.length; xi++) {
       for (let yi = 0; yi < yValues.length; yi++) {
-        const key = `${xValues[xi]}_${yValues[yi]}`
+        const key = JSON.stringify([xValues[xi], yValues[yi]])
         const entry = valueMap.get(key)
         if (!entry) continue
 
