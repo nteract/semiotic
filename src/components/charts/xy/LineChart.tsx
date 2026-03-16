@@ -49,6 +49,18 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   yAccessor?: ChartAccessor<TDatum, number>
 
   /**
+   * Scale type for the x-axis
+   * @default "linear"
+   */
+  xScaleType?: "linear" | "log"
+
+  /**
+   * Scale type for the y-axis
+   * @default "linear"
+   */
+  yScaleType?: "linear" | "log"
+
+  /**
    * Field name or function to group data into multiple lines
    * @example
    * ```ts
@@ -142,6 +154,12 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * - "none": static legend (default)
    */
   legendInteraction?: LegendInteractionMode
+
+  /**
+   * Legend position relative to the chart area
+   * @default "right"
+   */
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   /**
    * Tooltip configuration
@@ -315,7 +333,10 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    xScaleType,
+    yScaleType
   } = props
 
   const width = resolved.width
@@ -655,11 +676,12 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }
   }, [directLabel, directLabelAnnotations, directLabelFontSize, directLabelPosition, resolved.marginDefaults])
 
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: gapProcessedLineData,
     colorBy,
     colorScale,
     showLegend: effectiveShowLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: directLabelMarginDefaults,
   })
@@ -712,6 +734,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     data: flattenedData,
     xAccessor,
     yAccessor,
+    xScaleType,
+    yScaleType,
     groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
     curve,
     lineStyle,
@@ -727,7 +751,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

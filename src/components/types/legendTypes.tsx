@@ -13,6 +13,36 @@ export interface LegendGroup {
   label: string
 }
 
+/** Configuration for a gradient (continuous) legend */
+export interface GradientLegendConfig {
+  /** Color function: receives a value in `domain` range and returns a color string */
+  colorFn: (value: number) => string
+  /** Data domain [min, max] */
+  domain: [number, number]
+  /** Optional label for the gradient */
+  label?: string
+  /** Optional format function for tick labels */
+  format?: (v: number) => string
+}
+
+/** Type guard: categorical legend config */
+export function isLegendConfig(value: unknown): value is { legendGroups: LegendGroup[] } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "legendGroups" in value
+  )
+}
+
+/** Type guard: gradient legend config */
+export function isGradientLegendConfig(value: unknown): value is { gradient: GradientLegendConfig } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "gradient" in value
+  )
+}
+
 export interface LegendProps {
   legendGroups?: LegendGroup[]
   customClickBehavior?: Function

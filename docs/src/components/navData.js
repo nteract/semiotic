@@ -123,7 +123,8 @@ const navData = [
     children: [
       { title: "KPI Card + Sparkline", path: "/recipes/kpi-card-sparkline" },
       { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
-      { title: "Network Explorer", path: "/recipes/network-explorer" }
+      { title: "Network Explorer", path: "/recipes/network-explorer" },
+      { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" }
     ]
   },
   {

@@ -321,8 +321,8 @@ describe("BarChart", () => {
         </TooltipProvider>
       )
 
-      // Right margin should be at least 120 when legend is present
-      expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(120)
+      // Right margin should be at least 110 when legend is present
+      expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(110)
       expect(lastOrdinalFrameProps.legend).toBeDefined()
     })
   })

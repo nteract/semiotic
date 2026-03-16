@@ -377,7 +377,18 @@
             "height": { "type": "number", "default": 400 },
             "enableHover": { "type": "boolean", "default": true },
             "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "className": { "type": "string" },
+            "showLegend": {
+              "type": "boolean",
+              "description": "Show a gradient color legend",
+              "default": false
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": ["right", "left", "top", "bottom"],
+              "description": "Position of the gradient legend",
+              "default": "right"
+            }
           },
           "required": ["data"]
         }

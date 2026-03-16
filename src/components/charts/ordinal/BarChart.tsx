@@ -33,6 +33,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   showGrid?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
+  legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -64,7 +65,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     colorBy,
     colorScheme = "category10",
     sort = false,
-    barPadding = 5,
+    barPadding = 40,
     tooltip,
     annotations,
     frameProps = {},
@@ -74,7 +75,8 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -148,8 +150,9 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     [basePieceStyle, effectiveSelectionHook, selection]
   )
 
-  const { legend, margin } = useChartLegendAndMargin({
-    data: sortedData, colorBy, colorScale, showLegend, userMargin,
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+    data: sortedData, colorBy, colorScale, showLegend,
+    legendPosition: legendPositionProp, userMargin,
     defaults: resolved.marginDefaults,
   })
 
@@ -191,7 +194,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     rFormat: valueFormat,
     showGrid,
     oSort: sort,
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

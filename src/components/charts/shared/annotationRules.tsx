@@ -1,10 +1,24 @@
 import * as React from "react"
 import Annotation from "../../Annotation"
 import { packEnclose } from "d3-hierarchy"
+import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep, curveStepAfter, curveStepBefore, curveBasis, curveCardinal, curveCatmullRom } from "d3-shape"
+import type { CurveFactory } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
 import { loess } from "./loess"
 // @ts-expect-error — no type declarations for regression
 import regression from "regression"
+
+const CURVE_FACTORIES: Record<string, CurveFactory> = {
+  linear: curveLinear,
+  monotoneX: curveMonotoneX,
+  monotoneY: curveMonotoneY,
+  step: curveStep,
+  stepAfter: curveStepAfter,
+  stepBefore: curveStepBefore,
+  basis: curveBasis,
+  cardinal: curveCardinal,
+  catmullRom: curveCatmullRom,
+}
 
 // ── Coordinate resolution helpers ──────────────────────────────────────
 
@@ -456,16 +470,15 @@ export function createDefaultAnnotationRules(
           .sort((a, b) => (a[xAcc] as number) - (b[xAcc] as number))
         if (bounded.length < 2) return null
 
-        // Build polygon: upper path forward, lower path reversed
-        const upperPath = bounded
-          .map((d) => `${scaleX(d[xAcc])},${scaleY(d[upperAcc])}`)
-          .join(" L")
-        const lowerPath = bounded
-          .slice()
-          .reverse()
-          .map((d) => `${scaleX(d[xAcc])},${scaleY(d[lowerAcc])}`)
-          .join(" L")
-        const envelopePath = `M${upperPath} L${lowerPath} Z`
+        // Build envelope area using d3-shape area generator with curve interpolation
+        const curveFn = CURVE_FACTORIES[context.curve || "linear"] || curveLinear
+        const envelopeArea = d3Area<Record<string, any>>()
+          .x((d) => scaleX(d[xAcc]))
+          .y0((d) => scaleY(d[lowerAcc]))
+          .y1((d) => scaleY(d[upperAcc]))
+          .curve(curveFn)
+        const envelopePath = envelopeArea(bounded)
+        if (!envelopePath) return null
 
         const fillColor = ann.fill || "#6366f1"
         return (

@@ -352,7 +352,7 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.legend).toBeUndefined()
   })
 
-  it("expands right margin to 120 when legend is present and right < 120", () => {
+  it("expands right margin to 110 when legend is present and right < 110", () => {
     const colorScale = (v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
@@ -363,10 +363,10 @@ describe("useChartLegendAndMargin", () => {
         userMargin: undefined,
       })
     )
-    expect(result.current.margin.right).toBe(120)
+    expect(result.current.margin.right).toBe(110)
   })
 
-  it("preserves right margin when already >= 120", () => {
+  it("preserves right margin when already >= 110", () => {
     const colorScale = (v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({

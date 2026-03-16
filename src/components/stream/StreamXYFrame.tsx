@@ -28,7 +28,7 @@ import { findNearestNode, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
-import { SVGOverlay } from "./SVGOverlay"
+import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 
 // Canvas renderers
@@ -402,6 +402,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendClickBehavior,
       legendHighlightedCategory,
       legendIsolatedCategories,
+      legendPosition,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -416,7 +417,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapXBins,
       heatmapYBins,
       marginalGraphics,
-      pointIdAccessor
+      pointIdAccessor,
+      xScaleType,
+      yScaleType
     } = props
 
     // ── Responsive sizing ──────────────────────────────────────────────────
@@ -486,6 +489,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       groupAccessor,
       categoryAccessor,
       lineDataAccessor,
+      xScaleType,
+      yScaleType,
       xExtent,
       yExtent,
       sizeRange,
@@ -521,6 +526,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
+      xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle, y0Accessor, gradientFill,
@@ -644,8 +650,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         return
       }
 
+      const rawDatum = hit.datum || {}
       const hover: HoverData = {
-        data: hit.datum,
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+        data: rawDatum,
         time: hit.x,
         value: hit.y,
         x: hit.x,
@@ -1015,6 +1023,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
+            legendPosition={legendPosition}
             foregroundGraphics={foregroundGraphics}
             marginalGraphics={marginalGraphics}
             xValues={[]}
@@ -1028,6 +1037,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
             )}
+            curve={typeof curve === "string" ? curve : undefined}
           />
         </div>
       )
@@ -1065,6 +1075,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             {backgroundGraphics}
           </svg>
         )}
+        <SVGUnderlay
+          width={adjustedWidth}
+          height={adjustedHeight}
+          totalWidth={size[0]}
+          totalHeight={size[1]}
+          margin={margin}
+          scales={currentScales}
+          showAxes={showAxes}
+          axes={axesConfig}
+          showGrid={showGrid}
+          xFormat={xFormat || tickFormatTime}
+          yFormat={yFormat || tickFormatValue}
+        />
         <canvas
           ref={canvasRef}
           style={{
@@ -1102,6 +1125,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
+          legendPosition={legendPosition}
           foregroundGraphics={foregroundGraphics}
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}
@@ -1115,6 +1139,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           pointNodes={storeRef.current?.scene.filter(
             (n): n is PointSceneNode => n.type === "point"
           )}
+          curve={typeof curve === "string" ? curve : undefined}
+          underlayRendered
         />
         {(brush || onBrush) && (
           <BrushOverlay

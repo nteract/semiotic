@@ -224,4 +224,26 @@ describe("Heatmap", () => {
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
+
+  it("renders with showLegend", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <Heatmap data={sampleData} showLegend />
+      </TooltipProvider>
+    )
+
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+  })
+
+  it("renders with showLegend and legendPosition bottom", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <Heatmap data={sampleData} showLegend legendPosition="bottom" />
+      </TooltipProvider>
+    )
+
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+  })
 })

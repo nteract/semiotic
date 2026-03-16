@@ -428,7 +428,7 @@ export default function LegendsPage() {
       </p>
       <ul>
         <li>
-          <code>"fill"</code> — renders a 20x20 filled rectangle. Best for
+          <code>"fill"</code> — renders a 16×16 filled rectangle. Best for
           area charts, bars, and filled marks.
         </li>
         <li>
@@ -460,6 +460,44 @@ export default function LegendsPage() {
   ],
   label: "Size",
 }`}
+        language="jsx"
+      />
+
+      <h3 id="gradient-legends">Gradient Legends</h3>
+      <p>
+        For continuous or sequential color scales — such as those used in{" "}
+        <Link to="/charts/heatmap">Heatmap</Link> — Semiotic supports gradient
+        legends. On the <code>Heatmap</code> component, simply set{" "}
+        <code>showLegend</code> to render a gradient bar that maps the value
+        domain to the active color scheme. For Stream Frames, you can pass a{" "}
+        <code>gradient</code> configuration in the legend object with a custom
+        color function, domain, and label.
+      </p>
+
+      <CodeBlock
+        code={`// Heatmap — gradient legend via showLegend prop
+import { Heatmap } from "semiotic"
+
+<Heatmap
+  data={matrixData}
+  xAccessor="hour"
+  yAccessor="day"
+  valueAccessor="count"
+  colorScheme="viridis"
+  showLegend
+  legendPosition="right"
+/>
+
+// Stream Frame — gradient legend via legend config
+<StreamXYFrame
+  legend={{
+    gradient: {
+      colorFn: d3.interpolateViridis,
+      domain: [0, 100],
+      label: "Intensity",
+    },
+  }}
+/>`}
         language="jsx"
       />
 

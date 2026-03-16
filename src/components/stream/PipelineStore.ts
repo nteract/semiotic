@@ -1,4 +1,5 @@
-import { scaleLinear, type ScaleLinear } from "d3-scale"
+import { scaleLinear, scaleLog, scaleSequential, type ScaleLinear } from "d3-scale"
+import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBins, computeBinExtent } from "../realtime/BinAccumulator"
@@ -29,7 +30,7 @@ import {
   buildRectNode,
   buildHeatcellNode
 } from "./SceneGraph"
-import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { resolveAccessor, resolveRawAccessor, resolveStringAccessor } from "./accessorUtils"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -57,6 +58,10 @@ export interface PipelineConfig {
   groupAccessor?: string | ((d: any) => string)
   categoryAccessor?: string | ((d: any) => string)
   lineDataAccessor?: string
+
+  // Scale types
+  xScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log"
 
   // Fixed extents (partial: [min] or [min, undefined] to set only min)
   xExtent?: [number | undefined, number | undefined] | [number]
@@ -404,7 +409,7 @@ export class PipelineStore {
 
     // Build scales
     // For streaming charts, use time/value axes based on arrowOfTime
-    const isStreaming = config.arrowOfTime !== undefined
+    const isStreaming = config.runtimeMode === "streaming"
     if (isStreaming) {
       const timeAxis = getTimeAxis(config.arrowOfTime)
       if (timeAxis === "x") {
@@ -425,9 +430,17 @@ export class PipelineStore {
         }
       }
     } else {
+      const makeScale = (type: "linear" | "log" | undefined, domain: [number, number], range: [number, number]) => {
+        if (type === "log") {
+          // Log scales cannot include 0; clamp minimum to a small positive value
+          const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
+          return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+        }
+        return scaleLinear().domain(domain).range(range)
+      }
       this.scales = {
-        x: scaleLinear().domain(xDomain).range([0, layout.width]),
-        y: scaleLinear().domain(yDomain).range([layout.height, 0])
+        x: makeScale(config.xScaleType, xDomain, [0, layout.width]),
+        y: makeScale(config.yScaleType, yDomain, [layout.height, 0])
       }
     }
 
@@ -694,16 +707,23 @@ export class PipelineStore {
 
     const getVal = resolveAccessor(this.config.valueAccessor, "value")
 
-    // Determine grid dimensions from unique x/y values
-    const xSet = new Set<number>()
-    const ySet = new Set<number>()
+    const getRawX = resolveRawAccessor(this.config.xAccessor, "x")
+    const getRawY = resolveRawAccessor(this.config.yAccessor, "y")
+
+    // Determine grid dimensions from unique x/y values (supports numeric or string categories)
+    const xSet = new Set<any>()
+    const ySet = new Set<any>()
     for (const d of data) {
-      xSet.add(this.getX(d))
-      ySet.add(this.getY(d))
+      xSet.add(getRawX(d))
+      ySet.add(getRawY(d))
     }
 
-    const xValues = Array.from(xSet).sort((a, b) => a - b)
-    const yValues = Array.from(ySet).sort((a, b) => a - b)
+    const xRaw = Array.from(xSet)
+    const yRaw = Array.from(ySet)
+    const xNumeric = xRaw.every(v => typeof v === "number" && !isNaN(v))
+    const yNumeric = yRaw.every(v => typeof v === "number" && !isNaN(v))
+    const xValues = xNumeric ? xRaw.sort((a, b) => a - b) : xRaw
+    const yValues = yNumeric ? yRaw.sort((a, b) => a - b) : yRaw
     if (xValues.length === 0 || yValues.length === 0) return nodes
 
     const cellW = layout.width / xValues.length
@@ -712,7 +732,7 @@ export class PipelineStore {
     // Build value lookup
     const valueMap = new Map<string, { val: number; datum: any }>()
     for (const d of data) {
-      const key = `${this.getX(d)}_${this.getY(d)}`
+      const key = JSON.stringify([getRawX(d), getRawY(d)])
       valueMap.set(key, { val: getVal(d), datum: d })
     }
 
@@ -725,18 +745,24 @@ export class PipelineStore {
     }
     const valRange = maxVal - minVal || 1
 
+    // Resolve color interpolator from config
+    const HEAT_INTERPOLATORS: Record<string, (t: number) => string> = {
+      blues: interpolateBlues,
+      reds: interpolateReds,
+      greens: interpolateGreens,
+      viridis: interpolateViridis,
+    }
+    const schemeName = typeof this.config.colorScheme === "string" ? this.config.colorScheme : "blues"
+    const interpolator = HEAT_INTERPOLATORS[schemeName] || interpolateBlues
+    const heatColor = scaleSequential(interpolator).domain([minVal, maxVal])
+
     for (let xi = 0; xi < xValues.length; xi++) {
       for (let yi = 0; yi < yValues.length; yi++) {
-        const key = `${xValues[xi]}_${yValues[yi]}`
+        const key = JSON.stringify([xValues[xi], yValues[yi]])
         const entry = valueMap.get(key)
         if (!entry) continue
 
-        const t = (entry.val - minVal) / valRange
-        // Default to blues interpolation
-        const r = Math.round(220 - 180 * t)
-        const g = Math.round(220 - 100 * t)
-        const b = Math.round(255 - 50 * t)
-        const fill = `rgb(${r},${g},${b})`
+        const fill = heatColor(entry.val)
 
         nodes.push(buildHeatcellNode(
           xi * cellW,
@@ -875,9 +901,11 @@ export class PipelineStore {
 
       const rawX0 = scales.x(clampedStart)
       const rawX1 = scales.x(clampedEnd)
-      const x0 = Math.min(rawX0, rawX1) + gap / 2
-      const x1 = Math.max(rawX0, rawX1) - gap / 2
-      const barWidth = x1 - x0
+      const rawWidth = Math.abs(rawX1 - rawX0)
+      // When bins are narrow, reduce gap to preserve visibility (min 1px bar)
+      const effectiveGap = rawWidth > gap + 1 ? gap : 0
+      const x0 = Math.min(rawX0, rawX1) + effectiveGap / 2
+      const barWidth = Math.max(rawWidth - effectiveGap, 1)
       if (barWidth <= 0) continue
 
       if (categoryOrder && bin.categories.size > 0) {

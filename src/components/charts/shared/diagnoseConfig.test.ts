@@ -159,4 +159,64 @@ describe("diagnoseConfig", () => {
     const codes = result.diagnoses.map(d => d.code)
     expect(codes).not.toContain("DATA_GAPS")
   })
+
+  it("detects degenerate extent", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: "not a number" }, { x: 2, y: undefined }],
+      xAccessor: "x",
+      yAccessor: "y",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("DEGENERATE_EXTENT")
+    const diag = result.diagnoses.find(d => d.code === "DEGENERATE_EXTENT")!
+    expect(diag.severity).toBe("error")
+  })
+
+  it("detects invisible bar padding", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 50 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      barPadding: 0.99,
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("BAR_PADDING_INVISIBLE")
+    const diag = result.diagnoses.find(d => d.code === "BAR_PADDING_INVISIBLE")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("detects bottom legend with insufficient margin", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      legendPosition: "bottom",
+      margin: { bottom: 40 },
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("BOTTOM_MARGIN_WITH_LEGEND")
+    const diag = result.diagnoses.find(d => d.code === "BOTTOM_MARGIN_WITH_LEGEND")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("detects tight legend margin", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      showLegend: true,
+      margin: { right: 50 },
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("LEGEND_MARGIN_TIGHT")
+    const diag = result.diagnoses.find(d => d.code === "LEGEND_MARGIN_TIGHT")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("detects string accessor on heatmap", () => {
+    const result = diagnoseConfig("Heatmap", {
+      data: [{ x: "Mon", y: 1, value: 10 }],
+      xAccessor: "x",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("HEATMAP_STRING_ACCESSOR")
+    const diag = result.diagnoses.find(d => d.code === "HEATMAP_STRING_ACCESSOR")!
+    expect(diag.severity).toBe("warning")
+  })
 })

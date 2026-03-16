@@ -30,6 +30,7 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   showGrid?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
+  legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -51,11 +52,12 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     data, margin: userMargin, className,
     categoryAccessor = "category", groupBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme = "category10", barPadding = 5,
+    colorBy, colorScheme = "category10", barPadding = 60,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -116,8 +118,9 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     [basePieceStyle, effectiveSelectionHook, selection]
   )
 
-  const { legend, margin } = useChartLegendAndMargin({
-    data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin,
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
+    data: safeData, colorBy: actualColorBy, colorScale, showLegend,
+    legendPosition: legendPositionProp, userMargin,
     defaults: resolved.marginDefaults,
   })
 
@@ -155,7 +158,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

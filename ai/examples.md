@@ -111,6 +111,24 @@ const data = [
 
 Key props: `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `showValues`
 
+### Heatmap with Gradient Legend
+
+```jsx
+import { Heatmap } from "semiotic/ai"
+
+<Heatmap
+  data={data}
+  xAccessor="hour"
+  yAccessor="day"
+  valueAccessor="count"
+  colorScheme="viridis"
+  showLegend
+  legendPosition="right"
+/>
+```
+
+Key props: `showLegend` enables gradient legend, `legendPosition` ("right"|"left"|"top"|"bottom")
+
 ### AreaChart
 
 ```jsx
@@ -136,6 +154,50 @@ const data = [
 ```
 
 Key props: `areaBy` (group into multiple areas), `y0Accessor` (band/ribbon), `gradientFill`, `areaOpacity` (0.7)
+
+### AreaChart — Percentile Band with Main Line
+
+**IMPORTANT**: `showLine` on AreaChart only draws the TOP edge of the area (the `yAccessor` line). To render a separate main line (e.g., p50 median), you must layer two charts.
+
+```jsx
+import { AreaChart, LineChart } from "semiotic/ai"
+
+const data = [
+  { x: 0, p5: 10, p50: 25, p95: 45 },
+  { x: 1, p5: 12, p50: 28, p95: 50 },
+  { x: 2, p5: 11, p50: 30, p95: 52 },
+  { x: 3, p5: 14, p50: 32, p95: 55 },
+  { x: 4, p5: 13, p50: 35, p95: 58 },
+  { x: 5, p5: 15, p50: 37, p95: 62 },
+]
+
+// Band (p5–p95) + main line (p50): two separate charts layered
+<div style={{ position: "relative" }}>
+  <AreaChart
+    data={data}
+    xAccessor="x"
+    yAccessor="p95"
+    y0Accessor="p5"
+    showLine={false}
+    areaOpacity={0.3}
+    gradientFill
+    width={600}
+    height={400}
+  />
+  <div style={{ position: "absolute", top: 0, left: 0 }}>
+    <LineChart
+      data={data}
+      xAccessor="x"
+      yAccessor="p50"
+      lineWidth={2}
+      width={600}
+      height={400}
+    />
+  </div>
+</div>
+```
+
+Key props: `y0Accessor` defines band bottom, `yAccessor` defines band top, `showLine={false}` hides the top edge stroke. Layer a `LineChart` on top for the main metric.
 
 ### StackedAreaChart
 
@@ -727,16 +789,17 @@ import { StreamNetworkFrame } from "semiotic"
 const chartRef = useRef()
 
 useEffect(() => {
-  const edges = [
-    { source: "Salary", target: "Budget", value: 5000 },
-    { source: "Freelance", target: "Budget", value: 1500 },
+  // Push individual edges — NOT a full snapshot.
+  // Each push adds one edge event to the streaming sankey.
+  chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
+  chartRef.current.push({ source: "Freelance", target: "Budget", value: 1500 })
+
+  // Or batch multiple edges at once:
+  chartRef.current.pushMany([
     { source: "Budget", target: "Rent", value: 2000 },
     { source: "Budget", target: "Food", value: 800 },
-    { source: "Budget", target: "Savings", value: 1500 }
-  ]
-  for (const edge of edges) {
-    chartRef.current.push(edge)
-  }
+    { source: "Budget", target: "Savings", value: 1500 },
+  ])
 }, [])
 
 <StreamNetworkFrame
@@ -755,7 +818,7 @@ useEffect(() => {
 />
 ```
 
-Key props: `chartType="sankey"`, `showParticles` (boolean — enables animated particles flowing along edges), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), push via ref (`push`, `pushMany`, `clear`)
+Key props: `chartType="sankey"`, `showParticles` (boolean — enables animated particles flowing along edges), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), push via ref (`push` for single edge, `pushMany` for batch, `clear` to reset)
 
 ### Streaming any chart type via Stream Frames
 
@@ -783,3 +846,59 @@ chartRef.current?.push({ time: Date.now(), size: 42, category: "A" })
 ```
 
 Available Stream Frames: `StreamXYFrame` (line, area, stackedArea, scatter), `StreamOrdinalFrame` (bar, grouped bar), `StreamNetworkFrame` (sankey, force, chord)
+
+---
+
+## Server-Side Rendering
+
+### renderToStaticSVG (Node.js)
+
+```ts
+// IMPORTANT: frameType is "xy" | "ordinal" | "network" — NOT a component name like "BarChart"
+import { renderOrdinalToStaticSVG } from "semiotic/server"
+
+const data = [
+  { category: "Q1", value: 120 },
+  { category: "Q2", value: 148 },
+  { category: "Q3", value: 135 },
+  { category: "Q4", value: 162 },
+]
+
+const svg: string = renderOrdinalToStaticSVG({
+  data,
+  categoryAccessor: "category",
+  valueAccessor: "value",
+  width: 600,
+  height: 400,
+})
+
+// Or use the generic function:
+import { renderToStaticSVG } from "semiotic/server"
+const svg2 = renderToStaticSVG("ordinal", { data, categoryAccessor: "category", valueAccessor: "value" })
+```
+
+Key: `renderToStaticSVG(frameType, props)` where frameType is `"xy"` | `"ordinal"` | `"network"`. Type-specific shortcuts: `renderXYToStaticSVG`, `renderOrdinalToStaticSVG`, `renderNetworkToStaticSVG`.
+
+---
+
+## Export
+
+### exportChart (browser)
+
+```jsx
+import { useRef } from "react"
+import { Scatterplot } from "semiotic/ai"
+import { exportChart } from "semiotic"
+
+const containerRef = useRef<HTMLDivElement>(null)
+
+// Pass the WRAPPER DIV, not the SVG element — exportChart finds canvas+SVG internally
+<div ref={containerRef}>
+  <Scatterplot data={data} xAccessor="x" yAccessor="y" width={600} height={400} />
+</div>
+<button onClick={() => exportChart(containerRef.current!, { format: "png" })}>
+  Download PNG
+</button>
+```
+
+Key: `exportChart(wrapperDiv, { format, filename, scale, background })`. It queries the wrapper for canvas and SVG elements internally. Default format: PNG with 2x scale.

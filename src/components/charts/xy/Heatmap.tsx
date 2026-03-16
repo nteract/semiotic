@@ -6,6 +6,7 @@ import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridi
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction } from "../shared/hooks"
+import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -114,6 +115,18 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
    * Tooltip configuration
    */
   tooltip?: TooltipProp
+
+  /**
+   * Show a gradient legend for the color scale.
+   * @default false
+   */
+  showLegend?: boolean
+
+  /**
+   * Position of the gradient legend.
+   * @default "right"
+   */
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   /**
    * Legend interaction mode.
@@ -229,6 +242,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     chartId,
     loading,
     emptyContent,
+    showLegend: showLegendProp,
+    legendPosition: legendPositionProp,
     legendInteraction
   } = props
 
@@ -247,9 +262,13 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
 
   const safeData = data || []
 
+  const showLegend = showLegendProp ?? false
+  const legendPosition = legendPositionProp ?? "right"
+
+  // Use a synthetic colorBy to trigger margin expansion when legend is shown
   const { margin } = useChartLegendAndMargin({
-    data: safeData, colorBy: undefined, colorScale: undefined,
-    showLegend: false, userMargin,
+    data: safeData, colorBy: showLegend ? "value" : undefined, colorScale: undefined,
+    showLegend, legendPosition, userMargin,
     defaults: resolved.marginDefaults,
   })
 
@@ -379,6 +398,18 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   })
   if (error) return <ChartError componentName="Heatmap" message={error} width={width} height={height} />
 
+  // Build gradient legend
+  const gradientLegend = useMemo(() => {
+    if (!showLegend) return undefined
+    const gradientConfig: GradientLegendConfig = {
+      colorFn: (v: number) => colorScale(v),
+      domain: valueDomain,
+      label: typeof valueAccessor === "string" ? valueAccessor : "value",
+      format: valueFormat,
+    }
+    return { gradient: gradientConfig }
+  }, [showLegend, colorScale, valueDomain, valueAccessor, valueFormat])
+
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "heatmap",
@@ -386,6 +417,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     xAccessor,
     yAccessor,
     valueAccessor,
+    colorScheme: colorScheme !== "custom" ? colorScheme : undefined,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
@@ -396,6 +428,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     xFormat,
     yFormat,
     enableHover,
+    ...(gradientLegend && { legend: gradientLegend, legendPosition }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
