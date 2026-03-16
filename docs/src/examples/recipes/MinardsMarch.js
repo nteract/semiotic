@@ -55,33 +55,36 @@ const polotskFlows = [
 ]
 
 // Retreat flows (east → west) — the devastating return
+// Survivor counts bump at Bobr (Polotsk corps 22k rejoins) and
+// Studianka (southern detachment ~33k rejoins), then continue falling.
 const retreatFlows = [
   { source: "Moscow", target: "Mojaisk", survivors: 100, direction: "retreat" },
   { source: "Mojaisk", target: "Smolensk", survivors: 55, direction: "retreat" },
   { source: "Smolensk", target: "Orsha", survivors: 37, direction: "retreat" },
   { source: "Orsha", target: "Bobr", survivors: 24, direction: "retreat" },
-  { source: "Bobr", target: "Studianka", survivors: 20, direction: "retreat" },
-  { source: "Studianka", target: "Molodeczno", survivors: 12, direction: "retreat" },
-  { source: "Molodeczno", target: "Smorgoni", survivors: 10, direction: "retreat" },
-  { source: "Smorgoni", target: "Wilna", survivors: 6, direction: "retreat" },
-  { source: "Wilna", target: "Kowno", survivors: 4, direction: "retreat" }
+  { source: "Bobr", target: "Studianka", survivors: 50, direction: "retreat" },   // +22k Polotsk corps, +4k losses
+  { source: "Studianka", target: "Molodeczno", survivors: 55, direction: "retreat" }, // +33k southern detachment, −28k Berezina crossing
+  { source: "Molodeczno", target: "Smorgoni", survivors: 28, direction: "retreat" },
+  { source: "Smorgoni", target: "Wilna", survivors: 12, direction: "retreat" },
+  { source: "Wilna", target: "Kowno", survivors: 10, direction: "retreat" }
 ]
 
 const allFlows = [...advanceFlows, ...southDetachmentFlows, ...polotskFlows, ...retreatFlows]
 
 // Temperature data for the retreat (connected scatterplot: temperature vs casualties)
-// source/target fields match retreat flow edges for cross-highlighting
+// source/target fields match retreat flow edges for cross-highlighting.
+// Survivor counts bump at Bobr (Polotsk corps) and Studianka (southern detachment).
 const temperatureData = [
   { city: "Moscow", source: "Moscow", target: "Mojaisk", survivors: 100, temperature: 0, order: 0 },
   { city: "Mojaisk", source: "Mojaisk", target: "Smolensk", survivors: 55, temperature: -9, order: 1 },
   { city: "Smolensk", source: "Smolensk", target: "Orsha", survivors: 37, temperature: -21, order: 2 },
   { city: "Orsha", source: "Orsha", target: "Bobr", survivors: 24, temperature: -24, order: 3 },
-  { city: "Bobr", source: "Bobr", target: "Studianka", survivors: 20, temperature: -30, order: 4 },
-  { city: "Studianka", source: "Studianka", target: "Molodeczno", survivors: 12, temperature: -26, order: 5 },
-  { city: "Molodeczno", source: "Molodeczno", target: "Smorgoni", survivors: 10, temperature: -33, order: 6 },
-  { city: "Smorgoni", source: "Smorgoni", target: "Wilna", survivors: 6, temperature: -36, order: 7 },
-  { city: "Wilna", source: "Wilna", target: "Kowno", survivors: 4, temperature: -38, order: 8 },
-  { city: "Kowno", source: "Wilna", target: "Kowno", survivors: 4, temperature: -28, order: 9 }
+  { city: "Bobr", source: "Bobr", target: "Studianka", survivors: 50, temperature: -30, order: 4 },
+  { city: "Studianka", source: "Studianka", target: "Molodeczno", survivors: 55, temperature: -26, order: 5 },
+  { city: "Molodeczno", source: "Molodeczno", target: "Smorgoni", survivors: 28, temperature: -33, order: 6 },
+  { city: "Smorgoni", source: "Smorgoni", target: "Wilna", survivors: 12, temperature: -36, order: 7 },
+  { city: "Wilna", source: "Wilna", target: "Kowno", survivors: 10, temperature: -38, order: 8 },
+  { city: "Kowno", source: "Wilna", target: "Kowno", survivors: 10, temperature: -28, order: 9 }
 ]
 
 // ── Viridis gradient legend ────────────────────────────────────────────
@@ -143,7 +146,7 @@ export default function MinardsMarch({ width = 900 }) {
             lineType="line"
             edgeColorBy="direction"
             edgeOpacity={0.85}
-            edgeWidthRange={[1, 36]}
+            edgeWidthRange={[2, 72]}
             showParticles
             particleStyle={{
               radius: 2.5,
@@ -167,21 +170,28 @@ export default function MinardsMarch({ width = 900 }) {
                 borderRadius: 4,
                 fontSize: 12
               }}>
-                <div style={{ fontWeight: 600 }}>
-                  {d.source} → {d.target}
-                </div>
-                <div style={{ opacity: 0.7 }}>
-                  {(d.survivors * 1000).toLocaleString()} troops
-                </div>
-                <div style={{ opacity: 0.5, fontStyle: "italic" }}>
-                  {d.direction}
-                </div>
+                {d.source ? (
+                  <>
+                    <div style={{ fontWeight: 600 }}>
+                      {d.source} → {d.target}
+                    </div>
+                    <div style={{ opacity: 0.7 }}>
+                      {(d.survivors * 1000).toLocaleString()} troops
+                    </div>
+                    <div style={{ opacity: 0.5, fontStyle: "italic" }}>
+                      {d.direction}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontWeight: 600 }}>{d.id}</div>
+                )}
               </div>
             )}
             linkedHover={{
               name: "city-hl",
               fields: ["source", "target"]
             }}
+            selection={{ name: "city-hl" }}
           />
 
           <div style={{ marginTop: 4, background: "#fafafa", border: "1px solid #e0e0e0", borderRadius: 4 }}>
@@ -193,7 +203,7 @@ export default function MinardsMarch({ width = 900 }) {
               yLabel="Survivors (thousands)"
               orderAccessor="order"
               orderLabel="Retreat stage"
-              pointRadius={5}
+              pointRadius={7}
               width={width}
               height={chartHeight}
               margin={{ top: 30, right: 40, bottom: 50, left: 70 }}

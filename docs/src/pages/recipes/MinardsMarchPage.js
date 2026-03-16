@@ -94,6 +94,7 @@ export default function MinardsMarch({ width = 900 }) {
             fitPadding={0.1}
             width={width} height={mapHeight}
             linkedHover={{ name: "city-hl", fields: ["source", "target"] }}
+            selection={{ name: "city-hl" }}
           />
 
           <ConnectedScatterplot
