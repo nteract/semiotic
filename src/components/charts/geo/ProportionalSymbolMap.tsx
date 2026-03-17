@@ -117,15 +117,9 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = points || []
 
-  warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
-  warnMissingField("ProportionalSymbolMap", safeData, "yAccessor", yAccessor)
+  // ── All hooks must be called unconditionally (before any early returns) ──
 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
@@ -192,6 +186,15 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
       </div>
     )
   }, [sizeBy])
+
+  // ── Early returns (after all hooks) ─────────────────────────────────
+  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
+  if (emptyEl) return emptyEl
+
+  warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
+  warnMissingField("ProportionalSymbolMap", safeData, "yAccessor", yAccessor)
 
   const streamProps: StreamGeoFrameProps = {
     projection,

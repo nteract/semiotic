@@ -44,6 +44,47 @@ export const DEPTH_PALETTE_COLORS = [
   "#f0f0f0", "#b5d4ea", "#f4c2a1", "#b8dab2", "#d4b5e0", "#f9e0a2", "#a8d8d8"
 ]
 
+// CSS named color keywords (all 148 from CSS Color Level 4 + "transparent").
+// Used to distinguish category names from literal color values returned by colorBy functions.
+const CSS_NAMED_COLORS = new Set([
+  "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+  "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood",
+  "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan",
+  "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+  "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon",
+  "darkseagreen", "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet",
+  "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue",
+  "firebrick", "floralwhite", "forestgreen", "fuchsia",
+  "gainsboro", "ghostwhite", "gold", "goldenrod", "gray", "green", "greenyellow", "grey",
+  "honeydew", "hotpink",
+  "indianred", "indigo", "ivory",
+  "khaki",
+  "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue", "lightcoral",
+  "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink",
+  "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey",
+  "lightsteelblue", "lightyellow", "lime", "limegreen", "linen",
+  "magenta", "maroon", "mediumaquamarine", "mediumblue", "mediumorchid", "mediumpurple",
+  "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise", "mediumvioletred",
+  "midnightblue", "mintcream", "mistyrose", "moccasin",
+  "navajowhite", "navy",
+  "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid",
+  "palegoldenrod", "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff",
+  "peru", "pink", "plum", "powderblue", "purple",
+  "rebeccapurple", "red", "rosybrown", "royalblue",
+  "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver", "skyblue",
+  "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue",
+  "tan", "teal", "thistle", "tomato", "transparent", "turquoise",
+  "violet",
+  "wheat", "white", "whitesmoke",
+  "yellow", "yellowgreen"
+])
+
+/** Returns true if the string looks like a CSS color value (hex, rgb/a, hsl/a, or named keyword). */
+function isCssColor(value: string): boolean {
+  const v = value.toLowerCase()
+  return v.startsWith("#") || v.startsWith("rgb") || v.startsWith("hsl") || CSS_NAMED_COLORS.has(v)
+}
+
 /**
  * Gets a color for a data point based on the colorBy configuration
  *
@@ -69,7 +110,7 @@ export function getColor(
   if (typeof colorBy === "function") {
     const value = colorBy(dataPoint)
     // If the function returned a category name (not a CSS color), map through colorScale
-    if (colorScale && value && typeof value === "string" && !value.startsWith("#") && !value.startsWith("rgb") && !value.startsWith("hsl")) {
+    if (colorScale && value && typeof value === "string" && !isCssColor(value)) {
       return colorScale(value)
     }
     return value

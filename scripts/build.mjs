@@ -106,6 +106,10 @@ async function createBundle(options = {}) {
     input,
     context: "window",
     plugins,
+    // Mark world-atlas JSON subpath imports as external so they stay as
+    // dynamic imports in the output bundle. The consumer's bundler (webpack,
+    // vite, etc.) handles the JSON resolution at app build time.
+    external: (id) => id.startsWith("world-atlas/"),
     onLog(level, log, handler) {
       if (log.message && typeof log.message === 'string') {
         const d3Patterns = ["d3-", "internmap", "delaunator"]

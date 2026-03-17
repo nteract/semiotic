@@ -134,15 +134,9 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
   // Tile maps default to zoomable; non-tile maps default to not zoomable
   const zoomable = zoomableProp ?? (tileURL ? true : false)
 
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = points || []
 
-  warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
-  warnMissingField("DistanceCartogram", safeData, "yAccessor", yAccessor)
+  // ── All hooks must be called unconditionally (before any early returns) ──
 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
@@ -350,6 +344,15 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
       </g>
     )
   }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, margin, frameProps.foregroundGraphics])
+
+  // ── Early returns (after all hooks) ─────────────────────────────────
+  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
+  if (emptyEl) return emptyEl
+
+  warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
+  warnMissingField("DistanceCartogram", safeData, "yAccessor", yAccessor)
 
   const streamProps: StreamGeoFrameProps = {
     projection,

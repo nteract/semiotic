@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2026-03-16
+
+### Added
+
+- **Geographic visualization** — new `semiotic/geo` entry point with 4 HOC chart components and a low-level `StreamGeoFrame`, all canvas-rendered with d3-geo projections.
+  - **`ChoroplethMap`** — sequential color encoding on GeoJSON features. Supports `areaOpacity`, function or string `valueAccessor`, and reference geography strings (`"world-110m"`, `"world-50m"`, etc.).
+  - **`ProportionalSymbolMap`** — sized/colored point symbols on a geographic basemap with `sizeBy`, `sizeRange`, and `colorBy`.
+  - **`FlowMap`** — origin-destination flow lines with width encoding, animated particles (`showParticles`, `particleStyle`), and `lineType` ("geo"|"line").
+  - **`DistanceCartogram`** — ORBIS-style projection distortion based on travel cost. Concentric ring overlay (`showRings`, `ringStyle`, `costLabel`), north indicator (`showNorth`), configurable `strength` and `lineMode`.
+  - **`StreamGeoFrame`** — low-level geo frame with full control over areas, points, lines, canvas rendering, and push API for streaming.
+- **`GeoCanvasHitTester`** — spatial indexing for hover/click hit detection on canvas-rendered geo marks.
+- **`GeoParticlePool`** — object-pool polyline particle system for animated flow particles. Supports `"source"` color inheritance, per-line color functions, and configurable spawn rate.
+- **`GeoTileRenderer`** — slippy-map tile rendering on a background canvas. Mercator-only with retina support. Configurable `tileURL`, `tileAttribution`, `tileCacheSize`.
+- **Zoom/Pan** — all geo charts accept `zoomable`, `zoomExtent`, `onZoom`, with imperative `getZoom()`/`resetZoom()` on the frame ref. Re-renders projection directly (no CSS transform).
+- **Drag Rotate** — `dragRotate` prop for globe spinning (defaults true for orthographic). Latitude clamped to [-90, 90].
+- **Reference geography** — `resolveReferenceGeography("world-110m")` returns Natural Earth GeoJSON features. `mergeData(features, data, { featureKey, dataKey })` joins external data into features.
+- **Geo particles** — `showParticles` and `particleStyle` on `FlowMap` and `StreamGeoFrame` for animated dots flowing along line paths.
+- **6 documentation pages** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram, StreamGeoFrame, and GeoVisualization overview.
+- **2 playground pages** — interactive prop exploration for geo charts.
+- **1 recipe page** — ORBIS-style distance cartogram walkthrough.
+- **Comprehensive test suites** — unit tests for FlowMap (25 tests), ChoroplethMap (16 tests), DistanceCartogram (19 tests), colorUtils (+6 tests), hooks (+3 tests).
+
+### Fixed
+
+- **"Rendered more hooks than during previous render"** in `FlowMap` and `ChoroplethMap` — hooks were called after early returns for loading/empty states. All hooks now run unconditionally before any early return.
+- **`colorScale` crash with null areas in ChoroplethMap** — `useMemo` now returns a fallback sequential scale when `resolvedAreas` is null during async loading.
+- **Variable name collision in ChoroplethMap** — local `areaStyle` renamed to `areaStyleFn` to avoid collision with destructured prop.
+- **Function `colorBy` produced undefined colors** — `useColorScale` now derives categories from data when `colorBy` is a function and builds a proper ordinal scale. `getColor` maps non-CSS-color strings through `colorScale`.
+
 ## [3.0.1] - 2026-03-12
 
 ### Added

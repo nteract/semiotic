@@ -76,6 +76,28 @@ describe("getColor", () => {
     const colorFn = (d: any) => "CategoryA"
     expect(getColor({}, colorFn)).toBe("CategoryA")
   })
+
+  it("passes through named CSS colors from function colorBy without colorScale mapping", () => {
+    const colorFn = (d: any) => d.hot ? "red" : "steelblue"
+    const scale = vi.fn((v: any) => "#999")
+    expect(getColor({ hot: true }, colorFn, scale)).toBe("red")
+    expect(getColor({ hot: false }, colorFn, scale)).toBe("steelblue")
+    expect(scale).not.toHaveBeenCalled()
+  })
+
+  it("passes through 'transparent' from function colorBy without colorScale mapping", () => {
+    const colorFn = () => "transparent"
+    const scale = vi.fn((v: any) => "#999")
+    expect(getColor({}, colorFn, scale)).toBe("transparent")
+    expect(scale).not.toHaveBeenCalled()
+  })
+
+  it("maps non-color strings through colorScale even when they resemble color names", () => {
+    const colorFn = () => "CategoryRed"
+    const scale = vi.fn((v: any) => "#123456")
+    expect(getColor({}, colorFn, scale)).toBe("#123456")
+    expect(scale).toHaveBeenCalledWith("CategoryRed")
+  })
 })
 
 // ── createColorScale ──────────────────────────────────────────────────────
