@@ -158,7 +158,7 @@
     "@types/d3-shape": "^3.1.0",
     "@types/d3-time-format": "^4.0.0",
     "@types/d3-zoom": "^3.0.8",
-    "@types/node": "^20.19.35",
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@types/seedrandom": "^3.0.5",
