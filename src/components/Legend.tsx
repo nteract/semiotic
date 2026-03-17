@@ -470,8 +470,10 @@ export default function Legend(props: LegendProps) {
           isolatedCategories
         })
 
+  const isInteractive = Boolean(customClickBehavior || customHoverBehavior)
+
   return (
-    <g role="listbox" aria-label="Chart legend">
+    <g role={isInteractive ? "listbox" : undefined} aria-label="Chart legend">
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

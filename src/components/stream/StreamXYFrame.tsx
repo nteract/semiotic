@@ -863,6 +863,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
       }
 
+      // ── Update canvas aria-label imperatively after scene changes ──
+      if (needsDataRepaint && canvas) {
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
+      }
+
       // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
       dirtyRef.current = false

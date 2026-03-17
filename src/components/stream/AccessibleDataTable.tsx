@@ -107,7 +107,12 @@ export function AccessibleDataTable({ scene, chartType }: AccessibleDataTablePro
 
   if (rows.length === 0) return null
 
-  const columns = Object.keys(rows[0].values)
+  // Compute union of all keys across rows (not just first row)
+  const columnSet = new Set<string>()
+  for (const r of rows) {
+    for (const k of Object.keys(r.values)) columnSet.add(k)
+  }
+  const columns = Array.from(columnSet)
 
   return (
     <table style={SR_ONLY_STYLE} role="table" aria-label={`Data table for ${chartType}`}>
@@ -122,7 +127,7 @@ export function AccessibleDataTable({ scene, chartType }: AccessibleDataTablePro
         {rows.map((r, i) => (
           <tr key={i}>
             {columns.map((c) => (
-              <td key={c}>{r.values[c]}</td>
+              <td key={c}>{r.values[c] ?? ""}</td>
             ))}
           </tr>
         ))}
@@ -164,7 +169,11 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkA
 
   if (rows.length === 0) return null
 
-  const columns = Object.keys(rows[0].values)
+  const columnSet = new Set<string>()
+  for (const r of rows) {
+    for (const k of Object.keys(r.values)) columnSet.add(k)
+  }
+  const columns = Array.from(columnSet)
 
   return (
     <table style={SR_ONLY_STYLE} role="table" aria-label={`Data table for ${chartType}`}>
@@ -179,7 +188,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkA
         {rows.map((r, i) => (
           <tr key={i}>
             {columns.map((c) => (
-              <td key={c}>{r.values[c]}</td>
+              <td key={c}>{r.values[c] ?? ""}</td>
             ))}
           </tr>
         ))}

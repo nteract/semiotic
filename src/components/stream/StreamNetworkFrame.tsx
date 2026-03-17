@@ -992,6 +992,14 @@ const StreamNetworkFrame = forwardRef<
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
+    // Update canvas aria-label imperatively after scene changes
+    if (wasDirty || isTransitioning || animationTicked) {
+      const canvas = canvasRef.current
+      if (canvas) {
+        canvas.setAttribute("aria-label", computeNetworkAriaLabel(store.sceneNodes?.length ?? 0, store.sceneEdges?.length ?? 0, "Network chart"))
+      }
+    }
+
     // Update SVG overlay when layout changes
     if (wasDirty || isTransitioning || animationTicked) {
       setAnnotationFrame((f) => f + 1)
@@ -1057,7 +1065,7 @@ const StreamNetworkFrame = forwardRef<
   if (isServerEnvironment) {
     const store = storeRef.current
     if (store) {
-      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
       const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
 
       if (isHierarchical && hierarchyRoot) {

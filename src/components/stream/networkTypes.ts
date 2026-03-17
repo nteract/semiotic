@@ -432,7 +432,7 @@ export interface NetworkPipelineConfig {
   orbitMode?: "flat" | "solar" | "atomic" | number[]
   /** Ring size divisor per depth. Larger = tighter orbits. @default 2.95 */
   orbitSize?: number | ((node: any) => number)
-  /** Orbit speed in degrees per frame. @default 0.25 */
+  /** Orbit speed multiplier (higher = faster rotation). @default 0.25 */
   orbitSpeed?: number
   /** Per-node speed modifier. @default (node) => 1 / (node.depth + 1) */
   orbitRevolution?: (node: any) => number

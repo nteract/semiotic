@@ -490,6 +490,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           store.applyZoomTransform(zt, layout)
         }
         dirtyRef.current = false
+
+        // Update canvas aria-label imperatively after scene changes
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
       }
 
       const dpr = getDevicePixelRatio()

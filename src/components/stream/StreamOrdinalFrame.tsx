@@ -528,6 +528,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         dirtyRef.current = false
       }
 
+      // Update canvas aria-label imperatively after scene changes
+      if (wasDirty || isTransitioning) {
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
+      }
+
       // DPR setup
       const dpr = getDevicePixelRatio()
       canvas.width = size[0] * dpr

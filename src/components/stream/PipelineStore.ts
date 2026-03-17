@@ -1685,16 +1685,17 @@ export class PipelineStore {
     const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
     const t = computeEasing(rawT, easing)
 
-    for (const node of this.scene) {
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
       if (node.type === "point") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, 0) || "")
+          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
+        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
@@ -1705,12 +1706,12 @@ export class PipelineStore {
         }
       } else if (node.type === "rect") {
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, 0) || "")
+          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
+        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
@@ -1720,12 +1721,12 @@ export class PipelineStore {
         if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
       } else if (node.type === "heatcell") {
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, 0) || "")
+          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           ;(node as any).style = { ...((node as any).style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
+        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
