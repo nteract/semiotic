@@ -43,7 +43,8 @@ const PROJECTION_MAP: Record<ProjectionName, () => GeoProjection> = {
   equirectangular: geoEquirectangular
 }
 
-function resolveProjection(prop: ProjectionProp): GeoProjection {
+function resolveProjection(prop: ProjectionProp | undefined): GeoProjection {
+  if (!prop) return geoEqualEarth()
   if (typeof prop === "string") {
     const factory = PROJECTION_MAP[prop]
     if (!factory) {
