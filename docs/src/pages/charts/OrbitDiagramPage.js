@@ -121,7 +121,7 @@ export default function OrbitDiagramPage() {
           eccentricity: 0.7,
           speed: 0.4,
           revolution: (n) => 1 / (n.depth + 1),
-          nodeRadius: (n) => n.depth === 0 ? 16 : n.children ? 8 : 4,
+          nodeRadius: (n) => n.depth === 0 ? 16 : n.data?.children ? 8 : 4,
           colorByDepth: true,
           showLabels: true,
           width: 500,
@@ -131,7 +131,7 @@ export default function OrbitDiagramPage() {
         overrideProps={{
           data: "solarSystem",
           revolution: "(n) => 1 / (n.depth + 1)",
-          nodeRadius: "(n) => n.depth === 0 ? 16 : n.children ? 8 : 4",
+          nodeRadius: "(n) => n.depth === 0 ? 16 : n.data?.children ? 8 : 4",
         }}
         hiddenProps={{}}
       />
@@ -198,7 +198,8 @@ export default function OrbitDiagramPage() {
             ["orbitMode", '"flat"|"solar"|"atomic"|number[]', '"flat"', "Ring capacity pattern"],
             ["orbitSize", "number | fn", "2.95", "Ring size divisor per depth"],
             ["speed", "number", "0.25", "Rotation speed (degrees/frame)"],
-            ["revolution", "fn", "(n) => 1/(depth+1)", "Per-node speed modifier"],
+            ["revolution", "fn", "(n) => 1/(depth+1)", "Per-node speed modifier (overrides revolutionStyle)"],
+            ["revolutionStyle", '"locked"|"decay"|"alternate"', '"locked"', "Preset revolution pattern"],
             ["eccentricity", "number | fn", "1", "Vertical squash (1=circle, 0.5=ellipse)"],
             ["showRings", "boolean", "true", "Draw orbital ring paths"],
             ["nodeRadius", "number | fn", "6", "Node circle radius"],
@@ -206,7 +207,7 @@ export default function OrbitDiagramPage() {
             ["animated", "boolean", "true", "Enable orbital animation"],
             ["colorBy", "string | fn", "—", "Field for node colors"],
             ["colorByDepth", "boolean", "false", "Color by hierarchy depth"],
-            ["tooltip", "fn", "default", "Custom tooltip render function"],
+            ["tooltip", "fn", "default", "Custom tooltip (static mode only — disabled during animation)"],
           ].map(([name, type, def, desc]) => (
             <tr key={name} style={{ borderBottom: "1px solid var(--surface-3)" }}>
               <td style={{ padding: 8 }}><code>{name}</code></td>
@@ -243,6 +244,43 @@ export default function OrbitDiagramPage() {
           ))}
         </tbody>
       </table>
+
+      <h2 id="revolution-styles">Revolution Styles</h2>
+      <p>
+        The <code>revolutionStyle</code> prop controls how child nodes move
+        relative to their parents. You can also pass a custom <code>revolution</code> function
+        for full control.
+      </p>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9em" }}>
+        <thead>
+          <tr style={{ borderBottom: "2px solid var(--surface-3)" }}>
+            <th style={{ textAlign: "left", padding: 8 }}>Style</th>
+            <th style={{ textAlign: "left", padding: 8 }}>Behavior</th>
+            <th style={{ textAlign: "left", padding: 8 }}>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            ['"locked"', "Children rotate with parent, speed = 1/(depth+1)", "Default, natural hierarchy feel"],
+            ['"decay"', "Each depth level exponentially slower", "Winding down, outer rings nearly still"],
+            ['"alternate"', "Odd-depth rings reverse direction", "Counter-rotating, mechanical feel"],
+          ].map(([style, behavior, use]) => (
+            <tr key={style} style={{ borderBottom: "1px solid var(--surface-3)" }}>
+              <td style={{ padding: 8 }}><code>{style}</code></td>
+              <td style={{ padding: 8 }}>{behavior}</td>
+              <td style={{ padding: 8 }}>{use}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 id="tooltip-note">Tooltips</h3>
+      <p>
+        Tooltips are automatically disabled during animation to prevent flicker
+        caused by nodes continuously moving under the cursor. Set{" "}
+        <code>animated={"{false}"}</code> to enable tooltips on a static orbital layout.
+      </p>
 
       <h2 id="related">Related</h2>
       <ul>

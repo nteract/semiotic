@@ -30,6 +30,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -426,7 +427,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       marginalGraphics,
       pointIdAccessor,
       xScaleType,
-      yScaleType
+      yScaleType,
+      accessibleTable
     } = props
 
     // ── Responsive sizing ──────────────────────────────────────────────────
@@ -861,6 +863,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
       }
 
+      // ── Update canvas aria-label imperatively after scene changes ──
+      if (needsDataRepaint && canvas) {
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
+      }
+
       // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
       dirtyRef.current = false
@@ -1105,6 +1112,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         />
         <canvas
           ref={canvasRef}
+          aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")}
           style={{
             position: "absolute",
             left: 0,
@@ -1120,6 +1128,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             pointerEvents: "none"
           }}
         />
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}

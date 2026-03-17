@@ -87,13 +87,53 @@ const renderLegendGroupVertical = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
+        tabIndex={interactive ? 0 : undefined}
+        role={interactive ? "option" : undefined}
+        aria-selected={isIsolated || false}
+        aria-label={item.label}
+        onKeyDown={interactive ? (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            if (customClickBehavior) customClickBehavior(item)
+          }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault()
+            const dir = e.key === "ArrowDown" ? 1 : -1
+            const sibling = e.currentTarget.parentElement?.children[i + dir]
+            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
+              (sibling as any).focus?.()
+            }
+          }
+        } : undefined}
+        onFocus={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(item)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "visible")
+        } : undefined}
+        onBlur={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(null)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "hidden")
+        } : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
           transition: "opacity 150ms ease",
           pointerEvents: "all",
+          outline: "none",
         }}
       >
+        {interactive && <rect
+          className="semiotic-legend-focus-ring"
+          x={-2} y={-2}
+          width={SWATCH + 8 + item.label.length * 7}
+          height={SWATCH + 4}
+          fill="none"
+          stroke="var(--semiotic-focus, #005fcc)"
+          strokeWidth={2}
+          rx={3}
+          visibility="hidden"
+        />}
         {renderedType}
         {isIsolated && <CheckMark />}
         <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
@@ -134,13 +174,53 @@ const renderLegendGroupHorizontal = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
+        tabIndex={interactive ? 0 : undefined}
+        role={interactive ? "option" : undefined}
+        aria-selected={isIsolated || false}
+        aria-label={item.label}
+        onKeyDown={interactive ? (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            if (customClickBehavior) customClickBehavior(item)
+          }
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault()
+            const dir = e.key === "ArrowRight" ? 1 : -1
+            const sibling = e.currentTarget.parentElement?.children[i + dir]
+            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
+              (sibling as any).focus?.()
+            }
+          }
+        } : undefined}
+        onFocus={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(item)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "visible")
+        } : undefined}
+        onBlur={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(null)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "hidden")
+        } : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
           transition: "opacity 150ms ease",
           pointerEvents: "all",
+          outline: "none",
         }}
       >
+        {interactive && <rect
+          className="semiotic-legend-focus-ring"
+          x={-2} y={-2}
+          width={SWATCH + 8 + item.label.length * 7}
+          height={SWATCH + 4}
+          fill="none"
+          stroke="var(--semiotic-focus, #005fcc)"
+          strokeWidth={2}
+          rx={3}
+          visibility="hidden"
+        />}
         {renderedType}
         {isIsolated && <CheckMark />}
         <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
@@ -402,6 +482,7 @@ export default function Legend(props: LegendProps) {
     customHoverBehavior,
     highlightedCategory,
     isolatedCategories,
+    legendInteraction,
     title = "Legend",
     width = 100,
     height = 20,
@@ -428,8 +509,10 @@ export default function Legend(props: LegendProps) {
           isolatedCategories
         })
 
+  const isInteractive = Boolean(customClickBehavior || customHoverBehavior)
+
   return (
-    <g>
+    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && legendInteraction === "isolate" ? true : undefined} aria-label="Chart legend">
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

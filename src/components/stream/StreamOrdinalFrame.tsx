@@ -29,6 +29,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
@@ -225,7 +226,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       decay,
       pulse,
       transition,
-      staleness
+      staleness,
+      accessibleTable
     } = props
 
     // ── Layout ───────────────────────────────────────────────────────────
@@ -526,6 +528,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         dirtyRef.current = false
       }
 
+      // Update canvas aria-label imperatively after scene changes
+      if (wasDirty || isTransitioning) {
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
+      }
+
       // DPR setup
       const dpr = getDevicePixelRatio()
       canvas.width = size[0] * dpr
@@ -792,6 +799,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
         <canvas
           ref={canvasRef}
+          aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")}
           style={{
             position: "absolute",
             top: 0,
@@ -800,6 +808,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             height: size[1]
           }}
         />
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} />}
 
         <OrdinalSVGOverlay
           width={adjustedWidth}

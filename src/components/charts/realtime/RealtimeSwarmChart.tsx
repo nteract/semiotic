@@ -13,10 +13,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode } from "../shared/types"
+import type { ChartMode, ChartAccessor } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 
-export interface RealtimeSwarmChartProps {
+export interface RealtimeSwarmChartProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Chart dimensions as [width, height] */
@@ -40,9 +40,9 @@ export interface RealtimeSwarmChartProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time value accessor */
-  timeAccessor?: string | ((d: Record<string, any>) => number)
+  timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
-  valueAccessor?: string | ((d: Record<string, any>) => number)
+  valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
@@ -50,7 +50,7 @@ export interface RealtimeSwarmChartProps {
   /** Extent padding factor */
   extentPadding?: number
   /** Category accessor for color-coding dots */
-  categoryAccessor?: string | ((d: Record<string, any>) => string)
+  categoryAccessor?: ChartAccessor<TDatum, string>
   /** Category-to-color map */
   colors?: Record<string, string>
   /** Dot radius */

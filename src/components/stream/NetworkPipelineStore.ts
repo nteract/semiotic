@@ -1,6 +1,8 @@
 import { interpolateNumber } from "d3-interpolate"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
+import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type {
   NetworkChartType,
   NetworkPipelineConfig,
@@ -55,10 +57,7 @@ export class NetworkPipelineStore {
 
   // ── Transition animation ──────────────────────────────────────────────
 
-  transition: {
-    startTime: number
-    duration: number
-  } | null = null
+  transition: ActiveTransition | null = null
 
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
@@ -104,6 +103,11 @@ export class NetworkPipelineStore {
   // ── Config update ─────────────────────────────────────────────────────
 
   updateConfig(config: NetworkPipelineConfig): void {
+    // Preserve plugin state stored on the config object across updates
+    const prev = this.config as any
+    const next = config as any
+    if (prev.__orbitState) next.__orbitState = prev.__orbitState
+    if (prev.__hierarchyRoot) next.__hierarchyRoot = prev.__hierarchyRoot
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
@@ -434,6 +438,30 @@ export class NetworkPipelineStore {
     this.labels = labels
   }
 
+  // ── Animation tick (orbit etc.) ──────────────────────────────────────
+
+  /** Whether the current layout plugin drives continuous animation (respects orbitAnimated config) */
+  get isAnimating(): boolean {
+    const plugin = getLayoutPlugin(this.config.chartType)
+    if (!plugin?.supportsAnimation) return false
+    // Respect the orbitAnimated config — if explicitly false, don't animate
+    if (this.config.orbitAnimated === false) return false
+    return true
+  }
+
+  /**
+   * Advance the layout animation by one frame (e.g. orbit rotation).
+   * Returns true if the scene should be rebuilt.
+   */
+  tickAnimation(size: [number, number], deltaTime: number): boolean {
+    const plugin = getLayoutPlugin(this.config.chartType)
+    if (!plugin?.tick) return false
+
+    const nodesArr = Array.from(this.nodes.values())
+    const edgesArr = Array.from(this.edges.values())
+    return plugin.tick(nodesArr, edgesArr, this.config, size, deltaTime)
+  }
+
   // ── Transition animation ──────────────────────────────────────────────
 
   /**
@@ -442,10 +470,8 @@ export class NetworkPipelineStore {
   advanceTransition(now: number): boolean {
     if (!this.transition) return false
 
-    const elapsed = now - this.transition.startTime
-    const rawT = Math.min(elapsed / this.transition.duration, 1)
-    // Ease-out cubic
-    const t = 1 - Math.pow(1 - rawT, 3)
+    const rawT = computeRawProgress(now, this.transition)
+    const t = computeEasing(rawT)
 
     for (const node of this.nodes.values()) {
       if (
@@ -453,10 +479,10 @@ export class NetworkPipelineStore {
         node._prevX0 !== undefined &&
         (node._prevX0 !== 0 || node._prevX1 !== 0)
       ) {
-        node.x0 = node._prevX0 + (node._targetX0 - node._prevX0) * t
-        node.x1 = node._prevX1! + (node._targetX1! - node._prevX1!) * t
-        node.y0 = node._prevY0! + (node._targetY0! - node._prevY0!) * t
-        node.y1 = node._prevY1! + (node._targetY1! - node._prevY1!) * t
+        node.x0 = lerp(node._prevX0, node._targetX0, t)
+        node.x1 = lerp(node._prevX1!, node._targetX1!, t)
+        node.y0 = lerp(node._prevY0!, node._targetY0!, t)
+        node.y1 = lerp(node._prevY1!, node._targetY1!, t)
       }
     }
 
@@ -467,10 +493,9 @@ export class NetworkPipelineStore {
         edge._prevSankeyWidth !== undefined &&
         edge._prevSankeyWidth > 0
       ) {
-        edge.y0 = edge._prevY0 + (edge._targetY0 - edge._prevY0) * t
-        edge.y1 = edge._prevY1! + (edge._targetY1! - edge._prevY1!) * t
-        edge.sankeyWidth =
-          edge._prevSankeyWidth + (edge._targetSankeyWidth! - edge._prevSankeyWidth) * t
+        edge.y0 = lerp(edge._prevY0, edge._targetY0, t)
+        edge.y1 = lerp(edge._prevY1!, edge._targetY1!, t)
+        edge.sankeyWidth = lerp(edge._prevSankeyWidth, edge._targetSankeyWidth!, t)
       }
     }
 

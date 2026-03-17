@@ -34,6 +34,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
+import { NetworkAccessibleDataTable, AriaLiveTooltip, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -53,7 +54,7 @@ import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
 
 const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
 const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
-const CENTERED_TYPES = new Set(["chord", "force", "circlepack"])
+const CENTERED_TYPES = new Set(["chord", "force", "circlepack", "orbit"])
 const DEFAULT_SIZE: [number, number] = [800, 600]
 
 // ── Tooltip ────────────────────────────────────────────────────────────
@@ -240,7 +241,16 @@ const StreamNetworkFrame = forwardRef<
     decay,
     pulse,
     staleness,
-    thresholds
+    thresholds,
+    accessibleTable,
+    orbitMode,
+    orbitSize,
+    orbitSpeed,
+    orbitRevolution,
+    orbitRevolutionStyle,
+    orbitEccentricity,
+    orbitShowRings,
+    orbitAnimated
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -301,7 +311,15 @@ const StreamNetworkFrame = forwardRef<
       decay,
       pulse,
       staleness,
-      thresholds
+      thresholds,
+      orbitMode,
+      orbitSize,
+      orbitSpeed,
+      orbitRevolution,
+      orbitRevolutionStyle,
+      orbitEccentricity,
+      orbitShowRings,
+      orbitAnimated
     }),
     [
       chartType,
@@ -342,7 +360,15 @@ const StreamNetworkFrame = forwardRef<
       decay,
       pulse,
       staleness,
-      thresholds
+      thresholds,
+      orbitMode,
+      orbitSize,
+      orbitSpeed,
+      orbitRevolution,
+      orbitRevolutionStyle,
+      orbitEccentricity,
+      orbitShowRings,
+      orbitAnimated
     ]
   )
 
@@ -456,7 +482,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Stable scheduleRender ────────────────────────────────────────────
 
   const isContinuous =
-    (chartType === "sankey" && showParticles) || !!pulse
+    (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
 
   const scheduleRender = useCallback(() => {
     if (rafRef.current && !isContinuous) return
@@ -588,7 +614,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Bounded data ingestion ───────────────────────────────────────────
 
   // Determine if this is a hierarchical chart type
-  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
   // Resolve hierarchy root: `data` prop or single-object `edges` prop
   const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
 
@@ -876,7 +902,11 @@ const StreamNetworkFrame = forwardRef<
 
     // Advance transition animation
     const isTransitioning = store.advanceTransition(now)
-    if (isTransitioning || dirtyRef.current) {
+
+    // Advance layout animation (e.g. orbit rotation)
+    const animationTicked = store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+
+    if (isTransitioning || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
       store.buildScene([adjustedWidth, adjustedHeight])
     }
@@ -965,13 +995,21 @@ const StreamNetworkFrame = forwardRef<
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
+    // Update canvas aria-label imperatively after scene changes
+    if (wasDirty || isTransitioning || animationTicked) {
+      const canvas = canvasRef.current
+      if (canvas) {
+        canvas.setAttribute("aria-label", computeNetworkAriaLabel(store.sceneNodes?.length ?? 0, store.sceneEdges?.length ?? 0, "Network chart"))
+      }
+    }
+
     // Update SVG overlay when layout changes
-    if (wasDirty || isTransitioning) {
+    if (wasDirty || isTransitioning || animationTicked) {
       setAnnotationFrame((f) => f + 1)
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs)
-    if (isContinuous || isTransitioning || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation)
+    if (isContinuous || isTransitioning || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
@@ -1030,7 +1068,7 @@ const StreamNetworkFrame = forwardRef<
   if (isServerEnvironment) {
     const store = storeRef.current
     if (store) {
-      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
       const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
 
       if (isHierarchical && hierarchyRoot) {
@@ -1144,12 +1182,15 @@ const StreamNetworkFrame = forwardRef<
 
       <canvas
         ref={canvasRef}
+        aria-label={computeNetworkAriaLabel(store?.sceneNodes?.length ?? 0, store?.sceneEdges?.length ?? 0, "Network chart")}
         style={{
           position: "absolute",
           top: 0,
           left: 0
         }}
       />
+      <AriaLiveTooltip hoverPoint={hoverData} />
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}

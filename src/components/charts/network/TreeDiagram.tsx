@@ -5,7 +5,7 @@ import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
-import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -21,7 +21,7 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
   layout?: "tree" | "cluster" | "partition" | "treemap" | "circlepack"
   orientation?: "vertical" | "horizontal" | "radial"
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TNode, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string | number>
   colorScheme?: string | string[]

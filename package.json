@@ -91,7 +91,7 @@
     "bench:ui": "vitest bench --ui",
     "bench:baseline": "vitest bench --run && node scripts/save-baseline.js",
     "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
-    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html --dist-dir .parcel-cache/integration-tests",
+    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html integration-tests/accessibility-examples/index.html integration-tests/geo-examples/index.html integration-tests/realtime-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "dist": "node scripts/build.mjs",
     "dist:prod": "node scripts/build.mjs --production",
     "lint": "eslint src",
@@ -106,6 +106,8 @@
     "generate:ssr-gallery": "npx tsx scripts/ssr-gallery.tsx > docs/public/ssr-gallery.html 2>/dev/null",
     "website:build": "npm run dist:prod && npm run generate:ssr-gallery && parcel build --target website && node scripts/prerender.mjs",
     "build:mcp": "tsc -p tsconfig.mcp.json",
+    "docs:api": "typedoc",
+    "docs:api:json": "typedoc --json docs/build/api/api.json",
     "typescript": "tsc --noEmit",
     "check:schema": "node scripts/check-schema-freshness.js",
     "prepublishOnly": "node scripts/build.mjs --production"
@@ -183,6 +185,7 @@
     "rollup-plugin-typescript2": "^0.34.1",
     "rollup-plugin-visualizer": "^7.0.0",
     "seedrandom": "^3.0.5",
+    "typedoc": "^0.28.17",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   },

@@ -24,6 +24,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
+import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
 import { select } from "d3-selection"
@@ -180,7 +181,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       legendClickBehavior,
       legendHighlightedCategory,
       legendIsolatedCategories,
-      showAxes
+      showAxes,
+      accessibleTable
     } = props
 
     // ── Sizing ────────────────────────────────────────────────────────
@@ -488,6 +490,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           store.applyZoomTransform(zt, layout)
         }
         dirtyRef.current = false
+
+        // Update canvas aria-label imperatively after scene changes
+        canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
       }
 
       const dpr = getDevicePixelRatio()
@@ -984,12 +989,15 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         )}
         <canvas
           ref={canvasRef}
+          aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")}
           style={{ position: "absolute", left: 0, top: 0 }}
         />
         <canvas
           ref={interactionCanvasRef}
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}

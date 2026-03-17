@@ -80,6 +80,10 @@ export interface BaseChartProps {
 
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
+
+  /** Enable declarative bounded animation (enter/exit/update transitions).
+   * `true` uses defaults (300ms ease-out). Object form allows customization. */
+  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out" }
 }
 
 /**
@@ -114,9 +118,9 @@ export type ChartAccessor<TDatum, T> =
 /**
  * Color configuration
  */
-export interface ColorConfig {
+export interface ColorConfig<TDatum = Record<string, any>> {
   /** Field name or function to determine color */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme name (e.g., "blues", "category10") */
   colorScheme?: string
   /** Custom color palette */
@@ -126,9 +130,9 @@ export interface ColorConfig {
 /**
  * Size configuration
  */
-export interface SizeConfig {
+export interface SizeConfig<TDatum = Record<string, any>> {
   /** Field name or function to determine size */
-  sizeBy?: Accessor<number>
+  sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max size range */
   sizeRange?: [number, number]
 }

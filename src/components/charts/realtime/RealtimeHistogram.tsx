@@ -17,10 +17,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode } from "../shared/types"
+import type { ChartMode, ChartAccessor } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 
-export interface RealtimeTemporalHistogramProps {
+export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Time interval for binning */
@@ -46,9 +46,9 @@ export interface RealtimeTemporalHistogramProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time value accessor */
-  timeAccessor?: string | ((d: Record<string, any>) => number)
+  timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
-  valueAccessor?: string | ((d: Record<string, any>) => number)
+  valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
@@ -59,7 +59,7 @@ export interface RealtimeTemporalHistogramProps {
    * Category accessor for stacked bars.
    * When provided, bars are stacked by category within each bin.
    */
-  categoryAccessor?: string | ((d: Record<string, any>) => string)
+  categoryAccessor?: ChartAccessor<TDatum, string>
   /**
    * Category-to-color map for stacked bars.
    * Keys also determine stack order (listed keys first, then alphabetical).

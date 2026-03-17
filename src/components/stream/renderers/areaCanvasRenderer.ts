@@ -134,6 +134,8 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     }
 
     // Standard path (no decay): single filled area
+    const nodeOpacity = node.style.opacity ?? 1
+
     traceAreaPath(ctx, node)
 
     // Fill
@@ -156,10 +158,10 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       grad2.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${topAlpha})`)
       grad2.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${bottomAlpha})`)
       ctx.fillStyle = grad2
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = nodeOpacity
     } else {
       const fillOpacity = node.style.fillOpacity ?? 0.7
-      ctx.globalAlpha = fillOpacity
+      ctx.globalAlpha = fillOpacity * nodeOpacity
       ctx.fillStyle = fillColor
     }
     ctx.fill()
@@ -174,7 +176,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     // Stroke on top
     if (node.style.stroke && node.style.stroke !== "none") {
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = nodeOpacity
       ctx.strokeStyle = node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])

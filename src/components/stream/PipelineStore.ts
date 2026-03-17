@@ -11,8 +11,11 @@ import type {
   StreamScales,
   StreamLayout,
   SceneNode,
+  LineSceneNode,
   AreaSceneNode,
   PointSceneNode,
+  RectSceneNode,
+  HeatcellSceneNode,
   CandlestickSceneNode,
   CandlestickStyle,
   Style,
@@ -33,6 +36,8 @@ import {
   buildHeatcellNode
 } from "./SceneGraph"
 import { resolveAccessor, resolveRawAccessor, resolveStringAccessor } from "./accessorUtils"
+import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
+import type { ActiveTransition } from "./pipelineTransitionUtils"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -152,8 +157,12 @@ export class PipelineStore {
   private timestampBuffer: RingBuffer<number> | null = null
 
   // ── Transition animation ────────────────────────────────────────────
-  activeTransition: { startTime: number; duration: number } | null = null
-  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number }>()
+  activeTransition: ActiveTransition | null = null
+  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }>()
+  /** Previous line/area path arrays for path interpolation */
+  private prevPathMap = new Map<string, { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }>()
+  /** Exit nodes awaiting fade-out removal */
+  exitNodes: SceneNode[] = []
 
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
@@ -482,7 +491,7 @@ export class PipelineStore {
     }
 
     // Start transition animation from old to new positions
-    if (this.config.transition && this.prevPositionMap.size > 0) {
+    if (this.config.transition && (this.prevPositionMap.size > 0 || this.prevPathMap.size > 0)) {
       this.startTransition()
     }
 
@@ -1458,18 +1467,27 @@ export class PipelineStore {
    */
   private snapshotPositions(): void {
     this.prevPositionMap.clear()
+    this.prevPathMap.clear()
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
       const key = this.getNodeIdentity(node, i)
       if (!key) continue
       if (node.type === "point") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
       } else if (node.type === "rect") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
       } else if (node.type === "heatcell") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: (node as any).style?.opacity })
       } else if (node.type === "candlestick") {
         this.prevPositionMap.set(key, { x: node.x, y: node.openY })
+      } else if (node.type === "line") {
+        this.prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
+      } else if (node.type === "area") {
+        this.prevPathMap.set(key, {
+          topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
+          bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          opacity: node.style?.opacity
+        })
       }
     }
   }
@@ -1480,13 +1498,17 @@ export class PipelineStore {
   private getNodeIdentity(node: SceneNode, index: number): string | null {
     switch (node.type) {
       case "point":
-        return `p:${node.datum === undefined ? index : this.getX(node.datum)}_${this.getY(node.datum)}`
+        return `p:${index}`
       case "rect":
         return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
       case "heatcell":
         return `h:${node.x}_${node.y}`
       case "candlestick":
-        return `c:${this.getX(node.datum)}`
+        return node.datum == null ? `c:${index}` : `c:${this.getX(node.datum)}`
+      case "line":
+        return `l:${node.group || "_default"}`
+      case "area":
+        return `a:${node.group || "_default"}`
       default:
         return null
     }
@@ -1494,63 +1516,199 @@ export class PipelineStore {
 
   /**
    * After scene rebuild, set up transition from old to new positions.
+   * Detects entering nodes (new, no prev match) and exiting nodes (prev, no new match).
    */
   private startTransition(): void {
-    if (!this.config.transition || this.prevPositionMap.size === 0) return
+    if (!this.config.transition || (this.prevPositionMap.size === 0 && this.prevPathMap.size === 0)) return
     const duration = this.config.transition.duration ?? 300
 
+    // Clear any previously-appended exit nodes from the scene before processing
+    if (this.exitNodes.length > 0) {
+      const exitSet = new Set(this.exitNodes)
+      this.scene = this.scene.filter(n => !exitSet.has(n))
+      this.exitNodes = []
+    }
+
     let hasChanges = false
+    const matchedPrevKeys = new Set<string>()
+    const matchedPrevPathKeys = new Set<string>()
+
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
       const key = this.getNodeIdentity(node, i)
       if (!key) continue
-      const prev = this.prevPositionMap.get(key)
-      if (!prev) continue
 
-      // Store target positions and restore previous for animation start
+      // Store stable key on the node so advanceTransition can use it
+      // even after exit nodes are prepended to the scene
+      ;(node as any)._transitionKey = key
+
+      // Handle line/area path interpolation setup
+      if (node.type === "line" || node.type === "area") {
+        const prevPath = this.prevPathMap.get(key)
+        if (prevPath) {
+          matchedPrevPathKeys.add(key)
+          if (node.type === "line" && prevPath.path && prevPath.path.length === node.path.length) {
+            // Store target path and set current to prev for interpolation
+            ;(node as any)._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
+            ;(node as any)._prevPath = prevPath.path
+            // Start from prev positions
+            for (let j = 0; j < node.path.length; j++) {
+              node.path[j] = [prevPath.path[j][0], prevPath.path[j][1]]
+            }
+            hasChanges = true
+          } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath
+            && prevPath.topPath.length === node.topPath.length
+            && prevPath.bottomPath.length === node.bottomPath.length) {
+            ;(node as any)._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
+            ;(node as any)._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
+            ;(node as any)._prevTopPath = prevPath.topPath
+            ;(node as any)._prevBottomPath = prevPath.bottomPath
+            for (let j = 0; j < node.topPath.length; j++) {
+              node.topPath[j] = [prevPath.topPath[j][0], prevPath.topPath[j][1]]
+            }
+            for (let j = 0; j < node.bottomPath.length; j++) {
+              node.bottomPath[j] = [prevPath.bottomPath[j][0], prevPath.bottomPath[j][1]]
+            }
+            hasChanges = true
+          }
+          node._targetOpacity = node.style.opacity ?? 1
+        } else {
+          // Entering line/area — fade in from 0
+          node._targetOpacity = node.style.opacity ?? 1
+          node.style = { ...node.style, opacity: 0 }
+          hasChanges = true
+        }
+        continue
+      }
+
+      const prev = this.prevPositionMap.get(key)
+
       if (node.type === "point") {
-        const target = { x: node.x, y: node.y, r: node.r }
-        if (prev.x !== target.x || prev.y !== target.y) {
-          node._targetX = target.x
-          node._targetY = target.y
-          node._targetR = target.r
-          node.x = prev.x
-          node.y = prev.y
-          node.r = prev.r ?? node.r
+        if (prev) {
+          matchedPrevKeys.add(key)
+          const target = { x: node.x, y: node.y, r: node.r }
+          node._targetOpacity = node.style.opacity ?? 1
+          if (prev.x !== target.x || prev.y !== target.y) {
+            node._targetX = target.x
+            node._targetY = target.y
+            node._targetR = target.r
+            node.x = prev.x
+            node.y = prev.y
+            node.r = prev.r ?? node.r
+            hasChanges = true
+          }
+        } else {
+          // Entering node — start at opacity 0
+          node._targetOpacity = node.style.opacity ?? 1
+          node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
       } else if (node.type === "rect") {
-        const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-        if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
-          node._targetX = target.x
-          node._targetY = target.y
-          node._targetW = target.w
-          node._targetH = target.h
-          node.x = prev.x
-          node.y = prev.y
-          node.w = prev.w ?? node.w
-          node.h = prev.h ?? node.h
+        if (prev) {
+          matchedPrevKeys.add(key)
+          const target = { x: node.x, y: node.y, w: node.w, h: node.h }
+          node._targetOpacity = node.style.opacity ?? 1
+          if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
+            node._targetX = target.x
+            node._targetY = target.y
+            node._targetW = target.w
+            node._targetH = target.h
+            node.x = prev.x
+            node.y = prev.y
+            node.w = prev.w ?? node.w
+            node.h = prev.h ?? node.h
+            hasChanges = true
+          }
+        } else {
+          node._targetOpacity = node.style.opacity ?? 1
+          node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
       } else if (node.type === "heatcell") {
-        const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-        if (prev.x !== target.x || prev.y !== target.y) {
-          node._targetX = target.x
-          node._targetY = target.y
-          node._targetW = target.w
-          node._targetH = target.h
-          node.x = prev.x
-          node.y = prev.y
-          node.w = prev.w ?? node.w
-          node.h = prev.h ?? node.h
+        if (prev) {
+          matchedPrevKeys.add(key)
+          const target = { x: node.x, y: node.y, w: node.w, h: node.h }
+          node._targetOpacity = (node as any).style?.opacity ?? 1
+          if (prev.x !== target.x || prev.y !== target.y) {
+            node._targetX = target.x
+            node._targetY = target.y
+            node._targetW = target.w
+            node._targetH = target.h
+            node.x = prev.x
+            node.y = prev.y
+            node.w = prev.w ?? node.w
+            node.h = prev.h ?? node.h
+            hasChanges = true
+          }
+        } else {
+          node._targetOpacity = (node as any).style?.opacity ?? 1
+          ;(node as any).style = { ...((node as any).style || {}), opacity: 0 }
           hasChanges = true
         }
       }
     }
 
+    // Detect exit line/area nodes: keys in prevPathMap not matched in new scene
+    for (const [key, prevPath] of this.prevPathMap) {
+      if (matchedPrevPathKeys.has(key)) continue
+      // Exiting line/area — keep in scene with fade-out
+      if (key.startsWith("l:") && prevPath.path) {
+        const exitNode = {
+          type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
+          group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
+          _targetOpacity: 0, _transitionKey: key
+        } as any
+        this.exitNodes.push(exitNode)
+        hasChanges = true
+      } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
+        const exitNode = {
+          type: "area",
+          topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
+          bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
+          _targetOpacity: 0, _transitionKey: key
+        } as any
+        this.exitNodes.push(exitNode)
+        hasChanges = true
+      }
+    }
+
+    // Detect exit nodes: keys in prevPositionMap not matched in new scene
+    for (const [key, prev] of this.prevPositionMap) {
+      if (matchedPrevKeys.has(key)) continue
+      if (key.startsWith("p:")) {
+        const exitNode = {
+          type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
+          style: { opacity: prev.opacity ?? 1 }, datum: null,
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as PointSceneNode
+        this.exitNodes.push(exitNode)
+      } else if (key.startsWith("r:")) {
+        const exitNode = {
+          type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
+          style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as RectSceneNode
+        this.exitNodes.push(exitNode)
+      } else if (key.startsWith("h:")) {
+        const exitNode = {
+          type: "heatcell", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
+          fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as HeatcellSceneNode
+        this.exitNodes.push(exitNode)
+      }
+      hasChanges = true
+    }
+
+    // Append exit nodes (at end to avoid shifting indices, though we use _transitionKey now)
+    if (this.exitNodes.length > 0) {
+      this.scene = [...this.scene, ...this.exitNodes]
+    }
+
     if (hasChanges) {
       this.activeTransition = {
-        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+        startTime: getTimestamp(),
         duration
       }
     }
@@ -1562,51 +1720,110 @@ export class PipelineStore {
   advanceTransition(now: number): boolean {
     if (!this.activeTransition) return false
 
-    const elapsed = now - this.activeTransition.startTime
-    const rawT = Math.min(elapsed / this.activeTransition.duration, 1)
-    // Ease-out cubic (or linear)
-    const t = this.config.transition?.easing === "linear"
-      ? rawT
-      : 1 - Math.pow(1 - rawT, 3)
+    const rawT = computeRawProgress(now, this.activeTransition)
+    const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
+    const t = computeEasing(rawT, easing)
 
     for (const node of this.scene) {
+      // Use stable key stored during startTransition (immune to index shifts from exit nodes)
+      const key = (node as any)._transitionKey as string | undefined
       if (node.type === "point") {
+        // Interpolate opacity for enter/exit
+        if (node._targetOpacity !== undefined) {
+          const prev = key ? this.prevPositionMap.get(key) : undefined
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
+        }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (node._targetX - prev.x) * t
-        node.y = prev.y + (node._targetY! - prev.y) * t
+        node.x = lerp(prev.x, node._targetX, t)
+        node.y = lerp(prev.y, node._targetY!, t)
         if (node._targetR !== undefined && prev.r !== undefined) {
-          node.r = prev.r + (node._targetR - prev.r) * t
+          node.r = lerp(prev.r, node._targetR, t)
         }
       } else if (node.type === "rect") {
+        if (node._targetOpacity !== undefined) {
+          const prev = key ? this.prevPositionMap.get(key) : undefined
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
+        }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (node._targetX - prev.x) * t
-        node.y = prev.y + (node._targetY! - prev.y) * t
-        if (prev.w !== undefined) node.w = prev.w + (node._targetW! - prev.w) * t
-        if (prev.h !== undefined) node.h = prev.h + (node._targetH! - prev.h) * t
+        node.x = lerp(prev.x, node._targetX, t)
+        node.y = lerp(prev.y, node._targetY!, t)
+        if (prev.w !== undefined) node.w = lerp(prev.w, node._targetW!, t)
+        if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
       } else if (node.type === "heatcell") {
+        if (node._targetOpacity !== undefined) {
+          const prev = key ? this.prevPositionMap.get(key) : undefined
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          ;(node as any).style = { ...((node as any).style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
+        }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (node._targetX - prev.x) * t
-        node.y = prev.y + (node._targetY! - prev.y) * t
-        if (prev.w !== undefined) node.w = prev.w + (node._targetW! - prev.w) * t
-        if (prev.h !== undefined) node.h = prev.h + (node._targetH! - prev.h) * t
+        node.x = lerp(prev.x, node._targetX, t)
+        node.y = lerp(prev.y, node._targetY!, t)
+        if (prev.w !== undefined) node.w = lerp(prev.w, node._targetW!, t)
+        if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
+      } else if (node.type === "line") {
+        // Interpolate opacity for enter/exit
+        if (node._targetOpacity !== undefined) {
+          const isEntering = (node as any)._prevPath === undefined && node._targetOpacity > 0
+          const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
+          node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
+        }
+        // Interpolate path coordinates
+        const prevPath = (node as any)._prevPath as [number, number][] | undefined
+        const targetPath = (node as any)._targetPath as [number, number][] | undefined
+        if (prevPath && targetPath && prevPath.length === node.path.length) {
+          for (let j = 0; j < node.path.length; j++) {
+            node.path[j][0] = lerp(prevPath[j][0], targetPath[j][0], t)
+            node.path[j][1] = lerp(prevPath[j][1], targetPath[j][1], t)
+          }
+        }
+      } else if (node.type === "area") {
+        if (node._targetOpacity !== undefined) {
+          const isEntering = (node as any)._prevTopPath === undefined && node._targetOpacity > 0
+          const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
+          node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
+        }
+        const prevTop = (node as any)._prevTopPath as [number, number][] | undefined
+        const prevBottom = (node as any)._prevBottomPath as [number, number][] | undefined
+        const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
+        const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+        if (prevTop && targetTop && prevTop.length === node.topPath.length) {
+          for (let j = 0; j < node.topPath.length; j++) {
+            node.topPath[j][0] = lerp(prevTop[j][0], targetTop[j][0], t)
+            node.topPath[j][1] = lerp(prevTop[j][1], targetTop[j][1], t)
+          }
+        }
+        if (prevBottom && targetBottom && prevBottom.length === node.bottomPath.length) {
+          for (let j = 0; j < node.bottomPath.length; j++) {
+            node.bottomPath[j][0] = lerp(prevBottom[j][0], targetBottom[j][0], t)
+            node.bottomPath[j][1] = lerp(prevBottom[j][1], targetBottom[j][1], t)
+          }
+        }
       }
     }
 
     if (rawT >= 1) {
-      // Snap to targets and clear transition
+      // Snap to targets and clear transition fields
       for (const node of this.scene) {
+        if (node._targetOpacity !== undefined) {
+          const finalOpacity = node._targetOpacity
+          if (node.type === "line" || node.type === "area") {
+            node.style = { ...node.style, opacity: finalOpacity === 0 ? 0 : finalOpacity }
+          } else {
+            (node as any).style = { ...((node as any).style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
+          }
+          node._targetOpacity = undefined
+        }
         if (node.type === "point") {
           if (node._targetX === undefined) continue
           node.x = node._targetX
@@ -1635,7 +1852,40 @@ export class PipelineStore {
           node._targetY = undefined
           node._targetW = undefined
           node._targetH = undefined
+        } else if (node.type === "line") {
+          const targetPath = (node as any)._targetPath as [number, number][] | undefined
+          if (targetPath) {
+            for (let j = 0; j < node.path.length; j++) {
+              node.path[j] = targetPath[j]
+            }
+          }
+          ;(node as any)._prevPath = undefined
+          ;(node as any)._targetPath = undefined
+        } else if (node.type === "area") {
+          const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
+          const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+          if (targetTop) {
+            for (let j = 0; j < node.topPath.length; j++) {
+              node.topPath[j] = targetTop[j]
+            }
+          }
+          if (targetBottom) {
+            for (let j = 0; j < node.bottomPath.length; j++) {
+              node.bottomPath[j] = targetBottom[j]
+            }
+          }
+          ;(node as any)._prevTopPath = undefined
+          ;(node as any)._prevBottomPath = undefined
+          ;(node as any)._targetTopPath = undefined
+          ;(node as any)._targetBottomPath = undefined
         }
+      }
+
+      // Remove exit nodes from scene
+      if (this.exitNodes.length > 0) {
+        const exitSet = new Set(this.exitNodes)
+        this.scene = this.scene.filter(n => !exitSet.has(n))
+        this.exitNodes = []
       }
       this.activeTransition = null
       return false
@@ -1719,6 +1969,8 @@ export class PipelineStore {
     this.yExtent.clear()
     if (this.timestampBuffer) this.timestampBuffer.clear()
     this.prevPositionMap.clear()
+    this.prevPathMap.clear()
+    this.exitNodes = []
     this.activeTransition = null
     this.lastIngestTime = 0
 

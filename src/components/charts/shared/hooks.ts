@@ -10,6 +10,7 @@ import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
 import type { MarginType } from "../../types/generalTypes"
+import type { TransitionConfig } from "../../stream/types"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -432,5 +433,22 @@ export function useChartMode(
     categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,
     valueLabel: suppressLabels ? undefined : userProps.valueLabel,
     marginDefaults: m.marginDefaults,
+  }
+}
+
+// ── Animate prop → transition config ────────────────────────────────
+
+/**
+ * Resolve the `animate` prop into a `TransitionConfig` for Stream Frames.
+ * Returns undefined when animate is falsy (no transition).
+ */
+export function resolveAnimateConfig(
+  animate: boolean | { duration?: number; easing?: "linear" | "ease-out" } | undefined
+): TransitionConfig | undefined {
+  if (!animate) return undefined
+  if (animate === true) return { duration: 300 }
+  return {
+    duration: animate.duration ?? 300,
+    easing: animate.easing === "linear" ? "linear" : "ease-out"
   }
 }

@@ -111,7 +111,7 @@ export function buildAnomalyAnnotations(
 
 // ── Pre-computed mode ──────────────────────────────────────────────────
 
-interface ForecastResult {
+export interface ForecastResult {
   processedData: Record<string, any>[]
   annotations: Record<string, any>[]
 }
