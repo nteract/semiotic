@@ -160,7 +160,7 @@ export class PipelineStore {
   activeTransition: ActiveTransition | null = null
   private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }>()
   /** Previous line/area path arrays for path interpolation */
-  private prevPathMap = new Map<string, { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][] }>()
+  private prevPathMap = new Map<string, { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }>()
   /** Exit nodes awaiting fade-out removal */
   exitNodes: SceneNode[] = []
 
@@ -1481,11 +1481,12 @@ export class PipelineStore {
       } else if (node.type === "candlestick") {
         this.prevPositionMap.set(key, { x: node.x, y: node.openY })
       } else if (node.type === "line") {
-        this.prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]) })
+        this.prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
       } else if (node.type === "area") {
         this.prevPathMap.set(key, {
           topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
-          bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number])
+          bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          opacity: node.style?.opacity
         })
       }
     }
@@ -1640,8 +1641,32 @@ export class PipelineStore {
       }
     }
 
+    // Detect exit line/area nodes: keys in prevPathMap not matched in new scene
+    for (const [key, prevPath] of this.prevPathMap) {
+      if (matchedPrevPathKeys.has(key)) continue
+      // Exiting line/area — keep in scene with fade-out
+      if (key.startsWith("l:") && prevPath.path) {
+        const exitNode = {
+          type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
+          group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
+          _targetOpacity: 0, _transitionKey: key
+        } as any
+        this.exitNodes.push(exitNode)
+        hasChanges = true
+      } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
+        const exitNode = {
+          type: "area",
+          topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
+          bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
+          _targetOpacity: 0, _transitionKey: key
+        } as any
+        this.exitNodes.push(exitNode)
+        hasChanges = true
+      }
+    }
+
     // Detect exit nodes: keys in prevPositionMap not matched in new scene
-    this.exitNodes = []
     for (const [key, prev] of this.prevPositionMap) {
       if (matchedPrevKeys.has(key)) continue
       if (key.startsWith("p:")) {

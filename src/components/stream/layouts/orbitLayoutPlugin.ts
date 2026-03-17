@@ -125,8 +125,10 @@ function buildOrbitLayout(
       if (!ringSlice.length) break
 
       const ringFraction = (currentRing + 1) / ringCount
+      // Build a context object for callbacks that matches what user functions expect
+      const depthContext = { id: parentId, depth, data: parentDatum, parentId: parentId }
       const r = hasGrandparent
-        ? (parentRing / orbitSizeFn({ depth })) * ringFraction
+        ? (parentRing / orbitSizeFn(depthContext)) * ringFraction
         : parentRing * ringFraction
 
       // Use d3-pie for angular spacing — heavier children (with grandchildren) get more space
@@ -138,7 +140,7 @@ function buildOrbitLayout(
         .sort(null)
 
       const arcs = pieGen(ringSlice)
-      const ecc = eccentricityFn({ depth })
+      const ecc = eccentricityFn(depthContext)
 
       for (let j = 0; j < ringSlice.length; j++) {
         const angle = (arcs[j].startAngle + arcs[j].endAngle) / 2
@@ -186,12 +188,17 @@ function buildOrbitLayout(
 function tickOrbitPositions(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
-  _size: [number, number]
+  _size: [number, number],
+  deltaTime: number
 ): void {
   const state = getOrbitState(config)
   const speed = config.orbitSpeed ?? 0.25
-  const tickStep = speed * (Math.PI / 360)
+  // Use deltaTime for frame-rate-independent animation (normalize to ~16ms frame)
+  const dtFactor = deltaTime > 0 ? deltaTime / 16.667 : 1
+  const tickStep = speed * (Math.PI / 360) * dtFactor
   const revolutionFn = config.orbitRevolution ?? ((n: any) => 1 / ((n.depth ?? 0) + 1))
+
+  state.frame++
 
   // Build a node lookup for parent positions
   const nodeMap = new Map<string, RealtimeNode>()
@@ -206,7 +213,9 @@ function tickOrbitPositions(
     const parent = nodeMap.get(meta.parentId)
     if (!parent) continue
 
-    const a = meta.angle + state.frame * tickStep * revolutionFn({ depth: meta.depth })
+    // Pass actual node context to revolutionFn
+    const nodeContext = { id: node.id, depth: meta.depth, data: node.data, parentId: meta.parentId }
+    const a = meta.angle + state.frame * tickStep * revolutionFn(nodeContext)
     node.x = parent.x + meta.ring * Math.sin(a)
     node.y = parent.y + meta.ring * Math.cos(a) * meta.eccentricity
 
@@ -259,8 +268,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     const sceneEdges: NetworkLineEdge[] = []
     const labels: NetworkLabel[] = []
 
-    // Build ring ellipses as "decoration" scene edges (rendered as line edges
-    // but the HOC will override with foregroundGraphics for ellipses)
+    // TODO: orbitShowRings — render ring ellipses as foregroundGraphics when config.orbitShowRings !== false
 
     // Build circle nodes
     for (const node of nodes) {
@@ -346,12 +354,10 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     _edges: RealtimeEdge[],
     config: NetworkPipelineConfig,
     size: [number, number],
-    _deltaTime: number
+    deltaTime: number
   ): boolean {
     if (config.orbitAnimated === false) return false
-    const state = getOrbitState(config)
-    state.frame++
-    tickOrbitPositions(nodes, config, size)
+    tickOrbitPositions(nodes, config, size, deltaTime)
     return true // always rebuild scene
   }
 }

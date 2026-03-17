@@ -39,9 +39,17 @@ export function computeCanvasAriaLabel(
     candlestick: "candlesticks",
   }
 
-  for (const [type, count] of Object.entries(typeCounts)) {
+  // Sort by a fixed type order for stable aria-label output
+  const typeOrder = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick"]
+  const sortedTypes = Object.keys(typeCounts).sort((a, b) => {
+    const ai = typeOrder.indexOf(a)
+    const bi = typeOrder.indexOf(b)
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+  })
+
+  for (const type of sortedTypes) {
     const label = typeLabels[type] || type
-    parts.push(`${count} ${label}`)
+    parts.push(`${typeCounts[type]} ${label}`)
   }
 
   return `${chartType}, ${parts.join(", ")}`
