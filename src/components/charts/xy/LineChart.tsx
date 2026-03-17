@@ -14,8 +14,7 @@ import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } fr
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
-import { SEGMENT_FIELD } from "../shared/statisticalOverlays"
-import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy } from "../shared/statisticalOverlaysLazy"
+import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 
 /**
  * LineChart component props
@@ -375,6 +374,9 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
 
   useEffect(() => {
     let cancelled = false
+    // Clear stale overlays immediately so the chart doesn't show old data while loading
+    setStatisticalResult(null)
+    setStatisticalAnnotations([])
     if (forecast) {
       buildForecastLazy(safeData as Record<string, any>[], xAccStr, yAccStr, forecast, anomaly).then(result => {
         if (!cancelled) {
@@ -398,9 +400,6 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
           setStatisticalAnnotations([])
         }
       })
-    } else {
-      setStatisticalResult(null)
-      setStatisticalAnnotations([])
     }
     return () => { cancelled = true }
   }, [safeData, forecast, anomaly, xAccStr, yAccStr])

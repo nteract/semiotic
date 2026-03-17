@@ -5,6 +5,9 @@
 
 export type { ForecastResult } from "./statisticalOverlays"
 
+/** Duplicated here to avoid pulling in the heavy statisticalOverlays module at import time */
+export const SEGMENT_FIELD = "__forecastSegment" as const
+
 let _module: typeof import("./statisticalOverlays") | null = null
 
 async function load() {

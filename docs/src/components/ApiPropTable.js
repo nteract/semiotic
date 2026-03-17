@@ -64,8 +64,13 @@ const tdStyle = {
   borderBottom: "1px solid var(--surface-3)",
 }
 
+// Map components whose props interface names do not follow the `${componentName}Props` convention
+const COMPONENT_PROPS_NAME_MAP = {
+  RealtimeHistogram: "RealtimeTemporalHistogramProps",
+}
+
 function findPropsInterface(apiData, componentName) {
-  const propsName = `${componentName}Props`
+  const propsName = COMPONENT_PROPS_NAME_MAP[componentName] || `${componentName}Props`
   // Search through TypeDoc children recursively
   function search(node) {
     if (!node) return null
