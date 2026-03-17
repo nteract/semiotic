@@ -150,7 +150,6 @@ async function createBundle(options = {}) {
     exports: "named",
     sourcemap: !minify,
     preserveModules: false,
-    inlineDynamicImports: true,
     interop: "auto",
     generatedCode: {
       constBindings: true
@@ -159,16 +158,22 @@ async function createBundle(options = {}) {
 
   const suffix = minify ? ".min" : ""
 
+  // CJS: must inline dynamic imports (no code-splitting support)
   await bundle.write({
     ...outputOptions,
     format: "cjs",
-    file: `dist/${name}${suffix}.js`
+    file: `dist/${name}${suffix}.js`,
+    inlineDynamicImports: true
   })
 
+  // ESM: preserve dynamic imports for lazy loading / code-splitting
   await bundle.write({
     ...outputOptions,
     format: "esm",
-    file: `dist/${name}.module${suffix}.js`
+    dir: "dist",
+    entryFileNames: `${name}.module${suffix}.js`,
+    chunkFileNames: `${name}-[name]-[hash].js`,
+    inlineDynamicImports: false
   })
 
   await bundle.close()

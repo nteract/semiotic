@@ -105,8 +105,16 @@ const renderLegendGroupVertical = (
             }
           }
         } : undefined}
-        onFocus={customHoverBehavior ? () => customHoverBehavior(item) : undefined}
-        onBlur={customHoverBehavior ? () => customHoverBehavior(null) : undefined}
+        onFocus={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(item)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "visible")
+        } : undefined}
+        onBlur={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(null)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "hidden")
+        } : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
@@ -115,6 +123,17 @@ const renderLegendGroupVertical = (
           outline: "none",
         }}
       >
+        {interactive && <rect
+          className="semiotic-legend-focus-ring"
+          x={-2} y={-2}
+          width={SWATCH + 8 + item.label.length * 7}
+          height={SWATCH + 4}
+          fill="none"
+          stroke="var(--semiotic-focus, #005fcc)"
+          strokeWidth={2}
+          rx={3}
+          visibility="hidden"
+        />}
         {renderedType}
         {isIsolated && <CheckMark />}
         <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
@@ -173,8 +192,16 @@ const renderLegendGroupHorizontal = (
             }
           }
         } : undefined}
-        onFocus={customHoverBehavior ? () => customHoverBehavior(item) : undefined}
-        onBlur={customHoverBehavior ? () => customHoverBehavior(null) : undefined}
+        onFocus={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(item)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "visible")
+        } : undefined}
+        onBlur={interactive ? (e) => {
+          if (customHoverBehavior) customHoverBehavior(null)
+          const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
+          if (ring) ring.setAttribute("visibility", "hidden")
+        } : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
@@ -183,6 +210,17 @@ const renderLegendGroupHorizontal = (
           outline: "none",
         }}
       >
+        {interactive && <rect
+          className="semiotic-legend-focus-ring"
+          x={-2} y={-2}
+          width={SWATCH + 8 + item.label.length * 7}
+          height={SWATCH + 4}
+          fill="none"
+          stroke="var(--semiotic-focus, #005fcc)"
+          strokeWidth={2}
+          rx={3}
+          visibility="hidden"
+        />}
         {renderedType}
         {isIsolated && <CheckMark />}
         <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
