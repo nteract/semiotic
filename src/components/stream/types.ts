@@ -137,6 +137,8 @@ export interface LineSceneNode {
   curve?: CurveType
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
   _decayOpacities?: number[]
+  /** Animation target opacity (set during enter/exit transitions) */
+  _targetOpacity?: number
 }
 
 export interface AreaSceneNode {
@@ -158,6 +160,8 @@ export interface AreaSceneNode {
   curve?: CurveType
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
   _decayOpacities?: number[]
+  /** Animation target opacity (set during enter/exit transitions) */
+  _targetOpacity?: number
 }
 
 export interface PointSceneNode {
@@ -179,6 +183,7 @@ export interface PointSceneNode {
   _targetX?: number
   _targetY?: number
   _targetR?: number
+  _targetOpacity?: number
   _decayOpacity?: number
 }
 
@@ -198,6 +203,7 @@ export interface RectSceneNode {
   _targetY?: number
   _targetW?: number
   _targetH?: number
+  _targetOpacity?: number
   _decayOpacity?: number
 }
 
@@ -222,6 +228,7 @@ export interface HeatcellSceneNode {
   _targetY?: number
   _targetW?: number
   _targetH?: number
+  _targetOpacity?: number
   _decayOpacity?: number
 }
 
@@ -241,6 +248,8 @@ export interface CandlestickSceneNode {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Animation target opacity (set during enter/exit transitions) */
+  _targetOpacity?: number
 }
 
 // ── Candlestick style ──────────────────────────────────────────────────
@@ -484,6 +493,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   showValues?: boolean
   /** Format function for heatmap cell value labels */
   heatmapValueFormat?: (v: number) => string
+
+  // ── Accessibility ─────────────────────────────────
+  /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */
+  accessibleTable?: boolean
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

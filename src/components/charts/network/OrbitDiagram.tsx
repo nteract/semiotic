@@ -8,6 +8,7 @@ import { getColor } from "../shared/colorUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
+import { isServerEnvironment } from "../../stream/SceneToSVG"
 
 // ── Orbit layout types ──────────────────────────────────────────────────
 
@@ -334,7 +335,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   const tickStep = speed * (Math.PI / 360)
 
   useEffect(() => {
-    if (!animated) return
+    if (!animated || isServerEnvironment) return
     let rafId: number
     const loop = () => {
       frameRef.current++

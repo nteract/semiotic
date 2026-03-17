@@ -176,7 +176,8 @@ const navData = [
     title: "API Reference",
     path: "/api",
     children: [
-      { title: "Charts", path: "/api/charts" }
+      { title: "Charts", path: "/api/charts" },
+      { title: "TypeDoc API", path: "/api/typedoc" }
     ]
   }
 ]

@@ -10,6 +10,7 @@ import { ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexP
 
 // API pages
 import ChartsApiPage from "./pages/api/ChartsApiPage"
+import ApiReferencePage from "./pages/api/ApiReferencePage"
 
 // New chart pages
 import GettingStartedPage from "./pages/GettingStartedPage"
@@ -258,6 +259,7 @@ export default function DocsApp() {
                 }
               />
               <Route path="charts" element={<ChartsApiPage />} />
+              <Route path="typedoc" element={<ApiReferencePage />} />
             </Route>
 
             {/* Cookbook routes */}

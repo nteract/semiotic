@@ -34,6 +34,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
+import { NetworkAccessibleDataTable, AriaLiveTooltip, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -240,7 +241,8 @@ const StreamNetworkFrame = forwardRef<
     decay,
     pulse,
     staleness,
-    thresholds
+    thresholds,
+    accessibleTable
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -1144,12 +1146,15 @@ const StreamNetworkFrame = forwardRef<
 
       <canvas
         ref={canvasRef}
+        aria-label={computeNetworkAriaLabel(store?.sceneNodes?.length ?? 0, store?.sceneEdges?.length ?? 0, "Network chart")}
         style={{
           position: "absolute",
           top: 0,
           left: 0
         }}
       />
+      <AriaLiveTooltip hoverPoint={hoverData} />
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}

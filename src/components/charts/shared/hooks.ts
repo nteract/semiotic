@@ -434,3 +434,22 @@ export function useChartMode(
     marginDefaults: m.marginDefaults,
   }
 }
+
+// ── Animate prop → transition config ────────────────────────────────
+
+import type { TransitionConfig } from "../../stream/types"
+
+/**
+ * Resolve the `animate` prop into a `TransitionConfig` for Stream Frames.
+ * Returns undefined when animate is falsy (no transition).
+ */
+export function resolveAnimateConfig(
+  animate: boolean | { duration?: number; easing?: "linear" | "ease-out" } | undefined
+): TransitionConfig | undefined {
+  if (!animate) return undefined
+  if (animate === true) return { duration: 300 }
+  return {
+    duration: animate.duration ?? 300,
+    easing: animate.easing === "linear" ? "linear" : "ease-out"
+  }
+}

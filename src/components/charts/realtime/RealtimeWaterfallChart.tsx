@@ -13,10 +13,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode } from "../shared/types"
+import type { ChartMode, ChartAccessor } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 
-export interface RealtimeWaterfallChartProps {
+export interface RealtimeWaterfallChartProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Chart dimensions as [width, height] */
@@ -40,9 +40,9 @@ export interface RealtimeWaterfallChartProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time value accessor */
-  timeAccessor?: string | ((d: Record<string, any>) => number)
+  timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor (positive = gain, negative = loss) */
-  valueAccessor?: string | ((d: Record<string, any>) => number)
+  valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */

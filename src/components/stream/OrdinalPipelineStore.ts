@@ -10,6 +10,8 @@ import type {
   OrdinalChartType
 } from "./ordinalTypes"
 import type { Changeset, Style, DecayConfig } from "./types"
+import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
+import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
@@ -61,8 +63,10 @@ export class OrdinalPipelineStore {
   private timestampBuffer: RingBuffer<number> | null = null
 
   // ── Transition animation ────────────────────────────────────────────
-  activeTransition: { startTime: number; duration: number } | null = null
-  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number }>()
+  activeTransition: ActiveTransition | null = null
+  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }>()
+  /** Exit nodes awaiting fade-out removal */
+  exitNodes: import("./ordinalTypes").OrdinalSceneNode[] = []
 
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
@@ -746,9 +750,9 @@ export class OrdinalPipelineStore {
       const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
       if (node.type === "point") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
       } else if (node.type === "rect") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
       }
     }
   }
@@ -758,40 +762,82 @@ export class OrdinalPipelineStore {
     const duration = this.config.transition.duration ?? 300
 
     let hasChanges = false
+    const matchedPrevKeys = new Set<string>()
     const keyCounts = new Map<string, number>()
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
       const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
       const prev = this.prevPositionMap.get(key)
-      if (!prev) continue
 
       if (node.type === "point") {
-        if (prev.x !== node.x || prev.y !== node.y) {
-          node._targetX = node.x
-          node._targetY = node.y
-          node.x = prev.x
-          node.y = prev.y
+        if (prev) {
+          matchedPrevKeys.add(key)
+          node._targetOpacity = node.style.opacity ?? 1
+          if (prev.x !== node.x || prev.y !== node.y) {
+            node._targetX = node.x
+            node._targetY = node.y
+            node.x = prev.x
+            node.y = prev.y
+            hasChanges = true
+          }
+        } else {
+          // Entering node
+          node._targetOpacity = node.style.opacity ?? 1
+          node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
       } else if (node.type === "rect") {
-        if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
-          node._targetX = node.x
-          node._targetY = node.y
-          node._targetW = node.w
-          node._targetH = node.h
-          node.x = prev.x
-          node.y = prev.y
-          node.w = prev.w ?? node.w
-          node.h = prev.h ?? node.h
+        if (prev) {
+          matchedPrevKeys.add(key)
+          node._targetOpacity = node.style.opacity ?? 1
+          if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
+            node._targetX = node.x
+            node._targetY = node.y
+            node._targetW = node.w
+            node._targetH = node.h
+            node.x = prev.x
+            node.y = prev.y
+            node.w = prev.w ?? node.w
+            node.h = prev.h ?? node.h
+            hasChanges = true
+          }
+        } else {
+          // Entering node
+          node._targetOpacity = node.style.opacity ?? 1
+          node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
       }
     }
 
+    // Detect exit nodes
+    this.exitNodes = []
+    for (const [key, prev] of this.prevPositionMap) {
+      if (matchedPrevKeys.has(key)) continue
+      if (key.startsWith("p:")) {
+        this.exitNodes.push({
+          type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
+          style: { opacity: prev.opacity ?? 1 }, datum: null,
+          _targetOpacity: 0
+        } as any)
+      } else if (key.startsWith("r:")) {
+        this.exitNodes.push({
+          type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
+          style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
+          _targetOpacity: 0
+        } as any)
+      }
+      hasChanges = true
+    }
+
+    if (this.exitNodes.length > 0) {
+      this.scene = [...this.exitNodes, ...this.scene]
+    }
+
     if (hasChanges) {
       this.activeTransition = {
-        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+        startTime: getTimestamp(),
         duration
       }
     }
@@ -800,11 +846,9 @@ export class OrdinalPipelineStore {
   advanceTransition(now: number): boolean {
     if (!this.activeTransition) return false
 
-    const elapsed = now - this.activeTransition.startTime
-    const rawT = Math.min(elapsed / this.activeTransition.duration, 1)
-    const t = this.config.transition?.easing === "linear"
-      ? rawT
-      : 1 - Math.pow(1 - rawT, 3)
+    const rawT = computeRawProgress(now, this.activeTransition)
+    const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
+    const t = computeEasing(rawT, easing)
 
     const keyCounts = new Map<string, number>()
     for (let i = 0; i < this.scene.length; i++) {
@@ -812,25 +856,43 @@ export class OrdinalPipelineStore {
       // Always call getNodeKey to keep duplicate counters in sync
       const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
-      const prev = this.prevPositionMap.get(key)
-      if (!prev) continue
+
       if (node.type === "point") {
+        // Interpolate opacity for enter/exit
+        if (node._targetOpacity !== undefined) {
+          const prev = this.prevPositionMap.get(key)
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
+        }
         if (node._targetX === undefined) continue
-        node.x = prev.x + (node._targetX - prev.x) * t
-        node.y = prev.y + (node._targetY! - prev.y) * t
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = lerp(prev.x, node._targetX, t)
+        node.y = lerp(prev.y, node._targetY!, t)
       } else if (node.type === "rect") {
+        if (node._targetOpacity !== undefined) {
+          const prev = this.prevPositionMap.get(key)
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
+        }
         if (node._targetX === undefined) continue
-        node.x = prev.x + (node._targetX - prev.x) * t
-        node.y = prev.y + (node._targetY! - prev.y) * t
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = lerp(prev.x, node._targetX, t)
+        node.y = lerp(prev.y, node._targetY!, t)
         if (prev.w !== undefined) {
-          node.w = prev.w + (node._targetW! - prev.w) * t
-          node.h = prev.h! + (node._targetH! - prev.h!) * t
+          node.w = lerp(prev.w, node._targetW!, t)
+          node.h = lerp(prev.h!, node._targetH!, t)
         }
       }
     }
 
     if (rawT >= 1) {
       for (const node of this.scene) {
+        if (node._targetOpacity !== undefined) {
+          (node as any).style = { ...((node as any).style || {}), opacity: node._targetOpacity === 0 ? 0 : node._targetOpacity }
+          ;(node as any)._targetOpacity = undefined
+        }
         if (node.type === "point") {
           if (node._targetX === undefined) continue
           node.x = node._targetX
@@ -848,6 +910,12 @@ export class OrdinalPipelineStore {
           node._targetW = undefined
           node._targetH = undefined
         }
+      }
+      // Remove exit nodes
+      if (this.exitNodes.length > 0) {
+        const exitSet = new Set(this.exitNodes)
+        this.scene = this.scene.filter(n => !exitSet.has(n))
+        this.exitNodes = []
       }
       this.activeTransition = null
       return false
@@ -868,6 +936,7 @@ export class OrdinalPipelineStore {
     this.categories.clear()
     if (this.timestampBuffer) this.timestampBuffer.clear()
     this.prevPositionMap.clear()
+    this.exitNodes = []
     this.activeTransition = null
     this.lastIngestTime = 0
     this.scales = null

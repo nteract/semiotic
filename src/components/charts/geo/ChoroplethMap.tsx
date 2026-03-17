@@ -23,11 +23,11 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
   viridis: interpolateViridis
 }
 
-export interface ChoroplethMapProps extends BaseChartProps {
+export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** GeoJSON features or a reference string ("world-110m", "world-50m", "land-110m", "land-50m") */
   areas: AreasProp
   /** Accessor for the numeric value to encode as color */
-  valueAccessor: string | ((d: any) => number)
+  valueAccessor: ChartAccessor<TDatum, number>
   /** Sequential color scheme @default "blues" */
   colorScheme?: string
   /** Geographic projection @default "equalEarth" */
@@ -67,7 +67,7 @@ export interface ChoroplethMapProps extends BaseChartProps {
   frameProps?: Partial<Omit<StreamGeoFrameProps, "areas" | "projection">>
 }
 
-export function ChoroplethMap(props: ChoroplethMapProps) {
+export function ChoroplethMap<TDatum extends Record<string, any> = Record<string, any>>(props: ChoroplethMapProps<TDatum>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,

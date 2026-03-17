@@ -77,6 +77,9 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 function Skeleton({ height }: { height: number }) {
   return (
     <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading chart"
       style={{
         width: "100%",
         height,
@@ -295,6 +298,7 @@ export const ChartContainer = React.forwardRef<
                   className="semiotic-chart-action"
                   onClick={() => handleExport()}
                   title="Export chart"
+                  aria-label="Export chart"
                   style={actionButtonStyle}
                 >
                   <svg
@@ -317,6 +321,7 @@ export const ChartContainer = React.forwardRef<
                   className="semiotic-chart-action"
                   onClick={toggleFullscreen}
                   title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                  aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                   style={actionButtonStyle}
                 >
                   <svg
@@ -352,6 +357,7 @@ export const ChartContainer = React.forwardRef<
                   className="semiotic-chart-action"
                   onClick={() => handleCopyConfig()}
                   title="Copy config"
+                  aria-label="Copy chart configuration"
                   style={actionButtonStyle}
                 >
                   <svg
@@ -372,6 +378,8 @@ export const ChartContainer = React.forwardRef<
               {status && (
                 <div
                   className="semiotic-chart-status"
+                  aria-live="polite"
+                  aria-atomic="true"
                   style={{
                     padding: "2px 8px",
                     borderRadius: 4,

@@ -29,6 +29,8 @@ import type {
   StreamLayout
 } from "./types"
 import { RingBuffer } from "../realtime/RingBuffer"
+import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import type { ActiveTransition } from "./pipelineTransitionUtils"
 
 // ── Projection resolution ────────────────────────────────────────────
 
@@ -152,7 +154,7 @@ export class GeoPipelineStore {
   private timestampBuffer: RingBuffer<number> | null = null
 
   // Transition state
-  activeTransition: { startTime: number; duration: number } | null = null
+  activeTransition: ActiveTransition | null = null
   private prevPositions: Map<string, [number, number]> | null = null
 
   constructor(config: GeoPipelineConfig) {
@@ -795,11 +797,8 @@ export class GeoPipelineStore {
   advanceTransition(now: number): boolean {
     if (!this.activeTransition) return false
 
-    const { startTime, duration } = this.activeTransition
-    const elapsed = now - startTime
-    const rawT = Math.min(elapsed / duration, 1)
-    // Ease-out cubic
-    const t = 1 - Math.pow(1 - rawT, 3)
+    const rawT = computeRawProgress(now, this.activeTransition)
+    const t = computeEasing(rawT)
 
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"
@@ -809,8 +808,8 @@ export class GeoPipelineStore {
       if (node._targetX != null && node._targetY != null) {
         const startX = node.x
         const startY = node.y
-        node.x = startX + (node._targetX - startX) * t
-        node.y = startY + (node._targetY - startY) * t
+        node.x = lerp(startX, node._targetX, t)
+        node.y = lerp(startY, node._targetY, t)
       }
     }
 

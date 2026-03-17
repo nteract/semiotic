@@ -293,6 +293,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         pointerEvents: "none"
       }}
     >
+      {typeof title === "string" && <title>{title}</title>}
+      <desc>Ordinal chart, {width}x{height} pixels</desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in OrdinalSVGUnderlay) */}
         {showGrid && scales && !isRadial && !underlayRendered && (

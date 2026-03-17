@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useState, useEffect } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
@@ -14,7 +14,8 @@ import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } fr
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
-import { SEGMENT_FIELD, buildAnomalyAnnotations, buildForecast, createSegmentLineStyle } from "../shared/statisticalOverlays"
+import { SEGMENT_FIELD } from "../shared/statisticalOverlays"
+import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy } from "../shared/statisticalOverlaysLazy"
 
 /**
  * LineChart component props
@@ -365,18 +366,35 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   const xAccStr = typeof xAccessor === "string" ? xAccessor : "x"
   const yAccStr = typeof yAccessor === "string" ? yAccessor : "y"
 
-  const statisticalResult = useMemo(() => {
-    if (forecast) {
-      return buildForecast(safeData as Record<string, any>[], xAccStr, yAccStr, forecast, anomaly)
-    }
-    return null
-  }, [safeData, forecast, anomaly, xAccStr, yAccStr])
+  // Lazy-load statistical overlays — only fetches the module when forecast/anomaly props are used
+  const [statisticalResult, setStatisticalResult] = useState<{
+    processedData: Record<string, any>[]
+    annotations: Record<string, any>[]
+  } | null>(null)
+  const [statisticalAnnotations, setStatisticalAnnotations] = useState<Record<string, any>[]>([])
 
-  const statisticalAnnotations = useMemo(() => {
-    if (statisticalResult) return statisticalResult.annotations
-    if (anomaly) return buildAnomalyAnnotations(anomaly)
-    return []
-  }, [statisticalResult, anomaly])
+  useEffect(() => {
+    let cancelled = false
+    if (forecast) {
+      buildForecastLazy(safeData as Record<string, any>[], xAccStr, yAccStr, forecast, anomaly).then(result => {
+        if (!cancelled) {
+          setStatisticalResult(result)
+          setStatisticalAnnotations(result.annotations)
+        }
+      })
+    } else if (anomaly) {
+      buildAnomalyAnnotationsLazy(anomaly).then(result => {
+        if (!cancelled) {
+          setStatisticalResult(null)
+          setStatisticalAnnotations(result)
+        }
+      })
+    } else {
+      setStatisticalResult(null)
+      setStatisticalAnnotations([])
+    }
+    return () => { cancelled = true }
+  }, [safeData, forecast, anomaly, xAccStr, yAccStr])
 
   const effectiveData = statisticalResult ? statisticalResult.processedData : safeData
   const effectiveGroupAccessor = forecast && !lineBy ? SEGMENT_FIELD : lineBy
@@ -568,10 +586,21 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }
   }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity])
 
-  const segmentAwareStyle = useMemo(
-    () => forecast ? createSegmentLineStyle(baseLineStyle, forecast) : baseLineStyle,
-    [baseLineStyle, forecast]
+  // Lazy-load segment-aware styling — only loads module when forecast is set
+  const [segmentAwareStyle, setSegmentAwareStyle] = useState<(d: Record<string, any>) => Record<string, any>>(
+    () => baseLineStyle
   )
+  useEffect(() => {
+    let cancelled = false
+    if (forecast) {
+      createSegmentLineStyleLazy(baseLineStyle, forecast).then(result => {
+        if (!cancelled) setSegmentAwareStyle(() => result)
+      })
+    } else {
+      setSegmentAwareStyle(() => baseLineStyle)
+    }
+    return () => { cancelled = true }
+  }, [baseLineStyle, forecast])
 
   const lineStyle = useMemo(
     () => wrapStyleWithSelection(segmentAwareStyle, effectiveSelectionHook, selection),

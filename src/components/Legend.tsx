@@ -87,11 +87,32 @@ const renderLegendGroupVertical = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
+        tabIndex={interactive ? 0 : undefined}
+        role={interactive ? "option" : undefined}
+        aria-selected={isIsolated || false}
+        aria-label={item.label}
+        onKeyDown={interactive ? (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            if (customClickBehavior) customClickBehavior(item)
+          }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault()
+            const dir = e.key === "ArrowDown" ? 1 : -1
+            const sibling = e.currentTarget.parentElement?.children[i + dir]
+            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
+              (sibling as any).focus?.()
+            }
+          }
+        } : undefined}
+        onFocus={customHoverBehavior ? () => customHoverBehavior(item) : undefined}
+        onBlur={customHoverBehavior ? () => customHoverBehavior(null) : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
           transition: "opacity 150ms ease",
           pointerEvents: "all",
+          outline: "none",
         }}
       >
         {renderedType}
@@ -134,11 +155,32 @@ const renderLegendGroupHorizontal = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
+        tabIndex={interactive ? 0 : undefined}
+        role={interactive ? "option" : undefined}
+        aria-selected={isIsolated || false}
+        aria-label={item.label}
+        onKeyDown={interactive ? (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            if (customClickBehavior) customClickBehavior(item)
+          }
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault()
+            const dir = e.key === "ArrowRight" ? 1 : -1
+            const sibling = e.currentTarget.parentElement?.children[i + dir]
+            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
+              (sibling as any).focus?.()
+            }
+          }
+        } : undefined}
+        onFocus={customHoverBehavior ? () => customHoverBehavior(item) : undefined}
+        onBlur={customHoverBehavior ? () => customHoverBehavior(null) : undefined}
         style={{
           cursor: interactive ? "pointer" : "default",
           opacity,
           transition: "opacity 150ms ease",
           pointerEvents: "all",
+          outline: "none",
         }}
       >
         {renderedType}
@@ -429,7 +471,7 @@ export default function Legend(props: LegendProps) {
         })
 
   return (
-    <g>
+    <g role="listbox" aria-label="Chart legend">
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

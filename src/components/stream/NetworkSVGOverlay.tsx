@@ -80,6 +80,8 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         pointerEvents: "none"
       }}
     >
+      {typeof title === "string" && <title>{title}</title>}
+      <desc>Network chart, {width}x{height} pixels</desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Labels */}
         {labels.map((label, i) => (

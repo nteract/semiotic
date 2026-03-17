@@ -57,6 +57,8 @@ export interface WedgeSceneNode {
   _pulseIntensity?: number
   /** Pulse color */
   _pulseColor?: string
+  /** Animation target opacity (set during enter/exit transitions) */
+  _targetOpacity?: number
 }
 
 export interface BoxplotSceneNode {
@@ -78,6 +80,7 @@ export interface BoxplotSceneNode {
   datum: any
   category?: string
   outliers?: { px: number; py: number; value: number; datum: any }[]
+  _targetOpacity?: number
 }
 
 export interface DistributionStats {
@@ -106,6 +109,7 @@ export interface ViolinSceneNode {
   style: Style
   datum: any
   category?: string
+  _targetOpacity?: number
 }
 
 export interface ConnectorSceneNode {
@@ -117,6 +121,7 @@ export interface ConnectorSceneNode {
   style: Style
   datum: any
   group?: string
+  _targetOpacity?: number
 }
 
 // Re-export scene node types from XY that we reuse
@@ -319,6 +324,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   pulse?: PulseConfig
   transition?: TransitionConfig
   staleness?: StalenessConfig
+
+  // ── Accessibility ─────────────────────────────────
+  /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */
+  accessibleTable?: boolean
 }
 
 // ── Ref handle ─────────────────────────────────────────────────────────

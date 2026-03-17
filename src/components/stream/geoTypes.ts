@@ -220,6 +220,10 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   showAxes?: boolean
+
+  // ── Accessibility ─────────────────────────────────
+  /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */
+  accessibleTable?: boolean
 }
 
 export interface StreamGeoFrameHandle {

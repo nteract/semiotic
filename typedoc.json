@@ -1,0 +1,35 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/components/semiotic.ts",
+    "src/components/semiotic-xy.ts",
+    "src/components/semiotic-ordinal.ts",
+    "src/components/semiotic-network.ts",
+    "src/components/semiotic-geo.ts",
+    "src/components/semiotic-realtime.ts",
+    "src/components/semiotic-server.ts",
+    "src/components/semiotic-ai.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs/build/api",
+  "json": "docs/build/api/api.json",
+  "tsconfig": "tsconfig.json",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "skipErrorChecking": true,
+  "readme": "none",
+  "name": "Semiotic API Reference",
+  "navigationLinks": {
+    "Docs": "/",
+    "GitHub": "https://github.com/nteract/semiotic"
+  },
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "@deprecated": true
+  }
+}

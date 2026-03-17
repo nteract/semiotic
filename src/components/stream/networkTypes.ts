@@ -514,6 +514,10 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Threshold alerting ────────────────────────────
   thresholds?: ThresholdAlertConfig
+
+  // ── Accessibility ─────────────────────────────────
+  /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */
+  accessibleTable?: boolean
 }
 
 // ── Ref handle ──────────────────────────────────────────────────────

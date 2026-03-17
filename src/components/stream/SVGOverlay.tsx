@@ -410,6 +410,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
         pointerEvents: "none"
       }}
     >
+      {typeof title === "string" && <title>{title}</title>}
+      <desc>XY chart, {width}x{height} pixels</desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in SVGUnderlay) */}
         {showGrid && scales && !underlayRendered && (

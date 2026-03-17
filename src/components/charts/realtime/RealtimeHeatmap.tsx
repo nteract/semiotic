@@ -15,10 +15,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode } from "../shared/types"
+import type { ChartMode, ChartAccessor } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 
-export interface RealtimeHeatmapProps {
+export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Chart dimensions as [width, height] */
@@ -42,11 +42,11 @@ export interface RealtimeHeatmapProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time/x value accessor */
-  timeAccessor?: string | ((d: Record<string, any>) => number)
+  timeAccessor?: ChartAccessor<TDatum, number>
   /** Value/y accessor */
-  valueAccessor?: string | ((d: Record<string, any>) => number)
+  valueAccessor?: ChartAccessor<TDatum, number>
   /** Category accessor for colored cells */
-  categoryAccessor?: string | ((d: Record<string, any>) => string)
+  categoryAccessor?: ChartAccessor<TDatum, string>
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
