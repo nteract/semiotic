@@ -150,6 +150,7 @@ async function createBundle(options = {}) {
     exports: "named",
     sourcemap: !minify,
     preserveModules: false,
+    inlineDynamicImports: true,
     interop: "auto",
     generatedCode: {
       constBindings: true
