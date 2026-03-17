@@ -1,6 +1,5 @@
-import React, { useRef, useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState } from "react"
 import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
-import { StreamGeoFrame } from "semiotic/geo"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -86,91 +85,86 @@ function WorldChoropleth({ colorScheme = "viridis", graticule = false, width = 7
 }
 
 // ---------------------------------------------------------------------------
-// Streaming demo — points appearing on a world map
+// Streaming demo — countries updating values over time (simulated live data)
 // ---------------------------------------------------------------------------
 
-const streamingWorldCode = `import { useRef, useEffect, useState } from "react"
-import { StreamGeoFrame, resolveReferenceGeography } from "semiotic/geo"
+// Subset of country IDs that will receive streaming updates
+const streamingCountryIds = countryGDP.map(c => c.id)
 
-function StreamingWorldEvents() {
-  const chartRef = useRef()
+const streamingChoroplethCode = `import { useState, useEffect } from "react"
+import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
+
+function StreamingChoropleth() {
   const [areas, setAreas] = useState(null)
+  const [liveData, setLiveData] = useState({})
 
   useEffect(() => {
     resolveReferenceGeography("world-110m").then(setAreas)
   }, [])
 
+  // Simulate live data arriving — a random country gets a new value each tick
   useEffect(() => {
     if (!areas) return
     const id = setInterval(() => {
-      if (chartRef.current) {
-        // Random global event
-        const lon = -180 + Math.random() * 360
-        const lat = -60 + Math.random() * 130
-        chartRef.current.push({ lon, lat, magnitude: 1 + Math.random() * 5 })
-      }
-    }, 200)
+      setLiveData(prev => {
+        const countryId = countryIds[Math.floor(Math.random() * countryIds.length)]
+        return { ...prev, [countryId]: Math.random() * 100 }
+      })
+    }, 300)
     return () => clearInterval(id)
   }, [areas])
 
   if (!areas) return null
 
+  // Merge live values into features
+  const liveRows = Object.entries(liveData).map(([id, value]) => ({ id, value }))
+  const enriched = mergeData(areas, liveRows, { featureKey: "id", dataKey: "id" })
+
   return (
-    <StreamGeoFrame
-      ref={chartRef}
+    <ChoroplethMap
+      areas={enriched}
+      valueAccessor="value"
+      colorScheme="viridis"
       projection="equalEarth"
-      areas={areas}
-      xAccessor="lon"
-      yAccessor="lat"
-      runtimeMode="streaming"
-      size={[700, 400]}
-      areaStyle={() => ({ fill: "#1a1a2e", stroke: "#333", strokeWidth: 0.3 })}
-      pointStyle={(d) => ({ fill: "#6366f1", r: d.magnitude || 2 })}
-      decay={{ type: "exponential", minOpacity: 0.05 }}
-      pulse={{ duration: 800, color: "rgba(99,102,241,0.6)", glowRadius: 6 }}
-      background="#0f0f1a"
-      enableHover
+      tooltip
     />
   )
 }`
 
-function StreamingWorldDemo({ width }) {
-  const chartRef = useRef()
-  const [areas, setAreas] = useState(null)
+function StreamingChoroplethDemo({ width }) {
+  const [baseAreas, setBaseAreas] = useState(null)
+  const [liveData, setLiveData] = useState({})
 
   useEffect(() => {
-    resolveReferenceGeography("world-110m").then(setAreas)
+    resolveReferenceGeography("world-110m").then(setBaseAreas)
   }, [])
 
+  // Simulate live data — a random country gets a new value each tick
   useEffect(() => {
-    if (!areas) return
+    if (!baseAreas) return
     const id = setInterval(() => {
-      if (chartRef.current) {
-        const lon = -180 + Math.random() * 360
-        const lat = -60 + Math.random() * 130
-        chartRef.current.push({ lon, lat, magnitude: 1 + Math.random() * 5 })
-      }
-    }, 200)
+      setLiveData(prev => {
+        const countryId = streamingCountryIds[Math.floor(Math.random() * streamingCountryIds.length)]
+        return { ...prev, [countryId]: Math.random() * 100 }
+      })
+    }, 300)
     return () => clearInterval(id)
-  }, [areas])
+  }, [baseAreas])
 
-  if (!areas) return <div style={{ width, height: 400, background: "#0f0f1a", borderRadius: 8 }} />
+  if (!baseAreas) return <div style={{ width, height: 400, background: "var(--surface-1)", borderRadius: 8 }} />
+
+  const liveRows = Object.entries(liveData).map(([id, value]) => ({ id, value }))
+  const enriched = mergeData(baseAreas, liveRows, { featureKey: "id", dataKey: "id" })
 
   return (
-    <StreamGeoFrame
-      ref={chartRef}
+    <ChoroplethMap
+      areas={enriched}
+      valueAccessor="value"
+      colorScheme="viridis"
       projection="equalEarth"
-      areas={areas}
-      xAccessor="lon"
-      yAccessor="lat"
-      runtimeMode="streaming"
-      size={[width, 400]}
-      areaStyle={() => ({ fill: "#1a1a2e", stroke: "#333", strokeWidth: 0.3 })}
-      pointStyle={(d) => ({ fill: "#6366f1", r: d.magnitude || 2 })}
-      decay={{ type: "exponential", minOpacity: 0.05 }}
-      pulse={{ duration: 800, color: "rgba(99,102,241,0.6)", glowRadius: 6 }}
-      background="#0f0f1a"
-      enableHover
+      tooltip
+      width={width}
+      height={400}
     />
   )
 }
@@ -256,8 +250,8 @@ export default function ChoroplethMapPage() {
         }
         streamingContent={
           <StreamingDemo
-            renderChart={(w) => <StreamingWorldDemo width={w} />}
-            code={streamingWorldCode}
+            renderChart={(w) => <StreamingChoroplethDemo width={w} />}
+            code={streamingChoroplethCode}
           />
         }
       />

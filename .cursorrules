@@ -90,7 +90,7 @@ All geo HOCs support: `selection`, `linkedHover`, `onObservation`, `showLegend`,
 
 **Reference geography**: `resolveReferenceGeography("world-110m")` returns GeoJSON features from Natural Earth data (world-atlas). Supported: `"world-110m"`, `"world-50m"`, `"land-110m"`, `"land-50m"`. All geo HOCs accept `areas` as `GeoJSON.Feature[]` or a reference string.
 
-**mergeData(features, data, { featureKey, dataKey })** — join external data into GeoJSON features by key field. Supports nested paths (e.g., `"properties.iso_a3"`). World-atlas uses ISO 3166-1 numeric codes as the `id` field.
+**mergeData(features, data, { featureKey, dataKey })** — join external data into GeoJSON features by key field. Supports nested paths (e.g., `"properties.iso_a3"`). World-atlas uses ISO 3166-1 numeric codes as the `id` field. Also available from `semiotic/data` as a general join-by-key utility.
 
 ```jsx
 // World choropleth with reference geography + data joining
@@ -280,8 +280,8 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 
 ## Server-Side Rendering
 - All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
-- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` (NOT a component name like "BarChart")
-- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`
+- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` | `"geo"` (NOT a component name like "BarChart")
+- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)`
 - For a bar chart: `renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })`
 - Works with Next.js App Router, Remix, Astro — same component on server and client
 

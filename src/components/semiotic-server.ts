@@ -2,5 +2,6 @@ export {
   renderToStaticSVG,
   renderXYToStaticSVG,
   renderOrdinalToStaticSVG,
-  renderNetworkToStaticSVG
+  renderNetworkToStaticSVG,
+  renderGeoToStaticSVG
 } from "./server/renderToStaticSVG"

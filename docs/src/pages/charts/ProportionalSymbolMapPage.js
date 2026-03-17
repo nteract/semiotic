@@ -6,6 +6,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -57,6 +59,103 @@ function WorldSymbolMap({ width = 600, height = 400, ...props }) {
       width={width}
       height={height}
       {...props}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Streaming demo — cities appearing one by one with graduated symbols
+// ---------------------------------------------------------------------------
+
+const streamingSymbolCode = `import { useState, useEffect } from "react"
+import { ProportionalSymbolMap, resolveReferenceGeography } from "semiotic/geo"
+
+const allCities = [
+  { name: "Tokyo", lon: 139.7, lat: 35.7, population: 37400000, region: "Asia" },
+  { name: "Delhi", lon: 77.1, lat: 28.7, population: 30291000, region: "Asia" },
+  { name: "São Paulo", lon: -46.6, lat: -23.5, population: 22043000, region: "South America" },
+  // ...more cities
+]
+
+function StreamingSymbolMap() {
+  const [worldAreas, setWorldAreas] = useState(null)
+  const [points, setPoints] = useState([])
+
+  useEffect(() => {
+    resolveReferenceGeography("world-110m").then(setWorldAreas)
+  }, [])
+
+  // Add one city at a time
+  useEffect(() => {
+    if (!worldAreas) return
+    let idx = 0
+    const id = setInterval(() => {
+      if (idx < allCities.length) {
+        setPoints(prev => [...prev, allCities[idx]])
+        idx++
+      } else {
+        // Reset and start over
+        setPoints([])
+        idx = 0
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [worldAreas])
+
+  if (!worldAreas) return null
+
+  return (
+    <ProportionalSymbolMap
+      points={points}
+      sizeBy="population"
+      colorBy="region"
+      areas={worldAreas}
+      areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
+      showLegend
+      tooltip
+    />
+  )
+}`
+
+function StreamingSymbolDemo({ width }) {
+  const [worldAreas, setWorldAreas] = useState(null)
+  const [points, setPoints] = useState([])
+
+  useEffect(() => {
+    resolveReferenceGeography("world-110m").then(setWorldAreas)
+  }, [])
+
+  useEffect(() => {
+    if (!worldAreas) return
+    let idx = 0
+    const id = setInterval(() => {
+      if (idx < cityData.length) {
+        setPoints(prev => [...prev, cityData[idx]])
+        idx++
+      } else {
+        setPoints([])
+        idx = 0
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [worldAreas])
+
+  if (!worldAreas) return <div style={{ width, height: 450, background: "var(--surface-1)", borderRadius: 8 }} />
+
+  return (
+    <ProportionalSymbolMap
+      points={points}
+      xAccessor="lon"
+      yAccessor="lat"
+      sizeBy="population"
+      sizeRange={[3, 30]}
+      colorBy="region"
+      areas={worldAreas}
+      areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
+      showLegend
+      tooltip
+      width={width}
+      height={450}
     />
   )
 }
@@ -136,14 +235,24 @@ export default function ProportionalSymbolMapPage() {
         accessor. Circles scale automatically by population.
       </p>
 
-      <WorldSymbolMap
-        points={cityData}
-        xAccessor="lon"
-        yAccessor="lat"
-        sizeBy="population"
-        tooltip={true}
-        width={700}
-        height={450}
+      <StreamingToggle
+        staticContent={
+          <WorldSymbolMap
+            points={cityData}
+            xAccessor="lon"
+            yAccessor="lat"
+            sizeBy="population"
+            tooltip={true}
+            width={700}
+            height={450}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSymbolDemo width={w} />}
+            code={streamingSymbolCode}
+          />
+        }
       />
 
       <CodeBlock
