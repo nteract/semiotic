@@ -169,6 +169,7 @@ export type NetworkChartType =
   | "cluster"
   | "treemap"
   | "circlepack"
+  | "orbit"
   | "partition"
 
 // ── Scene graph nodes ─────────────────────────────────────────────────
@@ -320,6 +321,25 @@ export interface NetworkLayoutPlugin {
 
   /** Whether this layout uses hierarchical (tree) input instead of nodes+edges */
   hierarchical: boolean
+
+  /**
+   * Whether this layout drives continuous animation (e.g. orbiting nodes).
+   * When true, StreamNetworkFrame keeps its RAF loop alive and calls `tick()` each frame.
+   */
+  supportsAnimation?: boolean
+
+  /**
+   * Advance one animation frame. Called by StreamNetworkFrame on each RAF tick
+   * when `supportsAnimation` is true. Should mutate node positions in-place.
+   * Returns true if the scene needs a rebuild (always true for orbit animation).
+   */
+  tick?: (
+    nodes: RealtimeNode[],
+    edges: RealtimeEdge[],
+    config: NetworkPipelineConfig,
+    size: [number, number],
+    deltaTime: number
+  ) => boolean
 }
 
 // ── Threshold alerting ────────────────────────────────────────────────
@@ -405,6 +425,23 @@ export interface NetworkPipelineConfig {
 
   // ── Threshold alerting ────────────────────────────
   thresholds?: ThresholdAlertConfig
+
+  // ── Orbit layout ──────────────────────────────────
+  /** Ring arrangement mode: "flat" (all children in one ring), "solar" (one per ring),
+   *  "atomic" ([2,8] electron shell), or custom capacities. @default "flat" */
+  orbitMode?: "flat" | "solar" | "atomic" | number[]
+  /** Ring size divisor per depth. Larger = tighter orbits. @default 2.95 */
+  orbitSize?: number | ((node: any) => number)
+  /** Orbit speed in degrees per frame. @default 0.25 */
+  orbitSpeed?: number
+  /** Per-node speed modifier. @default (node) => 1 / (node.depth + 1) */
+  orbitRevolution?: (node: any) => number
+  /** Vertical squash for elliptical orbits. 1 = circle. @default 1 */
+  orbitEccentricity?: number | ((node: any) => number)
+  /** Show orbital ring ellipses as foreground graphics. @default true */
+  orbitShowRings?: boolean
+  /** Enable orbit animation. @default true */
+  orbitAnimated?: boolean
 }
 
 // ── Component props ─────────────────────────────────────────────────
@@ -514,6 +551,15 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Threshold alerting ────────────────────────────
   thresholds?: ThresholdAlertConfig
+
+  // ── Orbit layout ────────────────────────────────────
+  orbitMode?: "flat" | "solar" | "atomic" | number[]
+  orbitSize?: number | ((node: any) => number)
+  orbitSpeed?: number
+  orbitRevolution?: (node: any) => number
+  orbitEccentricity?: number | ((node: any) => number)
+  orbitShowRings?: boolean
+  orbitAnimated?: boolean
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */

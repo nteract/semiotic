@@ -54,7 +54,7 @@ import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
 
 const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
 const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
-const CENTERED_TYPES = new Set(["chord", "force", "circlepack"])
+const CENTERED_TYPES = new Set(["chord", "force", "circlepack", "orbit"])
 const DEFAULT_SIZE: [number, number] = [800, 600]
 
 // ── Tooltip ────────────────────────────────────────────────────────────
@@ -242,7 +242,14 @@ const StreamNetworkFrame = forwardRef<
     pulse,
     staleness,
     thresholds,
-    accessibleTable
+    accessibleTable,
+    orbitMode,
+    orbitSize,
+    orbitSpeed,
+    orbitRevolution,
+    orbitEccentricity,
+    orbitShowRings,
+    orbitAnimated
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -303,7 +310,14 @@ const StreamNetworkFrame = forwardRef<
       decay,
       pulse,
       staleness,
-      thresholds
+      thresholds,
+      orbitMode,
+      orbitSize,
+      orbitSpeed,
+      orbitRevolution,
+      orbitEccentricity,
+      orbitShowRings,
+      orbitAnimated
     }),
     [
       chartType,
@@ -344,7 +358,14 @@ const StreamNetworkFrame = forwardRef<
       decay,
       pulse,
       staleness,
-      thresholds
+      thresholds,
+      orbitMode,
+      orbitSize,
+      orbitSpeed,
+      orbitRevolution,
+      orbitEccentricity,
+      orbitShowRings,
+      orbitAnimated
     ]
   )
 
@@ -458,7 +479,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Stable scheduleRender ────────────────────────────────────────────
 
   const isContinuous =
-    (chartType === "sankey" && showParticles) || !!pulse
+    (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
 
   const scheduleRender = useCallback(() => {
     if (rafRef.current && !isContinuous) return
@@ -878,7 +899,11 @@ const StreamNetworkFrame = forwardRef<
 
     // Advance transition animation
     const isTransitioning = store.advanceTransition(now)
-    if (isTransitioning || dirtyRef.current) {
+
+    // Advance layout animation (e.g. orbit rotation)
+    const animationTicked = store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+
+    if (isTransitioning || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
       store.buildScene([adjustedWidth, adjustedHeight])
     }
@@ -968,12 +993,12 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = false
 
     // Update SVG overlay when layout changes
-    if (wasDirty || isTransitioning) {
+    if (wasDirty || isTransitioning || animationTicked) {
       setAnnotationFrame((f) => f + 1)
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs)
-    if (isContinuous || isTransitioning || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation)
+    if (isContinuous || isTransitioning || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }

@@ -433,6 +433,27 @@ export class NetworkPipelineStore {
     this.labels = labels
   }
 
+  // ── Animation tick (orbit etc.) ──────────────────────────────────────
+
+  /** Whether the current layout plugin drives continuous animation */
+  get isAnimating(): boolean {
+    const plugin = getLayoutPlugin(this.config.chartType)
+    return !!plugin?.supportsAnimation
+  }
+
+  /**
+   * Advance the layout animation by one frame (e.g. orbit rotation).
+   * Returns true if the scene should be rebuilt.
+   */
+  tickAnimation(size: [number, number], deltaTime: number): boolean {
+    const plugin = getLayoutPlugin(this.config.chartType)
+    if (!plugin?.tick) return false
+
+    const nodesArr = Array.from(this.nodes.values())
+    const edgesArr = Array.from(this.edges.values())
+    return plugin.tick(nodesArr, edgesArr, this.config, size, deltaTime)
+  }
+
   // ── Transition animation ──────────────────────────────────────────────
 
   /**

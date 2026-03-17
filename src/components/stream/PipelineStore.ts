@@ -1497,13 +1497,13 @@ export class PipelineStore {
   private getNodeIdentity(node: SceneNode, index: number): string | null {
     switch (node.type) {
       case "point":
-        return `p:${node.datum === undefined ? index : this.getX(node.datum)}_${this.getY(node.datum)}`
+        return `p:${index}`
       case "rect":
         return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
       case "heatcell":
         return `h:${node.x}_${node.y}`
       case "candlestick":
-        return `c:${this.getX(node.datum)}`
+        return node.datum == null ? `c:${index}` : `c:${this.getX(node.datum)}`
       case "line":
         return `l:${node.group || "_default"}`
       case "area":
