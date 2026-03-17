@@ -1530,6 +1530,10 @@ export class PipelineStore {
       const key = this.getNodeIdentity(node, i)
       if (!key) continue
 
+      // Store stable key on the node so advanceTransition can use it
+      // even after exit nodes are prepended to the scene
+      ;(node as any)._transitionKey = key
+
       // Handle line/area path interpolation setup
       if (node.type === "line" || node.type === "area") {
         const prevPath = this.prevPathMap.get(key)
@@ -1641,30 +1645,33 @@ export class PipelineStore {
     for (const [key, prev] of this.prevPositionMap) {
       if (matchedPrevKeys.has(key)) continue
       if (key.startsWith("p:")) {
-        this.exitNodes.push({
+        const exitNode = {
           type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
           style: { opacity: prev.opacity ?? 1 }, datum: null,
-          _targetOpacity: 0
-        } as unknown as PointSceneNode)
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as PointSceneNode
+        this.exitNodes.push(exitNode)
       } else if (key.startsWith("r:")) {
-        this.exitNodes.push({
+        const exitNode = {
           type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
           style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
-          _targetOpacity: 0
-        } as unknown as RectSceneNode)
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as RectSceneNode
+        this.exitNodes.push(exitNode)
       } else if (key.startsWith("h:")) {
-        this.exitNodes.push({
+        const exitNode = {
           type: "heatcell", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
           fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
-          _targetOpacity: 0
-        } as unknown as HeatcellSceneNode)
+          _targetOpacity: 0, _transitionKey: key
+        } as unknown as HeatcellSceneNode
+        this.exitNodes.push(exitNode)
       }
       hasChanges = true
     }
 
-    // Add exit nodes to the scene so they render during the transition
+    // Append exit nodes (at end to avoid shifting indices, though we use _transitionKey now)
     if (this.exitNodes.length > 0) {
-      this.scene = [...this.exitNodes, ...this.scene]
+      this.scene = [...this.scene, ...this.exitNodes]
     }
 
     if (hasChanges) {
@@ -1685,17 +1692,17 @@ export class PipelineStore {
     const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
     const t = computeEasing(rawT, easing)
 
-    for (let i = 0; i < this.scene.length; i++) {
-      const node = this.scene[i]
+    for (const node of this.scene) {
+      // Use stable key stored during startTransition (immune to index shifts from exit nodes)
+      const key = (node as any)._transitionKey as string | undefined
       if (node.type === "point") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
+          const prev = key ? this.prevPositionMap.get(key) : undefined
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
@@ -1706,12 +1713,11 @@ export class PipelineStore {
         }
       } else if (node.type === "rect") {
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
+          const prev = key ? this.prevPositionMap.get(key) : undefined
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
@@ -1721,12 +1727,11 @@ export class PipelineStore {
         if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
       } else if (node.type === "heatcell") {
         if (node._targetOpacity !== undefined) {
-          const prev = this.prevPositionMap.get(this.getNodeIdentity(node, i) || "")
+          const prev = key ? this.prevPositionMap.get(key) : undefined
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           ;(node as any).style = { ...((node as any).style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         if (node._targetX === undefined) continue
-        const key = this.getNodeIdentity(node, i)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue

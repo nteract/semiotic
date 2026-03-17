@@ -435,10 +435,13 @@ export class NetworkPipelineStore {
 
   // ── Animation tick (orbit etc.) ──────────────────────────────────────
 
-  /** Whether the current layout plugin drives continuous animation */
+  /** Whether the current layout plugin drives continuous animation (respects orbitAnimated config) */
   get isAnimating(): boolean {
     const plugin = getLayoutPlugin(this.config.chartType)
-    return !!plugin?.supportsAnimation
+    if (!plugin?.supportsAnimation) return false
+    // Respect the orbitAnimated config — if explicitly false, don't animate
+    if (this.config.orbitAnimated === false) return false
+    return true
   }
 
   /**

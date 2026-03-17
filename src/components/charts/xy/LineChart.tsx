@@ -381,12 +381,21 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
           setStatisticalResult(result)
           setStatisticalAnnotations(result.annotations)
         }
+      }).catch(() => {
+        if (!cancelled) {
+          setStatisticalResult(null)
+          setStatisticalAnnotations([])
+        }
       })
     } else if (anomaly) {
       buildAnomalyAnnotationsLazy(anomaly).then(result => {
         if (!cancelled) {
           setStatisticalResult(null)
           setStatisticalAnnotations(result)
+        }
+      }).catch(() => {
+        if (!cancelled) {
+          setStatisticalAnnotations([])
         }
       })
     } else {

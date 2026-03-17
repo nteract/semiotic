@@ -768,6 +768,11 @@ export class OrdinalPipelineStore {
       const node = this.scene[i]
       const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
+
+      // Store stable key on node so advanceTransition can use it
+      // even after exit nodes are appended to the scene
+      ;(node as any)._transitionKey = key
+
       const prev = this.prevPositionMap.get(key)
 
       if (node.type === "point") {
@@ -819,20 +824,21 @@ export class OrdinalPipelineStore {
         this.exitNodes.push({
           type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
           style: { opacity: prev.opacity ?? 1 }, datum: null,
-          _targetOpacity: 0
+          _targetOpacity: 0, _transitionKey: key
         } as any)
       } else if (key.startsWith("r:")) {
         this.exitNodes.push({
           type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
           style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
-          _targetOpacity: 0
+          _targetOpacity: 0, _transitionKey: key
         } as any)
       }
       hasChanges = true
     }
 
+    // Append exit nodes (at end to preserve existing indices)
     if (this.exitNodes.length > 0) {
-      this.scene = [...this.exitNodes, ...this.scene]
+      this.scene = [...this.scene, ...this.exitNodes]
     }
 
     if (hasChanges) {
@@ -850,11 +856,9 @@ export class OrdinalPipelineStore {
     const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
     const t = computeEasing(rawT, easing)
 
-    const keyCounts = new Map<string, number>()
-    for (let i = 0; i < this.scene.length; i++) {
-      const node = this.scene[i]
-      // Always call getNodeKey to keep duplicate counters in sync
-      const key = this.getNodeKey(node, keyCounts)
+    for (const node of this.scene) {
+      // Use stable key stored during startTransition (immune to exit node shifts)
+      const key = (node as any)._transitionKey as string | undefined
       if (!key) continue
 
       if (node.type === "point") {
