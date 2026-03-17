@@ -48,6 +48,7 @@ if (typeof HTMLCanvasElement !== "undefined") {
 const originalGetContext = HTMLCanvasElement.prototype.getContext
 
 HTMLCanvasElement.prototype.getContext = function (
+  this: HTMLCanvasElement,
   contextId: string,
   ...args: any[]
 ) {
