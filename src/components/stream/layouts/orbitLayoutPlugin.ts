@@ -31,7 +31,7 @@ interface OrbitState {
 function getOrbitState(config: NetworkPipelineConfig): OrbitState {
   const c = config as any
   if (!c.__orbitState) {
-    c.__orbitState = { metaMap: new Map<string, OrbitMeta>(), startTime: performance.now() }
+    c.__orbitState = { metaMap: new Map<string, OrbitMeta>(), startTime: typeof performance !== "undefined" ? performance.now() : Date.now() }
   }
   return c.__orbitState
 }
@@ -223,7 +223,7 @@ function tickOrbitPositions(
 
   // Use wall-clock elapsed time for deterministic animation regardless of
   // re-render frequency or frame rate
-  const elapsed = (performance.now() - state.startTime) / 1000 // seconds
+  const elapsed = ((typeof performance !== "undefined" ? performance.now() : Date.now()) - state.startTime) / 1000 // seconds
   const baseRate = speed * (Math.PI / 6) // radians per second (speed=0.25 → ~7.5°/s)
 
   // Build a node lookup for parent positions

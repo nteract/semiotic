@@ -184,6 +184,19 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     onObservation, chartType: "OrbitDiagram", chartId,
   })
 
+  // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
+  // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
+  const wrappedHoverBehavior = useMemo(() => {
+    if (!customHoverBehavior) return undefined
+    return (hover: any) => {
+      if (hover && hover.data && hover.data.data !== undefined) {
+        customHoverBehavior({ ...hover, data: hover.data.data })
+      } else {
+        customHoverBehavior(hover)
+      }
+    }
+  }, [customHoverBehavior])
+
   // Validate
   const error = validateObjectData({ componentName: "OrbitDiagram", data })
   if (error) return <ChartError componentName="OrbitDiagram" message={error} width={width} height={height} />
@@ -209,7 +222,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         showLabels={showLabels}
         enableHover={animated ? false : enableHover}
         tooltipContent={!animated && tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data?.data ?? d.data) : undefined}
-        customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+        customHoverBehavior={(linkedHover || onObservation) ? wrappedHoverBehavior : undefined}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
         className={className}

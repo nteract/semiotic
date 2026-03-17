@@ -51,6 +51,8 @@ export interface LegendProps {
   isolatedCategories?: Set<string>
   /** Whether hover-highlighting is active (dims non-hovered items) */
   highlightedCategory?: string | null
+  /** Legend interaction mode — used to set aria-multiselectable on the listbox */
+  legendInteraction?: string
   title?: string
   width?: number
   height?: number

@@ -482,6 +482,7 @@ export default function Legend(props: LegendProps) {
     customHoverBehavior,
     highlightedCategory,
     isolatedCategories,
+    legendInteraction,
     title = "Legend",
     width = 100,
     height = 20,
@@ -511,7 +512,7 @@ export default function Legend(props: LegendProps) {
   const isInteractive = Boolean(customClickBehavior || customHoverBehavior)
 
   return (
-    <g role={isInteractive ? "listbox" : undefined} aria-label="Chart legend">
+    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && legendInteraction === "isolate" ? true : undefined} aria-label="Chart legend">
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

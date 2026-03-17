@@ -10,6 +10,7 @@ import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
 import type { MarginType } from "../../types/generalTypes"
+import type { TransitionConfig } from "../../stream/types"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -436,8 +437,6 @@ export function useChartMode(
 }
 
 // ── Animate prop → transition config ────────────────────────────────
-
-import type { TransitionConfig } from "../../stream/types"
 
 /**
  * Resolve the `animate` prop into a `TransitionConfig` for Stream Frames.
