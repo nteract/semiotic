@@ -156,10 +156,11 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, selection])
 
   const allCategories = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") return []
+    if (!colorBy) return []
+    const acc = typeof colorBy === "function" ? colorBy : (d: any) => d[colorBy as string]
     const vals = new Set<string>()
     for (const d of safeData) {
-      const v = d[colorBy as string]
+      const v = acc(d)
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)

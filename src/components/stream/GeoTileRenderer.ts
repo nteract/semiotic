@@ -70,12 +70,18 @@ export class TileCache {
   }
 
   private evict(): void {
-    // Remove least recently used entries until under limit
-    const entries = Array.from(this.cache.entries())
-      .sort((a, b) => a[1].lastUsed - b[1].lastUsed)
-    const toRemove = entries.slice(0, entries.length - this.limit)
-    for (const [key] of toRemove) {
-      this.cache.delete(key)
+    // Remove single oldest entry — O(n) scan instead of O(n log n) sort
+    while (this.cache.size > this.limit) {
+      let oldestKey: string | undefined
+      let oldestTime = Infinity
+      for (const [key, entry] of this.cache) {
+        if (entry.lastUsed < oldestTime) {
+          oldestTime = entry.lastUsed
+          oldestKey = key
+        }
+      }
+      if (oldestKey) this.cache.delete(oldestKey)
+      else break
     }
   }
 
