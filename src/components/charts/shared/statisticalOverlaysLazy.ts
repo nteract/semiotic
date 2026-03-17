@@ -3,6 +3,8 @@
  * Only loads the LOESS/forecast logic when forecast or anomaly props are actually used.
  */
 
+export type { ForecastResult } from "./statisticalOverlays"
+
 let _module: typeof import("./statisticalOverlays") | null = null
 
 async function load() {
