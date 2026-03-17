@@ -1522,6 +1522,13 @@ export class PipelineStore {
     if (!this.config.transition || (this.prevPositionMap.size === 0 && this.prevPathMap.size === 0)) return
     const duration = this.config.transition.duration ?? 300
 
+    // Clear any previously-appended exit nodes from the scene before processing
+    if (this.exitNodes.length > 0) {
+      const exitSet = new Set(this.exitNodes)
+      this.scene = this.scene.filter(n => !exitSet.has(n))
+      this.exitNodes = []
+    }
+
     let hasChanges = false
     const matchedPrevKeys = new Set<string>()
     const matchedPrevPathKeys = new Set<string>()

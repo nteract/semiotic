@@ -603,6 +603,9 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     if (forecast) {
       createSegmentLineStyleLazy(baseLineStyle, forecast).then(result => {
         if (!cancelled) setSegmentAwareStyle(() => result)
+      }).catch(() => {
+        // Fallback to base style if overlay module fails to load
+        if (!cancelled) setSegmentAwareStyle(() => baseLineStyle)
       })
     } else {
       setSegmentAwareStyle(() => baseLineStyle)

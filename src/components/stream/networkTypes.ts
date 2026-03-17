@@ -436,6 +436,15 @@ export interface NetworkPipelineConfig {
   orbitSpeed?: number
   /** Per-node speed modifier. @default (node) => 1 / (node.depth + 1) */
   orbitRevolution?: (node: any) => number
+  /**
+   * Built-in revolution style presets:
+   * - "locked": children rotate with parent at decreasing speed (default)
+   * - "decay": each depth level progressively slower, independent of parent
+   * - "alternate": odd-depth rings reverse direction
+   * Ignored when `orbitRevolution` is provided.
+   * @default "locked"
+   */
+  orbitRevolutionStyle?: "locked" | "decay" | "alternate"
   /** Vertical squash for elliptical orbits. 1 = circle. @default 1 */
   orbitEccentricity?: number | ((node: any) => number)
   /** Show orbital ring ellipses as foreground graphics. @default true */
@@ -557,6 +566,7 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   orbitSize?: number | ((node: any) => number)
   orbitSpeed?: number
   orbitRevolution?: (node: any) => number
+  orbitRevolutionStyle?: "locked" | "decay" | "alternate"
   orbitEccentricity?: number | ((node: any) => number)
   orbitShowRings?: boolean
   orbitAnimated?: boolean

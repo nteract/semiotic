@@ -761,6 +761,13 @@ export class OrdinalPipelineStore {
     if (!this.config.transition || this.prevPositionMap.size === 0) return
     const duration = this.config.transition.duration ?? 300
 
+    // Clear any previously-appended exit nodes from the scene
+    if (this.exitNodes.length > 0) {
+      const exitSet = new Set(this.exitNodes)
+      this.scene = this.scene.filter(n => !exitSet.has(n))
+      this.exitNodes = []
+    }
+
     let hasChanges = false
     const matchedPrevKeys = new Set<string>()
     const keyCounts = new Map<string, number>()

@@ -60,6 +60,8 @@ const datasets = [
 const controls = [
   { name: "orbitMode", type: "select", label: "Orbit Mode", group: "Layout",
     default: "flat", options: ["flat", "solar", "atomic"] },
+  { name: "revolutionStyle", type: "select", label: "Revolution Style", group: "Animation",
+    default: "locked", options: ["locked", "decay", "alternate"] },
   { name: "speed", type: "number", label: "Speed", group: "Animation",
     default: 0.25, min: 0, max: 2, step: 0.05 },
   { name: "eccentricity", type: "number", label: "Eccentricity", group: "Layout",
@@ -110,7 +112,7 @@ export default function OrbitDiagramPlayground() {
   data={hierarchyData}
   childrenAccessor="children"
   nodeIdAccessor="name"
-  orbitMode="${values.orbitMode}"${values.speed !== 0.25 ? `\n  speed={${values.speed}}` : ""}${values.eccentricity !== 1 ? `\n  eccentricity={${values.eccentricity}}` : ""}${values.orbitSize !== 2.95 ? `\n  orbitSize={${values.orbitSize}}` : ""}${values.nodeRadius !== 6 ? `\n  nodeRadius={${values.nodeRadius}}` : ""}${!values.showRings ? "\n  showRings={false}" : ""}${values.showLabels ? "\n  showLabels" : ""}${values.colorByDepth ? "\n  colorByDepth" : ""}${!values.animated ? "\n  animated={false}" : ""}
+  orbitMode="${values.orbitMode}"${values.revolutionStyle !== "locked" ? `\n  revolutionStyle="${values.revolutionStyle}"` : ""}${values.speed !== 0.25 ? `\n  speed={${values.speed}}` : ""}${values.eccentricity !== 1 ? `\n  eccentricity={${values.eccentricity}}` : ""}${values.orbitSize !== 2.95 ? `\n  orbitSize={${values.orbitSize}}` : ""}${values.nodeRadius !== 6 ? `\n  nodeRadius={${values.nodeRadius}}` : ""}${!values.showRings ? "\n  showRings={false}" : ""}${values.showLabels ? "\n  showLabels" : ""}${values.colorByDepth ? "\n  colorByDepth" : ""}${!values.animated ? "\n  animated={false}" : ""}
   width={${chartSize}}
   height={${chartSize}}
 />`
@@ -141,11 +143,12 @@ export default function OrbitDiagramPlayground() {
       <div ref={vizRef} className="playground-chart-container" style={{ display: "flex", justifyContent: "center" }}>
         {containerWidth ? (
           <OrbitDiagram
-            key={`orbit-${datasetIndex}-${values.orbitMode}-${values.animated}`}
+            key={`orbit-${datasetIndex}-${values.orbitMode}-${values.revolutionStyle}-${values.animated}`}
             data={dataset.data}
             childrenAccessor="children"
             nodeIdAccessor="name"
             orbitMode={values.orbitMode}
+            revolutionStyle={values.revolutionStyle}
             speed={values.speed}
             eccentricity={values.eccentricity}
             orbitSize={values.orbitSize}

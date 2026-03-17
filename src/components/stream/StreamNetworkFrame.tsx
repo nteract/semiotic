@@ -247,6 +247,7 @@ const StreamNetworkFrame = forwardRef<
     orbitSize,
     orbitSpeed,
     orbitRevolution,
+    orbitRevolutionStyle,
     orbitEccentricity,
     orbitShowRings,
     orbitAnimated
@@ -315,6 +316,7 @@ const StreamNetworkFrame = forwardRef<
       orbitSize,
       orbitSpeed,
       orbitRevolution,
+      orbitRevolutionStyle,
       orbitEccentricity,
       orbitShowRings,
       orbitAnimated
@@ -363,6 +365,7 @@ const StreamNetworkFrame = forwardRef<
       orbitSize,
       orbitSpeed,
       orbitRevolution,
+      orbitRevolutionStyle,
       orbitEccentricity,
       orbitShowRings,
       orbitAnimated
@@ -611,7 +614,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Bounded data ingestion ───────────────────────────────────────────
 
   // Determine if this is a hierarchical chart type
-  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
   // Resolve hierarchy root: `data` prop or single-object `edges` prop
   const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
 

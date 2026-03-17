@@ -103,6 +103,11 @@ export class NetworkPipelineStore {
   // ── Config update ─────────────────────────────────────────────────────
 
   updateConfig(config: NetworkPipelineConfig): void {
+    // Preserve plugin state stored on the config object across updates
+    const prev = this.config as any
+    const next = config as any
+    if (prev.__orbitState) next.__orbitState = prev.__orbitState
+    if (prev.__hierarchyRoot) next.__hierarchyRoot = prev.__hierarchyRoot
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,

@@ -58,6 +58,15 @@ export interface OrbitDiagramProps<TDatum extends Record<string, any> = Record<s
   speed?: number
   /** Per-node speed modifier @default (node) => 1 / (node.depth + 1) */
   revolution?: (node: any) => number
+  /**
+   * Built-in revolution style presets:
+   * - "locked": children rotate with parent at decreasing speed (default)
+   * - "decay": each depth level progressively slower, independent of parent
+   * - "alternate": odd-depth rings reverse direction
+   * Ignored when `revolution` function is provided.
+   * @default "locked"
+   */
+  revolutionStyle?: "locked" | "decay" | "alternate"
   /** Vertical squash for elliptical orbits. 1 = circle, 0.5 = ellipse @default 1 */
   eccentricity?: number | ((node: any) => number)
   /** Show orbital ring paths @default true */
@@ -68,7 +77,7 @@ export interface OrbitDiagramProps<TDatum extends Record<string, any> = Record<s
   showLabels?: boolean
   /** Enable animation @default true */
   animated?: boolean
-  /** Tooltip configuration */
+  /** Tooltip configuration. Function form receives the raw datum (not OrbitNode). */
   tooltip?: TooltipProp
   /** Enable hover @default true */
   enableHover?: boolean
@@ -110,6 +119,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     orbitSize = 2.95,
     speed = 0.25,
     revolution,
+    revolutionStyle,
     eccentricity = 1,
     showRings = true,
     nodeRadius: nodeRadiusProp = 6,
@@ -197,8 +207,8 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         nodeSize={nodeRadiusProp}
         nodeLabel={showLabels ? nodeIdAccessor : undefined}
         showLabels={showLabels}
-        enableHover={enableHover}
-        tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+        enableHover={animated ? false : enableHover}
+        tooltipContent={!animated && tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
         customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
@@ -208,6 +218,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         orbitSize={orbitSize}
         orbitSpeed={speed}
         orbitRevolution={revolution}
+        orbitRevolutionStyle={revolutionStyle}
         orbitEccentricity={eccentricity}
         orbitShowRings={showRings}
         orbitAnimated={animated}

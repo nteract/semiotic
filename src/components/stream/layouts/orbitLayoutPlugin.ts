@@ -25,13 +25,13 @@ interface OrbitMeta {
 // Per-instance orbit state is stored on the config to support multiple OrbitDiagrams
 interface OrbitState {
   metaMap: Map<string, OrbitMeta>
-  frame: number
+  startTime: number
 }
 
 function getOrbitState(config: NetworkPipelineConfig): OrbitState {
   const c = config as any
   if (!c.__orbitState) {
-    c.__orbitState = { metaMap: new Map<string, OrbitMeta>(), frame: 0 }
+    c.__orbitState = { metaMap: new Map<string, OrbitMeta>(), startTime: performance.now() }
   }
   return c.__orbitState
 }
@@ -60,6 +60,25 @@ function resolveNodeIdAccessor(acc: string | ((d: any) => string) | undefined): 
   return (d: any) => String(d[field] ?? "")
 }
 
+function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefined): (n: any) => number {
+  switch (style) {
+    case "decay":
+      // Each depth level is exponentially slower — outer rings wind down
+      return (n: any) => Math.pow(0.6, (n.depth ?? 0))
+    case "alternate":
+      // Odd depths reverse direction — counter-rotating rings
+      return (n: any) => {
+        const d = n.depth ?? 0
+        const sign = d % 2 === 0 ? 1 : -1
+        return sign / (d + 1)
+      }
+    case "locked":
+    default:
+      // Children rotate with parent at speed proportional to 1/(depth+1)
+      return (n: any) => 1 / ((n.depth ?? 0) + 1)
+  }
+}
+
 // ── Layout engine ─────────────────────────────────────────────────────
 
 function buildOrbitLayout(
@@ -77,19 +96,26 @@ function buildOrbitLayout(
   const orbitSizeFn = typeof orbitSizeOpt === "number" ? () => orbitSizeOpt : orbitSizeOpt
   const eccentricityFn = typeof eccentricityOpt === "number" ? () => eccentricityOpt : eccentricityOpt
 
-  // Clear previous state
+  // Clear previous layout state (but preserve frame counter for continuous animation)
   const state = getOrbitState(config)
   state.metaMap.clear()
-  state.frame = 0
   nodes.length = 0
   edges.length = 0
+
+  // Track seen IDs to disambiguate duplicates (common in hierarchical data)
+  const seenIds = new Map<string, number>()
+  function uniqueId(rawId: string): string {
+    const count = seenIds.get(rawId) ?? 0
+    seenIds.set(rawId, count + 1)
+    return count === 0 ? rawId : `${rawId}__${count}`
+  }
 
   const cx = size[0] / 2
   const cy = size[1] / 2
   const maxRing = Math.min(size[0], size[1]) / 2 * 0.85
 
   // Create root node
-  const rootId = nodeIdFn(root)
+  const rootId = uniqueId(nodeIdFn(root))
   const rootNode: RealtimeNode = {
     id: rootId,
     x: cx, y: cy,
@@ -145,7 +171,7 @@ function buildOrbitLayout(
       for (let j = 0; j < ringSlice.length; j++) {
         const angle = (arcs[j].startAngle + arcs[j].endAngle) / 2
         const kidDatum = ringSlice[j]
-        const kidId = nodeIdFn(kidDatum)
+        const kidId = uniqueId(nodeIdFn(kidDatum))
 
         const x = parentX + r * Math.sin(angle)
         const y = parentY + r * Math.cos(angle) * ecc
@@ -189,16 +215,16 @@ function tickOrbitPositions(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
   _size: [number, number],
-  deltaTime: number
+  _deltaTime: number
 ): void {
   const state = getOrbitState(config)
   const speed = config.orbitSpeed ?? 0.25
-  // Use deltaTime for frame-rate-independent animation (normalize to ~16ms frame)
-  const dtFactor = deltaTime > 0 ? deltaTime / 16.667 : 1
-  const tickStep = speed * (Math.PI / 360) * dtFactor
-  const revolutionFn = config.orbitRevolution ?? ((n: any) => 1 / ((n.depth ?? 0) + 1))
+  const revolutionFn = config.orbitRevolution ?? resolveRevolutionStyle(config.orbitRevolutionStyle)
 
-  state.frame++
+  // Use wall-clock elapsed time for deterministic animation regardless of
+  // re-render frequency or frame rate
+  const elapsed = (performance.now() - state.startTime) / 1000 // seconds
+  const baseRate = speed * (Math.PI / 6) // radians per second (speed=0.25 → ~7.5°/s)
 
   // Build a node lookup for parent positions
   const nodeMap = new Map<string, RealtimeNode>()
@@ -215,7 +241,7 @@ function tickOrbitPositions(
 
     // Pass actual node context to revolutionFn
     const nodeContext = { id: node.id, depth: meta.depth, data: node.data, parentId: meta.parentId }
-    const a = meta.angle + state.frame * tickStep * revolutionFn(nodeContext)
+    const a = meta.angle + elapsed * baseRate * revolutionFn(nodeContext)
     node.x = parent.x + meta.ring * Math.sin(a)
     node.y = parent.y + meta.ring * Math.cos(a) * meta.eccentricity
 
@@ -268,7 +294,42 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     const sceneEdges: NetworkLineEdge[] = []
     const labels: NetworkLabel[] = []
 
-    // TODO: orbitShowRings — render ring ellipses as foregroundGraphics when config.orbitShowRings !== false
+    // Build orbit ring ellipses (when orbitShowRings !== false)
+    if (config.orbitShowRings !== false) {
+      const state = getOrbitState(config)
+      const nodeMap = new Map<string, RealtimeNode>()
+      for (const n of nodes) nodeMap.set(n.id, n)
+
+      // Collect unique rings: keyed by parentId + ring radius
+      const rings = new Map<string, { parentX: number; parentY: number; ring: number; ecc: number }>()
+      for (const [, meta] of state.metaMap) {
+        if (!meta.parentId) continue
+        const parent = nodeMap.get(meta.parentId)
+        if (!parent) continue
+        const ringKey = `${meta.parentId}:${meta.ring}`
+        if (!rings.has(ringKey)) {
+          rings.set(ringKey, { parentX: parent.x, parentY: parent.y, ring: meta.ring, ecc: meta.eccentricity })
+        }
+      }
+
+      const RING_SEGMENTS = 48
+      const ringStyle: Style = { stroke: "currentColor", strokeWidth: 0.5, opacity: 0.08 }
+      for (const [, { parentX, parentY, ring, ecc }] of rings) {
+        for (let s = 0; s < RING_SEGMENTS; s++) {
+          const a1 = (s / RING_SEGMENTS) * Math.PI * 2
+          const a2 = ((s + 1) / RING_SEGMENTS) * Math.PI * 2
+          sceneEdges.push({
+            type: "line",
+            x1: parentX + ring * Math.sin(a1),
+            y1: parentY + ring * Math.cos(a1) * ecc,
+            x2: parentX + ring * Math.sin(a2),
+            y2: parentY + ring * Math.cos(a2) * ecc,
+            style: ringStyle,
+            datum: null as any
+          })
+        }
+      }
+    }
 
     // Build circle nodes
     for (const node of nodes) {
