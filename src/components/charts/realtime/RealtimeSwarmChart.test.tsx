@@ -13,6 +13,16 @@ describe("RealtimeSwarmChart", () => {
       strokeRect: vi.fn(), save: vi.fn(), restore: vi.fn(),
       scale: vi.fn(), translate: vi.fn(), setLineDash: vi.fn(),
       closePath: vi.fn(),
+      setTransform: vi.fn(), transform: vi.fn(), resetTransform: vi.fn(),
+      getLineDash: vi.fn(() => []), clip: vi.fn(), rect: vi.fn(),
+      arcTo: vi.fn(), bezierCurveTo: vi.fn(), quadraticCurveTo: vi.fn(),
+      drawImage: vi.fn(), putImageData: vi.fn(),
+      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(0) })),
+      measureText: vi.fn(() => ({ width: 0 })),
+      createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+      createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+      createPattern: vi.fn(), isPointInPath: vi.fn(() => false),
+      strokeText: vi.fn(),
       strokeStyle: "", lineWidth: 1, fillStyle: "", font: "",
       textAlign: "", textBaseline: "", globalAlpha: 1
     }))

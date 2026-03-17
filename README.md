@@ -33,7 +33,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with all 28 chart components, optimized for LLM code generation
+- **`semiotic/ai`** — a single import with all 32 chart components, optimized for LLM code generation
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -58,6 +58,10 @@ monitoring dashboards.
 **Coordinated views.** `LinkedCharts` provides hover cross-highlighting,
 brush cross-filtering, and selection synchronization across any combination
 of chart types — zero wiring.
+
+**Geographic visualization.** Choropleth maps, proportional symbol maps, flow
+maps with animated particles, and distance cartograms — all canvas-rendered
+with d3-geo projections, zoom/pan, tile basemaps, and drag-rotate globe spinning.
 
 **Statistical summaries.** Box plots, violin plots, swarm plots, histograms,
 LOESS smoothing, forecast with confidence envelopes, and anomaly detection.
@@ -159,6 +163,30 @@ import { ForceDirectedGraph, SankeyDiagram } from "semiotic"
 />
 ```
 
+### Geographic Visualization
+
+Choropleth maps, flow maps, and distance cartograms with canvas rendering,
+zoom/pan, tile basemaps, and animated particles:
+
+```jsx
+import { ChoroplethMap, FlowMap, DistanceCartogram } from "semiotic/geo"
+
+<ChoroplethMap
+  areas={geoJsonFeatures} valueAccessor="gdp"
+  colorScheme="viridis" projection="equalEarth" zoomable tooltip
+/>
+
+<FlowMap
+  nodes={airports} flows={routes} valueAccessor="passengers"
+  showParticles particleStyle={{ color: "source", speedMultiplier: 1.5 }}
+/>
+
+<DistanceCartogram
+  points={cities} center="rome" costAccessor="travelDays"
+  showRings costLabel="days" lines={routes}
+/>
+```
+
 ### Streaming System Monitor
 
 Live service topology with threshold alerting and click-to-inspect:
@@ -211,10 +239,11 @@ import { LineChart, BarChart } from "semiotic"
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` |
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
+| **Geo** | `ChoroplethMap` `ProportionalSymbolMap` `FlowMap` `DistanceCartogram` |
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
 | **Layout** | `ChartGrid` `ContextLayout` `CategoryColorProvider` |
-| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
+| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` `StreamGeoFrame` |
 
 ### Vega-Lite Translation
 
@@ -250,10 +279,11 @@ for color, size, aggregation, and binning.
 Import only what you need:
 
 ```jsx
-import { LineChart } from "semiotic/xy"                 // 124 KB
-import { BarChart } from "semiotic/ordinal"              // 100 KB
-import { ForceDirectedGraph } from "semiotic/network"    // 104 KB
-import { LineChart } from "semiotic/ai"                  // HOC-only surface for AI generation
+import { LineChart } from "semiotic/xy"                 // ~156 KB
+import { BarChart } from "semiotic/ordinal"              // ~124 KB
+import { ForceDirectedGraph } from "semiotic/network"    // ~123 KB
+import { ChoroplethMap } from "semiotic/geo"             // ~102 KB (+ d3-geo peer)
+import { LineChart } from "semiotic/ai"                  // ~397 KB (all HOCs)
 ```
 
 Granular entry points export only v3 Stream Frames and HOC charts — no legacy
@@ -306,7 +336,7 @@ const svg = renderToStaticSVG("xy", {
 [Interactive docs and examples](https://semiotic.nteract.io)
 
 - [Getting Started](https://semiotic.nteract.io/getting-started)
-- [Charts](https://semiotic.nteract.io/charts) — all 28 chart types with live examples
+- [Charts](https://semiotic.nteract.io/charts) — all 32 chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
 - [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes

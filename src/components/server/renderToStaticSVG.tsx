@@ -33,16 +33,20 @@ import type {
   StreamOrdinalFrameProps
 } from "../stream/ordinalTypes"
 
+import { GeoPipelineStore } from "../stream/GeoPipelineStore"
+import type { GeoPipelineConfig, StreamGeoFrameProps } from "../stream/geoTypes"
+
 // Shared scene → SVG converters
 import {
   xySceneNodeToSVG,
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG,
   networkLabelToSVG,
-  ordinalSceneNodeToSVG
+  ordinalSceneNodeToSVG,
+  geoSceneNodeToSVG
 } from "../stream/SceneToSVG"
 
-type FrameType = "xy" | "ordinal" | "network"
+type FrameType = "xy" | "ordinal" | "network" | "geo"
 
 // ── Axis generation ─────────────────────────────────────────────────────
 
@@ -584,11 +588,81 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps): string {
   return ReactDOMServer.renderToStaticMarkup(svgElement)
 }
 
+// ── Geo SSR ─────────────────────────────────────────────────────────────
+
+function renderGeoFrame(props: StreamGeoFrameProps): string {
+  const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
+  const size: [number, number] = props.size || [props.width || 600, props.height || 400]
+  const margin = { ...defaultMargin, ...props.margin }
+  const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
+  const height = size[1] - (margin.top ?? 0) - (margin.bottom ?? 0)
+
+  const config: GeoPipelineConfig = {
+    projection: props.projection || "equalEarth",
+    xAccessor: props.xAccessor,
+    yAccessor: props.yAccessor,
+    lineDataAccessor: props.lineDataAccessor,
+    pointIdAccessor: props.pointIdAccessor,
+    lineType: props.lineType,
+    areaStyle: props.areaStyle as any,
+    pointStyle: props.pointStyle as any,
+    lineStyle: props.lineStyle as any,
+    graticule: props.graticule,
+    fitPadding: props.fitPadding,
+    projectionTransform: props.projectionTransform,
+  }
+
+  const store = new GeoPipelineStore(config)
+
+  if (props.areas) store.setAreas(props.areas)
+  if (props.points) store.setPoints(props.points as any[])
+  if (props.lines) store.setLines(props.lines as any[])
+
+  store.computeScene({ width, height })
+
+  if (store.scene.length === 0) {
+    return ReactDOMServer.renderToStaticMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg" className="stream-geo-frame" width={size[0]} height={size[1]} />
+    )
+  }
+
+  const dataMarks = store.scene
+    .map((node, i) => geoSceneNodeToSVG(node, i))
+    .filter(Boolean)
+
+  const title = props.title && typeof props.title === "string" ? (
+    <text x={size[0] / 2} y={16} textAnchor="middle" fontSize={14} fontWeight="bold" fill="#333">
+      {props.title}
+    </text>
+  ) : null
+
+  const bg = props.background ? (
+    <rect x={0} y={0} width={width} height={height} fill={props.background} />
+  ) : null
+
+  const svgElement = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={`stream-geo-frame${props.className ? ` ${props.className}` : ""}`}
+      width={size[0]}
+      height={size[1]}
+    >
+      <g transform={`translate(${margin.left ?? 0},${margin.top ?? 0})`}>
+        {bg}
+        {dataMarks}
+      </g>
+      {title}
+    </svg>
+  )
+
+  return ReactDOMServer.renderToStaticMarkup(svgElement)
+}
+
 // ── Public API ──────────────────────────────────────────────────────────
 
 export function renderToStaticSVG(
   frameType: FrameType,
-  props: StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps
+  props: StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps
 ): string {
   switch (frameType) {
     case "xy":
@@ -597,9 +671,11 @@ export function renderToStaticSVG(
       return renderOrdinalFrame(props as StreamOrdinalFrameProps)
     case "network":
       return renderNetworkFrame(props as StreamNetworkFrameProps)
+    case "geo":
+      return renderGeoFrame(props as StreamGeoFrameProps)
     default:
       throw new Error(
-        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", or "network".`
+        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", or "geo".`
       )
   }
 }
@@ -614,4 +690,8 @@ export function renderOrdinalToStaticSVG(props: StreamOrdinalFrameProps): string
 
 export function renderNetworkToStaticSVG(props: StreamNetworkFrameProps): string {
   return renderNetworkFrame(props)
+}
+
+export function renderGeoToStaticSVG(props: StreamGeoFrameProps): string {
+  return renderGeoFrame(props)
 }

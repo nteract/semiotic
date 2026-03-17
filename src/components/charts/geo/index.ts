@@ -1,0 +1,8 @@
+export { ChoroplethMap } from "./ChoroplethMap"
+export type { ChoroplethMapProps } from "./ChoroplethMap"
+export { ProportionalSymbolMap } from "./ProportionalSymbolMap"
+export type { ProportionalSymbolMapProps } from "./ProportionalSymbolMap"
+export { FlowMap } from "./FlowMap"
+export type { FlowMapProps } from "./FlowMap"
+export { DistanceCartogram } from "./DistanceCartogram"
+export type { DistanceCartogramProps } from "./DistanceCartogram"

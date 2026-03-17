@@ -210,6 +210,9 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
       const xAcc = typeof xAccessor === "string" ? (d: any) => d[xAccessor] : xAccessor
       const yAcc = typeof yAccessor === "string" ? (d: any) => d[yAccessor] : yAccessor
 
+      const selActive = effectiveSelectionHook?.isActive
+      const selPredicate = effectiveSelectionHook?.predicate
+
       const elements: React.ReactNode[] = []
 
       for (let i = 0; i < safeData.length - 1; i++) {
@@ -221,6 +224,12 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
         const y1 = scaleY(yAcc(d1))
         const color = pointColors[i]
 
+        // When selection active, dim lines where neither endpoint matches
+        const segmentSelected = selActive && selPredicate
+          ? selPredicate(d0) || selPredicate(d1)
+          : true
+        const segmentOpacity = selActive ? (segmentSelected ? 1 : 0.2) : 1
+
         // Halo line (white, wider, semi-transparent) for < 100 points
         if (showHalo) {
           elements.push(
@@ -229,7 +238,7 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
               x1={x0} y1={y0} x2={x1} y2={y1}
               stroke="white"
               strokeWidth={pointRadius + 2}
-              strokeOpacity={0.5}
+              strokeOpacity={0.5 * segmentOpacity}
               strokeLinecap="round"
             />
           )
@@ -243,13 +252,14 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
             stroke={color}
             strokeWidth={pointRadius}
             strokeLinecap="round"
+            opacity={segmentOpacity}
           />
         )
       }
 
       return <g key={`ann-${index}`}>{elements}</g>
     }
-  }, [safeData, pointColors, pointRadius, showHalo, xAccessor, yAccessor, n])
+  }, [safeData, pointColors, pointRadius, showHalo, xAccessor, yAccessor, n, effectiveSelectionHook])
 
   // ── Point style — viridis colored, fixed radius ───────────────────────
 

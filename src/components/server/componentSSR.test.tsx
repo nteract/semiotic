@@ -30,7 +30,7 @@ import { Treemap } from "../charts/network/Treemap"
 import { CirclePack } from "../charts/network/CirclePack"
 
 // Standalone SSR for equivalence tests
-import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG } from "./renderToStaticSVG"
+import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG } from "./renderToStaticSVG"
 
 // ── Test data ───────────────────────────────────────────────────────────
 
@@ -700,5 +700,185 @@ describe("SSR mark count contracts", () => {
     expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
     // 4 unique nodes → 4 rects
     expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
+  })
+})
+
+// ── Geo SSR — renderGeoToStaticSVG ──────────────────────────────────────
+
+const geoAreas = [
+  {
+    type: "Feature",
+    properties: { name: "CountryA", gdp: 100 },
+    geometry: { type: "Polygon", coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] }
+  },
+  {
+    type: "Feature",
+    properties: { name: "CountryB", gdp: 200 },
+    geometry: { type: "Polygon", coordinates: [[[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]]] }
+  },
+  {
+    type: "Feature",
+    properties: { name: "CountryC", gdp: 50 },
+    geometry: { type: "Polygon", coordinates: [[[40, 0], [50, 0], [50, 10], [40, 10], [40, 0]]] }
+  },
+]
+
+const geoPoints = [
+  { lon: 5, lat: 5, population: 1000000 },
+  { lon: 25, lat: 5, population: 5000000 },
+  { lon: 45, lat: 5, population: 2000000 },
+]
+
+const geoLines = [
+  {
+    coordinates: [
+      { lon: 5, lat: 5 },
+      { lon: 25, lat: 5 },
+      { lon: 45, lat: 5 },
+    ]
+  }
+]
+
+describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
+  it("renders area polygons as SVG path elements", () => {
+    const svg = renderGeoToStaticSVG({
+      areas: geoAreas as any,
+      projection: "equalEarth",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect(svg).not.toContain("<canvas")
+    // 3 areas = 3 paths
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it("renders point data as SVG circle elements", () => {
+    const svg = renderGeoToStaticSVG({
+      points: geoPoints,
+      xAccessor: "lon",
+      yAccessor: "lat",
+      projection: "equalEarth",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect(svg).not.toContain("<canvas")
+    // 3 points = 3 circles
+    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it("renders line data as SVG path elements", () => {
+    const svg = renderGeoToStaticSVG({
+      lines: geoLines,
+      xAccessor: "lon",
+      yAccessor: "lat",
+      lineDataAccessor: "coordinates",
+      projection: "equalEarth",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect(svg).not.toContain("<canvas")
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it("renders areas + points together", () => {
+    const svg = renderGeoToStaticSVG({
+      areas: geoAreas as any,
+      points: geoPoints,
+      xAccessor: "lon",
+      yAccessor: "lat",
+      projection: "equalEarth",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    // At least 3 area paths + 3 point circles
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
+    expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it("returns empty SVG when no geo data is provided", () => {
+    const svg = renderGeoToStaticSVG({
+      projection: "equalEarth",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect((svg.match(/<path /g) || []).length).toBe(0)
+    expect((svg.match(/<circle /g) || []).length).toBe(0)
+  })
+
+  it("renders title text when provided", () => {
+    const svg = renderGeoToStaticSVG({
+      areas: geoAreas as any,
+      projection: "equalEarth",
+      size: [600, 400],
+      title: "World GDP",
+    } as any)
+
+    expect(svg).toContain("World GDP")
+  })
+
+  it("applies className to SVG element", () => {
+    const svg = renderGeoToStaticSVG({
+      areas: geoAreas as any,
+      projection: "equalEarth",
+      size: [600, 400],
+      className: "my-geo-chart",
+    } as any)
+
+    expect(svg).toContain("my-geo-chart")
+    expect(svg).toContain("stream-geo-frame")
+  })
+
+  it("supports mercator projection", () => {
+    const svg = renderGeoToStaticSVG({
+      areas: geoAreas as any,
+      projection: "mercator",
+      size: [600, 400],
+    } as any)
+
+    expect(svg).toContain("<svg")
+    expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe("SSR mark count contracts — Geo", () => {
+  it("N geo areas → N path elements", () => {
+    for (const n of [1, 3, 5]) {
+      const areas = Array.from({ length: n }, (_, i) => ({
+        type: "Feature",
+        properties: { name: `Country${i}` },
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[i * 15, 0], [i * 15 + 10, 0], [i * 15 + 10, 10], [i * 15, 10], [i * 15, 0]]]
+        }
+      }))
+      const svg = renderGeoToStaticSVG({
+        areas: areas as any,
+        projection: "equalEarth",
+        size: [600, 400],
+      } as any)
+      expect((svg.match(/<path /g) || []).length).toBe(n)
+    }
+  })
+
+  it("N geo points → N circle elements", () => {
+    for (const n of [2, 5, 10]) {
+      const points = Array.from({ length: n }, (_, i) => ({
+        lon: i * 10,
+        lat: i * 5,
+      }))
+      const svg = renderGeoToStaticSVG({
+        points,
+        xAccessor: "lon",
+        yAccessor: "lat",
+        projection: "equalEarth",
+        size: [600, 400],
+      } as any)
+      expect((svg.match(/<circle /g) || []).length).toBe(n)
+    }
   })
 })

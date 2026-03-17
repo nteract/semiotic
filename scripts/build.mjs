@@ -106,6 +106,10 @@ async function createBundle(options = {}) {
     input,
     context: "window",
     plugins,
+    // Mark world-atlas JSON subpath imports as external so they stay as
+    // dynamic imports in the output bundle. The consumer's bundler (webpack,
+    // vite, etc.) handles the JSON resolution at app build time.
+    external: (id) => id.startsWith("world-atlas/"),
     onLog(level, log, handler) {
       if (log.message && typeof log.message === 'string') {
         const d3Patterns = ["d3-", "internmap", "delaunator"]
@@ -180,7 +184,8 @@ function buildDeclarations() {
   // "types" fields resolve correctly (tsc emits into dist/components/ due to rootDir)
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
-    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server"
+    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
+    "semiotic-geo"
   ]
   for (const name of entryPoints) {
     try { copyFileSync(`dist/components/${name}.d.ts`, `dist/${name}.d.ts`) } catch { /* may not exist */ }
@@ -218,7 +223,8 @@ async function build() {
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify },
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
-    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify }
+    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
+    { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify }
   ]
 
   await Promise.all([

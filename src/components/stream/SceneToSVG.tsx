@@ -39,6 +39,11 @@ import type {
   ConnectorSceneNode
 } from "./ordinalTypes"
 
+import type {
+  GeoSceneNode,
+  GeoAreaSceneNode
+} from "./geoTypes"
+
 // ── Color parsing helper (for heatcell contrast text) ───────────────────
 
 function parseHeatcellColor(color: string): [number, number, number] {
@@ -456,6 +461,63 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
           stroke={n.style.stroke || "#999"}
           strokeWidth={n.style.strokeWidth || 1}
           opacity={n.style.opacity ?? 0.5}
+        />
+      )
+    }
+    default:
+      return null
+  }
+}
+
+// ── Geo Scene Nodes ─────────────────────────────────────────────────────
+
+export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNode {
+  switch (node.type) {
+    case "geoarea": {
+      const n = node as GeoAreaSceneNode
+      if (!n.pathData) return null
+      return (
+        <path
+          key={`geoarea-${i}`}
+          d={n.pathData}
+          fill={n.style.fill || "#e0e0e0"}
+          fillOpacity={n.style.fillOpacity ?? 1}
+          stroke={n.style.stroke || "none"}
+          strokeWidth={n.style.strokeWidth || 0.5}
+          strokeDasharray={n.style.strokeDasharray}
+          opacity={n._decayOpacity ?? 1}
+        />
+      )
+    }
+    case "point": {
+      const n = node as PointSceneNode
+      return (
+        <circle
+          key={`point-${i}`}
+          cx={n.x}
+          cy={n.y}
+          r={n.r}
+          fill={n.style.fill || "#4e79a7"}
+          fillOpacity={n.style.fillOpacity ?? 0.8}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n._decayOpacity ?? (n.style.opacity ?? 1)}
+        />
+      )
+    }
+    case "line": {
+      const n = node
+      if (n.path.length < 2) return null
+      const d = "M" + n.path.map(p => `${p[0]},${p[1]}`).join("L")
+      return (
+        <path
+          key={`line-${i}`}
+          d={d}
+          fill="none"
+          stroke={n.style.stroke || "#4e79a7"}
+          strokeWidth={n.style.strokeWidth || 1.5}
+          strokeDasharray={n.style.strokeDasharray}
+          opacity={n.style.opacity ?? 1}
         />
       )
     }

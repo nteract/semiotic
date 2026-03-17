@@ -59,6 +59,12 @@
       "require": "./dist/semiotic-data.min.js",
       "default": "./dist/semiotic-data.module.min.js"
     },
+    "./geo": {
+      "types": "./dist/semiotic-geo.d.ts",
+      "import": "./dist/geo.module.min.js",
+      "require": "./dist/geo.min.js",
+      "default": "./dist/geo.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -116,7 +122,8 @@
     }
   },
   "alias": {
-    "semiotic": "./src/components/semiotic.ts"
+    "semiotic": "./src/components/semiotic.ts",
+    "semiotic/geo": "./src/components/semiotic-geo.ts"
   },
   "repository": {
     "type": "git",
@@ -142,6 +149,7 @@
     "@types/d3-chord": "^3.0.0",
     "@types/d3-force": "^3.0.0",
     "@types/d3-format": "^3.0.0",
+    "@types/d3-geo": "^3.1.0",
     "@types/d3-hierarchy": "^3.1.0",
     "@types/d3-interpolate": "^3.0.0",
     "@types/d3-scale": "^4.0.9",
@@ -149,10 +157,12 @@
     "@types/d3-selection": "^3.0.0",
     "@types/d3-shape": "^3.1.0",
     "@types/d3-time-format": "^4.0.0",
+    "@types/d3-zoom": "^3.0.8",
     "@types/node": "^20.19.35",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@types/seedrandom": "^3.0.5",
+    "@types/topojson-client": "^3.1.5",
     "@typescript-eslint/eslint-plugin": "^5.4.6",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/ui": "^4.0.18",
@@ -188,6 +198,7 @@
     "d3-chord": "^3.0.1",
     "d3-force": "^3.0.0",
     "d3-format": "^3.1.0",
+    "d3-geo": "^3.1.1",
     "d3-hierarchy": "^3.1.2",
     "d3-interpolate": "^3.0.1",
     "d3-quadtree": "^3.0.1",
@@ -195,8 +206,12 @@
     "d3-scale-chromatic": "^3.1.0",
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",
+    "d3-tile": "^1.0.0",
     "d3-time-format": "^4.1.0",
-    "regression": "^2.0.1"
+    "d3-zoom": "^3.0.0",
+    "regression": "^2.0.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "browserslist": {
     "development": [

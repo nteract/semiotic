@@ -2,14 +2,14 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
+- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 - Every HOC has a built-in error boundary (never blanks the page) and dev-mode validation warnings
 
 ## Architecture
 - **HOC Charts**: Simple props, sensible defaults. **Stream Frames**: Full control.
-- **Always use HOC charts** (`ForceDirectedGraph`, `SankeyDiagram`, `LineChart`, `RealtimeLineChart`, etc.) unless you need sophisticated control they don't expose. Stream Frames (`StreamNetworkFrame`, `StreamXYFrame`, `StreamOrdinalFrame`) are low-level escape hatches — they accept raw `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data objects directly.
+- **Always use HOC charts** (`ForceDirectedGraph`, `SankeyDiagram`, `LineChart`, `RealtimeLineChart`, `ChoroplethMap`, etc.) unless you need sophisticated control they don't expose. Stream Frames (`StreamNetworkFrame`, `StreamXYFrame`, `StreamOrdinalFrame`, `StreamGeoFrame`) are low-level escape hatches — they accept raw `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data objects directly.
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
@@ -66,6 +66,65 @@ The `datum` field contains your original data object (not a wrapper).
 **Treemap** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `showLabels`, `labelMode`
 **CirclePack** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `circleOpacity`
 **OrbitDiagram** — animated radial/orbital hierarchy. Use this (not TreeDiagram) when you want animated orbiting nodes. `data` (root), `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed` (0.25), `revolution`, `eccentricity`, `orbitSize`, `nodeRadius`, `showRings`, `showLabels`, `animated` (true), `colorBy`, `colorByDepth`, `annotations` (widget annotations anchor by nodeId). For static radial trees, use `TreeDiagram layout="radial"` instead.
+
+## Geo Charts (`semiotic/geo`)
+
+Geographic visualization with d3-geo projections. Canvas-rendered via `StreamGeoFrame`. Import from `semiotic/geo` to avoid adding d3-geo to non-geo bundles.
+
+**ChoroplethMap** — `areas` (GeoJSON Feature[] or reference string like "world-110m"), `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `areaOpacity` (1), `projection` ("equalEarth"), `graticule`, `tooltip`, `showLegend`
+**ProportionalSymbolMap** — `points`, `xAccessor` ("lon"), `yAccessor` ("lat"), `sizeBy`, `sizeRange` ([3,30]), `colorBy`, `areas` (optional background), `projection`
+**FlowMap** — `flows` ({source, target, value}), `nodes`, `xAccessor`, `yAccessor`, `nodeIdAccessor` ("id"), `valueAccessor` ("value"), `edgeColorBy`, `edgeOpacity` (0.6), `edgeWidthRange` ([1,8]), `edgeLinecap` ("round"), `lineType` ("geo"|"line"), `areas` (optional background), `showParticles`, `particleStyle` ({ radius, color, opacity, speedMultiplier, maxPerLine, spawnRate }). Particle `color` accepts a string, `"source"` (inherit line stroke), or `(datum) => string`.
+**DistanceCartogram** — `points`, `center` (id of center node), `costAccessor`, `strength` (0-1), `lineMode` ("straight"|"fractional"), `nodeIdAccessor` ("id"), `lines`, `projection`, `showRings` (true|false|number[]), `ringStyle` ({ stroke, strokeWidth, ... }), `showNorth` (true), `costLabel` (string for ring labels), `transition` (ms for smooth animation), `pointRadius`
+
+All geo HOCs support: `selection`, `linkedHover`, `onObservation`, `showLegend`, `legendInteraction`, `tooltip`, `loading`, `emptyContent`, `frameProps`, `fitPadding` (0–1 fraction, insets auto-fit projection from edges), `zoomable` (defaults true with tileURL, false otherwise), `zoomExtent`, `onZoom`, `dragRotate`, `graticule`, `tileURL`, `tileAttribution`, `tileCacheSize`
+
+**Zoom/Pan**: All geo charts accept `zoomable` (boolean), `zoomExtent` ([minZoom, maxZoom], default [1, 8]), and `onZoom` (callback with `{ projection, zoom }`). Re-renders projection directly on every zoom tick (no CSS transform). Imperative API: `ref.current.getZoom()`, `ref.current.resetZoom()`.
+
+**Geo Particles**: `FlowMap` and `StreamGeoFrame` support `showParticles` (boolean) and `particleStyle` to animate dots flowing along line paths. Uses `GeoParticlePool` — an object-pool polyline particle system. Particle `color` accepts: `"source"` (inherit line stroke), a CSS string, or `(datum) => string` for per-line color.
+
+**Drag Rotate (Globe Spinning)**: `dragRotate` (boolean) — when true, drag gestures rotate the projection (globe spinning) instead of panning. **Defaults to true for orthographic projection.** Scroll-wheel zoom still works normally. Explicitly set `dragRotate={false}` on orthographic to get standard pan behavior, or `dragRotate={true}` on other projections to enable rotation. Latitude rotation is clamped to [-90, 90] to prevent flipping.
+
+**Tile Maps**: All geo charts accept `tileURL` (string template like `"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"` or `(z, x, y, dpr) => string`), `tileAttribution` (e.g., `"© OpenStreetMap contributors"`), `tileCacheSize` (default 256). Tiles render on a background canvas behind data layers. **Mercator projection only** — a dev warning is emitted for non-Mercator projections. Tiles update on zoom/pan. Retina support via `{r}` placeholder or DPR parameter.
+
+**StreamGeoFrame** — low-level frame with full control. Props: `projection`, `areas`, `points`, `lines`, `xAccessor`, `yAccessor`, `areaStyle`, `pointStyle`, `lineStyle`, `graticule`, `projectionTransform` (distance cartogram config), `projectionExtent`, `enableHover`, `tooltipContent`, `zoomable`, `zoomExtent`, `onZoom`, `tileURL`, `tileAttribution`, `tileCacheSize`, `decay`, `pulse`, `transition`. Push API: `ref.current.push(datum)`, `ref.current.pushMany(data)`, `ref.current.clear()`.
+
+**Reference geography**: `resolveReferenceGeography("world-110m")` returns GeoJSON features from Natural Earth data (world-atlas). Supported: `"world-110m"`, `"world-50m"`, `"land-110m"`, `"land-50m"`. All geo HOCs accept `areas` as `GeoJSON.Feature[]` or a reference string.
+
+**mergeData(features, data, { featureKey, dataKey })** — join external data into GeoJSON features by key field. Supports nested paths (e.g., `"properties.iso_a3"`). World-atlas uses ISO 3166-1 numeric codes as the `id` field. Also available from `semiotic/data` as a general join-by-key utility.
+
+```jsx
+// World choropleth with reference geography + data joining
+import { ChoroplethMap, resolveReferenceGeography, mergeData } from "semiotic/geo"
+const world = await resolveReferenceGeography("world-110m")
+const areas = mergeData(world, gdpData, { featureKey: "id", dataKey: "id" })
+<ChoroplethMap areas={areas} valueAccessor="gdpPerCapita" colorScheme="viridis"
+  projection="equalEarth" zoomable tooltip />
+
+// Distance cartogram (ORBIS-style) with concentric rings overlay
+import { DistanceCartogram } from "semiotic/geo"
+<DistanceCartogram
+  points={cities} center="rome" costAccessor="travelDays"
+  strength={0.8} lines={routes} showLegend zoomable
+  showRings costLabel="days" showNorth
+  ringStyle={{ stroke: "#999", strokeWidth: 0.5 }}
+/>
+
+// Tile map basemap with proportional symbols
+<ProportionalSymbolMap
+  points={earthquakes} xAccessor="lon" yAccessor="lat"
+  sizeBy="magnitude" sizeRange={[2, 20]}
+  projection="mercator" zoomable
+  tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+  tileAttribution="© OpenStreetMap contributors"
+/>
+
+// Streaming geo points with zoom
+const geoRef = useRef()
+geoRef.current.push({ lon: -122.4, lat: 37.8, value: 42 })
+<StreamGeoFrame ref={geoRef} projection="mercator" xAccessor="lon" yAccessor="lat"
+  runtimeMode="streaming" decay={{ type: "linear", minOpacity: 0.1 }}
+  zoomable zoomExtent={[1, 12]} onZoom={({ zoom }) => console.log(zoom)} />
+```
 
 ## Realtime Charts (`semiotic/realtime`)
 
@@ -221,8 +280,8 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 
 ## Server-Side Rendering
 - All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
-- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` (NOT a component name like "BarChart")
-- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`
+- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` | `"geo"` (NOT a component name like "BarChart")
+- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)`
 - For a bar chart: `renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })`
 - Works with Next.js App Router, Remix, Astro — same component on server and client
 
@@ -253,7 +312,9 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 
 **LinkedCharts suppresses child legends**: When a `CategoryColorProvider` wraps `LinkedCharts`, individual chart legends are suppressed in favor of a unified legend. To force a child chart to show its own legend, set `showLegend={true}` explicitly.
 
+**Geo bundle isolation**: `semiotic/geo` is a separate entry point. Do NOT import geo components from `semiotic` — use `import { ChoroplethMap } from "semiotic/geo"` to avoid pulling d3-geo (~30KB) into non-geo bundles.
+
 **`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
 
 ## Differentiators
-Network viz, streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend
+Network viz, geographic viz (choropleth, flow maps, distance cartograms), streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend
