@@ -8,7 +8,8 @@ import {
   geoPath as d3GeoPath,
   geoBounds,
   geoGraticule,
-  geoDistance
+  geoDistance,
+  geoInterpolate
 } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
@@ -641,11 +642,25 @@ export class GeoPipelineStore {
 
       let screenPath: [number, number][]
 
-      if (config.lineType === "line") {
-        screenPath = lineCoords
+      if (config.lineType === "geo") {
+        // Densify along great-circle arcs between each pair of points
+        const geoCoords: [number, number][] = []
+        for (let i = 0; i < lineCoords.length - 1; i++) {
+          const start = lineCoords[i]
+          const end = lineCoords[i + 1]
+          const dist = geoDistance(start, end) || 0
+          const steps = Math.max(2, Math.ceil(dist / (Math.PI / 180)))
+          const interpolate = geoInterpolate(start, end)
+          for (let s = 0; s <= steps; s++) {
+            if (i > 0 && s === 0) continue // avoid duplicate at segment joins
+            geoCoords.push(interpolate(s / steps) as [number, number])
+          }
+        }
+        screenPath = geoCoords
           .map(([lon, lat]) => proj([lon, lat]))
           .filter((p): p is [number, number] => p != null)
       } else {
+        // Straight-line segments in projected space
         screenPath = lineCoords
           .map(([lon, lat]) => proj([lon, lat]))
           .filter((p): p is [number, number] => p != null)
@@ -686,8 +701,11 @@ export class GeoPipelineStore {
     const clipAngle = proj.clipAngle ? (proj.clipAngle() ?? 0) : 0
     const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
     const rotation = proj.rotate ? proj.rotate() : [0, 0, 0]
-    // Projection center in [lon, lat] — negate the rotation
-    const projCenter: [number, number] = [-rotation[0], -rotation[1]]
+    const center = typeof proj.center === "function" ? proj.center() : [0, 0]
+    const projCenter: [number, number] = [
+      (center[0] ?? 0) - rotation[0],
+      (center[1] ?? 0) - rotation[1]
+    ]
 
     for (let i = 0; i < points.length; i++) {
       const d = points[i]
