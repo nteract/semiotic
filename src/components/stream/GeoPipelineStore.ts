@@ -6,7 +6,6 @@ import {
   geoNaturalEarth1,
   geoEquirectangular,
   geoPath as d3GeoPath,
-  geoBounds,
   geoGraticule,
   geoDistance,
   geoInterpolate
@@ -588,6 +587,17 @@ export class GeoPipelineStore {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
     this.version++
+  }
+
+  /**
+   * Set the projection rotation without rebuilding the scene.
+   * Use when rotation will be followed by another operation that rebuilds
+   * (e.g., applyZoomScale), to avoid redundant scene builds.
+   */
+  setRotation(rotation: [number, number, number]): void {
+    const proj = this.projection
+    if (!proj || !proj.rotate) return
+    proj.rotate(rotation)
   }
 
   /** Get current rotation (for external tracking) */

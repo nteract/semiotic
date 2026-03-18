@@ -493,21 +493,20 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
         store.computeScene(layout)
 
-        // Restore rotation before re-applying zoom
-        if (savedRotation) {
-          store.applyRotation(savedRotation, layout)
-        }
-
-        // Preserve zoom — computeScene resets to base projection, so
-        // re-apply the current zoom transform if user has zoomed/panned
+        // Preserve zoom/rotation — computeScene resets to base projection.
+        // Use setRotation (no rebuild) then let applyZoomScale do the single
+        // rebuild; if no zoom, use applyRotation for the rebuild.
         const zt = zoomTransformRef.current
-        if (zt.k !== 1 || zt.x !== 0 || zt.y !== 0) {
-          if (effectiveDragRotate) {
-            // Scale-only zoom to prevent translate drift on globe
+        const hasZoom = zt.k !== 1 || zt.x !== 0 || zt.y !== 0
+        if (effectiveDragRotate && savedRotation) {
+          if (hasZoom) {
+            store.setRotation(savedRotation)
             store.applyZoomScale(zt.k, layout)
           } else {
-            store.applyZoomTransform(zt, layout)
+            store.applyRotation(savedRotation, layout)
           }
+        } else if (hasZoom) {
+          store.applyZoomTransform(zt, layout)
         }
         dirtyRef.current = false
 
