@@ -158,6 +158,43 @@ function buildArcPath(
 }
 
 /**
+ * Build an offset version of a densified geo screen path.
+ * Shifts each point along its local normal so the great-circle curvature
+ * is preserved while visually separating overlapping flows.
+ */
+function buildOffsetGeoPath(
+  screenPath: [number, number][],
+  strokeWidth: number
+): [number, number][] {
+  if (screenPath.length < 2) return screenPath
+  const offset = strokeWidth / 2 + 1
+
+  const result: [number, number][] = []
+  for (let i = 0; i < screenPath.length; i++) {
+    const p = screenPath[i]
+    // Compute tangent direction at this point
+    let dx: number, dy: number
+    if (i === 0) {
+      dx = screenPath[1][0] - p[0]
+      dy = screenPath[1][1] - p[1]
+    } else if (i === screenPath.length - 1) {
+      dx = p[0] - screenPath[i - 1][0]
+      dy = p[1] - screenPath[i - 1][1]
+    } else {
+      // Average of prev→current and current→next for smoother normals
+      dx = screenPath[i + 1][0] - screenPath[i - 1][0]
+      dy = screenPath[i + 1][1] - screenPath[i - 1][1]
+    }
+    const len = Math.sqrt(dx * dx + dy * dy) || 1
+    // Left-hand normal (same convention as buildOffsetPath)
+    const nx = dy / len
+    const ny = -dx / len
+    result.push([p[0] + nx * offset, p[1] + ny * offset])
+  }
+  return result
+}
+
+/**
  * Build an offset path — shift a straight line perpendicular to its direction.
  * All flows are offset to their left by half their stroke width plus padding.
  * Bidirectional pairs (A->B and B->A) naturally separate because their
@@ -674,12 +711,15 @@ export class GeoPipelineStore {
 
       // Apply flow style transformation (only for simple 2-point source→target flows;
       // multi-point polylines keep their full geometry).
-      // Offset is skipped for lineType="geo" since it would collapse the densified
-      // great-circle arc back to a straight 2-point segment.
       if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
         screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset" && config.lineType !== "geo") {
-        screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
+      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
+        if (config.lineType === "geo") {
+          // Offset each point along its local normal to preserve great-circle curvature
+          screenPath = buildOffsetGeoPath(screenPath, resolvedStrokeWidth)
+        } else {
+          screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
+        }
       }
 
       const lineNode: LineSceneNode = {
