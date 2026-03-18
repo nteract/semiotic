@@ -158,13 +158,14 @@ function buildArcPath(
 
 /**
  * Build an offset path — shift a straight line perpendicular to its direction.
- * Bidirectional flows (A->B and B->A) get offset in opposite directions.
- * When there is no reverse flow, the line stays centered.
+ * All flows are offset to their left by half their stroke width plus padding.
+ * Bidirectional pairs (A->B and B->A) naturally separate because their
+ * left-hand normals point to opposite sides.
  */
 function buildOffsetPath(
   start: [number, number],
   end: [number, number],
-  flow: any,
+  _flow: any,
   _allFlows: any[],
   strokeWidth: number
 ): [number, number][] {
@@ -631,14 +632,6 @@ export class GeoPipelineStore {
 
     // Lines
     const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
-
-    // Pre-resolve stroke widths for offset mode so both directions are available
-    if (config.flowStyle === "offset") {
-      for (const line of this.lineData) {
-        const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
-        ;(line as any)._resolvedStrokeWidth = (style.strokeWidth as number) || 1
-      }
-    }
 
     for (const line of this.lineData) {
       const coords = lineDataAcc(line)

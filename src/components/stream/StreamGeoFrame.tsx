@@ -731,9 +731,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           }
         }
 
-        // Expose a synthetic zoom behavior for the +/- buttons
+        // Expose a synthetic zoom behavior for the +/- buttons and resetZoom()
         zoomBehaviorRef.current = {
-          scaleBy: (_sel: any, factor: number) => applyScale(currentK * factor)
+          scaleBy: (_sel: any, factor: number) => applyScale(currentK * factor),
+          transform: (_sel: any, t: any) => applyScale(t?.k ?? 1)
         } as any
 
         const onWheel = (e: WheelEvent) => {

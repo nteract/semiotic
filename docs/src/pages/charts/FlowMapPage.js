@@ -610,10 +610,11 @@ function WorldFlowMap() {
 
       <h3 id="offset-style">Offset Flow Style (Bidirectional)</h3>
       <p>
-        Set <code>flowStyle="offset"</code> to separate bidirectional flows.
-        When routes exist in both directions (e.g. JFK&rarr;LHR and LHR&rarr;JFK),
-        the lines are offset from the centerline so both are visible. Routes
-        with no reverse flow remain centered.
+        Set <code>flowStyle="offset"</code> to draw each flow slightly offset
+        from the direct centerline between its source and target. This
+        separation makes overlapping routes easier to distinguish, especially
+        when traffic exists in both directions (e.g. JFK&rarr;LHR and
+        LHR&rarr;JFK).
       </p>
 
       <WorldFlowMap
