@@ -117,8 +117,8 @@ const DEFAULT_LINE_STYLE: Style = {
 
 /**
  * Build a quadratic arc path between two screen-space points.
- * The arc bulges perpendicular to the straight line (left of the
- * direction of travel), with height proportional to distance.
+ * The arc bulges perpendicular to the straight line (right of the
+ * direction of travel in screen coords), with height proportional to distance.
  */
 function buildArcPath(
   start: [number, number],

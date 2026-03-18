@@ -489,7 +489,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         // re-apply the current zoom transform if user has zoomed/panned
         const zt = zoomTransformRef.current
         if (zt.k !== 1 || zt.x !== 0 || zt.y !== 0) {
-          store.applyZoomTransform(zt, layout)
+          if (effectiveDragRotate) {
+            // Scale-only zoom to prevent translate drift on globe
+            store.applyZoomScale(zt.k, layout)
+          } else {
+            store.applyZoomTransform(zt, layout)
+          }
         }
         dirtyRef.current = false
 
