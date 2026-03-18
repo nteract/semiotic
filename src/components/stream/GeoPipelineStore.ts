@@ -669,13 +669,16 @@ export class GeoPipelineStore {
       if (screenPath.length < 2) continue
 
       const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
-      const resolvedStrokeWidth = (style.strokeWidth as number) || 1
+      const resolvedStrokeWidth =
+        typeof style.strokeWidth === "number" ? style.strokeWidth : 1
 
       // Apply flow style transformation (only for simple 2-point source→target flows;
-      // multi-point polylines keep their full geometry)
+      // multi-point polylines keep their full geometry).
+      // Offset is skipped for lineType="geo" since it would collapse the densified
+      // great-circle arc back to a straight 2-point segment.
       if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
         screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
+      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset" && config.lineType !== "geo") {
         screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
       }
 
