@@ -123,7 +123,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       // Geo-specific
       lineType = "geo",
-      flowStyle,
+      flowStyle = "basic",
       graticule,
       zoomable,
       zoomExtent,
@@ -484,7 +484,20 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Recompute scene when dirty
       if (dirtyRef.current && !isTransitioning) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
+
+        // In drag-rotate mode, preserve the current rotation across
+        // computeScene() which resets the projection via fitProjection.
+        const savedRotation = effectiveDragRotate
+          ? store.getRotation()
+          : null
+
         store.computeScene(layout)
+
+        // Restore rotation before re-applying zoom
+        if (savedRotation) {
+          store.applyRotation(savedRotation, layout)
+        }
+
         // Preserve zoom — computeScene resets to base projection, so
         // re-apply the current zoom transform if user has zoomed/panned
         const zt = zoomTransformRef.current
