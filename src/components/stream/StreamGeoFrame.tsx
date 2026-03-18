@@ -744,6 +744,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
 
         const onDblClick = (e: MouseEvent) => {
+          const target = e.target as HTMLElement | null
+          if (target && (target.closest("button") || target.closest(".stream-geo-zoom-controls"))) return
           e.preventDefault()
           applyScale(currentK * 1.5)
         }

@@ -130,7 +130,7 @@ function buildArcPath(
   const dist = Math.sqrt(dx * dx + dy * dy)
   if (dist === 0) return [start, end]
 
-  // Perpendicular normal (rotated 90° left of travel direction)
+  // Perpendicular normal (right-hand in screen coords, y-down)
   const nx = -dy / dist
   const ny = dx / dist
 
@@ -671,10 +671,11 @@ export class GeoPipelineStore {
       const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
       const resolvedStrokeWidth = (style.strokeWidth as number) || 1
 
-      // Apply flow style transformation
-      if (screenPath.length >= 2 && config.flowStyle === "arc") {
+      // Apply flow style transformation (only for simple 2-point source→target flows;
+      // multi-point polylines keep their full geometry)
+      if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
         screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (screenPath.length >= 2 && config.flowStyle === "offset") {
+      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
         screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
       }
 
