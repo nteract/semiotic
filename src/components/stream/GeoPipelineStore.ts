@@ -7,7 +7,8 @@ import {
   geoEquirectangular,
   geoPath as d3GeoPath,
   geoBounds,
-  geoGraticule
+  geoGraticule,
+  geoDistance
 } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
@@ -109,6 +110,82 @@ const DEFAULT_LINE_STYLE: Style = {
   stroke: "#4e79a7",
   strokeWidth: 1.5,
   fill: "none"
+}
+
+// ── Flow style helpers ───────────────────────────────────────────────
+
+/**
+ * Build a quadratic arc path between two screen-space points.
+ * The arc bulges perpendicular to the straight line (left of the
+ * direction of travel), with height proportional to distance.
+ */
+function buildArcPath(
+  start: [number, number],
+  end: [number, number],
+  segments: number = 24
+): [number, number][] {
+  const dx = end[0] - start[0]
+  const dy = end[1] - start[1]
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  if (dist === 0) return [start, end]
+
+  // Perpendicular normal (rotated 90° left of travel direction)
+  const nx = -dy / dist
+  const ny = dx / dist
+
+  // Arc height proportional to distance (capped)
+  const bulge = Math.min(dist * 0.3, 80)
+
+  // Midpoint
+  const mx = (start[0] + end[0]) / 2
+  const my = (start[1] + end[1]) / 2
+
+  // Control point for quadratic bezier
+  const cx = mx + nx * bulge
+  const cy = my + ny * bulge
+
+  // Sample quadratic bezier
+  const path: [number, number][] = []
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments
+    const u = 1 - t
+    const x = u * u * start[0] + 2 * u * t * cx + t * t * end[0]
+    const y = u * u * start[1] + 2 * u * t * cy + t * t * end[1]
+    path.push([x, y])
+  }
+  return path
+}
+
+/**
+ * Build an offset path — shift a straight line perpendicular to its direction.
+ * Bidirectional flows (A->B and B->A) get offset in opposite directions.
+ * When there is no reverse flow, the line stays centered.
+ */
+function buildOffsetPath(
+  start: [number, number],
+  end: [number, number],
+  flow: any,
+  _allFlows: any[],
+  strokeWidth: number
+): [number, number][] {
+  const dx = end[0] - start[0]
+  const dy = end[1] - start[1]
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  if (dist === 0) return [start, end]
+
+  // Left-hand normal in screen coords (y-down): (dy, -dx) points left of travel
+  const nx = dy / dist
+  const ny = -dx / dist
+
+  // Every flow offsets to its own left by half its stroke width.
+  // Opposite-direction flows naturally separate because their lefts
+  // point to opposite sides.
+  const offset = strokeWidth / 2 + 1
+
+  return [
+    [start[0] + nx * offset, start[1] + ny * offset],
+    [end[0] + nx * offset, end[1] + ny * offset]
+  ]
 }
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
@@ -328,6 +405,15 @@ export class GeoPipelineStore {
         [[0, 0], [layout.width, layout.height]],
         syntheticFeature
       )
+    } else if (proj.clipAngle && (proj.clipAngle() ?? 0) > 0) {
+      // Clipped projections (e.g. orthographic): size the globe to fill the
+      // viewport rather than fitting to data bounds, which would crop the
+      // edges (e.g. Antarctic graticule lines).
+      const pad = config.fitPadding ?? 0
+      const dim = Math.min(layout.width, layout.height)
+      const radius = dim / 2 - dim * pad
+      proj.scale(radius)
+      proj.translate([layout.width / 2, layout.height / 2])
     } else {
       // Auto-fit to all data
       const collection: GeoJSON.FeatureCollection = {
@@ -392,6 +478,42 @@ export class GeoPipelineStore {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
 
+    this.version++
+  }
+
+  /**
+   * Apply zoom as scale-only (no translate shift).
+   * Used in drag-rotate mode to prevent globe drift on zoom.
+   */
+  applyZoomScale(k: number, layout: StreamLayout): void {
+    const proj = this.projection
+    if (!proj) return
+
+    proj.scale(this.baseScale * k)
+    // Keep translate at base center — no shift
+    proj.translate(this.baseTranslate)
+
+    this.currentZoom = k
+
+    this.geoPath = d3GeoPath(proj)
+    this.scales = {
+      projection: proj,
+      geoPath: this.geoPath,
+      projectedPoint: (lon: number, lat: number) => {
+        const result = proj([lon, lat])
+        return result as [number, number] | null
+      },
+      invertedPoint: (px: number, py: number) => {
+        if (!proj.invert) return null
+        const result = proj.invert([px, py])
+        return result as [number, number] | null
+      }
+    }
+
+    this.scene = this.buildSceneNodes(layout)
+    if (this.config.projectionTransform) {
+      this.applyCartogramTransform(this.config.projectionTransform, layout)
+    }
     this.version++
   }
 
@@ -509,6 +631,15 @@ export class GeoPipelineStore {
 
     // Lines
     const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
+
+    // Pre-resolve stroke widths for offset mode so both directions are available
+    if (config.flowStyle === "offset") {
+      for (const line of this.lineData) {
+        const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
+        ;(line as any)._resolvedStrokeWidth = (style.strokeWidth as number) || 1
+      }
+    }
+
     for (const line of this.lineData) {
       const coords = lineDataAcc(line)
       if (!coords || coords.length < 2) continue
@@ -518,14 +649,10 @@ export class GeoPipelineStore {
       let screenPath: [number, number][]
 
       if (config.lineType === "line") {
-        // Straight screen-space connections
         screenPath = lineCoords
           .map(([lon, lat]) => proj([lon, lat]))
           .filter((p): p is [number, number] => p != null)
       } else {
-        // Great circle arcs via geoPath — project to screen via geoPath
-        // We need to convert geoPath output to a point array for LineSceneNode
-        // Use individual segment projection for the scene node
         screenPath = lineCoords
           .map(([lon, lat]) => proj([lon, lat]))
           .filter((p): p is [number, number] => p != null)
@@ -534,6 +661,14 @@ export class GeoPipelineStore {
       if (screenPath.length < 2) continue
 
       const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
+      const resolvedStrokeWidth = (style.strokeWidth as number) || 1
+
+      // Apply flow style transformation
+      if (screenPath.length >= 2 && config.flowStyle === "arc") {
+        screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
+      } else if (screenPath.length >= 2 && config.flowStyle === "offset") {
+        screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
+      }
 
       const lineNode: LineSceneNode = {
         type: "line",
@@ -552,10 +687,26 @@ export class GeoPipelineStore {
         : (d: any) => d[config.pointIdAccessor as string])
       : null
 
+    // For projections with a clip angle (e.g. orthographic), cull points
+    // on the far side. geoProjection still returns screen coords for
+    // backface points — we must check angular distance ourselves.
+    const clipAngle = proj.clipAngle ? (proj.clipAngle() ?? 0) : 0
+    const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
+    const rotation = proj.rotate ? proj.rotate() : [0, 0, 0]
+    // Projection center in [lon, lat] — negate the rotation
+    const projCenter: [number, number] = [-rotation[0], -rotation[1]]
+
     for (let i = 0; i < points.length; i++) {
       const d = points[i]
       const lon = xAcc(d)
       const lat = yAcc(d)
+
+      // Backface culling: skip points beyond the clip angle
+      if (clipRadians != null) {
+        const dist = geoDistance([lon, lat], projCenter)
+        if (dist > clipRadians) continue
+      }
+
       const projected = proj([lon, lat])
       if (!projected) continue
 

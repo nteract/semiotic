@@ -37,6 +37,8 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   graticule?: boolean | import("../../stream/geoTypes").GraticuleConfig
   /** Line type: "geo" for great circles, "line" for straight @default "geo" */
   lineType?: "geo" | "line"
+  /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
+  flowStyle?: "basic" | "offset" | "arc"
   /** Optional background areas */
   areas?: AreasProp
   /** Background area style */
@@ -112,6 +114,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     tileAttribution,
     tileCacheSize,
     lineType = "geo",
+    flowStyle = "basic",
     areas,
     areaStyle = { fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 },
     edgeColorBy,
@@ -311,6 +314,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     yAccessor: yAccessor as any,
     lineDataAccessor: "coordinates",
     lineType,
+    flowStyle,
     lineStyle: lineStyleFn,
     pointStyle: pointStyleFn,
     ...(resolvedAreas && { areas: resolvedAreas, areaStyle }),

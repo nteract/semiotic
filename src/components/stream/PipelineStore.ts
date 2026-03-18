@@ -976,11 +976,12 @@ export class PipelineStore {
       const colorKeys = this.config.barColors ? Object.keys(this.config.barColors) : []
       const listed = new Set(colorKeys)
       const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
-      const cacheKey = colorKeys.join('\0') + '\x01' + unlisted.join('\0')
+      const activeKeys = colorKeys.filter(k => allCategories.has(k))
+      const cacheKey = activeKeys.join('\0') + '\x01' + unlisted.join('\0')
       if (this._barCategoryCache && this._barCategoryCache.key === cacheKey) {
         categoryOrder = this._barCategoryCache.order
       } else {
-        categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+        categoryOrder = [...activeKeys, ...unlisted]
         this._barCategoryCache = { key: cacheKey, order: categoryOrder }
       }
     }
