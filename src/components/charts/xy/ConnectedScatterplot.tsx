@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useState, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -51,6 +51,11 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
+/** Compute a viridis color for index i out of n total items */
+function viridisColor(i: number, n: number): string {
+  return interpolateViridis(n === 1 ? 0.5 : i / (n - 1))
+}
+
 /**
  * ConnectedScatterplot — points connected in sequence by lines.
  *
@@ -73,27 +78,10 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
 export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedScatterplotProps>(function ConnectedScatterplot(props, ref) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  // Track pushed data locally so we can compute viridis colors + connecting lines
-  const pushedDataRef = useRef<Record<string, any>[]>([])
-  const [pushVersion, setPushVersion] = useState(0)
-
   useImperativeHandle(ref, () => ({
-    push: (point) => {
-      frameRef.current?.push(point)
-      // Sync local copy from Frame's windowed data so colors stay correct
-      pushedDataRef.current = frameRef.current?.getData() ?? []
-      setPushVersion(v => v + 1)
-    },
-    pushMany: (points) => {
-      frameRef.current?.pushMany(points)
-      pushedDataRef.current = frameRef.current?.getData() ?? []
-      setPushVersion(v => v + 1)
-    },
-    clear: () => {
-      frameRef.current?.clear()
-      pushedDataRef.current = []
-      setPushVersion(v => v + 1)
-    },
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
 
@@ -139,11 +127,9 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // In push API mode (data is undefined), use locally tracked pushed data
-  const rawData = (data != null ? data : pushedDataRef.current) as Record<string, any>[]
+  const rawData = (data || []) as Record<string, any>[]
 
-  // Sort by orderAccessor if provided
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Sort by orderAccessor if provided (bounded data mode only)
   const safeData = useMemo(() => {
     if (!orderAccessor || rawData.length === 0) return rawData
     const getOrder = typeof orderAccessor === "function"
@@ -152,12 +138,11 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
     return [...rawData].sort((a, b) => {
       const va = getOrder(a)
       const vb = getOrder(b)
-      // Handle Date objects
       const na = va instanceof Date ? va.getTime() : +va
       const nb = vb instanceof Date ? vb.getTime() : +vb
       return na - nb
     })
-  }, [rawData, orderAccessor, pushVersion])
+  }, [rawData, orderAccessor])
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("ConnectedScatterplot", safeData, "xAccessor", xAccessor)
@@ -180,52 +165,34 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
     return activeSelectionHook
   }, [legendState.legendSelectionHook, activeSelectionHook])
 
-  // ── Viridis color assignment ──────────────────────────────────────────
-
-  const n = safeData.length
-  const showHalo = n > 0 && n < 100
-
-  // Pre-compute color for each data point (viridis: 0=purple → 1=yellow)
-  const pointColors = useMemo(() => {
-    if (n === 0) return []
-    return safeData.map((_, i) => interpolateViridis(n === 1 ? 0.5 : i / (n - 1)))
-  }, [safeData, n])
-
-  // ── Canvas pre-renderer for connecting lines (drawn under points) ────
-  // Reads live data from PointSceneNodes so it stays in sync with the
-  // Frame's window (old points that leave the window are gone from the
-  // scene, so their connecting lines disappear too).
+  // ── Canvas pre-renderer for connecting lines (drawn under points) ─────
+  //
+  // Reads PointSceneNodes directly from the scene graph, which is the
+  // single source of truth for visible data (respects windowing, eviction,
+  // etc.). Computes viridis colors on the fly from scene node order.
 
   const connectingLineRenderer = useMemo(() => {
-    return (ctx: CanvasRenderingContext2D, nodes: any[], scales: any) => {
-      // Extract point nodes in their current scene order
+    return (ctx: CanvasRenderingContext2D, nodes: any[]) => {
       const pts = nodes.filter((n: any) => n.type === "point")
       if (pts.length < 2) return
 
       const selActive = effectiveSelectionHook?.isActive
       const selPredicate = effectiveSelectionHook?.predicate
       const halo = pts.length < 100
-
-      // Compute viridis colors for current visible points
       const count = pts.length
-      const colors = pts.map((_: any, i: number) =>
-        interpolateViridis(count === 1 ? 0.5 : i / (count - 1))
-      )
 
       ctx.lineCap = "round"
 
       for (let i = 0; i < count - 1; i++) {
         const p0 = pts[i]
         const p1 = pts[i + 1]
-        const color = colors[i]
+        const color = viridisColor(i, count)
 
-        // When selection active, dim lines where neither endpoint matches
         const segmentSelected = selActive && selPredicate
           ? selPredicate(p0.data ?? p0) || selPredicate(p1.data ?? p1)
           : true
         const segmentOpacity = selActive ? (segmentSelected ? 1 : 0.2) : 1
 
-        // Halo line (white, wider, semi-transparent) for < 100 points
         if (halo) {
           ctx.beginPath()
           ctx.moveTo(p0.x, p0.y)
@@ -236,7 +203,6 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
           ctx.stroke()
         }
 
-        // Connecting line — same width as point radius, source point color
         ctx.beginPath()
         ctx.moveTo(p0.x, p0.y)
         ctx.lineTo(p1.x, p1.y)
@@ -256,32 +222,36 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
   )
 
   // ── Point style — viridis colored, fixed radius ───────────────────────
+  //
+  // pointStyle is called once per datum during scene build, in data order.
+  // We use a call counter (reset each time the function reference changes)
+  // so each datum gets the correct viridis position. The total count comes
+  // from getData() which reflects the pipeline's current windowed data.
 
-  // Build identity map for O(1) color lookup. In push mode the renderer
-  // passes the original datum object so identity comparison works.
-  const colorByIdentity = useMemo(() => {
-    const map = new Map<any, string>()
-    safeData.forEach((d, i) => {
-      map.set(d, pointColors[i] ?? "#6366f1")
-    })
-    return map
-  }, [safeData, pointColors])
+  const pointCallCounter = useRef({ idx: 0, total: 0 })
 
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      // Try identity lookup first, then check .data (RealtimeNode wrapper)
-      const color = colorByIdentity.get(d)
-        ?? colorByIdentity.get((d as any).data)
-        ?? "#6366f1"
+      const counter = pointCallCounter.current
+      // On first call of a batch, snapshot the current data count
+      if (counter.idx === 0) {
+        counter.total = frameRef.current?.getData()?.length ?? safeData.length
+      }
+      const n = counter.total
+      const i = counter.idx
+      counter.idx++
+      // Reset for next scene build cycle
+      if (counter.idx >= n) counter.idx = 0
+
       return {
-        fill: color,
+        fill: n > 0 ? viridisColor(i, n) : "#6366f1",
         stroke: "white",
         strokeWidth: 1,
         r: pointRadius,
         fillOpacity: 1,
       }
     }
-  }, [colorByIdentity, pointRadius])
+  }, [pointRadius, safeData.length])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -309,8 +279,6 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
     data,
     accessors: { xAccessor, yAccessor },
   })
-
-  // ── Annotations ──────────────────────────────────────────────────────
 
   // ── Loading / empty / error states (after all hooks) ──────────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -343,7 +311,7 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
     tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...(canvasPreRenderers && { canvasPreRenderers }),
+    canvasPreRenderers,
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

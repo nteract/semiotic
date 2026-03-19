@@ -938,7 +938,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       dirtyRef.current = true
       scheduleRender()
-    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, scheduleRender])
+    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, canvasPreRenderers, scheduleRender])
 
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)

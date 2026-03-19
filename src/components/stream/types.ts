@@ -12,6 +12,7 @@ import type {
   AnnotationContext,
   AnnotationAnchorMode
 } from "../realtime/types"
+import type { StreamRendererFn } from "./renderers/types"
 
 // ── Realtime encoding configs ─────────────────────────────────────────
 
@@ -462,7 +463,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Custom canvas renderers ───────────────────
   /** Canvas renderers executed before the chart-type renderers (e.g. connecting lines under points) */
-  canvasPreRenderers?: import("./renderers/types").StreamRendererFn[]
+  canvasPreRenderers?: StreamRendererFn[]
 
   // ── Title ────────────────────────────────────────
   title?: string | ReactNode
