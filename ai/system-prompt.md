@@ -49,14 +49,14 @@ Sizing: all Realtime HOCs accept both `size={[600, 400]}` (tuple) and `width={60
 
 Pushed data shape: `{ time: Date.now(), value: 42 }` for line/waterfall/heatmap, add `category` for histogram/swarm.
 
-### Push API on all HOC charts
-All non-Realtime HOC charts also support the push API via `forwardRef`. **Omit the `data` prop** (do NOT pass `data={[]}`) and push imperatively:
+### Push API on HOC charts
+Many HOC charts support the push API via `forwardRef`. **Omit the `data` prop** (do NOT pass `data={[]}`) and push imperatively:
 ```jsx
 const chartRef = useRef()
 chartRef.current.push({ x: 1, y: 2 })
 <Scatterplot ref={chartRef} xAccessor="x" yAccessor="y" />
 ```
-Methods: `push(datum)`, `pushMany(data)`, `clear()`, `getData()`. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`. Not supported on hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) or ScatterplotMatrix.
+Methods: `push(datum)`, `pushMany(data)`, `clear()`, `getData()`. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`. Supported: XY charts, ordinal charts, network charts (ForceDirectedGraph, SankeyDiagram, ChordDiagram), ProportionalSymbolMap, DistanceCartogram. Not supported: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram), ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 For advanced streaming control, use Stream Frames (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and ref-based push.
 

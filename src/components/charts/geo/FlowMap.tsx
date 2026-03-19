@@ -1,9 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, useRef, useImperativeHandle, forwardRef } from "react"
+import { useMemo, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
@@ -87,14 +86,7 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function FlowMap(props, ref) {
-  const frameRef = useRef<StreamGeoFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
+export function FlowMap<TDatum extends Record<string, any> = Record<string, any>>(props: FlowMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -104,8 +96,8 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
   })
 
   const {
-    flows = [],
-    nodes = [],
+    flows,
+    nodes,
     nodeIdAccessor = "id",
     xAccessor = "lon",
     yAccessor = "lat",
@@ -172,27 +164,30 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
     : null
 
-  const colorScale = useColorScale(flows, edgeColorBy, colorScheme)
+  const safeFlows = flows || []
+  const safeNodes = (nodes || []) as Record<string, any>[]
+
+  const colorScale = useColorScale(safeFlows, edgeColorBy, colorScheme)
 
   // Build node lookup
   const nodeLookup = useMemo(() => {
     const map = new Map<string, Record<string, any>>()
-    for (const node of nodes) {
+    for (const node of safeNodes) {
       map.set(String(node[nodeIdAccessor]), node)
     }
     return map
-  }, [nodes, nodeIdAccessor])
+  }, [safeNodes, nodeIdAccessor])
 
   // Reverse lookup: nodeId → first flow touching that node
   // Used to emit flow-relevant fields when a point node is hovered
   const nodeFlowLookup = useMemo(() => {
-    const map = new Map<string, typeof flows[0]>()
-    for (const flow of flows) {
+    const map = new Map<string, (typeof safeFlows)[0]>()
+    for (const flow of safeFlows) {
       if (!map.has(flow.source)) map.set(flow.source, flow)
       if (!map.has(flow.target)) map.set(flow.target, flow)
     }
     return map
-  }, [flows])
+  }, [safeFlows])
 
   // Custom hover behavior: when a point is hovered, emit the associated
   // flow's datum so that source/target fields are available for selection
@@ -246,7 +241,7 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
 
-    return flows.map(flow => {
+    return safeFlows.map(flow => {
       const src = nodeLookup.get(String(flow.source))
       const tgt = nodeLookup.get(String(flow.target))
       if (!src || !tgt) return null
@@ -258,16 +253,16 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
         ]
       }
     }).filter(Boolean) as Record<string, any>[]
-  }, [flows, nodeLookup, xAccessor, yAccessor])
+  }, [safeFlows, nodeLookup, xAccessor, yAccessor])
 
   // Edge width scale
   const widthScale = useMemo(() => {
-    const vals = flows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
+    const vals = safeFlows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
     if (vals.length === 0) return () => edgeWidthRange[0]
     return scaleLinear()
       .domain([Math.min(...vals), Math.max(...vals)])
       .range(edgeWidthRange)
-  }, [flows, valueAccessor, edgeWidthRange])
+  }, [safeFlows, valueAccessor, edgeWidthRange])
 
   const baseLineStyleFn = useMemo(() => (d: any): Style => ({
     stroke: edgeColorBy ? getColor(d, edgeColorBy, colorScale) : DEFAULT_COLOR,
@@ -316,7 +311,7 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
   const streamProps: StreamGeoFrameProps = {
     projection,
     ...(props.flows != null && { lines: lineData }),
-    ...(props.nodes != null && { points: nodes }),
+    ...(props.nodes != null && { points: safeNodes }),
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     lineDataAccessor: "coordinates",
@@ -349,9 +344,7 @@ export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function Fl
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame ref={frameRef} {...streamProps} />
+      <StreamGeoFrame {...streamProps} />
     </SafeRender>
   )
-})
-
-FlowMap.displayName = "FlowMap"
+}

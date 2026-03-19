@@ -157,7 +157,7 @@ function buildFibSpiralPoints(arcCount, pointsPerArc) {
 // Generate plenty of arcs — each grows by φ ≈ 1.618× so this covers a huge range
 const spiralPoints = buildFibSpiralPoints(40, 8)
 
-const streamingConnectedCode = `import { useRef, useEffect } from "react"
+const streamingConnectedCode = `import { useRef, useEffect, useMemo } from "react"
 import { ConnectedScatterplot } from "semiotic"
 
 // Fibonacci spiral: quarter-circle arcs through Fibonacci-sized

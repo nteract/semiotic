@@ -145,6 +145,10 @@ export function validateNetworkData({
   edgesRequired = true,
   accessors,
 }: NetworkDataValidation): string | null {
+  // Push API mode: both nodes and edges null/undefined means push mode — skip validation.
+  // If only one is null while the other is provided, that's a user error, not push mode.
+  if (nodes == null && edges == null) return null
+
   if (edgesRequired && (!edges || !Array.isArray(edges) || edges.length === 0)) {
     return (
       `${componentName}: No edges provided. Pass a non-empty array: ` +

@@ -1,9 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
+import { useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
@@ -68,14 +67,7 @@ export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<
   frameProps?: Partial<Omit<StreamGeoFrameProps, "areas" | "projection">>
 }
 
-export const ChoroplethMap = forwardRef<RealtimeFrameHandle, ChoroplethMapProps>(function ChoroplethMap(props, ref) {
-  const frameRef = useRef<StreamGeoFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
+export function ChoroplethMap<TDatum extends Record<string, any> = Record<string, any>>(props: ChoroplethMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -218,9 +210,7 @@ export const ChoroplethMap = forwardRef<RealtimeFrameHandle, ChoroplethMapProps>
 
   return (
     <SafeRender componentName="ChoroplethMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame ref={frameRef} {...streamProps} />
+      <StreamGeoFrame {...streamProps} />
     </SafeRender>
   )
-})
-
-ChoroplethMap.displayName = "ChoroplethMap"
+}

@@ -151,8 +151,8 @@ ref.current.push({ time: Date.now(), value: 42, category: "A" }) // histogram, s
 ref.current.push({ time: Date.now(), value: 42 })              // heatmap (time=x, value=y)
 ```
 
-### Push API on all HOC charts
-All non-Realtime HOC charts support the push API via `forwardRef`. Omit the `data` prop and push data imperatively:
+### Push API on HOC charts
+Many HOC charts support the push API via `forwardRef`. Omit the `data` prop and push data imperatively:
 ```jsx
 const chartRef = useRef()
 chartRef.current.push({ x: 1, y: 2 })          // single point
@@ -163,7 +163,7 @@ chartRef.current.getData()                        // read current data
 ```
 **IMPORTANT**: When using the push API, **omit** the `data`/`nodes`/`edges` prop entirely — do NOT pass `data={[]}`, which clears pushed data on every render. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`.
 
-Supported: all XY, ordinal, network (ForceDirectedGraph, SankeyDiagram, ChordDiagram), and geo HOCs. **Not supported**: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) — their root-object data shape is incompatible with flat push. ScatterplotMatrix is a composition wrapper and also does not support push.
+Supported: all XY charts (LineChart, AreaChart, Scatterplot, etc.), all ordinal charts (BarChart, Histogram, etc.), network charts (ForceDirectedGraph, SankeyDiagram, ChordDiagram), and geo point charts (ProportionalSymbolMap, DistanceCartogram). **Not supported**: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) — their root-object data shape is incompatible with flat push. ChoroplethMap (area-based, not point-based), FlowMap (line-based), and ScatterplotMatrix also do not support push.
 
 ## Stream Frame Callbacks (advanced — prefer HOCs)
 Stream Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as function, `colorBy` as function, `nodeLabel` as function) receive **`RealtimeNode`/`RealtimeEdge`** wrappers, NOT your raw data. Access your original data via `.data`:
