@@ -34,9 +34,9 @@ const chartProps = [
   {
     name: "data",
     type: "array",
-    required: true,
+    required: false,
     default: null,
-    description: "Array of data points in order. Consecutive points are connected by lines.",
+    description: "Array of data points in order. Consecutive points are connected by lines. Optional when using the push API via ref.push()/pushMany().",
   },
   {
     name: "xAccessor",
@@ -162,6 +162,29 @@ import { ConnectedScatterplot } from "semiotic"
 
 // Fibonacci spiral: quarter-circle arcs through Fibonacci-sized
 // squares, each ~25% larger than the last
+function buildFibSpiralPoints(arcCount, pointsPerArc) {
+  const pts = []
+  let a = 1, b = 1
+  let cx = 0, cy = 0
+  for (let arc = 0; arc < arcCount; arc++) {
+    const dir = arc % 4
+    const startAngle = dir === 0 ? Math.PI
+      : dir === 1 ? Math.PI * 1.5
+      : dir === 2 ? 0 : Math.PI * 0.5
+    for (let j = 0; j < pointsPerArc; j++) {
+      const frac = j / pointsPerArc
+      const angle = startAngle + frac * (Math.PI / 2)
+      pts.push({ x: cx + b * Math.cos(angle), y: cy + b * Math.sin(angle), step: pts.length })
+    }
+    if (dir === 0) cx += b
+    else if (dir === 1) cy += b
+    else if (dir === 2) cx -= b
+    else cy -= b
+    const next = a + b; a = b; b = next
+  }
+  return pts
+}
+
 function StreamingConnectedScatterplot() {
   const chartRef = useRef()
   const tickRef = useRef(0)

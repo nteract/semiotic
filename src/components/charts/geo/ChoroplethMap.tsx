@@ -176,17 +176,17 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
   if (loadingEl) return loadingEl
 
-  // Show loading state while reference geography loads
-  if (!resolvedAreas) {
+  // Show loading state while reference geography is loading (async resolve in progress)
+  if (areas != null && !resolvedAreas) {
     return renderLoadingState(true, resolved.width, resolved.height) || null
   }
 
-  const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
+  const emptyEl = renderEmptyState(resolvedAreas ?? [], resolved.width, resolved.height, emptyContent)
   if (emptyEl) return emptyEl
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    ...(areas != null && resolvedAreas && { areas: resolvedAreas }),
+    ...(resolvedAreas && { areas: resolvedAreas }),
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,

@@ -310,8 +310,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    ...(props.flows != null && { lines: lineData }),
-    ...(props.nodes != null && { points: safeNodes }),
+    lines: lineData,
+    points: safeNodes,
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     lineDataAccessor: "coordinates",
