@@ -36,7 +36,7 @@ export interface BoxPlotProps<TDatum extends Record<string, any> = Record<string
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const BoxPlot = forwardRef<RealtimeFrameHandle, BoxPlotProps>(function BoxPlot(props, ref) {
+export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string, any> = Record<string, any>>(props: BoxPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -193,5 +193,8 @@ export const BoxPlot = forwardRef<RealtimeFrameHandle, BoxPlotProps>(function Bo
   }
 
   return <SafeRender componentName="BoxPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 BoxPlot.displayName = "BoxPlot"

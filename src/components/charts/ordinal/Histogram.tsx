@@ -33,7 +33,7 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const Histogram = forwardRef<RealtimeFrameHandle, HistogramProps>(function Histogram(props, ref) {
+export const Histogram = forwardRef(function Histogram<TDatum extends Record<string, any> = Record<string, any>>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -163,5 +163,8 @@ export const Histogram = forwardRef<RealtimeFrameHandle, HistogramProps>(functio
   }
 
   return <SafeRender componentName="Histogram" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 Histogram.displayName = "Histogram"

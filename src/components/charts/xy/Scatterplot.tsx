@@ -70,7 +70,7 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
  * />
  * ```
  */
-export const Scatterplot = forwardRef<RealtimeFrameHandle, ScatterplotProps>(function Scatterplot(props, ref) {
+export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -302,5 +302,8 @@ export const Scatterplot = forwardRef<RealtimeFrameHandle, ScatterplotProps>(fun
   }
 
   return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 Scatterplot.displayName = "Scatterplot"

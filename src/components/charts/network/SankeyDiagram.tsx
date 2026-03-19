@@ -47,7 +47,7 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
  *
  * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
  */
-export const SankeyDiagram = forwardRef<RealtimeFrameHandle, SankeyDiagramProps>(function SankeyDiagram(props, ref) {
+export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
@@ -234,5 +234,8 @@ export const SankeyDiagram = forwardRef<RealtimeFrameHandle, SankeyDiagramProps>
       {...frameProps}
     />
   </SafeRender>)
-})
+}) as unknown as {
+  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 SankeyDiagram.displayName = "SankeyDiagram"

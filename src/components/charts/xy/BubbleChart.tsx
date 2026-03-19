@@ -204,7 +204,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart
  */
-export const BubbleChart = forwardRef<RealtimeFrameHandle, BubbleChartProps>(function BubbleChart(props, ref) {
+export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -423,5 +423,8 @@ export const BubbleChart = forwardRef<RealtimeFrameHandle, BubbleChartProps>(fun
   }
 
   return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 BubbleChart.displayName = "BubbleChart"

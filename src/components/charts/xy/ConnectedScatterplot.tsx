@@ -75,7 +75,7 @@ function viridisColor(i: number, n: number): string {
  * />
  * ```
  */
-export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedScatterplotProps>(function ConnectedScatterplot(props, ref) {
+export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -317,5 +317,8 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
   }
 
   return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 ConnectedScatterplot.displayName = "ConnectedScatterplot"

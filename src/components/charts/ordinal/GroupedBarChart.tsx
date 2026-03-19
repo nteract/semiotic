@@ -37,7 +37,7 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const GroupedBarChart = forwardRef<RealtimeFrameHandle, GroupedBarChartProps>(function GroupedBarChart(props, ref) {
+export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -183,5 +183,8 @@ export const GroupedBarChart = forwardRef<RealtimeFrameHandle, GroupedBarChartPr
   }
 
   return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 GroupedBarChart.displayName = "GroupedBarChart"

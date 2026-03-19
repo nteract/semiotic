@@ -31,7 +31,7 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const PieChart = forwardRef<RealtimeFrameHandle, PieChartProps>(function PieChart(props, ref) {
+export const PieChart = forwardRef(function PieChart<TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -166,5 +166,8 @@ export const PieChart = forwardRef<RealtimeFrameHandle, PieChartProps>(function 
   }
 
   return <SafeRender componentName="PieChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 PieChart.displayName = "PieChart"

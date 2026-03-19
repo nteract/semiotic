@@ -81,7 +81,7 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export const DistanceCartogram = forwardRef<RealtimeFrameHandle, DistanceCartogramProps>(function DistanceCartogram(props, ref) {
+export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum extends Record<string, any> = Record<string, any>>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -398,6 +398,8 @@ export const DistanceCartogram = forwardRef<RealtimeFrameHandle, DistanceCartogr
       <StreamGeoFrame ref={geoRef} {...streamProps} />
     </SafeRender>
   )
-})
-
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 DistanceCartogram.displayName = "DistanceCartogram"

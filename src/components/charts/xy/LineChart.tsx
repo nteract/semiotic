@@ -290,8 +290,8 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  * @param props - LineChart configuration
  * @returns Rendered line chart
  */
-export const LineChart = forwardRef<RealtimeFrameHandle, LineChartProps>(
-  function LineChart(props, ref) {
+export const LineChart = forwardRef(
+  function LineChart<TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -821,5 +821,8 @@ export const LineChart = forwardRef<RealtimeFrameHandle, LineChartProps>(
   }
 
   return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 LineChart.displayName = "LineChart"

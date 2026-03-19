@@ -207,7 +207,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export const Heatmap = forwardRef<RealtimeFrameHandle, HeatmapProps>(function Heatmap(props, ref) {
+export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -430,5 +430,8 @@ export const Heatmap = forwardRef<RealtimeFrameHandle, HeatmapProps>(function He
   }
 
   return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 Heatmap.displayName = "Heatmap"

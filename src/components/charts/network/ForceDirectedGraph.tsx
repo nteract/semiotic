@@ -45,7 +45,7 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
  *
  * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
  */
-export const ForceDirectedGraph = forwardRef<RealtimeFrameHandle, ForceDirectedGraphProps>(function ForceDirectedGraph(props, ref) {
+export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
@@ -224,5 +224,8 @@ export const ForceDirectedGraph = forwardRef<RealtimeFrameHandle, ForceDirectedG
       {...frameProps}
     />
   </SafeRender>)
-})
+}) as unknown as {
+  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 ForceDirectedGraph.displayName = "ForceDirectedGraph"

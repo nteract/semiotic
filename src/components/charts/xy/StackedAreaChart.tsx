@@ -171,7 +171,7 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
  * />
  * ```
  */
-export const StackedAreaChart = forwardRef<RealtimeFrameHandle, StackedAreaChartProps>(function StackedAreaChart(props, ref) {
+export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -411,5 +411,8 @@ export const StackedAreaChart = forwardRef<RealtimeFrameHandle, StackedAreaChart
   }
 
   return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 StackedAreaChart.displayName = "StackedAreaChart"

@@ -186,7 +186,7 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
  * />
  * ```
  */
-export const AreaChart = forwardRef<RealtimeFrameHandle, AreaChartProps>(function AreaChart(props, ref) {
+export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -432,5 +432,8 @@ export const AreaChart = forwardRef<RealtimeFrameHandle, AreaChartProps>(functio
   }
 
   return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 AreaChart.displayName = "AreaChart"

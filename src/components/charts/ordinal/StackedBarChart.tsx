@@ -38,7 +38,7 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const StackedBarChart = forwardRef<RealtimeFrameHandle, StackedBarChartProps>(function StackedBarChart(props, ref) {
+export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -185,5 +185,8 @@ export const StackedBarChart = forwardRef<RealtimeFrameHandle, StackedBarChartPr
   }
 
   return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 StackedBarChart.displayName = "StackedBarChart"

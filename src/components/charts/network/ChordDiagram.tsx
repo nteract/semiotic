@@ -44,7 +44,7 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
  *
  * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
  */
-export const ChordDiagram = forwardRef<RealtimeFrameHandle, ChordDiagramProps>(function ChordDiagram(props, ref) {
+export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
@@ -219,5 +219,8 @@ export const ChordDiagram = forwardRef<RealtimeFrameHandle, ChordDiagramProps>(f
       {...frameProps}
     />
   </SafeRender>)
-})
+}) as unknown as {
+  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 ChordDiagram.displayName = "ChordDiagram"

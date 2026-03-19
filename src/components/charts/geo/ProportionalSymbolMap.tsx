@@ -69,7 +69,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> =
   frameProps?: Partial<Omit<StreamGeoFrameProps, "points" | "projection">>
 }
 
-export const ProportionalSymbolMap = forwardRef<RealtimeFrameHandle, ProportionalSymbolMapProps>(function ProportionalSymbolMap(props, ref) {
+export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Record<string, any> = Record<string, any>>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
@@ -243,6 +243,8 @@ export const ProportionalSymbolMap = forwardRef<RealtimeFrameHandle, Proportiona
       <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-})
-
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 ProportionalSymbolMap.displayName = "ProportionalSymbolMap"

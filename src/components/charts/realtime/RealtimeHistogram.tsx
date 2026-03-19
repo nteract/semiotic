@@ -135,8 +135,8 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
  * />
  * ```
  */
-export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, RealtimeTemporalHistogramProps>(
-  function RealtimeTemporalHistogram(props, ref) {
+export const RealtimeTemporalHistogram = forwardRef(
+  function RealtimeTemporalHistogram<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeTemporalHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -254,7 +254,10 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       />
     )
   }
-)
+) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeTemporalHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 RealtimeTemporalHistogram.displayName = "RealtimeTemporalHistogram"
 
 /** @deprecated Use RealtimeTemporalHistogram instead */

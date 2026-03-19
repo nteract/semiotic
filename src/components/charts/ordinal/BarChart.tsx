@@ -43,7 +43,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
 /**
  * BarChart - Visualize categorical data with bars.
  */
-export const BarChart = forwardRef<RealtimeFrameHandle, BarChartProps>(function BarChart(props, ref) {
+export const BarChart = forwardRef(function BarChart<TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -219,5 +219,8 @@ export const BarChart = forwardRef<RealtimeFrameHandle, BarChartProps>(function 
   }
 
   return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 BarChart.displayName = "BarChart"

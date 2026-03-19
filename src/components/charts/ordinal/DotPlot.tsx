@@ -37,7 +37,7 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const DotPlot = forwardRef<RealtimeFrameHandle, DotPlotProps>(function DotPlot(props, ref) {
+export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string, any> = Record<string, any>>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -178,5 +178,8 @@ export const DotPlot = forwardRef<RealtimeFrameHandle, DotPlotProps>(function Do
   }
 
   return <SafeRender componentName="DotPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 DotPlot.displayName = "DotPlot"

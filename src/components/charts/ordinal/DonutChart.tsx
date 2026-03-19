@@ -33,7 +33,7 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const DonutChart = forwardRef<RealtimeFrameHandle, DonutChartProps>(function DonutChart(props, ref) {
+export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -172,5 +172,8 @@ export const DonutChart = forwardRef<RealtimeFrameHandle, DonutChartProps>(funct
   }
 
   return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-})
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 DonutChart.displayName = "DonutChart"
