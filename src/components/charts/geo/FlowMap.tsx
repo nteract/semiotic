@@ -348,3 +348,4 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     </SafeRender>
   )
 }
+FlowMap.displayName = "FlowMap"

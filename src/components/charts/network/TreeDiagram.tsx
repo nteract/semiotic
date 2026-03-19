@@ -181,3 +181,4 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     />
   </SafeRender>)
 }
+TreeDiagram.displayName = "TreeDiagram"

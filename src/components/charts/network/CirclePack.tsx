@@ -171,3 +171,4 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     />
   </SafeRender>)
 }
+CirclePack.displayName = "CirclePack"

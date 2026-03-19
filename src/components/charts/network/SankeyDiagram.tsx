@@ -53,7 +53,7 @@ export const SankeyDiagram = forwardRef<RealtimeFrameHandle, SankeyDiagramProps>
     push: (point) => frameRef.current?.push(point as any),
     pushMany: (points) => frameRef.current?.pushMany(points as any),
     clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
+    getData: () => frameRef.current?.getTopology()?.edges?.map((e: any) => e.data) ?? []
   }))
 
   const resolved = useChartMode(props.mode, {

@@ -189,7 +189,7 @@ export const ConnectedScatterplot = forwardRef<RealtimeFrameHandle, ConnectedSca
         const color = viridisColor(i, count)
 
         const segmentSelected = selActive && selPredicate
-          ? selPredicate(p0.data ?? p0) || selPredicate(p1.data ?? p1)
+          ? selPredicate(p0.datum ?? p0) || selPredicate(p1.datum ?? p1)
           : true
         const segmentOpacity = selActive ? (segmentSelected ? 1 : 0.2) : 1
 

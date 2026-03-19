@@ -214,3 +214,4 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     </SafeRender>
   )
 }
+ChoroplethMap.displayName = "ChoroplethMap"

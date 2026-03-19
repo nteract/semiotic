@@ -209,3 +209,4 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     />
   </SafeRender>)
 }
+Treemap.displayName = "Treemap"
