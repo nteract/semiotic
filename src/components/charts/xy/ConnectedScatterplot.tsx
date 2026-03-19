@@ -231,11 +231,18 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   const pointCallCounter = useRef({ idx: 0, total: 0 })
 
   const basePointStyle = useMemo(() => {
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
     return (d: Record<string, any>) => {
       const counter = pointCallCounter.current
-      // On first call of a batch, snapshot the current data count
+      // On first call of a batch, snapshot the renderable point count
+      // (filter out invalid x/y so gradient matches the connecting-line renderer)
       if (counter.idx === 0) {
-        counter.total = frameRef.current?.getData()?.length ?? safeData.length
+        const allData = frameRef.current?.getData() ?? safeData
+        counter.total = allData.filter((p: any) => {
+          const x = xAcc(p); const y = yAcc(p)
+          return x != null && y != null && isFinite(x) && isFinite(y)
+        }).length
       }
       const n = counter.total
       const i = counter.idx
@@ -251,7 +258,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         fillOpacity: 1,
       }
     }
-  }, [pointRadius, safeData.length])
+  }, [pointRadius, safeData.length, xAccessor, yAccessor])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),

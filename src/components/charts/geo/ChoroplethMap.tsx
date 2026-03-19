@@ -25,7 +25,7 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
 
 export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** GeoJSON features or a reference string ("world-110m", "world-50m", "land-110m", "land-50m") */
-  areas?: AreasProp
+  areas: AreasProp
   /** Accessor for the numeric value to encode as color */
   valueAccessor: ChartAccessor<TDatum, number>
   /** Sequential color scheme @default "blues" */
@@ -177,16 +177,16 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   if (loadingEl) return loadingEl
 
   // Show loading state while reference geography is loading (async resolve in progress)
-  if (areas != null && !resolvedAreas) {
+  if (!resolvedAreas) {
     return renderLoadingState(true, resolved.width, resolved.height) || null
   }
 
-  const emptyEl = renderEmptyState(resolvedAreas ?? [], resolved.width, resolved.height, emptyContent)
+  const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
   if (emptyEl) return emptyEl
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    ...(resolvedAreas && { areas: resolvedAreas }),
+    areas: resolvedAreas,
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,

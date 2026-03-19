@@ -813,9 +813,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           }
 
           // Custom pre-renderers (e.g. connecting lines under points)
+          // Each call is wrapped in save/restore to prevent ctx state leaks
           if (canvasPreRenderers && store.scales) {
             for (const renderer of canvasPreRenderers) {
+              ctx.save()
               renderer(ctx, store.scene, store.scales, { width: adjustedWidth, height: adjustedHeight })
+              ctx.restore()
             }
           }
 
