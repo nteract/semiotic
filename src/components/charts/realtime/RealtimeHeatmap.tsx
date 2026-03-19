@@ -110,8 +110,8 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
  * />
  * ```
  */
-export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapProps>(
-  function RealtimeHeatmap(props, ref) {
+export const RealtimeHeatmap = forwardRef(
+  function RealtimeHeatmap<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -218,5 +218,8 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
       />
     )
   }
-)
+) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 RealtimeHeatmap.displayName = "RealtimeHeatmap"

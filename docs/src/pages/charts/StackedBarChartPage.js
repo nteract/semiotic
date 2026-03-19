@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { StackedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -51,7 +50,7 @@ const products = ["Widgets", "Gadgets", "Gizmos"]
 const stackColors = { Widgets: "#6366f1", Gadgets: "#f59e0b", Gizmos: "#10b981" }
 
 const streamingStackedBarCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { StackedBarChart } from "semiotic"
 
 function StreamingStackedBarDemo() {
   const chartRef = useRef()
@@ -72,26 +71,20 @@ function StreamingStackedBarDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <StackedBarChart
       ref={chartRef}
-      chartType="bar"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="quarter"
-      rAccessor="sales"
+      categoryAccessor="quarter"
       stackBy="product"
-      windowSize={200}
-      showAxes
-      pieceStyle={d => ({ fill: stackColors[d.product] || "#007bff" })}
-      tooltipContent={d => {
-        const datum = d.data || d
-        return (
-          <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
-            <div style={{ fontWeight: "bold" }}>{datum.quarter}</div>
-            <div>{datum.product}: {typeof datum.sales === "number" ? datum.sales.toLocaleString() : datum.sales}</div>
-          </div>
-        )
-      }}
+      valueAccessor="sales"
+      width={600}
+      height={300}
+      tooltip={(d) => (
+        <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
+          <div style={{ fontWeight: "bold" }}>{d.quarter}</div>
+          <div>{d.product}: {typeof d.sales === "number" ? d.sales.toLocaleString() : d.sales}</div>
+        </div>
+      )}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -115,26 +108,20 @@ function StreamingStackedBarDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <StackedBarChart
       ref={chartRef}
-      chartType="bar"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="quarter"
-      rAccessor="sales"
+      categoryAccessor="quarter"
       stackBy="product"
-      windowSize={200}
-      showAxes
-      pieceStyle={d => ({ fill: stackColors[d.product] || "#007bff" })}
-      tooltipContent={d => {
-        const datum = d.data || d
-        return (
-          <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
-            <div style={{ fontWeight: "bold" }}>{datum.quarter}</div>
-            <div>{datum.product}: {typeof datum.sales === "number" ? datum.sales.toLocaleString() : datum.sales}</div>
-          </div>
-        )
-      }}
+      valueAccessor="sales"
+      width={width}
+      height={300}
+      tooltip={(d) => (
+        <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
+          <div style={{ fontWeight: "bold" }}>{d.quarter}</div>
+          <div>{d.product}: {typeof d.sales === "number" ? d.sales.toLocaleString() : d.sales}</div>
+        </div>
+      )}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

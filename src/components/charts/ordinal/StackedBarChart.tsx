@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
+import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -13,9 +13,10 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 export interface StackedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TDatum[]
+  data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   stackBy: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -37,7 +38,7 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export function StackedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum>) {
+export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -48,6 +49,14 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
   })
+
+  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
 
   const {
     data, margin: userMargin, className,
@@ -135,14 +144,14 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
   )
 
   const error = validateArrayData({
-    componentName: "StackedBarChart", data: safeData,
+    componentName: "StackedBarChart", data: data,
     accessors: { categoryAccessor, valueAccessor }, requiredProps: { stackBy },
   })
   if (error) return <ChartError componentName="StackedBarChart" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "bar",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     stackBy,
@@ -175,6 +184,9 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     ...frameProps
   }
 
-  return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
+  return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 StackedBarChart.displayName = "StackedBarChart"

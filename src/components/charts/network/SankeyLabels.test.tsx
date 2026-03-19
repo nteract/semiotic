@@ -8,13 +8,16 @@ import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../../st
 
 // ── Mock StreamNetworkFrame to capture props ────────────────────────────
 let lastFrameProps: any = null
-vi.mock("../../stream/StreamNetworkFrame", () => ({
-  __esModule: true,
-  default: (props: any) => {
-    lastFrameProps = props
-    return <div className="stream-network-frame"><svg /></div>
+vi.mock("../../stream/StreamNetworkFrame", () => {
+  const React = require("react")
+  return {
+    __esModule: true,
+    default: React.forwardRef((props: any, _ref: any) => {
+      lastFrameProps = props
+      return <div className="stream-network-frame"><svg /></div>
+    })
   }
-}))
+})
 
 // ── Test data matching the user's real-world scenario ───────────────────
 const nodes = [

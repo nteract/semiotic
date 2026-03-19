@@ -108,8 +108,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Record<string, any> = Re
  * />
  * ```
  */
-export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmChartProps>(
-  function RealtimeSwarmChart(props, ref) {
+export const RealtimeSwarmChart = forwardRef(
+  function RealtimeSwarmChart<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -219,5 +219,8 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
       />
     )
   }
-)
+) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeSwarmChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 RealtimeSwarmChart.displayName = "RealtimeSwarmChart"

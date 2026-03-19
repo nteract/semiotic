@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -26,7 +27,7 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
    * [{x: 1, y: 10, category: 'A'}, {x: 2, y: 20, category: 'A'}, {x: 1, y: 15, category: 'B'}]
    * ```
    */
-  data: TDatum[]
+  data?: TDatum[]
 
   /**
    * Field name or function to access x values
@@ -185,7 +186,16 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
  * />
  * ```
  */
-export function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>) {
+export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -362,7 +372,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "AreaChart",
-    data: safeData,
+    data: data,
     accessors: {
       xAccessor,
       yAccessor,
@@ -387,7 +397,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "area",
-    data: flattenedData,
+    ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
     groupAccessor: areaBy || undefined,
@@ -421,6 +431,9 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     ...frameProps
   }
 
-  return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
+  return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 AreaChart.displayName = "AreaChart"

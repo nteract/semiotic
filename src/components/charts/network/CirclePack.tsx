@@ -40,6 +40,7 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
  * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
 export function CirclePack<TNode extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode>) {
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -82,7 +83,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   if (loadingEl) return loadingEl
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -140,7 +141,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     <SafeRender componentName="CirclePack" width={width} height={height}>
     <StreamNetworkFrame
       chartType="circlepack"
-      data={data}
+      {...(data != null && { data })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}

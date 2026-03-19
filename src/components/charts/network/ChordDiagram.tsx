@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -18,7 +19,7 @@ import { validateNetworkData } from "../shared/validateChartData"
  */
 export interface ChordDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   nodes?: TNode[]
-  edges: TEdge[]
+  edges?: TEdge[]
   sourceAccessor?: ChartAccessor<TEdge, string>
   targetAccessor?: ChartAccessor<TEdge, string>
   valueAccessor?: ChartAccessor<TEdge, number>
@@ -43,7 +44,15 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
  *
  * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
  */
-export function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>) {
+export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+  const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point as any),
+    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getTopology()?.edges?.map((e: any) => e.data) ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -173,9 +182,10 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   return (
     <SafeRender componentName="ChordDiagram" width={width} height={height}>
     <StreamNetworkFrame
+      ref={frameRef}
       chartType="chord"
-      nodes={inferredNodes}
-      edges={safeEdges}
+      {...(inferredNodes.length > 0 && { nodes: inferredNodes })}
+      {...(edges != null && { edges: safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
@@ -209,5 +219,8 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       {...frameProps}
     />
   </SafeRender>)
+}) as unknown as {
+  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 ChordDiagram.displayName = "ChordDiagram"

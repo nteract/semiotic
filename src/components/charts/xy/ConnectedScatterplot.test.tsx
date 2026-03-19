@@ -7,12 +7,13 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Mock XYFrame to capture props
 let lastXYFrameProps: any = null
 vi.mock("../../stream/StreamXYFrame", () => {
+  const React = require("react")
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: React.forwardRef((props: any, _ref: any) => {
       lastXYFrameProps = props
       return <div className="stream-xy-frame"><svg /></div>
-    }
+    })
   }
 })
 
@@ -129,27 +130,15 @@ describe("ConnectedScatterplot", () => {
       expect(style.r).toBe(4)
     })
 
-    it("includes connected-lines annotation", () => {
+    it("uses canvasPreRenderers for connecting lines", () => {
       render(
         <TooltipProvider>
           <ConnectedScatterplot data={sampleData} />
         </TooltipProvider>
       )
-      expect(lastXYFrameProps.annotations).toBeDefined()
-      expect(lastXYFrameProps.annotations.length).toBeGreaterThanOrEqual(1)
-      const connectedLines = lastXYFrameProps.annotations.find(
-        (a: any) => a.type === "connected-lines"
-      )
-      expect(connectedLines).toBeDefined()
-    })
-
-    it("provides svgAnnotationRules for connecting lines", () => {
-      render(
-        <TooltipProvider>
-          <ConnectedScatterplot data={sampleData} />
-        </TooltipProvider>
-      )
-      expect(typeof lastXYFrameProps.svgAnnotationRules).toBe("function")
+      expect(lastXYFrameProps.canvasPreRenderers).toBeDefined()
+      expect(lastXYFrameProps.canvasPreRenderers.length).toBe(1)
+      expect(typeof lastXYFrameProps.canvasPreRenderers[0]).toBe("function")
     })
 
     it("forwards width and height as size", () => {
@@ -198,16 +187,15 @@ describe("ConnectedScatterplot", () => {
       expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
     })
 
-    it("merges user annotations with connected-lines annotation", () => {
+    it("forwards user annotations without connected-lines (now canvas-based)", () => {
       const userAnnotations = [{ type: "react-annotation", x: 2, y: 20, label: "Peak" }]
       render(
         <TooltipProvider>
           <ConnectedScatterplot data={sampleData} annotations={userAnnotations} />
         </TooltipProvider>
       )
-      expect(lastXYFrameProps.annotations.length).toBe(2)
-      expect(lastXYFrameProps.annotations[0].type).toBe("connected-lines")
-      expect(lastXYFrameProps.annotations[1].type).toBe("react-annotation")
+      expect(lastXYFrameProps.annotations.length).toBe(1)
+      expect(lastXYFrameProps.annotations[0].type).toBe("react-annotation")
     })
   })
 })

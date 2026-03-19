@@ -110,8 +110,8 @@ export interface RealtimeLineChartProps<TDatum extends Record<string, any> = Rec
  * />
  * ```
  */
-export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineChartProps>(
-  function RealtimeLineChart(props, ref) {
+export const RealtimeLineChart = forwardRef(
+  function RealtimeLineChart<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeLineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -218,5 +218,8 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       />
     )
   }
-)
+) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 RealtimeLineChart.displayName = "RealtimeLineChart"

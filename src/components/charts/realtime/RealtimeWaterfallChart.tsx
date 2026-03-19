@@ -105,8 +105,8 @@ export interface RealtimeWaterfallChartProps<TDatum extends Record<string, any> 
  * />
  * ```
  */
-export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWaterfallChartProps>(
-  function RealtimeWaterfallChart(props, ref) {
+export const RealtimeWaterfallChart = forwardRef(
+  function RealtimeWaterfallChart<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeWaterfallChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -216,5 +216,8 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
       />
     )
   }
-)
+) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeWaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
+}
 RealtimeWaterfallChart.displayName = "RealtimeWaterfallChart"

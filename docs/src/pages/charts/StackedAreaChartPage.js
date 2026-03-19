@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { StackedAreaChart, StreamXYFrame } from "semiotic"
+import { StackedAreaChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -68,13 +68,12 @@ const stackedAreaChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingStackedCode = `import { useRef, useEffect } from "react"
-import { StreamXYFrame } from "semiotic"
+import { StackedAreaChart } from "semiotic"
 
 function StreamingRevenue() {
   const chartRef = useRef()
   const indexRef = useRef(0)
   const regions = ["North", "South", "East", "West"]
-  const colors = { North: "#6366f1", South: "#f59e0b", East: "#10b981", West: "#ef4444" }
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -92,26 +91,18 @@ function StreamingRevenue() {
   }, [])
 
   return (
-    <StreamXYFrame
+    <StackedAreaChart
       ref={chartRef}
-      chartType="stackedarea"
-      runtimeMode="streaming"
-      size={[600, 280]}
-      groupAccessor="region"
-      lineStyle={(d, group) => ({
-        fill: colors[group] || "#6366f1",
-        fillOpacity: 0.7,
-        stroke: colors[group] || "#6366f1",
-        strokeWidth: 1,
-      })}
-      windowSize={100}
-      pulse={{ duration: 600, color: "rgba(255,255,255,0.6)" }}
-      showAxes
+      xAccessor="time"
+      yAccessor="value"
+      areaBy="region"
+      colorBy="region"
+      width={600}
+      height={280}
+      frameProps={{ windowSize: 100 }}
     />
   )
 }`
-
-const stackColors = { North: "#6366f1", South: "#f59e0b", East: "#10b981", West: "#ef4444" }
 
 function StreamingStackedDemo({ width }) {
   const chartRef = useRef()
@@ -134,21 +125,15 @@ function StreamingStackedDemo({ width }) {
   }, [])
 
   return (
-    <StreamXYFrame
+    <StackedAreaChart
       ref={chartRef}
-      chartType="stackedarea"
-      runtimeMode="streaming"
-      size={[width, 280]}
-      groupAccessor="region"
-      lineStyle={(d, group) => ({
-        fill: stackColors[group] || "#6366f1",
-        fillOpacity: 0.7,
-        stroke: stackColors[group] || "#6366f1",
-        strokeWidth: 1,
-      })}
-      windowSize={100}
-      pulse={{ duration: 600, color: "rgba(255,255,255,0.6)" }}
-      showAxes={true}
+      xAccessor="time"
+      yAccessor="value"
+      areaBy="region"
+      colorBy="region"
+      width={width}
+      height={280}
+      frameProps={{ windowSize: 100 }}
     />
   )
 }

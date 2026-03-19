@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
+import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -13,9 +13,10 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TDatum[]
+  data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
   orientation?: "vertical" | "horizontal"
@@ -38,7 +39,7 @@ export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<stri
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export function SwarmPlot<TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum>) {
+export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -49,6 +50,14 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
   })
+
+  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
 
   const {
     data, margin: userMargin, className,
@@ -142,14 +151,14 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
   )
 
   const error = validateArrayData({
-    componentName: "SwarmPlot", data: safeData,
+    componentName: "SwarmPlot", data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="SwarmPlot" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "swarm",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
@@ -180,6 +189,9 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
     ...frameProps
   }
 
-  return <SafeRender componentName="SwarmPlot" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
+  return <SafeRender componentName="SwarmPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 SwarmPlot.displayName = "SwarmPlot"

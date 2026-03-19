@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DonutChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -47,11 +46,9 @@ const donutLegend = {
 }
 
 const streamingDonutCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { DonutChart } from "semiotic"
 
 const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
-const donutColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-const donutColorMap = Object.fromEntries(budgetCategories.map((s, i) => [s, donutColors[i]]))
 
 function StreamingDonutDemo() {
   const chartRef = useRef()
@@ -71,27 +68,16 @@ function StreamingDonutDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <DonutChart
       ref={chartRef}
-      chartType="donut"
-      runtimeMode="streaming"
-      projection="radial"
+      categoryAccessor="category"
+      valueAccessor="value"
       innerRadius={60}
-      size={[400, 400]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes={false}
-      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+      showLegend
+      width={400}
+      height={400}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
-      legend={{
-        legendGroups: [{
-          styleFn: d => ({ fill: d.color, stroke: d.color }),
-          type: "fill",
-          items: budgetCategories.map(c => ({ label: c, color: donutColorMap[c] })),
-          label: ""
-        }]
-      }}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -115,20 +101,16 @@ function StreamingDonutDemo({ width }) {
 
   const size = Math.min(width, 400)
   return (
-    <StreamOrdinalFrame
+    <DonutChart
       ref={chartRef}
-      chartType="donut"
-      runtimeMode="streaming"
-      projection="radial"
+      categoryAccessor="category"
+      valueAccessor="value"
       innerRadius={60}
-      size={[size, size]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes={false}
-      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+      showLegend
+      width={size}
+      height={size}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
-      legend={donutLegend}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

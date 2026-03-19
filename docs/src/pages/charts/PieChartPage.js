@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { PieChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -41,11 +40,9 @@ const pieLegend = {
 }
 
 const streamingPieCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { PieChart } from "semiotic"
 
 const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
-const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-const pieColorMap = Object.fromEntries(marketSegments.map((s, i) => [s, pieColors[i]]))
 
 function StreamingPieDemo() {
   const chartRef = useRef()
@@ -65,26 +62,17 @@ function StreamingPieDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <PieChart
       ref={chartRef}
-      chartType="pie"
-      runtimeMode="streaming"
-      projection="radial"
-      size={[400, 400]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes={false}
-      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
-      pulse={{ duration: 800, color: "rgba(255,255,255,0.7)" }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      showLegend
+      width={400}
+      height={400}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
-      legend={{
-        legendGroups: [{
-          styleFn: d => ({ fill: d.color, stroke: d.color }),
-          type: "fill",
-          items: marketSegments.map(s => ({ label: s, color: pieColorMap[s] })),
-          label: ""
-        }]
+      frameProps={{
+        windowSize: 200,
+        pulse: { duration: 800, color: "rgba(255,255,255,0.7)" },
       }}
     />
   )
@@ -109,20 +97,18 @@ function StreamingPieDemo({ width }) {
 
   const size = Math.min(width, 400)
   return (
-    <StreamOrdinalFrame
+    <PieChart
       ref={chartRef}
-      chartType="pie"
-      runtimeMode="streaming"
-      projection="radial"
-      size={[size, size]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes={false}
-      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
-      pulse={{ duration: 800, color: "rgba(255,255,255,0.7)" }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      showLegend
+      width={size}
+      height={size}
       margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
-      legend={pieLegend}
+      frameProps={{
+        windowSize: 200,
+        pulse: { duration: 800, color: "rgba(255,255,255,0.7)" },
+      }}
     />
   )
 }

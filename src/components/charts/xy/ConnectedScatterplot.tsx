@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -18,8 +19,8 @@ import { interpolateViridis } from "d3-scale-chromatic"
  * ConnectedScatterplot component props
  */
 export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
-  /** Array of data points. Each point needs x and y properties. */
-  data: TDatum[]
+  /** Array of data points. Each point needs x and y properties. Omit when using push API. */
+  data?: TDatum[]
   /** Field name or function to access x values @default "x" */
   xAccessor?: ChartAccessor<TDatum, number>
   /** Field name or function to access y values @default "y" */
@@ -50,6 +51,11 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
+/** Compute a viridis color for index i out of n total items */
+function viridisColor(i: number, n: number): string {
+  return interpolateViridis(n === 1 ? 0.5 : i / (n - 1))
+}
+
 /**
  * ConnectedScatterplot — points connected in sequence by lines.
  *
@@ -69,9 +75,16 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
  * />
  * ```
  */
-export function ConnectedScatterplot<TDatum extends Record<string, any> = Record<string, any>>(
-  props: ConnectedScatterplotProps<TDatum>
-) {
+export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -114,15 +127,9 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const rawData = (data || []) as Record<string, any>[]
 
-  // Sort by orderAccessor if provided
+  // Sort by orderAccessor if provided (bounded data mode only)
   const safeData = useMemo(() => {
     if (!orderAccessor || rawData.length === 0) return rawData
     const getOrder = typeof orderAccessor === "function"
@@ -131,7 +138,6 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     return [...rawData].sort((a, b) => {
       const va = getOrder(a)
       const vb = getOrder(b)
-      // Handle Date objects
       const na = va instanceof Date ? va.getTime() : +va
       const nb = vb instanceof Date ? vb.getTime() : +vb
       return na - nb
@@ -159,123 +165,100 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     return activeSelectionHook
   }, [legendState.legendSelectionHook, activeSelectionHook])
 
-  // ── Viridis color assignment ──────────────────────────────────────────
+  // ── Canvas pre-renderer for connecting lines (drawn under points) ─────
+  //
+  // Reads PointSceneNodes directly from the scene graph, which is the
+  // single source of truth for visible data (respects windowing, eviction,
+  // etc.). Computes viridis colors on the fly from scene node order.
 
-  const n = safeData.length
-  const showHalo = n > 0 && n < 100
-
-  // Pre-compute color for each data point (viridis: 0=purple → 1=yellow)
-  const pointColors = useMemo(() => {
-    if (n === 0) return []
-    return safeData.map((_, i) => interpolateViridis(n === 1 ? 0.5 : i / (n - 1)))
-  }, [safeData, n])
-
-  // ── Build foreground SVG for connecting lines ─────────────────────────
-  // We draw lines as SVG foreground graphics so they sit between the
-  // canvas points and the SVG overlay (axes, tooltips). Each line
-  // connects consecutive points.
-
-  const connectingLines = useMemo(() => {
-    if (n < 2) return null
-
-    // We need the scales to map data → pixels. Since we don't have direct
-    // access to the pipeline store's scales in the HOC, we render the lines
-    // as annotations instead — they get access to scales via the annotation
-    // context. But annotations are SVG elements in the overlay.
-    //
-    // Actually, the cleanest approach: pass the data as BOTH scatter points
-    // AND a line, then style the line segments individually.
-    // StreamXYFrame doesn't support per-segment line coloring natively for
-    // connected scatterplots. Instead, we'll use svgAnnotationRules to draw
-    // the connecting lines in the SVG overlay with full control.
-
-    return null // handled via svgAnnotationRules below
-  }, [n])
-
-  // ── Custom annotation rules for connecting lines ──────────────────────
-
-  const svgAnnotationRules = useMemo(() => {
-    if (n < 2) return undefined
-
-    return (annotation: Record<string, any>, index: number, context: any) => {
-      // Only handle our custom "connected-lines" annotation
-      if (annotation.type !== "connected-lines") return null
-
-      const scales = context.scales
-      if (!scales) return null
-      const scaleX = scales.x ?? scales.time
-      const scaleY = scales.y ?? scales.value
-      if (!scaleX || !scaleY) return null
-
-      const xAcc = typeof xAccessor === "string" ? (d: any) => d[xAccessor] : xAccessor
-      const yAcc = typeof yAccessor === "string" ? (d: any) => d[yAccessor] : yAccessor
+  const connectingLineRenderer = useMemo(() => {
+    return (ctx: CanvasRenderingContext2D, nodes: any[]) => {
+      const pts = nodes.filter((n: any) => n.type === "point")
+      if (pts.length < 2) return
 
       const selActive = effectiveSelectionHook?.isActive
       const selPredicate = effectiveSelectionHook?.predicate
+      const halo = pts.length < 100
+      const count = pts.length
 
-      const elements: React.ReactNode[] = []
+      ctx.lineCap = "round"
 
-      for (let i = 0; i < safeData.length - 1; i++) {
-        const d0 = safeData[i]
-        const d1 = safeData[i + 1]
-        const x0 = scaleX(xAcc(d0))
-        const y0 = scaleY(yAcc(d0))
-        const x1 = scaleX(xAcc(d1))
-        const y1 = scaleY(yAcc(d1))
-        const color = pointColors[i]
+      for (let i = 0; i < count - 1; i++) {
+        const p0 = pts[i]
+        const p1 = pts[i + 1]
+        const color = viridisColor(i, count)
 
-        // When selection active, dim lines where neither endpoint matches
         const segmentSelected = selActive && selPredicate
-          ? selPredicate(d0) || selPredicate(d1)
+          ? selPredicate(p0.datum ?? p0) || selPredicate(p1.datum ?? p1)
           : true
         const segmentOpacity = selActive ? (segmentSelected ? 1 : 0.2) : 1
 
-        // Halo line (white, wider, semi-transparent) for < 100 points
-        if (showHalo) {
-          elements.push(
-            <line
-              key={`halo-${i}`}
-              x1={x0} y1={y0} x2={x1} y2={y1}
-              stroke="white"
-              strokeWidth={pointRadius + 2}
-              strokeOpacity={0.5 * segmentOpacity}
-              strokeLinecap="round"
-            />
-          )
+        if (halo) {
+          ctx.beginPath()
+          ctx.moveTo(p0.x, p0.y)
+          ctx.lineTo(p1.x, p1.y)
+          ctx.strokeStyle = "white"
+          ctx.lineWidth = pointRadius + 2
+          ctx.globalAlpha = 0.5 * segmentOpacity
+          ctx.stroke()
         }
 
-        // Connecting line — same width as point radius, source point color
-        elements.push(
-          <line
-            key={`conn-${i}`}
-            x1={x0} y1={y0} x2={x1} y2={y1}
-            stroke={color}
-            strokeWidth={pointRadius}
-            strokeLinecap="round"
-            opacity={segmentOpacity}
-          />
-        )
+        ctx.beginPath()
+        ctx.moveTo(p0.x, p0.y)
+        ctx.lineTo(p1.x, p1.y)
+        ctx.strokeStyle = color
+        ctx.lineWidth = pointRadius
+        ctx.globalAlpha = segmentOpacity
+        ctx.stroke()
       }
 
-      return <g key={`ann-${index}`}>{elements}</g>
+      ctx.globalAlpha = 1
     }
-  }, [safeData, pointColors, pointRadius, showHalo, xAccessor, yAccessor, n, effectiveSelectionHook])
+  }, [pointRadius, effectiveSelectionHook])
+
+  const canvasPreRenderers = useMemo(
+    () => [connectingLineRenderer],
+    [connectingLineRenderer]
+  )
 
   // ── Point style — viridis colored, fixed radius ───────────────────────
+  //
+  // pointStyle is called once per datum during scene build, in data order.
+  // We use a call counter (reset each time the function reference changes)
+  // so each datum gets the correct viridis position. The total count comes
+  // from getData() which reflects the pipeline's current windowed data.
+
+  const pointCallCounter = useRef({ idx: 0, total: 0 })
 
   const basePointStyle = useMemo(() => {
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
     return (d: Record<string, any>) => {
-      const idx = safeData.indexOf(d)
-      const color = idx >= 0 && idx < pointColors.length ? pointColors[idx] : "#6366f1"
+      const counter = pointCallCounter.current
+      // On first call of a batch, snapshot the renderable point count
+      // (filter out invalid x/y so gradient matches the connecting-line renderer)
+      if (counter.idx === 0) {
+        const allData = frameRef.current?.getData() ?? safeData
+        counter.total = allData.filter((p: any) => {
+          const x = xAcc(p); const y = yAcc(p)
+          return x != null && y != null && isFinite(x) && isFinite(y)
+        }).length
+      }
+      const n = counter.total
+      const i = counter.idx
+      counter.idx++
+      // Reset for next scene build cycle
+      if (counter.idx >= n) counter.idx = 0
+
       return {
-        fill: color,
+        fill: n > 0 ? viridisColor(i, n) : "#6366f1",
         stroke: "white",
         strokeWidth: 1,
         r: pointRadius,
         fillOpacity: 1,
       }
     }
-  }, [safeData, pointColors, pointRadius])
+  }, [pointRadius, safeData.length, xAccessor, yAccessor])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -300,23 +283,22 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
 
   const error = validateArrayData({
     componentName: "ConnectedScatterplot",
-    data: safeData,
+    data,
     accessors: { xAccessor, yAccessor },
   })
+
+  // ── Loading / empty / error states (after all hooks) ──────────────────
+  const loadingEl = renderLoadingState(loading, width, height)
+  if (loadingEl) return loadingEl
+  const emptyEl = renderEmptyState(data, width, height, emptyContent)
+  if (emptyEl) return emptyEl
   if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />
-
-  // ── Annotations: inject the connected-lines annotation ────────────────
-
-  const allAnnotations = useMemo(() => {
-    const base = annotations || []
-    return [{ type: "connected-lines" }, ...base]
-  }, [annotations])
 
   // ── Render ────────────────────────────────────────────────────────────
 
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     xAccessor,
     yAccessor,
     pointStyle,
@@ -336,11 +318,14 @@ export function ConnectedScatterplot<TDatum extends Record<string, any> = Record
     tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    annotations: allAnnotations,
-    svgAnnotationRules,
+    canvasPreRenderers,
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 
-  return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
+  return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 ConnectedScatterplot.displayName = "ConnectedScatterplot"

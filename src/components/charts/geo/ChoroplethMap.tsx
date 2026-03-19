@@ -68,6 +68,7 @@ export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<
 }
 
 export function ChoroplethMap<TDatum extends Record<string, any> = Record<string, any>>(props: ChoroplethMapProps<TDatum>) {
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -175,7 +176,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
   if (loadingEl) return loadingEl
 
-  // Show loading state while reference geography loads
+  // Show loading state while reference geography is loading (async resolve in progress)
   if (!resolvedAreas) {
     return renderLoadingState(true, resolved.width, resolved.height) || null
   }
@@ -213,5 +214,4 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     </SafeRender>
   )
 }
-
 ChoroplethMap.displayName = "ChoroplethMap"

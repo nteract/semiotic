@@ -42,6 +42,7 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
  * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
 export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode>) {
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -87,7 +88,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   // Node style function
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -147,7 +148,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   return (<SafeRender componentName="TreeDiagram" width={width} height={height}>
     <StreamNetworkFrame
       chartType={layout}
-      data={data}
+      {...(data != null && { data })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}

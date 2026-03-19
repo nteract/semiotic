@@ -41,6 +41,7 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
  * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
  */
 export function Treemap<TNode extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode>) {
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -105,7 +106,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   )
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -177,7 +178,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   return (<SafeRender componentName="Treemap" width={width} height={height}>
     <StreamNetworkFrame
       chartType="treemap"
-      data={data}
+      {...(data != null && { data })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}

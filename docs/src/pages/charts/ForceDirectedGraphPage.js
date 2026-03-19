@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { StreamNetworkFrame } from "semiotic"
 import { ForceDirectedGraph } from "semiotic"
-import { StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -89,7 +87,7 @@ const forceDirectedGraphProps = [
 const streamingForceNames = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
 
 const streamingForceCode = `import { useRef, useEffect } from "react"
-import { StreamNetworkFrame } from "semiotic"
+import { ForceDirectedGraph } from "semiotic"
 
 const names = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
 
@@ -112,13 +110,15 @@ function StreamingForce() {
   }, [])
 
   return (
-    <StreamNetworkFrame
+    <ForceDirectedGraph
       ref={chartRef}
-      chartType="force"
-      size={[600, 400]}
+      width={600}
+      height={400}
       enableHover
-      pulse={{ duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 }}
-      staleness={{ threshold: 3000, dimOpacity: 0.4, showBadge: true }}
+      frameProps={{
+        pulse: { duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 },
+        staleness: { threshold: 3000, dimOpacity: 0.4, showBadge: true },
+      }}
     />
   )
 }`
@@ -142,13 +142,15 @@ function StreamingForceDemo({ width }) {
   }, [])
 
   return (
-    <StreamNetworkFrame
+    <ForceDirectedGraph
       ref={chartRef}
-      chartType="force"
-      size={[width, 400]}
+      width={width}
+      height={400}
       enableHover
-      pulse={{ duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 }}
-      staleness={{ threshold: 3000, dimOpacity: 0.4, showBadge: true }}
+      frameProps={{
+        pulse: { duration: 800, color: "rgba(100,200,255,0.8)", glowRadius: 6 },
+        staleness: { threshold: 3000, dimOpacity: 0.4, showBadge: true },
+      }}
     />
   )
 }

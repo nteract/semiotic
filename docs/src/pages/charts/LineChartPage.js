@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { LineChart, RealtimeLineChart } from "semiotic"
+import { LineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -122,7 +122,7 @@ const lineChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingLineCode = `import { useRef, useEffect } from "react"
-import { RealtimeLineChart } from "semiotic"
+import { LineChart } from "semiotic"
 
 function StreamingRevenue() {
   const chartRef = useRef()
@@ -143,13 +143,16 @@ function StreamingRevenue() {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <LineChart
       ref={chartRef}
-      size={[600, 280]}
-      stroke="#6366f1"
-      strokeWidth={2}
-      windowSize={150}
-      showAxes
+      xAccessor="time"
+      yAccessor="value"
+      width={600}
+      height={280}
+      frameProps={{
+        lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+        windowSize: 150,
+      }}
     />
   )
 }`
@@ -172,13 +175,16 @@ function StreamingLineDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <LineChart
       ref={chartRef}
-      size={[width, 280]}
-      stroke="#6366f1"
-      strokeWidth={2}
-      windowSize={150}
-      showAxes={true}
+      xAccessor="time"
+      yAccessor="value"
+      width={width}
+      height={280}
+      frameProps={{
+        lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+        windowSize: 150,
+      }}
     />
   )
 }

@@ -20,9 +20,9 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
 export interface FlowMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** Flow edges with source/target/value */
-  flows: { source: string; target: string; value?: number; [key: string]: any }[]
+  flows?: { source: string; target: string; value?: number; [key: string]: any }[]
   /** Geographic nodes with coordinates */
-  nodes: TDatum[]
+  nodes?: TDatum[]
   /** Node ID accessor @default "id" */
   nodeIdAccessor?: string
   /** Longitude accessor @default "lon" */
@@ -86,9 +86,8 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export function FlowMap<TDatum extends Record<string, any> = Record<string, any>>(
-  props: FlowMapProps<TDatum>
-) {
+export function FlowMap<TDatum extends Record<string, any> = Record<string, any>>(props: FlowMapProps<TDatum>) {
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -165,27 +164,30 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
     : null
 
-  const colorScale = useColorScale(flows, edgeColorBy, colorScheme)
+  const safeFlows = flows || []
+  const safeNodes = (nodes || []) as Record<string, any>[]
+
+  const colorScale = useColorScale(safeFlows, edgeColorBy, colorScheme)
 
   // Build node lookup
   const nodeLookup = useMemo(() => {
-    const map = new Map<string, TDatum>()
-    for (const node of nodes) {
+    const map = new Map<string, Record<string, any>>()
+    for (const node of safeNodes) {
       map.set(String(node[nodeIdAccessor]), node)
     }
     return map
-  }, [nodes, nodeIdAccessor])
+  }, [safeNodes, nodeIdAccessor])
 
   // Reverse lookup: nodeId → first flow touching that node
   // Used to emit flow-relevant fields when a point node is hovered
   const nodeFlowLookup = useMemo(() => {
-    const map = new Map<string, typeof flows[0]>()
-    for (const flow of flows) {
+    const map = new Map<string, (typeof safeFlows)[0]>()
+    for (const flow of safeFlows) {
       if (!map.has(flow.source)) map.set(flow.source, flow)
       if (!map.has(flow.target)) map.set(flow.target, flow)
     }
     return map
-  }, [flows])
+  }, [safeFlows])
 
   // Custom hover behavior: when a point is hovered, emit the associated
   // flow's datum so that source/target fields are available for selection
@@ -239,7 +241,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
 
-    return flows.map(flow => {
+    return safeFlows.map(flow => {
       const src = nodeLookup.get(String(flow.source))
       const tgt = nodeLookup.get(String(flow.target))
       if (!src || !tgt) return null
@@ -251,16 +253,16 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
         ]
       }
     }).filter(Boolean) as Record<string, any>[]
-  }, [flows, nodeLookup, xAccessor, yAccessor])
+  }, [safeFlows, nodeLookup, xAccessor, yAccessor])
 
   // Edge width scale
   const widthScale = useMemo(() => {
-    const vals = flows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
+    const vals = safeFlows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
     if (vals.length === 0) return () => edgeWidthRange[0]
     return scaleLinear()
       .domain([Math.min(...vals), Math.max(...vals)])
       .range(edgeWidthRange)
-  }, [flows, valueAccessor, edgeWidthRange])
+  }, [safeFlows, valueAccessor, edgeWidthRange])
 
   const baseLineStyleFn = useMemo(() => (d: any): Style => ({
     stroke: edgeColorBy ? getColor(d, edgeColorBy, colorScale) : DEFAULT_COLOR,
@@ -309,7 +311,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   const streamProps: StreamGeoFrameProps = {
     projection,
     lines: lineData,
-    points: nodes,
+    points: safeNodes,
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     lineDataAccessor: "coordinates",
@@ -346,5 +348,4 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     </SafeRender>
   )
 }
-
 FlowMap.displayName = "FlowMap"

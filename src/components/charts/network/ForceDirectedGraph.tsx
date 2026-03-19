@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -16,8 +17,8 @@ import { validateNetworkData } from "../shared/validateChartData"
  * ForceDirectedGraph component props
  */
 export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  nodes: TNode[]
-  edges: TEdge[]
+  nodes?: TNode[]
+  edges?: TEdge[]
   nodeIDAccessor?: ChartAccessor<TNode, string>
   sourceAccessor?: ChartAccessor<TEdge, string>
   targetAccessor?: ChartAccessor<TEdge, string>
@@ -44,7 +45,15 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
  *
  * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
  */
-export function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>) {
+export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+  const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point as any),
+    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -134,7 +143,7 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   const edgeStyle = useMemo(() => {
     return (d: Record<string, any>) => ({
       stroke: edgeColor,
-      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d as TEdge) : d[edgeWidth] || 1,
+      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d as any) : d[edgeWidth] || 1,
       opacity: edgeOpacity
     })
   }, [edgeWidth, edgeColor, edgeOpacity])
@@ -179,9 +188,10 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   return (
     <SafeRender componentName="ForceDirectedGraph" width={width} height={height}>
     <StreamNetworkFrame
+      ref={frameRef}
       chartType="force"
-      nodes={safeNodes}
-      edges={safeEdges}
+      {...(nodes != null && { nodes: safeNodes })}
+      {...(edges != null && { edges: safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
@@ -214,5 +224,8 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
       {...frameProps}
     />
   </SafeRender>)
+}) as unknown as {
+  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 ForceDirectedGraph.displayName = "ForceDirectedGraph"

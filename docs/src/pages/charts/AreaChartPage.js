@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { AreaChart, StreamXYFrame } from "semiotic"
+import { AreaChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -100,7 +100,7 @@ const areaChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingAreaCode = `import { useRef, useEffect } from "react"
-import { StreamXYFrame } from "semiotic"
+import { AreaChart } from "semiotic"
 
 function StreamingArea() {
   const chartRef = useRef()
@@ -121,19 +121,15 @@ function StreamingArea() {
   }, [])
 
   return (
-    <StreamXYFrame
+    <AreaChart
       ref={chartRef}
-      chartType="line"
-      runtimeMode="streaming"
-      size={[600, 280]}
-      lineStyle={{
-        stroke: "#10b981",
-        strokeWidth: 2,
-        fill: "#10b981",
-        fillOpacity: 0.3
-      }}
-      windowSize={150}
-      showAxes
+      xAccessor="time"
+      yAccessor="value"
+      width={600}
+      height={280}
+      areaOpacity={0.3}
+      colorScheme={["#10b981"]}
+      frameProps={{ windowSize: 150 }}
     />
   )
 }`
@@ -156,19 +152,15 @@ function StreamingAreaDemo({ width }) {
   }, [])
 
   return (
-    <StreamXYFrame
+    <AreaChart
       ref={chartRef}
-      chartType="line"
-      runtimeMode="streaming"
-      size={[width, 280]}
-      lineStyle={{
-        stroke: "#10b981",
-        strokeWidth: 2,
-        fill: "#10b981",
-        fillOpacity: 0.3
-      }}
-      windowSize={150}
-      showAxes={true}
+      xAccessor="time"
+      yAccessor="value"
+      width={width}
+      height={280}
+      areaOpacity={0.3}
+      colorScheme={["#10b981"]}
+      frameProps={{ windowSize: 150 }}
     />
   )
 }

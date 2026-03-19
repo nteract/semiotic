@@ -205,7 +205,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     <SafeRender componentName="OrbitDiagram" width={width} height={height}>
       <StreamNetworkFrame
         chartType="orbit"
-        data={data}
+        {...(data != null && { data })}
         size={[width, height]}
         responsiveWidth={props.responsiveWidth}
         responsiveHeight={props.responsiveHeight}

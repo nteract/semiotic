@@ -411,6 +411,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendPosition,
       backgroundGraphics,
       foregroundGraphics,
+      canvasPreRenderers,
       title,
       categoryAccessor,
       brush,
@@ -811,6 +812,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.clip()
           }
 
+          // Custom pre-renderers (e.g. connecting lines under points)
+          // Each call is wrapped in save/restore to prevent ctx state leaks
+          if (canvasPreRenderers && store.scales) {
+            for (const renderer of canvasPreRenderers) {
+              ctx.save()
+              renderer(ctx, store.scene, store.scales, { width: adjustedWidth, height: adjustedHeight })
+              ctx.restore()
+            }
+          }
+
           const renderers = RENDERERS[chartType]
           if (renderers && store.scales) {
             for (const renderer of renderers) {
@@ -930,7 +941,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       dirtyRef.current = true
       scheduleRender()
-    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, scheduleRender])
+    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, canvasPreRenderers, scheduleRender])
 
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)

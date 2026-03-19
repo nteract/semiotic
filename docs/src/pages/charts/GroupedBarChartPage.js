@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { GroupedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -48,10 +47,9 @@ const groupLegend = {
 }
 
 const streamingGroupedBarCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { GroupedBarChart } from "semiotic"
 
 const groupProducts = ["Alpha", "Beta", "Gamma"]
-const groupColorMap = { Alpha: "#6366f1", Beta: "#22c55e", Gamma: "#f59e0b" }
 
 function StreamingGroupedBarDemo() {
   const chartRef = useRef()
@@ -72,26 +70,16 @@ function StreamingGroupedBarDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <GroupedBarChart
       ref={chartRef}
-      chartType="clusterbar"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="year"
-      rAccessor="revenue"
+      categoryAccessor="year"
       groupBy="product"
-      windowSize={200}
-      showAxes
-      pieceStyle={d => ({ fill: groupColorMap[d.product] || "#007bff" })}
+      valueAccessor="revenue"
+      colorBy="product"
+      width={600}
+      height={300}
       margin={{ top: 10, bottom: 40, left: 50, right: 120 }}
-      legend={{
-        legendGroups: [{
-          styleFn: d => ({ fill: d.color, stroke: d.color }),
-          type: "fill",
-          items: groupProducts.map(p => ({ label: p, color: groupColorMap[p] })),
-          label: ""
-        }]
-      }}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -115,19 +103,16 @@ function StreamingGroupedBarDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <GroupedBarChart
       ref={chartRef}
-      chartType="clusterbar"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="year"
-      rAccessor="revenue"
+      categoryAccessor="year"
       groupBy="product"
-      windowSize={200}
-      showAxes
-      pieceStyle={d => ({ fill: groupColorMap[d.product] || "#007bff" })}
+      valueAccessor="revenue"
+      colorBy="product"
+      width={width}
+      height={300}
       margin={{ top: 10, bottom: 40, left: 50, right: 120 }}
-      legend={groupLegend}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

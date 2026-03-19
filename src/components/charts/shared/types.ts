@@ -136,3 +136,4 @@ export interface SizeConfig<TDatum = Record<string, any>> {
   /** Min and max size range */
   sizeRange?: [number, number]
 }
+

@@ -72,7 +72,9 @@ export function validateArrayData({
   }
 
   // Check data exists and is non-empty
-  if (!data || !Array.isArray(data) || data.length === 0) {
+  // undefined/null = push API mode, skip validation
+  if (data == null) return null
+  if (!Array.isArray(data) || data.length === 0) {
     return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
   }
 
@@ -143,6 +145,10 @@ export function validateNetworkData({
   edgesRequired = true,
   accessors,
 }: NetworkDataValidation): string | null {
+  // Push API mode: both nodes and edges null/undefined means push mode — skip validation.
+  // If only one is null while the other is provided, that's a user error, not push mode.
+  if (nodes == null && edges == null) return null
+
   if (edgesRequired && (!edges || !Array.isArray(edges) || edges.length === 0)) {
     return (
       `${componentName}: No edges provided. Pass a non-empty array: ` +
