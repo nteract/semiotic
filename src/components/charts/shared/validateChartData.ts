@@ -72,7 +72,9 @@ export function validateArrayData({
   }
 
   // Check data exists and is non-empty
-  if (!data || !Array.isArray(data) || data.length === 0) {
+  // undefined/null = push API mode, skip validation
+  if (data == null) return null
+  if (!Array.isArray(data) || data.length === 0) {
     return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
   }
 

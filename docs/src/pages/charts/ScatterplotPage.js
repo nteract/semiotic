@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { Scatterplot, RealtimeSwarmChart } from "semiotic"
+import { Scatterplot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -95,7 +95,7 @@ const scatterplotProps = [
 // ---------------------------------------------------------------------------
 
 const streamingScatterCode = `import { useRef, useEffect } from "react"
-import { RealtimeSwarmChart } from "semiotic"
+import { Scatterplot } from "semiotic"
 
 function StreamingMeasurements() {
   const chartRef = useRef()
@@ -115,14 +115,15 @@ function StreamingMeasurements() {
   }, [])
 
   return (
-    <RealtimeSwarmChart
+    <Scatterplot
       ref={chartRef}
-      size={[600, 280]}
-      fill="#6366f1"
-      opacity={0.6}
-      radius={3}
-      windowSize={200}
-      showAxes
+      xAccessor="time"
+      yAccessor="value"
+      pointRadius={3}
+      pointOpacity={0.6}
+      width={600}
+      height={280}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -145,14 +146,15 @@ function StreamingScatterDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeSwarmChart
+    <Scatterplot
       ref={chartRef}
-      size={[width, 280]}
-      fill="#6366f1"
-      opacity={0.6}
-      radius={3}
-      windowSize={200}
-      showAxes={true}
+      xAccessor="time"
+      yAccessor="value"
+      pointRadius={3}
+      pointOpacity={0.6}
+      width={width}
+      height={280}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

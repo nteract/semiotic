@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
+import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -13,9 +13,10 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 export interface DonutChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TDatum[]
+  data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
   innerRadius?: number
@@ -32,7 +33,7 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export function DonutChart<TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum>) {
+export const DonutChart = forwardRef<RealtimeFrameHandle, DonutChartProps>(function DonutChart(props, ref) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -41,6 +42,14 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     title: props.title,
     linkedHover: props.linkedHover,
   })
+
+  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
 
   const {
     data, margin: userMargin, className,
@@ -126,14 +135,14 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
   )
 
   const error = validateArrayData({
-    componentName: "DonutChart", data: safeData,
+    componentName: "DonutChart", data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="DonutChart" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "donut",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     projection: "radial",
@@ -162,6 +171,6 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     ...frameProps
   }
 
-  return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 DonutChart.displayName = "DonutChart"

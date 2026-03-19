@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useRef, useState, useEffect, useCallback } from "react"
+import { useMemo, useRef, useState, useEffect, useCallback, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp, DistanceCartogramConfig } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -11,10 +11,11 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 export interface DistanceCartogramProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** Point data with geographic coordinates */
-  points: TDatum[]
+  points?: TDatum[]
   /** Route/edge data with source/target fields */
   lines?: { source: string; target: string; coordinates?: any[]; [key: string]: any }[]
   /** Longitude accessor @default "lon" */
@@ -80,9 +81,7 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export function DistanceCartogram<TDatum extends Record<string, any> = Record<string, any>>(
-  props: DistanceCartogramProps<TDatum>
-) {
+export const DistanceCartogram = forwardRef<RealtimeFrameHandle, DistanceCartogramProps>(function DistanceCartogram(props, ref) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -188,7 +187,7 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
 
     // Build node lookup for edge coordinates
-    const nodeLookup = new Map<string, TDatum>()
+    const nodeLookup = new Map<string, Record<string, any>>()
     for (const node of safeData) {
       nodeLookup.set(String(node[nodeIdAccessor]), node)
     }
@@ -222,6 +221,13 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
 
   // ── Ref + layout state for overlay rendering ─────────────────────
   const geoRef = useRef<StreamGeoFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => geoRef.current?.push(point),
+    pushMany: (points) => geoRef.current?.pushMany(points),
+    clear: () => geoRef.current?.clear(),
+    getData: () => geoRef.current?.getData() ?? []
+  }))
+
   const [cartogramLayout, setCartogramLayout] = useState<{
     cx: number; cy: number; maxCost: number; availableRadius: number
   } | null>(null)
@@ -356,7 +362,7 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    points: safeData,
+    ...(points != null && { points: safeData }),
     ...(lineData && { lines: lineData, lineDataAccessor: "coordinates" }),
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
@@ -392,6 +398,6 @@ export function DistanceCartogram<TDatum extends Record<string, any> = Record<st
       <StreamGeoFrame ref={geoRef} {...streamProps} />
     </SafeRender>
   )
-}
+})
 
 DistanceCartogram.displayName = "DistanceCartogram"

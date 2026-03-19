@@ -64,8 +64,9 @@ export function renderEmptyState(
   emptyContent?: React.ReactNode | false
 ): React.ReactElement | null {
   if (emptyContent === false) return null
-  if (data && Array.isArray(data) && data.length > 0) return null
-  if (data && !Array.isArray(data)) return null // hierarchy data (object)
+  if (data == null) return null // undefined/null = no data provided (e.g. push API)
+  if (Array.isArray(data) && data.length > 0) return null
+  if (!Array.isArray(data)) return null // hierarchy data (object)
 
   return (
     <div style={{ ...EMPTY_STYLE, width, height }}>

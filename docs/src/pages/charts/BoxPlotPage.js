@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { BoxPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -70,7 +69,7 @@ const colorData = [
 const timeSlots = ["Morning", "Afternoon", "Evening"]
 
 const streamingBoxPlotCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { BoxPlot } from "semiotic"
 
 function StreamingBoxPlotDemo() {
   const chartRef = useRef()
@@ -94,17 +93,14 @@ function StreamingBoxPlotDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <BoxPlot
       ref={chartRef}
-      chartType="boxplot"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       showOutliers
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+      width={600}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }`
@@ -130,17 +126,14 @@ function StreamingBoxPlotDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <BoxPlot
       ref={chartRef}
-      chartType="boxplot"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       showOutliers
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+      width={width}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }

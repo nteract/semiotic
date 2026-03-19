@@ -1,5 +1,4 @@
 import React from "react"
-import { StreamNetworkFrame } from "semiotic"
 import { Treemap } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"

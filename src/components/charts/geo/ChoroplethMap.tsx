@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
+import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
@@ -25,7 +26,7 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
 
 export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** GeoJSON features or a reference string ("world-110m", "world-50m", "land-110m", "land-50m") */
-  areas: AreasProp
+  areas?: AreasProp
   /** Accessor for the numeric value to encode as color */
   valueAccessor: ChartAccessor<TDatum, number>
   /** Sequential color scheme @default "blues" */
@@ -67,7 +68,15 @@ export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<
   frameProps?: Partial<Omit<StreamGeoFrameProps, "areas" | "projection">>
 }
 
-export function ChoroplethMap<TDatum extends Record<string, any> = Record<string, any>>(props: ChoroplethMapProps<TDatum>) {
+export const ChoroplethMap = forwardRef<RealtimeFrameHandle, ChoroplethMapProps>(function ChoroplethMap(props, ref) {
+  const frameRef = useRef<StreamGeoFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -185,7 +194,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    areas: resolvedAreas,
+    ...(areas != null && resolvedAreas && { areas: resolvedAreas }),
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,
@@ -209,9 +218,9 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
 
   return (
     <SafeRender componentName="ChoroplethMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame {...streamProps} />
+      <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}
+})
 
 ChoroplethMap.displayName = "ChoroplethMap"

@@ -1,7 +1,5 @@
 import React from "react"
-import { StreamNetworkFrame } from "semiotic"
 import { ChordDiagram } from "semiotic"
-import { StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -85,7 +83,7 @@ const chordDiagramProps = [
 // ---------------------------------------------------------------------------
 
 const streamingChordCode = `import { useRef } from "react"
-import { StreamNetworkFrame } from "semiotic"
+import { ChordDiagram } from "semiotic"
 
 function StreamingChord() {
   const chartRef = useRef()
@@ -93,10 +91,10 @@ function StreamingChord() {
   chartRef.current?.push({ source: "US", target: "EU", value: 500 })
 
   return (
-    <StreamNetworkFrame
+    <ChordDiagram
       ref={chartRef}
-      chartType="chord"
-      size={[600, 600]}
+      width={600}
+      height={600}
       enableHover
       showLabels
     />
@@ -120,10 +118,10 @@ function StreamingChordDemo({ width }) {
         <button className="demo-button" onClick={addTrade}>Add Trade</button>
         <button className="demo-button" onClick={() => chartRef.current?.clear()}>Clear</button>
       </div>
-      <StreamNetworkFrame
+      <ChordDiagram
         ref={chartRef}
-        chartType="chord"
-        size={[Math.min(width, 500), Math.min(width, 500)]}
+        width={Math.min(width, 500)}
+        height={Math.min(width, 500)}
         enableHover
         showLabels
       />

@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -17,7 +18,7 @@ import { validateObjectData } from "../shared/validateChartData"
  * CirclePack component props
  */
 export interface CirclePackProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TNode
+  data?: TNode
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
   valueAccessor?: ChartAccessor<TNode, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
@@ -39,7 +40,15 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
  *
  * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
-export function CirclePack<TNode extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode>) {
+export const CirclePack = forwardRef<RealtimeFrameHandle, CirclePackProps>(function CirclePack(props, ref) {
+  const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point as any),
+    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -82,7 +91,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   if (loadingEl) return loadingEl
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -139,8 +148,9 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   return (
     <SafeRender componentName="CirclePack" width={width} height={height}>
     <StreamNetworkFrame
+      ref={frameRef}
       chartType="circlepack"
-      data={data}
+      {...(data != null && { data })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
@@ -169,5 +179,5 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       {...frameProps}
     />
   </SafeRender>)
-}
+})
 CirclePack.displayName = "CirclePack"

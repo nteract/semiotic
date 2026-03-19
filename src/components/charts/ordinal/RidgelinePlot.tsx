@@ -133,14 +133,14 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
   }, [])
 
   const error = validateArrayData({
-    componentName: "RidgelinePlot", data: safeData,
+    componentName: "RidgelinePlot", data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="RidgelinePlot" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "ridgeline",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",

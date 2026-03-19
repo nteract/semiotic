@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
 import { DotPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -44,7 +43,7 @@ const colorData = [
 const countries = ["Norway", "Switzerland", "Australia", "Germany", "Canada", "Japan", "Brazil", "USA"]
 
 const streamingDotPlotCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { DotPlot } from "semiotic"
 
 function StreamingDotPlotDemo() {
   const chartRef = useRef()
@@ -64,18 +63,17 @@ function StreamingDotPlotDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <DotPlot
       ref={chartRef}
-      chartType="point"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1", r: 5, opacity: 0.7 })}
-      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
-      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={600}
+      height={300}
+      frameProps={{
+        windowSize: 200,
+        decay: { type: "exponential", halfLife: 100, minOpacity: 0.1 },
+        pulse: { duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 },
+      }}
     />
   )
 }`
@@ -98,18 +96,17 @@ function StreamingDotPlotDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <DotPlot
       ref={chartRef}
-      chartType="point"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1", r: 5, opacity: 0.7 })}
-      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
-      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={width}
+      height={300}
+      frameProps={{
+        windowSize: 200,
+        decay: { type: "exponential", halfLife: 100, minOpacity: 0.1 },
+        pulse: { duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 },
+      }}
     />
   )
 }

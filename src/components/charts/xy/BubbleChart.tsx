@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -26,7 +27,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
    * [{x: 1, y: 10, size: 50, category: 'A'}, {x: 2, y: 20, size: 30, category: 'B'}]
    * ```
    */
-  data: TDatum[]
+  data?: TDatum[]
 
   /**
    * Field name or function to access x values
@@ -203,7 +204,16 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart
  */
-export function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>) {
+export const BubbleChart = forwardRef<RealtimeFrameHandle, BubbleChartProps>(function BubbleChart(props, ref) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -364,7 +374,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BubbleChart",
-    data: safeData,
+    data: data,
     accessors: {
       xAccessor,
       yAccessor,
@@ -376,7 +386,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "bubble",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     xAccessor,
     yAccessor,
     colorAccessor: colorBy || undefined,
@@ -412,6 +422,6 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...frameProps
   }
 
-  return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 BubbleChart.displayName = "BubbleChart"

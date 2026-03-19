@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -17,7 +18,7 @@ import { validateObjectData } from "../shared/validateChartData"
  * TreeDiagram component props
  */
 export interface TreeDiagramProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TNode
+  data?: TNode
   layout?: "tree" | "cluster" | "partition" | "treemap" | "circlepack"
   orientation?: "vertical" | "horizontal" | "radial"
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
@@ -41,7 +42,15 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
  *
  * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
-export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode>) {
+export const TreeDiagram = forwardRef<RealtimeFrameHandle, TreeDiagramProps>(function TreeDiagram(props, ref) {
+  const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point as any),
+    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -87,7 +96,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   // Node style function
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -146,8 +155,9 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   return (<SafeRender componentName="TreeDiagram" width={width} height={height}>
     <StreamNetworkFrame
+      ref={frameRef}
       chartType={layout}
-      data={data}
+      {...(data != null && { data })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
@@ -179,5 +189,5 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       {...frameProps}
     />
   </SafeRender>)
-}
+})
 TreeDiagram.displayName = "TreeDiagram"

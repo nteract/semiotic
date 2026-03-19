@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
+import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor, getSize } from "../shared/colorUtils"
@@ -16,7 +17,7 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
 export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** Point data with geographic coordinates */
-  points: TDatum[]
+  points?: TDatum[]
   /** Longitude accessor @default "lon" */
   xAccessor?: ChartAccessor<TDatum, number>
   /** Latitude accessor @default "lat" */
@@ -68,9 +69,15 @@ export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> =
   frameProps?: Partial<Omit<StreamGeoFrameProps, "points" | "projection">>
 }
 
-export function ProportionalSymbolMap<TDatum extends Record<string, any> = Record<string, any>>(
-  props: ProportionalSymbolMapProps<TDatum>
-) {
+export const ProportionalSymbolMap = forwardRef<RealtimeFrameHandle, ProportionalSymbolMapProps>(function ProportionalSymbolMap(props, ref) {
+  const frameRef = useRef<StreamGeoFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -199,7 +206,7 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    points: safeData,
+    ...(points != null && { points: safeData }),
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     pointStyle: pointStyleFn,
@@ -233,9 +240,9 @@ export function ProportionalSymbolMap<TDatum extends Record<string, any> = Recor
 
   return (
     <SafeRender componentName="ProportionalSymbolMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame {...streamProps} />
+      <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}
+})
 
 ProportionalSymbolMap.displayName = "ProportionalSymbolMap"

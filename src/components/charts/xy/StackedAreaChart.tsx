@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -25,7 +26,7 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
    * [{x: 1, y: 10, category: 'A'}, {x: 2, y: 20, category: 'A'}, {x: 1, y: 15, category: 'B'}]
    * ```
    */
-  data: TDatum[]
+  data?: TDatum[]
 
   /**
    * Field name or function to access x values
@@ -170,7 +171,16 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
  * />
  * ```
  */
-export function StackedAreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum>) {
+export const StackedAreaChart = forwardRef<RealtimeFrameHandle, StackedAreaChartProps>(function StackedAreaChart(props, ref) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -342,7 +352,7 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "StackedAreaChart",
-    data: safeData,
+    data: data,
     accessors: {
       xAccessor,
       yAccessor,
@@ -367,7 +377,7 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "stackedarea",
-    data: flattenedData,
+    ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
     groupAccessor: areaBy || undefined,
@@ -400,6 +410,6 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     ...frameProps
   }
 
-  return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 StackedAreaChart.displayName = "StackedAreaChart"

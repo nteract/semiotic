@@ -151,8 +151,19 @@ ref.current.push({ time: Date.now(), value: 42, category: "A" }) // histogram, s
 ref.current.push({ time: Date.now(), value: 42 })              // heatmap (time=x, value=y)
 ```
 
-### Any chart can stream via Stream Frames
-The Realtime* HOCs are convenience wrappers. For streaming versions of ANY chart type (scatter, stacked area, bar, etc.), use the corresponding Stream Frame (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and push data via ref.
+### Push API on all HOC charts
+All non-Realtime HOC charts support the push API via `forwardRef`. Omit the `data` prop and push data imperatively:
+```jsx
+const chartRef = useRef()
+chartRef.current.push({ x: 1, y: 2 })          // single point
+chartRef.current.pushMany([...points])           // batch
+chartRef.current.clear()                          // reset
+chartRef.current.getData()                        // read current data
+<Scatterplot ref={chartRef} xAccessor="x" yAccessor="y" />
+```
+**IMPORTANT**: When using the push API, **omit** the `data`/`nodes`/`edges` prop entirely — do NOT pass `data={[]}`, which clears pushed data on every render. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`.
+
+Supported: all XY, ordinal, network (ForceDirectedGraph, SankeyDiagram, ChordDiagram), and geo HOCs. **Not supported**: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) — their root-object data shape is incompatible with flat push. ScatterplotMatrix is a composition wrapper and also does not support push.
 
 ## Stream Frame Callbacks (advanced — prefer HOCs)
 Stream Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as function, `colorBy` as function, `nodeLabel` as function) receive **`RealtimeNode`/`RealtimeEdge`** wrappers, NOT your raw data. Access your original data via `.data`:
@@ -313,6 +324,8 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 **LinkedCharts suppresses child legends**: When a `CategoryColorProvider` wraps `LinkedCharts`, individual chart legends are suppressed in favor of a unified legend. To force a child chart to show its own legend, set `showLegend={true}` explicitly.
 
 **Geo bundle isolation**: `semiotic/geo` is a separate entry point. Do NOT import geo components from `semiotic` — use `import { ChoroplethMap } from "semiotic/geo"` to avoid pulling d3-geo (~30KB) into non-geo bundles.
+
+**Push API: omit data, don't pass empty array**: When using `ref.current.push()` on HOCs, **omit** the `data`/`nodes`/`edges` prop entirely. Passing `data={[]}` clears pushed data on every render because the HOC forwards it to the Stream Frame's `setBoundedData([])`. Similarly, `data={undefined}` is fine (prop not present), but `data={null}` is treated the same as omitted.
 
 **`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
 

@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
 import { ViolinPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -46,7 +45,7 @@ const colorData = [
 const violinTimeSlots = ["Morning", "Afternoon", "Evening"]
 
 const streamingViolinCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { ViolinPlot } from "semiotic"
 
 function StreamingViolinDemo() {
   const chartRef = useRef()
@@ -70,17 +69,14 @@ function StreamingViolinDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <ViolinPlot
       ref={chartRef}
-      chartType="violin"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       showIQR
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.6 })}
+      width={600}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }`
@@ -106,17 +102,14 @@ function StreamingViolinDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <ViolinPlot
       ref={chartRef}
-      chartType="violin"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       showIQR
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.6 })}
+      width={width}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }

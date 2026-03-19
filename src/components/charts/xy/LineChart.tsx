@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, useState, useEffect } from "react"
+import { useMemo, useCallback, useState, useEffect, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -34,7 +35,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * [{label: 'Series A', coordinates: [{x: 1, y: 10}, {x: 2, y: 20}]}]
    * ```
    */
-  data: TDatum[]
+  data?: TDatum[]
 
   /**
    * Field name or function to access x values
@@ -289,7 +290,17 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  * @param props - LineChart configuration
  * @returns Rendered line chart
  */
-export function LineChart<TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum>) {
+export const LineChart = forwardRef<RealtimeFrameHandle, LineChartProps>(
+  function LineChart(props, ref) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -771,7 +782,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType,
-    data: flattenedData,
+    ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
     xScaleType,
@@ -809,6 +820,6 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...frameProps
   }
 
-  return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 LineChart.displayName = "LineChart"

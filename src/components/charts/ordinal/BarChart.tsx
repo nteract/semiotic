@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
+import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -13,12 +13,13 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 /**
  * BarChart component props
  */
 export interface BarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TDatum[]
+  data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
   orientation?: "vertical" | "horizontal"
@@ -42,7 +43,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
 /**
  * BarChart - Visualize categorical data with bars.
  */
-export function BarChart<TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum>) {
+export const BarChart = forwardRef<RealtimeFrameHandle, BarChartProps>(function BarChart(props, ref) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -53,6 +54,14 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
   })
+
+  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
 
   const {
     data,
@@ -170,14 +179,14 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BarChart",
-    data: safeData,
+    data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="BarChart" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "bar",
-    data: sortedData,
+    ...(data != null && { data: sortedData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
@@ -209,6 +218,6 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     ...frameProps
   }
 
-  return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 BarChart.displayName = "BarChart"

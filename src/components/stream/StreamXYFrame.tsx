@@ -411,6 +411,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendPosition,
       backgroundGraphics,
       foregroundGraphics,
+      canvasPreRenderers,
       title,
       categoryAccessor,
       brush,
@@ -809,6 +810,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.beginPath()
             ctx.rect(0, 0, adjustedWidth, adjustedHeight)
             ctx.clip()
+          }
+
+          // Custom pre-renderers (e.g. connecting lines under points)
+          if (canvasPreRenderers && store.scales) {
+            for (const renderer of canvasPreRenderers) {
+              renderer(ctx, store.scene, store.scales, { width: adjustedWidth, height: adjustedHeight })
+            }
           }
 
           const renderers = RENDERERS[chartType]

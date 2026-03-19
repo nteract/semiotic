@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -20,7 +21,7 @@ import { useBrushSelection } from "../../store/useSelection"
  */
 export interface ScatterplotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
   /** Array of data points. Each point should have x and y properties. */
-  data: TDatum[]
+  data?: TDatum[]
   /** Field name or function to access x values @default "x" */
   xAccessor?: ChartAccessor<TDatum, number>
   /** Field name or function to access y values @default "y" */
@@ -69,7 +70,16 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
  * />
  * ```
  */
-export function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>) {
+export const Scatterplot = forwardRef<RealtimeFrameHandle, ScatterplotProps>(function Scatterplot(props, ref) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -244,7 +254,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "Scatterplot",
-    data: safeData,
+    data: data,
     accessors: {
       xAccessor,
       yAccessor,
@@ -254,7 +264,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
 
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     xAccessor,
     yAccessor,
     colorAccessor: colorBy || undefined,
@@ -291,6 +301,6 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...frameProps
   }
 
-  return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 Scatterplot.displayName = "Scatterplot"

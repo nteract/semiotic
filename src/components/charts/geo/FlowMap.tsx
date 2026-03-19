@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
+import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
@@ -20,9 +21,9 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
 export interface FlowMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /** Flow edges with source/target/value */
-  flows: { source: string; target: string; value?: number; [key: string]: any }[]
+  flows?: { source: string; target: string; value?: number; [key: string]: any }[]
   /** Geographic nodes with coordinates */
-  nodes: TDatum[]
+  nodes?: TDatum[]
   /** Node ID accessor @default "id" */
   nodeIdAccessor?: string
   /** Longitude accessor @default "lon" */
@@ -86,9 +87,15 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export function FlowMap<TDatum extends Record<string, any> = Record<string, any>>(
-  props: FlowMapProps<TDatum>
-) {
+export const FlowMap = forwardRef<RealtimeFrameHandle, FlowMapProps>(function FlowMap(props, ref) {
+  const frameRef = useRef<StreamGeoFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -97,8 +104,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   })
 
   const {
-    flows,
-    nodes,
+    flows = [],
+    nodes = [],
     nodeIdAccessor = "id",
     xAccessor = "lon",
     yAccessor = "lat",
@@ -169,7 +176,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   // Build node lookup
   const nodeLookup = useMemo(() => {
-    const map = new Map<string, TDatum>()
+    const map = new Map<string, Record<string, any>>()
     for (const node of nodes) {
       map.set(String(node[nodeIdAccessor]), node)
     }
@@ -308,8 +315,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    lines: lineData,
-    points: nodes,
+    ...(props.flows != null && { lines: lineData }),
+    ...(props.nodes != null && { points: nodes }),
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     lineDataAccessor: "coordinates",
@@ -342,9 +349,9 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame {...streamProps} />
+      <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}
+})
 
 FlowMap.displayName = "FlowMap"

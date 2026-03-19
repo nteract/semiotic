@@ -242,4 +242,6 @@ export interface StreamGeoFrameHandle {
   getZoom(): number
   /** Animate back to initial view */
   resetZoom(): void
+  /** Get current data points */
+  getData(): Record<string, any>[]
 }

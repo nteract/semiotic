@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { BarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -40,7 +39,7 @@ const colorData = [
 const departments = ["Engineering", "Marketing", "Sales", "Operations", "HR", "Design"]
 
 const streamingBarCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { BarChart } from "semiotic"
 
 function StreamingBarDemo() {
   const chartRef = useRef()
@@ -60,16 +59,13 @@ function StreamingBarDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <BarChart
       ref={chartRef}
-      chartType="bar"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1" })}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={600}
+      height={300}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -92,16 +88,13 @@ function StreamingBarDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <BarChart
       ref={chartRef}
-      chartType="bar"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1" })}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={width}
+      height={300}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

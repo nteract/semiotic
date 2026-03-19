@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { SwarmPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -67,7 +66,7 @@ const sizedData = [
 const swarmGroups = ["Control", "Treatment", "Placebo"]
 
 const streamingSwarmCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { SwarmPlot } from "semiotic"
 
 function StreamingSwarmDemo() {
   const chartRef = useRef()
@@ -89,18 +88,17 @@ function StreamingSwarmDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <SwarmPlot
       ref={chartRef}
-      chartType="swarm"
-      runtimeMode="streaming"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
-      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
-      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={600}
+      height={300}
+      frameProps={{
+        windowSize: 200,
+        decay: { type: "exponential", halfLife: 100, minOpacity: 0.1 },
+        pulse: { duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 },
+      }}
     />
   )
 }`
@@ -124,18 +122,17 @@ function StreamingSwarmDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <SwarmPlot
       ref={chartRef}
-      chartType="swarm"
-      runtimeMode="streaming"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={200}
-      showAxes
-      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
-      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
-      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
+      categoryAccessor="category"
+      valueAccessor="value"
+      width={width}
+      height={300}
+      frameProps={{
+        windowSize: 200,
+        decay: { type: "exponential", halfLife: 100, minOpacity: 0.1 },
+        pulse: { duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 },
+      }}
     />
   )
 }

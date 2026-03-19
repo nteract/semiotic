@@ -49,7 +49,16 @@ Sizing: all Realtime HOCs accept both `size={[600, 400]}` (tuple) and `width={60
 
 Pushed data shape: `{ time: Date.now(), value: 42 }` for line/waterfall/heatmap, add `category` for histogram/swarm.
 
-Any chart type can stream via Stream Frames (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and ref-based push.
+### Push API on all HOC charts
+All non-Realtime HOC charts also support the push API via `forwardRef`. **Omit the `data` prop** (do NOT pass `data={[]}`) and push imperatively:
+```jsx
+const chartRef = useRef()
+chartRef.current.push({ x: 1, y: 2 })
+<Scatterplot ref={chartRef} xAccessor="x" yAccessor="y" />
+```
+Methods: `push(datum)`, `pushMany(data)`, `clear()`, `getData()`. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`. Not supported on hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) or ScatterplotMatrix.
+
+For advanced streaming control, use Stream Frames (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and ref-based push.
 
 ## ChartContainer
 - **ChartContainer** — wrapper with title, subtitle, status indicator, toolbar. `title`, `subtitle`, `height` (default **400** — always set this to match your chart height), `width` ("100%"), `status` ("live"|"stale"|"error"), `loading`, `error`, `actions`, `style`

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { BubbleChart, StreamXYFrame } from "semiotic"
+import { BubbleChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -73,7 +73,7 @@ const bubbleChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingBubbleCode = `import { useRef, useEffect } from "react"
-import StreamXYFrame from "semiotic/StreamXYFrame"
+import { BubbleChart } from "semiotic"
 
 function StreamingCountryData() {
   const chartRef = useRef()
@@ -97,16 +97,16 @@ function StreamingCountryData() {
   }, [])
 
   return (
-    <StreamXYFrame
+    <BubbleChart
       ref={chartRef}
-      chartType="bubble"
-      runtimeMode="streaming"
-      size={[600, 280]}
-      sizeAccessor="population"
+      xAccessor="time"
+      yAccessor="value"
+      sizeBy="population"
       sizeRange={[4, 20]}
-      colorAccessor="continent"
-      windowSize={200}
-      showAxes
+      colorBy="continent"
+      width={600}
+      height={280}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }`
@@ -133,16 +133,16 @@ function StreamingBubbleDemo({ width }) {
   }, [])
 
   return (
-    <StreamXYFrame
+    <BubbleChart
       ref={chartRef}
-      chartType="bubble"
-      runtimeMode="streaming"
-      size={[width, 280]}
-      sizeAccessor="population"
+      xAccessor="time"
+      yAccessor="value"
+      sizeBy="population"
       sizeRange={[4, 20]}
-      colorAccessor="continent"
-      windowSize={200}
-      showAxes={true}
+      colorBy="continent"
+      width={width}
+      height={280}
+      frameProps={{ windowSize: 200 }}
     />
   )
 }

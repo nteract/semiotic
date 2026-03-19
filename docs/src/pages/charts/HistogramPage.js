@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
 import { Histogram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -47,7 +46,7 @@ const colorData = [
 const histGroups = ["Morning", "Afternoon", "Evening"]
 
 const streamingHistogramCode = `import { useRef, useEffect } from "react"
-import { StreamOrdinalFrame } from "semiotic"
+import { Histogram } from "semiotic"
 
 function StreamingHistogramDemo() {
   const chartRef = useRef()
@@ -70,18 +69,14 @@ function StreamingHistogramDemo() {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <Histogram
       ref={chartRef}
-      chartType="histogram"
-      runtimeMode="streaming"
-      projection="horizontal"
-      size={[600, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       bins={15}
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+      width={600}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }`
@@ -107,18 +102,14 @@ function StreamingHistogramDemo({ width }) {
   }, [])
 
   return (
-    <StreamOrdinalFrame
+    <Histogram
       ref={chartRef}
-      chartType="histogram"
-      runtimeMode="streaming"
-      projection="horizontal"
-      size={[width, 300]}
-      oAccessor="category"
-      rAccessor="value"
-      windowSize={300}
-      showAxes
+      categoryAccessor="category"
+      valueAccessor="value"
       bins={15}
-      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+      width={width}
+      height={300}
+      frameProps={{ windowSize: 300 }}
     />
   )
 }

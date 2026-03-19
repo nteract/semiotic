@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
 import { Heatmap } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -6,6 +6,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -58,6 +60,79 @@ const correlationData = [
   { x: 4, y: 3, value: 0.7 },
   { x: 4, y: 4, value: 1.0 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingHeatmapCode = `import { useRef, useEffect } from "react"
+import { Heatmap } from "semiotic"
+
+function StreamingHeatmap() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const day = (i % 5) + 1
+        const hour = [8, 10, 12, 14, 16][Math.floor(Math.random() * 5)]
+        chartRef.current.push({
+          day,
+          hour,
+          value: Math.random() * 60,
+        })
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <Heatmap
+      ref={chartRef}
+      xAccessor="day"
+      yAccessor="hour"
+      valueAccessor="value"
+      colorScheme="viridis"
+      width={600}
+      height={300}
+    />
+  )
+}`
+
+function StreamingHeatmapDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const day = (i % 5) + 1
+        const hour = [8, 10, 12, 14, 16][Math.floor(Math.random() * 5)]
+        chartRef.current.push({
+          day,
+          hour,
+          value: Math.random() * 60,
+        })
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <Heatmap
+      ref={chartRef}
+      xAccessor="day"
+      yAccessor="hour"
+      valueAccessor="value"
+      colorScheme="viridis"
+      width={width}
+      height={300}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -136,32 +211,37 @@ export default function HeatmapPage() {
         <code>"value"</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          xAccessor: "day",
-          yAccessor: "hour",
-          valueAccessor: "value",
-          xLabel: "Day",
-          yLabel: "Hour",
-        }}
-        type={Heatmap}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: simpleData,
+              xAccessor: "day",
+              yAccessor: "hour",
+              valueAccessor: "value",
+              xLabel: "Day",
+              yLabel: "Hour",
+            }}
+            type={Heatmap}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { day: 1, hour: 8, value: 12 },
   { day: 1, hour: 10, value: 25 },
   { day: 1, hour: 12, value: 42 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingHeatmapDemo width={w} />}
+            code={streamingHeatmapCode}
+          />
+        }
       />
-
-      <p style={{ fontSize: 13, color: "var(--text-2)", fontStyle: "italic", marginTop: 8 }}>
-        Streaming: No realtime heatmap component exists. Update Heatmap's{" "}
-        <code>data</code> prop directly for live updates.
-      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}

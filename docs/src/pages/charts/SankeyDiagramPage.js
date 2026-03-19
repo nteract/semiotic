@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react"
-import { SankeyDiagram, StreamNetworkFrame } from "semiotic"
+import { SankeyDiagram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -168,7 +168,7 @@ const sankeyDiagramProps = [
 // ---------------------------------------------------------------------------
 
 const streamingSankeyCode = `import { useRef } from "react"
-import { StreamNetworkFrame } from "semiotic"
+import { SankeyDiagram } from "semiotic"
 
 function StreamingSankey() {
   const chartRef = useRef()
@@ -183,14 +183,16 @@ function StreamingSankey() {
   return (
     <>
       <button onClick={pushBudget}>Push Budget Data</button>
-      <StreamNetworkFrame
+      <SankeyDiagram
         ref={chartRef}
-        chartType="sankey"
-        size={[800, 400]}
+        width={800}
+        height={400}
         showParticles
         edgeOpacity={0.4}
-        pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
-        staleness={{ threshold: 5000, dimOpacity: 0.4, showBadge: true }}
+        frameProps={{
+          pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
+          staleness: { threshold: 5000, dimOpacity: 0.4, showBadge: true },
+        }}
       />
     </>
   )
@@ -222,14 +224,16 @@ function StreamingSankeyDemo({ width }) {
         <button className="demo-button" onClick={addMore} disabled={!pushed}>Add Edge</button>
         <button className="demo-button" onClick={() => { chartRef.current?.clear(); setPushed(false) }}>Clear</button>
       </div>
-      <StreamNetworkFrame
+      <SankeyDiagram
         ref={chartRef}
-        chartType="sankey"
-        size={[width, 350]}
+        width={width}
+        height={350}
         showParticles
         edgeOpacity={0.4}
-        pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
-        staleness={{ threshold: 5000, dimOpacity: 0.4, showBadge: true }}
+        frameProps={{
+          pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
+          staleness: { threshold: 5000, dimOpacity: 0.4, showBadge: true },
+        }}
       />
     </div>
   )
@@ -297,19 +301,21 @@ function PushApiDemo() {
         }}
       >
         {containerWidth && (
-          <StreamNetworkFrame
+          <SankeyDiagram
             ref={chartRef}
-            chartType="sankey"
-            size={[containerWidth, 400]}
+            width={containerWidth}
+            height={400}
             showParticles
             edgeOpacity={0.4}
-            particleStyle={{
-              radius: 2.5,
-              opacity: 0.6,
-              spawnRate: 0.05,
-              speedMultiplier: 0.8
+            frameProps={{
+              particleStyle: {
+                radius: 2.5,
+                opacity: 0.6,
+                spawnRate: 0.05,
+                speedMultiplier: 0.8
+              },
+              pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
             }}
-            pulse={{ duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 }}
           />
         )}
       </div>
@@ -378,21 +384,23 @@ function ContinuousStreamDemo() {
         }}
       >
         {containerWidth && (
-          <StreamNetworkFrame
+          <SankeyDiagram
             ref={chartRef}
-            chartType="sankey"
-            size={[containerWidth, 450]}
+            width={containerWidth}
+            height={450}
             showParticles
             edgeOpacity={0.35}
-            particleStyle={{
-              radius: 2,
-              opacity: 0.5,
-              spawnRate: 0.03,
-              speedMultiplier: 1.2
+            frameProps={{
+              particleStyle: {
+                radius: 2,
+                opacity: 0.5,
+                spawnRate: 0.03,
+                speedMultiplier: 1.2
+              },
+              tensionConfig: { threshold: 2.0 },
+              pulse: { duration: 400, color: "rgba(100,255,180,0.7)", glowRadius: 4 },
+              staleness: { threshold: 3000, dimOpacity: 0.3, showBadge: true },
             }}
-            tensionConfig={{ threshold: 2.0 }}
-            pulse={{ duration: 400, color: "rgba(100,255,180,0.7)", glowRadius: 4 }}
-            staleness={{ threshold: 3000, dimOpacity: 0.3, showBadge: true }}
           />
         )}
       </div>
@@ -631,8 +639,8 @@ export default function SankeyDiagramPage() {
       <h2 id="streaming">Streaming</h2>
 
       <p>
-        Use <code>StreamNetworkFrame</code> with <code>chartType="sankey"</code>{" "}
-        to build streaming Sankey diagrams. Push edges imperatively via a ref and
+        Use <code>SankeyDiagram</code> with a ref to build streaming Sankey
+        diagrams. Push edges imperatively via <code>push</code>/<code>pushMany</code>/<code>clear</code> and
         watch nodes, links, and animated particles appear. The tension model
         batches relayouts for smooth performance during high-frequency updates.
       </p>
@@ -652,10 +660,10 @@ export default function SankeyDiagramPage() {
 chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
 chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
 
-<StreamNetworkFrame
+<SankeyDiagram
   ref={chartRef}
-  chartType="sankey"
-  size={[800, 400]}
+  width={800}
+  height={400}
   showParticles
   edgeOpacity={0.4}
 />`}
@@ -686,7 +694,7 @@ chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
       />
 
       <h3 id="push-ref-handle">Push API Reference</h3>
-      <p>Access these methods via a React ref on <code>StreamNetworkFrame</code>:</p>
+      <p>Access these methods via a React ref on <code>SankeyDiagram</code>:</p>
       <ul>
         <li><code>push(edge)</code> — push a single edge <code>{`{ source, target, value }`}</code></li>
         <li><code>pushMany(edges)</code> — batch push multiple edges</li>

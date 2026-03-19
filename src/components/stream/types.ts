@@ -460,6 +460,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   /** SVG elements rendered on top of everything (in SVG overlay) */
   foregroundGraphics?: ReactNode
 
+  // ── Custom canvas renderers ───────────────────
+  /** Canvas renderers executed before the chart-type renderers (e.g. connecting lines under points) */
+  canvasPreRenderers?: import("./renderers/types").StreamRendererFn[]
+
   // ── Title ────────────────────────────────────────
   title?: string | ReactNode
 

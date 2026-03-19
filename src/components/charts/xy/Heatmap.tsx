@@ -1,10 +1,11 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -27,7 +28,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
    * [{x: 1, y: 1, value: 10}, {x: 1, y: 2, value: 20}, {x: 2, y: 1, value: 15}]
    * ```
    */
-  data: TDatum[]
+  data?: TDatum[]
 
   /**
    * Field name or function to access x values
@@ -206,7 +207,16 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export function Heatmap<TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum>) {
+export const Heatmap = forwardRef<RealtimeFrameHandle, HeatmapProps>(function Heatmap(props, ref) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -295,7 +305,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   // Get value accessor function
   const getValueFn = useMemo(() => {
     return typeof valueAccessor === "function"
-      ? (d: Record<string, any>) => valueAccessor(d as TDatum)
+      ? (d: Record<string, any>) => (valueAccessor as (d: any) => number)(d)
       : (d: Record<string, any>) => d[valueAccessor]
   }, [valueAccessor])
 
@@ -369,7 +379,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "Heatmap",
-    data: safeData,
+    data: data,
     accessors: {
       xAccessor,
       yAccessor,
@@ -393,7 +403,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "heatmap",
-    data: safeData,
+    ...(data != null && { data: safeData }),
     xAccessor,
     yAccessor,
     valueAccessor,
@@ -419,6 +429,6 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     ...frameProps
   }
 
-  return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame {...streamProps} /></SafeRender>
-}
+  return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+})
 Heatmap.displayName = "Heatmap"

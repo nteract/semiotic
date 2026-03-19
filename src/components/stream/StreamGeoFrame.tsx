@@ -349,6 +349,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             zoomIdentity
           )
         }
+      },
+      getData: () => {
+        const store = storeRef.current
+        if (!store) return []
+        return store.scene
+          .filter((n): n is PointSceneNode => n.type === "point")
+          .map(p => p.datum)
+          .filter(Boolean)
       }
     }), [pushPoint, pushMany, clearAll])
 

@@ -1,8 +1,9 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -19,7 +20,7 @@ import { validateNetworkData } from "../shared/validateChartData"
  */
 export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   nodes?: TNode[]
-  edges: TEdge[]
+  edges?: TEdge[]
   sourceAccessor?: ChartAccessor<TEdge, string>
   targetAccessor?: ChartAccessor<TEdge, string>
   valueAccessor?: ChartAccessor<TEdge, number>
@@ -46,7 +47,15 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
  *
  * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
  */
-export function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>) {
+export const SankeyDiagram = forwardRef<RealtimeFrameHandle, SankeyDiagramProps>(function SankeyDiagram(props, ref) {
+  const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point as any),
+    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
+  }))
+
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -185,9 +194,10 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   return (
     <SafeRender componentName="SankeyDiagram" width={width} height={height}>
     <StreamNetworkFrame
+      ref={frameRef}
       chartType="sankey"
-      nodes={inferredNodes}
-      edges={safeEdges}
+      {...(nodes != null && { nodes: inferredNodes })}
+      {...(edges != null && { edges: safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
@@ -224,5 +234,5 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       {...frameProps}
     />
   </SafeRender>)
-}
+})
 SankeyDiagram.displayName = "SankeyDiagram"
