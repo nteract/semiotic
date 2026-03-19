@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
-import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, RealtimeHistogram } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, ForceDirectedGraph, RealtimeHistogram } from "semiotic"
 
 const tierSnippets = {
   charts: `import { LineChart } from "semiotic"
@@ -303,34 +303,34 @@ const galleryAreaData = [
 ]
 
 const galleryNetworkNodes = [
-  { id: "A" },
-  { id: "B" },
-  { id: "C" },
-  { id: "D" },
-  { id: "E" },
-  { id: "F" },
-  { id: "G" },
-  { id: "H" },
-  { id: "I" },
-  { id: "J" },
-  { id: "K" },
-  { id: "L" },
+  { id: "API", group: "backend" },
+  { id: "Auth", group: "backend" },
+  { id: "DB", group: "backend" },
+  { id: "Cache", group: "backend" },
+  { id: "Dashboard", group: "frontend" },
+  { id: "Settings", group: "frontend" },
+  { id: "Profile", group: "frontend" },
+  { id: "Search", group: "frontend" },
+  { id: "CDN", group: "infra" },
+  { id: "Queue", group: "infra" },
+  { id: "Logger", group: "infra" },
+  { id: "Monitor", group: "infra" },
 ]
 const galleryNetworkEdges = [
-  { source: "A", target: "B" },
-  { source: "A", target: "C" },
-  { source: "A", target: "D" },
-  { source: "B", target: "E" },
-  { source: "B", target: "F" },
-  { source: "C", target: "G" },
-  { source: "D", target: "H" },
-  { source: "E", target: "I" },
-  { source: "F", target: "J" },
-  { source: "G", target: "K" },
-  { source: "H", target: "L" },
-  { source: "I", target: "A" },
-  { source: "J", target: "C" },
-  { source: "K", target: "E" },
+  { source: "Dashboard", target: "API" },
+  { source: "Settings", target: "API" },
+  { source: "Profile", target: "API" },
+  { source: "Search", target: "API" },
+  { source: "API", target: "Auth" },
+  { source: "API", target: "DB" },
+  { source: "API", target: "Cache" },
+  { source: "API", target: "Queue" },
+  { source: "DB", target: "Cache" },
+  { source: "Queue", target: "Logger" },
+  { source: "Logger", target: "Monitor" },
+  { source: "CDN", target: "Dashboard" },
+  { source: "CDN", target: "Search" },
+  { source: "Monitor", target: "API" },
 ]
 
 const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
@@ -382,7 +382,7 @@ const galleryItems = [
         }}
         showAxes={true}
         oLabel="region"
-        barPadding={8}
+        barPadding={40}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
       />
     ),
@@ -434,22 +434,19 @@ const galleryItems = [
     title: "Network Graph",
     path: "/charts/force-directed-graph",
     render: (w, h) => (
-      <StreamNetworkFrame
-        size={[w, h]}
-        chartType="force"
+      <ForceDirectedGraph
         nodes={galleryNetworkNodes}
         edges={galleryNetworkEdges}
-        iterations={300}
-        nodeSize={5}
-        nodeStyle={(d) => ({
-          fill: galleryColors[
-            galleryNetworkNodes.findIndex((n) => n.id === d.id) % galleryColors.length
-          ],
-          stroke: "#fff",
-          strokeWidth: 1.5,
-        })}
-        edgeStyle={() => ({ stroke: "var(--text-secondary)", strokeWidth: 1, opacity: 0.4 })}
-        nodeIDAccessor="id"
+        colorBy="group"
+        colorScheme={["#6366f1", "#10b981", "#f97316"]}
+        nodeSize={8}
+        showLabels
+        edgeWidth={1.5}
+        edgeOpacity={0.3}
+        iterations={500}
+        forceStrength={0.15}
+        width={w}
+        height={h}
         margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
       />
     ),

@@ -647,10 +647,21 @@ function ProjectionsExample() {
       frameProps={{
         projection: { type: "orthographic", rotate: [0, -20] },
         areas: worldAreas,
+        points: earthquakes,
+        xAccessor: "lon",
+        yAccessor: "lat",
         areaStyle: () => ({ fill: "#10b981", fillOpacity: 0.6, stroke: "#fff", strokeWidth: 0.5 }),
+        pointStyle: (d) => ({
+          fill: "#ef4444",
+          r: Math.max(3, d.magnitude * 0.7),
+          stroke: "#fff",
+          strokeWidth: 1,
+        }),
         graticule: true,
+        dragRotate: true,
+        zoomable: true,
         enableHover: true,
-        size: [600, 400],
+        size: [600, 500],
       }}
       type={StreamGeoFrame}
       overrideProps={{
@@ -683,14 +694,14 @@ function GraticuleExample() {
         points: earthquakes,
         xAccessor: "lon",
         yAccessor: "lat",
-        areaStyle: () => ({ fill: "#f8fafc", stroke: "#e2e8f0", strokeWidth: 0.5 }),
+        areaStyle: () => ({ fill: "#10b981", fillOpacity: 0.6, stroke: "#fff", strokeWidth: 0.5 }),
         pointStyle: (d) => ({
           fill: "#f59e0b",
           r: Math.max(3, d.magnitude * 0.6),
           stroke: "#fff",
           strokeWidth: 1,
         }),
-        graticule: true,
+        graticule: { stroke: "#059669", strokeWidth: 0.5 },
         enableHover: true,
         size: [600, 400],
       }}
@@ -699,7 +710,7 @@ function GraticuleExample() {
         areas: `// loaded via resolveReferenceGeography("world-110m")
 worldAreas`,
         points: "earthquakes",
-        graticule: "true",
+        graticule: '{ stroke: "#059669", strokeWidth: 0.5 }',
       }}
       hiddenProps={{}}
     />

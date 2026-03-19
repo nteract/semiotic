@@ -107,6 +107,8 @@ export interface GeoPipelineConfig {
   yAccessor?: string | ((d: any) => number)
   lineDataAccessor?: string | ((d: any) => any[])
   lineType?: "geo" | "line"
+  /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
+  flowStyle?: "basic" | "offset" | "arc"
 
   areaStyle?: Style | ((d: any) => Style)
   pointStyle?: (d: any) => Style & { r?: number }
@@ -150,6 +152,8 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
 
   // ── Geo-specific ──
   lineType?: "geo" | "line"
+  /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
+  flowStyle?: "basic" | "offset" | "arc"
   graticule?: boolean | GraticuleConfig
   zoomable?: boolean
   zoomExtent?: [number, number]

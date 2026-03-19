@@ -123,6 +123,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       // Geo-specific
       lineType = "geo",
+      flowStyle = "basic",
       graticule,
       zoomable,
       zoomExtent,
@@ -219,6 +220,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       yAccessor,
       lineDataAccessor,
       lineType,
+      flowStyle,
       areaStyle,
       pointStyle,
       lineStyle,
@@ -232,7 +234,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       pointIdAccessor
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
-      lineType, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
+      lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
       projectionTransform, decay, pulse, transition, annotations, pointIdAccessor
     ])
 
@@ -482,11 +484,28 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Recompute scene when dirty
       if (dirtyRef.current && !isTransitioning) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
+
+        // In drag-rotate mode, preserve the current rotation across
+        // computeScene() which resets the projection via fitProjection.
+        const savedRotation = effectiveDragRotate
+          ? store.getRotation()
+          : null
+
         store.computeScene(layout)
-        // Preserve zoom — computeScene resets to base projection, so
-        // re-apply the current zoom transform if user has zoomed/panned
+
+        // Preserve zoom/rotation — computeScene resets to base projection.
+        // Use setRotation (no rebuild) then let applyZoomScale do the single
+        // rebuild; if no zoom, use applyRotation for the rebuild.
         const zt = zoomTransformRef.current
-        if (zt.k !== 1 || zt.x !== 0 || zt.y !== 0) {
+        const hasZoom = zt.k !== 1 || zt.x !== 0 || zt.y !== 0
+        if (effectiveDragRotate && savedRotation) {
+          if (hasZoom) {
+            store.setRotation(savedRotation)
+            store.applyZoomScale(zt.k, layout)
+          } else {
+            store.applyRotation(savedRotation, layout)
+          }
+        } else if (hasZoom) {
           store.applyZoomTransform(zt, layout)
         }
         dirtyRef.current = false
@@ -708,50 +727,57 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const layout = { width: adjustedWidth, height: adjustedHeight }
 
       // ── Drag-rotate mode (globe spinning) ──
+      // No d3-zoom — manual wheel/button zoom + pointer drag rotation.
+      // This avoids translate drift that d3-zoom introduces on orthographic.
       if (effectiveDragRotate) {
-        // Use d3-zoom for scroll-wheel zoom only (filter out drag)
-        const behavior = d3Zoom()
-          .scaleExtent([minZoom, maxZoom])
-          .extent([[0, 0], [size[0], size[1]]])
-          .filter((event: any) => {
-            // Allow scroll-wheel and programmatic zoom, block drag
-            return event.type === "wheel" || event.type === "dblclick"
-          })
-          .on("zoom", (event: D3ZoomEvent<Element, unknown>) => {
-            const transform = event.transform
-            zoomTransformRef.current = transform
-            isZoomingRef.current = true
+        let currentK = zoomTransformRef.current.k
 
-            // Re-render projection directly — no CSS transform
-            const store = storeRef.current
-            if (store) {
-              store.applyZoomTransform(transform, layout)
-              dirtyRef.current = false
-              scheduleRender()
-            }
-          })
-          .on("end", (event: D3ZoomEvent<Element, unknown>) => {
-            zoomTransformRef.current = event.transform
-            isZoomingRef.current = false
+        const applyScale = (k: number) => {
+          currentK = Math.max(minZoom, Math.min(maxZoom, k))
+          zoomTransformRef.current = zoomIdentity.scale(currentK)
 
-            const store = storeRef.current
-            if (store) {
-              onZoom?.({
-                projection: store.scales?.projection!,
-                zoom: store.currentZoom
-              })
-            }
-          })
+          const store = storeRef.current
+          if (store) {
+            store.applyZoomScale(currentK, layout)
+            dirtyRef.current = false
+            scheduleRender()
+            onZoom?.({
+              projection: store.scales?.projection!,
+              zoom: store.currentZoom
+            })
+          }
+        }
 
-        zoomBehaviorRef.current = behavior
-        select(container).call(behavior as any)
+        // Expose a synthetic zoom behavior for the +/- buttons and resetZoom()
+        zoomBehaviorRef.current = {
+          scaleBy: (_sel: any, factor: number) => applyScale(currentK * factor),
+          transform: (_sel: any, t: any) => applyScale(t?.k ?? 1)
+        } as any
+
+        const onWheel = (e: WheelEvent) => {
+          e.preventDefault()
+          const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1
+          applyScale(currentK * factor)
+        }
+
+        const onDblClick = (e: MouseEvent) => {
+          const target = e.target as HTMLElement | null
+          if (target && (target.closest("button") || target.closest(".stream-geo-zoom-controls"))) return
+          e.preventDefault()
+          applyScale(currentK * 1.5)
+        }
+
+        container.addEventListener("wheel", onWheel, { passive: false })
+        container.addEventListener("dblclick", onDblClick)
 
         // Manual drag handler for rotation
-        const sensitivity = 0.4 // degrees per pixel
+        const sensitivity = 0.4
 
         const onPointerDown = (e: PointerEvent) => {
-          // Only rotate on primary button, not on wheel/zoom
           if (e.button !== 0) return
+          // Don't start rotation when clicking zoom buttons or other controls
+          const target = e.target as HTMLElement
+          if (target.closest("button") || target.closest(".stream-geo-zoom-controls")) return
           const store = storeRef.current
           if (!store) return
 
@@ -770,7 +796,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
           const newRotation: [number, number, number] = [
             dragStart.rotation[0] + dx * sensitivity,
-            // Clamp latitude rotation to [-90, 90] to prevent flipping
             Math.max(-90, Math.min(90, dragStart.rotation[1] - dy * sensitivity)),
             dragStart.rotation[2]
           ]
@@ -803,11 +828,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         container.addEventListener("pointercancel", onPointerUp)
 
         return () => {
-          select(container).on(".zoom", null)
+          container.removeEventListener("wheel", onWheel)
+          container.removeEventListener("dblclick", onDblClick)
           container.removeEventListener("pointerdown", onPointerDown)
           container.removeEventListener("pointermove", onPointerMove)
           container.removeEventListener("pointerup", onPointerUp)
           container.removeEventListener("pointercancel", onPointerUp)
+          zoomBehaviorRef.current = null
         }
       }
 
@@ -1062,11 +1089,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
               onClick={(e) => {
                 e.stopPropagation()
                 const container = containerRef.current
-                if (container && zoomBehaviorRef.current) {
-                  select(container).call(
-                    (zoomBehaviorRef.current as any).scaleBy,
-                    1.5
-                  )
+                const behavior = zoomBehaviorRef.current as any
+                if (container && behavior?.scaleBy) {
+                  behavior.scaleBy(select(container), 1.5)
                 }
               }}
               style={zoomButtonStyle}
@@ -1079,11 +1104,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
               onClick={(e) => {
                 e.stopPropagation()
                 const container = containerRef.current
-                if (container && zoomBehaviorRef.current) {
-                  select(container).call(
-                    (zoomBehaviorRef.current as any).scaleBy,
-                    1 / 1.5
-                  )
+                const behavior = zoomBehaviorRef.current as any
+                if (container && behavior?.scaleBy) {
+                  behavior.scaleBy(select(container), 1 / 1.5)
                 }
               }}
               style={zoomButtonStyle}

@@ -144,7 +144,9 @@ export default function MinardsMarch({ width = 900 }) {
             valueAccessor="survivors"
             projection="mercator"
             lineType="line"
+            flowStyle="offset"
             edgeColorBy="direction"
+            edgeLinecap="square"
             edgeOpacity={0.85}
             edgeWidthRange={[2, 72]}
             showParticles

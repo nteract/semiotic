@@ -268,6 +268,7 @@ const flowMapProps = [
   { name: "valueAccessor", type: "string", required: false, default: '"value"', description: "Field on flows for edge width scaling." },
   { name: "edgeWidthRange", type: "[number, number]", required: false, default: "[1, 8]", description: "Min and max edge stroke width." },
   { name: "lineType", type: '"geo" | "line"', required: false, default: '"geo"', description: '"geo" for great-circle arcs, "line" for straight lines.' },
+  { name: "flowStyle", type: '"basic" | "offset" | "arc"', required: false, default: '"basic"', description: 'Flow rendering style. "basic" draws straight or great-circle lines. "offset" shifts bidirectional flows apart so A\u2192B and B\u2192A don\'t overlap. "arc" renders curved arcs that bulge perpendicular to the flow direction.' },
   { name: "edgeColorBy", type: "string | function", required: false, default: null, description: "Field or function for edge color." },
   { name: "edgeOpacity", type: "number", required: false, default: "0.6", description: "Opacity applied to flow lines." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme for edges." },
@@ -566,6 +567,75 @@ function WorldFlowMap() {
   edgeOpacity={0.5}
   showParticles
   particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.5 }}
+  tooltip
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="arc-style">Arc Flow Style</h3>
+      <p>
+        Set <code>flowStyle="arc"</code> to render curved arcs that bulge
+        perpendicular to the flow direction. This makes overlapping routes
+        easier to distinguish and adds a visual sense of motion. Particles
+        follow the arc path automatically.
+      </p>
+
+      <WorldFlowMap
+        nodes={airports}
+        flows={internationalFlights}
+        nodeIdAccessor="id"
+        valueAccessor="passengers"
+        edgeColorBy="source"
+        flowStyle="arc"
+        showParticles
+        particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.2 }}
+        tooltip={true}
+        title="Arc-Style Flight Routes"
+      />
+
+      <CodeBlock
+        code={`<FlowMap
+  nodes={airports}
+  flows={flights}
+  areas={worldAreas}
+  valueAccessor="passengers"
+  edgeColorBy="source"
+  flowStyle="arc"
+  showParticles
+  particleStyle={{ radius: 2, color: "source", speedMultiplier: 1.2 }}
+  tooltip
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="offset-style">Offset Flow Style (Bidirectional)</h3>
+      <p>
+        Set <code>flowStyle="offset"</code> to draw each flow slightly offset
+        from the direct centerline between its source and target. This
+        separation makes overlapping routes easier to distinguish, especially
+        when traffic exists in both directions (e.g. JFK&rarr;LHR and
+        LHR&rarr;JFK).
+      </p>
+
+      <WorldFlowMap
+        nodes={airports}
+        flows={internationalFlights}
+        nodeIdAccessor="id"
+        valueAccessor="passengers"
+        edgeColorBy="source"
+        flowStyle="offset"
+        tooltip={true}
+        title="Offset Bidirectional Routes"
+      />
+
+      <CodeBlock
+        code={`<FlowMap
+  nodes={airports}
+  flows={flights}
+  areas={worldAreas}
+  valueAccessor="passengers"
+  edgeColorBy="source"
+  flowStyle="offset"
   tooltip
 />`}
         language="jsx"
