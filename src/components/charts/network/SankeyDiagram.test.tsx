@@ -7,12 +7,13 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps: any = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
+  const React = require("react")
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: React.forwardRef((props: any, _ref: any) => {
       lastNetworkFrameProps = props
       return <div className="stream-network-frame"><svg /></div>
-    }
+    })
   }
 })
 

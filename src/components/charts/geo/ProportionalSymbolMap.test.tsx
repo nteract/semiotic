@@ -7,12 +7,13 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Mock StreamGeoFrame to capture props
 let lastGeoFrameProps: any = null
 vi.mock("../../stream/StreamGeoFrame", () => {
+  const React = require("react")
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: React.forwardRef((props: any, _ref: any) => {
       lastGeoFrameProps = props
       return <div className="stream-geo-frame"><svg /></div>
-    }
+    })
   }
 })
 

@@ -184,7 +184,7 @@ export const ChordDiagram = forwardRef<RealtimeFrameHandle, ChordDiagramProps>(f
     <StreamNetworkFrame
       ref={frameRef}
       chartType="chord"
-      {...(nodes != null && { nodes: inferredNodes })}
+      {...(inferredNodes.length > 0 && { nodes: inferredNodes })}
       {...(edges != null && { edges: safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}

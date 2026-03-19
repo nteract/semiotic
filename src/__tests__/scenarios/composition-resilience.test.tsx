@@ -203,9 +203,9 @@ describe("Empty and Loading States", () => {
   })
 
   // 12. renderEmptyState returns null for undefined data (hierarchy case)
-  it("returns placeholder for undefined data", () => {
+  it("returns null for undefined data (push API mode)", () => {
     const result = renderEmptyState(undefined, 400, 300)
-    expect(result).not.toBeNull()
+    expect(result).toBeNull()
   })
 
   // 13. renderEmptyState with custom content

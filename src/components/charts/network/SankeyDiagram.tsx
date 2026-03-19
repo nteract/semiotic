@@ -196,7 +196,7 @@ export const SankeyDiagram = forwardRef<RealtimeFrameHandle, SankeyDiagramProps>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="sankey"
-      {...(nodes != null && { nodes: inferredNodes })}
+      {...(inferredNodes.length > 0 && { nodes: inferredNodes })}
       {...(edges != null && { edges: safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}

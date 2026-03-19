@@ -6,12 +6,13 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
+  const React = require("react")
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: React.forwardRef((props: any, _ref: any) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
-    }
+    })
   }
 })
 
