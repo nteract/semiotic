@@ -206,7 +206,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
     onObservation, chartType: "QuadrantChart", chartId
   })
 
@@ -348,8 +348,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       // Skip drawing if center maps outside the chart area — this happens when
       // scales haven't been updated with the real data yet (e.g., [0,1] fallback
       // domain with a center at 6.0 produces a pixel far outside the chart).
-      if (xCenter != null && (xC <= 0 || xC >= w)) return
-      if (yCenter != null && (yC <= 0 || yC >= h)) return
+      if (xCenter != null && (!isFinite(xC) || xC < 0 || xC > w)) return
+      if (yCenter != null && (!isFinite(yC) || yC < 0 || yC > h)) return
 
       // Clamp center lines to chart area
       const cx = Math.max(0, Math.min(w, xC))
@@ -407,8 +407,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       const yC = yCenter != null ? scales.y(yCenter) : h / 2
 
       // Skip if center is outside chart (stale/fallback scales)
-      if (xCenter != null && (xC <= 0 || xC >= w)) return
-      if (yCenter != null && (yC <= 0 || yC >= h)) return
+      if (xCenter != null && (!isFinite(xC) || xC < 0 || xC > w)) return
+      if (yCenter != null && (!isFinite(yC) || yC < 0 || yC > h)) return
 
       const cx = Math.max(0, Math.min(w, xC))
       const cy = Math.max(0, Math.min(h, yC))

@@ -99,7 +99,7 @@ const quadrantChartProps = [
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover tooltips." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend." },
-  { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
+  { name: "tooltip", type: "boolean | object | function", required: false, default: null, description: "Enable/disable default tooltip (boolean), or provide a config object or render function." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "auto", description: "Margin around the chart area." },
@@ -185,7 +185,7 @@ function StreamingQuadrantDemo({ width }) {
 export default function QuadrantChartPage() {
   return (
     <PageLayout
-      title="QuadrantChartPage"
+      title="Quadrant Chart"
       tier="charts"
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
