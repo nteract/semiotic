@@ -168,7 +168,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     showGrid,
     oSort: false,
     amplitude,
-    ...(setup.legend && { legend: setup.legend }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false

@@ -180,7 +180,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
-    ...(setup.legend && { legend: setup.legend }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false

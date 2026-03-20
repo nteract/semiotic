@@ -162,7 +162,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
-    ...(setup.legend && { legend: setup.legend }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false

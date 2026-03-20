@@ -14,7 +14,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     ctx.save()
 
     // Apply decay opacity if present
-    const decayOpacity = (n as any)._decayOpacity
+    const decayOpacity = n._decayOpacity
     if (decayOpacity != null && decayOpacity !== 1) {
       ctx.globalAlpha = decayOpacity
     }
