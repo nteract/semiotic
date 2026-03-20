@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, StreamScales, StreamLayout } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -485,9 +485,11 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: (tooltip === true || tooltip === undefined)
-      ? defaultTooltipContent
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
+    tooltipContent: tooltip === false
+      ? undefined
+      : (tooltip === true || tooltip === undefined)
+        ? defaultTooltipContent
+        : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

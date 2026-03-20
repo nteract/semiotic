@@ -54,7 +54,7 @@ const commonProps: Record<string, PropDef> = {
   showGrid: { type: "boolean" },
   colorBy: { type: ["string", "function"] },
   colorScheme: { type: ["string", "array"] },
-  tooltip: { type: ["function", "object"] },
+  tooltip: { type: ["boolean", "function", "object"] },
   frameProps: { type: "object" },
 }
 
