@@ -18,8 +18,27 @@ async function waitForStreaming(page: Page, testId: string, ms = 2500) {
   await expect(testCase).toBeVisible()
   const canvas = testCase.locator("canvas").first()
   await expect(canvas).toBeVisible({ timeout: 8000 })
-  // Wait for streaming data to push and render
+  // Wait for streaming data to push and render — use polling to handle slow CI
   await page.waitForTimeout(ms)
+  // Additionally wait for the canvas to have non-empty content (non-transparent pixels)
+  await page.waitForFunction(
+    (id) => {
+      const container = document.querySelector(`[data-testid="${id}"]`)
+      if (!container) return false
+      const canvas = container.querySelector("canvas") as HTMLCanvasElement
+      if (!canvas || canvas.width === 0 || canvas.height === 0) return false
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return false
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      let nonEmpty = 0
+      for (let i = 0; i < data.length; i += 64) {
+        if (data[i + 3] > 50 && !(data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240)) nonEmpty++
+      }
+      return nonEmpty > 5
+    },
+    testId,
+    { timeout: 10000 }
+  ).catch(() => { /* proceed to assertion — it will fail with a clear message */ })
 }
 
 /**
@@ -31,18 +50,24 @@ async function getCanvasColors(page: Page, testId: string): Promise<{
   hasColor: boolean
   hasGrey: boolean
   uniqueColors: number
+  coloredPixels: number
+  greyPixels: number
+  canvasWidth: number
+  canvasHeight: number
 }> {
   return page.evaluate((id) => {
+    const empty = { hasColor: false, hasGrey: true, uniqueColors: 0, coloredPixels: 0, greyPixels: 0, canvasWidth: 0, canvasHeight: 0 }
     const container = document.querySelector(`[data-testid="${id}"]`)
-    if (!container) return { hasColor: false, hasGrey: true, uniqueColors: 0 }
-    const canvas = container.querySelector("canvas")
-    if (!canvas) return { hasColor: false, hasGrey: true, uniqueColors: 0 }
+    if (!container) return empty
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement
+    if (!canvas) return empty
 
     const ctx = canvas.getContext("2d")
-    if (!ctx) return { hasColor: false, hasGrey: true, uniqueColors: 0 }
+    if (!ctx) return empty
 
     const w = canvas.width
     const h = canvas.height
+    if (w === 0 || h === 0) return { ...empty, canvasWidth: w, canvasHeight: h }
     const data = ctx.getImageData(0, 0, w, h).data
 
     const colorSet = new Set<string>()
@@ -77,6 +102,10 @@ async function getCanvasColors(page: Page, testId: string): Promise<{
       hasColor: coloredPixels > 10,
       hasGrey: greyPixels > coloredPixels && coloredPixels < 10,
       uniqueColors: colorSet.size,
+      coloredPixels,
+      greyPixels,
+      canvasWidth: w,
+      canvasHeight: h,
     }
   }, testId)
 }
@@ -104,7 +133,7 @@ test.describe("Streaming Color Regression", () => {
       const colors = await getCanvasColors(page, testId)
 
       // Should have colored pixels, not just grey
-      expect(colors.hasColor).toBe(true)
+      expect(colors.hasColor, `${name}: expected colored pixels but got coloredPixels=${colors.coloredPixels}, greyPixels=${colors.greyPixels}, canvasSize=${colors.canvasWidth}x${colors.canvasHeight}`).toBe(true)
       // Should have multiple distinct colors (one per category)
       expect(colors.uniqueColors).toBeGreaterThanOrEqual(minColors)
     })

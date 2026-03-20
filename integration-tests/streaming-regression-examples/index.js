@@ -361,18 +361,26 @@ function StreamingScatter() {
 }
 
 const examples = [
-  TestCase({ title: "Streaming Stacked Bar", testId: "regression-stacked-bar", children: React.createElement(StreamingStackedBar) }),
-  TestCase({ title: "Streaming Pie", testId: "regression-pie", children: React.createElement(StreamingPie) }),
-  TestCase({ title: "Streaming Bubble", testId: "regression-bubble", children: React.createElement(StreamingBubble) }),
-  TestCase({ title: "Streaming Grouped Bar", testId: "regression-grouped-bar", children: React.createElement(StreamingGroupedBar) }),
-  TestCase({ title: "Streaming Stacked Area", testId: "regression-stacked-area", children: React.createElement(StreamingStackedArea) }),
-  TestCase({ title: "Area Chart Tooltip", testId: "regression-area-tooltip", children: React.createElement(AreaChartTooltipTest) }),
-  TestCase({ title: "Streaming Line (no infinite loop)", testId: "regression-line-streaming", children: React.createElement(StreamingLine) }),
-  TestCase({ title: "Force Graph Centering", testId: "regression-force-centering", children: React.createElement(ForceGraphCentering) }),
-  TestCase({ title: "Streaming Chord (multi-color)", testId: "regression-chord-streaming", children: React.createElement(StreamingChord) }),
-  TestCase({ title: "Streaming Donut", testId: "regression-donut", children: React.createElement(StreamingDonut) }),
-  TestCase({ title: "Streaming Scatterplot", testId: "regression-scatter", children: React.createElement(StreamingScatter) }),
+  { key: "stacked-bar", title: "Streaming Stacked Bar", testId: "regression-stacked-bar", component: StreamingStackedBar },
+  { key: "pie", title: "Streaming Pie", testId: "regression-pie", component: StreamingPie },
+  { key: "bubble", title: "Streaming Bubble", testId: "regression-bubble", component: StreamingBubble },
+  { key: "grouped-bar", title: "Streaming Grouped Bar", testId: "regression-grouped-bar", component: StreamingGroupedBar },
+  { key: "stacked-area", title: "Streaming Stacked Area", testId: "regression-stacked-area", component: StreamingStackedArea },
+  { key: "area-tooltip", title: "Area Chart Tooltip", testId: "regression-area-tooltip", component: AreaChartTooltipTest },
+  { key: "line", title: "Streaming Line (no infinite loop)", testId: "regression-line-streaming", component: StreamingLine },
+  { key: "force", title: "Force Graph Centering", testId: "regression-force-centering", component: ForceGraphCentering },
+  { key: "chord", title: "Streaming Chord (multi-color)", testId: "regression-chord-streaming", component: StreamingChord },
+  { key: "donut", title: "Streaming Donut", testId: "regression-donut", component: StreamingDonut },
+  { key: "scatter", title: "Streaming Scatterplot", testId: "regression-scatter", component: StreamingScatter },
 ]
 
 const root = createRoot(document.getElementById("root"))
-root.render(React.createElement("div", { className: "test-grid" }, examples))
+root.render(
+  React.createElement(
+    "div",
+    { className: "test-grid" },
+    examples.map(({ key, title, testId, component }) =>
+      React.createElement(TestCase, { key, title, testId, children: React.createElement(component) })
+    )
+  )
+)
