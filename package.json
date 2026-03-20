@@ -179,7 +179,7 @@
     "prettier": "^3.8.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "react-router-dom": "^6.2.1",
+    "react-router-dom": "^7.13.1",
     "rollup": "^4.59.0",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-typescript2": "^0.34.1",
