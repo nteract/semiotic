@@ -24,6 +24,7 @@ const navData = [
           { title: "Bubble Chart", path: "/charts/bubble-chart" },
           { title: "Heatmap", path: "/charts/heatmap" },
           { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" },
+          { title: "Quadrant Chart", path: "/charts/quadrant-chart" },
           { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
@@ -137,7 +138,9 @@ const navData = [
       { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
       { title: "Network Explorer", path: "/recipes/network-explorer" },
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
-      { title: "Minard's Map", path: "/recipes/minards-map" }
+      { title: "Minard's Map", path: "/recipes/minards-map" },
+      { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
+      { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" }
     ]
   },
   {

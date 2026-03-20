@@ -37,6 +37,9 @@ export type { ScatterplotMatrixProps } from "./xy/ScatterplotMatrix"
 export { MinimapChart } from "./xy/MinimapChart"
 export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
 
+export { QuadrantChart } from "./xy/QuadrantChart"
+export type { QuadrantChartProps, QuadrantsConfig, QuadrantConfig, CenterlineStyle } from "./xy/QuadrantChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================

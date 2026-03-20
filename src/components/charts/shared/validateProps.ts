@@ -201,6 +201,29 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  QuadrantChart: {
+    required: ["quadrants"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      yAccessor: { type: ["string", "function"] },
+      quadrants: { type: "object" },
+      xCenter: { type: "number" },
+      yCenter: { type: "number" },
+      centerlineStyle: { type: "object" },
+      showQuadrantLabels: { type: "boolean" },
+      quadrantLabelSize: { type: "number" },
+      sizeBy: { type: ["string", "function"] },
+      sizeRange: { type: "array" },
+      pointRadius: { type: "number" },
+      pointOpacity: { type: "number" },
+    },
+  },
+
   ConnectedScatterplot: {
     required: ["data"],
     dataShape: "array",

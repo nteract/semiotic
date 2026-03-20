@@ -965,7 +965,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             hoverPoint!.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
           })`,
           pointerEvents: "none",
-          zIndex: 1
+          zIndex: 1,
+          width: "max-content"
         }}
       >
         {tooltipRendered}
@@ -1089,6 +1090,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           position: "relative",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
+          overflow: "visible",
         }}
         onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}

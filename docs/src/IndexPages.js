@@ -281,6 +281,22 @@ export function RecipesIndex() {
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
 
+        <div className="sub-header">Streaming Visualization</div>
+
+        <PageLink
+          href="/recipes/streaming-migration-map"
+          title="Streaming Migration Map"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
+
+        <div className="sub-header">Narrative Visualization</div>
+
+        <PageLink
+          href="/recipes/rosling-bubble-chart"
+          title="Rosling Bubble Chart"
+          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
+        />
+
         <div className="sub-header">Dashboards</div>
 
         <PageLink

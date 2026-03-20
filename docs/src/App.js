@@ -50,6 +50,7 @@ import ProportionalSymbolMapPage from "./pages/charts/ProportionalSymbolMapPage"
 import FlowMapPage from "./pages/charts/FlowMapPage"
 import DistanceCartogramPage from "./pages/charts/DistanceCartogramPage"
 import TileMapPage from "./pages/charts/TileMapPage"
+import QuadrantChartPage from "./pages/charts/QuadrantChartPage"
 
 // New frame pages
 import StreamXYFramePage from "./pages/frames/XYFramePage"
@@ -99,6 +100,8 @@ import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import MinardsMarchPage from "./pages/recipes/MinardsMarchPage"
+import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
+import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
 
@@ -296,6 +299,8 @@ export default function DocsApp() {
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
               <Route path="minards-map" element={<MinardsMarchPage />} />
+              <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
+              <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
             </Route>
 
             {/* Playground routes */}
@@ -377,6 +382,7 @@ export default function DocsApp() {
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
+              <Route path="quadrant-chart" element={<QuadrantChartPage />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
               <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
               <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
