@@ -178,7 +178,9 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? undefined
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

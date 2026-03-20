@@ -41,8 +41,10 @@ correct visualizations without trial and error:
 - **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
 - **`llms.txt`** — machine-readable documentation following the emerging standard
 
-Every chart includes a built-in error boundary and dev-mode validation
-warnings with typo suggestions, so AI-generated code fails gracefully with
+Every chart includes a built-in error boundary, dev-mode validation
+warnings with typo suggestions, and accessibility features (canvas
+`aria-label`, keyboard-navigable legends, `aria-live` tooltips, SVG
+`<title>`/`<desc>`) so AI-generated code fails gracefully with
 actionable diagnostics instead of a blank screen.
 
 ### Beyond standard charts

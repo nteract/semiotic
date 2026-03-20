@@ -315,7 +315,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     showGrid,
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? undefined
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,

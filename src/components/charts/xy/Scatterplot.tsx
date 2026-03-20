@@ -292,7 +292,9 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? undefined
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),

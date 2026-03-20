@@ -102,7 +102,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   // ── Loading / empty states ──────────────────────────────────────────────
   const loadingEl = renderLoadingState(loading, width, height)
   if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(edges, width, height, emptyContent)
+  const emptyEl = renderEmptyState(nodes, width, height, emptyContent)
   if (emptyEl) return emptyEl
 
   const safeNodes = nodes || []

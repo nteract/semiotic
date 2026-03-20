@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-03-19
+
+### Added
+
+- **Accessibility foundation** — moves Semiotic from ~30% to ~70% WCAG 2.1 AA compliance.
+  - **Canvas `aria-label`** — every `<canvas>` element now has a computed `aria-label` describing chart type and data shape (e.g., "scatter chart, 200 points"). All four Stream Frames: `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`, `StreamGeoFrame`.
+  - **Legend keyboard navigation** — interactive legend items are focusable (`tabIndex={0}`, `role="option"`), with `role="listbox"` on the container. Enter/Space activates (click), Arrow keys navigate between items. Visible focus ring on keyboard focus.
+  - **`aria-multiselectable`** on legend listbox when `legendInteraction="isolate"` or `customClickBehavior` is present.
+  - **`aria-selected`** on legend items reflecting isolation state.
+  - **`aria-live="polite"` region** — `AriaLiveTooltip` component mirrors tooltip text for screen reader announcements on hover.
+  - **SVG `<title>` and `<desc>`** — all SVG overlays (`SVGOverlay`, `OrdinalSVGOverlay`, `NetworkSVGOverlay`) include `role="img"` and accessible `<title>`/`<desc>` elements derived from the chart title.
+  - **`aria-label` on ChartContainer toolbar buttons** — Export, Fullscreen, and Copy Config buttons have descriptive labels and title attributes.
+  - **35 Playwright integration tests** — `integration-tests/accessibility.spec.ts` covering canvas aria-labels, AriaLiveTooltip, legend keyboard traversal, focus rings, SVG title/desc, and ChartContainer toolbar buttons.
+
+- **Performance: color map cache** — `PipelineStore` caches the category→color map across rebuilds using a sorted category set as cache key. Skips rebuild when categories are unchanged. (`PipelineStore.ts`)
+- **Performance: stacked area cache** — `PipelineStore` caches stacked area cumulative sums using a `buffer.size + ingestVersion` hash. Skips expensive groupData + cumulative sum computation when data is unchanged. (`PipelineStore.ts`)
+
+### Fixed
+
+- **`tooltip={false}` now correctly disables tooltips** on all 22 remaining HOCs (LineChart, AreaChart, StackedAreaChart, Scatterplot, BubbleChart, Heatmap, ConnectedScatterplot, BarChart, StackedBarChart, GroupedBarChart, DonutChart, PieChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, RidgelinePlot, ProportionalSymbolMap, ChoroplethMap, FlowMap, DistanceCartogram). The pattern `normalizeTooltip(tooltip) || defaultTooltipContent` was replaced with an explicit `tooltip === false ? undefined : ...` check.
+- **`normalizeTooltip` unwrap heuristic tightened** — the HoverData unwrap now only triggers when the object has `.type === "node" | "edge"` AND `.data`, preventing false unwraps when a user's datum has a `.data` property.
+- **ForceDirectedGraph empty state** — `renderEmptyState` now checks `nodes` instead of `edges`, so a graph with nodes but no edges no longer shows the empty state.
+- **ChoroplethMap validation** — added GeoJSON-aware validation that checks for a `geometry` property on area features, replacing the inapplicable `validateArrayData` check.
+- **LineChart validation** — `validateArrayData` now receives the raw `data` prop instead of post-processed `safeData`, so push API mode (`data` undefined) correctly skips validation instead of triggering "No data provided".
+- **QuadrantChart `sizeDomain` NaN** — `sizeBy` values are now filtered to finite numbers before computing min/max, preventing NaN propagation to point radius.
+- **Recipe source code** — `RecipeLayout` now clarifies that displayed source code is abbreviated and points to the full runnable source in `docs/src/examples/recipes/`.
+
 ## [3.0.2] - 2026-03-16
 
 ### Added

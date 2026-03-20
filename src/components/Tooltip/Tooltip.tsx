@@ -413,11 +413,14 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
     return (hoverData: Record<string, any>) => {
       // Unwrap HoverData → raw datum so user functions receive the data they expect.
-      // If the object has a `.data` property that's a plain object, it's likely
-      // a HoverData wrapper. Pass the raw datum to the user function.
-      const datum = (hoverData && typeof hoverData.data === "object" && hoverData.data !== null)
-        ? hoverData.data
-        : hoverData
+      // Only unwrap when hoverData matches the HoverData shape from Stream Frames
+      // (has .type of "node"/"edge" AND .data object). This avoids mis-unwrapping
+      // user data that happens to have a .data property.
+      const isHoverWrapper = hoverData
+        && typeof hoverData.data === "object"
+        && hoverData.data !== null
+        && (hoverData.type === "node" || hoverData.type === "edge")
+      const datum = isHoverWrapper ? hoverData.data : hoverData
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (

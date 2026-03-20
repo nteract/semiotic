@@ -401,6 +401,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   return (
     <svg
+      role="img"
       width={totalWidth}
       height={totalHeight}
       style={{
@@ -410,8 +411,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
         pointerEvents: "none"
       }}
     >
-      {typeof title === "string" && <title>{title}</title>}
-      <desc>XY chart, {width}x{height} pixels</desc>
+      <title>{typeof title === "string" ? title : "XY Chart"}</title>
+      <desc>{typeof title === "string" ? `${title} — XY data visualization` : "XY data visualization"}</desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in SVGUnderlay) */}
         {showGrid && scales && !underlayRendered && (

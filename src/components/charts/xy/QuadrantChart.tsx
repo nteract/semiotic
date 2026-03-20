@@ -262,9 +262,10 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
 
   const sizeDomain = useMemo(() => {
     if (!sizeBy || safeData.length === 0) return undefined
-    const sizes = safeData.map((d) =>
-      typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy]
-    )
+    const sizes = safeData
+      .map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
+    if (sizes.length === 0) return undefined
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
   }, [safeData, sizeBy])
 

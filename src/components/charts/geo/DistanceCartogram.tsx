@@ -382,7 +382,9 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     size: [resolved.width, resolved.height],
     margin,
     enableHover: true,
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltip,
+    tooltipContent: tooltip === false
+      ? undefined
+      : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(legend && { legend }),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
