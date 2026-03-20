@@ -54,6 +54,7 @@ export interface PipelineConfig {
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime
   extentPadding: number
+  maxCapacity?: number
 
   // Accessors
   xAccessor?: string | ((d: any) => number)
@@ -284,9 +285,12 @@ export class PipelineStore {
       // Streaming append
       for (const d of changeset.inserts) {
         if (this.config.windowMode === "growing" && this.buffer.full) {
-          this.growingCap *= 2
-          this.buffer.resize(this.growingCap)
-          if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
+          const maxCap = this.config.maxCapacity || 1_000_000
+          if (this.growingCap < maxCap) {
+            this.growingCap = Math.min(this.growingCap * 2, maxCap)
+            this.buffer.resize(this.growingCap)
+            if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
+          }
         }
 
         const evicted = this.buffer.push(d)
@@ -732,8 +736,12 @@ export class PipelineStore {
     if (this.getSize && !this.config.pointStyle) {
       const sizes = data.map(d => this.getSize!(d)).filter(s => s != null && !Number.isNaN(s))
       if (sizes.length > 0) {
-        const minSize = Math.min(...sizes)
-        const maxSize = Math.max(...sizes)
+        let minSize = Infinity
+        let maxSize = -Infinity
+        for (const s of sizes) {
+          if (s < minSize) minSize = s
+          if (s > maxSize) maxSize = s
+        }
         sizeScale = (s: number) => {
           if (minSize === maxSize) return (sizeRange[0] + sizeRange[1]) / 2
           return sizeRange[0] + ((s - minSize) / (maxSize - minSize)) * (sizeRange[1] - sizeRange[0])
@@ -810,7 +818,7 @@ export class PipelineStore {
     // Build value lookup
     const valueMap = new Map<string, { val: number; datum: any }>()
     for (const d of data) {
-      const key = JSON.stringify([getRawX(d), getRawY(d)])
+      const key = `${getRawX(d)}\0${getRawY(d)}`
       valueMap.set(key, { val: getVal(d), datum: d })
     }
 
@@ -836,7 +844,7 @@ export class PipelineStore {
 
     for (let xi = 0; xi < xValues.length; xi++) {
       for (let yi = 0; yi < yValues.length; yi++) {
-        const key = JSON.stringify([xValues[xi], yValues[yi]])
+        const key = `${xValues[xi]}\0${yValues[yi]}`
         const entry = valueMap.get(key)
         if (!entry) continue
 
@@ -2048,6 +2056,43 @@ export class PipelineStore {
     }
 
     Object.assign(this.config, config)
+
+    // Re-resolve accessor functions when accessor config changes
+    if (config.xAccessor !== undefined || config.yAccessor !== undefined
+      || config.timeAccessor !== undefined || config.valueAccessor !== undefined) {
+      const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+      const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
+      if (useStreamingDefaults) {
+        this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
+        this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
+      } else {
+        this.getX = resolveAccessor(this.config.xAccessor, "x")
+        this.getY = resolveAccessor(this.config.yAccessor, "y")
+      }
+    }
+    if (config.groupAccessor !== undefined) {
+      this.getGroup = resolveStringAccessor(this.config.groupAccessor)
+    }
+    if (config.categoryAccessor !== undefined) {
+      this.getCategory = resolveStringAccessor(this.config.categoryAccessor)
+    }
+    if (config.sizeAccessor !== undefined) {
+      this.getSize = this.config.sizeAccessor
+        ? resolveAccessor(this.config.sizeAccessor, "size")
+        : undefined
+    }
+    if (config.colorAccessor !== undefined) {
+      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    }
+    if (config.y0Accessor !== undefined) {
+      this.getY0 = this.config.y0Accessor
+        ? resolveAccessor(this.config.y0Accessor, "y0")
+        : undefined
+    }
+    if (config.pointIdAccessor !== undefined) {
+      this.getPointId = resolveStringAccessor(this.config.pointIdAccessor)
+    }
+
     this.needsFullRebuild = true
   }
 }

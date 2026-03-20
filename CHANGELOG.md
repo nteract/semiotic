@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - 2026-03-10
 
-Complete rewrite of Semiotic. Stream-first canvas architecture, 28 HOC chart
+Complete rewrite of Semiotic. Stream-first canvas architecture, 37 HOC chart
 components, full TypeScript, AI tooling, coordinated views, realtime encoding,
 and native server-side rendering.
 
@@ -115,7 +115,7 @@ Components compatibility.
 
 #### Chart Components (HOCs)
 
-28 higher-order chart components that wrap the core Frames with curated,
+37 higher-order chart components that wrap the core Frames with curated,
 simple prop APIs.
 
 **XY Charts** (wrap StreamXYFrame):

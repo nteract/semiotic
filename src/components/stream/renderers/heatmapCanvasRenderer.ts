@@ -57,6 +57,8 @@ function defaultFormat(v: number): string {
 export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const heatNodes = nodes.filter((n): n is HeatcellSceneNode => n.type === "heatcell")
 
+  ctx.save()
+  try {
   for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
     const nodeStyle = (node as any).style
@@ -102,5 +104,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layo
       ctx.textBaseline = "middle"
       ctx.fillText(formatted, centerX, centerY)
     }
+  }
+  } finally {
+    ctx.restore()
   }
 }

@@ -206,7 +206,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,

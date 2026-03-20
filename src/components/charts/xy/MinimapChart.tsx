@@ -10,7 +10,7 @@ import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -465,10 +465,12 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
   )
 
   return (
-    <div className={`minimap-chart${className ? ` ${className}` : ""}`}>
-      {renderBefore ? overviewChart : mainChart}
-      {renderBefore ? mainChart : overviewChart}
-    </div>
+    <SafeRender componentName="MinimapChart" width={width} height={height}>
+      <div className={`minimap-chart${className ? ` ${className}` : ""}`}>
+        {renderBefore ? overviewChart : mainChart}
+        {renderBefore ? mainChart : overviewChart}
+      </div>
+    </SafeRender>
   )
 }
 MinimapChart.displayName = "MinimapChart"

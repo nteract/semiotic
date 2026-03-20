@@ -210,7 +210,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       legend={legend}
       {...(legendInteraction && legendInteraction !== "none" && {

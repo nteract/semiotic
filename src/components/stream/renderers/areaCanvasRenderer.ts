@@ -141,23 +141,18 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Fill
     if (node.fillGradient) {
       // Vertical gradient: topOpacity at the line, bottomOpacity at the baseline
-      const topY = Math.min(...node.topPath.map(p => p[1]))
-      const bottomY = Math.max(...node.bottomPath.map(p => p[1]))
-      const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
-      grad.addColorStop(0, fillColor)
-      grad.addColorStop(1, fillColor)
-      ctx.fillStyle = grad
-      // Use separate alpha stops via two-pass approach:
-      // Canvas gradients interpolate color+alpha together, so we set color stops
-      // with the same color and vary globalAlpha isn't possible per-stop.
-      // Instead, use rgba color stops.
+      let topY = Infinity
+      for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
+      let bottomY = -Infinity
+      for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
+      // Use rgba color stops to vary opacity across the gradient
       const parsed = parseColor(fillColor)
       const topAlpha = node.fillGradient.topOpacity
       const bottomAlpha = node.fillGradient.bottomOpacity
-      const grad2 = ctx.createLinearGradient(0, topY, 0, bottomY)
-      grad2.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${topAlpha})`)
-      grad2.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${bottomAlpha})`)
-      ctx.fillStyle = grad2
+      const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
+      grad.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${topAlpha})`)
+      grad.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${bottomAlpha})`)
+      ctx.fillStyle = grad
       ctx.globalAlpha = nodeOpacity
     } else {
       const fillOpacity = node.style.fillOpacity ?? 0.7

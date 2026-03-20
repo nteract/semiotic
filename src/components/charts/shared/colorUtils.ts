@@ -163,7 +163,8 @@ export function createColorScale(
 
   if (isNumeric && typeof colorScheme === "function") {
     // Use sequential scale for numeric data
-    return (v: any) => colorScheme(Number(v) / Math.max(...uniqueValues.map(Number)))
+    const maxVal = Math.max(...uniqueValues.map(Number))
+    return (v: any) => colorScheme(Number(v) / maxVal)
   } else {
     // Use ordinal scale for categorical data
     const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS

@@ -110,7 +110,8 @@
     "docs:api:json": "typedoc --json docs/build/api/api.json",
     "typescript": "tsc --noEmit",
     "check:schema": "node scripts/check-schema-freshness.js",
-    "prepublishOnly": "node scripts/build.mjs --production"
+    "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production"
   },
   "targets": {
     "website": {

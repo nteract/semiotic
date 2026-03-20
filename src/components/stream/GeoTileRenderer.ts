@@ -80,12 +80,24 @@ export class TileCache {
           oldestKey = key
         }
       }
-      if (oldestKey) this.cache.delete(oldestKey)
-      else break
+      if (oldestKey) {
+        const entry = this.cache.get(oldestKey)
+        if (entry) {
+          entry.img.onload = null
+          entry.img.onerror = null
+          entry.img.src = ""
+        }
+        this.cache.delete(oldestKey)
+      } else break
     }
   }
 
   clear(): void {
+    for (const entry of this.cache.values()) {
+      entry.img.onload = null
+      entry.img.onerror = null
+      entry.img.src = ""
+    }
     this.cache.clear()
   }
 }

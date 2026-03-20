@@ -672,7 +672,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         if (stale !== isStale) setIsStale(stale)
       }
 
-      setAnnotationFrame(f => f + 1)
+      // Only trigger SVG overlay re-render when data or hover state changed
+      if (dirtyRef.current || annotations?.length) {
+        setAnnotationFrame(f => f + 1)
+      }
 
       // Reschedule if animating or tiles still loading
       if (isTransitioning || store.hasActivePulses || needsContinuation) {

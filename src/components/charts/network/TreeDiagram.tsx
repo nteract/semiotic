@@ -167,7 +167,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       nodeLabel={showLabels ? (nodeLabel || nodeIdAccessor) : undefined}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,

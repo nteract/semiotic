@@ -45,7 +45,7 @@ function drawIconBar(ctx: CanvasRenderingContext2D, node: RectSceneNode): void {
   const padding = node.style.iconPadding || 2
 
   // Determine icon size: fit within the bar width
-  const iconSize = Math.min(node.w, node.w) - padding
+  const iconSize = Math.min(node.w, node.h) - padding
   if (iconSize <= 0) return
 
   // Determine if bar is primarily vertical or horizontal
