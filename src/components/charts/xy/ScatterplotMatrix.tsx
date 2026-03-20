@@ -346,10 +346,12 @@ function DiagonalCell({
     // Resolve colorBy to a string field name for category extraction
     const colorField = typeof colorBy === "string" ? colorBy : null
 
-    // Get unique categories (stable order)
+    // Get unique categories (stable order), filtering out null/undefined values
     const categories: string[] = colorField
-      ? [...new Set(data.map((d) => String(d[colorField])))]
+      ? [...new Set(data.map((d) => d[colorField]).filter((v) => v != null).map(String))]
       : []
+    // O(1) category→index lookup
+    const categoryIndexMap = new Map<string, number>(categories.map((cat, i) => [cat, i]))
 
     const counts = new Array(bins).fill(0)
     const selectedCounts = new Array(bins).fill(0)
@@ -367,8 +369,8 @@ function DiagonalCell({
         selectedCounts[idx]++
       }
       if (colorField) {
-        const catIdx = categories.indexOf(String(d[colorField]))
-        if (catIdx >= 0) {
+        const catIdx = categoryIndexMap.get(String(d[colorField]))
+        if (catIdx !== undefined) {
           categoryCounts[idx][catIdx]++
           if (!isActive || activePredicate(d)) {
             selectedCategoryCounts[idx][catIdx]++

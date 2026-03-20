@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -79,19 +79,24 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     legendPosition: legendPositionProp,
   })
 
+  const wrappedPush = useCallback(
+    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    [streaming.wrapPush]
+  )
+  const wrappedPushMany = useCallback(
+    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
+    [streaming.wrapPushMany]
+  )
+
   useImperativeHandle(ref, () => ({
-    push: (point: any) => {
-      streaming.wrapPush((d: any) => frameRef.current?.push(d))(point)
-    },
-    pushMany: (points: any[]) => {
-      streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d))(points)
-    },
+    push: wrappedPush,
+    pushMany: wrappedPushMany,
     clear: () => {
       streaming.resetCategories()
       frameRef.current?.clear()
     },
     getData: () => frameRef.current?.getData() ?? []
-  }), [streaming])
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   const setup = useChartSetup({
     data: safeData,

@@ -2,18 +2,9 @@
 
 import { useRef, useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
-import { getColor } from "./colorUtils"
+import { getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor } from "./types"
 import type { LegendPosition } from "./hooks"
-
-/**
- * Default palette matching PipelineStore.resolveGroupColor —
- * keeps HOC legend colors consistent with frame-rendered bars/slices.
- */
-const DEFAULT_PALETTE = [
-  "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
-  "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"
-]
 
 /**
  * Hook that discovers categories from streamed (pushed) data and builds
@@ -120,7 +111,7 @@ export function useStreamingLegend({
     const categories = orderedRef.current
     if (categories.length === 0) return undefined
 
-    const palette = Array.isArray(colorScheme) ? colorScheme : DEFAULT_PALETTE
+    const palette = Array.isArray(colorScheme) ? colorScheme : STREAMING_PALETTE
     const colorMap = new Map<string, string>()
     for (let i = 0; i < categories.length; i++) {
       colorMap.set(categories[i], palette[i % palette.length])

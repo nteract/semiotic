@@ -13,6 +13,7 @@ import type { Changeset, Style, DecayConfig } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
 import { buildPieScene } from "./ordinalSceneBuilders/pieScene"
@@ -620,7 +621,7 @@ export class OrdinalPipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      : STREAMING_PALETTE
     const color = palette[this._colorSchemeIndex % palette.length]
     this._colorSchemeIndex++
     this._colorSchemeMap.set(key, color)

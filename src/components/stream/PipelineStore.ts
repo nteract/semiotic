@@ -36,6 +36,7 @@ import {
   buildHeatcellNode
 } from "./SceneGraph"
 import { resolveAccessor, resolveRawAccessor, resolveStringAccessor } from "./accessorUtils"
+import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 
@@ -1973,7 +1974,7 @@ export class PipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      : STREAMING_PALETTE
     const colorMap = new Map<string, string>()
     for (let ci = 0; ci < sorted.length; ci++) {
       colorMap.set(sorted[ci], palette[ci % palette.length])
@@ -2046,7 +2047,7 @@ export class PipelineStore {
     }
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      : STREAMING_PALETTE
     // Build/update cache entry for this group
     if (!this._colorMapCache) this._colorMapCache = { key: "", map: new Map() }
     const idx = this._colorMapCache.map.size
