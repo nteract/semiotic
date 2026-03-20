@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.0] - 2026-03-19
+## [3.1.0] - 2026-03-20
 
 ### Added
 
@@ -19,18 +19,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`aria-label` on ChartContainer toolbar buttons** — Export, Fullscreen, and Copy Config buttons have descriptive labels and title attributes.
   - **35 Playwright integration tests** — `integration-tests/accessibility.spec.ts` covering canvas aria-labels, AriaLiveTooltip, legend keyboard traversal, focus rings, SVG title/desc, and ChartContainer toolbar buttons.
 
+- **Streaming legend support** — new `useStreamingLegend` hook discovers categories from pushed data and builds legends dynamically with minimal re-renders via version counter. Integrated into StackedBarChart, PieChart, DonutChart, GroupedBarChart.
+
+- **Streaming regression test suite** — 20+ Playwright integration tests (`streaming-regression.spec.ts`) covering:
+  - Canvas pixel sampling to verify colored fills (saturation > 0.1) across 8 streaming chart types
+  - Legend items appear after push API data arrives (4 chart types)
+  - Area chart tooltip contains numeric values, not dashes
+  - LineChart streaming stability (no "Maximum update depth" errors)
+  - Force graph content centroid within 30% of canvas center
+  - Error-free rendering across all 11 streaming test fixtures
+
 - **Performance: color map cache** — `PipelineStore` caches the category→color map across rebuilds using a sorted category set as cache key. Skips rebuild when categories are unchanged. (`PipelineStore.ts`)
 - **Performance: stacked area cache** — `PipelineStore` caches stacked area cumulative sums using a `buffer.size + ingestVersion` hash. Skips expensive groupData + cumulative sum computation when data is unchanged. (`PipelineStore.ts`)
 
 ### Fixed
 
-- **`tooltip={false}` now correctly disables tooltips** on all 22 remaining HOCs (LineChart, AreaChart, StackedAreaChart, Scatterplot, BubbleChart, Heatmap, ConnectedScatterplot, BarChart, StackedBarChart, GroupedBarChart, DonutChart, PieChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, RidgelinePlot, ProportionalSymbolMap, ChoroplethMap, FlowMap, DistanceCartogram). The pattern `normalizeTooltip(tooltip) || defaultTooltipContent` was replaced with an explicit `tooltip === false ? undefined : ...` check.
+#### Streaming Color Pipeline (root cause)
+
+- **Grey fills on push API charts** — When using `ref.current.push()`, HOC charts passed undefined color scales to style functions, causing grey fallback fills. Fixed end-to-end:
+  - HOC `pieceStyle`/`pointStyle`/`lineStyle` functions now omit fill/stroke when colorScale is unavailable
+  - `OrdinalPipelineStore.resolvePieceStyle` fills in from the frame's color scheme when HOC returns no fill
+  - `PipelineStore.resolveLineStyle`/`resolveAreaStyle`/point scene builder do the same for XY charts
+  - New `resolveGroupColor` method provides centralized `STREAMING_PALETTE` assignment for streaming groups
+  - Affected charts: StackedBarChart, PieChart, DonutChart, GroupedBarChart, BubbleChart, StackedAreaChart, AreaChart, LineChart, Scatterplot, QuadrantChart, ChordDiagram
+
+#### Runtime Errors
+
+- **LineChart infinite re-render loop** — circular dependency between `useEffect` → `setSegmentAwareStyle` → `baseLineStyle` → `colorScale` → `statisticalResult`. Fixed by guarding statistical effect to only run when forecast/anomaly is present and deriving `effectiveLineStyle` without unnecessary state.
+- **`createColorScale` crash on undefined data** — added null guards (`d?.` + `.filter(v => v != null)`) so push API charts with sparse data don't throw.
+- **`OrdinalSVGOverlay` duplicate React keys** — keys now include category/group for uniqueness across stacked/grouped layouts.
+
+#### Tooltips
+
+- **Area/StackedArea tooltips showing "-"** — `hitTestAreaPath` now extracts the specific data point at the hover index (like `hitTestLine` does) instead of returning the entire data array.
+- **Ordinal frame tooltips** — default tooltip now shows category + value using `__oAccessor`/`__rAccessor` metadata.
+- **Geo chart tooltips** — ChoroplethMap shows country names (not numeric IDs), ProportionalSymbolMap shows formatted metrics with labels, FlowMap shows source → target with values.
+
+#### Layout & Interaction
+
+- **Force graph centering** — added `forceCenter` to simulation, strengthened `forceX`/`forceY`, clamped node positions to canvas bounds. Fixed `finalizeLayout` overwriting force-computed positions from stale bounding boxes during streaming warm-starts.
+- **Streaming force refresh** — force simulation now runs on topology changes during push API streaming.
+- **FIFO category ordering** — streaming ordinal charts preserve insertion order instead of re-sorting by value (fixes violin/histogram column flicker).
+- **Edge hit areas** — expanded to 5px minimum tolerance across XY lines, network edges (bezier + path), and geo lines. Added `pointToSegmentDist` for accurate perpendicular distance. Line hit tolerance now scales with stroke width.
+- **Network edge ctx.lineWidth leak** — `hitTestBezierEdge` and `hitTestPathEdge` now save/restore `ctx.lineWidth` around `isPointInStroke` calls.
+- **Sankey crossing reduction** — added barycenter-based initial node ordering before iterative relaxation.
+- **QuadrantChart streaming** — fixed quadrant backgrounds disappearing after first point; points now auto-color by quadrant when no `colorBy` provided.
+- **Anti-meridian line handling** — geo lines that wrap across the projection edge are split into segments with smooth opacity fades.
+- **Distance cartogram centering** — center node is pinned to viewport center during streaming.
+- **Orthographic drag jank** — pointer-move rotations now coalesce via `pendingRotationRef`, applying once per rAF frame.
+
+#### Visual / Dark Mode
+
+- **Orbit diagram** — ring/connecting lines changed from `currentColor` (invisible on canvas) to `rgba(128,128,128,0.35)`. Root nodes use scheme color instead of grey depth palette.
+- **Treemap/CirclePack labels** — luminance-based contrast text color (white on dark fills, dark on light fills). Treemap parent labels positioned at top-left of rectangle.
+- **ScatterplotMatrix diagonal histograms** — now colored by category with O(1) Map lookups instead of grey fills with O(n) `.indexOf()`.
+- **Dark mode fixes** — serialization page text contrast, streaming system model background, candlestick wick color, uncertainty tooltip background.
+
+#### Bug Fixes
+
+- **`tooltip={false}` now correctly disables tooltips** on all 22 remaining HOCs. The pattern `normalizeTooltip(tooltip) || defaultTooltipContent` was replaced with an explicit `tooltip === false ? undefined : ...` check.
 - **`normalizeTooltip` unwrap heuristic tightened** — the HoverData unwrap now only triggers when the object has `.type === "node" | "edge"` AND `.data`, preventing false unwraps when a user's datum has a `.data` property.
 - **ForceDirectedGraph empty state** — `renderEmptyState` now checks `nodes` instead of `edges`, so a graph with nodes but no edges no longer shows the empty state.
 - **ChoroplethMap validation** — added GeoJSON-aware validation that checks for a `geometry` property on area features, replacing the inapplicable `validateArrayData` check.
 - **LineChart validation** — `validateArrayData` now receives the raw `data` prop instead of post-processed `safeData`, so push API mode (`data` undefined) correctly skips validation instead of triggering "No data provided".
 - **QuadrantChart `sizeDomain` NaN** — `sizeBy` values are now filtered to finite numbers before computing min/max, preventing NaN propagation to point radius.
-- **Recipe source code** — `RecipeLayout` now clarifies that displayed source code is abbreviated and points to the full runnable source in `docs/src/examples/recipes/`.
+
+#### Documentation (25+ fixes)
+
+- Home page: meaningful tooltips on bar chart, bubble chart, network graph (degree centrality)
+- Streaming sankey pastel colors, chord multi-color fix
+- Highlight hover uses distinct red line, more distinctive custom theme
+- Top/bottom legend examples, chart container year controls work
+- Responsive frame data fix, styling offset fix, linked dashboard color consistency
+- Candlestick dark mode, uncertainty tooltip dark mode, isotype chart person icons
+- Radar/isotype duplicate key fix, network explorer `.data` wrapper access
+- Rosling bubble annotations/extent/tooltip, benchmark log scale fix, forecast sparkline card
+- Force graph sparse preset parameters, choropleth playground sizing
+- DocumentFrame: added 100+ missing prop names to `processNodes`
+- Tile map: production provider documentation
 
 ## [3.0.2] - 2026-03-16
 
