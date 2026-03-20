@@ -475,11 +475,11 @@ const galleryItems = [
             const nodeId = d.id || d.data?.id
             const degree = degreeCentrality[nodeId] || 0
             return (
-              <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+              <>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{nodeId}</div>
                 <div>Group: {d.group || d.data?.group}</div>
                 <div>Degree centrality: {degree}</div>
-              </div>
+              </>
             )
           }}
         />
