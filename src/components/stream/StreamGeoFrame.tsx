@@ -257,6 +257,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }
     const rafRef = useRef(0)
     const dirtyRef = useRef(true)
+    const prevAnnotationsRef = useRef(annotations)
     const renderFnRef = useRef<() => void>(() => {})
 
     // Zoom state
@@ -672,8 +673,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         if (stale !== isStale) setIsStale(stale)
       }
 
-      // Only trigger SVG overlay re-render when data or hover state changed
-      if (dirtyRef.current || annotations?.length) {
+      // Only trigger SVG overlay re-render when data or hover/annotation state changed
+      const annotationsChanged = annotations !== prevAnnotationsRef.current
+      if (annotationsChanged) prevAnnotationsRef.current = annotations
+      if (dirtyRef.current || annotationsChanged) {
         setAnnotationFrame(f => f + 1)
       }
 

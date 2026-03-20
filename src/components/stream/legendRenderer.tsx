@@ -16,6 +16,7 @@ export interface LegendRenderConfig {
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  legendInteraction?: string
 }
 
 /**
@@ -34,6 +35,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
+    legendInteraction,
   } = config
 
   if (!legend) return null
@@ -70,6 +72,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
             customClickBehavior={legendClickBehavior}
             highlightedCategory={legendHighlightedCategory}
             isolatedCategories={legendIsolatedCategories}
+            legendInteraction={legendInteraction}
           />
         : (legend as ReactNode)}
     </g>

@@ -117,7 +117,7 @@ function LinkedLegend({
   const allCategories = entries.map(([label]) => label)
   const items = entries.map(([label, color]) => ({ label, color }))
   const legendGroups: LegendGroup[] = [{
-    styleFn: (d: { color: string }) => ({ fill: d.color, stroke: d.color }),
+    styleFn: (d) => ({ fill: d.color || "#333", stroke: d.color || "#333" }),
     type: "fill" as const,
     items,
     label: ""

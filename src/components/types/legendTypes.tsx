@@ -6,7 +6,7 @@ export type ItemType = SupportedLegendGlyphs | ((item: LegendItem) => ReactEleme
 
 export interface LegendItem {
   label: string
-  color: string
+  color?: string
   [key: string]: unknown
 }
 

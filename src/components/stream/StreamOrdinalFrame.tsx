@@ -549,7 +549,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         canvas.style.width = `${size[0]}px`
         canvas.style.height = `${size[1]}px`
       }
-      ctx.scale(dpr, dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       // Clear
       ctx.clearRect(0, 0, size[0], size[1])

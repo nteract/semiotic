@@ -73,7 +73,7 @@ const renderLegendGroupVertical = (
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
-  const useIsolateAria = legendInteraction === "isolate"
+  const useIsolateAria = legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)
   const ROW_HEIGHT = 22
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
@@ -172,7 +172,7 @@ const renderLegendGroupHorizontal = (
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
-  const useIsolateAria = legendInteraction === "isolate"
+  const useIsolateAria = legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
