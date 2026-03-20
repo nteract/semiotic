@@ -1988,8 +1988,9 @@ export class PipelineStore {
     if (typeof ls === "function") {
       const style = ls(sampleDatum || {}, group)
       // When HOC returns no stroke (push API, colorScale unavailable),
-      // fill in from the frame's color map
-      if (style && !style.stroke && this.getColor) {
+      // fill in from the frame's palette. Use group name for color assignment
+      // even when colorAccessor is not set (e.g. StackedAreaChart streaming).
+      if (style && !style.stroke && group) {
         const color = this.resolveGroupColor(group)
         if (color) return { ...style, stroke: color }
       }
@@ -2011,8 +2012,9 @@ export class PipelineStore {
   private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
     if (this.config.areaStyle) {
       const style = this.config.areaStyle(sampleDatum || {})
-      // Fill in colors from frame's palette when HOC has no color scale (push API)
-      if (style && !style.fill && this.getColor) {
+      // Fill in colors from frame's palette when HOC has no color scale (push API).
+      // Use group name for assignment even without colorAccessor.
+      if (style && !style.fill && group) {
         const color = this.resolveGroupColor(group)
         if (color) return { ...style, fill: color, stroke: style.stroke || color }
       }
@@ -2022,7 +2024,7 @@ export class PipelineStore {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
       const style = ls(sampleDatum || {}, group)
-      if (style && !style.fill && this.getColor) {
+      if (style && !style.fill && group) {
         const color = this.resolveGroupColor(group)
         if (color) return { ...style, fill: color, stroke: style.stroke || color }
       }

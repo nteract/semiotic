@@ -41,6 +41,17 @@ export function useColorScale(
   const categoryColors = useCategoryColors()
   return useMemo(() => {
     if (!colorBy) return undefined
+    // When data is empty (push API mode), return undefined so the pipeline's
+    // STREAMING_PALETTE fallback handles coloring. Building a scale from empty
+    // data creates an ordinal scale with an implicit domain that can intercept
+    // the pipeline's color assignment.
+    if (data.length === 0) {
+      // Still use CategoryColorProvider if available — it has stable colors
+      if (categoryColors && Object.keys(categoryColors).length > 0) {
+        return (v: string) => categoryColors[v] || "#999"
+      }
+      return undefined
+    }
     // When colorBy is a function, derive categories from data and build an ordinal scale
     if (typeof colorBy === "function") {
       const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
