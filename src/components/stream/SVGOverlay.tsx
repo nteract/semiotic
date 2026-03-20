@@ -4,9 +4,8 @@ import { useMemo, useRef } from "react"
 import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import Legend, { GradientLegend } from "../Legend"
 import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
-import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
+import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 
@@ -628,43 +627,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
       )}
 
       {/* Legend */}
-      {legend && (() => {
-        const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
-        const hasTitle = Boolean(title)
-        let tx: number, ty: number
-        if (legendPosition === "left") {
-          tx = 4; ty = margin.top
-        } else if (legendPosition === "top") {
-          tx = 0; ty = hasTitle ? 32 : 8
-        } else if (legendPosition === "bottom") {
-          tx = 0; ty = totalHeight - margin.bottom + 50
-        } else {
-          // right (default)
-          tx = totalWidth - margin.right + 10; ty = margin.top
-        }
-        return (
-          <g transform={`translate(${tx}, ${ty})`}>
-            {isGradientLegendConfig(legend)
-              ? <GradientLegend
-                  config={legend.gradient}
-                  orientation={isHorizontal ? "horizontal" : "vertical"}
-                  width={isHorizontal ? totalWidth : 100}
-                />
-              : isLegendConfig(legend)
-              ? <Legend
-                  legendGroups={legend.legendGroups}
-                  title=""
-                  width={isHorizontal ? totalWidth : 100}
-                  orientation={isHorizontal ? "horizontal" : "vertical"}
-                  customHoverBehavior={legendHoverBehavior}
-                  customClickBehavior={legendClickBehavior}
-                  highlightedCategory={legendHighlightedCategory}
-                  isolatedCategories={legendIsolatedCategories}
-                />
-              : (legend as ReactNode)}
-          </g>
-        )
-      })()}
+      {renderLegendFromConfig({
+        legend, totalWidth, totalHeight, margin, legendPosition, title,
+        legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
+      })}
     </svg>
   )
 }

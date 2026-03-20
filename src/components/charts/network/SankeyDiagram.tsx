@@ -220,7 +220,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip ? (d: any) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       customClickBehavior={onObservation ? customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {

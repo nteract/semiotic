@@ -17,8 +17,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode, ChartAccessor } from "../shared/types"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 
 export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -95,6 +97,8 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
+  /** Consume a named selection — dims unselected elements */
+  selection?: SelectionConfig
   /** Configurable opacity decay for older data */
   decay?: DecayConfig
   /** Flash effect on newly inserted data */
@@ -103,6 +107,18 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   staleness?: StalenessConfig
   /** Smooth position interpolation on data change */
   transition?: TransitionConfig
+  /** Show a loading skeleton placeholder */
+  loading?: boolean
+  /** Custom content to render when data is empty. Set to `false` to disable empty state. */
+  emptyContent?: ReactNode | false
+  /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
+  emphasis?: "primary" | "secondary"
+  /** Show a legend */
+  showLegend?: boolean
+  /** Legend position */
+  legendPosition?: LegendPosition
+  /** Legend interaction mode */
+  legendInteraction?: LegendInteractionMode
 }
 
 /**
@@ -174,12 +190,17 @@ export const RealtimeTemporalHistogram = forwardRef(
       tickFormatTime,
       tickFormatValue,
       linkedHover,
+      selection,
       decay,
       pulse,
       staleness,
       transition,
       onObservation,
-      chartId
+      chartId,
+      loading,
+      emptyContent,
+      emphasis,
+      legendPosition: legendPositionProp,
     } = props
 
     const showAxes = resolved.showAxes
@@ -192,7 +213,7 @@ export const RealtimeTemporalHistogram = forwardRef(
 
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      linkedHover, unwrapData: true,
+      selection, linkedHover, unwrapData: true,
       onObservation, chartType: "RealtimeTemporalHistogram", chartId
     })
 
@@ -211,11 +232,21 @@ export const RealtimeTemporalHistogram = forwardRef(
       getData: () => frameRef.current?.getData() ?? []
     }))
 
+    // ── Loading / empty state ──
+    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
+    if (loadingEl) return loadingEl
+    const emptyEl = renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    if (emptyEl) return emptyEl
+
     const barStyle: BarStyle = {}
     if (fill != null) barStyle.fill = fill
     if (stroke != null) barStyle.stroke = stroke
     if (strokeWidth != null) barStyle.strokeWidth = strokeWidth
     if (gap != null) barStyle.gap = gap
+
+    const resolvedClassName = emphasis
+      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+      : className
 
     return (
       <StreamXYFrame
@@ -224,7 +255,7 @@ export const RealtimeTemporalHistogram = forwardRef(
         runtimeMode="streaming"
         size={resolvedSize}
         margin={margin}
-        className={className}
+        className={resolvedClassName}
         arrowOfTime={arrowOfTime}
         windowMode={windowMode}
         windowSize={windowSize}
@@ -251,6 +282,7 @@ export const RealtimeTemporalHistogram = forwardRef(
         pulse={pulse}
         staleness={staleness}
         transition={transition}
+        legendPosition={legendPositionProp}
       />
     )
   }

@@ -2,23 +2,10 @@ import { vi, describe, it, expect } from "vitest"
 import { wedgeCanvasRenderer } from "./wedgeCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
 import type { WedgeSceneNode, OrdinalSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
+import { createMockCanvasContext } from "../../../test-utils/canvasMock"
 
 function createMockCtx() {
-  return {
-    beginPath: vi.fn(),
-    arc: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    fill: vi.fn(),
-    stroke: vi.fn(),
-    closePath: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    fillStyle: "",
-    strokeStyle: "",
-    globalAlpha: 1,
-    lineWidth: 1
-  } as unknown as CanvasRenderingContext2D
+  return createMockCanvasContext() as unknown as CanvasRenderingContext2D
 }
 
 function makeScales(): OrdinalScales {

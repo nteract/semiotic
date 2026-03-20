@@ -237,11 +237,11 @@ export class NetworkPipelineStore {
     let topologyChanged = false
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
+    this._decaySortedNodes = null
 
     if (!this.nodes.has(source)) {
       this.nodes.set(source, createNode(source))
       this.nodeTimestamps.set(source, now)
-      this._decaySortedNodes = null
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }
@@ -249,7 +249,6 @@ export class NetworkPipelineStore {
     if (!this.nodes.has(target)) {
       this.nodes.set(target, createNode(target))
       this.nodeTimestamps.set(target, now)
-      this._decaySortedNodes = null
       this.tension += this.tensionConfig.newNode
       topologyChanged = true
     }

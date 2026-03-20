@@ -8,7 +8,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -36,6 +36,7 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
   enableHover?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "nodes" | "edges" | "size">>
 }
@@ -90,6 +91,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     loading,
     emptyContent,
     legendInteraction,
+    legendPosition: legendPositionProp,
   } = props
 
   const width = resolved.width
@@ -157,11 +159,12 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   }, [showLabels, nodeLabel])
 
   // Legend & margin
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeNodes,
     colorBy,
     colorScale,
     showLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: resolved.marginDefaults
   })
@@ -210,9 +213,10 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
       legend={legend}
+      legendPosition={legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

@@ -4,16 +4,17 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import { useSortedData, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface DotPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -32,6 +33,7 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   showGrid?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -65,7 +67,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -77,60 +80,47 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = data || []
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
-    selection, linkedHover,
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
-    onObservation, chartType: "DotPlot", chartId
+    onObservation,
+    chartType: "DotPlot",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
   })
 
+  if (setup.earlyReturn) return setup.earlyReturn
+
   const sortedData = useSortedData(safeData, sort, valueAccessor)
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
       return baseStyle
     }
-  }, [colorBy, colorScale, dotRadius])
+  }, [colorBy, setup.colorScale, dotRadius])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, effectiveSelectionHook, selection),
-    [basePieceStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
+    [basePieceStyle, setup.effectiveSelectionHook, selection]
   )
-
-  const { legend, margin } = useChartLegendAndMargin({
-    data: sortedData, colorBy, colorScale, showLegend, userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({ categoryAccessor, valueAccessor }),
@@ -153,7 +143,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     barPadding: categoryPadding,
     enableHover,
     showAxes: resolved.showAxes,
@@ -162,19 +152,13 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     rFormat: valueFormat,
     showGrid,
     oSort: sort,
-    ...(legend && { legend }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

@@ -2,30 +2,16 @@
 import * as React from "react"
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
-  useState,
-  useEffect,
-  useLayoutEffect
+  useRef,
+  useSyncExternalStore
 } from "react"
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect
 
 interface Source<T> {
   getState(): T
   subscribe: (cb: () => void) => () => void
-}
-
-function useSyncExternalStoreShim<T>(
-  subscribe: (cb: () => void) => () => void,
-  getSnapshot: () => T
-): T {
-  const [value, setValue] = useState<T>(getSnapshot)
-  useIsomorphicLayoutEffect(() => {
-    return subscribe(() => setValue(getSnapshot))
-  }, [subscribe])
-  return value
 }
 
 export function createStore<T>(
@@ -41,8 +27,17 @@ export function createStore<T>(
 
   const useSelector = <R,>(selector: (state: T) => R): R => {
     const source = useContext(Ctx) ?? fallbackSource
-    const getSnapshot = () => selector(source.getState())
-    return useSyncExternalStoreShim(source.subscribe, getSnapshot)
+    const selectorRef = useRef(selector)
+    selectorRef.current = selector
+    const getSnapshot = useCallback(
+      () => selectorRef.current(source.getState()),
+      [source]
+    )
+    const getServerSnapshot = useCallback(
+      () => selectorRef.current(source.getState()),
+      [source]
+    )
+    return useSyncExternalStore(source.subscribe, getSnapshot, getServerSnapshot)
   }
 
   return [Provider, useSelector]

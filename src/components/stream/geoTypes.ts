@@ -75,6 +75,8 @@ export interface GeoAreaSceneNode {
   datum: any
   group?: string
   interactive?: boolean
+  /** Lazily-cached Path2D parsed from pathData (avoids re-parsing on every hit test) */
+  _cachedPath2D?: Path2D
   _decayOpacity?: number
   _pulseIntensity?: number
   _pulseColor?: string

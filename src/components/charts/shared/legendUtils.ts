@@ -1,4 +1,5 @@
 import type { Accessor } from "./types"
+import type { LegendItem } from "../../types/legendTypes"
 
 /**
  * Create a legend configuration for HOC components
@@ -60,8 +61,9 @@ export function createLegend({
   return {
     legendGroups: [
       {
-        styleFn: (d: { color: string }) => {
-          const style: Record<string, string | number> = { fill: d.color, stroke: d.color }
+        styleFn: (d: LegendItem) => {
+          const c = d.color || "#333"
+          const style: Record<string, string | number> = { fill: c, stroke: c }
           if (strokeColor !== undefined) {
             style.stroke = strokeColor
           }

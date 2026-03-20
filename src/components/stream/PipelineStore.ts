@@ -54,6 +54,7 @@ export interface PipelineConfig {
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime
   extentPadding: number
+  maxCapacity?: number
 
   // Accessors
   xAccessor?: string | ((d: any) => number)
@@ -178,6 +179,12 @@ export class PipelineStore {
   /** Monotonic counter incremented on each ingest — used as part of cache keys */
   private _ingestVersion = 0
 
+  // ── Buffer array caching ────────────────────────────────────────────
+  /** Cached materialized array from buffer.toArray() — only rebuilt when buffer changes */
+  private _bufferArrayCache: Record<string, any>[] | null = null
+  /** True when the buffer has been mutated since last toArray() call */
+  private _bufferDirty = true
+
   // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
   private lastLayout: StreamLayout | null = null
@@ -248,6 +255,7 @@ export class PipelineStore {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
     this.needsFullRebuild = true
+    this._bufferDirty = true
     this._ingestVersion++
 
     if (changeset.bounded) {
@@ -284,9 +292,12 @@ export class PipelineStore {
       // Streaming append
       for (const d of changeset.inserts) {
         if (this.config.windowMode === "growing" && this.buffer.full) {
-          this.growingCap *= 2
-          this.buffer.resize(this.growingCap)
-          if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
+          const maxCap = this.config.maxCapacity || 1_000_000
+          if (this.growingCap < maxCap) {
+            this.growingCap = Math.min(this.growingCap * 2, maxCap)
+            this.buffer.resize(this.growingCap)
+            if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
+          }
         }
 
         const evicted = this.buffer.push(d)
@@ -351,8 +362,8 @@ export class PipelineStore {
       }
     }
 
-    // Materialize buffer once for all downstream consumers
-    const bufferArray = buffer.toArray()
+    // Materialize buffer once for all downstream consumers (cached when unchanged)
+    const bufferArray = this.getBufferArray()
 
     // Resolve domains — merge user-specified extents with data extents
     const dataXDomain = this.xExtent.extent
@@ -589,16 +600,23 @@ export class PipelineStore {
       }
     }
 
-    // Rebuild scales with new pixel ranges (same data domain)
+    // Rebuild scales with new pixel ranges (same data domain), preserving scale type
     const xDomain = this.scales!.x.domain() as [number, number]
     const yDomain = this.scales!.y.domain() as [number, number]
     const oldXRange = this.scales!.x.range() as [number, number]
     const oldYRange = this.scales!.y.range() as [number, number]
+    const remapScale = (type: "linear" | "log" | undefined, domain: [number, number], range: [number, number]) => {
+      if (type === "log") {
+        const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
+        return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+      }
+      return scaleLinear().domain(domain).range(range)
+    }
     this.scales = {
-      x: scaleLinear().domain(xDomain).range([
+      x: remapScale(this.config.xScaleType, xDomain, [
         oldXRange[0] * wRatio, oldXRange[1] * wRatio
       ]),
-      y: scaleLinear().domain(yDomain).range([
+      y: remapScale(this.config.yScaleType, yDomain, [
         oldYRange[0] * hRatio, oldYRange[1] * hRatio
       ])
     }
@@ -732,8 +750,12 @@ export class PipelineStore {
     if (this.getSize && !this.config.pointStyle) {
       const sizes = data.map(d => this.getSize!(d)).filter(s => s != null && !Number.isNaN(s))
       if (sizes.length > 0) {
-        const minSize = Math.min(...sizes)
-        const maxSize = Math.max(...sizes)
+        let minSize = Infinity
+        let maxSize = -Infinity
+        for (const s of sizes) {
+          if (s < minSize) minSize = s
+          if (s > maxSize) maxSize = s
+        }
         sizeScale = (s: number) => {
           if (minSize === maxSize) return (sizeRange[0] + sizeRange[1]) / 2
           return sizeRange[0] + ((s - minSize) / (maxSize - minSize)) * (sizeRange[1] - sizeRange[0])
@@ -810,7 +832,7 @@ export class PipelineStore {
     // Build value lookup
     const valueMap = new Map<string, { val: number; datum: any }>()
     for (const d of data) {
-      const key = JSON.stringify([getRawX(d), getRawY(d)])
+      const key = `${getRawX(d)}\0${getRawY(d)}`
       valueMap.set(key, { val: getVal(d), datum: d })
     }
 
@@ -836,7 +858,7 @@ export class PipelineStore {
 
     for (let xi = 0; xi < xValues.length; xi++) {
       for (let yi = 0; yi < yValues.length; yi++) {
-        const key = JSON.stringify([xValues[xi], yValues[yi]])
+        const key = `${xValues[xi]}\0${yValues[yi]}`
         const entry = valueMap.get(key)
         if (!entry) continue
 
@@ -1369,10 +1391,10 @@ export class PipelineStore {
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
       if (node.type === "heatcell") {
-        ;(node as any).style = { opacity: decayOpacity }
+        node.style = { opacity: decayOpacity }
       } else if (node.type === "candlestick") {
         // Candlestick doesn't have a style object — store opacity for renderer
-        ;(node as any)._decayOpacity = decayOpacity
+        node._decayOpacity = decayOpacity
       } else {
         const baseOpacity = node.style?.opacity ?? 1
         node.style = { ...node.style, opacity: baseOpacity * decayOpacity }
@@ -1439,9 +1461,9 @@ export class PipelineStore {
       if (insertTime == null) continue
       const intensity = this.computePulseIntensity(insertTime, now)
       if (intensity > 0) {
-        (node as any)._pulseIntensity = intensity
-        ;(node as any)._pulseColor = pulseColor
-        ;(node as any)._pulseGlowRadius = glowRadius
+        node._pulseIntensity = intensity
+        node._pulseColor = pulseColor
+        node._pulseGlowRadius = glowRadius
       }
     }
   }
@@ -1474,7 +1496,7 @@ export class PipelineStore {
       } else if (node.type === "rect") {
         this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
       } else if (node.type === "heatcell") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: (node as any).style?.opacity })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
       } else if (node.type === "candlestick") {
         this.prevPositionMap.set(key, { x: node.x, y: node.openY })
       } else if (node.type === "line") {
@@ -1494,8 +1516,25 @@ export class PipelineStore {
    */
   private getNodeIdentity(node: SceneNode, index: number): string | null {
     switch (node.type) {
-      case "point":
+      case "point": {
+        // Use explicit pointId (from pointIdAccessor) if available
+        if (node.pointId) return `p:${node.pointId}`
+        // In streaming mode, derive stable key from datum values so
+        // ring-buffer index shifts don't cause transitions to interpolate
+        // between unrelated data points. In bounded mode, index-based keys
+        // are correct because full data replacement preserves position order.
+        if (this.config.runtimeMode === "streaming" && node.datum) {
+          if (this.getCategory) {
+            const cat = this.getCategory(node.datum)
+            const val = this.getY(node.datum)
+            return `p:${cat}:${val}`
+          }
+          const xVal = this.getX(node.datum)
+          const yVal = this.getY(node.datum)
+          if (xVal != null && yVal != null) return `p:${xVal}:${yVal}`
+        }
         return `p:${index}`
+      }
       case "rect":
         return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
       case "heatcell":
@@ -1537,7 +1576,7 @@ export class PipelineStore {
 
       // Store stable key on the node so advanceTransition can use it
       // even after exit nodes are prepended to the scene
-      ;(node as any)._transitionKey = key
+      node._transitionKey = key
 
       // Handle line/area path interpolation setup
       if (node.type === "line" || node.type === "area") {
@@ -1546,8 +1585,8 @@ export class PipelineStore {
           matchedPrevPathKeys.add(key)
           if (node.type === "line" && prevPath.path && prevPath.path.length === node.path.length) {
             // Store target path and set current to prev for interpolation
-            ;(node as any)._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._prevPath = prevPath.path
+            node._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
+            node._prevPath = prevPath.path
             // Start from prev positions
             for (let j = 0; j < node.path.length; j++) {
               node.path[j] = [prevPath.path[j][0], prevPath.path[j][1]]
@@ -1556,10 +1595,10 @@ export class PipelineStore {
           } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath
             && prevPath.topPath.length === node.topPath.length
             && prevPath.bottomPath.length === node.bottomPath.length) {
-            ;(node as any)._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._prevTopPath = prevPath.topPath
-            ;(node as any)._prevBottomPath = prevPath.bottomPath
+            node._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
+            node._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
+            node._prevTopPath = prevPath.topPath
+            node._prevBottomPath = prevPath.bottomPath
             for (let j = 0; j < node.topPath.length; j++) {
               node.topPath[j] = [prevPath.topPath[j][0], prevPath.topPath[j][1]]
             }
@@ -1625,7 +1664,7 @@ export class PipelineStore {
         if (prev) {
           matchedPrevKeys.add(key)
           const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-          node._targetOpacity = (node as any).style?.opacity ?? 1
+          node._targetOpacity = node.style?.opacity ?? 1
           if (prev.x !== target.x || prev.y !== target.y) {
             node._targetX = target.x
             node._targetY = target.y
@@ -1638,8 +1677,8 @@ export class PipelineStore {
             hasChanges = true
           }
         } else {
-          node._targetOpacity = (node as any).style?.opacity ?? 1
-          ;(node as any).style = { ...((node as any).style || {}), opacity: 0 }
+          node._targetOpacity = node.style?.opacity ?? 1
+          node.style = { ...(node.style || {}), opacity: 0 }
           hasChanges = true
         }
       }
@@ -1650,21 +1689,21 @@ export class PipelineStore {
       if (matchedPrevPathKeys.has(key)) continue
       // Exiting line/area — keep in scene with fade-out
       if (key.startsWith("l:") && prevPath.path) {
-        const exitNode = {
+        const exitNode: LineSceneNode = {
           type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
           group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key
-        } as any
+          _targetOpacity: 0, _transitionKey: key, datum: null
+        }
         this.exitNodes.push(exitNode)
         hasChanges = true
       } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
-        const exitNode = {
+        const exitNode: AreaSceneNode = {
           type: "area",
           topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
           bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
           group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key
-        } as any
+          _targetOpacity: 0, _transitionKey: key, datum: null
+        }
         this.exitNodes.push(exitNode)
         hasChanges = true
       }
@@ -1723,7 +1762,7 @@ export class PipelineStore {
 
     for (const node of this.scene) {
       // Use stable key stored during startTransition (immune to index shifts from exit nodes)
-      const key = (node as any)._transitionKey as string | undefined
+      const key = node._transitionKey
       if (node.type === "point") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
@@ -1758,7 +1797,7 @@ export class PipelineStore {
         if (node._targetOpacity !== undefined) {
           const prev = key ? this.prevPositionMap.get(key) : undefined
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
-          ;(node as any).style = { ...((node as any).style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
+          node.style = { ...(node.style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         if (node._targetX === undefined) continue
         if (!key) continue
@@ -1771,13 +1810,13 @@ export class PipelineStore {
       } else if (node.type === "line") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
-          const isEntering = (node as any)._prevPath === undefined && node._targetOpacity > 0
+          const isEntering = node._prevPath === undefined && node._targetOpacity > 0
           const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
           node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         // Interpolate path coordinates
-        const prevPath = (node as any)._prevPath as [number, number][] | undefined
-        const targetPath = (node as any)._targetPath as [number, number][] | undefined
+        const prevPath = node._prevPath
+        const targetPath = node._targetPath
         if (prevPath && targetPath && prevPath.length === node.path.length) {
           for (let j = 0; j < node.path.length; j++) {
             node.path[j][0] = lerp(prevPath[j][0], targetPath[j][0], t)
@@ -1786,14 +1825,14 @@ export class PipelineStore {
         }
       } else if (node.type === "area") {
         if (node._targetOpacity !== undefined) {
-          const isEntering = (node as any)._prevTopPath === undefined && node._targetOpacity > 0
+          const isEntering = node._prevTopPath === undefined && node._targetOpacity > 0
           const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
           node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
-        const prevTop = (node as any)._prevTopPath as [number, number][] | undefined
-        const prevBottom = (node as any)._prevBottomPath as [number, number][] | undefined
-        const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
-        const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+        const prevTop = node._prevTopPath
+        const prevBottom = node._prevBottomPath
+        const targetTop = node._targetTopPath
+        const targetBottom = node._targetBottomPath
         if (prevTop && targetTop && prevTop.length === node.topPath.length) {
           for (let j = 0; j < node.topPath.length; j++) {
             node.topPath[j][0] = lerp(prevTop[j][0], targetTop[j][0], t)
@@ -1817,7 +1856,7 @@ export class PipelineStore {
           if (node.type === "line" || node.type === "area") {
             node.style = { ...node.style, opacity: finalOpacity === 0 ? 0 : finalOpacity }
           } else {
-            (node as any).style = { ...((node as any).style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
+            node.style = { ...(node.style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
           }
           node._targetOpacity = undefined
         }
@@ -1850,17 +1889,17 @@ export class PipelineStore {
           node._targetW = undefined
           node._targetH = undefined
         } else if (node.type === "line") {
-          const targetPath = (node as any)._targetPath as [number, number][] | undefined
+          const targetPath = node._targetPath
           if (targetPath) {
             for (let j = 0; j < node.path.length; j++) {
               node.path[j] = targetPath[j]
             }
           }
-          ;(node as any)._prevPath = undefined
-          ;(node as any)._targetPath = undefined
+          node._prevPath = undefined
+          node._targetPath = undefined
         } else if (node.type === "area") {
-          const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
-          const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+          const targetTop = node._targetTopPath
+          const targetBottom = node._targetBottomPath
           if (targetTop) {
             for (let j = 0; j < node.topPath.length; j++) {
               node.topPath[j] = targetTop[j]
@@ -1871,10 +1910,10 @@ export class PipelineStore {
               node.bottomPath[j] = targetBottom[j]
             }
           }
-          ;(node as any)._prevTopPath = undefined
-          ;(node as any)._prevBottomPath = undefined
-          ;(node as any)._targetTopPath = undefined
-          ;(node as any)._targetBottomPath = undefined
+          node._prevTopPath = undefined
+          node._prevBottomPath = undefined
+          node._targetTopPath = undefined
+          node._targetBottomPath = undefined
         }
       }
 
@@ -1975,10 +2014,26 @@ export class PipelineStore {
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
   }
 
+  // ── Buffer array cache ──────────────────────────────────────────────
+
+  /**
+   * Return a cached materialized array of the buffer contents.
+   * Only calls buffer.toArray() when the buffer has actually changed
+   * (new push, resize, or clear), avoiding per-frame allocation on
+   * transition ticks, hover redraws, and other non-data-changing renders.
+   */
+  private getBufferArray(): Record<string, any>[] {
+    if (this._bufferDirty || !this._bufferArrayCache) {
+      this._bufferArrayCache = this.buffer.toArray()
+      this._bufferDirty = false
+    }
+    return this._bufferArrayCache
+  }
+
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Record<string, any>[] {
-    return this.buffer.toArray()
+    return this.getBufferArray()
   }
 
   getExtents(): { x: [number, number]; y: [number, number] } | null {
@@ -2001,6 +2056,8 @@ export class PipelineStore {
     this.lastIngestTime = 0
 
     this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._bufferArrayCache = null
     this.lastLayout = null
     this.scales = null
     this.scene = []
@@ -2048,6 +2105,43 @@ export class PipelineStore {
     }
 
     Object.assign(this.config, config)
+
+    // Re-resolve accessor functions when accessor config changes
+    if (config.xAccessor !== undefined || config.yAccessor !== undefined
+      || config.timeAccessor !== undefined || config.valueAccessor !== undefined) {
+      const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+      const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
+      if (useStreamingDefaults) {
+        this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
+        this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
+      } else {
+        this.getX = resolveAccessor(this.config.xAccessor, "x")
+        this.getY = resolveAccessor(this.config.yAccessor, "y")
+      }
+    }
+    if (config.groupAccessor !== undefined) {
+      this.getGroup = resolveStringAccessor(this.config.groupAccessor)
+    }
+    if (config.categoryAccessor !== undefined) {
+      this.getCategory = resolveStringAccessor(this.config.categoryAccessor)
+    }
+    if (config.sizeAccessor !== undefined) {
+      this.getSize = this.config.sizeAccessor
+        ? resolveAccessor(this.config.sizeAccessor, "size")
+        : undefined
+    }
+    if (config.colorAccessor !== undefined) {
+      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    }
+    if (config.y0Accessor !== undefined) {
+      this.getY0 = this.config.y0Accessor
+        ? resolveAccessor(this.config.y0Accessor, "y0")
+        : undefined
+    }
+    if (config.pointIdAccessor !== undefined) {
+      this.getPointId = resolveStringAccessor(this.config.pointIdAccessor)
+    }
+
     this.needsFullRebuild = true
   }
 }

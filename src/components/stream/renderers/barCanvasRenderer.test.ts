@@ -2,36 +2,10 @@ import { vi } from "vitest"
 import { barCanvasRenderer } from "./barCanvasRenderer"
 import { scaleLinear } from "d3-scale"
 import type { RectSceneNode, SceneNode, StreamScales, StreamLayout } from "../types"
+import { createMockCanvasContext as _createCtx } from "../../../test-utils/canvasMock"
 
 function createMockCanvasContext() {
-  return {
-    beginPath: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    fillRect: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    stroke: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    closePath: vi.fn(),
-    setTransform: vi.fn(),
-    clearRect: vi.fn(),
-    strokeRect: vi.fn(),
-    setLineDash: vi.fn(),
-    rect: vi.fn(),
-    clip: vi.fn(),
-    drawImage: vi.fn(),
-    fillStyle: "",
-    strokeStyle: "",
-    globalAlpha: 1,
-    lineWidth: 1,
-    shadowBlur: 0,
-    shadowColor: "",
-    font: "",
-    textAlign: "start" as CanvasTextAlign,
-    textBaseline: "alphabetic" as CanvasTextBaseline
-  } as unknown as CanvasRenderingContext2D
+  return _createCtx() as unknown as CanvasRenderingContext2D
 }
 
 function makeScales(): StreamScales {

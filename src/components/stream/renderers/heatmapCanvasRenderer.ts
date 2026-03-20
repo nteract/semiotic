@@ -1,5 +1,6 @@
 import type { SceneNode, HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
+import { renderRectPulse } from "./renderPulse"
 
 /**
  * Parse a CSS color string to [R, G, B] (0–255).
@@ -57,9 +58,11 @@ function defaultFormat(v: number): string {
 export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const heatNodes = nodes.filter((n): n is HeatcellSceneNode => n.type === "heatcell")
 
+  ctx.save()
+  try {
   for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
-    const nodeStyle = (node as any).style
+    const nodeStyle = node.style
     if (nodeStyle?.opacity != null) {
       ctx.globalAlpha = nodeStyle.opacity
     }
@@ -73,11 +76,7 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layo
     ctx.strokeRect(node.x, node.y, node.w, node.h)
 
     // Pulse overlay
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
-      ctx.globalAlpha = node._pulseIntensity * 0.3
-      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fillRect(node.x, node.y, node.w, node.h)
-    }
+    renderRectPulse(ctx, node)
 
     ctx.globalAlpha = 1
 
@@ -102,5 +101,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layo
       ctx.textBaseline = "middle"
       ctx.fillText(formatted, centerX, centerY)
     }
+  }
+  } finally {
+    ctx.restore()
   }
 }

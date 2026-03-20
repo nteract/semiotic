@@ -13,8 +13,10 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
-import type { ChartMode, ChartAccessor } from "../shared/types"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 
 export interface RealtimeSwarmChartProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -85,6 +87,20 @@ export interface RealtimeSwarmChartProps<TDatum extends Record<string, any> = Re
   tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
+  /** Consume a named selection — dims unselected elements */
+  selection?: SelectionConfig
+  /** Show a loading skeleton placeholder */
+  loading?: boolean
+  /** Custom content to render when data is empty. Set to `false` to disable empty state. */
+  emptyContent?: ReactNode | false
+  /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
+  emphasis?: "primary" | "secondary"
+  /** Show a legend */
+  showLegend?: boolean
+  /** Legend position */
+  legendPosition?: LegendPosition
+  /** Legend interaction mode */
+  legendInteraction?: LegendInteractionMode
 }
 
 /**
@@ -147,8 +163,13 @@ export const RealtimeSwarmChart = forwardRef(
       tickFormatTime,
       tickFormatValue,
       linkedHover,
+      selection,
       onObservation,
-      chartId
+      chartId,
+      loading,
+      emptyContent,
+      emphasis,
+      legendPosition: legendPositionProp,
     } = props
 
     const showAxes = resolved.showAxes
@@ -161,7 +182,7 @@ export const RealtimeSwarmChart = forwardRef(
 
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      linkedHover, unwrapData: true,
+      selection, linkedHover, unwrapData: true,
       onObservation, chartType: "RealtimeSwarmChart", chartId
     })
 
@@ -180,12 +201,22 @@ export const RealtimeSwarmChart = forwardRef(
       getData: () => frameRef.current?.getData() ?? []
     }))
 
+    // ── Loading / empty state ──
+    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
+    if (loadingEl) return loadingEl
+    const emptyEl = renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    if (emptyEl) return emptyEl
+
     const swarmStyle: SwarmStyle = {}
     if (radius != null) swarmStyle.radius = radius
     if (fill != null) swarmStyle.fill = fill
     if (opacity != null) swarmStyle.opacity = opacity
     if (stroke != null) swarmStyle.stroke = stroke
     if (strokeWidth != null) swarmStyle.strokeWidth = strokeWidth
+
+    const resolvedClassName = emphasis
+      ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
+      : className
 
     return (
       <StreamXYFrame
@@ -194,7 +225,7 @@ export const RealtimeSwarmChart = forwardRef(
         runtimeMode="streaming"
         size={resolvedSize}
         margin={margin}
-        className={className}
+        className={resolvedClassName}
         arrowOfTime={arrowOfTime}
         windowMode={windowMode}
         windowSize={windowSize}
@@ -216,6 +247,7 @@ export const RealtimeSwarmChart = forwardRef(
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
+        legendPosition={legendPositionProp}
       />
     )
   }

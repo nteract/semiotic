@@ -13,60 +13,12 @@ import { vi } from "vitest"
  */
 import React from "react"
 import { render, act } from "@testing-library/react"
+import { createMockCanvasContext } from "../../test-utils/canvasMock"
 
 // ── Canvas + rAF mocks ──────────────────────────────────────────────────
 
 function setupMocks() {
-  const rafCallbacks: Function[] = []
-  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    bezierCurveTo: vi.fn(),
-    quadraticCurveTo: vi.fn(),
-    stroke: vi.fn(),
-    fill: vi.fn(),
-    arc: vi.fn(),
-    clearRect: vi.fn(),
-    fillRect: vi.fn(),
-    fillText: vi.fn(),
-    strokeRect: vi.fn(),
-    strokeText: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    scale: vi.fn(),
-    translate: vi.fn(),
-    setTransform: vi.fn(),
-    transform: vi.fn(),
-    resetTransform: vi.fn(),
-    setLineDash: vi.fn(),
-    getLineDash: vi.fn(() => []),
-    closePath: vi.fn(),
-    clip: vi.fn(),
-    rect: vi.fn(),
-    arcTo: vi.fn(),
-    drawImage: vi.fn(),
-    putImageData: vi.fn(),
-    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(0) })),
-    measureText: vi.fn(() => ({ width: 0 })),
-    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-    createPattern: vi.fn(),
-    isPointInPath: vi.fn(() => false),
-    strokeStyle: "",
-    lineWidth: 1,
-    fillStyle: "",
-    font: "",
-    textAlign: "",
-    textBaseline: "",
-    globalAlpha: 1,
-    lineCap: "butt",
-    lineJoin: "miter",
-    shadowBlur: 0,
-    shadowColor: "rgba(0, 0, 0, 0)",
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-  }))
+  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => createMockCanvasContext())
   // Path2D not available in jsdom — mock it for network edge rendering
   if (!(globalThis as any).Path2D) {
     (globalThis as any).Path2D = class { constructor() {} }
@@ -80,7 +32,6 @@ function setupMocks() {
     return id
   })
   vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-  return rafCallbacks
 }
 
 function teardownMocks() {

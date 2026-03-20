@@ -1,5 +1,6 @@
 import type { SceneNode, PointSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
+import { renderCirclePulse } from "./renderPulse"
 
 /**
  * Canvas point renderer.
@@ -9,36 +10,32 @@ import type { StreamRendererFn } from "./types"
 export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const pointNodes = nodes.filter((n): n is PointSceneNode => n.type === "point")
 
-  for (const node of pointNodes) {
-    ctx.beginPath()
-    ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
-
-    const alpha = node.style.opacity ?? node.style.fillOpacity
-    if (alpha != null) {
-      ctx.globalAlpha = alpha
-    }
-
-    ctx.fillStyle = node.style.fill || "#4e79a7"
-    ctx.fill()
-
-    if (node.style.stroke) {
-      ctx.strokeStyle = node.style.stroke
-      ctx.lineWidth = node.style.strokeWidth || 1
-      ctx.stroke()
-    }
-
-    // Pulse glow ring
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
-      const glowRadius = node._pulseGlowRadius ?? 4
-      const pulseR = node.r + glowRadius * node._pulseIntensity
+  ctx.save()
+  try {
+    for (const node of pointNodes) {
       ctx.beginPath()
-      ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2)
-      ctx.strokeStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.lineWidth = 2 * node._pulseIntensity
-      ctx.globalAlpha = node._pulseIntensity * 0.6
-      ctx.stroke()
-    }
+      ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
 
-    ctx.globalAlpha = 1
+      const alpha = node.style.opacity ?? node.style.fillOpacity
+      if (alpha != null) {
+        ctx.globalAlpha = alpha
+      }
+
+      ctx.fillStyle = node.style.fill || "#4e79a7"
+      ctx.fill()
+
+      if (node.style.stroke) {
+        ctx.strokeStyle = node.style.stroke
+        ctx.lineWidth = node.style.strokeWidth || 1
+        ctx.stroke()
+      }
+
+      // Pulse glow ring
+      renderCirclePulse(ctx, node)
+
+      ctx.globalAlpha = 1
+    }
+  } finally {
+    ctx.restore()
   }
 }

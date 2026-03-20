@@ -3,6 +3,9 @@ import { vi } from "vitest"
 /**
  * Creates a mock 2D canvas rendering context with all commonly used
  * methods stubbed as vi.fn() and properties set to sensible defaults.
+ *
+ * This is the single canonical canvas mock for the entire test suite.
+ * Import from "../../test-utils/canvasMock" (or appropriate relative path).
  */
 export function createMockCanvasContext(): Record<string, any> {
   return {
@@ -13,15 +16,19 @@ export function createMockCanvasContext(): Record<string, any> {
     stroke: vi.fn(),
     fill: vi.fn(),
     arc: vi.fn(),
+    arcTo: vi.fn(),
     clearRect: vi.fn(),
     fillRect: vi.fn(),
     fillText: vi.fn(),
+    strokeText: vi.fn(),
     strokeRect: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
     scale: vi.fn(),
     translate: vi.fn(),
+    transform: vi.fn(),
     setLineDash: vi.fn(),
+    getLineDash: vi.fn(() => []),
     closePath: vi.fn(),
     clip: vi.fn(),
     rect: vi.fn(),
@@ -33,12 +40,14 @@ export function createMockCanvasContext(): Record<string, any> {
     createRadialGradient: vi.fn(() => ({
       addColorStop: vi.fn(),
     })),
+    createPattern: vi.fn(),
     measureText: vi.fn(() => ({ width: 0 })),
     setTransform: vi.fn(),
     resetTransform: vi.fn(),
     drawImage: vi.fn(),
     getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(0) })),
     putImageData: vi.fn(),
+    isPointInPath: vi.fn(() => false),
 
     // Style properties
     strokeStyle: "",
@@ -76,6 +85,10 @@ export function setupCanvasMock(): () => void {
   const ctx = createMockCanvasContext();
 
   (HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ctx)
+
+  if (!(globalThis as any).Path2D) {
+    (globalThis as any).Path2D = class { constructor() {} }
+  }
 
   const rafSpy = vi
     .spyOn(window, "requestAnimationFrame")

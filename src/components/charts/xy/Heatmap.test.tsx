@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { Heatmap } from "./Heatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 describe("Heatmap", () => {
   const sampleData = [
@@ -12,64 +13,9 @@ describe("Heatmap", () => {
     { x: 2, y: 2, value: 25 }
   ]
 
-  let rafCallbacks: Function[] = []
-  beforeEach(() => {
-    rafCallbacks = []
-    ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
-      beginPath: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      stroke: vi.fn(),
-      fill: vi.fn(),
-      arc: vi.fn(),
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
-      fillText: vi.fn(),
-      strokeRect: vi.fn(),
-      save: vi.fn(),
-      restore: vi.fn(),
-      scale: vi.fn(),
-      translate: vi.fn(),
-      setLineDash: vi.fn(),
-      closePath: vi.fn(),
-      setTransform: vi.fn(),
-      transform: vi.fn(),
-      resetTransform: vi.fn(),
-      getLineDash: vi.fn(() => []),
-      clip: vi.fn(),
-      rect: vi.fn(),
-      arcTo: vi.fn(),
-      bezierCurveTo: vi.fn(),
-      quadraticCurveTo: vi.fn(),
-      drawImage: vi.fn(),
-      putImageData: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(0) })),
-      measureText: vi.fn(() => ({ width: 0 })),
-      createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-      createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-      createPattern: vi.fn(),
-      isPointInPath: vi.fn(() => false),
-      strokeText: vi.fn(),
-      strokeStyle: "",
-      lineWidth: 1,
-      fillStyle: "",
-      font: "",
-      textAlign: "",
-      textBaseline: "",
-      globalAlpha: 1
-    }))
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
-      cb(performance.now())
-      return 0
-    })
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
-    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
-  })
+  let cleanup: () => void
+  beforeEach(() => { cleanup = setupCanvasMock() })
+  afterEach(() => { cleanup() })
 
   it("renders without crashing with minimal props", () => {
     const { container } = render(

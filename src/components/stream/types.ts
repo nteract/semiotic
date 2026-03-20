@@ -139,6 +139,12 @@ export interface LineSceneNode {
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
+  /** Previous path coordinates for interpolation during transitions */
+  _prevPath?: [number, number][]
+  /** Target path coordinates for interpolation during transitions */
+  _targetPath?: [number, number][]
 }
 
 export interface AreaSceneNode {
@@ -162,6 +168,16 @@ export interface AreaSceneNode {
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
+  /** Previous top path coordinates for interpolation during transitions */
+  _prevTopPath?: [number, number][]
+  /** Target top path coordinates for interpolation during transitions */
+  _targetTopPath?: [number, number][]
+  /** Previous bottom path coordinates for interpolation during transitions */
+  _prevBottomPath?: [number, number][]
+  /** Target bottom path coordinates for interpolation during transitions */
+  _targetBottomPath?: [number, number][]
 }
 
 export interface PointSceneNode {
@@ -185,6 +201,8 @@ export interface PointSceneNode {
   _targetR?: number
   _targetOpacity?: number
   _decayOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
 }
 
 export interface RectSceneNode {
@@ -198,6 +216,7 @@ export interface RectSceneNode {
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
+  _pulseGlowRadius?: number
   /** Animation target fields (set during transitions) */
   _targetX?: number
   _targetY?: number
@@ -205,6 +224,8 @@ export interface RectSceneNode {
   _targetH?: number
   _targetOpacity?: number
   _decayOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
 }
 
 export interface HeatcellSceneNode {
@@ -215,6 +236,8 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: any
+  /** Optional style object (used for decay/transition opacity on heatmap cells) */
+  style?: Style
   /** Numeric cell value (for canvas text rendering when showValues is enabled) */
   value?: number
   /** Whether to render the value as text inside the cell */
@@ -223,6 +246,7 @@ export interface HeatcellSceneNode {
   valueFormat?: (v: number) => string
   _pulseIntensity?: number
   _pulseColor?: string
+  _pulseGlowRadius?: number
   /** Animation target fields (set during transitions) */
   _targetX?: number
   _targetY?: number
@@ -230,6 +254,8 @@ export interface HeatcellSceneNode {
   _targetH?: number
   _targetOpacity?: number
   _decayOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
 }
 
 export interface CandlestickSceneNode {
@@ -246,10 +272,17 @@ export interface CandlestickSceneNode {
   wickWidth: number
   isUp: boolean
   datum: any
+  /** Optional style object (used during transition opacity animations) */
+  style?: Style
   _pulseIntensity?: number
   _pulseColor?: string
+  _pulseGlowRadius?: number
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
+  /** Decay opacity for candlestick nodes (no style object, stored separately) */
+  _decayOpacity?: number
+  /** Stable identity key for transition tracking */
+  _transitionKey?: string
 }
 
 // ── Candlestick style ──────────────────────────────────────────────────

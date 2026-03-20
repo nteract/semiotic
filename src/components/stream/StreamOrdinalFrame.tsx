@@ -365,7 +365,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       push: pushPoint,
       pushMany: pushManyPoints,
       clear: clearAll,
-      getData: () => storeRef.current?.getData() ?? [],
+      getData: () => {
+        // Flush any buffered push data so getData() always returns up-to-date results
+        adapterRef.current?.flush()
+        return storeRef.current?.getData() ?? []
+      },
       getScales: () => storeRef.current?.scales ?? null
     }), [pushPoint, pushManyPoints, clearAll])
 
@@ -533,13 +537,19 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
       }
 
-      // DPR setup
+      // DPR setup — only resize the canvas buffer when dimensions actually change.
+      // Setting canvas.width/height (even to the same value) implicitly clears the
+      // buffer and forces GPU reallocation on HiDPI displays.
       const dpr = getDevicePixelRatio()
-      canvas.width = size[0] * dpr
-      canvas.height = size[1] * dpr
-      canvas.style.width = `${size[0]}px`
-      canvas.style.height = `${size[1]}px`
-      ctx.scale(dpr, dpr)
+      const newWidth = size[0] * dpr
+      const newHeight = size[1] * dpr
+      if (canvas.width !== newWidth || canvas.height !== newHeight) {
+        canvas.width = newWidth
+        canvas.height = newHeight
+        canvas.style.width = `${size[0]}px`
+        canvas.style.height = `${size[1]}px`
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       // Clear
       ctx.clearRect(0, 0, size[0], size[1])

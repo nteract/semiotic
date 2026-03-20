@@ -76,9 +76,11 @@ export function findNearestGeoNode(
     const [[x0, y0], [x1, y1]] = node.bounds
     if (mouseX < x0 || mouseX > x1 || mouseY < y0 || mouseY > y1) continue
 
-    // isPointInPath with Path2D
-    const path = new Path2D(node.pathData)
-    if (hitCtx.isPointInPath(path, mouseX, mouseY)) {
+    // isPointInPath with Path2D (lazily cached to avoid re-parsing per mouse event)
+    if (!node._cachedPath2D) {
+      node._cachedPath2D = new Path2D(node.pathData)
+    }
+    if (hitCtx.isPointInPath(node._cachedPath2D, mouseX, mouseY)) {
       return { node, distance: 0 }
     }
   }

@@ -4,16 +4,17 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useSortedData, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * BarChart component props
@@ -97,73 +98,58 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = data || []
+
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: true,
+    onObservation,
+    chartType: "BarChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
+
+  if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("BarChart", safeData, "categoryAccessor", categoryAccessor)
   warnMissingField("BarChart", safeData, "valueAccessor", valueAccessor)
 
-  // ── Selection hooks (always called) ────────────────────────────────────
-
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
-    selection, linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true,
-    onObservation, chartType: "BarChart", chartId
-  })
-
   // ── Core chart logic ───────────────────────────────────────────────────
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
+        baseStyle.fill = getColor(d, colorBy, setup.colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }
       return baseStyle
     }
-  }, [colorBy, colorScale])
+  }, [colorBy, setup.colorScale])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, effectiveSelectionHook, selection),
-    [basePieceStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
+    [basePieceStyle, setup.effectiveSelectionHook, selection]
   )
-
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: sortedData, colorBy, colorScale, showLegend,
-    legendPosition: legendPositionProp, userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   // Default tooltip
   const defaultTooltipContent = useMemo(
@@ -194,7 +180,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     barPadding,
     enableHover,
     showAxes: resolved.showAxes,
@@ -203,19 +189,13 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     rFormat: valueFormat,
     showGrid,
     oSort: sort,
-    ...(legend && { legend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

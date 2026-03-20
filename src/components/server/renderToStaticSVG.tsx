@@ -614,7 +614,17 @@ function renderGeoFrame(props: StreamGeoFrameProps): string {
 
   const store = new GeoPipelineStore(config)
 
-  if (props.areas) store.setAreas(props.areas)
+  if (props.areas) {
+    if (typeof props.areas === "string") {
+      throw new Error(
+        `Geo SSR requires pre-resolved GeoJSON features. ` +
+        `Reference string "${props.areas}" cannot be resolved synchronously. ` +
+        `Use \`const features = await resolveReferenceGeography('${props.areas}')\` ` +
+        `before calling renderGeoToStaticSVG.`
+      )
+    }
+    store.setAreas(props.areas)
+  }
   if (props.points) store.setPoints(props.points as any[])
   if (props.lines) store.setLines(props.lines as any[])
 

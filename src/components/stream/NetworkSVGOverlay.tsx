@@ -2,8 +2,8 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
-import Legend from "../Legend"
-import type { LegendGroup } from "../types/legendTypes"
+import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import { renderLegendFromConfig } from "./legendRenderer"
 
 export interface NetworkSVGOverlayProps {
   width: number
@@ -19,11 +19,12 @@ export interface NetworkSVGOverlayProps {
   title?: string | ReactNode
 
   /** Legend configuration */
-  legend?: ReactNode | { legendGroups: LegendGroup[] }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  legendPosition?: "right" | "left" | "top" | "bottom"
 
   /** User-provided SVG elements on top */
   foregroundGraphics?: ReactNode
@@ -61,6 +62,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
+    legendPosition = "right",
     foregroundGraphics,
     sceneNodes,
     annotations,
@@ -141,21 +143,10 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       ) : null}
 
       {/* Legend */}
-      {legend && (
-        <g transform={`translate(${totalWidth - margin.right + 10},${margin.top})`}>
-          {typeof legend === "object" && !React.isValidElement(legend) && "legendGroups" in (legend as any)
-            ? <Legend
-                legendGroups={(legend as any).legendGroups}
-                title=""
-                width={100}
-                customHoverBehavior={legendHoverBehavior}
-                customClickBehavior={legendClickBehavior}
-                highlightedCategory={legendHighlightedCategory}
-                isolatedCategories={legendIsolatedCategories}
-              />
-            : (legend as React.ReactNode)}
-        </g>
-      )}
+      {renderLegendFromConfig({
+        legend, totalWidth, totalHeight, margin, legendPosition, title,
+        legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
+      })}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG */}
     {annotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {

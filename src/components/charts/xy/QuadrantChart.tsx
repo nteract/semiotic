@@ -9,7 +9,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -100,6 +100,8 @@ export interface QuadrantChartProps<TDatum extends Record<string, any> = Record<
   pointIdAccessor?: ChartAccessor<TDatum, string>
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** Legend position */
+  legendPosition?: LegendPosition
   /** Annotation objects */
   annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props */
@@ -178,7 +180,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -286,11 +289,12 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   )
 
   // Legend + margin
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeData,
     colorBy,
     colorScale,
     showLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: resolved.marginDefaults,
   })
@@ -477,7 +481,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     enableHover,
     showGrid,
     ...(dataExtents && { xExtent: dataExtents.xExtent, yExtent: dataExtents.yExtent }),
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

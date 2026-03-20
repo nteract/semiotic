@@ -53,7 +53,8 @@ export function useColorScale(
     }
     // If a CategoryColorProvider is present, use its color map as the scale
     if (categoryColors && Object.keys(categoryColors).length > 0) {
-      return (v: string) => categoryColors[v] || createColorScale(data, colorBy as string, colorScheme)(v)
+      const fallbackScale = createColorScale(data, colorBy as string, colorScheme)
+      return (v: string) => categoryColors[v] || fallbackScale(v)
     }
     return createColorScale(data, colorBy as string, colorScheme)
   }, [data, colorBy, colorScheme, categoryColors])

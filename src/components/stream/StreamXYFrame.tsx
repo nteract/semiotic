@@ -612,7 +612,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       push: pushPoint,
       pushMany: pushManyPoints,
       clear: clearAll,
-      getData: () => storeRef.current?.getData() ?? [],
+      getData: () => {
+        // Flush any buffered push data so getData() always returns up-to-date results
+        adapterRef.current?.flush()
+        return storeRef.current?.getData() ?? []
+      },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null
     }), [pushPoint, pushManyPoints, clearAll])

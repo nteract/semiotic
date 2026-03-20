@@ -2,8 +2,8 @@
  * Scenario tests: Data ingestion pipeline under real-world conditions.
  *
  * Tests DataSourceAdapter's progressive chunking, hybrid bounded+streaming
- * mode, cancellation semantics, and deduplication — the data flow contract
- * that Stream Frames depend on.
+ * mode, cancellation semantics, deduplication, and microtask-based push
+ * batching — the data flow contract that Stream Frames depend on.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { DataSourceAdapter } from "../../components/stream/DataSourceAdapter"
@@ -14,6 +14,11 @@ import type { Changeset } from "../../components/stream/types"
 /** Generate N items with sequential IDs */
 function generateData(n: number) {
   return Array.from({ length: n }, (_, i) => ({ id: i, value: i * 10 }))
+}
+
+/** Drain the microtask queue so push batches flush */
+function flushMicrotasks(): Promise<void> {
+  return Promise.resolve()
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────
@@ -96,7 +101,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   })
 
   // 3. Push after bounded data appends (hybrid mode)
-  it("push after setBoundedData appends without clearing", () => {
+  it("push after setBoundedData appends without clearing", async () => {
     const changesets: Changeset<any>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
@@ -104,15 +109,16 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(changesets).toHaveLength(1)
     expect(changesets[0].bounded).toBe(true)
 
-    // Now push streaming data
+    // Now push streaming data — buffered until microtask flushes
     adapter.push({ id: 100, value: 1000 })
+    await flushMicrotasks()
     expect(changesets).toHaveLength(2)
     expect(changesets[1].bounded).toBe(false)
     expect(changesets[1].inserts).toEqual([{ id: 100, value: 1000 }])
   })
 
-  // 4. pushMany emits single changeset
-  it("pushMany emits a single changeset with all items", () => {
+  // 4. pushMany emits single changeset after microtask flush
+  it("pushMany emits a single changeset with all items", async () => {
     const changesets: Changeset<any>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
@@ -122,17 +128,19 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
       { id: 3, value: 30 },
     ])
 
+    await flushMicrotasks()
     expect(changesets).toHaveLength(1)
     expect(changesets[0].bounded).toBe(false)
     expect(changesets[0].inserts).toHaveLength(3)
   })
 
   // 5. pushMany with empty array is no-op
-  it("pushMany with empty array does not emit a changeset", () => {
+  it("pushMany with empty array does not emit a changeset", async () => {
     const changesets: Changeset<any>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.pushMany([])
+    await flushMicrotasks()
     expect(changesets).toHaveLength(0)
   })
 
@@ -195,5 +203,102 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     // No more chunks
     flushRAF()
     expect(changesets).toHaveLength(4)
+  })
+
+  // 9. Rapid push() calls are batched into a single changeset via microtask
+  it("rapid push() calls within the same task are batched", async () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    // Simulate high-frequency pushes — all within the same synchronous task
+    for (let i = 0; i < 1000; i++) {
+      adapter.push({ id: i, value: i * 10 })
+    }
+
+    // Nothing flushed yet synchronously — all buffered
+    expect(changesets).toHaveLength(0)
+
+    // Wait for microtask to flush
+    await flushMicrotasks()
+    expect(changesets).toHaveLength(1)
+    expect(changesets[0].inserts).toHaveLength(1000)
+    expect(changesets[0].bounded).toBe(false)
+  })
+
+  // 10. Mixed push() and pushMany() within same task are coalesced
+  it("mixed push() and pushMany() within same task are coalesced", async () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    adapter.push({ id: 1, value: 10 })
+    adapter.pushMany([
+      { id: 2, value: 20 },
+      { id: 3, value: 30 },
+    ])
+    adapter.push({ id: 4, value: 40 })
+
+    await flushMicrotasks()
+    expect(changesets).toHaveLength(1)
+    expect(changesets[0].inserts).toHaveLength(4)
+    expect(changesets[0].inserts.map((d: any) => d.id)).toEqual([1, 2, 3, 4])
+  })
+
+  // 11. clear() discards buffered pushes
+  it("clear() discards buffered push data", async () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    adapter.push({ id: 1, value: 10 })
+    adapter.push({ id: 2, value: 20 })
+    adapter.clear()
+
+    await flushMicrotasks()
+    expect(changesets).toHaveLength(0)
+  })
+
+  // 12. Successive flushes across microtask boundaries produce separate changesets
+  it("pushes across separate microtask ticks produce separate changesets", async () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    adapter.push({ id: 1, value: 10 })
+    await flushMicrotasks() // first flush
+    expect(changesets).toHaveLength(1)
+
+    adapter.push({ id: 2, value: 20 })
+    await flushMicrotasks() // second flush
+    expect(changesets).toHaveLength(2)
+    expect(changesets[0].inserts).toHaveLength(1)
+    expect(changesets[1].inserts).toHaveLength(1)
+  })
+
+  // 13. flush() provides synchronous escape hatch
+  it("flush() immediately processes buffered pushes synchronously", () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    adapter.push({ id: 1, value: 10 })
+    adapter.push({ id: 2, value: 20 })
+
+    // Nothing flushed yet
+    expect(changesets).toHaveLength(0)
+
+    // Explicit flush
+    adapter.flush()
+    expect(changesets).toHaveLength(1)
+    expect(changesets[0].inserts).toHaveLength(2)
+    expect(changesets[0].inserts.map((d: any) => d.id)).toEqual([1, 2])
+  })
+
+  // 14. clearLastData discards buffered pushes
+  it("clearLastData discards buffered push data", async () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    adapter.push({ id: 1, value: 10 })
+    adapter.clearLastData()
+
+    await flushMicrotasks()
+    expect(changesets).toHaveLength(0)
   })
 })

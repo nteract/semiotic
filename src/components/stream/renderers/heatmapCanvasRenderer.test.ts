@@ -2,33 +2,10 @@ import { vi } from "vitest"
 import { heatmapCanvasRenderer } from "./heatmapCanvasRenderer"
 import { scaleLinear } from "d3-scale"
 import type { HeatcellSceneNode, SceneNode, StreamScales, StreamLayout } from "../types"
+import { createMockCanvasContext as _createCtx } from "../../../test-utils/canvasMock"
 
 function createMockCanvasContext() {
-  return {
-    beginPath: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    fillRect: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    stroke: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    closePath: vi.fn(),
-    setTransform: vi.fn(),
-    clearRect: vi.fn(),
-    strokeRect: vi.fn(),
-    setLineDash: vi.fn(),
-    fillStyle: "",
-    strokeStyle: "",
-    globalAlpha: 1,
-    lineWidth: 1,
-    shadowBlur: 0,
-    shadowColor: "",
-    font: "",
-    textAlign: "start" as CanvasTextAlign,
-    textBaseline: "alphabetic" as CanvasTextBaseline
-  } as unknown as CanvasRenderingContext2D
+  return _createCtx() as unknown as CanvasRenderingContext2D
 }
 
 function makeScales(): StreamScales {
@@ -90,7 +67,7 @@ describe("heatmapCanvasRenderer", () => {
     })
 
     const node = makeHeatcellNode()
-    ;(node as any).style = { opacity: 0.4 }
+    node.style = { opacity: 0.4 }
 
     heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
@@ -189,9 +166,9 @@ describe("heatmapCanvasRenderer", () => {
     })
 
     const node1 = makeHeatcellNode()
-    ;(node1 as any).style = { opacity: 0.3 }
+    node1.style = { opacity: 0.3 }
     const node2 = makeHeatcellNode()
-    ;(node2 as any).style = { opacity: 0.8 }
+    node2.style = { opacity: 0.8 }
 
     heatmapCanvasRenderer(ctx, [node1, node2], makeScales(), makeLayout())
 
@@ -202,8 +179,7 @@ describe("heatmapCanvasRenderer", () => {
   it("does not set globalAlpha when style has no opacity", () => {
     const ctx = createMockCanvasContext()
     const node = makeHeatcellNode()
-    // HeatcellSceneNode doesn't have a style property by default in the type,
-    // but the renderer checks (node as any).style?.opacity
+    // HeatcellSceneNode has an optional style property used for decay/transition opacity
 
     heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 

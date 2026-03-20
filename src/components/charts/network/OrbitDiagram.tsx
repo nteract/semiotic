@@ -221,7 +221,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         nodeLabel={showLabels ? nodeIdAccessor : undefined}
         showLabels={showLabels}
         enableHover={animated ? false : enableHover}
-        tooltipContent={!animated && tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data?.data ?? d.data) : undefined}
+        tooltipContent={!animated ? (tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)) : undefined}
         customHoverBehavior={(linkedHover || onObservation) ? wrappedHoverBehavior : undefined}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
