@@ -1,14 +1,18 @@
+import type { CSSProperties, ReactElement } from "react"
+
 export type SupportedLegendGlyphs = "fill" | "line"
 
-export type ItemType = SupportedLegendGlyphs | Function
+export type ItemType = SupportedLegendGlyphs | ((item: LegendItem) => ReactElement)
 
 export interface LegendItem {
   label: string
+  color: string
+  [key: string]: unknown
 }
 
 export interface LegendGroup {
   type?: ItemType
-  styleFn: Function
+  styleFn: (item: LegendItem, index: number) => CSSProperties
   items: LegendItem[]
   label: string
 }
@@ -45,7 +49,7 @@ export function isGradientLegendConfig(value: unknown): value is { gradient: Gra
 
 export interface LegendProps {
   legendGroups?: LegendGroup[]
-  customClickBehavior?: Function
+  customClickBehavior?: (item: LegendItem) => void
   customHoverBehavior?: (item: LegendItem | null) => void
   /** Set of currently isolated category labels (shown with checkmarks) */
   isolatedCategories?: Set<string>

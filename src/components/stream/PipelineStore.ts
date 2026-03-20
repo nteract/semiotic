@@ -1377,10 +1377,10 @@ export class PipelineStore {
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
       if (node.type === "heatcell") {
-        ;(node as any).style = { opacity: decayOpacity }
+        node.style = { opacity: decayOpacity }
       } else if (node.type === "candlestick") {
         // Candlestick doesn't have a style object — store opacity for renderer
-        ;(node as any)._decayOpacity = decayOpacity
+        node._decayOpacity = decayOpacity
       } else {
         const baseOpacity = node.style?.opacity ?? 1
         node.style = { ...node.style, opacity: baseOpacity * decayOpacity }
@@ -1447,9 +1447,9 @@ export class PipelineStore {
       if (insertTime == null) continue
       const intensity = this.computePulseIntensity(insertTime, now)
       if (intensity > 0) {
-        (node as any)._pulseIntensity = intensity
-        ;(node as any)._pulseColor = pulseColor
-        ;(node as any)._pulseGlowRadius = glowRadius
+        node._pulseIntensity = intensity
+        node._pulseColor = pulseColor
+        node._pulseGlowRadius = glowRadius
       }
     }
   }
@@ -1482,7 +1482,7 @@ export class PipelineStore {
       } else if (node.type === "rect") {
         this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
       } else if (node.type === "heatcell") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: (node as any).style?.opacity })
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
       } else if (node.type === "candlestick") {
         this.prevPositionMap.set(key, { x: node.x, y: node.openY })
       } else if (node.type === "line") {
@@ -1545,7 +1545,7 @@ export class PipelineStore {
 
       // Store stable key on the node so advanceTransition can use it
       // even after exit nodes are prepended to the scene
-      ;(node as any)._transitionKey = key
+      node._transitionKey = key
 
       // Handle line/area path interpolation setup
       if (node.type === "line" || node.type === "area") {
@@ -1554,8 +1554,8 @@ export class PipelineStore {
           matchedPrevPathKeys.add(key)
           if (node.type === "line" && prevPath.path && prevPath.path.length === node.path.length) {
             // Store target path and set current to prev for interpolation
-            ;(node as any)._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._prevPath = prevPath.path
+            node._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
+            node._prevPath = prevPath.path
             // Start from prev positions
             for (let j = 0; j < node.path.length; j++) {
               node.path[j] = [prevPath.path[j][0], prevPath.path[j][1]]
@@ -1564,10 +1564,10 @@ export class PipelineStore {
           } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath
             && prevPath.topPath.length === node.topPath.length
             && prevPath.bottomPath.length === node.bottomPath.length) {
-            ;(node as any)._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
-            ;(node as any)._prevTopPath = prevPath.topPath
-            ;(node as any)._prevBottomPath = prevPath.bottomPath
+            node._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
+            node._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
+            node._prevTopPath = prevPath.topPath
+            node._prevBottomPath = prevPath.bottomPath
             for (let j = 0; j < node.topPath.length; j++) {
               node.topPath[j] = [prevPath.topPath[j][0], prevPath.topPath[j][1]]
             }
@@ -1633,7 +1633,7 @@ export class PipelineStore {
         if (prev) {
           matchedPrevKeys.add(key)
           const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-          node._targetOpacity = (node as any).style?.opacity ?? 1
+          node._targetOpacity = node.style?.opacity ?? 1
           if (prev.x !== target.x || prev.y !== target.y) {
             node._targetX = target.x
             node._targetY = target.y
@@ -1646,8 +1646,8 @@ export class PipelineStore {
             hasChanges = true
           }
         } else {
-          node._targetOpacity = (node as any).style?.opacity ?? 1
-          ;(node as any).style = { ...((node as any).style || {}), opacity: 0 }
+          node._targetOpacity = node.style?.opacity ?? 1
+          node.style = { ...(node.style || {}), opacity: 0 }
           hasChanges = true
         }
       }
@@ -1658,21 +1658,21 @@ export class PipelineStore {
       if (matchedPrevPathKeys.has(key)) continue
       // Exiting line/area — keep in scene with fade-out
       if (key.startsWith("l:") && prevPath.path) {
-        const exitNode = {
+        const exitNode: LineSceneNode = {
           type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
           group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key
-        } as any
+          _targetOpacity: 0, _transitionKey: key, datum: null
+        }
         this.exitNodes.push(exitNode)
         hasChanges = true
       } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
-        const exitNode = {
+        const exitNode: AreaSceneNode = {
           type: "area",
           topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
           bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
           group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key
-        } as any
+          _targetOpacity: 0, _transitionKey: key, datum: null
+        }
         this.exitNodes.push(exitNode)
         hasChanges = true
       }
@@ -1731,7 +1731,7 @@ export class PipelineStore {
 
     for (const node of this.scene) {
       // Use stable key stored during startTransition (immune to index shifts from exit nodes)
-      const key = (node as any)._transitionKey as string | undefined
+      const key = node._transitionKey
       if (node.type === "point") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
@@ -1766,7 +1766,7 @@ export class PipelineStore {
         if (node._targetOpacity !== undefined) {
           const prev = key ? this.prevPositionMap.get(key) : undefined
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
-          ;(node as any).style = { ...((node as any).style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
+          node.style = { ...(node.style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         if (node._targetX === undefined) continue
         if (!key) continue
@@ -1779,13 +1779,13 @@ export class PipelineStore {
       } else if (node.type === "line") {
         // Interpolate opacity for enter/exit
         if (node._targetOpacity !== undefined) {
-          const isEntering = (node as any)._prevPath === undefined && node._targetOpacity > 0
+          const isEntering = node._prevPath === undefined && node._targetOpacity > 0
           const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
           node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
         // Interpolate path coordinates
-        const prevPath = (node as any)._prevPath as [number, number][] | undefined
-        const targetPath = (node as any)._targetPath as [number, number][] | undefined
+        const prevPath = node._prevPath
+        const targetPath = node._targetPath
         if (prevPath && targetPath && prevPath.length === node.path.length) {
           for (let j = 0; j < node.path.length; j++) {
             node.path[j][0] = lerp(prevPath[j][0], targetPath[j][0], t)
@@ -1794,14 +1794,14 @@ export class PipelineStore {
         }
       } else if (node.type === "area") {
         if (node._targetOpacity !== undefined) {
-          const isEntering = (node as any)._prevTopPath === undefined && node._targetOpacity > 0
+          const isEntering = node._prevTopPath === undefined && node._targetOpacity > 0
           const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
           node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
         }
-        const prevTop = (node as any)._prevTopPath as [number, number][] | undefined
-        const prevBottom = (node as any)._prevBottomPath as [number, number][] | undefined
-        const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
-        const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+        const prevTop = node._prevTopPath
+        const prevBottom = node._prevBottomPath
+        const targetTop = node._targetTopPath
+        const targetBottom = node._targetBottomPath
         if (prevTop && targetTop && prevTop.length === node.topPath.length) {
           for (let j = 0; j < node.topPath.length; j++) {
             node.topPath[j][0] = lerp(prevTop[j][0], targetTop[j][0], t)
@@ -1825,7 +1825,7 @@ export class PipelineStore {
           if (node.type === "line" || node.type === "area") {
             node.style = { ...node.style, opacity: finalOpacity === 0 ? 0 : finalOpacity }
           } else {
-            (node as any).style = { ...((node as any).style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
+            node.style = { ...(node.style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
           }
           node._targetOpacity = undefined
         }
@@ -1858,17 +1858,17 @@ export class PipelineStore {
           node._targetW = undefined
           node._targetH = undefined
         } else if (node.type === "line") {
-          const targetPath = (node as any)._targetPath as [number, number][] | undefined
+          const targetPath = node._targetPath
           if (targetPath) {
             for (let j = 0; j < node.path.length; j++) {
               node.path[j] = targetPath[j]
             }
           }
-          ;(node as any)._prevPath = undefined
-          ;(node as any)._targetPath = undefined
+          node._prevPath = undefined
+          node._targetPath = undefined
         } else if (node.type === "area") {
-          const targetTop = (node as any)._targetTopPath as [number, number][] | undefined
-          const targetBottom = (node as any)._targetBottomPath as [number, number][] | undefined
+          const targetTop = node._targetTopPath
+          const targetBottom = node._targetBottomPath
           if (targetTop) {
             for (let j = 0; j < node.topPath.length; j++) {
               node.topPath[j] = targetTop[j]
@@ -1879,10 +1879,10 @@ export class PipelineStore {
               node.bottomPath[j] = targetBottom[j]
             }
           }
-          ;(node as any)._prevTopPath = undefined
-          ;(node as any)._prevBottomPath = undefined
-          ;(node as any)._targetTopPath = undefined
-          ;(node as any)._targetBottomPath = undefined
+          node._prevTopPath = undefined
+          node._prevBottomPath = undefined
+          node._targetTopPath = undefined
+          node._targetBottomPath = undefined
         }
       }
 

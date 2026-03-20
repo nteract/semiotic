@@ -90,7 +90,7 @@ describe("heatmapCanvasRenderer", () => {
     })
 
     const node = makeHeatcellNode()
-    ;(node as any).style = { opacity: 0.4 }
+    node.style = { opacity: 0.4 }
 
     heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
@@ -189,9 +189,9 @@ describe("heatmapCanvasRenderer", () => {
     })
 
     const node1 = makeHeatcellNode()
-    ;(node1 as any).style = { opacity: 0.3 }
+    node1.style = { opacity: 0.3 }
     const node2 = makeHeatcellNode()
-    ;(node2 as any).style = { opacity: 0.8 }
+    node2.style = { opacity: 0.8 }
 
     heatmapCanvasRenderer(ctx, [node1, node2], makeScales(), makeLayout())
 
@@ -202,8 +202,7 @@ describe("heatmapCanvasRenderer", () => {
   it("does not set globalAlpha when style has no opacity", () => {
     const ctx = createMockCanvasContext()
     const node = makeHeatcellNode()
-    // HeatcellSceneNode doesn't have a style property by default in the type,
-    // but the renderer checks (node as any).style?.opacity
+    // HeatcellSceneNode has an optional style property used for decay/transition opacity
 
     heatmapCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 

@@ -8,13 +8,14 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * Scatterplot component props
@@ -129,27 +130,32 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = data || []
 
-  // ── Dev-mode warnings ─────────────────────────────────────────────────
-  warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
-  warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
-
-  // ── Selection hooks (always called, conditional logic inside) ──────────
-
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "Scatterplot", chartId
+    unwrapData: false,
+    onObservation,
+    chartType: "Scatterplot",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
   })
 
+  // ── Brush (Scatterplot-specific) ───────────────────────────────────────
   const brushConfig = normalizeLinkedBrush(linkedBrush)
 
   const brushHook = useBrushSelection({
@@ -186,28 +192,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     [] // stable — reads from ref
   )
 
+  if (setup.earlyReturn) return setup.earlyReturn
+
+  // ── Dev-mode warnings ─────────────────────────────────────────────────
+  warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
+  warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
+
   // ── Core chart logic ───────────────────────────────────────────────────
-
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
 
   const sizeDomain = useMemo(() => {
     if (!sizeBy || safeData.length === 0) return undefined
@@ -220,28 +211,18 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
       baseStyle.r = sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
         : pointRadius
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
+  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
-    [basePointStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, setup.effectiveSelectionHook, selection),
+    [basePointStyle, setup.effectiveSelectionHook, selection]
   )
-
-  // Legend + margin
-  const { legend, margin } = useChartLegendAndMargin({
-    data: safeData,
-    colorBy,
-    colorScale,
-    showLegend,
-    userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   // Default tooltip showing all configured fields
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
@@ -275,7 +256,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -283,19 +264,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

@@ -1,20 +1,19 @@
-// @ts-nocheck
 import * as React from "react"
 
 import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig } from "./types/legendTypes"
 
 const SWATCH = 16
 
-const typeHash = {
-  fill: (style: Object) => <rect style={style} width={SWATCH} height={SWATCH} />,
-  line: (style: Object) => <line style={style} x1={0} y1={0} x2={SWATCH} y2={SWATCH} />
+const typeHash: Record<"fill" | "line", (style: React.CSSProperties) => React.ReactElement> = {
+  fill: (style) => <rect style={style} width={SWATCH} height={SWATCH} />,
+  line: (style) => <line style={style} x1={0} y1={0} x2={SWATCH} y2={SWATCH} />
 }
 
 function renderType(
-  item: Object,
+  item: LegendItem,
   i: number,
   type: ItemType,
-  styleFn: Function
+  styleFn: (item: LegendItem, index: number) => React.CSSProperties
 ) {
   let renderedType
   if (typeof type === "function") {
@@ -60,13 +59,15 @@ function itemOpacity(
 
 const renderLegendGroupVertical = (
   legendGroup: LegendGroup,
-  customClickBehavior?: Function,
-  customHoverBehavior?: (item: LegendItem | null) => void,
-  highlightedCategory?: string | null,
-  isolatedCategories?: Set<string>
+  customClickBehavior: ((item: LegendItem) => void) | undefined,
+  customHoverBehavior: ((item: LegendItem | null) => void) | undefined,
+  highlightedCategory: string | null | undefined,
+  isolatedCategories: Set<string> | undefined,
+  focusedIndex: number,
+  onFocusedIndexChange: (index: number) => void
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
-  const renderedItems = []
+  const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
   const ROW_HEIGHT = 22
@@ -87,11 +88,11 @@ const renderLegendGroupVertical = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
-        tabIndex={interactive ? 0 : undefined}
+        tabIndex={interactive ? (i === focusedIndex ? 0 : -1) : undefined}
         role={interactive ? "option" : undefined}
         aria-selected={isIsolated || false}
         aria-label={item.label}
-        onKeyDown={interactive ? (e) => {
+        onKeyDown={interactive ? (e: React.KeyboardEvent<SVGGElement>) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             if (customClickBehavior) customClickBehavior(item)
@@ -99,18 +100,21 @@ const renderLegendGroupVertical = (
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault()
             const dir = e.key === "ArrowDown" ? 1 : -1
-            const sibling = e.currentTarget.parentElement?.children[i + dir]
-            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
-              (sibling as any).focus?.()
+            const nextIndex = (i + dir + items.length) % items.length
+            onFocusedIndexChange(nextIndex)
+            const sibling = e.currentTarget.parentElement?.children[nextIndex]
+            if (sibling instanceof SVGElement) {
+              (sibling as SVGGElement).focus()
             }
           }
         } : undefined}
-        onFocus={interactive ? (e) => {
+        onFocus={interactive ? (e: React.FocusEvent<SVGGElement>) => {
+          onFocusedIndexChange(i)
           if (customHoverBehavior) customHoverBehavior(item)
           const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
           if (ring) ring.setAttribute("visibility", "visible")
         } : undefined}
-        onBlur={interactive ? (e) => {
+        onBlur={interactive ? (e: React.FocusEvent<SVGGElement>) => {
           if (customHoverBehavior) customHoverBehavior(null)
           const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
           if (ring) ring.setAttribute("visibility", "hidden")
@@ -148,13 +152,15 @@ const renderLegendGroupVertical = (
 
 const renderLegendGroupHorizontal = (
   legendGroup: LegendGroup,
-  customClickBehavior?: Function,
-  customHoverBehavior?: (item: LegendItem | null) => void,
-  highlightedCategory?: string | null,
-  isolatedCategories?: Set<string>
+  customClickBehavior: ((item: LegendItem) => void) | undefined,
+  customHoverBehavior: ((item: LegendItem | null) => void) | undefined,
+  highlightedCategory: string | null | undefined,
+  isolatedCategories: Set<string> | undefined,
+  focusedIndex: number,
+  onFocusedIndexChange: (index: number) => void
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
-  const renderedItems = []
+  const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
   items.forEach((item, i) => {
@@ -174,11 +180,11 @@ const renderLegendGroupHorizontal = (
         onMouseLeave={
           customHoverBehavior ? () => customHoverBehavior(null) : undefined
         }
-        tabIndex={interactive ? 0 : undefined}
+        tabIndex={interactive ? (i === focusedIndex ? 0 : -1) : undefined}
         role={interactive ? "option" : undefined}
         aria-selected={isIsolated || false}
         aria-label={item.label}
-        onKeyDown={interactive ? (e) => {
+        onKeyDown={interactive ? (e: React.KeyboardEvent<SVGGElement>) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             if (customClickBehavior) customClickBehavior(item)
@@ -186,18 +192,21 @@ const renderLegendGroupHorizontal = (
           if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
             e.preventDefault()
             const dir = e.key === "ArrowRight" ? 1 : -1
-            const sibling = e.currentTarget.parentElement?.children[i + dir]
-            if (sibling instanceof HTMLElement || sibling instanceof SVGElement) {
-              (sibling as any).focus?.()
+            const nextIndex = (i + dir + items.length) % items.length
+            onFocusedIndexChange(nextIndex)
+            const sibling = e.currentTarget.parentElement?.children[nextIndex]
+            if (sibling instanceof SVGElement) {
+              (sibling as SVGGElement).focus()
             }
           }
         } : undefined}
-        onFocus={interactive ? (e) => {
+        onFocus={interactive ? (e: React.FocusEvent<SVGGElement>) => {
+          onFocusedIndexChange(i)
           if (customHoverBehavior) customHoverBehavior(item)
           const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
           if (ring) ring.setAttribute("visibility", "visible")
         } : undefined}
-        onBlur={interactive ? (e) => {
+        onBlur={interactive ? (e: React.FocusEvent<SVGGElement>) => {
           if (customHoverBehavior) customHoverBehavior(null)
           const ring = e.currentTarget.querySelector(".semiotic-legend-focus-ring")
           if (ring) ring.setAttribute("visibility", "hidden")
@@ -239,18 +248,22 @@ const renderVerticalGroup = ({
   customClickBehavior,
   customHoverBehavior,
   highlightedCategory,
-  isolatedCategories
+  isolatedCategories,
+  focusedIndex,
+  onFocusedIndexChange
 }: {
   legendGroups: LegendGroup[]
   width: number
-  customClickBehavior?: Function
+  customClickBehavior?: (item: LegendItem) => void
   customHoverBehavior?: (item: LegendItem | null) => void
   highlightedCategory?: string | null
   isolatedCategories?: Set<string>
+  focusedIndex: number
+  onFocusedIndexChange: (index: number) => void
 }) => {
   let offset = 24
 
-  const renderedGroups = []
+  const renderedGroups: React.ReactElement[] = []
 
   legendGroups.forEach((l, i) => {
     offset += 5
@@ -287,7 +300,7 @@ const renderVerticalGroup = ({
         className="legend-item"
         transform={`translate(0,${offset})`}
       >
-        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)}
+        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange)}
       </g>
     )
     offset += l.items.length * 22 + 8
@@ -304,25 +317,29 @@ const renderHorizontalGroup = ({
   customClickBehavior,
   customHoverBehavior,
   highlightedCategory,
-  isolatedCategories
+  isolatedCategories,
+  focusedIndex,
+  onFocusedIndexChange
 }: {
   legendGroups: LegendGroup[]
   title: string | boolean
   height: number
   width: number
-  customClickBehavior?: Function
+  customClickBehavior?: (item: LegendItem) => void
   customHoverBehavior?: (item: LegendItem | null) => void
   highlightedCategory?: string | null
   isolatedCategories?: Set<string>
+  focusedIndex: number
+  onFocusedIndexChange: (index: number) => void
 }) => {
   // First pass: compute total width of all items
   let totalItemsWidth = 0
-  const groupResults: { label?: string; items: any; offset: number }[] = []
+  const groupResults: { label?: string; items: React.ReactElement[]; offset: number }[] = []
 
   legendGroups.forEach((l) => {
     let groupWidth = 0
     if (l.label) groupWidth += 16
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories)
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange)
     groupWidth += renderedItems.offset + 5
     groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth })
     totalItemsWidth += groupWidth + 12
@@ -332,7 +349,7 @@ const renderHorizontalGroup = ({
   const startOffset = Math.max(0, (width - totalItemsWidth) / 2)
   let offset = startOffset
 
-  const renderedGroups = []
+  const renderedGroups: React.ReactElement[] = []
   const verticalOffset = 0
 
   groupResults.forEach((result, i) => {
@@ -408,7 +425,7 @@ export function GradientLegend({
     const totalWidth = barWidth
     const startX = Math.max(0, (width - totalWidth) / 2)
 
-    const stops = []
+    const stops: React.ReactElement[] = []
     for (let i = 0; i <= STEPS; i++) {
       const t = i / STEPS
       stops.push(
@@ -443,7 +460,7 @@ export function GradientLegend({
   const BAR_WIDTH = 14
   const BAR_HEIGHT = 100
 
-  const stops = []
+  const stops: React.ReactElement[] = []
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS
     // SVG gradient goes top to bottom, so top = max, bottom = min
@@ -488,31 +505,38 @@ export default function Legend(props: LegendProps) {
     height = 20,
     orientation = "vertical"
   } = props
+
+  const [focusedIndex, setFocusedIndex] = React.useState(0)
+
   const renderedGroups =
     orientation === "vertical"
       ? renderVerticalGroup({
-          legendGroups,
+          legendGroups: legendGroups || [],
           width,
           customClickBehavior,
           customHoverBehavior,
           highlightedCategory,
-          isolatedCategories
+          isolatedCategories,
+          focusedIndex,
+          onFocusedIndexChange: setFocusedIndex
         })
       : renderHorizontalGroup({
-          legendGroups,
+          legendGroups: legendGroups || [],
           title,
           height,
           width,
           customClickBehavior,
           customHoverBehavior,
           highlightedCategory,
-          isolatedCategories
+          isolatedCategories,
+          focusedIndex,
+          onFocusedIndexChange: setFocusedIndex
         })
 
   const isInteractive = Boolean(customClickBehavior || customHoverBehavior)
 
   return (
-    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && (legendInteraction === "isolate" || customClickBehavior) ? true : undefined} aria-label="Chart legend">
+    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && (legendInteraction === "isolate" || !!customClickBehavior) ? true : undefined} aria-label="Chart legend">
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

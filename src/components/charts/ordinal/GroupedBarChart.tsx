@@ -4,16 +4,17 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface GroupedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -78,60 +79,45 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = data || []
   const actualColorBy = colorBy || groupBy
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
-    selection, linkedHover,
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy: actualColorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
     unwrapData: true,
-    onObservation, chartType: "GroupedBarChart", chartId
+    onObservation,
+    chartType: "GroupedBarChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
   })
 
-  const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!actualColorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
-      const v = typeof actualColorBy === "function" ? actualColorBy(d) : d[actualColorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, actualColorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, actualColorBy, allCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      if (actualColorBy) return { fill: getColor(d, actualColorBy, colorScale) }
+      if (actualColorBy) return { fill: getColor(d, actualColorBy, setup.colorScale) }
       return { fill: DEFAULT_COLOR }
     }
-  }, [actualColorBy, colorScale])
+  }, [actualColorBy, setup.colorScale])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, effectiveSelectionHook, selection),
-    [basePieceStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
+    [basePieceStyle, setup.effectiveSelectionHook, selection]
   )
-
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeData, colorBy: actualColorBy, colorScale, showLegend,
-    legendPosition: legendPositionProp, userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({
@@ -159,7 +145,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     barPadding,
     enableHover,
     showAxes: resolved.showAxes,
@@ -167,19 +153,13 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
-    ...(legend && { legend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

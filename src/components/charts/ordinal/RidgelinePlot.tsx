@@ -4,13 +4,14 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TDatum[]
@@ -72,39 +73,43 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-
   const safeData = data || []
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
-    selection, linkedHover,
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction: undefined,
+    selection,
+    linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
-    onObservation, chartType: "RidgelinePlot", chartId
+    onObservation,
+    chartType: "RidgelinePlot",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
   })
 
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      const color = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
       return { fill: color, stroke: color, fillOpacity: 0.5 }
     }
-  }, [colorBy, colorScale])
+  }, [colorBy, setup.colorScale])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, activeSelectionHook, selection),
-    [baseSummaryStyle, activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
+    [baseSummaryStyle, setup.activeSelectionHook, selection]
   )
-
-  const { legend, margin } = useChartLegendAndMargin({
-    data: safeData, colorBy, colorScale, showLegend, userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -149,7 +154,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     barPadding: categoryPadding,
     enableHover,
     showAxes: resolved.showAxes,
@@ -159,13 +164,13 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     showGrid,
     oSort: false,
     amplitude,
-    ...(legend && { legend }),
+    ...(setup.legend && { legend: setup.legend }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

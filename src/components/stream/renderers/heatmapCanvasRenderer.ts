@@ -61,7 +61,7 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layo
   try {
   for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
-    const nodeStyle = (node as any).style
+    const nodeStyle = node.style
     if (nodeStyle?.opacity != null) {
       ctx.globalAlpha = nodeStyle.opacity
     }
