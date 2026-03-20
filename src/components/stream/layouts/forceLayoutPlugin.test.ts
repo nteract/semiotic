@@ -27,12 +27,12 @@ describe("forceLayoutPlugin", () => {
     const moved = nodes.some(n => n.x !== 0 || n.y !== 0)
     expect(moved).toBe(true)
 
-    // Nodes should be within or near the chart area
+    // Nodes should be clamped within the chart area
     for (const n of nodes) {
-      expect(n.x).toBeGreaterThan(-100)
-      expect(n.x).toBeLessThan(700)
-      expect(n.y).toBeGreaterThan(-100)
-      expect(n.y).toBeLessThan(700)
+      expect(n.x).toBeGreaterThanOrEqual(0)
+      expect(n.x).toBeLessThanOrEqual(600)
+      expect(n.y).toBeGreaterThanOrEqual(0)
+      expect(n.y).toBeLessThanOrEqual(600)
     }
   })
 
@@ -202,5 +202,137 @@ describe("forceLayoutPlugin", () => {
         expect(sn.r).toBe(15)
       }
     }
+  })
+
+  it("centers nodes in the chart area", () => {
+    const nodes = Array.from({ length: 10 }, (_, i) => makeNode(`N${i}`))
+    const edges = Array.from({ length: 9 }, (_, i) => makeEdge(`N${i}`, `N${i + 1}`))
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 200 }
+    const size: [number, number] = [600, 400]
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, size)
+
+    // Compute the centroid of all node positions
+    let sumX = 0, sumY = 0
+    for (const n of nodes) { sumX += n.x; sumY += n.y }
+    const centroidX = sumX / nodes.length
+    const centroidY = sumY / nodes.length
+
+    // The centroid should be close to the center of the chart (within 15% of each dimension)
+    expect(Math.abs(centroidX - 300)).toBeLessThan(90)
+    expect(Math.abs(centroidY - 200)).toBeLessThan(60)
+  })
+
+  it("clamps all nodes within the canvas boundaries", () => {
+    // Use a small canvas with many nodes to stress-test boundary clamping
+    const nodes = Array.from({ length: 20 }, (_, i) => makeNode(`N${i}`))
+    const edges = Array.from({ length: 19 }, (_, i) => makeEdge(`N${i}`, `N${i + 1}`))
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 300 }
+    const size: [number, number] = [300, 200]
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, size)
+
+    for (const n of nodes) {
+      expect(n.x).toBeGreaterThanOrEqual(0)
+      expect(n.x).toBeLessThanOrEqual(300)
+      expect(n.y).toBeGreaterThanOrEqual(0)
+      expect(n.y).toBeLessThanOrEqual(200)
+    }
+  })
+
+  it("resets bounding box so finalizeLayout uses force-computed x/y", () => {
+    // After computeLayout, x0/x1/y0/y1 should be zeroed so that the
+    // pipeline store's finalizeLayout derives the bounding box from x/y
+    // (not from stale x0/x1/y0/y1 left over from a previous layout).
+    const nodes = [makeNode("A"), makeNode("B"), makeNode("C")]
+    const edges = [makeEdge("A", "B"), makeEdge("B", "C")]
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 100 }
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, [600, 600])
+
+    for (const n of nodes) {
+      expect(n.x0).toBe(0)
+      expect(n.x1).toBe(0)
+      expect(n.y0).toBe(0)
+      expect(n.y1).toBe(0)
+      // But x/y should be set by the force simulation
+      expect(n.x !== 0 || n.y !== 0).toBe(true)
+    }
+  })
+
+  it("updates existing node positions during streaming warm-start relayout", () => {
+    // Simulate the full streaming pipeline: initial layout, then push new node
+    const nodes = [makeNode("A"), makeNode("B"), makeNode("C")]
+    const edges = [makeEdge("A", "B"), makeEdge("B", "C")]
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 100 }
+    const size: [number, number] = [600, 600]
+
+    // First layout (cold start)
+    forceLayoutPlugin.computeLayout(nodes, edges, config, size)
+
+    // Simulate what finalizeLayout does: synthesize bounding box from x/y
+    for (const n of nodes) {
+      const r = 5
+      n.x0 = n.x - r
+      n.x1 = n.x + r
+      n.y0 = n.y - r
+      n.y1 = n.y + r
+    }
+
+    // Record positions
+    const positionsAfterFirst = new Map<string, { x: number; y: number }>()
+    for (const n of nodes) positionsAfterFirst.set(n.id, { x: n.x, y: n.y })
+
+    // Push a new node (streaming)
+    const nodeD = makeNode("D")
+    nodes.push(nodeD)
+    edges.push(makeEdge("A", "D"))
+
+    // Second layout (warm start) — this is the streaming relayout
+    forceLayoutPlugin.computeLayout(nodes, edges, config, size)
+
+    // After force layout, x0/x1/y0/y1 should be zeroed for all nodes
+    for (const n of nodes) {
+      expect(n.x0).toBe(0)
+      expect(n.x1).toBe(0)
+      expect(n.y0).toBe(0)
+      expect(n.y1).toBe(0)
+    }
+
+    // New node should have been positioned
+    expect(nodeD.x !== 0 || nodeD.y !== 0).toBe(true)
+
+    // Existing nodes should have shifted slightly due to the new node's forces
+    // (they shouldn't be frozen at their old positions)
+    let anyMoved = false
+    for (const [id, oldPos] of positionsAfterFirst) {
+      const node = nodes.find(n => n.id === id)!
+      if (Math.abs(node.x - oldPos.x) > 0.01 || Math.abs(node.y - oldPos.y) > 0.01) {
+        anyMoved = true
+      }
+    }
+    expect(anyMoved).toBe(true)
+  })
+
+  it("centers nodes in non-square (wide) chart areas", () => {
+    const nodes = Array.from({ length: 8 }, (_, i) => makeNode(`N${i}`))
+    const edges = [
+      makeEdge("N0", "N1"), makeEdge("N1", "N2"), makeEdge("N2", "N3"),
+      makeEdge("N0", "N4"), makeEdge("N4", "N5"), makeEdge("N5", "N6"),
+      makeEdge("N3", "N7"), makeEdge("N6", "N7")
+    ]
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 200 }
+    const size: [number, number] = [800, 300]
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, size)
+
+    let sumX = 0, sumY = 0
+    for (const n of nodes) { sumX += n.x; sumY += n.y }
+    const centroidX = sumX / nodes.length
+    const centroidY = sumY / nodes.length
+
+    // Centroid should be near center of the wide canvas
+    expect(Math.abs(centroidX - 400)).toBeLessThan(120)
+    expect(Math.abs(centroidY - 150)).toBeLessThan(60)
   })
 })

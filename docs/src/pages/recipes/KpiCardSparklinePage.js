@@ -12,6 +12,7 @@ function formatValue(value, unit) {
   return value.toLocaleString()
 }
 
+// Standard sparkline KPI card
 function KpiCard({ label, value, previousValue, unit, trend }) {
   const change = ((value - previousValue) / previousValue) * 100
   const isPositive = change >= 0
@@ -42,11 +43,13 @@ function KpiCard({ label, value, previousValue, unit, trend }) {
           {isPositive ? "+" : ""}{change.toFixed(1)}%
         </span>
         <StreamXYFrame
+          chartType="line"
           size={[120, 40]}
-          lines={[{ coordinates: trend }]}
+          data={trend}
           xAccessor="day"
           yAccessor="value"
-          lineStyle={{ stroke: sparkColor, strokeWidth: 2, fill: "none" }}
+          lineStyle={{ stroke: sparkColor, strokeWidth: 2 }}
+          showAxes={false}
           margin={{ top: 4, bottom: 4, left: 0, right: 0 }}
         />
       </div>
@@ -54,25 +57,77 @@ function KpiCard({ label, value, previousValue, unit, trend }) {
   )
 }
 
-export default function KpiCardSparkline({ data }) {
+// Forecast sparkline KPI card with confidence interval
+function ForecastKpiCard({ label, value, previousValue, unit, actual, forecast }) {
+  const change = ((value - previousValue) / previousValue) * 100
+  const isPositive = change >= 0
+  const sparkColor = isPositive ? "#22c55e" : "#ef4444"
+
+  const flatData = [
+    ...actual.map(d => ({ ...d, lineGroup: "actual", forecast: false })),
+    ...forecast.map(d => ({ ...d, lineGroup: "forecast", forecast: true })),
+  ]
+
   return (
     <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: "16px",
+      background: "var(--surface-1, #12121a)",
+      border: "1px solid var(--surface-3, #252530)",
+      borderRadius: "12px",
+      padding: "20px",
     }}>
-      {data.map((kpi) => (
-        <KpiCard key={kpi.label} {...kpi} />
-      ))}
+      <div style={{
+        fontSize: "11px", fontWeight: 600, textTransform: "uppercase",
+        letterSpacing: "0.05em", color: "var(--text-secondary, #8888a0)",
+        marginBottom: "4px",
+      }}>
+        {label}
+      </div>
+      <div style={{ fontSize: "28px", fontWeight: 700, lineHeight: 1.2, marginBottom: "8px" }}>
+        {formatValue(value, unit)}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <span style={{
+          fontSize: "13px", fontWeight: 600,
+          color: isPositive ? "#22c55e" : "#ef4444",
+        }}>
+          {isPositive ? "+" : ""}{change.toFixed(1)}%
+        </span>
+        <StreamXYFrame
+          chartType="line"
+          size={[160, 50]}
+          data={flatData}
+          groupAccessor="lineGroup"
+          xAccessor="day"
+          yAccessor="value"
+          lineStyle={(d) => d.forecast
+            ? { stroke: sparkColor, strokeWidth: 2, strokeDasharray: "3 2" }
+            : { stroke: sparkColor, strokeWidth: 2 }
+          }
+          boundsAccessor={d => d.uncertainty || 0}
+          boundsStyle={{ fill: sparkColor, fillOpacity: 0.15, stroke: "none" }}
+          showAxes={false}
+          margin={{ top: 6, bottom: 6, left: 0, right: 0 }}
+        />
+      </div>
+      <div style={{
+        fontSize: "10px", color: "var(--text-secondary, #8888a0)",
+        marginTop: "4px", fontStyle: "italic",
+      }}>
+        forecast with confidence interval
+      </div>
     </div>
   )
 }
 
 // Usage:
-// <KpiCardSparkline data={[
-//   { label: "Revenue", value: 128400, previousValue: 112300, unit: "$",
-//     trend: [{ day: 1, value: 112 }, { day: 2, value: 115 }, ...] },
-// ]} />`
+// <KpiCard label="Revenue" value={128400} previousValue={112300}
+//   unit="$" trend={[{ day: 1, value: 112 }, ...]} />
+//
+// <ForecastKpiCard label="Projected Revenue" value={142000}
+//   previousValue={128400} unit="$"
+//   actual={[{ day: 1, value: 112 }, ...]}
+//   forecast={[{ day: 9, value: 128, uncertainty: 0 },
+//     { day: 10, value: 131, uncertainty: 4 }, ...]} />`
 
 export default function KpiCardSparklinePage() {
   return (
@@ -90,6 +145,14 @@ export default function KpiCardSparklinePage() {
         A dashboard KPI card that shows a metric's current value, percent change
         from the previous period, and an inline sparkline trend. Uses Semiotic's
         <code>StreamXYFrame</code> at minimal size with no axes for the sparkline.
+      </p>
+      <p>
+        The fourth card demonstrates a <strong>forecast sparkline</strong> with a
+        confidence interval cone, combining actual data with projected values.
+        The forecast segment uses a dashed line and the <code>boundsAccessor</code> prop
+        to render a growing uncertainty band, similar to the{" "}
+        <Link to="/cookbook/uncertainty-visualization">Uncertainty Visualization</Link> cookbook
+        recipe but at sparkline scale.
       </p>
 
       <h2 id="preview">Preview</h2>
@@ -133,25 +196,42 @@ export default function KpiCardSparklinePage() {
             <td><code>data</code> prop</td>
             <td>Pass your own array of KPI objects</td>
           </tr>
+          <tr>
+            <td>Forecast confidence</td>
+            <td><code>boundsAccessor</code></td>
+            <td>Each forecast point's <code>uncertainty</code> value controls the band width</td>
+          </tr>
+          <tr>
+            <td>Forecast line style</td>
+            <td><code>lineStyle</code> function</td>
+            <td>Check <code>d.forecast</code> to switch between solid and dashed strokes</td>
+          </tr>
         </tbody>
       </table>
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        Each KPI card renders an <code>StreamXYFrame</code> with <code>lines</code> containing
-        a single series. The frame uses zero-margin axes and a tiny size to create an
-        inline sparkline. The <code>xAccessor</code> and <code>yAccessor</code> props
-        map to the <code>day</code> and <code>value</code> fields of each trend data point.
+        Each KPI card renders a <code>StreamXYFrame</code> with a single line series.
+        The frame uses zero-margin axes and a tiny size to create an inline sparkline.
+        The <code>xAccessor</code> and <code>yAccessor</code> props map to the{" "}
+        <code>day</code> and <code>value</code> fields of each trend data point.
       </p>
       <p>
         The percent change is calculated from <code>value</code> vs <code>previousValue</code>,
         with the sparkline color matching the direction (green for positive, red for negative).
       </p>
+      <p>
+        The forecast card uses <code>groupAccessor</code> to split data into "actual" and
+        "forecast" line groups. The <code>lineStyle</code> function checks a <code>forecast</code> flag
+        to render the projected segment with a dashed stroke. The <code>boundsAccessor</code> reads
+        each point's <code>uncertainty</code> value to draw the confidence interval cone, matching
+        the pattern from the <Link to="/cookbook/uncertainty-visualization">Uncertainty Visualization</Link> recipe.
+      </p>
 
       <h2 id="related">Related</h2>
       <ul>
         <li><Link to="/frames/xy-frame">StreamXYFrame</Link> — underlying frame for sparklines</li>
-        <li><Link to="/features/sparklines">Sparklines</Link> — more sparkline patterns</li>
+        <li><Link to="/cookbook/uncertainty-visualization">Uncertainty Visualization</Link> — full-size forecast with confidence interval</li>
         <li><Link to="/charts/line-chart">Line Chart</Link> — full-size line visualizations</li>
       </ul>
     </RecipeLayout>

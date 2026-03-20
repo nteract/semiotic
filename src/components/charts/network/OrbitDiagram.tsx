@@ -3,7 +3,7 @@ import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
+import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
 import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -153,24 +153,36 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
 
   // ── Node style — d is a RealtimeNode, user data on d.data ───────────────
+  // Resolve the scheme colors array for root node coloring
+  const schemeColors = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? (resolved as readonly string[]) : DEFAULT_COLORS
+  }, [colorScheme])
+
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { stroke: "#fff", strokeWidth: 1 }
+      const isRoot = (d.depth ?? 0) === 0
       if (colorByDepth) {
-        baseStyle.fill = DEPTH_COLORS[(d.depth || 0) % DEPTH_COLORS.length]
+        // Root nodes use the first color from the scheme instead of the grey depth palette
+        baseStyle.fill = isRoot
+          ? schemeColors[0]
+          : DEPTH_COLORS[(d.depth || 0) % DEPTH_COLORS.length]
       } else if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }
-      baseStyle.opacity = (d.depth ?? 0) === 0 ? 1 : 0.85
+      baseStyle.opacity = isRoot ? 1 : 0.85
       return baseStyle
     }
-  }, [colorBy, colorByDepth, colorScale])
+  }, [colorBy, colorByDepth, colorScale, schemeColors])
 
-  // Edge style
+  // Edge style — use semi-transparent grey that works in both light and dark mode
+  // (canvas cannot resolve "currentColor")
   const edgeStyleFn = useMemo(() => {
-    return () => ({ stroke: "currentColor", strokeWidth: 0.5, opacity: 0.1 })
+    return () => ({ stroke: "rgba(128,128,128,0.35)", strokeWidth: 0.5, opacity: 1 })
   }, [])
 
   // Margin

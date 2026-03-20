@@ -133,6 +133,7 @@ export default function RoslingBubbleChart({ width = 800 }) {
           width={width} height={500}
           annotations={annotations}
           frameProps={{ pointStyle, xScaleType: "log",
+            xExtent: [300, 70000], yExtent: [30, 90],
             ...(canvasPreRenderers && { canvasPreRenderers }) }}
         />
       </CategoryColorProvider>

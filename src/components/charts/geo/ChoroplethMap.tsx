@@ -154,14 +154,22 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     return base
   }, [valAcc, colorScale, activeSelectionHook, selection, areaOpacity])
 
-  // Default tooltip
+  // Default tooltip — check both nested properties and flattened fields
+  // (StreamGeoFrame flattens feature.properties onto the hover object)
   const defaultTooltip = useMemo(() => (d: any) => {
-    const name = d?.properties?.name || d?.properties?.NAME || "Feature"
+    const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || "Feature"
     const val = valAcc(d)
+
+    const formatValue = (v: any): string => {
+      if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
+      if (Number.isInteger(v)) return v.toLocaleString()
+      return v.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    }
+
     return (
       <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
         <div style={{ fontWeight: 600 }}>{name}</div>
-        {val != null && <div style={{ opacity: 0.7 }}>{typeof val === "number" ? val.toLocaleString() : val}</div>}
+        {val != null && <div style={{ opacity: 0.7 }}>{formatValue(val)}</div>}
       </div>
     )
   }, [valAcc])

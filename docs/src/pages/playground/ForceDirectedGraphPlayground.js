@@ -145,6 +145,8 @@ const datasets = [
     nodes: sparseNodes,
     edges: sparseEdges,
     colorBy: "group",
+    forceStrength: 0.3,
+    iterations: 500,
     codeString: `// nodes
 [
   { id: "N1", group: "A" },
@@ -183,6 +185,8 @@ export default function ForceDirectedGraphPlayground() {
         colorBy: ds.colorBy,
         nodeLabel: "id",
         height: 500,
+        ...(ds.forceStrength != null && { forceStrength: ds.forceStrength }),
+        ...(ds.iterations != null && { iterations: ds.iterations }),
       })}
     >
       <p>

@@ -457,7 +457,7 @@ export default function AnnotationsPage() {
           pointIdAccessor: "label",
           annotations: [
             { type: "label", pointId: "D", label: "Outlier", dx: 30, dy: -30 },
-            { type: "callout", pointId: "F", label: "Peak", radius: 15 },
+            { type: "callout", pointId: "F", label: "Peak", radius: 15, dx: -50, dy: -20 },
           ],
         }}
         type={Scatterplot}
@@ -474,7 +474,7 @@ export default function AnnotationsPage() {
           pointIdAccessor: `"label"`,
           annotations: `[
   { type: "label", pointId: "D", label: "Outlier", dx: 30, dy: -30 },
-  { type: "callout", pointId: "F", label: "Peak", radius: 15 }
+  { type: "callout", pointId: "F", label: "Peak", radius: 15, dx: -50, dy: -20 }
 ]`,
         }}
         hiddenProps={{}}

@@ -460,6 +460,107 @@ const areas = mergeData(worldFeatures, countryGDP, {
       </table>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Production Tile Providers & API Keys */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="production-providers">Production Tile Providers & API Keys</h2>
+
+      <p>
+        The examples on this page use OpenStreetMap's free tile server, which is
+        fine for development and low-traffic demos. For production applications
+        you should use a commercial tile provider that offers an SLA, higher
+        rate limits, and custom map styles. Most require an API key that you
+        pass as part of the URL template.
+      </p>
+
+      <div style={{
+        background: "var(--surface-2)",
+        border: "1px solid var(--border)",
+        borderRadius: 8,
+        padding: "12px 16px",
+        marginBottom: 24,
+        fontSize: 14,
+        color: "var(--text-secondary)",
+      }}>
+        <strong>Important:</strong> Never hard-code API keys in client-side
+        source code. Use environment variables (e.g.{" "}
+        <code>VITE_MAPBOX_TOKEN</code> or <code>NEXT_PUBLIC_MAPTILER_KEY</code>)
+        and your bundler's env injection so keys stay out of version control.
+      </div>
+
+      <h3>Mapbox</h3>
+      <p>
+        Sign up at{" "}
+        <a href="https://www.mapbox.com/" target="_blank" rel="noreferrer">mapbox.com</a>{" "}
+        for an access token. Mapbox offers a generous free tier and custom
+        Studio styles.
+      </p>
+      <CodeBlock
+        code={`// Mapbox raster tiles (requires access token)
+<ProportionalSymbolMap
+  projection="mercator"
+  tileURL={\`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=\${MAPBOX_TOKEN}\`}
+  tileAttribution="&copy; Mapbox &copy; OpenStreetMap"
+  // ...other props
+/>`}
+        language="jsx"
+      />
+
+      <h3>MapTiler</h3>
+      <p>
+        <a href="https://www.maptiler.com/" target="_blank" rel="noreferrer">MapTiler</a>{" "}
+        provides raster and vector tiles with a free tier. Their raster endpoint
+        works directly with Semiotic's <code>tileURL</code>.
+      </p>
+      <CodeBlock
+        code={`// MapTiler raster tiles (requires API key)
+<ChoroplethMap
+  projection="mercator"
+  tileURL={\`https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=\${MAPTILER_KEY}\`}
+  tileAttribution="&copy; MapTiler &copy; OpenStreetMap contributors"
+  // ...other props
+/>`}
+        language="jsx"
+      />
+
+      <h3>Stadia Maps (Stamen styles)</h3>
+      <p>
+        <a href="https://stadiamaps.com/" target="_blank" rel="noreferrer">Stadia Maps</a>{" "}
+        hosts the classic Stamen tile styles (Toner, Watercolor, Terrain). A
+        free tier is available for non-commercial use; production use requires a
+        plan and API key.
+      </p>
+      <CodeBlock
+        code={`// Stadia Maps — free tier works without a key on localhost
+// For production, add your API key:
+<ProportionalSymbolMap
+  projection="mercator"
+  tileURL={\`https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}.png?api_key=\${STADIA_KEY}\`}
+  tileAttribution="&copy; Stadia Maps &copy; Stamen Design &copy; OpenStreetMap"
+  // ...other props
+/>`}
+        language="jsx"
+      />
+
+      <h3>Using a function for tileURL</h3>
+      <p>
+        For providers that need dynamic URL construction (e.g. rotating
+        subdomains, retina detection, or token injection), pass a function
+        instead of a string template:
+      </p>
+      <CodeBlock
+        code={`// Function form — receives (z, x, y, devicePixelRatio)
+<StreamGeoFrame
+  projection="mercator"
+  tileURL={(z, x, y, dpr) => {
+    const retina = dpr > 1 ? "@2x" : ""
+    return \`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/\${z}/\${x}/\${y}\${retina}?access_token=\${MAPBOX_TOKEN}\`
+  }}
+  // ...other props
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Tips */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="tips">Tips</h2>

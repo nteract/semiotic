@@ -40,6 +40,28 @@ const sampleData = [
   },
 ]
 
+// Forecast sample: actual data + projected values with growing uncertainty
+const forecastSampleData = [
+  {
+    label: "Projected Revenue",
+    value: 142000,
+    previousValue: 128400,
+    unit: "$",
+    actual: [
+      { day: 1, value: 112 }, { day: 2, value: 115 }, { day: 3, value: 113 },
+      { day: 4, value: 118 }, { day: 5, value: 121 }, { day: 6, value: 119 },
+      { day: 7, value: 124 }, { day: 8, value: 126 }, { day: 9, value: 128 },
+    ],
+    forecast: [
+      { day: 9, value: 128, uncertainty: 0 },
+      { day: 10, value: 131, uncertainty: 4 },
+      { day: 11, value: 135, uncertainty: 8 },
+      { day: 12, value: 138, uncertainty: 13 },
+      { day: 13, value: 142, uncertainty: 19 },
+    ],
+  },
+]
+
 function formatValue(value, unit) {
   if (unit === "$") return `$${value.toLocaleString()}`
   if (unit === "%") return `${value}%`
@@ -74,11 +96,68 @@ function KpiCard({ label, value, previousValue, unit, trend }) {
   )
 }
 
+function ForecastKpiCard({ label, value, previousValue, unit, actual, forecast }) {
+  const change = ((value - previousValue) / previousValue) * 100
+  const isPositive = change >= 0
+  const sparkColor = isPositive ? "#22c55e" : "#ef4444"
+
+  // Flatten actual + forecast into grouped line data for StreamXYFrame
+  const flatData = [
+    ...actual.map(d => ({ ...d, lineGroup: "actual", forecast: false })),
+    ...forecast.map(d => ({ ...d, lineGroup: "forecast", forecast: true })),
+  ]
+
+  return (
+    <div className="recipe-kpi-card">
+      <div className="recipe-kpi-label">{label}</div>
+      <div className="recipe-kpi-value">{formatValue(value, unit)}</div>
+      <div className="recipe-kpi-row">
+        <span className={`recipe-kpi-change ${isPositive ? "positive" : "negative"}`}>
+          {isPositive ? "+" : ""}{change.toFixed(1)}%
+        </span>
+        <StreamXYFrame
+          chartType="line"
+          size={[160, 50]}
+          data={flatData}
+          groupAccessor="lineGroup"
+          xAccessor="day"
+          yAccessor="value"
+          lineStyle={(d) => {
+            if (d.forecast) {
+              return { stroke: sparkColor, strokeWidth: 2, strokeDasharray: "3 2" }
+            }
+            return { stroke: sparkColor, strokeWidth: 2 }
+          }}
+          boundsAccessor={d => d.uncertainty || 0}
+          boundsStyle={{
+            fill: sparkColor,
+            fillOpacity: 0.15,
+            stroke: "none",
+          }}
+          showAxes={false}
+          margin={{ top: 6, bottom: 6, left: 0, right: 0 }}
+        />
+      </div>
+      <div style={{
+        fontSize: "10px",
+        color: "var(--text-secondary, #8888a0)",
+        marginTop: "4px",
+        fontStyle: "italic",
+      }}>
+        forecast with confidence interval
+      </div>
+    </div>
+  )
+}
+
 export default function KpiCardSparkline({ data = sampleData }) {
   return (
     <div className="recipe-kpi-grid">
       {data.map((kpi) => (
         <KpiCard key={kpi.label} {...kpi} />
+      ))}
+      {forecastSampleData.map((kpi) => (
+        <ForecastKpiCard key={kpi.label} {...kpi} />
       ))}
     </div>
   )

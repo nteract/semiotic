@@ -168,12 +168,19 @@ function ThemeDemo() {
   const themeValue = mode === "custom"
     ? {
         colors: {
-          primary: "#e63946",
-          background: "#f1faee",
-          text: "#1d3557",
-          textSecondary: "#457b9d",
-          grid: "#a8dadc",
-          border: "#457b9d",
+          primary: "#d4a373",
+          categorical: ["#d4a373", "#a3b18a", "#588157", "#bc6c25"],
+          background: "#fefae0",
+          text: "#283618",
+          textSecondary: "#606c38",
+          grid: "#dda15e44",
+          border: "#bc6c25",
+        },
+        typography: {
+          fontFamily: '"Georgia", serif',
+          titleSize: 18,
+          labelSize: 13,
+          tickSize: 11,
         },
       }
     : mode

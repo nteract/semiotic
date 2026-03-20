@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -15,6 +15,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 export interface DonutChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -46,12 +47,6 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
 
   const {
     data, margin: userMargin, className,
@@ -74,6 +69,34 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
 
   const safeData = data || []
   const actualColorBy = colorBy || categoryAccessor
+  const isPushMode = data === undefined
+
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy: actualColorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+  })
+
+  const wrappedPush = useCallback(
+    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    [streaming.wrapPush]
+  )
+  const wrappedPushMany = useCallback(
+    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
+    [streaming.wrapPushMany]
+  )
+
+  useImperativeHandle(ref, () => ({
+    push: wrappedPush,
+    pushMany: wrappedPushMany,
+    clear: () => {
+      streaming.resetCategories()
+      frameRef.current?.clear()
+    },
+    getData: () => frameRef.current?.getData() ?? []
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   const setup = useChartSetup({
     data: safeData,
@@ -102,7 +125,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      if (actualColorBy) return { fill: getColor(d, actualColorBy, setup.colorScale) }
+      if (actualColorBy) {
+        if (setup.colorScale) return { fill: getColor(d, actualColorBy, setup.colorScale) }
+        return {} // Let frame use its own color scheme (push API)
+      }
       return { fill: DEFAULT_COLOR }
     }
   }, [actualColorBy, setup.colorScale])
@@ -129,6 +155,31 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
   })
   if (error) return <ChartError componentName="DonutChart" message={error} width={width} height={height} />
 
+  // Merge streaming legend into legendBehaviorProps when in push API mode
+  const effectiveLegendProps = useMemo(() => {
+    if (streaming.streamingLegend) {
+      return {
+        ...setup.legendBehaviorProps,
+        legend: streaming.streamingLegend,
+        legendPosition: legendPositionProp || setup.legendPosition,
+      }
+    }
+    return setup.legendBehaviorProps
+  }, [setup.legendBehaviorProps, setup.legendPosition, streaming.streamingLegend, legendPositionProp])
+
+  // Adjust margin for streaming legend
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...setup.margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return setup.margin
+  }, [setup.margin, streaming.streamingMarginAdjust])
+
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "donut",
     ...(data != null && { data: safeData }),
@@ -142,10 +193,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: setup.margin,
+    margin: effectiveMargin,
     enableHover,
     showAxes: false,
-    ...setup.legendBehaviorProps,
+    ...effectiveLegendProps,
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false

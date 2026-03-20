@@ -205,8 +205,8 @@ export default function RoslingBubbleChart({ width = 800 }) {
           type: "widget",
           gdp: d.gdp,
           life: d.life,
-          dx: d.pop > 500 ? 25 : 15,
-          dy: -6,
+          dx: d.pop > 500 ? 30 : 18,
+          dy: d.pop > 500 ? -35 : -20,
           content: (
             <span style={{
               fontSize: 11,
@@ -462,13 +462,7 @@ export default function RoslingBubbleChart({ width = 800 }) {
             enableHover
             annotations={annotations}
             tooltip={(d) => (
-              <div style={{
-                background: "var(--surface-2, rgba(0,0,0,0.85))",
-                color: "var(--text-primary, white)",
-                border: "1px solid var(--surface-3, transparent)",
-                padding: "8px 12px", borderRadius: 6, fontSize: 12,
-                maxWidth: 200,
-              }}>
+              <div style={{ fontSize: 12, maxWidth: 200 }}>
                 <div style={{ fontWeight: 700, marginBottom: 2 }}>{d.country}</div>
                 <div style={{ opacity: 0.8 }}>
                   GDP: ${d.gdp?.toLocaleString()}/capita
@@ -484,6 +478,8 @@ export default function RoslingBubbleChart({ width = 800 }) {
             frameProps={{
               pointStyle,
               xScaleType: "log",
+              xExtent: [300, 70000],
+              yExtent: [30, 90],
               ...(canvasPreRenderers && { canvasPreRenderers }),
             }}
           />

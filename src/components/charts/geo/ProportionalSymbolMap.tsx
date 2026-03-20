@@ -189,15 +189,41 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   })
 
   const defaultTooltip = useMemo(() => (d: any) => {
+    // Try to find a human-readable name for the point
+    const name = d?.name || d?.label || d?.NAME || d?.id
+    const sizeField = typeof sizeBy === "string" ? sizeBy : null
     const sizeAcc = typeof sizeBy === "function" ? sizeBy : (datum: any) => datum[sizeBy as string]
+    const sizeVal = sizeAcc(d)
+
+    // Format numbers: use toLocaleString for large integers, limit decimals for floats
+    const formatValue = (v: any): string => {
+      if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
+      if (Number.isInteger(v)) return v.toLocaleString()
+      return v.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    }
+
+    // If colorBy is a string, show the category too
+    const categoryField = typeof colorBy === "string" ? colorBy : null
+    const categoryVal = categoryField ? d?.[categoryField] : null
+
     return (
       <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
-        {Object.entries(d).slice(0, 4).map(([k, v]) => (
-          <div key={k}><span style={{ opacity: 0.7 }}>{k}: </span>{String(v)}</div>
-        ))}
+        {name && <div style={{ fontWeight: 600, marginBottom: 2 }}>{name}</div>}
+        {sizeField && sizeVal != null && (
+          <div><span style={{ opacity: 0.7 }}>{sizeField}: </span>{formatValue(sizeVal)}</div>
+        )}
+        {categoryField && categoryVal != null && (
+          <div><span style={{ opacity: 0.7 }}>{categoryField}: </span>{String(categoryVal)}</div>
+        )}
+        {!name && !sizeField && (
+          // Fallback: show first few fields, but format numbers
+          Object.entries(d).filter(([k]) => k !== "data" && k !== "x" && k !== "y" && k !== "time").slice(0, 4).map(([k, v]) => (
+            <div key={k}><span style={{ opacity: 0.7 }}>{k}: </span>{formatValue(v)}</div>
+          ))
+        )}
       </div>
     )
-  }, [sizeBy])
+  }, [sizeBy, colorBy])
 
   // ── Early returns (after all hooks) ─────────────────────────────────
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)

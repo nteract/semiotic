@@ -1,5 +1,6 @@
 import {
   forceSimulation,
+  forceCenter,
   forceX,
   forceY,
   forceLink,
@@ -157,14 +158,17 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       .id((d: any) => d.id)
 
     // Build simulation
-    const forceMod = size[1] / size[0]
     const simulation = forceSimulation()
       .force(
         "charge",
         forceManyBody().strength((d: any) => -25 * nodeRadius(d))
       )
-      .force("x", forceX(size[0] / 2).strength(forceMod * 0.1))
-      .force("y", forceY(size[1] / 2).strength(0.1))
+      // forceCenter shifts the center of mass to the target on every tick,
+      // ensuring the graph as a whole stays centered in the chart area
+      .force("center", forceCenter(cx, cy).strength(0.8))
+      // forceX/forceY pull individual nodes toward center, preventing outliers
+      .force("x", forceX(cx).strength(0.15))
+      .force("y", forceY(cy).strength(0.15))
 
     simulation.nodes(nodes as any)
 
@@ -192,6 +196,22 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // Run synchronously
     for (let i = 0; i < iterations; ++i) {
       simulation.tick()
+    }
+
+    // Clamp node positions to stay within the canvas area (with padding for node radius)
+    for (const node of nodes) {
+      if (node.x == null || node.y == null) continue
+      const r = nodeRadius(node)
+      node.x = Math.max(r, Math.min(size[0] - r, node.x))
+      node.y = Math.max(r, Math.min(size[1] - r, node.y))
+
+      // Reset bounding box so finalizeLayout derives it from the updated x/y.
+      // Without this, stale x0/x1/y0/y1 from a previous layout would cause
+      // finalizeLayout to overwrite the force-computed positions.
+      node.x0 = 0
+      node.x1 = 0
+      node.y0 = 0
+      node.y1 = 0
     }
 
     // Resolve edge source/target to node object references so that

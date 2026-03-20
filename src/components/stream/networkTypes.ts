@@ -408,6 +408,7 @@ export interface NetworkPipelineConfig {
   edgeStyle?: (d: any) => Record<string, any>
   nodeLabel?: string | ((d: any) => string)
   showLabels?: boolean
+  labelMode?: "leaf" | "parent" | "all"
 
   // ── Color ────────────────────────────────────────
   colorBy?: string | ((d: any) => string | number)
@@ -515,6 +516,7 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   // ── Labels ───────────────────────────────────────
   nodeLabel?: string | ((d: any) => string)
   showLabels?: boolean
+  labelMode?: "leaf" | "parent" | "all"
 
   // ── Layout ───────────────────────────────────────
   size?: [number, number]

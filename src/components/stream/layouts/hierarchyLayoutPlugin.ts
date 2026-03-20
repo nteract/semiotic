@@ -24,6 +24,33 @@ import type { Style } from "../types"
 type HierarchyLayoutType = "tree" | "cluster" | "treemap" | "circlepack" | "partition"
 
 /**
+ * Parse a CSS color string (hex or rgb/rgba) into [r, g, b].
+ * Falls back to mid-gray if the format is unrecognized.
+ */
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    let hex = color.slice(1)
+    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+    if (hex.length === 6) {
+      return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
+    }
+  }
+  const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
+  if (m) return [+m[1], +m[2], +m[3]]
+  return [128, 128, 128]
+}
+
+/**
+ * Return a high-contrast text color (white or near-black) for the given background.
+ * Uses perceived luminance (ITU-R BT.601).
+ */
+function contrastTextColor(bgColor: string): string {
+  const [r, g, b] = parseColor(bgColor)
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b
+  return luminance > 150 ? "#222" : "#fff"
+}
+
+/**
  * Hierarchy layout plugin — handles tree, cluster, treemap, circlepack, and partition layouts.
  *
  * Uses d3-hierarchy for all layout computations. This plugin is `hierarchical: true`,
@@ -568,32 +595,63 @@ function buildRectScene(
   // Build labels
   if (config.showLabels !== false) {
     const labelFn = resolveLabelFn(config.nodeLabel)
+    const labelMode = config.labelMode || "leaf"
+    const isPartition = config.chartType === "partition"
 
     for (const node of nodes) {
       const w = node.x1 - node.x0
       const h = node.y1 - node.y0
       if (w <= 0 || h <= 0) continue
 
-      // Only label leaf nodes by default (for treemap), or all for partition
       const isLeaf = !(node.data?.children && node.data.children.length > 0)
-      const isPartition = config.chartType === "partition"
 
-      if (!isLeaf && !isPartition) continue
+      // Determine whether to label this node based on labelMode
+      if (!isPartition) {
+        if (labelMode === "leaf" && !isLeaf) continue
+        if (labelMode === "parent" && isLeaf) continue
+        // "all" labels everything
+      }
 
       const text = labelFn ? labelFn(node) : node.id
       if (!text) continue
 
       // Skip labels for very small cells
-      if (w < 30 || h < 16) continue
+      const minWidth = isLeaf ? 30 : 40
+      const minHeight = isLeaf ? 16 : 14
+      if (w < minWidth || h < minHeight) continue
 
-      labels.push({
-        x: node.x0 + w / 2,
-        y: node.y0 + h / 2,
-        text: String(text),
-        anchor: "middle",
-        baseline: "middle",
-        fontSize: Math.min(11, Math.max(8, Math.min(w, h) / 6))
-      })
+      // Compute fill color the same way as the scene node for contrast
+      const userStyle = nodeStyleFn(node)
+      let fill = userStyle.fill || "#4d430c"
+      if (config.colorByDepth && node.depth !== undefined) {
+        fill = depthPalette[node.depth % depthPalette.length]
+      }
+      const textColor = contrastTextColor(fill)
+
+      if (isLeaf) {
+        // Leaf labels: centered in the cell
+        labels.push({
+          x: node.x0 + w / 2,
+          y: node.y0 + h / 2,
+          text: String(text),
+          anchor: "middle",
+          baseline: "middle",
+          fontSize: Math.min(11, Math.max(8, Math.min(w, h) / 6)),
+          fill: textColor
+        })
+      } else {
+        // Parent labels: positioned at the top-left of the header area
+        labels.push({
+          x: node.x0 + 4,
+          y: node.y0 + 12,
+          text: String(text),
+          anchor: "start",
+          baseline: "auto",
+          fontSize: 11,
+          fontWeight: 600,
+          fill: textColor
+        })
+      }
     }
   }
 
@@ -667,18 +725,40 @@ function buildCircleScene(
       // Leaf nodes: centered label. Parent nodes: top-center label.
       const isLeaf = !(node.data?.children && node.data.children.length > 0)
 
-      labels.push({
-        x: node.x,
-        y: isLeaf ? node.y : node.y - r + 14,
-        text: String(text),
-        anchor: "middle",
-        baseline: isLeaf ? "middle" : "hanging",
-        fontSize: Math.min(11, Math.max(8, r / 3)),
-        fill: isLeaf ? undefined : "#000",
-        stroke: isLeaf ? undefined : "#fff",
-        strokeWidth: isLeaf ? undefined : 3,
-        paintOrder: isLeaf ? undefined : "stroke"
-      })
+      // Compute fill color the same way as the scene node for contrast
+      const userStyle = nodeStyleFn(node)
+      let fill = userStyle.fill || "#4d430c"
+      if (config.colorByDepth && node.depth !== undefined) {
+        fill = depthPalette[node.depth % depthPalette.length]
+      }
+
+      if (isLeaf) {
+        // Leaf labels: use luminance-based contrast color
+        const textColor = contrastTextColor(fill)
+        labels.push({
+          x: node.x,
+          y: node.y,
+          text: String(text),
+          anchor: "middle",
+          baseline: "middle",
+          fontSize: Math.min(11, Math.max(8, r / 3)),
+          fill: textColor
+        })
+      } else {
+        // Parent labels: white halo for readability on any background
+        labels.push({
+          x: node.x,
+          y: node.y - r + 14,
+          text: String(text),
+          anchor: "middle",
+          baseline: "hanging",
+          fontSize: Math.min(11, Math.max(8, r / 3)),
+          fill: "#000",
+          stroke: "#fff",
+          strokeWidth: 3,
+          paintOrder: "stroke"
+        })
+      }
     }
   }
 

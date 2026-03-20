@@ -194,6 +194,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       colorByDepth={colorByDepth}
       nodeLabel={showLabels ? (nodeLabel || nodeIdAccessor) : undefined}
       showLabels={showLabels}
+      labelMode={labelMode}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       {...((linkedHover || onObservation) && { customHoverBehavior })}

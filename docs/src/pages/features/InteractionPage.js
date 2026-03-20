@@ -105,7 +105,7 @@ export default function InteractionPage() {
             hoverAnnotation: [
               {
                 type: "highlight",
-                style: { strokeWidth: 3 },
+                style: { strokeWidth: 6, stroke: "rgba(220, 38, 38, 0.45)" },
               },
               { type: "frame-hover" },
             ],
@@ -122,7 +122,7 @@ export default function InteractionPage() {
 ]`,
           frameProps: `{
   hoverAnnotation: [
-    { type: "highlight", style: { strokeWidth: 3 } },
+    { type: "highlight", style: { strokeWidth: 6, stroke: "rgba(220, 38, 38, 0.45)" } },
     { type: "frame-hover" }
   ],
   lineIDAccessor: "product"
@@ -164,9 +164,9 @@ export default function InteractionPage() {
           hoverAnnotation: [
             {
               type: "highlight",
-              style: (d) => ({
-                strokeWidth: 3,
-                stroke: d.parentLine?.group === "Widget" ? colors[0] : colors[1],
+              style: () => ({
+                strokeWidth: 6,
+                stroke: "rgba(220, 38, 38, 0.45)",
               }),
             },
             {
@@ -192,9 +192,9 @@ export default function InteractionPage() {
           hoverAnnotation: `[
   {
     type: "highlight",
-    style: d => ({
-      strokeWidth: 3,
-      stroke: colorForLine(d)
+    style: () => ({
+      strokeWidth: 6,
+      stroke: "rgba(220, 38, 38, 0.45)"
     })
   },
   {

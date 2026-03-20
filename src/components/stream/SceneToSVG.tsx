@@ -327,12 +327,19 @@ export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNo
 // ── Ordinal Scene Nodes ──────────────────────────────────────────────────
 
 export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.ReactNode {
+  // Build a unique key combining node type, category (or group), and index
+  // to avoid duplicate key warnings when multiple nodes share the same index
+  // within stacked/grouped ordinal charts.
+  const category = (node as any).category || (node as any).group || ""
+  const nodeKey = (suffix: string) => `ord-${node.type}-${category}-${i}-${suffix}`
+  const baseKey = `ord-${node.type}-${category}-${i}`
+
   switch (node.type) {
     case "rect": {
       const n = node as RectSceneNode
       return (
         <rect
-          key={`ord-rect-${i}`}
+          key={baseKey}
           x={n.x} y={n.y} width={n.w} height={n.h}
           fill={n.style.fill || "#4e79a7"}
           opacity={n.style.opacity}
@@ -345,7 +352,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const n = node as PointSceneNode
       return (
         <circle
-          key={`ord-point-${i}`}
+          key={baseKey}
           cx={n.x} cy={n.y} r={n.r}
           fill={n.style.fill || "#4e79a7"}
           opacity={n.style.opacity ?? 0.8}
@@ -363,7 +370,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         .endAngle(n.endAngle)({} as any) || ""
       return (
         <path
-          key={`ord-wedge-${i}`}
+          key={baseKey}
           d={arcPath}
           transform={`translate(${n.cx},${n.cy})`}
           fill={n.style.fill || "#4e79a7"}
@@ -378,7 +385,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const halfW = n.columnWidth / 2
       if (n.projection === "vertical") {
         return (
-          <g key={`ord-boxplot-${i}`}>
+          <g key={baseKey}>
             <line x1={n.x} y1={n.minPos} x2={n.x} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
             <rect
               x={n.x - halfW} y={Math.min(n.q1Pos, n.q3Pos)}
@@ -393,7 +400,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         )
       } else {
         return (
-          <g key={`ord-boxplot-${i}`}>
+          <g key={baseKey}>
             <line x1={n.minPos} y1={n.y} x2={n.maxPos} y2={n.y} stroke={n.style.stroke || "#333"} strokeWidth={1} />
             <rect
               x={Math.min(n.q1Pos, n.q3Pos)} y={n.y - halfW}
@@ -412,7 +419,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const n = node as ViolinSceneNode
       const elements: React.ReactNode[] = [
         <path
-          key={`ord-violin-path-${i}`}
+          key={nodeKey("path")}
           d={n.pathString}
           transform={n.translateX || n.translateY ? `translate(${n.translateX},${n.translateY})` : undefined}
           fill={n.style.fill || "#4e79a7"}
@@ -428,35 +435,35 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         const isVertical = b.height > b.width
         if (isVertical) {
           elements.push(
-            <line key={`ord-violin-iqr-${i}`}
+            <line key={nodeKey("iqr")}
               x1={midX} y1={n.iqrLine.q1Pos} x2={midX} y2={n.iqrLine.q3Pos}
               stroke={n.style.stroke || "#333"} strokeWidth={2}
             />,
-            <circle key={`ord-violin-med-${i}`}
+            <circle key={nodeKey("med")}
               cx={midX} cy={n.iqrLine.medianPos} r={3}
               fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
           )
         } else {
           elements.push(
-            <line key={`ord-violin-iqr-${i}`}
+            <line key={nodeKey("iqr")}
               x1={n.iqrLine.q1Pos} y1={midY} x2={n.iqrLine.q3Pos} y2={midY}
               stroke={n.style.stroke || "#333"} strokeWidth={2}
             />,
-            <circle key={`ord-violin-med-${i}`}
+            <circle key={nodeKey("med")}
               cx={n.iqrLine.medianPos} cy={midY} r={3}
               fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
           )
         }
       }
-      return <g key={`ord-violin-${i}`}>{elements}</g>
+      return <g key={baseKey}>{elements}</g>
     }
     case "connector": {
       const n = node as ConnectorSceneNode
       return (
         <line
-          key={`ord-conn-${i}`}
+          key={baseKey}
           x1={n.x1} y1={n.y1} x2={n.x2} y2={n.y2}
           stroke={n.style.stroke || "#999"}
           strokeWidth={n.style.strokeWidth || 1}

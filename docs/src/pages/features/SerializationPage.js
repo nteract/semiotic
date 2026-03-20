@@ -194,8 +194,8 @@ function RoundTripDemo() {
             )}
           </div>
           <pre style={{
-            background: "var(--surface-1, #1a1a2e)",
-            color: "#a8e6cf",
+            background: "var(--surface-2, #1a1a2e)",
+            color: "var(--text-primary, #f0f0f5)",
             borderRadius: 8,
             padding: 12,
             fontSize: 11,
@@ -286,6 +286,7 @@ function ConfigEditorDemo() {
             borderRadius: 8,
             border: error ? "2px solid #ef4444" : "1px solid var(--surface-3, #ddd)",
             background: "var(--surface-1, #f8f9fa)",
+            color: "var(--text-primary, #1a1a2e)",
             resize: "vertical",
             boxSizing: "border-box",
           }}

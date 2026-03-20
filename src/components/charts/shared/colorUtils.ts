@@ -40,6 +40,15 @@ export const DEFAULT_COLORS = schemeCategory10
  * Pastel palette for depth-based hierarchy coloring (Treemap, CirclePack, TreeDiagram).
  * Index corresponds to hierarchy depth, wraps via modulo.
  */
+/**
+ * Default streaming palette — used by PipelineStore, OrdinalPipelineStore,
+ * and useStreamingLegend for consistent colors when no colorScheme is specified.
+ */
+export const STREAMING_PALETTE = [
+  "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
+  "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"
+]
+
 export const DEPTH_PALETTE_COLORS = [
   "#f0f0f0", "#b5d4ea", "#f4c2a1", "#b8dab2", "#d4b5e0", "#f9e0a2", "#a8d8d8"
 ]
@@ -146,7 +155,7 @@ export function createColorScale(
   scheme: string | string[] = "category10"
 ): (v: string) => string {
   // Get unique values
-  const uniqueValues = Array.from(new Set(data.map(d => d[colorBy])))
+  const uniqueValues = Array.from(new Set(data.map(d => d?.[colorBy]).filter(v => v != null)))
 
   // Check if values are numeric for sequential scale
   const isNumeric = uniqueValues.every(v => typeof v === "number" || !isNaN(Number(v)))

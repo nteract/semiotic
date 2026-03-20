@@ -337,14 +337,28 @@ function DiagonalCell({
 
   const histogram = useMemo(() => {
     const values = data.map((d) => d[field]).filter((v) => v != null && !isNaN(v))
-    if (values.length === 0) return { bars: [], selectedBars: [], max: 0 }
+    if (values.length === 0) return { bars: [], selectedBars: [], categoryBars: [], selectedCategoryBars: [], max: 0, categories: [] }
 
     const min = Math.min(...values)
     const max = Math.max(...values)
     const binWidth = (max - min) / bins || 1
 
+    // Resolve colorBy to a string field name for category extraction
+    const colorField = typeof colorBy === "string" ? colorBy : null
+
+    // Get unique categories (stable order), filtering out null/undefined values
+    const categories: string[] = colorField
+      ? [...new Set(data.map((d) => d[colorField]).filter((v) => v != null).map(String))]
+      : []
+    // O(1) category→index lookup
+    const categoryIndexMap = new Map<string, number>(categories.map((cat, i) => [cat, i]))
+
     const counts = new Array(bins).fill(0)
     const selectedCounts = new Array(bins).fill(0)
+
+    // Per-category counts: categoryCounts[binIdx][categoryIdx]
+    const categoryCounts: number[][] = Array.from({ length: bins }, () => new Array(categories.length).fill(0))
+    const selectedCategoryCounts: number[][] = Array.from({ length: bins }, () => new Array(categories.length).fill(0))
 
     for (const d of data) {
       const v = d[field]
@@ -354,9 +368,51 @@ function DiagonalCell({
       if (!isActive || activePredicate(d)) {
         selectedCounts[idx]++
       }
+      if (colorField) {
+        const catIdx = categoryIndexMap.get(String(d[colorField]))
+        if (catIdx !== undefined) {
+          categoryCounts[idx][catIdx]++
+          if (!isActive || activePredicate(d)) {
+            selectedCategoryCounts[idx][catIdx]++
+          }
+        }
+      }
     }
 
     const maxCount = Math.max(...counts, 1)
+
+    // Build stacked bar segments per bin per category
+    const categoryBars = categoryCounts.map((catCounts, i) => {
+      let y0 = 0
+      return catCounts.map((c, catIdx) => {
+        const h = (c / maxCount) * (cellSize - 24)
+        const segment = {
+          x: (i / bins) * cellSize,
+          w: (cellSize / bins) - 1,
+          h,
+          y0,
+          category: categories[catIdx]
+        }
+        y0 += h
+        return segment
+      })
+    })
+
+    const selectedCategoryBars = selectedCategoryCounts.map((catCounts, i) => {
+      let y0 = 0
+      return catCounts.map((c, catIdx) => {
+        const h = (c / maxCount) * (cellSize - 24)
+        const segment = {
+          x: (i / bins) * cellSize,
+          w: (cellSize / bins) - 1,
+          h,
+          y0,
+          category: categories[catIdx]
+        }
+        y0 += h
+        return segment
+      })
+    })
 
     return {
       bars: counts.map((c, i) => ({
@@ -371,9 +427,12 @@ function DiagonalCell({
         h: (c / maxCount) * (cellSize - 24),
         count: c
       })),
-      max: maxCount
+      categoryBars,
+      selectedCategoryBars,
+      max: maxCount,
+      categories
     }
-  }, [data, field, bins, cellSize, isActive, activePredicate])
+  }, [data, field, bins, cellSize, isActive, activePredicate, colorBy])
 
   return (
     <svg width={cellSize} height={cellSize} style={{ overflow: "hidden" }}>
@@ -387,31 +446,59 @@ function DiagonalCell({
       >
         {label}
       </text>
-      {/* Full distribution (dimmed when selection active) */}
-      {histogram.bars.map((bar, i) => (
-        <rect
-          key={`bg-${i}`}
-          x={bar.x}
-          y={cellSize - bar.h}
-          width={Math.max(bar.w, 1)}
-          height={bar.h}
-          fill="#ccc"
-          opacity={isActive ? 0.3 : 0.6}
-        />
-      ))}
-      {/* Selected distribution */}
+      {/* Full distribution — colored by category when colorBy is set */}
+      {histogram.categories.length > 0
+        ? histogram.categoryBars.map((segments, i) =>
+            segments.map((seg, catIdx) => (
+              <rect
+                key={`bg-${i}-${catIdx}`}
+                x={seg.x}
+                y={cellSize - seg.y0 - seg.h}
+                width={Math.max(seg.w, 1)}
+                height={seg.h}
+                fill={colorScale ? colorScale(seg.category) : DEFAULT_COLOR}
+                opacity={isActive ? 0.3 : 0.6}
+              />
+            ))
+          )
+        : histogram.bars.map((bar, i) => (
+            <rect
+              key={`bg-${i}`}
+              x={bar.x}
+              y={cellSize - bar.h}
+              width={Math.max(bar.w, 1)}
+              height={bar.h}
+              fill={DEFAULT_COLOR}
+              opacity={isActive ? 0.3 : 0.6}
+            />
+          ))}
+      {/* Selected distribution — colored by category when colorBy is set */}
       {isActive &&
-        histogram.selectedBars.map((bar, i) => (
-          <rect
-            key={`sel-${i}`}
-            x={bar.x}
-            y={cellSize - bar.h}
-            width={Math.max(bar.w, 1)}
-            height={bar.h}
-            fill={DEFAULT_COLOR}
-            opacity={0.7}
-          />
-        ))}
+        (histogram.categories.length > 0
+          ? histogram.selectedCategoryBars.map((segments, i) =>
+              segments.map((seg, catIdx) => (
+                <rect
+                  key={`sel-${i}-${catIdx}`}
+                  x={seg.x}
+                  y={cellSize - seg.y0 - seg.h}
+                  width={Math.max(seg.w, 1)}
+                  height={seg.h}
+                  fill={colorScale ? colorScale(seg.category) : DEFAULT_COLOR}
+                  opacity={0.7}
+                />
+              ))
+            )
+          : histogram.selectedBars.map((bar, i) => (
+              <rect
+                key={`sel-${i}`}
+                x={bar.x}
+                y={cellSize - bar.h}
+                width={Math.max(bar.w, 1)}
+                height={bar.h}
+                fill={DEFAULT_COLOR}
+                opacity={0.7}
+              />
+            )))}
     </svg>
   )
 }

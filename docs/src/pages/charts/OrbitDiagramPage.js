@@ -277,9 +277,10 @@ export default function OrbitDiagramPage() {
 
       <h3 id="tooltip-note">Tooltips</h3>
       <p>
-        Tooltips are automatically disabled during animation to prevent flicker
-        caused by nodes continuously moving under the cursor. Set{" "}
-        <code>animated={"{false}"}</code> to enable tooltips on a static orbital layout.
+        <strong>Tooltips are only available when the chart is static</strong> (<code>animated={"{false}"}</code>).
+        During animation, tooltips are automatically disabled because nodes
+        continuously move under the cursor, causing flicker. Set{" "}
+        <code>animated={"{false}"}</code> to enable hover and tooltip interactions.
       </p>
 
       <h2 id="related">Related</h2>

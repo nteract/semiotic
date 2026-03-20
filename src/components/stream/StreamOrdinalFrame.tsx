@@ -126,9 +126,34 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
     )
   }
 
-  // For regular pieces — extract category and value from common field names
-  const category = d.category || d.name || d.group || d.__rName || ""
-  const value = d.value ?? d.__rValue ?? d.pct ?? ""
+  // Accessor hints passed from the hover handler
+  const oAccessor = (hover as any).__oAccessor as string | undefined
+  const rAccessor = (hover as any).__rAccessor as string | undefined
+  const hoverChartType = (hover as any).__chartType as string | undefined
+
+  // For swarm/point charts, show all datum fields (point-level data, not aggregated)
+  if (hoverChartType === "swarm" || hoverChartType === "point") {
+    const entries = Object.entries(d).filter(
+      ([k]) => !k.startsWith("_") && k !== "data"
+    )
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <span style={{ opacity: 0.7 }}>{k}:</span>{" "}
+            {typeof v === "number" ? v.toLocaleString() : String(v)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // For regular pieces (bar, pie, etc.) — use accessor names to find category and value
+  const category = (oAccessor && d[oAccessor] != null ? d[oAccessor] : null)
+    || d.category || d.name || d.group || d.__rName || ""
+  const value = d.__aggregateValue
+    ?? (rAccessor && d[rAccessor] != null ? d[rAccessor] : null)
+    ?? d.value ?? d.__rValue ?? d.pct ?? ""
 
   // If standard fields didn't match, show all non-internal fields from the datum
   if (!category && value === "") {
@@ -434,7 +459,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         x: hit.x,
         y: hit.y,
         ...(hit.stats && { stats: hit.stats }),
-        ...(hit.category && { category: hit.category })
+        ...(hit.category && { category: hit.category }),
+        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
+        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+        __chartType: chartType
       } as any
 
       hoverRef.current = hover
@@ -496,7 +524,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const idx = current < 0 ? 0 : next
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
-      const hover = navPointToHover(point)
+      const hover = {
+        ...navPointToHover(point),
+        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
+        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+        __chartType: chartType
+      } as HoverData
       hoverRef.current = hover
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)

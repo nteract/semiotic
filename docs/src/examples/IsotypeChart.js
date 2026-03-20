@@ -1,10 +1,6 @@
 import React, { useRef, useState, useEffect } from "react"
-import DocumentFrame from "../DocumentFrame"
-import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-
-// const ROOT = process.env.PUBLIC_URL;
 
 const vizzers = [
   { type: "journalist", writeviz: 1, number: 9 },
@@ -49,124 +45,20 @@ const vizzers = [
   { type: "viz", writeviz: -0.95, number: 1 }
 ]
 
-const rosto =
-  "M 9.1224266,3.3361224 C 8.2810363,3.2943324 7.4365263,3.4028924 6.6380563,3.6876824 4.1694463,3.6296224 1.9665163,5.3650424 0.91344627,7.5119024 -1.3227637,11.795842 2.5514463,17.764562 8.1907863,16.545112 11.620097,16.132302 15.547317,14.037072 16.173217,10.334172 16.380807,6.5289124 12.768497,3.5172224 9.1224266,3.3361224 Z M 9.3528966,19.855652 C 8.8890366,19.840732 8.4082066,19.917662 7.9173563,20.105652 5.1205063,21.551132 3.7183663,24.679342 2.7943063,27.543152 2.3207563,29.861872 0.86862627,32.037502 1.3646163,34.488462 1.6304963,37.604102 8.0443063,38.953312 8.0443063,38.953312 8.0443063,38.953312 14.670637,39.650602 16.495477,36.334172 17.161197,31.945522 16.344137,27.232262 14.009147,23.424012 13.065617,21.690222 11.362967,19.920312 9.3528966,19.855652 Z"
+// Simple person silhouette SVG path (head + body)
+// Viewbox roughly 0,0 to 18,40
+const personPath =
+  "M 9.12,3.34 C 8.28,3.29 7.44,3.40 6.64,3.69 4.17,3.63 1.97,5.37 0.91,7.51 -1.32,11.80 2.55,17.76 8.19,16.55 11.62,16.13 15.55,14.04 16.17,10.33 16.38,6.53 12.77,3.52 9.12,3.34 Z M 9.35,19.86 C 8.89,19.84 8.41,19.92 7.92,20.11 5.12,21.55 3.72,24.68 2.79,27.54 2.32,29.86 0.87,32.04 1.36,34.49 1.63,37.60 8.04,38.95 8.04,38.95 8.04,38.95 14.67,39.65 16.50,36.33 17.16,31.95 16.34,27.23 14.01,23.42 13.07,21.69 11.36,19.92 9.35,19.86 Z"
 
-const iconHash = {
-  viz: rosto,
-  journalist: rosto,
-  none: "M0,0"
-}
 const colorHash = {
   journalist: theme[2],
   viz: theme[1]
 }
 
-const makeFrameProps = (adjustedWidth) => {
-  const aw = adjustedWidth || 610
-  return {
-    size: [aw + 90, 368],
-    data: vizzers,
-    chartType: "bar",
-    projection: "vertical",
-    oAccessor: "writeviz",
-    oSort: (a, b) => parseFloat(a) - parseFloat(b),
-    rAccessor: "number",
-    pieceStyle: d => ({
-      fill: colorHash[d.type],
-      stroke: colorHash[d.type],
-      fillOpacity: 1,
-      strokeWidth: 1.5
-    }),
-    margin: { top: 60, bottom: 70, left: 10, right: 80 },
-    barPadding: 2,
-    enableHover: true,
-    foregroundGraphics: (
-      <g>
-        <g transform="translate(20,165)">
-          <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
-          <text fontWeight="700" fill="white" x={5} y={15}>
-            DATA VIZ
-          </text>
-          <text fontWeight="700" fill="white" x={5} y={30}>
-            EXPERTS
-          </text>
-        </g>
-        <g transform={`translate(${aw - 105},10)`}>
-          <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
-          <text fontWeight="700" fill="white" x={5} y={15}>
-            JOURNALISTS
-          </text>
-        </g>
-        <g transform="translate(0,300)">
-          <line strokeWidth={2} stroke={"darkgray"} x1={10} x2={aw + 10} />
-        </g>
-        <g fill="darkgray" transform="translate(5,305)">
-          <text fontWeight="700" x={5} y={15}>
-            CREATE MORE
-          </text>
-          <text fontWeight="700" x={5} y={30}>
-            DATA VIZ EACH DAY
-          </text>
-        </g>
-        <g fill="darkgray" textAnchor="end" transform={`translate(${aw + 5},305)`}>
-          <text fontWeight="700" x={5} y={15}>
-            WRITE MORE
-          </text>
-          <text fontWeight="700" x={5} y={30}>
-            EACH DAY
-          </text>
-        </g>
-      </g>
-    )
-  }
-}
+// Sort data by writeviz ascending (left = more viz, right = more writing)
+const sortedData = [...vizzers].sort((a, b) => a.writeviz - b.writeviz)
 
-const frameProps = makeFrameProps(610)
-
-const overrideProps = {
-  chartType: `"bar"`,
-  foregroundGraphics: `(
-    <g>
-      <g transform="translate(20,165)">
-        <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
-        <text fontWeight="700" fill="white" x={5} y={15}>
-          DATA VIZ
-        </text>
-        <text fontWeight="700" fill="white" x={5} y={30}>
-          EXPERTS
-        </text>
-      </g>
-      <g transform="translate(505,10)">
-        <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
-        <text fontWeight="700" fill="white" x={5} y={15}>
-          JOURNALISTS
-        </text>
-      </g>
-      <g transform="translate(0,300)">
-        <line strokeWidth={2} stroke={"darkgray"} x1={10} x2={620} />
-      </g>
-      <g fill="darkgray" transform="translate(5,305)">
-        <text fontWeight="700" x={5} y={15}>
-          CREATE MORE
-        </text>
-        <text fontWeight="700" x={5} y={30}>
-          DATA VIZ EACH DAY
-        </text>
-      </g>
-      <g fill="darkgray" textAnchor="end" transform="translate(615,305)">
-        <text fontWeight="700" x={5} y={15}>
-          WRITE MORE
-        </text>
-        <text fontWeight="700" x={5} y={30}>
-          EACH DAY
-        </text>
-      </g>
-    </g>
-  )`
-}
-
-export default function SwarmPlot() {
+export default function IsotypeChart() {
   const containerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(null)
 
@@ -182,30 +74,105 @@ export default function SwarmPlot() {
     return () => observer.disconnect()
   }, [])
 
-  // margins: left 10 + right 80 = 90
-  const adjustedWidth = containerWidth ? containerWidth - 90 : 610
-  const dynamicFrameProps = makeFrameProps(adjustedWidth)
+  const totalWidth = containerWidth || 700
+  const margin = { top: 60, bottom: 70, left: 10, right: 80 }
+  const chartWidth = totalWidth - margin.left - margin.right
+  const chartHeight = 240
+  const totalHeight = chartHeight + margin.top + margin.bottom
+
+  const numColumns = sortedData.length
+  const colWidth = chartWidth / numColumns
+  const maxNumber = Math.max(...sortedData.map(d => d.number))
+
+  // Person icon sizing: fit within column, leave padding
+  const iconWidth = Math.min(colWidth - 2, 14)
+  const iconScale = iconWidth / 18 // original path is ~18 wide
+  const iconHeight = 40 * iconScale
 
   return (
     <div ref={containerRef}>
       <MarkdownText
         text={`
 Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
-
-Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
 `}
       />
-      {containerWidth && <DocumentFrame
-        frameProps={dynamicFrameProps}
-        overrideProps={overrideProps}
-        pre={`
-const colorHash = {
-  journalist: theme[2],
-  viz: theme[1]
-}`}
-        type={StreamOrdinalFrame}
-        useExpanded
-      />}
+      {containerWidth && (
+        <svg width={totalWidth} height={totalHeight}>
+          <g transform={`translate(${margin.left},${margin.top})`}>
+            {/* Person icons for each column */}
+            {sortedData.map((d, colIndex) => {
+              const color = colorHash[d.type]
+              if (!color || d.number === 0) return null
+              const cx = colIndex * colWidth + colWidth / 2
+              const icons = []
+              for (let i = 0; i < d.number; i++) {
+                const iy = chartHeight - (i + 1) * (iconHeight + 2)
+                icons.push(
+                  <g
+                    key={`${colIndex}-${i}`}
+                    transform={`translate(${cx - iconWidth / 2},${iy}) scale(${iconScale})`}
+                  >
+                    <path
+                      d={personPath}
+                      fill={color}
+                      stroke={color}
+                      strokeWidth={1.5}
+                    />
+                  </g>
+                )
+              }
+              return <g key={colIndex}>{icons}</g>
+            })}
+
+            {/* Baseline */}
+            <line
+              x1={0}
+              x2={chartWidth}
+              y1={chartHeight}
+              y2={chartHeight}
+              stroke="darkgray"
+              strokeWidth={2}
+            />
+
+            {/* Labels: DATA VIZ EXPERTS (left) */}
+            <g transform="translate(10,105)">
+              <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
+              <text fontWeight="700" fill="white" x={5} y={15} style={{ fontSize: "13px" }}>
+                DATA VIZ
+              </text>
+              <text fontWeight="700" fill="white" x={5} y={30} style={{ fontSize: "13px" }}>
+                EXPERTS
+              </text>
+            </g>
+
+            {/* Labels: JOURNALISTS (right) */}
+            <g transform={`translate(${chartWidth - 115},-50)`}>
+              <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
+              <text fontWeight="700" fill="white" x={5} y={15} style={{ fontSize: "13px" }}>
+                JOURNALISTS
+              </text>
+            </g>
+
+            {/* Bottom axis labels */}
+            <g fill="darkgray" transform={`translate(-5,${chartHeight + 5})`}>
+              <text fontWeight="700" x={5} y={15} style={{ fontSize: "12px" }}>
+                CREATE MORE
+              </text>
+              <text fontWeight="700" x={5} y={30} style={{ fontSize: "12px" }}>
+                DATA VIZ EACH DAY
+              </text>
+            </g>
+            <g fill="darkgray" textAnchor="end" transform={`translate(${chartWidth + 5},${chartHeight + 5})`}>
+              <text fontWeight="700" x={5} y={15} style={{ fontSize: "12px" }}>
+                WRITE MORE
+              </text>
+              <text fontWeight="700" x={5} y={30} style={{ fontSize: "12px" }}>
+                EACH DAY
+              </text>
+            </g>
+          </g>
+        </svg>
+      )}
     </div>
   )
 }

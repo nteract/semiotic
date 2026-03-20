@@ -19,9 +19,11 @@ export default function IsotypeChartPage() {
       <p>
         Isotype charts (pictogram charts) replace abstract bar lengths with
         repeated icons, making quantities more tangible and engaging. This
-        recipe uses StreamOrdinalFrame's icon bar type to display a survey of data
-        visualization practitioners and journalists, with each person
-        represented by a small person-shaped SVG path.
+        recipe renders a survey of data visualization practitioners and
+        journalists, with each person represented by a small person-shaped
+        SVG silhouette. Journalists are colored in{" "}
+        <span style={{ color: "#9fd0cb" }}>teal</span> and viz experts in{" "}
+        <span style={{ color: "#E0488B" }}>pink</span>.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
@@ -38,83 +40,60 @@ export default function IsotypeChartPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The <code>icon</code> property on the bar type replaces rectangle bars
-        with repeated SVG paths. Each icon shape is looked up from a hash based
-        on the data type. The <code>resize: "fixed"</code> setting preserves
-        the icon's natural aspect ratio instead of stretching it:
+        The chart lays out a person silhouette SVG path for each respondent in
+        a column. Each column corresponds to a data bin (how much they
+        write vs. create data viz), and the number of repeated icons in
+        each column encodes the count. A color hash maps the respondent
+        type to the appropriate color:
       </p>
       <CodeBlock
-        code={`type: {
-  type: "bar",
-  icon: d => iconHash[d.type],
-  iconPadding: 2,
-  resize: "fixed"
-}`}
-        language="jsx"
-      />
-      <p>
-        The icon paths are SVG path data strings. The same "rosto" (person
-        silhouette) shape is used for both journalists and viz practitioners,
-        distinguished by color. The <code>renderMode: "sketchy"</code> prop
-        gives the entire chart a hand-drawn aesthetic:
-      </p>
-      <CodeBlock
-        code={`const rosto = "M 9.12...(SVG path)...Z"
+        code={`const personPath = "M 9.12,3.34 C ... Z" // head + body silhouette
 
-const iconHash = {
-  viz: rosto,
-  journalist: rosto,
-  none: "M0,0"
-}
 const colorHash = {
-  journalist: theme[2],
-  viz: theme[1]
+  journalist: theme[2],  // teal
+  viz: theme[1]          // pink
 }
 
-// In frame props:
-renderMode: "sketchy",
-style: d => ({
-  fill: colorHash[d.type],
-  stroke: colorHash[d.type],
-  fillOpacity: 1,
-  strokeWidth: 1.5
-})`}
+// For each data point, repeat the person icon vertically:
+for (let i = 0; i < d.number; i++) {
+  <path d={personPath} fill={color} stroke={color} strokeWidth={1.5} />
+}`}
         language="jsx"
       />
 
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
-          The <code>icon</code> property on bar types replaces bars with
-          repeated SVG path shapes, creating pictogram charts.
+          Repeated SVG path shapes create a pictogram / isotype chart where
+          each icon represents one person.
         </li>
         <li>
-          <code>resize: "fixed"</code> preserves icon proportions;{" "}
-          <code>"auto"</code> would stretch icons to fill available space.
+          Color distinguishes categories (journalist vs. viz expert) using
+          the same silhouette shape for both.
         </li>
         <li>
-          <code>iconPadding</code> controls spacing between repeated icons
-          within each bar.
+          The chart is responsive, using a <code>ResizeObserver</code> to
+          adjust column widths and icon scaling to fit the container.
         </li>
         <li>
-          <code>renderMode: "sketchy"</code> applies a hand-drawn rendering
-          style to all marks, including icon shapes.
+          SVG rendering ensures crisp icons at any resolution, with no
+          canvas rasterization artifacts.
         </li>
       </ul>
 
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
-          frame with icon bar support
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the
+          underlying ordinal frame for bar charts
         </li>
         <li>
           <Link to="/charts/bar-chart">BarChart</Link> — standard bar chart
-          without icon rendering
+          for comparison
         </li>
         <li>
           <Link to="/cookbook/waterfall-chart">Waterfall Chart</Link> — another
-          custom rendering approach in StreamOrdinalFrame
+          custom rendering approach
         </li>
       </ul>
     </PageLayout>

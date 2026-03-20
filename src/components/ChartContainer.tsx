@@ -405,6 +405,9 @@ export const ChartContainer = React.forwardRef<
           style={{
             position: "relative",
             overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             ...(isFullscreen ? { flex: 1 } : { height }),
           }}
         >

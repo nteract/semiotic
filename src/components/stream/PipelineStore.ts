@@ -36,6 +36,7 @@ import {
   buildHeatcellNode
 } from "./SceneGraph"
 import { resolveAccessor, resolveRawAccessor, resolveStringAccessor } from "./accessorUtils"
+import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 
@@ -171,6 +172,8 @@ export class PipelineStore {
   // ── Color map caching ──────────────────────────────────────────────
   /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
   private _colorMapCache: { key: string; map: Map<string, string> } | null = null
+  /** Separate group→color map for resolveGroupColor (insertion-order based, never invalidates _colorMapCache) */
+  private _groupColorMap: Map<string, string> = new Map()
   private _barCategoryCache: { key: string; order: string[] } | null = null
 
   // ── Stacked area extent caching ───────────────────────────────────
@@ -454,6 +457,12 @@ export class PipelineStore {
         userMin != null ? yDomain[0] : yDomain[0] - pad,
         userMax != null ? yDomain[1] : yDomain[1] + pad
       ]
+      // For log scales, ensure domain minimum stays positive (log(0) is undefined).
+      // Use multiplicative padding instead of additive to avoid negative domains.
+      if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0) {
+        const logPad = 1 + config.extentPadding
+        yDomain[0] = userMin != null ? yDomain[0] : dataYDomain[0] / logPad
+      }
     }
 
     // Handle degenerate extents
@@ -763,9 +772,9 @@ export class PipelineStore {
       }
     }
 
-    // Build color map from colorAccessor if no pointStyle handles it
-    // Sort categories alphabetically for stable palette assignment across frames
-    const colorMap = (this.getColor && !this.config.pointStyle)
+    // Build color map from colorAccessor — always build when colorAccessor exists
+    // so push API can fall back to frame colors when HOC colorScale is unavailable
+    const colorMap = this.getColor
       ? this.resolveColorMap(data)
       : null
 
@@ -781,8 +790,8 @@ export class PipelineStore {
         }
       }
 
-      // Apply color from accessor if pointStyle doesn't provide a custom fill
-      if (colorMap && this.getColor) {
+      // Apply color from accessor if pointStyle doesn't provide a fill
+      if (colorMap && this.getColor && !style.fill) {
         const colorVal = this.getColor(d)
         if (colorVal && colorMap.has(colorVal)) {
           style = { ...style, fill: colorMap.get(colorVal)! }
@@ -1967,7 +1976,7 @@ export class PipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      : STREAMING_PALETTE
     const colorMap = new Map<string, string>()
     for (let ci = 0; ci < sorted.length; ci++) {
       colorMap.set(sorted[ci], palette[ci % palette.length])
@@ -1979,7 +1988,15 @@ export class PipelineStore {
   private resolveLineStyle(group: string, sampleDatum?: Record<string, any>): Style {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
-      return ls(sampleDatum || {}, group)
+      const style = ls(sampleDatum || {}, group)
+      // When HOC returns no stroke (push API, colorScale unavailable),
+      // fill in from the frame's palette. Use group name for color assignment
+      // even when colorAccessor is not set (e.g. StackedAreaChart streaming).
+      if (style && !style.stroke && group) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, stroke: color }
+      }
+      return style
     }
     if (ls && typeof ls === "object") {
       return {
@@ -1996,12 +2013,24 @@ export class PipelineStore {
 
   private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
     if (this.config.areaStyle) {
-      return this.config.areaStyle(sampleDatum || {})
+      const style = this.config.areaStyle(sampleDatum || {})
+      // Fill in colors from frame's palette when HOC has no color scale (push API).
+      // Use group name for assignment even without colorAccessor.
+      if (style && !style.fill && group) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, fill: color, stroke: style.stroke || color }
+      }
+      return style
     }
     // Fall back to lineStyle — AreaChart passes area styling via lineStyle
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
-      return ls(sampleDatum || {}, group)
+      const style = ls(sampleDatum || {}, group)
+      if (style && !style.fill && group) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, fill: color, stroke: style.stroke || color }
+      }
+      return style
     }
     if (ls && typeof ls === "object") {
       return {
@@ -2012,6 +2041,27 @@ export class PipelineStore {
       }
     }
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
+  }
+
+  /** Resolve a group name to a color from the cached color map or a dedicated group palette.
+   *  First checks _colorMapCache (populated by resolveColorMap when colorAccessor is set).
+   *  Falls back to _groupColorMap (insertion-order, never mutates _colorMapCache). */
+  private resolveGroupColor(group: string): string | null {
+    // Prefer the accessor-based color map when available
+    if (this._colorMapCache) {
+      const c = this._colorMapCache.map.get(group)
+      if (c) return c
+    }
+    // Fall back to dedicated group color map (does not pollute _colorMapCache)
+    const existing = this._groupColorMap.get(group)
+    if (existing) return existing
+
+    const palette = Array.isArray(this.config.colorScheme)
+      ? this.config.colorScheme
+      : STREAMING_PALETTE
+    const color = palette[this._groupColorMap.size % palette.length]
+    this._groupColorMap.set(group, color)
+    return color
   }
 
   // ── Buffer array cache ──────────────────────────────────────────────
@@ -2063,6 +2113,7 @@ export class PipelineStore {
     this.scene = []
     this._quadtree = null
     this._colorMapCache = null
+    this._groupColorMap = new Map()
     this._barCategoryCache = null
     this._stackExtentCache = null
     this.version++
@@ -2092,6 +2143,7 @@ export class PipelineStore {
     // Invalidate color map caches when relevant config changes
     if (config.colorScheme !== undefined) {
       this._colorMapCache = null
+      this._groupColorMap = new Map()
     }
     if (config.barColors !== undefined || config.colorScheme !== undefined) {
       this._barCategoryCache = null

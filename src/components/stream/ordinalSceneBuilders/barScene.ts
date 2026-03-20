@@ -122,7 +122,7 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLa
       const groupData = grouped.get(groupKeys[gi]) || []
       for (const d of groupData) {
         const val = getR(d)
-        const style = resolvePieceStyle(d, col.name)
+        const style = resolvePieceStyle(d, groupKeys[gi])
 
         if (isVertical) {
           const barX = col.x + gi * subWidth + innerPad / 2

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react"
 import {
   LineChart, BarChart, Scatterplot, DonutChart, Treemap,
-  LinkedCharts,
+  LinkedCharts, CategoryColorProvider,
 } from "semiotic"
 import { RealtimeLineChart, RealtimeTemporalHistogram } from "semiotic"
 
@@ -272,7 +272,6 @@ const channelTreeData = {
   children: [
     {
       name: "Email",
-      channel: "Email",
       children: [
         { name: "Newsletter", value: 500, channel: "Email" },
         { name: "Drip", value: 400, channel: "Email" },
@@ -280,7 +279,6 @@ const channelTreeData = {
     },
     {
       name: "Search",
-      channel: "Search",
       children: [
         { name: "Brand", value: 1200, channel: "Search" },
         { name: "Non-Brand", value: 900, channel: "Search" },
@@ -288,7 +286,6 @@ const channelTreeData = {
     },
     {
       name: "Social",
-      channel: "Social",
       children: [
         { name: "Organic", value: 600, channel: "Social" },
         { name: "Paid", value: 700, channel: "Social" },
@@ -296,7 +293,6 @@ const channelTreeData = {
     },
     {
       name: "Display",
-      channel: "Display",
       children: [
         { name: "Retargeting", value: 250, channel: "Display" },
         { name: "Prospecting", value: 150, channel: "Display" },
@@ -305,8 +301,16 @@ const channelTreeData = {
   ],
 }
 
+const channelColorMap = {
+  Email: channelColors[0],
+  Search: channelColors[1],
+  Social: channelColors[2],
+  Display: channelColors[3],
+}
+
 function LinkedDashboardDemo() {
   return (
+    <CategoryColorProvider colors={channelColorMap}>
     <LinkedCharts>
       <div>
         <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary, #666)", marginBottom: 4 }}>
@@ -367,6 +371,7 @@ function LinkedDashboardDemo() {
         </div>
       </div>
     </LinkedCharts>
+    </CategoryColorProvider>
   )
 }
 
@@ -507,7 +512,11 @@ export default function ChartModesPage() {
       <LinkedDashboardDemo />
 
       <CodeBlock
-        code={`<LinkedCharts>
+        code={`<CategoryColorProvider colors={{
+  Email: "#e15759", Search: "#4e79a7",
+  Social: "#59a14f", Display: "#b07aa1",
+}}>
+<LinkedCharts>
   {/* Primary detail view */}
   <Scatterplot
     data={campaigns}
@@ -531,7 +540,8 @@ export default function ChartModesPage() {
       selection={{ name: "dash" }}
     />
   </div>
-</LinkedCharts>`}
+</LinkedCharts>
+</CategoryColorProvider>`}
         language="jsx"
       />
 

@@ -13,6 +13,7 @@ import type { Changeset, Style, DecayConfig } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
 import { buildPieScene } from "./ordinalSceneBuilders/pieScene"
@@ -55,6 +56,8 @@ export class OrdinalPipelineStore {
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
+  /** True once a non-bounded (push) changeset has been ingested */
+  private _hasStreamingData = false
   /** Lazy color map built from colorScheme for resolvePieceStyle */
   private _colorSchemeMap: Map<string, string> | null = null
   private _colorSchemeIndex = 0
@@ -144,6 +147,7 @@ export class OrdinalPipelineStore {
       }
     } else {
       // Streaming append
+      this._hasStreamingData = true
       for (const d of changeset.inserts) {
         const evicted = this.buffer.push(d)
         if (this.timestampBuffer) this.timestampBuffer.push(now)
@@ -331,10 +335,25 @@ export class OrdinalPipelineStore {
     const cats = Array.from(this.categories)
     const sort = this.config.oSort
 
-    // In streaming mode, preserve insertion order by default to avoid
-    // jarring category shuffling as values fluctuate in the sliding window
-    if (this.config.runtimeMode === "streaming" && sort === undefined) {
-      return cats
+    // In streaming mode (explicit runtimeMode or push-API data), preserve
+    // insertion order by default to avoid jarring category shuffling as
+    // values fluctuate in the sliding window
+    if ((this.config.runtimeMode === "streaming" || this._hasStreamingData) && sort === undefined) {
+      // Prune ghost categories whose data has been fully evicted from the
+      // ring buffer, so they don't waste band space in the scale domain
+      const liveCategories = new Set<string>()
+      for (const d of data) {
+        liveCategories.add(this.getO(d))
+      }
+      const pruned: string[] = []
+      for (const cat of cats) {
+        if (liveCategories.has(cat)) {
+          pruned.push(cat)
+        } else {
+          this.categories.delete(cat)
+        }
+      }
+      return pruned
     }
 
     if (sort === false) return cats
@@ -373,7 +392,11 @@ export class OrdinalPipelineStore {
     let min = 0
     let max = 0
 
-    if (chartType === "bar" && this.getStack) {
+    if (chartType === "bar" && this.getStack && this.config.normalize) {
+      // Normalized stacked bars: values are divided by column total → domain is [0, 1]
+      min = 0
+      max = 1
+    } else if (chartType === "bar" && this.getStack) {
       // Stacked bars: compute per-category stacked sums
       const posSums = new Map<string, number>()
       const negSums = new Map<string, number>()
@@ -573,7 +596,14 @@ export class OrdinalPipelineStore {
 
   private resolvePieceStyle(d: any, category?: string): Style {
     if (typeof this.config.pieceStyle === "function") {
-      return this.config.pieceStyle(d, category)
+      const style = this.config.pieceStyle(d, category)
+      // If the function returned a style without a fill color and we have a category,
+      // fill in from the frame's color scheme. This handles push API where HOC colorScale
+      // is not yet available.
+      if (style && !style.fill && category) {
+        return { ...style, fill: this.getColorFromScheme(category) }
+      }
+      return style
     }
     if (this.config.pieceStyle && typeof this.config.pieceStyle === "object") {
       return this.config.pieceStyle as unknown as Style
@@ -595,7 +625,7 @@ export class OrdinalPipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      : STREAMING_PALETTE
     const color = palette[this._colorSchemeIndex % palette.length]
     this._colorSchemeIndex++
     this._colorSchemeMap.set(key, color)
@@ -945,6 +975,7 @@ export class OrdinalPipelineStore {
     this.buffer.clear()
     this.rExtent.clear()
     this.categories.clear()
+    this._hasStreamingData = false
     if (this.timestampBuffer) this.timestampBuffer.clear()
     this.prevPositionMap.clear()
     this.exitNodes = []

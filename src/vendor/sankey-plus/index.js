@@ -293,6 +293,34 @@ function adjustSankeySize(graph, nodePadding, nodeWidth) {
   }
 }
 
+// Compute the weighted barycenter of a node's connections.
+// For nodes in the first column (no target links), use source link targets.
+// For other nodes, use target link sources. Returns NaN if no connections.
+function barycenter(node) {
+  var totalWeight = 0;
+  var weightedSum = 0;
+
+  // Pull toward source positions (upstream connections)
+  node.targetLinks.forEach(function (link) {
+    if (!link.circular) {
+      var w = link.value || 1;
+      weightedSum += nodeCenter(link.source) * w;
+      totalWeight += w;
+    }
+  });
+
+  // Pull toward target positions (downstream connections)
+  node.sourceLinks.forEach(function (link) {
+    if (!link.circular) {
+      var w = link.value || 1;
+      weightedSum += nodeCenter(link.target) * w;
+      totalWeight += w;
+    }
+  });
+
+  return totalWeight > 0 ? weightedSum / totalWeight : NaN;
+}
+
 function computeNodeBreadths(graph, nodeSort, id) {
   var columns = groups(graph.nodes, function (d) {
     return d.column;
@@ -304,31 +332,63 @@ function computeNodeBreadths(graph, nodeSort, id) {
       return d[1];
     });
 
-  columns.forEach(function (nodes) {
+  columns.forEach(function (nodes, columnIndex) {
     var nodesLength = nodes.length;
 
-    var optimizedSort = function (a, b) {
-      if (a.circularLinkType == b.circularLinkType) {
-        return (
-          numberOfNonSelfLinkingCycles(b, id) -
-          numberOfNonSelfLinkingCycles(a, id)
-        );
-      } else if (
-        a.circularLinkType == "top" &&
-        b.circularLinkType == "bottom"
-      ) {
-        return -1;
-      } else if (a.circularLinkType == "top" && b.partOfCycle == false) {
-        return -1;
-      } else if (a.partOfCycle == false && b.circularLinkType == "bottom") {
-        return -1;
-      }
-      return 0;
-    };
-
+    // Use barycenter ordering to reduce crossings when no custom sort is given.
+    // For the first column, fall back to the original heuristic since there
+    // are no upstream positions yet. For subsequent columns, sort by the
+    // weighted average y-position of connected nodes (barycenter heuristic).
     if (nodeSort) {
       nodes.sort(nodeSort);
+    } else if (columnIndex > 0) {
+      // Barycenter sort: order nodes by the average y of their connections
+      // to minimise link crossings. Nodes without connections keep their
+      // relative order via a stable index fallback.
+      var baryCache = new Map();
+      nodes.forEach(function (n, idx) {
+        var bc = barycenter(n);
+        baryCache.set(n, { bc: bc, idx: idx });
+      });
+      nodes.sort(function (a, b) {
+        var infoA = baryCache.get(a);
+        var infoB = baryCache.get(b);
+        var bcA = infoA.bc;
+        var bcB = infoB.bc;
+        // Circular-link nodes: keep top-cycle nodes above bottom-cycle nodes
+        if (a.circularLinkType !== b.circularLinkType) {
+          if (a.circularLinkType == "top" && b.circularLinkType == "bottom") return -1;
+          if (a.circularLinkType == "bottom" && b.circularLinkType == "top") return 1;
+          if (a.circularLinkType == "top") return -1;
+          if (b.circularLinkType == "top") return 1;
+          if (a.circularLinkType == "bottom") return 1;
+          if (b.circularLinkType == "bottom") return -1;
+        }
+        if (!isNaN(bcA) && !isNaN(bcB)) return bcA - bcB;
+        if (!isNaN(bcA)) return -1;
+        if (!isNaN(bcB)) return 1;
+        return infoA.idx - infoB.idx;
+      });
     } else {
+      // First column: use the original circular-link-aware heuristic
+      var optimizedSort = function (a, b) {
+        if (a.circularLinkType == b.circularLinkType) {
+          return (
+            numberOfNonSelfLinkingCycles(b, id) -
+            numberOfNonSelfLinkingCycles(a, id)
+          );
+        } else if (
+          a.circularLinkType == "top" &&
+          b.circularLinkType == "bottom"
+        ) {
+          return -1;
+        } else if (a.circularLinkType == "top" && b.partOfCycle == false) {
+          return -1;
+        } else if (a.partOfCycle == false && b.circularLinkType == "bottom") {
+          return -1;
+        }
+        return 0;
+      };
       nodes.sort(optimizedSort);
     }
 
