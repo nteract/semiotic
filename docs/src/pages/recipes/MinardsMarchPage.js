@@ -129,6 +129,7 @@ export default function MinardsMarchPage() {
         { label: "Minard's Map", path: "/recipes/minards-map" },
       ]}
       prevPage={{ title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" }}
+      nextPage={{ title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" }}
       dependencies={["semiotic", "semiotic/geo", "react"]}
       fullSourceCode={fullSourceCode}
     >

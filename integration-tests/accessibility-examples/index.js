@@ -132,21 +132,24 @@ const examples = [
     }),
   }),
 
-  // 6. Chart with legend (for keyboard navigation testing)
+  // 6. Chart with interactive legend (for keyboard navigation testing)
   TestCase({
-    title: "Chart with Legend (keyboard nav)",
+    title: "Chart with Interactive Legend (keyboard nav)",
     testId: "a11y-legend-keyboard",
     children: React.createElement(BarChart, {
       data: [
         { category: "A", value: 10, type: "X" },
         { category: "B", value: 20, type: "Y" },
-        { category: "C", value: 15, type: "X" },
-        { category: "D", value: 25, type: "Y" },
+        { category: "C", value: 15, type: "Z" },
+        { category: "D", value: 25, type: "X" },
+        { category: "E", value: 18, type: "Y" },
+        { category: "F", value: 22, type: "Z" },
       ],
       categoryAccessor: "category",
       valueAccessor: "value",
       colorBy: "type",
       showLegend: true,
+      legendInteraction: "isolate",
       width: 500,
       height: 300,
     }),
@@ -214,4 +217,4 @@ const examples = [
 ]
 
 const root = createRoot(document.getElementById("root"))
-root.render(React.createElement("div", { className: "test-grid" }, examples))
+root.render(React.createElement("div", { className: "test-grid" }, examples.map((ex, i) => React.cloneElement(ex, { key: `test-${i}` }))))

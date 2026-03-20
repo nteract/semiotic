@@ -54,7 +54,7 @@ const commonProps: Record<string, PropDef> = {
   showGrid: { type: "boolean" },
   colorBy: { type: ["string", "function"] },
   colorScheme: { type: ["string", "array"] },
-  tooltip: { type: ["function", "object"] },
+  tooltip: { type: ["boolean", "function", "object"] },
   frameProps: { type: "object" },
 }
 
@@ -198,6 +198,29 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       cellBorderWidth: { type: "number" },
       showLegend: { type: "boolean" },
       legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] },
+    },
+  },
+
+  QuadrantChart: {
+    required: ["quadrants"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      yAccessor: { type: ["string", "function"] },
+      quadrants: { type: "object" },
+      xCenter: { type: "number" },
+      yCenter: { type: "number" },
+      centerlineStyle: { type: "object" },
+      showQuadrantLabels: { type: "boolean" },
+      quadrantLabelSize: { type: "number" },
+      sizeBy: { type: ["string", "function"] },
+      sizeRange: { type: "array" },
+      pointRadius: { type: "number" },
+      pointOpacity: { type: "number" },
     },
   },
 

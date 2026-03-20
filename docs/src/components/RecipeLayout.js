@@ -32,9 +32,10 @@ export default function RecipeLayout({
       {children}
 
       <div className="recipe-source" style={{ marginTop: "48px" }}>
-        <h2 id="full-source-code">Full Source Code</h2>
+        <h2 id="full-source-code">Source Code</h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          Copy this component into your project. It works with the listed dependencies only.
+          Abbreviated for readability — data arrays and steps are truncated. See the full runnable
+          source in <code>docs/src/examples/recipes/</code>.
         </p>
         <CodeBlock
           code={fullSourceCode}

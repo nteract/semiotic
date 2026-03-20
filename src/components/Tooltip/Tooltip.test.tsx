@@ -1,6 +1,7 @@
 import React from "react"
 import { render } from "@testing-library/react"
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip"
+import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 
 describe("Tooltip", () => {
   const sampleData = { x: 1, y: 5, category: "A", size: 10 }
@@ -184,12 +185,73 @@ describe("normalizeTooltip", () => {
     expect(normalizeTooltip(false)).toBe(false)
   })
 
-  it("returns the function for tooltip functions", () => {
+  it("wraps user tooltip functions with standard chrome", () => {
     const fn = (d: any) => <div>{d.name}</div>
-    expect(normalizeTooltip(fn)).toBe(fn)
+    const result = normalizeTooltip(fn)
+    expect(typeof result).toBe("function")
+    // Should NOT be the same identity — it's wrapped for styling
+    expect(result).not.toBe(fn)
+  })
+
+  it("unwraps HoverData for user tooltip functions", () => {
+    const fn = (d: any) => d.task
+    const wrapped = normalizeTooltip(fn) as Function
+    // Simulate HoverData wrapper from StreamNetworkFrame (has type + data)
+    const hoverData = { type: "node", data: { task: "Fix bug" }, x: 10, y: 20 }
+    const rendered = wrapped(hoverData) as any
+    expect(rendered).not.toBeNull()
+    // The string "Fix bug" should be inside the tooltip chrome div
+    expect(rendered.props.children).toBe("Fix bug")
+  })
+
+  it("does not unwrap user data that happens to have a .data property", () => {
+    const fn = (d: any) => d.data?.nested
+    const wrapped = normalizeTooltip(fn) as Function
+    // User datum has .data but no .type — should NOT be unwrapped
+    const datum = { data: { nested: "hello" }, x: 10, y: 20 }
+    const rendered = wrapped(datum) as any
+    expect(rendered).not.toBeNull()
+    expect(rendered.props.children).toBe("hello")
   })
 
   it("returns false for undefined", () => {
     expect(normalizeTooltip(undefined as any)).toBe(false)
+  })
+})
+
+describe("buildDefaultTooltip with title role", () => {
+  it("renders title field as bold header", () => {
+    const fn = buildDefaultTooltip([
+      { label: "product", accessor: "product", role: "title" },
+      { label: "share", accessor: "share", role: "x" },
+      { label: "growth", accessor: "growth", role: "y" },
+    ])
+    const hoverData = { data: { product: "TurboEncabulator", share: 0.75, growth: 0.82 } }
+    const { container } = render(<>{fn(hoverData)}</>)
+
+    // Title should be bold
+    const boldEl = container.querySelector("div[style*='bold']")
+    expect(boldEl).toBeTruthy()
+    expect(boldEl!.textContent).toBe("TurboEncabulator")
+
+    // Body fields should be present
+    expect(container.textContent).toContain("share")
+    expect(container.textContent).toContain("0.75")
+    expect(container.textContent).toContain("growth")
+    expect(container.textContent).toContain("0.82")
+  })
+
+  it("renders without title when no title role", () => {
+    const fn = buildDefaultTooltip([
+      { label: "x", accessor: "x", role: "x" },
+      { label: "y", accessor: "y", role: "y" },
+    ])
+    const hoverData = { data: { x: 1, y: 2 } }
+    const { container } = render(<>{fn(hoverData)}</>)
+
+    expect(container.textContent).toContain("x")
+    expect(container.textContent).toContain("1")
+    expect(container.textContent).toContain("y")
+    expect(container.textContent).toContain("2")
   })
 })

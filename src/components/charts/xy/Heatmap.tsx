@@ -423,7 +423,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     ...(gradientLegend && { legend: gradientLegend, legendPosition }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? () => null
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

@@ -1052,7 +1052,8 @@ const StreamNetworkFrame = forwardRef<
               : "calc(-100% - 4px)"
           })`,
           pointerEvents: "none",
-          zIndex: 2
+          zIndex: 2,
+          width: "max-content"
         }}
       >
         {tooltipContent ? (
@@ -1157,6 +1158,7 @@ const StreamNetworkFrame = forwardRef<
         position: "relative",
         width: responsiveWidth ? "100%" : size[0],
         height: responsiveHeight ? "100%" : size[1],
+        overflow: "visible",
       }}
       onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}

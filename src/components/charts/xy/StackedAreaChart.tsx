@@ -404,7 +404,9 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? () => null
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

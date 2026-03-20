@@ -42,6 +42,8 @@ The `datum` field contains your original data object (not a wrapper).
 
 **ConnectedScatterplot** — `data`, `xAccessor`, `yAccessor`, `orderAccessor` (number|Date field for sequencing), `pointRadius` (4). Viridis colored start→end, line width = point radius, white halo under lines when <100 points.
 
+**QuadrantChart** — Scatterplot divided into four labeled, colored quadrants. `data`, `xAccessor`, `yAccessor`, `quadrants` (required: `{ topRight, topLeft, bottomRight, bottomLeft }` each with `label`, `color`, optional `opacity`), `xCenter` (vertical center line in data units), `yCenter` (horizontal center line), `centerlineStyle` (`{ stroke, strokeWidth, strokeDasharray }`), `showQuadrantLabels` (true), `quadrantLabelSize` (12), `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8). Supports push API. Quadrant fills and labels drawn via `canvasPreRenderers`.
+
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis" or custom), `showValues`, `cellBorderColor`. Accessors can be string field names (including string/categorical fields) or functions.
 
 ## Ordinal Charts (`semiotic/ordinal`)

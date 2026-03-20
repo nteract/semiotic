@@ -5,7 +5,7 @@ import type { HoverData } from "../../realtime/types"
 export interface TooltipFieldConfig {
   label: string
   accessor: string | ((d: any) => any)
-  role?: "x" | "y" | "color" | "size" | "group" | "value"
+  role?: "title" | "x" | "y" | "color" | "size" | "group" | "value"
 }
 
 /**
@@ -38,21 +38,29 @@ export function resolveValue(d: Record<string, any>, acc: string | ((d: Record<s
 export function buildDefaultTooltip(
   fields: TooltipFieldConfig[]
 ): (hover: HoverData) => React.ReactNode {
+  const titleField = fields.find(f => f.role === "title")
+  const bodyFields = fields.filter(f => f.role !== "title")
+
   return (hover: HoverData) => {
     const d = hover.data
     if (!d) return null
 
+    const titleValue = titleField ? formatVal(resolveValue(d, titleField.accessor)) : null
+
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {fields.map((field, i) => {
+        {titleValue && (
+          <div style={{ fontWeight: "bold", marginBottom: bodyFields.length > 0 ? 4 : 0 }}>
+            {titleValue}
+          </div>
+        )}
+        {bodyFields.map((field, i) => {
           const raw = resolveValue(d, field.accessor)
           const display = formatVal(raw)
           return (
             <div key={i} style={i > 0 ? { marginTop: 2 } : undefined}>
-              <span style={{ opacity: 0.8 }}>{field.label}: </span>
-              <span style={{ fontWeight: field.role === "color" || field.role === "group" ? "bold" : "normal" }}>
-                {display}
-              </span>
+              <span style={{ opacity: 0.7 }}>{field.label}: </span>
+              <span>{display}</span>
             </div>
           )
         })}

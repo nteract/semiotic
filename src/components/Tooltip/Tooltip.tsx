@@ -405,8 +405,30 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   }
 
   if (typeof tooltip === "function") {
-    // Already a tooltip function, use it as tooltipContent
-    return tooltip as TooltipContentFn
+    // Wrap user function to fix two common issues:
+    // 1. The Stream Frame calls tooltipContent with HoverData ({ data, x, y, ... }),
+    //    but HOC users expect their raw datum. We unwrap automatically.
+    // 2. Returning a plain string/number renders as an unstyled text node.
+    //    We wrap all results in the standard tooltip chrome.
+    const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
+    return (hoverData: Record<string, any>) => {
+      // Unwrap HoverData → raw datum so user functions receive the data they expect.
+      // Only unwrap when hoverData matches the HoverData shape from Stream Frames
+      // (has .type of "node"/"edge" AND .data object). This avoids mis-unwrapping
+      // user data that happens to have a .data property.
+      const isHoverWrapper = hoverData
+        && typeof hoverData.data === "object"
+        && hoverData.data !== null
+        && (hoverData.type === "node" || hoverData.type === "edge")
+      const datum = isHoverWrapper ? hoverData.data : hoverData
+      const result = userFn(datum)
+      if (result === null || result === undefined) return null
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          {result}
+        </div>
+      )
+    }
   }
 
   if (tooltip === false || tooltip === undefined) {

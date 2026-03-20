@@ -168,9 +168,15 @@ export class PipelineStore {
   lastIngestTime = 0
 
   // ── Color map caching ──────────────────────────────────────────────
-  private _pointColorCache: { key: string; map: Map<string, string> } | null = null
+  /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
+  private _colorMapCache: { key: string; map: Map<string, string> } | null = null
   private _barCategoryCache: { key: string; order: string[] } | null = null
 
+  // ── Stacked area extent caching ───────────────────────────────────
+  /** Cache stacked area cumulative sums to skip recalculation when buffer hasn't changed */
+  private _stackExtentCache: { key: string; yDomain: [number, number] } | null = null
+  /** Monotonic counter incremented on each ingest — used as part of cache keys */
+  private _ingestVersion = 0
 
   // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
@@ -242,6 +248,7 @@ export class PipelineStore {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
     this.needsFullRebuild = true
+    this._ingestVersion++
 
     if (changeset.bounded) {
       // Full replacement for bounded data
@@ -374,27 +381,34 @@ export class PipelineStore {
         // Normalized: all stacks sum to 1.0
         yDomain = [0, 1 + config.extentPadding]
       } else {
-        const groups = this.groupData(bufferArray)
+        // Cache the stacked extent computation — only rebuild when buffer data changes
+        const stackCacheKey = `${buffer.size}:${this._ingestVersion}`
+        if (this._stackExtentCache && this._stackExtentCache.key === stackCacheKey) {
+          yDomain = this._stackExtentCache.yDomain
+        } else {
+          const groups = this.groupData(bufferArray)
 
-        // Build per-x-value totals across all groups
-        const xTotals = new Map<number, number>()
-        for (const g of groups) {
-          for (const d of g.data) {
-            const x = this.getX(d)
-            const y = this.getY(d)
-            if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
-              xTotals.set(x, (xTotals.get(x) || 0) + y)
+          // Build per-x-value totals across all groups
+          const xTotals = new Map<number, number>()
+          for (const g of groups) {
+            for (const d of g.data) {
+              const x = this.getX(d)
+              const y = this.getY(d)
+              if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+                xTotals.set(x, (xTotals.get(x) || 0) + y)
+              }
             }
           }
-        }
 
-        let maxStacked = 0
-        for (const total of xTotals.values()) {
-          if (total > maxStacked) maxStacked = total
-        }
+          let maxStacked = 0
+          for (const total of xTotals.values()) {
+            if (total > maxStacked) maxStacked = total
+          }
 
-        const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
-        yDomain = [0, maxStacked + pad]
+          const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
+          yDomain = [0, maxStacked + pad]
+          this._stackExtentCache = { key: stackCacheKey, yDomain }
+        }
       }
     } else if (config.chartType === "bar" && config.binSize && !yFullySpecified && buffer.size > 0) {
       const [, maxTotal] = computeBinExtent(
@@ -729,27 +743,9 @@ export class PipelineStore {
 
     // Build color map from colorAccessor if no pointStyle handles it
     // Sort categories alphabetically for stable palette assignment across frames
-    let colorMap: Map<string, string> | null = null
-    if (this.getColor && !this.config.pointStyle) {
-      const categories = new Set<string>()
-      for (const d of data) {
-        const c = this.getColor(d)
-        if (c) categories.add(c)
-      }
-      const sorted = Array.from(categories).sort()
-      const cacheKey = sorted.join('\0')
-      if (this._pointColorCache && this._pointColorCache.key === cacheKey) {
-        colorMap = this._pointColorCache.map
-      } else {
-        const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
-          : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
-        colorMap = new Map()
-        for (let ci = 0; ci < sorted.length; ci++) {
-          colorMap.set(sorted[ci], palette[ci % palette.length])
-        }
-        this._pointColorCache = { key: cacheKey, map: colorMap }
-      }
-    }
+    const colorMap = (this.getColor && !this.config.pointStyle)
+      ? this.resolveColorMap(data)
+      : null
 
     for (const d of data) {
       let style = this.config.pointStyle ? this.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
@@ -1912,6 +1908,35 @@ export class PipelineStore {
     return Array.from(groups.entries()).map(([key, data]) => ({ key, data }))
   }
 
+  /**
+   * Resolve a category→color map from data using the colorAccessor.
+   * Caches the result in _colorMapCache keyed by sorted category set —
+   * only rebuilds when the set of categories changes.
+   */
+  private resolveColorMap(data: Record<string, any>[]): Map<string, string> {
+    const categories = new Set<string>()
+    for (const d of data) {
+      const c = this.getColor!(d)
+      if (c) categories.add(c)
+    }
+    const sorted = Array.from(categories).sort()
+    const cacheKey = sorted.join('\0')
+
+    if (this._colorMapCache && this._colorMapCache.key === cacheKey) {
+      return this._colorMapCache.map
+    }
+
+    const palette = Array.isArray(this.config.colorScheme)
+      ? this.config.colorScheme
+      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+    const colorMap = new Map<string, string>()
+    for (let ci = 0; ci < sorted.length; ci++) {
+      colorMap.set(sorted[ci], palette[ci % palette.length])
+    }
+    this._colorMapCache = { key: cacheKey, map: colorMap }
+    return colorMap
+  }
+
   private resolveLineStyle(group: string, sampleDatum?: Record<string, any>): Style {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
@@ -1980,6 +2005,9 @@ export class PipelineStore {
     this.scales = null
     this.scene = []
     this._quadtree = null
+    this._colorMapCache = null
+    this._barCategoryCache = null
+    this._stackExtentCache = null
     this.version++
   }
 
@@ -2006,12 +2034,18 @@ export class PipelineStore {
   updateConfig(config: Partial<PipelineConfig>): void {
     // Invalidate color map caches when relevant config changes
     if (config.colorScheme !== undefined) {
-      this._pointColorCache = null
+      this._colorMapCache = null
     }
     if (config.barColors !== undefined || config.colorScheme !== undefined) {
       this._barCategoryCache = null
     }
-    // Invalidate stacked area extent cache on config changes (e.g. normalize)
+    // Invalidate stacked area extent cache on config changes that affect stacking
+    if (config.normalize !== undefined || config.extentPadding !== undefined
+      || config.xAccessor !== undefined || config.yAccessor !== undefined
+      || config.groupAccessor !== undefined || config.categoryAccessor !== undefined
+      || config.chartType !== undefined) {
+      this._stackExtentCache = null
+    }
 
     Object.assign(this.config, config)
     this.needsFullRebuild = true

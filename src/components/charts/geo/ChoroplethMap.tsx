@@ -184,6 +184,16 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
   if (emptyEl) return emptyEl
 
+  // Validate areas is a valid GeoJSON feature array.
+  // We skip accessor validation here because valueAccessor resolves through
+  // properties (d.properties[field]) which validateArrayData doesn't understand.
+  if (Array.isArray(resolvedAreas) && resolvedAreas.length > 0) {
+    const sample = resolvedAreas[0]
+    if (!sample || typeof sample !== "object" || !sample.geometry) {
+      return <ChartError componentName="ChoroplethMap" message="ChoroplethMap: areas must be an array of GeoJSON Features with a geometry property." width={resolved.width} height={resolved.height} />
+    }
+  }
+
   const streamProps: StreamGeoFrameProps = {
     projection,
     areas: resolvedAreas,
@@ -191,7 +201,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     size: [resolved.width, resolved.height],
     margin,
     enableHover: true,
-    tooltipContent: tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
+    tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),
     ...(zoomable && { zoomable: true }),

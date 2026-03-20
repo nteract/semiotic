@@ -17,6 +17,7 @@ export { BubbleChart } from "./charts/xy/BubbleChart"
 export { Heatmap } from "./charts/xy/Heatmap"
 export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
 export { MinimapChart } from "./charts/xy/MinimapChart"
+export { QuadrantChart } from "./charts/xy/QuadrantChart"
 
 // Stream Frame types
 export type {

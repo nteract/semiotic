@@ -750,7 +750,7 @@ export const LineChart = forwardRef(
   // inside the first line object rather than the top-level line objects
   const validationData = isLineObjectFormat
     ? (effectiveData[0]?.[lineDataAccessor] || [])
-    : safeData
+    : data
   const error = validateArrayData({
     componentName: "LineChart",
     data: validationData,
@@ -811,7 +811,9 @@ export const LineChart = forwardRef(
     }),
     ...(title && { title }),
     ...(className && { className }),
-    tooltipContent: normalizeTooltip(tooltip) || defaultTooltipContent,
+    tooltipContent: tooltip === false
+      ? () => null
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {

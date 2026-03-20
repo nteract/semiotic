@@ -297,6 +297,57 @@
     {
       "type": "function",
       "function": {
+        "name": "QuadrantChart",
+        "description": "Scatterplot divided into four labeled, colored quadrants by center lines. Use for BCG matrices, priority matrices, and any 2x2 strategic framework.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": { "type": "string", "default": "x" },
+            "yAccessor": { "type": "string", "default": "y" },
+            "xCenter": { "type": "number", "description": "X-coordinate of the vertical center line. Defaults to midpoint of x domain." },
+            "yCenter": { "type": "number", "description": "Y-coordinate of the horizontal center line. Defaults to midpoint of y domain." },
+            "quadrants": {
+              "type": "object",
+              "description": "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with { label, color, opacity? }",
+              "properties": {
+                "topRight": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
+                "topLeft": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
+                "bottomRight": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
+                "bottomLeft": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] }
+              },
+              "required": ["topRight", "topLeft", "bottomRight", "bottomLeft"]
+            },
+            "showQuadrantLabels": { "type": "boolean", "default": true },
+            "quadrantLabelSize": { "type": "number", "default": 12 },
+            "colorBy": { "type": "string", "description": "Key to determine point color" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "sizeBy": { "type": "string", "description": "Key for variable point sizing" },
+            "sizeRange": { "type": "array", "items": { "type": "number" }, "default": [3, 15] },
+            "pointRadius": { "type": "number", "default": 5 },
+            "pointOpacity": { "type": "number", "default": 0.8 },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["quadrants"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "BubbleChart",
         "description": "Scatterplot with required size dimension for three-variable comparison. Bubble area encodes a numeric value.",
         "parameters": {

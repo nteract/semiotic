@@ -906,7 +906,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             hoverPoint!.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
           })`,
           pointerEvents: "none",
-          zIndex: 10
+          zIndex: 10,
+          width: "max-content"
         }}
       >
         {tooltipRendered}
