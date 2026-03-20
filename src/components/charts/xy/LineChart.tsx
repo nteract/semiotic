@@ -812,7 +812,7 @@ export const LineChart = forwardRef(
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),

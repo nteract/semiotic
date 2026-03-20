@@ -288,8 +288,8 @@ export default function RoslingBubbleChart({ width = 800 }) {
     return [
       (ctx, nodes, scales) => {
         if (!scales) return
-        const xScale = scales.xScale
-        const yScale = scales.yScale
+        const xScale = scales.x
+        const yScale = scales.y
         if (!xScale || !yScale) return
 
         for (const country of step.highlight) {

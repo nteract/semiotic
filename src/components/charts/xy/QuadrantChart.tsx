@@ -487,7 +487,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),

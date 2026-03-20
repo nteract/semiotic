@@ -97,16 +97,16 @@ export default function RoslingBubbleChart({ width = 800 }) {
         if (trail.length < 2) continue
         const color = CONTINENT_COLORS[trail[0].continent]
         ctx.beginPath()
-        ctx.moveTo(scales.xScale(trail[0].gdp), scales.yScale(trail[0].life))
+        ctx.moveTo(scales.x(trail[0].gdp), scales.y(trail[0].life))
         for (let i = 1; i < trail.length; i++)
-          ctx.lineTo(scales.xScale(trail[i].gdp), scales.yScale(trail[i].life))
+          ctx.lineTo(scales.x(trail[i].gdp), scales.y(trail[i].life))
         ctx.strokeStyle = color; ctx.lineWidth = 2
         ctx.globalAlpha = 0.4; ctx.setLineDash([4, 3]); ctx.stroke()
         ctx.setLineDash([])
         // Small dots at each historical position
         for (let i = 0; i < trail.length - 1; i++) {
           ctx.beginPath()
-          ctx.arc(scales.xScale(trail[i].gdp), scales.yScale(trail[i].life), 3, 0, Math.PI * 2)
+          ctx.arc(scales.x(trail[i].gdp), scales.y(trail[i].life), 3, 0, Math.PI * 2)
           ctx.fillStyle = color; ctx.globalAlpha = 0.5; ctx.fill()
         }
       }

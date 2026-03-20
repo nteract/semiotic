@@ -383,7 +383,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     margin,
     enableHover: true,
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(legend && { legend }),
     ...((linkedHover || onObservation) && { customHoverBehavior }),

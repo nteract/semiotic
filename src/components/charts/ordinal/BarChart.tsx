@@ -213,7 +213,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),

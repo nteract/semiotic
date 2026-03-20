@@ -316,7 +316,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),

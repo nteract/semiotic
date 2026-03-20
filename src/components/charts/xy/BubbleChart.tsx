@@ -415,7 +415,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),

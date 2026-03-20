@@ -201,7 +201,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     size: [resolved.width, resolved.height],
     margin,
     enableHover: true,
-    tooltipContent: tooltip === false ? undefined : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
+    tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),
     ...(zoomable && { zoomable: true }),

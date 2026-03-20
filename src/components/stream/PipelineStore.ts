@@ -2039,8 +2039,11 @@ export class PipelineStore {
     if (config.barColors !== undefined || config.colorScheme !== undefined) {
       this._barCategoryCache = null
     }
-    // Invalidate stacked area extent cache on config changes (e.g. normalize, extentPadding)
-    if (config.normalize !== undefined || config.extentPadding !== undefined) {
+    // Invalidate stacked area extent cache on config changes that affect stacking
+    if (config.normalize !== undefined || config.extentPadding !== undefined
+      || config.xAccessor !== undefined || config.yAccessor !== undefined
+      || config.groupAccessor !== undefined || config.categoryAccessor !== undefined
+      || config.chartType !== undefined) {
       this._stackExtentCache = null
     }
 

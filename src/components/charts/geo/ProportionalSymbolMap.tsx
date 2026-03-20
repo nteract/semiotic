@@ -224,7 +224,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     margin,
     enableHover: true,
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(legend && { legend }),
     ...(legendInteraction && legendInteraction !== "none" && {

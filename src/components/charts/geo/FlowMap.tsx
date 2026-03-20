@@ -335,7 +335,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     margin,
     enableHover: true,
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
