@@ -3,7 +3,7 @@ import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
 import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -155,7 +155,9 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   // ── Node style — d is a RealtimeNode, user data on d.data ───────────────
   // Resolve the scheme colors array for root node coloring
   const schemeColors = useMemo(() => {
-    return Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
+    if (Array.isArray(colorScheme)) return colorScheme
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? (resolved as readonly string[]) : DEFAULT_COLORS
   }, [colorScheme])
 
   const nodeStyleFn = useMemo(() => {

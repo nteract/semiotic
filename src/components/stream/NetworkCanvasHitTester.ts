@@ -234,8 +234,11 @@ function hitTestBezierEdge(
     }
 
     // Also check isPointInStroke with a generous hit tolerance for thin bezier curves
+    const prevLineWidth = ctx.lineWidth
     ctx.lineWidth = 10
-    if (ctx.isPointInStroke(path, px, py)) {
+    const inStroke = ctx.isPointInStroke(path, px, py)
+    ctx.lineWidth = prevLineWidth
+    if (inStroke) {
       return {
         type: "edge",
         datum: edge.datum,
@@ -308,8 +311,11 @@ function hitTestPathEdge(
     }
 
     // Also check stroke with generous hit tolerance for thin curved/ribbon edges
+    const prevLineWidth = ctx.lineWidth
     ctx.lineWidth = 10
-    if (ctx.isPointInStroke(path, px, py)) {
+    const inStroke = ctx.isPointInStroke(path, px, py)
+    ctx.lineWidth = prevLineWidth
+    if (inStroke) {
       return {
         type: "edge",
         datum: edge.datum,

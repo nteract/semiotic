@@ -122,8 +122,9 @@ function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | n
     dist = Math.sqrt(ddx * ddx + ddy * ddy)
   }
 
-  // Minimum 5px hit tolerance for lines regardless of visual stroke width
-  const tolerance = 5
+  // Scale hit tolerance with stroke width, minimum 5px
+  const strokeWidth = (node.style as any)?.strokeWidth ?? (node.style as any)?.lineWidth ?? 1
+  const tolerance = Math.max(5, strokeWidth / 2 + 2)
   if (dist > tolerance) return null
 
   // For line data, the datum is the array; return the index as well
