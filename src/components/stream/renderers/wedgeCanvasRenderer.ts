@@ -1,4 +1,5 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
+import { renderPathPulse } from "./renderPulse"
 
 /** Trace the wedge arc path (donut or pie) onto the current context. */
 function drawWedgePath(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
@@ -40,9 +41,7 @@ export const wedgeCanvasRenderer = (
     // Pulse overlay — brightened fill flash when aggregated category value changes
     if (node._pulseIntensity && node._pulseIntensity > 0) {
       drawWedgePath(ctx, node)
-      ctx.globalAlpha = node._pulseIntensity * 0.35
-      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fill()
+      renderPathPulse(ctx, node)
     }
 
     ctx.globalAlpha = 1

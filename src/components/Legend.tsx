@@ -64,17 +64,20 @@ const renderLegendGroupVertical = (
   highlightedCategory: string | null | undefined,
   isolatedCategories: Set<string> | undefined,
   focusedIndex: number,
-  onFocusedIndexChange: (index: number) => void
+  onFocusedIndexChange: (index: number) => void,
+  legendInteraction?: string
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
+  const useIsolateAria = legendInteraction === "isolate"
   const ROW_HEIGHT = 22
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
     const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
+    const isHighlighted = highlightedCategory != null && item.label === highlightedCategory
     renderedItems.push(
       <g
         key={`legend-item-${i}`}
@@ -90,7 +93,8 @@ const renderLegendGroupVertical = (
         }
         tabIndex={interactive ? (i === focusedIndex ? 0 : -1) : undefined}
         role={interactive ? "option" : undefined}
-        aria-selected={isIsolated || false}
+        aria-selected={interactive && useIsolateAria ? (isIsolated || false) : undefined}
+        aria-current={interactive && !useIsolateAria ? (isHighlighted || undefined) : undefined}
         aria-label={item.label}
         onKeyDown={interactive ? (e: React.KeyboardEvent<SVGGElement>) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -157,16 +161,19 @@ const renderLegendGroupHorizontal = (
   highlightedCategory: string | null | undefined,
   isolatedCategories: Set<string> | undefined,
   focusedIndex: number,
-  onFocusedIndexChange: (index: number) => void
+  onFocusedIndexChange: (index: number) => void,
+  legendInteraction?: string
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
+  const useIsolateAria = legendInteraction === "isolate"
   items.forEach((item, i) => {
     const renderedType = renderType(item, i, type, styleFn)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
     const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
+    const isHighlighted = highlightedCategory != null && item.label === highlightedCategory
     renderedItems.push(
       <g
         key={`legend-item-${i}`}
@@ -182,7 +189,8 @@ const renderLegendGroupHorizontal = (
         }
         tabIndex={interactive ? (i === focusedIndex ? 0 : -1) : undefined}
         role={interactive ? "option" : undefined}
-        aria-selected={isIsolated || false}
+        aria-selected={interactive && useIsolateAria ? (isIsolated || false) : undefined}
+        aria-current={interactive && !useIsolateAria ? (isHighlighted || undefined) : undefined}
         aria-label={item.label}
         onKeyDown={interactive ? (e: React.KeyboardEvent<SVGGElement>) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -250,7 +258,8 @@ const renderVerticalGroup = ({
   highlightedCategory,
   isolatedCategories,
   focusedIndex,
-  onFocusedIndexChange
+  onFocusedIndexChange,
+  legendInteraction
 }: {
   legendGroups: LegendGroup[]
   width: number
@@ -260,6 +269,7 @@ const renderVerticalGroup = ({
   isolatedCategories?: Set<string>
   focusedIndex: number
   onFocusedIndexChange: (index: number) => void
+  legendInteraction?: string
 }) => {
   let offset = 24
 
@@ -300,7 +310,7 @@ const renderVerticalGroup = ({
         className="legend-item"
         transform={`translate(0,${offset})`}
       >
-        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange)}
+        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange, legendInteraction)}
       </g>
     )
     offset += l.items.length * 22 + 8
@@ -319,7 +329,8 @@ const renderHorizontalGroup = ({
   highlightedCategory,
   isolatedCategories,
   focusedIndex,
-  onFocusedIndexChange
+  onFocusedIndexChange,
+  legendInteraction
 }: {
   legendGroups: LegendGroup[]
   title: string | boolean
@@ -331,6 +342,7 @@ const renderHorizontalGroup = ({
   isolatedCategories?: Set<string>
   focusedIndex: number
   onFocusedIndexChange: (index: number) => void
+  legendInteraction?: string
 }) => {
   // First pass: compute total width of all items
   let totalItemsWidth = 0
@@ -339,7 +351,7 @@ const renderHorizontalGroup = ({
   legendGroups.forEach((l) => {
     let groupWidth = 0
     if (l.label) groupWidth += 16
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange)
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedIndex, onFocusedIndexChange, legendInteraction)
     groupWidth += renderedItems.offset + 5
     groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth })
     totalItemsWidth += groupWidth + 12
@@ -434,7 +446,7 @@ export function GradientLegend({
     }
 
     return (
-      <g>
+      <g aria-label={label || "Gradient legend"}>
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             {stops}
@@ -470,7 +482,7 @@ export function GradientLegend({
   }
 
   return (
-    <g>
+    <g aria-label={label || "Gradient legend"}>
       {label && (
         <text x={BAR_WIDTH / 2} y={-6} textAnchor="middle" fontSize={11} fill="var(--semiotic-text, #333)">
           {label}
@@ -518,7 +530,8 @@ export default function Legend(props: LegendProps) {
           highlightedCategory,
           isolatedCategories,
           focusedIndex,
-          onFocusedIndexChange: setFocusedIndex
+          onFocusedIndexChange: setFocusedIndex,
+          legendInteraction
         })
       : renderHorizontalGroup({
           legendGroups: legendGroups || [],
@@ -530,7 +543,8 @@ export default function Legend(props: LegendProps) {
           highlightedCategory,
           isolatedCategories,
           focusedIndex,
-          onFocusedIndexChange: setFocusedIndex
+          onFocusedIndexChange: setFocusedIndex,
+          legendInteraction
         })
 
   const isInteractive = Boolean(customClickBehavior || customHoverBehavior)

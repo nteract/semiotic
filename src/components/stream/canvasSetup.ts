@@ -30,10 +30,18 @@ export function prepareCanvas(
   const ctx = canvas.getContext("2d")
   if (!ctx) return null
 
-  canvas.width = size[0] * dpr
-  canvas.height = size[1] * dpr
-  canvas.style.width = `${size[0]}px`
-  canvas.style.height = `${size[1]}px`
+  const newWidth = size[0] * dpr
+  const newHeight = size[1] * dpr
+
+  // Only set canvas.width/height when dimensions actually change.
+  // Setting these properties — even to the same value — implicitly clears
+  // the canvas buffer and forces a GPU buffer reallocation on HiDPI displays.
+  if (canvas.width !== newWidth || canvas.height !== newHeight) {
+    canvas.width = newWidth
+    canvas.height = newHeight
+    canvas.style.width = `${size[0]}px`
+    canvas.style.height = `${size[1]}px`
+  }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.translate(margin.left, margin.top)

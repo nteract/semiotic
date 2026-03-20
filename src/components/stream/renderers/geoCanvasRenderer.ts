@@ -1,4 +1,5 @@
 import type { GeoAreaSceneNode, GeoSceneNode } from "../geoTypes"
+import { renderPathPulse } from "./renderPulse"
 
 /**
  * Canvas renderer for GeoAreaSceneNode — projected geographic polygons.
@@ -45,11 +46,7 @@ export function geoCanvasRenderer(
     }
 
     // Pulse overlay
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
-      ctx.globalAlpha = node._pulseIntensity * 0.35
-      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fill(path)
-    }
+    renderPathPulse(ctx, node, path)
 
     ctx.globalAlpha = 1
     ctx.setLineDash([])

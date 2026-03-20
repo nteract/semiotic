@@ -179,6 +179,12 @@ export class PipelineStore {
   /** Monotonic counter incremented on each ingest — used as part of cache keys */
   private _ingestVersion = 0
 
+  // ── Buffer array caching ────────────────────────────────────────────
+  /** Cached materialized array from buffer.toArray() — only rebuilt when buffer changes */
+  private _bufferArrayCache: Record<string, any>[] | null = null
+  /** True when the buffer has been mutated since last toArray() call */
+  private _bufferDirty = true
+
   // ── Resize optimization──────────────────────────────────────────────
   private needsFullRebuild = true
   private lastLayout: StreamLayout | null = null
@@ -249,6 +255,7 @@ export class PipelineStore {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
     this.needsFullRebuild = true
+    this._bufferDirty = true
     this._ingestVersion++
 
     if (changeset.bounded) {
@@ -355,8 +362,8 @@ export class PipelineStore {
       }
     }
 
-    // Materialize buffer once for all downstream consumers
-    const bufferArray = buffer.toArray()
+    // Materialize buffer once for all downstream consumers (cached when unchanged)
+    const bufferArray = this.getBufferArray()
 
     // Resolve domains — merge user-specified extents with data extents
     const dataXDomain = this.xExtent.extent
@@ -593,16 +600,23 @@ export class PipelineStore {
       }
     }
 
-    // Rebuild scales with new pixel ranges (same data domain)
+    // Rebuild scales with new pixel ranges (same data domain), preserving scale type
     const xDomain = this.scales!.x.domain() as [number, number]
     const yDomain = this.scales!.y.domain() as [number, number]
     const oldXRange = this.scales!.x.range() as [number, number]
     const oldYRange = this.scales!.y.range() as [number, number]
+    const remapScale = (type: "linear" | "log" | undefined, domain: [number, number], range: [number, number]) => {
+      if (type === "log") {
+        const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
+        return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+      }
+      return scaleLinear().domain(domain).range(range)
+    }
     this.scales = {
-      x: scaleLinear().domain(xDomain).range([
+      x: remapScale(this.config.xScaleType, xDomain, [
         oldXRange[0] * wRatio, oldXRange[1] * wRatio
       ]),
-      y: scaleLinear().domain(yDomain).range([
+      y: remapScale(this.config.yScaleType, yDomain, [
         oldYRange[0] * hRatio, oldYRange[1] * hRatio
       ])
     }
@@ -1983,10 +1997,26 @@ export class PipelineStore {
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
   }
 
+  // ── Buffer array cache ──────────────────────────────────────────────
+
+  /**
+   * Return a cached materialized array of the buffer contents.
+   * Only calls buffer.toArray() when the buffer has actually changed
+   * (new push, resize, or clear), avoiding per-frame allocation on
+   * transition ticks, hover redraws, and other non-data-changing renders.
+   */
+  private getBufferArray(): Record<string, any>[] {
+    if (this._bufferDirty || !this._bufferArrayCache) {
+      this._bufferArrayCache = this.buffer.toArray()
+      this._bufferDirty = false
+    }
+    return this._bufferArrayCache
+  }
+
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Record<string, any>[] {
-    return this.buffer.toArray()
+    return this.getBufferArray()
   }
 
   getExtents(): { x: [number, number]; y: [number, number] } | null {
@@ -2009,6 +2039,8 @@ export class PipelineStore {
     this.lastIngestTime = 0
 
     this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._bufferArrayCache = null
     this.lastLayout = null
     this.scales = null
     this.scene = []

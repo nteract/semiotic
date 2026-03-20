@@ -112,7 +112,7 @@ export function renderLoadingState(
             position: "absolute",
             top: startY + i * (barHeight + gap),
             left: Math.floor(width * 0.1),
-            width: `${30 + Math.round(Math.random() * 50)}%`,
+            width: `${30 + ((i * 37 + 13) % 50)}%`,
             height: barHeight,
             opacity: 0.5 + (i % 2) * 0.2,
           }}

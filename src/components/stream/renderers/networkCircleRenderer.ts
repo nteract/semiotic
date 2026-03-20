@@ -1,4 +1,5 @@
 import type { NetworkSceneNode, NetworkCircleNode } from "../networkTypes"
+import { renderCirclePulse } from "./renderPulse"
 
 /**
  * Canvas painter for NetworkCircleNode (force nodes, tree nodes, circlepack).
@@ -40,16 +41,7 @@ export function networkCircleRenderer(
     }
 
     // Pulse glow ring
-    if (c._pulseIntensity && c._pulseIntensity > 0) {
-      const glowRadius = c._pulseGlowRadius ?? 4
-      const pulseR = c.r + glowRadius * c._pulseIntensity
-      ctx.beginPath()
-      ctx.arc(c.cx, c.cy, pulseR, 0, Math.PI * 2)
-      ctx.strokeStyle = c._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.lineWidth = 2 * c._pulseIntensity
-      ctx.globalAlpha = c._pulseIntensity * 0.6
-      ctx.stroke()
-    }
+    renderCirclePulse(ctx, c)
 
     ctx.restore()
   }

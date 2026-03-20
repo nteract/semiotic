@@ -1,5 +1,6 @@
 import type { SceneNode, RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
+import { renderRectPulse } from "./renderPulse"
 
 /**
  * Canvas bar renderer.
@@ -30,11 +31,7 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
     }
 
     // Pulse overlay
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
-      ctx.globalAlpha = node._pulseIntensity * 0.3
-      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fillRect(node.x, node.y, node.w, node.h)
-    }
+    renderRectPulse(ctx, node)
 
     ctx.globalAlpha = 1
   }

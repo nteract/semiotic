@@ -11,6 +11,14 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     if (node.type !== "candlestick") continue
     const n = node as CandlestickSceneNode
 
+    ctx.save()
+
+    // Apply decay opacity if present
+    const decayOpacity = (n as any)._decayOpacity
+    if (decayOpacity != null && decayOpacity !== 1) {
+      ctx.globalAlpha = decayOpacity
+    }
+
     // Draw wick (high-low line)
     ctx.beginPath()
     ctx.moveTo(n.x, n.highY)
@@ -31,5 +39,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     ctx.strokeStyle = bodyColor
     ctx.lineWidth = 1
     ctx.strokeRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
+
+    ctx.restore()
   }
 }

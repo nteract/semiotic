@@ -140,6 +140,7 @@ describe("Legend — aria-selected and isolation", () => {
         legendGroups={[makeLegendGroup()]}
         customClickBehavior={onClick}
         isolatedCategories={isolated}
+        legendInteraction="isolate"
       />
     )
     const options = container.querySelectorAll("[role='option']")
@@ -165,6 +166,46 @@ describe("Legend — aria-selected and isolation", () => {
     // Alpha should not have a checkmark path
     const alphaPaths = options[0].querySelectorAll("path")
     expect(alphaPaths.length).toBe(0)
+  })
+})
+
+// ── aria-current in highlight mode ───────────────────────────────────────
+
+describe("Legend — aria-current in highlight mode", () => {
+  it("uses aria-current instead of aria-selected when legendInteraction is highlight", () => {
+    const onHover = vi.fn()
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customHoverBehavior={onHover}
+        highlightedCategory="Beta"
+        legendInteraction="highlight"
+      />
+    )
+    const options = container.querySelectorAll("[role='option']")
+    // aria-selected should not be present in highlight mode
+    expect(options[0].getAttribute("aria-selected")).toBeNull()
+    expect(options[1].getAttribute("aria-selected")).toBeNull()
+    // aria-current should be set on the highlighted item
+    expect(options[0].getAttribute("aria-current")).toBeNull()
+    expect(options[1].getAttribute("aria-current")).toBe("true")
+    expect(options[2].getAttribute("aria-current")).toBeNull()
+  })
+
+  it("no aria-selected when legendInteraction is not isolate", () => {
+    const onClick = vi.fn()
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+        highlightedCategory="Alpha"
+      />
+    )
+    const options = container.querySelectorAll("[role='option']")
+    // Without legendInteraction="isolate", should use aria-current, not aria-selected
+    options.forEach((opt) => {
+      expect(opt.getAttribute("aria-selected")).toBeNull()
+    })
   })
 })
 
@@ -356,6 +397,31 @@ describe("GradientLegend", () => {
     expect(gradient).not.toBeNull()
     expect(gradient!.getAttribute("x2")).toBe("100%")
     expect(gradient!.getAttribute("y2")).toBe("0%")
+  })
+
+  it("has aria-label using the label prop", () => {
+    const { container } = renderInSvg(
+      <GradientLegend config={config} orientation="vertical" />
+    )
+    const g = container.querySelector("[aria-label='Intensity']")
+    expect(g).not.toBeNull()
+  })
+
+  it("has fallback aria-label when no label prop", () => {
+    const noLabelConfig = { ...config, label: undefined }
+    const { container } = renderInSvg(
+      <GradientLegend config={noLabelConfig} orientation="vertical" />
+    )
+    const g = container.querySelector("[aria-label='Gradient legend']")
+    expect(g).not.toBeNull()
+  })
+
+  it("has aria-label on horizontal orientation", () => {
+    const { container } = renderInSvg(
+      <GradientLegend config={config} orientation="horizontal" width={200} />
+    )
+    const g = container.querySelector("[aria-label='Intensity']")
+    expect(g).not.toBeNull()
   })
 
   it("uses custom format function for labels", () => {

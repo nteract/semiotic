@@ -111,9 +111,9 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     return ""
   }
 
-  // Format numbers with commas
+  // Only add commas for numbers > 9999 to avoid formatting years (2005 → "2,005")
   if (typeof value === "number") {
-    return value.toLocaleString()
+    return Math.abs(value) > 9999 ? value.toLocaleString() : String(value)
   }
 
   // Format dates

@@ -1,4 +1,5 @@
 import type { NetworkSceneNode, NetworkRectNode } from "../networkTypes"
+import { renderRectPulse } from "./renderPulse"
 
 /**
  * Canvas painter for NetworkRectNode (sankey nodes, treemap cells, partition blocks).
@@ -37,11 +38,7 @@ export function networkRectRenderer(
     }
 
     // Pulse overlay
-    if (r._pulseIntensity && r._pulseIntensity > 0) {
-      ctx.globalAlpha = r._pulseIntensity * 0.3
-      ctx.fillStyle = r._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fillRect(r.x, r.y, r.w, r.h)
-    }
+    renderRectPulse(ctx, r)
 
     ctx.restore()
   }

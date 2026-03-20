@@ -1,5 +1,6 @@
 import type { SceneNode, AreaSceneNode, CurveType } from "../types"
 import type { StreamRendererFn } from "./types"
+import { renderPathPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import {
   curveMonotoneX,
@@ -164,9 +165,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Pulse overlay — brightened fill flash when aggregated value changes
     if (node._pulseIntensity && node._pulseIntensity > 0) {
       traceAreaPath(ctx, node)
-      ctx.globalAlpha = node._pulseIntensity * 0.35
-      ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-      ctx.fill()
+      renderPathPulse(ctx, node)
     }
 
     // Stroke on top
