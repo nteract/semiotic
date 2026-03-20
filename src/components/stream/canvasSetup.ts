@@ -36,11 +36,15 @@ export function prepareCanvas(
   // Only set canvas.width/height when dimensions actually change.
   // Setting these properties — even to the same value — implicitly clears
   // the canvas buffer and forces a GPU buffer reallocation on HiDPI displays.
+  // Always keep CSS dimensions in sync with logical size
+  const cssW = `${size[0]}px`
+  const cssH = `${size[1]}px`
+  if (canvas.style.width !== cssW) canvas.style.width = cssW
+  if (canvas.style.height !== cssH) canvas.style.height = cssH
+
   if (canvas.width !== newWidth || canvas.height !== newHeight) {
     canvas.width = newWidth
     canvas.height = newHeight
-    canvas.style.width = `${size[0]}px`
-    canvas.style.height = `${size[1]}px`
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
