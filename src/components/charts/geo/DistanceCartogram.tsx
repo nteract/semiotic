@@ -7,6 +7,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -48,6 +49,8 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   tooltip?: TooltipProp
   /** Show legend */
   showLegend?: boolean
+  /** Legend position */
+  legendPosition?: LegendPosition
   /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
   fitPadding?: number
   /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
@@ -127,6 +130,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     chartId,
     loading,
     emptyContent,
+    legendPosition: legendPositionProp,
     frameProps = {}
   } = props
 
@@ -162,11 +166,12 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     return base
   }, [colorBy, colorScale, pointRadius, activeSelectionHook, selection])
 
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeData,
     colorBy,
     colorScale,
     showLegend: resolved.showLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: { top: 10, bottom: 10, left: 10, right: 10 }
   })
@@ -385,7 +390,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),

@@ -1516,8 +1516,25 @@ export class PipelineStore {
    */
   private getNodeIdentity(node: SceneNode, index: number): string | null {
     switch (node.type) {
-      case "point":
+      case "point": {
+        // Use explicit pointId (from pointIdAccessor) if available
+        if (node.pointId) return `p:${node.pointId}`
+        // In streaming mode, derive stable key from datum values so
+        // ring-buffer index shifts don't cause transitions to interpolate
+        // between unrelated data points. In bounded mode, index-based keys
+        // are correct because full data replacement preserves position order.
+        if (this.config.runtimeMode === "streaming" && node.datum) {
+          if (this.getCategory) {
+            const cat = this.getCategory(node.datum)
+            const val = this.getY(node.datum)
+            return `p:${cat}:${val}`
+          }
+          const xVal = this.getX(node.datum)
+          const yVal = this.getY(node.datum)
+          if (xVal != null && yVal != null) return `p:${xVal}:${yVal}`
+        }
         return `p:${index}`
+      }
       case "rect":
         return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
       case "heatcell":

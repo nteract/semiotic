@@ -7,6 +7,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamScales } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -80,6 +81,9 @@ export interface MinimapChartProps<TDatum extends Record<string, any> = Record<s
 
   /** Show legend */
   showLegend?: boolean
+
+  /** Legend position */
+  legendPosition?: LegendPosition
 
   /** Tooltip config */
   tooltip?: TooltipProp
@@ -238,6 +242,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     enableHover = true,
     showGrid = false,
     showLegend,
+    legendPosition: legendPositionProp,
     tooltip,
     minimap: minimapConfig = {},
     renderBefore = false,
@@ -360,11 +365,12 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
 
   // ── Legend + Margins ──────────────────────────────────────────────────
 
-  const { legend, margin: mainMargin } = useChartLegendAndMargin({
+  const { legend, margin: mainMargin, legendPosition } = useChartLegendAndMargin({
     data: lineData,
     colorBy,
     colorScale,
     showLegend,
+    legendPosition: legendPositionProp,
     userMargin
   })
 
@@ -415,7 +421,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) || undefined }),
     // Apply brush extent to main chart

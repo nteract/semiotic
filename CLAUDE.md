@@ -297,6 +297,7 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)`
 - For a bar chart: `renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })`
 - Works with Next.js App Router, Remix, Astro — same component on server and client
+- **Geo SSR requires pre-resolved features**: `renderGeoToStaticSVG` is synchronous — pass GeoJSON features directly, not reference strings like `"world-110m"`. Call `await resolveReferenceGeography("world-110m")` first and pass the result as `areas`.
 
 ## AI Features
 - `onObservation` — structured events (hover, click, brush, selection) on all HOCs

@@ -9,7 +9,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -53,6 +53,8 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   pointIdAccessor?: ChartAccessor<TDatum, string>
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** Legend position */
+  legendPosition?: LegendPosition
   /** Annotation objects to render on the chart */
   annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props for advanced customization */
@@ -118,7 +120,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -139,6 +142,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     colorBy,
     colorScheme,
     legendInteraction,
+    legendPosition: legendPositionProp,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],

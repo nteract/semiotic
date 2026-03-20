@@ -6,7 +6,7 @@ import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -145,6 +145,11 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   legendInteraction?: LegendInteractionMode
 
   /**
+   * Legend position
+   */
+  legendPosition?: LegendPosition
+
+  /**
    * Tooltip configuration
    */
   tooltip?: TooltipProp
@@ -234,7 +239,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -352,11 +358,12 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   )
 
   // Legend + margin
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: areaData,
     colorBy,
     colorScale,
     showLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: resolved.marginDefaults,
   })
@@ -416,7 +423,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

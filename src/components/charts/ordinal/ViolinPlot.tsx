@@ -5,6 +5,7 @@ import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -31,6 +32,7 @@ export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<str
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
+  legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -64,7 +66,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     colorBy, colorScheme = "category10", categoryPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
-    loading, emptyContent
+    loading, emptyContent,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -84,6 +87,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     colorBy,
     colorScheme,
     legendInteraction: undefined,
+    legendPosition: legendPositionProp,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],

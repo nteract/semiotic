@@ -5,7 +5,7 @@ import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -29,6 +29,7 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   enableHover?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
+  legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -61,7 +62,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendInteraction
+    legendInteraction,
+    legendPosition: legendPositionProp
   } = props
 
   const width = resolved.width
@@ -79,6 +81,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     colorBy: actualColorBy,
     colorScheme,
     legendInteraction,
+    legendPosition: legendPositionProp,
     selection,
     linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],

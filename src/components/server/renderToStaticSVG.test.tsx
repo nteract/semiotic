@@ -6,7 +6,8 @@ import {
   renderToStaticSVG,
   renderXYToStaticSVG,
   renderOrdinalToStaticSVG,
-  renderNetworkToStaticSVG
+  renderNetworkToStaticSVG,
+  renderGeoToStaticSVG
 } from "./renderToStaticSVG"
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -461,5 +462,27 @@ describe("renderNetworkToStaticSVG - node inference", () => {
 
     expect(svg).toContain("<svg")
     expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(2)
+  })
+})
+
+// ── Geo SSR: reference string error ──────────────────────────────────
+
+describe("renderGeoToStaticSVG - reference string error", () => {
+  it("throws a descriptive error when areas is a reference string", () => {
+    expect(() =>
+      renderGeoToStaticSVG({
+        areas: "world-110m" as any,
+        size: [600, 400]
+      } as any)
+    ).toThrow(/resolveReferenceGeography/)
+  })
+
+  it("includes the reference string name in the error message", () => {
+    expect(() =>
+      renderGeoToStaticSVG({
+        areas: "world-50m" as any,
+        size: [600, 400]
+      } as any)
+    ).toThrow(/world-50m/)
   })
 })

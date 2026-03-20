@@ -8,7 +8,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -44,6 +44,8 @@ export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> =
   showLegend?: boolean
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** Legend position */
+  legendPosition?: LegendPosition
   /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
   fitPadding?: number
   /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
@@ -116,6 +118,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     loading,
     emptyContent,
     legendInteraction,
+    legendPosition: legendPositionProp,
     frameProps = {}
   } = props
 
@@ -175,11 +178,12 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
-  const { legend, margin } = useChartLegendAndMargin({
+  const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeData,
     colorBy,
     colorScale,
     showLegend: resolved.showLegend,
+    legendPosition: legendPositionProp,
     userMargin,
     defaults: { top: 10, bottom: 10, left: 10, right: 10 }
   })
@@ -226,7 +230,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
-    ...(legend && { legend }),
+    ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,
