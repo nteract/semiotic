@@ -386,7 +386,7 @@ const galleryItems = [
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
         enableHover={true}
         tooltipContent={(d) => (
-          <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+          <div style={{ padding: "8px 12px", background: "white", color: "#333", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.data?.region} - {d.data?.quarter}</div>
             <div>Value: {d.data?.value}</div>
           </div>
@@ -416,7 +416,7 @@ const galleryItems = [
           const groupLabels = { A: "Indigo", B: "Pink", C: "Orange" }
           const raw = d.data || d
           return (
-            <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+            <div style={{ padding: "8px 12px", background: "white", color: "#333", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
               <div style={{ fontWeight: 600, marginBottom: 4 }}>Category: {groupLabels[raw.group] || raw.group}</div>
               <div>x: {Math.round(raw.x * 10) / 10}, y: {Math.round(raw.y * 10) / 10}</div>
             </div>
