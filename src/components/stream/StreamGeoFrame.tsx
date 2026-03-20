@@ -268,6 +268,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // Drag-rotate state (globe spinning)
     const dragStartRef = useRef<{ x: number; y: number; rotation: [number, number, number] } | null>(null)
+    // Pending rotation from drag — applied in the render loop to coalesce pointer events
+    const pendingRotationRef = useRef<[number, number, number] | null>(null)
 
     // Particle pool
     const particlePoolRef = useRef<GeoParticlePool | null>(null)
@@ -486,6 +488,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       const now = performance.now()
       let needsContinuation = false
+
+      // Apply pending drag-rotation (coalesced from pointer events)
+      const pendingRot = pendingRotationRef.current
+      if (pendingRot) {
+        pendingRotationRef.current = null
+        const rotLayout = { width: adjustedWidth, height: adjustedHeight }
+        store.applyRotation(pendingRot, rotLayout)
+      }
 
       // Advance transition
       const isTransitioning = store.advanceTransition(now)
@@ -814,18 +824,28 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             dragStart.rotation[2]
           ]
 
-          const store = storeRef.current
-          if (store) {
-            store.applyRotation(newRotation, layout)
-            dirtyRef.current = false
-            scheduleRender()
-          }
+          // Defer the expensive scene rebuild to the next animation frame.
+          // Multiple pointer events between frames are coalesced — only the
+          // latest rotation is applied, avoiding redundant buildSceneNodes().
+          pendingRotationRef.current = newRotation
+          scheduleRender()
         }
 
         const onPointerUp = (e: PointerEvent) => {
           if (!dragStartRef.current) return
           dragStartRef.current = null
           container.releasePointerCapture(e.pointerId)
+
+          // Flush any pending rotation immediately so the final position is exact
+          const pendingRot = pendingRotationRef.current
+          if (pendingRot) {
+            pendingRotationRef.current = null
+            const store = storeRef.current
+            if (store) {
+              store.applyRotation(pendingRot, layout)
+              scheduleRender()
+            }
+          }
 
           const store = storeRef.current
           if (store) {

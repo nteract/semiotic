@@ -47,19 +47,24 @@ function NodeDetail({ node, edges }) {
     )
   }
 
+  const raw = node.data || node
+  const nodeId = node.id
+  const label = raw.label || raw.id || nodeId
+  const group = raw.group
+
   const connectedEdges = edges.filter(
-    (e) => e.source === node.id || e.target === node.id ||
-           (e.source && e.source.id === node.id) || (e.target && e.target.id === node.id)
+    (e) => e.source === nodeId || e.target === nodeId ||
+           (e.source && e.source.id === nodeId) || (e.target && e.target.id === nodeId)
   )
   const connectedNames = connectedEdges.map((e) => {
     const sourceId = typeof e.source === "string" ? e.source : e.source.id
     const targetId = typeof e.target === "string" ? e.target : e.target.id
-    return sourceId === node.id ? targetId : sourceId
+    return sourceId === nodeId ? targetId : sourceId
   })
 
   return (
     <div>
-      <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "4px" }}>{node.label}</div>
+      <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "4px" }}>{label}</div>
       <div style={{
         display: "inline-block",
         padding: "2px 8px",
@@ -67,10 +72,10 @@ function NodeDetail({ node, edges }) {
         fontSize: "11px",
         fontWeight: 600,
         color: "#fff",
-        background: groupColors[node.group] || "var(--accent)",
+        background: groupColors[group] || "var(--accent)",
         marginBottom: "12px",
       }}>
-        {node.group}
+        {group}
       </div>
       <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>
         {connectedNames.length} connection{connectedNames.length !== 1 ? "s" : ""}
@@ -114,16 +119,19 @@ export default function NetworkExplorer({
           nodes={nodes}
           edges={edges}
           networkType={{ type: "force", iterations: 500 }}
-          nodeSizeAccessor={5}
+          nodeSize={5}
           sourceAccessor="source"
           targetAccessor="target"
           nodeIDAccessor="id"
           nodeStyle={(d) => {
-            const isMatch = !searchTerm || d.label.toLowerCase().includes(searchLower)
+            const raw = d.data || d
+            const label = (raw.label || raw.id || "").toLowerCase()
+            const group = raw.group
+            const isMatch = !searchTerm || label.includes(searchLower)
             const isSelected = selectedNode && selectedNode.id === d.id
             const isHovered = hoveredNode && hoveredNode.id === d.id
             return {
-              fill: groupColors[d.group] || "var(--accent)",
+              fill: groupColors[group] || "var(--accent)",
               stroke: isSelected ? "var(--text-primary)" : isHovered ? "var(--text-primary)" : "none",
               strokeWidth: isSelected ? 3 : isHovered ? 2 : 0,
               opacity: isMatch ? 1 : 0.15,
@@ -131,35 +139,24 @@ export default function NetworkExplorer({
             }
           }}
           edgeStyle={(d) => {
-            const sourceId = typeof d.source === "string" ? d.source : d.source.id
-            const targetId = typeof d.target === "string" ? d.target : d.target.id
-            const sourceMatch = !searchTerm || sourceId.toLowerCase().includes(searchLower)
-            const targetMatch = !searchTerm || targetId.toLowerCase().includes(searchLower)
+            const raw = d.data || d
+            const src = typeof raw.source === "string" ? raw.source : (raw.source && raw.source.id) || ""
+            const tgt = typeof raw.target === "string" ? raw.target : (raw.target && raw.target.id) || ""
+            const sourceMatch = !searchTerm || src.toLowerCase().includes(searchLower)
+            const targetMatch = !searchTerm || tgt.toLowerCase().includes(searchLower)
             return {
               stroke: "var(--text-secondary)",
-              strokeWidth: d.weight || 1,
+              strokeWidth: raw.value || 1,
               opacity: sourceMatch || targetMatch ? 0.4 : 0.05,
             }
           }}
           customClickBehavior={(d) => setSelectedNode(d)}
           customHoverBehavior={(d) => setHoveredNode(d || null)}
-          nodeLabels={(d) => {
-            const isMatch = !searchTerm || d.label.toLowerCase().includes(searchLower)
-            return (
-              <text
-                y={-10}
-                textAnchor="middle"
-                style={{
-                  fontSize: "11px",
-                  fill: "var(--text-primary)",
-                  opacity: isMatch ? 1 : 0.15,
-                  pointerEvents: "none",
-                }}
-              >
-                {d.label}
-              </text>
-            )
+          nodeLabel={(d) => {
+            const raw = d.data || d
+            return raw.label || raw.id || ""
           }}
+          showLabels
           margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
         />
       </div>

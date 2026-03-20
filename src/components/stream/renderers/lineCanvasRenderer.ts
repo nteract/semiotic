@@ -51,6 +51,61 @@ function resolveColor(
 }
 
 /**
+ * Render a line segment with edge-fade effect.
+ * The first and last portions of the path fade from full opacity to transparent,
+ * giving the visual impression that the line disappears at the projection edge
+ * (used for anti-meridian split segments in geo charts).
+ */
+function renderEdgeFadeLine(
+  ctx: CanvasRenderingContext2D,
+  path: [number, number][],
+  baseColor: string,
+  lineWidth: number,
+  baseOpacity: number,
+  linecap: CanvasLineCap
+): void {
+  if (path.length < 2) return
+
+  // Compute cumulative distances along the path
+  const cumDist: number[] = [0]
+  for (let i = 1; i < path.length; i++) {
+    const dx = path[i][0] - path[i - 1][0]
+    const dy = path[i][1] - path[i - 1][1]
+    cumDist.push(cumDist[i - 1] + Math.sqrt(dx * dx + dy * dy))
+  }
+  const totalLen = cumDist[cumDist.length - 1]
+  if (totalLen === 0) return
+
+  // Fade distance: 20% of total length on each end, capped at 40px
+  const fadeLen = Math.min(totalLen * 0.2, 40)
+
+  ctx.strokeStyle = baseColor
+  ctx.lineWidth = lineWidth
+  ctx.lineCap = linecap
+
+  // Render segment-by-segment with per-segment opacity
+  for (let i = 0; i < path.length - 1; i++) {
+    const midDist = (cumDist[i] + cumDist[i + 1]) / 2
+    let alpha = baseOpacity
+
+    // Fade at the start
+    if (midDist < fadeLen) {
+      alpha *= midDist / fadeLen
+    }
+    // Fade at the end
+    if (totalLen - midDist < fadeLen) {
+      alpha *= (totalLen - midDist) / fadeLen
+    }
+
+    ctx.globalAlpha = Math.max(0, alpha)
+    ctx.beginPath()
+    ctx.moveTo(path[i][0], path[i][1])
+    ctx.lineTo(path[i + 1][0], path[i + 1][1])
+    ctx.stroke()
+  }
+}
+
+/**
  * Canvas line renderer.
  * Renders LineSceneNode paths using moveTo/lineTo.
  * Supports threshold-based segment coloring when colorThresholds + rawValues
@@ -80,6 +135,23 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     ctx.lineWidth = lineWidth
     ctx.lineCap = (node.style.strokeLinecap as CanvasLineCap) || "butt"
+
+    // Edge-fade for anti-meridian split segments
+    if ((node.style as any)._edgeFade) {
+      const baseOpacity = node.style.opacity ?? 1
+      renderEdgeFadeLine(
+        ctx,
+        node.path,
+        baseColor,
+        lineWidth,
+        baseOpacity,
+        (node.style.strokeLinecap as CanvasLineCap) || "butt"
+      )
+      ctx.globalAlpha = 1
+      ctx.setLineDash([])
+      ctx.lineCap = "butt"
+      continue
+    }
 
     const curveFactory = resolveCurveFactory(node.curve)
     const hasThresholds = thresholds && thresholds.length > 0 && rawValues && rawValues.length === node.path.length

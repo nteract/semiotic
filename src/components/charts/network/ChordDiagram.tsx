@@ -124,8 +124,15 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
+  // When data is empty (push API, no edges at mount), the HOC's colorScale
+  // is built from zero data points and returns "#999" for everything.
+  // In that case, skip passing nodeStyle/edgeStyle so the chord layout
+  // plugin's built-in nodeColorMap palette handles coloring per node index.
+  const hasColorData = inferredNodes.length > 0
+
   // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
+    if (!hasColorData) return undefined
     return (d: Record<string, any>, i?: number) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "black",
@@ -141,17 +148,20 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       }
       return baseStyle
     }
-  }, [colorBy, colorScale, colorScheme])
+  }, [hasColorData, colorBy, colorScale, colorScheme])
 
   // Edge style function — d is a RealtimeEdge
-  const edgeStyle = useMemo(() => createEdgeStyleFn({
-    edgeColorBy,
-    colorBy,
-    colorScale,
-    nodeStyleFn: nodeStyle,
-    edgeOpacity,
-    baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
-  }), [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+  const edgeStyle = useMemo(() => {
+    if (!hasColorData) return undefined
+    return createEdgeStyleFn({
+      edgeColorBy,
+      colorBy,
+      colorScale,
+      nodeStyleFn: nodeStyle || ((d: Record<string, any>) => ({ fill: DEFAULT_COLOR })),
+      edgeOpacity,
+      baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
+    })
+  }, [hasColorData, edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {

@@ -67,7 +67,7 @@ function WorldChoroplethWrapper({ dataset = "gdp", ...props }) {
     })
   }, [dataset])
 
-  if (!areas) return <div style={{ width: props.width || 600, height: props.height || 400, background: "var(--surface-1)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>Loading world map...</div>
+  if (!areas) return <div style={{ width: props.width || 600, height: props.height || 500, background: "var(--surface-1)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>Loading world map...</div>
 
   return <ChoroplethMap {...props} areas={areas} />
 }
@@ -112,7 +112,8 @@ export default function ChoroplethMapPlayground() {
       dataProps={(ds) => ({
         dataset: ds.dataset,
         valueAccessor: ds.valueAccessor,
-        height: 450,
+        height: 500,
+        fitPadding: 0.02,
         tooltip: true,
       })}
       mapProps={(name, value) => {

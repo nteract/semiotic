@@ -384,6 +384,13 @@ const galleryItems = [
         oLabel="region"
         barPadding={40}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+        enableHover={true}
+        tooltipContent={(d) => (
+          <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.data?.region} - {d.data?.quarter}</div>
+            <div>Value: {d.data?.value}</div>
+          </div>
+        )}
       />
     ),
   },
@@ -405,6 +412,16 @@ const galleryItems = [
         showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
         enableHover={true}
+        tooltipContent={(d) => {
+          const groupLabels = { A: "Indigo", B: "Pink", C: "Orange" }
+          const raw = d.data || d
+          return (
+            <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>Category: {groupLabels[raw.group] || raw.group}</div>
+              <div>x: {Math.round(raw.x * 10) / 10}, y: {Math.round(raw.y * 10) / 10}</div>
+            </div>
+          )
+        }}
       />
     ),
   },
@@ -433,23 +450,41 @@ const galleryItems = [
   {
     title: "Network Graph",
     path: "/charts/force-directed-graph",
-    render: (w, h) => (
-      <ForceDirectedGraph
-        nodes={galleryNetworkNodes}
-        edges={galleryNetworkEdges}
-        colorBy="group"
-        colorScheme={["#6366f1", "#10b981", "#f97316"]}
-        nodeSize={8}
-        showLabels
-        edgeWidth={1.5}
-        edgeOpacity={0.3}
-        iterations={500}
-        forceStrength={0.15}
-        width={w}
-        height={h}
-        margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
-      />
-    ),
+    render: (w, h) => {
+      const degreeCentrality = {}
+      galleryNetworkEdges.forEach(({ source, target }) => {
+        degreeCentrality[source] = (degreeCentrality[source] || 0) + 1
+        degreeCentrality[target] = (degreeCentrality[target] || 0) + 1
+      })
+      return (
+        <ForceDirectedGraph
+          nodes={galleryNetworkNodes}
+          edges={galleryNetworkEdges}
+          colorBy="group"
+          colorScheme={["#6366f1", "#10b981", "#f97316"]}
+          nodeSize={8}
+          showLabels
+          edgeWidth={1.5}
+          edgeOpacity={0.3}
+          iterations={500}
+          forceStrength={0.15}
+          width={w}
+          height={h}
+          margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
+          tooltip={(d) => {
+            const nodeId = d.id || d.data?.id
+            const degree = degreeCentrality[nodeId] || 0
+            return (
+              <div style={{ padding: "8px 12px", background: "white", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>{nodeId}</div>
+                <div>Group: {d.group || d.data?.group}</div>
+                <div>Degree centrality: {degree}</div>
+              </div>
+            )
+          }}
+        />
+      )
+    },
   },
   {
     title: "Realtime Bar Chart",

@@ -26,12 +26,28 @@ const lineData = [
   },
 ]
 
-const barData = [
-  { category: "Q1", value: 120 },
-  { category: "Q2", value: 180 },
-  { category: "Q3", value: 95 },
-  { category: "Q4", value: 210 },
-]
+const barDataByYear = {
+  2024: [
+    { category: "Q1", value: 120 },
+    { category: "Q2", value: 180 },
+    { category: "Q3", value: 95 },
+    { category: "Q4", value: 210 },
+  ],
+  2023: [
+    { category: "Q1", value: 95 },
+    { category: "Q2", value: 140 },
+    { category: "Q3", value: 110 },
+    { category: "Q4", value: 175 },
+  ],
+  2022: [
+    { category: "Q1", value: 80 },
+    { category: "Q2", value: 105 },
+    { category: "Q3", value: 90 },
+    { category: "Q4", value: 130 },
+  ],
+}
+
+const barData = barDataByYear[2024]
 
 // ---------------------------------------------------------------------------
 // Prop definitions
@@ -148,6 +164,7 @@ const containerProps = [
 export default function ChartContainersPage() {
   const [statusDemo, setStatusDemo] = useState("live")
   const [loadingDemo, setLoadingDemo] = useState(false)
+  const [selectedYear, setSelectedYear] = useState("2024")
   const chartRef = useRef(null)
 
   return (
@@ -184,6 +201,7 @@ export default function ChartContainersPage() {
           title="Monthly Revenue"
           subtitle="USD thousands, 2024"
           actions={{ export: true, fullscreen: true }}
+          height={300}
         >
           <LineChart
             data={lineData}
@@ -232,6 +250,8 @@ export default function ChartContainersPage() {
           actions={{ export: { format: "png", filename: "sales" } }}
           controls={
             <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
               style={{
                 fontSize: 12,
                 padding: "2px 6px",
@@ -242,14 +262,14 @@ export default function ChartContainersPage() {
                 marginRight: 4,
               }}
             >
-              <option>2024</option>
-              <option>2023</option>
-              <option>2022</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
             </select>
           }
         >
           <BarChart
-            data={barData}
+            data={barDataByYear[selectedYear]}
             categoryAccessor="category"
             valueAccessor="value"
             width={600}
@@ -259,12 +279,24 @@ export default function ChartContainersPage() {
       </div>
 
       <CodeBlock
-        code={`<ChartContainer
+        code={`const [year, setYear] = useState("2024")
+
+const dataByYear = {
+  2024: [{ category: "Q1", value: 120 }, { category: "Q2", value: 180 }, ...],
+  2023: [{ category: "Q1", value: 95 }, { category: "Q2", value: 140 }, ...],
+}
+
+<ChartContainer
   title="Quarterly Sales"
   actions={{ export: { format: "png", filename: "sales" } }}
-  controls={<select><option>2024</option></select>}
+  controls={
+    <select value={year} onChange={(e) => setYear(e.target.value)}>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+    </select>
+  }
 >
-  <BarChart data={data} categoryAccessor="category" valueAccessor="value" />
+  <BarChart data={dataByYear[year]} categoryAccessor="category" valueAccessor="value" />
 </ChartContainer>`}
         language="jsx"
       />
@@ -377,6 +409,7 @@ export default function ChartContainersPage() {
           subtitle="Temperature readings"
           status={statusDemo}
           actions={{ fullscreen: true }}
+          height={250}
         >
           <LineChart
             data={lineData}
@@ -449,6 +482,7 @@ function Dashboard() {
             subtitle="Automatically themed"
             actions={{ export: true, fullscreen: true }}
             status="live"
+            height={250}
           >
             <LineChart
               data={lineData}

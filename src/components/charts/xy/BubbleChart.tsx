@@ -340,9 +340,10 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
         stroke: bubbleStrokeColor
       }
 
-      // Apply color
+      // Apply color — skip fill when colorScale unavailable (push API)
+      // so the frame's own color map can fill in
       if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
+        if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }

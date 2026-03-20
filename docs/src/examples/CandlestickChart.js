@@ -88,7 +88,7 @@ const frameProps = {
   candlestickStyle: {
     upColor: theme[2],
     downColor: theme[1],
-    wickColor: "#333",
+    wickColor: "#999",
   },
   size: [700, 400],
   margin: { left: 80, bottom: 50, right: 10, top: 40 },
@@ -128,7 +128,7 @@ const overrideProps = {
   candlestickStyle: `{
     upColor: theme[2],  // green for up days
     downColor: theme[1], // red for down days
-    wickColor: "#333",
+    wickColor: "#999",
   }`
 }
 

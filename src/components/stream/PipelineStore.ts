@@ -454,6 +454,12 @@ export class PipelineStore {
         userMin != null ? yDomain[0] : yDomain[0] - pad,
         userMax != null ? yDomain[1] : yDomain[1] + pad
       ]
+      // For log scales, ensure domain minimum stays positive (log(0) is undefined).
+      // Use multiplicative padding instead of additive to avoid negative domains.
+      if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0) {
+        const logPad = 1 + config.extentPadding
+        yDomain[0] = userMin != null ? yDomain[0] : dataYDomain[0] / logPad
+      }
     }
 
     // Handle degenerate extents
@@ -763,9 +769,9 @@ export class PipelineStore {
       }
     }
 
-    // Build color map from colorAccessor if no pointStyle handles it
-    // Sort categories alphabetically for stable palette assignment across frames
-    const colorMap = (this.getColor && !this.config.pointStyle)
+    // Build color map from colorAccessor — always build when colorAccessor exists
+    // so push API can fall back to frame colors when HOC colorScale is unavailable
+    const colorMap = this.getColor
       ? this.resolveColorMap(data)
       : null
 
@@ -781,8 +787,8 @@ export class PipelineStore {
         }
       }
 
-      // Apply color from accessor if pointStyle doesn't provide a custom fill
-      if (colorMap && this.getColor) {
+      // Apply color from accessor if pointStyle doesn't provide a fill
+      if (colorMap && this.getColor && !style.fill) {
         const colorVal = this.getColor(d)
         if (colorVal && colorMap.has(colorVal)) {
           style = { ...style, fill: colorMap.get(colorVal)! }
@@ -1979,7 +1985,14 @@ export class PipelineStore {
   private resolveLineStyle(group: string, sampleDatum?: Record<string, any>): Style {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
-      return ls(sampleDatum || {}, group)
+      const style = ls(sampleDatum || {}, group)
+      // When HOC returns no stroke (push API, colorScale unavailable),
+      // fill in from the frame's color map
+      if (style && !style.stroke && this.getColor) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, stroke: color }
+      }
+      return style
     }
     if (ls && typeof ls === "object") {
       return {
@@ -1996,12 +2009,23 @@ export class PipelineStore {
 
   private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
     if (this.config.areaStyle) {
-      return this.config.areaStyle(sampleDatum || {})
+      const style = this.config.areaStyle(sampleDatum || {})
+      // Fill in colors from frame's palette when HOC has no color scale (push API)
+      if (style && !style.fill && this.getColor) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, fill: color, stroke: style.stroke || color }
+      }
+      return style
     }
     // Fall back to lineStyle — AreaChart passes area styling via lineStyle
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
-      return ls(sampleDatum || {}, group)
+      const style = ls(sampleDatum || {}, group)
+      if (style && !style.fill && this.getColor) {
+        const color = this.resolveGroupColor(group)
+        if (color) return { ...style, fill: color, stroke: style.stroke || color }
+      }
+      return style
     }
     if (ls && typeof ls === "object") {
       return {
@@ -2012,6 +2036,24 @@ export class PipelineStore {
       }
     }
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
+  }
+
+  /** Resolve a group name to a color from the cached color map or palette */
+  private resolveGroupColor(group: string): string | null {
+    if (this._colorMapCache) {
+      const c = this._colorMapCache.map.get(group)
+      if (c) return c
+    }
+    const palette = Array.isArray(this.config.colorScheme)
+      ? this.config.colorScheme
+      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+    // Build/update cache entry for this group
+    if (!this._colorMapCache) this._colorMapCache = { key: "", map: new Map() }
+    const idx = this._colorMapCache.map.size
+    const color = palette[idx % palette.length]
+    this._colorMapCache.map.set(group, color)
+    this._colorMapCache.key = Array.from(this._colorMapCache.map.keys()).join('\0')
+    return color
   }
 
   // ── Buffer array cache ──────────────────────────────────────────────

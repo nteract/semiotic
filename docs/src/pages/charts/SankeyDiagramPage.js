@@ -107,6 +107,23 @@ const conversionEdges = [
 ]
 
 // ---------------------------------------------------------------------------
+// Pastel color scheme for streaming examples
+// ---------------------------------------------------------------------------
+
+const pastelColors = [
+  "#a8d8ea", // soft blue
+  "#f9c6c9", // soft pink
+  "#b5ead7", // soft mint
+  "#ffdac1", // soft peach
+  "#c7ceea", // soft lavender
+  "#e2f0cb", // soft lime
+  "#fce4ec", // soft rose
+  "#d1c4e9", // soft purple
+  "#fff9c4", // soft yellow
+  "#b2dfdb", // soft teal
+]
+
+// ---------------------------------------------------------------------------
 // Streaming data sets
 // ---------------------------------------------------------------------------
 
@@ -230,6 +247,7 @@ function StreamingSankeyDemo({ width }) {
         height={350}
         showParticles
         edgeOpacity={0.4}
+        colorScheme={pastelColors}
         frameProps={{
           pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
           staleness: { threshold: 5000, dimOpacity: 0.4, showBadge: true },
@@ -307,6 +325,7 @@ function PushApiDemo() {
             height={400}
             showParticles
             edgeOpacity={0.4}
+            colorScheme={pastelColors}
             frameProps={{
               particleStyle: {
                 radius: 2.5,
@@ -390,6 +409,7 @@ function ContinuousStreamDemo() {
             height={450}
             showParticles
             edgeOpacity={0.35}
+            colorScheme={pastelColors}
             frameProps={{
               particleStyle: {
                 radius: 2,

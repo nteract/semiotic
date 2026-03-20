@@ -286,7 +286,7 @@ function StreamingSystemDemo({ width }) {
           enableHover
           edgeOpacity={0.4}
           staleness={STALENESS_CONFIG}
-          background="#fafafa"
+          background="var(--surface-1, #fafafa)"
           onObservation={handleObservation}
         />
       </ChartContainer>

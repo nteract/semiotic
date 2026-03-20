@@ -384,6 +384,7 @@ export const LineChart = forwardRef(
   const [statisticalAnnotations, setStatisticalAnnotations] = useState<Record<string, any>[]>([])
 
   useEffect(() => {
+    if (!forecast && !anomaly) return
     let cancelled = false
     // Clear stale overlays immediately so the chart doesn't show old data while loading
     setStatisticalResult(null)
@@ -588,17 +589,22 @@ export const LineChart = forwardRef(
         strokeWidth: lineWidth
       }
 
-      // Apply color
+      // Apply color — skip stroke/fill when colorScale unavailable (push API)
+      // so the frame's own color map can fill in
       if (colorBy) {
-        baseStyle.stroke = getColor(d, colorBy, colorScale)
+        if (colorScale) {
+          baseStyle.stroke = getColor(d, colorBy, colorScale)
+          if (fillArea) {
+            baseStyle.fill = baseStyle.stroke
+            baseStyle.fillOpacity = areaOpacity
+          }
+        }
       } else {
         baseStyle.stroke = DEFAULT_COLOR
-      }
-
-      // Apply fill for area chart
-      if (fillArea) {
-        baseStyle.fill = baseStyle.stroke
-        baseStyle.fillOpacity = areaOpacity
+        if (fillArea) {
+          baseStyle.fill = DEFAULT_COLOR
+          baseStyle.fillOpacity = areaOpacity
+        }
       }
 
       return baseStyle
@@ -606,27 +612,26 @@ export const LineChart = forwardRef(
   }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity])
 
   // Lazy-load segment-aware styling — only loads module when forecast is set
-  const [segmentAwareStyle, setSegmentAwareStyle] = useState<(d: Record<string, any>) => Record<string, any>>(
-    () => baseLineStyle
-  )
+  const [segmentAwareStyle, setSegmentAwareStyle] = useState<((d: Record<string, any>) => Record<string, any>) | null>(null)
   useEffect(() => {
-    let cancelled = false
-    if (forecast) {
-      createSegmentLineStyleLazy(baseLineStyle, forecast).then(result => {
-        if (!cancelled) setSegmentAwareStyle(() => result)
-      }).catch(() => {
-        // Fallback to base style if overlay module fails to load
-        if (!cancelled) setSegmentAwareStyle(() => baseLineStyle)
-      })
-    } else {
-      setSegmentAwareStyle(() => baseLineStyle)
+    if (!forecast) {
+      setSegmentAwareStyle(null)
+      return
     }
+    let cancelled = false
+    createSegmentLineStyleLazy(baseLineStyle, forecast).then(result => {
+      if (!cancelled) setSegmentAwareStyle(() => result)
+    }).catch(() => {
+      if (!cancelled) setSegmentAwareStyle(null)
+    })
     return () => { cancelled = true }
   }, [baseLineStyle, forecast])
 
+  const effectiveLineStyle = segmentAwareStyle || baseLineStyle
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(segmentAwareStyle, effectiveSelectionHook, selection),
-    [segmentAwareStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(effectiveLineStyle, effectiveSelectionHook, selection),
+    [effectiveLineStyle, effectiveSelectionHook, selection]
   )
 
   // Point style function (if showPoints is true)
@@ -639,9 +644,10 @@ export const LineChart = forwardRef(
         fillOpacity: 1
       }
 
-      // Match line color
+      // Match line color — skip fill when colorScale unavailable (push API)
+      // so the frame's own color map can fill in
       if (colorBy) {
-        baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }

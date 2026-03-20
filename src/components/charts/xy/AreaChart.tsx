@@ -335,18 +335,29 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
-      // Apply color
-      const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
-
-      baseStyle.fill = color
-      baseStyle.fillOpacity = areaOpacity
-
-      if (showLine) {
-        baseStyle.stroke = color
-        baseStyle.strokeWidth = lineWidth
+      // Apply color — skip fill/stroke when colorScale unavailable (push API)
+      // so the frame's own color map can fill in
+      if (colorBy) {
+        if (colorScale) {
+          const color = getColor(d, colorBy, colorScale)
+          baseStyle.fill = color
+          if (showLine) {
+            baseStyle.stroke = color
+            baseStyle.strokeWidth = lineWidth
+          } else {
+            baseStyle.stroke = "none"
+          }
+        }
       } else {
-        baseStyle.stroke = "none"
+        baseStyle.fill = DEFAULT_COLOR
+        if (showLine) {
+          baseStyle.stroke = DEFAULT_COLOR
+          baseStyle.strokeWidth = lineWidth
+        } else {
+          baseStyle.stroke = "none"
+        }
       }
+      baseStyle.fillOpacity = areaOpacity
 
       return baseStyle
     }

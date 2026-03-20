@@ -86,7 +86,8 @@ const frameProps = {
       <div
         style={{
           border: `thin solid ${theme[1]}`,
-          backgroundColor: "white",
+          backgroundColor: "var(--surface-1, #f8f9fa)",
+          color: "var(--text-primary, #1a1a2e)",
           width: "100px",
           textAlign: "center",
           padding: "10px",
@@ -130,7 +131,8 @@ const overrideProps = {
       <div
         style={{
           border: \`thin solid \${theme[1]}\`,
-          backgroundColor: "white",
+          backgroundColor: "var(--surface-1, #f8f9fa)",
+          color: "var(--text-primary, #1a1a2e)",
           width: "100px",
           textAlign: "center",
           padding: "10px"

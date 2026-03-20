@@ -146,7 +146,7 @@ export function createColorScale(
   scheme: string | string[] = "category10"
 ): (v: string) => string {
   // Get unique values
-  const uniqueValues = Array.from(new Set(data.map(d => d[colorBy])))
+  const uniqueValues = Array.from(new Set(data.map(d => d?.[colorBy]).filter(v => v != null)))
 
   // Check if values are numeric for sequential scale
   const isNumeric = uniqueValues.every(v => typeof v === "number" || !isNaN(Number(v)))

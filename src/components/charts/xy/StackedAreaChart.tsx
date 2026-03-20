@@ -315,18 +315,23 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
-      // Apply color
-      const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
-
-      baseStyle.fill = color
-      baseStyle.fillOpacity = areaOpacity
-
-      if (showLine) {
-        baseStyle.stroke = color
-        baseStyle.strokeWidth = lineWidth
-      } else {
-        baseStyle.stroke = "none"
+      // Apply color — skip when colorScale unavailable (push API)
+      // so the frame's own color resolution can fill in
+      if (colorBy && colorScale) {
+        const color = getColor(d, colorBy, colorScale)
+        baseStyle.fill = color
+        if (showLine) {
+          baseStyle.stroke = color
+          baseStyle.strokeWidth = lineWidth
+        } else {
+          baseStyle.stroke = "none"
+        }
+      } else if (!colorBy) {
+        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.stroke = showLine ? DEFAULT_COLOR : "none"
+        if (showLine) baseStyle.strokeWidth = lineWidth
       }
+      baseStyle.fillOpacity = areaOpacity
 
       return baseStyle
     }

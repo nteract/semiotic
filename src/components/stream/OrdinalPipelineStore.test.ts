@@ -283,6 +283,103 @@ describe("OrdinalPipelineStore", () => {
     })
   })
 
+  // ── Push-API FIFO category ordering ────────────────────────────────
+
+  describe("push-API FIFO category ordering", () => {
+    it("preserves insertion order for push-API data even without explicit runtimeMode", () => {
+      // No runtimeMode set — simulates HOC charts using push API
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [
+          { category: "Gamma", value: 5 },
+          { category: "Alpha", value: 100 },
+          { category: "Beta", value: 50 }
+        ],
+        bounded: false  // push API sends bounded: false
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // Should be FIFO, not sorted by value descending (Alpha, Beta, Gamma)
+      const colNames = Object.keys(store.columns)
+      expect(colNames).toEqual(["Gamma", "Alpha", "Beta"])
+    })
+
+    it("appends new categories at the end during streaming", () => {
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [{ category: "A", value: 10 }],
+        bounded: false
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A"])
+
+      store.ingest({
+        inserts: [{ category: "C", value: 5 }, { category: "B", value: 20 }],
+        bounded: false
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // B has higher value but should appear after C (FIFO)
+      expect(Object.keys(store.columns)).toEqual(["A", "C", "B"])
+    })
+
+    it("prunes ghost categories after eviction", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ windowSize: 2 }))
+      store.ingest({
+        inserts: [{ category: "A", value: 10 }],
+        bounded: false
+      })
+      store.ingest({
+        inserts: [{ category: "B", value: 20 }],
+        bounded: false
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A", "B"])
+
+      // Push C — evicts A
+      store.ingest({
+        inserts: [{ category: "C", value: 30 }],
+        bounded: false
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // A should be pruned since its data was evicted
+      expect(Object.keys(store.columns)).toEqual(["B", "C"])
+    })
+
+    it("does not use FIFO for bounded-only data", () => {
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [
+          { category: "Small", value: 1 },
+          { category: "Big", value: 100 },
+          { category: "Medium", value: 50 }
+        ],
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // Should be sorted by value descending (default)
+      const colNames = Object.keys(store.columns)
+      expect(colNames).toEqual(["Big", "Medium", "Small"])
+    })
+
+    it("resets FIFO state on clear", () => {
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [{ category: "A", value: 10 }],
+        bounded: false
+      })
+      store.clear()
+      // After clear, bounded data should use default sort again
+      store.ingest({
+        inserts: [
+          { category: "Small", value: 1 },
+          { category: "Big", value: 100 }
+        ],
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["Big", "Small"])
+    })
+  })
+
   // ── Window/eviction behavior ────────────────────────────────────────
 
   describe("window/eviction behavior", () => {

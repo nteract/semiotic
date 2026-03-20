@@ -154,6 +154,7 @@ export default function ResponsivePage() {
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           responsiveWidth: true,
+          size: [600, 300],
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
           showAxes: true,
           xLabel: "Month",

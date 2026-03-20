@@ -216,6 +216,29 @@ describe("ChordDiagram", () => {
     expect(typeof lastNetworkFrameProps.nodeStyle).toBe("function")
   })
 
+  it("does not pass nodeStyle/edgeStyle when colorBy is set but no data (push API mode)", () => {
+    // When using push API, edges is undefined so colorScale is empty.
+    // The HOC should NOT pass its own nodeStyle/edgeStyle so the chord
+    // layout plugin's built-in palette handles coloring.
+    render(
+      <TooltipProvider>
+        <ChordDiagram colorBy="category" colorScheme="category10" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeStyle).toBeUndefined()
+    expect(lastNetworkFrameProps.edgeStyle).toBeUndefined()
+  })
+
+  it("passes nodeStyle/edgeStyle when colorBy is set with bounded data", () => {
+    render(
+      <TooltipProvider>
+        <ChordDiagram edges={sampleEdges} nodes={sampleNodes} colorBy="category" />
+      </TooltipProvider>
+    )
+    expect(typeof lastNetworkFrameProps.nodeStyle).toBe("function")
+    expect(typeof lastNetworkFrameProps.edgeStyle).toBe("function")
+  })
+
   it("enables hover by default", () => {
     render(
       <TooltipProvider>

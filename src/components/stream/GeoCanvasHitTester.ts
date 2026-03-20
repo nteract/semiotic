@@ -100,7 +100,7 @@ export function findNearestGeoNode(
       const [ax, ay] = path[j]
       const [bx, by] = path[j + 1]
       const dist = pointToSegmentDistance(mouseX, mouseY, ax, ay, bx, by)
-      const hitWidth = (node.style.strokeWidth || 2) + 4
+      const hitWidth = Math.max((node.style.strokeWidth || 2) + 4, 5)
       if (dist <= hitWidth && dist < bestLineDist) {
         bestLine = node
         bestLineDist = dist

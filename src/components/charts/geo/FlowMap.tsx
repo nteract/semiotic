@@ -289,12 +289,42 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     []
   )
 
-  const defaultTooltip = useMemo(() => (d: any) => (
-    <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
-      <div style={{ fontWeight: 600 }}>{d.source} → {d.target}</div>
-      {d[valueAccessor] != null && <div style={{ opacity: 0.7 }}>{d[valueAccessor]}</div>}
-    </div>
-  ), [valueAccessor])
+  const defaultTooltip = useMemo(() => (d: any) => {
+    // Area hover (country/region from background geography)
+    if (d?.geometry || d?.properties || d?.data?.geometry) {
+      const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || d?.data?.properties?.name || d?.data?.properties?.NAME
+      if (name) {
+        return (
+          <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
+            <div style={{ fontWeight: 600 }}>{name}</div>
+          </div>
+        )
+      }
+    }
+
+    // Line/flow hover (has source and target)
+    if (d?.source != null && d?.target != null) {
+      const val = d[valueAccessor]
+      return (
+        <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
+          <div style={{ fontWeight: 600 }}>{d.source} → {d.target}</div>
+          {val != null && <div style={{ opacity: 0.7 }}>{typeof val === "number" ? val.toLocaleString() : val}</div>}
+        </div>
+      )
+    }
+
+    // Point/node hover
+    const name = d?.name || d?.label || d?.[nodeIdAccessor]
+    if (name != null) {
+      return (
+        <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
+          <div style={{ fontWeight: 600 }}>{name}</div>
+        </div>
+      )
+    }
+
+    return null
+  }, [valueAccessor, nodeIdAccessor])
 
   const margin = useMemo(() => ({
     top: 10, right: 10, bottom: 10, left: 10,

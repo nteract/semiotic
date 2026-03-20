@@ -272,16 +272,40 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
   }, [safeData, sizeBy])
 
+  // Resolve x/y accessors for quadrant coloring
+  const getXValue = useMemo(() =>
+    typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => +d[xAccessor as string],
+    [xAccessor]
+  )
+  const getYValue = useMemo(() =>
+    typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => +d[yAccessor as string],
+    [yAccessor]
+  )
+
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      if (colorBy) {
+        if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
+        // else: let frame use its own color scheme (push API)
+      } else {
+        // Color by quadrant: determine which quadrant the point falls in
+        // based on xCenter/yCenter thresholds and use the quadrant's color
+        const xVal = getXValue(d)
+        const yVal = getYValue(d)
+        const isRight = xCenter != null ? xVal >= xCenter : true
+        const isTop = yCenter != null ? yVal >= yCenter : true
+        if (isTop && isRight) baseStyle.fill = quadrants.topRight.color
+        else if (isTop && !isRight) baseStyle.fill = quadrants.topLeft.color
+        else if (!isTop && isRight) baseStyle.fill = quadrants.bottomRight.color
+        else baseStyle.fill = quadrants.bottomLeft.color
+      }
       baseStyle.r = sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
         : pointRadius
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
+  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -350,11 +374,13 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       const xC = xCenter != null ? scales.x(xCenter) : w / 2
       const yC = yCenter != null ? scales.y(yCenter) : h / 2
 
-      // Skip drawing if center maps outside the chart area — this happens when
-      // scales haven't been updated with the real data yet (e.g., [0,1] fallback
-      // domain with a center at 6.0 produces a pixel far outside the chart).
-      if (xCenter != null && (!isFinite(xC) || xC < 0 || xC > w)) return
-      if (yCenter != null && (!isFinite(yC) || yC < 0 || yC > h)) return
+      // Skip drawing only if scales produce non-finite values (broken/uninitialized).
+      // When the center maps outside the chart area, we still draw — the clamp below
+      // pushes center lines to the edges so quadrant fills cover the full chart.
+      // This is important for streaming/push API where the domain evolves as data
+      // arrives and may not include the center point initially.
+      if (xCenter != null && !isFinite(xC)) return
+      if (yCenter != null && !isFinite(yC)) return
 
       // Clamp center lines to chart area
       const cx = Math.max(0, Math.min(w, xC))
@@ -411,9 +437,9 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       const xC = xCenter != null ? scales.x(xCenter) : w / 2
       const yC = yCenter != null ? scales.y(yCenter) : h / 2
 
-      // Skip if center is outside chart (stale/fallback scales)
-      if (xCenter != null && (!isFinite(xC) || xC < 0 || xC > w)) return
-      if (yCenter != null && (!isFinite(yC) || yC < 0 || yC > h)) return
+      // Skip only if scales produce non-finite values
+      if (xCenter != null && !isFinite(xC)) return
+      if (yCenter != null && !isFinite(yC)) return
 
       const cx = Math.max(0, Math.min(w, xC))
       const cy = Math.max(0, Math.min(h, yC))

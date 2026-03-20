@@ -396,7 +396,7 @@ export function createDefaultAnnotationRules(
               const py = resolveY(d, context)
               if (px == null || py == null) return null
               return (
-                <circle key={i} cx={px} cy={py} r={ann.r || 6} {...style} />
+                <circle key={`hl-${i}`} cx={px} cy={py} r={ann.r || 6} {...style} />
               )
             })}
           </g>
@@ -633,7 +633,7 @@ export function createDefaultAnnotationRules(
               if (px == null || py == null) return null
               return (
                 <circle
-                  key={i}
+                  key={`anomaly-${i}`}
                   cx={px}
                   cy={py}
                   r={anomalyRadius}

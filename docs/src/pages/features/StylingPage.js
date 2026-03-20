@@ -182,29 +182,33 @@ export default function StylingPage() {
           lineStyle: () => ({ stroke: theme[0], strokeWidth: 2.5 }),
           showAxes: true,
           margin: { top: 30, bottom: 40, left: 50, right: 20 },
-          backgroundGraphics: (
-            <g>
-              <rect
-                x={50}
-                y={30}
-                width={430}
-                height={230}
-                fill="#f4f0ff"
-                rx={4}
-              />
-              <text x={265} y={150} textAnchor="middle" fill="#d0c4ee" fontSize={48} fontWeight={700} opacity={0.5}>
-                DRAFT
-              </text>
-            </g>
-          ),
-          foregroundGraphics: (
-            <g>
-              <line x1={50} y1={130} x2={480} y2={130} stroke="#E0488B" strokeWidth={1} strokeDasharray="4 4" />
-              <text x={482} y={134} fill="#E0488B" fontSize={11} fontWeight={600}>
-                Target
-              </text>
-            </g>
-          ),
+          backgroundGraphics: ({ size, margin }) => {
+            const left = margin.left
+            const top = margin.top
+            const w = size[0] - margin.left - margin.right
+            const h = size[1] - margin.top - margin.bottom
+            return (
+              <g>
+                <rect x={left} y={top} width={w} height={h} fill="#f4f0ff" rx={4} />
+                <text x={left + w / 2} y={top + h / 2} textAnchor="middle" fill="#d0c4ee" fontSize={48} fontWeight={700} opacity={0.5}>
+                  DRAFT
+                </text>
+              </g>
+            )
+          },
+          foregroundGraphics: ({ size, margin }) => {
+            const left = margin.left
+            const right = size[0] - margin.right
+            const yPos = margin.top + (size[1] - margin.top - margin.bottom) * 0.42
+            return (
+              <g>
+                <line x1={left} y1={yPos} x2={right} y2={yPos} stroke="#E0488B" strokeWidth={1} strokeDasharray="4 4" />
+                <text x={right + 2} y={yPos + 4} fill="#E0488B" fontSize={11} fontWeight={600}>
+                  Target
+                </text>
+              </g>
+            )
+          },
           title: "With Background & Foreground Layers",
         }}
         type={StreamXYFrame}

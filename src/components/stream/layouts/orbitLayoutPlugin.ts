@@ -313,7 +313,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
       }
 
       const RING_SEGMENTS = 48
-      const ringStyle: Style = { stroke: "currentColor", strokeWidth: 0.5, opacity: 0.08 }
+      const ringStyle: Style = { stroke: "rgba(128,128,128,0.35)", strokeWidth: 0.5, opacity: 1 }
       for (const [, { parentX, parentY, ring, ecc }] of rings) {
         for (let s = 0; s < RING_SEGMENTS; s++) {
           const a1 = (s / RING_SEGMENTS) * Math.PI * 2
@@ -368,9 +368,9 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
       if (sourceNode.x == null || targetNode.x == null) continue
 
       const style: Style = {
-        stroke: "currentColor",
+        stroke: "rgba(128,128,128,0.35)",
         strokeWidth: 0.5,
-        opacity: 0.1
+        opacity: 1
       }
 
       sceneEdges.push({

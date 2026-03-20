@@ -52,7 +52,7 @@ function StreamingCandlestick() {
       candlestickStyle={{
         upColor: "#4daf4a",
         downColor: "#e41a1c",
-        wickColor: "#333",
+        wickColor: "#999",
       }}
       windowSize={40}
       showAxes
@@ -97,7 +97,7 @@ function StreamingCandlestickDemo({ width }) {
       candlestickStyle={{
         upColor: "#4daf4a",
         downColor: "#e41a1c",
-        wickColor: "#333",
+        wickColor: "#999",
       }}
       windowSize={40}
       showAxes={true}
@@ -163,7 +163,7 @@ export default function CandlestickChartPage() {
   candlestickStyle={{
     upColor: "#4daf4a",   // close >= open
     downColor: "#e41a1c", // close < open
-    wickColor: "#333",
+    wickColor: "#999",
   }}
 />`}
         language="jsx"

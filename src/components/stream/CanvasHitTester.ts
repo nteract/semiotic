@@ -100,9 +100,31 @@ function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | n
   if (idx < 0) return null
 
   const [nx, ny] = node.path[idx]
-  const dx = px - nx
-  const dy = py - ny
-  const dist = Math.sqrt(dx * dx + dy * dy)
+
+  // Also check perpendicular distance to the segment around the nearest point
+  // for more accurate hit testing on non-horizontal lines
+  let dist: number
+  if (node.path.length > 1) {
+    // Check segments adjacent to the found index
+    let minSegDist = Infinity
+    const startSeg = Math.max(0, idx - 1)
+    const endSeg = Math.min(node.path.length - 2, idx)
+    for (let i = startSeg; i <= endSeg; i++) {
+      const [ax, ay] = node.path[i]
+      const [bx, by] = node.path[i + 1]
+      const segDist = pointToSegmentDist(px, py, ax, ay, bx, by)
+      if (segDist < minSegDist) minSegDist = segDist
+    }
+    dist = minSegDist
+  } else {
+    const ddx = px - nx
+    const ddy = py - ny
+    dist = Math.sqrt(ddx * ddx + ddy * ddy)
+  }
+
+  // Minimum 5px hit tolerance for lines regardless of visual stroke width
+  const tolerance = 5
+  if (dist > tolerance) return null
 
   // For line data, the datum is the array; return the index as well
   const datum = Array.isArray(node.datum) && node.datum[idx]
@@ -110,6 +132,23 @@ function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | n
     : node.datum
 
   return { node, datum, x: nx, y: ny, distance: dist }
+}
+
+/** Distance from point (px, py) to line segment (ax,ay)-(bx,by) */
+function pointToSegmentDist(
+  px: number, py: number,
+  ax: number, ay: number,
+  bx: number, by: number
+): number {
+  const dx = bx - ax
+  const dy = by - ay
+  const lenSq = dx * dx + dy * dy
+  if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2)
+  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq
+  t = Math.max(0, Math.min(1, t))
+  const projX = ax + t * dx
+  const projY = ay + t * dy
+  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2)
 }
 
 function hitTestRect(node: RectSceneNode, px: number, py: number): HitResult | null {
@@ -156,7 +195,12 @@ function hitTestAreaPath(node: { type: "area"; topPath: [number, number][]; datu
   const dy = py - ny
   const dist = Math.sqrt(dx * dx + dy * dy)
 
-  return { node: node as SceneNode, datum: node.datum, x: nx, y: ny, distance: dist }
+  // Extract the specific data point at the hit index (like hitTestLine does)
+  const datum = Array.isArray(node.datum) && node.datum[idx]
+    ? node.datum[idx]
+    : node.datum
+
+  return { node: node as SceneNode, datum, x: nx, y: ny, distance: dist }
 }
 
 /**

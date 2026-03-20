@@ -211,6 +211,7 @@ function hitTestBezierEdge(
     const ctx = getHitContext()
     if (!ctx) return null
 
+    // First check isPointInPath for filled/wide bezier bands (sankey ribbons)
     if (ctx.isPointInPath(path, px, py)) {
       // Return midpoint of the band as hover position
       const sourceNode = typeof edge.datum?.source === "object" ? edge.datum.source : null
@@ -229,6 +230,18 @@ function hitTestBezierEdge(
         x: midX,
         y: midY,
         distance: 0
+      }
+    }
+
+    // Also check isPointInStroke with a generous hit tolerance for thin bezier curves
+    ctx.lineWidth = 10
+    if (ctx.isPointInStroke(path, px, py)) {
+      return {
+        type: "edge",
+        datum: edge.datum,
+        x: px,
+        y: py,
+        distance: 4
       }
     }
   } catch {
@@ -283,6 +296,7 @@ function hitTestPathEdge(
     const ctx = getHitContext()
     if (!ctx) return null
 
+    // Check filled area first (for wide ribbon edges)
     if (ctx.isPointInPath(path, px, py)) {
       return {
         type: "edge",
@@ -290,6 +304,18 @@ function hitTestPathEdge(
         x: px,
         y: py,
         distance: 0
+      }
+    }
+
+    // Also check stroke with generous hit tolerance for thin curved/ribbon edges
+    ctx.lineWidth = 10
+    if (ctx.isPointInStroke(path, px, py)) {
+      return {
+        type: "edge",
+        datum: edge.datum,
+        x: px,
+        y: py,
+        distance: 4
       }
     }
   } catch {

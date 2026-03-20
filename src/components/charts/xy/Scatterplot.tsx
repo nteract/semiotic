@@ -215,7 +215,12 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
+      if (colorBy) {
+        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
+        // else: let frame use its own color scheme (push API)
+      } else {
+        baseStyle.fill = DEFAULT_COLOR
+      }
       baseStyle.r = sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
         : pointRadius

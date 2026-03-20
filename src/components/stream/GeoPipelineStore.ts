@@ -112,6 +112,49 @@ const DEFAULT_LINE_STYLE: Style = {
   fill: "none"
 }
 
+// ── Anti-meridian line splitting ─────────────────────────────────
+
+/**
+ * Detect screen-space jumps in a projected path that indicate the line
+ * has wrapped around the edge of the projection (anti-meridian crossing).
+ * Split the path at those jumps and return an array of continuous segments.
+ *
+ * A jump is detected when consecutive screen-space points are further apart
+ * than `threshold` pixels (default: half the viewport width).
+ */
+function splitAntiMeridianPath(
+  screenPath: [number, number][],
+  viewportWidth: number
+): [number, number][][] {
+  if (screenPath.length < 2) return [screenPath]
+
+  const threshold = viewportWidth * 0.4
+  const segments: [number, number][][] = []
+  let current: [number, number][] = [screenPath[0]]
+
+  for (let i = 1; i < screenPath.length; i++) {
+    const prev = screenPath[i - 1]
+    const curr = screenPath[i]
+    const dx = Math.abs(curr[0] - prev[0])
+
+    if (dx > threshold) {
+      // Jump detected — end the current segment and start a new one
+      if (current.length >= 2) {
+        segments.push(current)
+      }
+      current = [curr]
+    } else {
+      current.push(curr)
+    }
+  }
+
+  if (current.length >= 2) {
+    segments.push(current)
+  }
+
+  return segments
+}
+
 // ── Flow style helpers ───────────────────────────────────────────────
 
 /**
@@ -732,13 +775,34 @@ export class GeoPipelineStore {
         }
       }
 
-      const lineNode: LineSceneNode = {
-        type: "line",
-        path: screenPath,
-        style,
-        datum: line
+      // Split lines that wrap around the anti-meridian into separate segments.
+      // Each segment that doesn't span the full viewport is rendered independently.
+      // Lines that jump across the projection edge (>40% of viewport width between
+      // consecutive points) are split and each segment fades at the clipped end.
+      const segments = splitAntiMeridianPath(screenPath, layout.width)
+
+      if (segments.length <= 1) {
+        // No anti-meridian crossing — render as a single line
+        const lineNode: LineSceneNode = {
+          type: "line",
+          path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
+          style,
+          datum: line
+        }
+        nodes.push(lineNode)
+      } else {
+        // Anti-meridian crossing detected — render each segment with edge fade
+        for (const segment of segments) {
+          if (segment.length < 2) continue
+          const lineNode: LineSceneNode = {
+            type: "line",
+            path: segment,
+            style: { ...style, _edgeFade: true } as any,
+            datum: line
+          }
+          nodes.push(lineNode)
+        }
       }
-      nodes.push(lineNode)
     }
 
     // Points
@@ -870,6 +934,24 @@ export class GeoPipelineStore {
       node.x = cx + Math.cos(angle) * dist
       node.y = cy + Math.sin(angle) * dist
     }
+
+    // Re-center the cartogram so the center node is always at the
+    // viewport center. Without this, fitProjection moves the center
+    // as new points arrive, causing the cartogram to "bounce around."
+    const viewCx = layout.width / 2
+    const viewCy = layout.height / 2
+    const offsetX = viewCx - centerNode.x
+    const offsetY = viewCy - centerNode.y
+
+    if (Math.abs(offsetX) > 0.5 || Math.abs(offsetY) > 0.5) {
+      for (const node of pointNodes) {
+        node.x += offsetX
+        node.y += offsetY
+      }
+    }
+
+    // Update cartogramLayout to reflect the re-centered position
+    this.cartogramLayout = { cx: viewCx, cy: viewCy, maxCost, availableRadius }
 
     // Reposition lines connecting repositioned points
     const lineNodes = this.scene.filter(
