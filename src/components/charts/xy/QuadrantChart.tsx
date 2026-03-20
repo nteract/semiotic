@@ -293,9 +293,11 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
         // based on xCenter/yCenter thresholds and use the quadrant's color
         const xVal = getXValue(d)
         const yVal = getYValue(d)
-        const isRight = xCenter != null ? xVal >= xCenter : true
-        const isTop = yCenter != null ? yVal >= yCenter : true
-        if (isTop && isRight) baseStyle.fill = quadrants.topRight.color
+        const isRight = xCenter != null ? xVal >= xCenter : undefined
+        const isTop = yCenter != null ? yVal >= yCenter : undefined
+        if (isTop === undefined || isRight === undefined) {
+          baseStyle.fill = DEFAULT_COLOR
+        } else if (isTop && isRight) baseStyle.fill = quadrants.topRight.color
         else if (isTop && !isRight) baseStyle.fill = quadrants.topLeft.color
         else if (!isTop && isRight) baseStyle.fill = quadrants.bottomRight.color
         else baseStyle.fill = quadrants.bottomLeft.color

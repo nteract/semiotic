@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 /**
  * StackedAreaChart component props
@@ -179,13 +180,6 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
 export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
-
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -243,6 +237,35 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   if (emptyEl) return emptyEl
 
   const safeData = data || []
+  const actualColorBy = colorBy || areaBy
+  const isPushMode = data === undefined
+
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy: actualColorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+  })
+
+  const wrappedPush = useCallback(
+    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    [streaming.wrapPush]
+  )
+  const wrappedPushMany = useCallback(
+    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
+    [streaming.wrapPushMany]
+  )
+
+  useImperativeHandle(ref, () => ({
+    push: wrappedPush,
+    pushMany: wrappedPushMany,
+    clear: () => {
+      streaming.resetCategories()
+      frameRef.current?.clear()
+    },
+    getData: () => frameRef.current?.getData() ?? []
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
@@ -353,6 +376,23 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     defaults: resolved.marginDefaults,
   })
 
+  // Merge streaming legend when in push API mode
+  const effectiveLegend = streaming.streamingLegend || legend
+  const effectiveLegendPosition = legendPositionProp || legendPosition
+
+  // Adjust margin for streaming legend
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return margin
+  }, [margin, streaming.streamingMarginAdjust])
+
   // Default tooltip showing all configured fields
   const groupField = areaBy || colorBy
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
@@ -399,7 +439,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: effectiveMargin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -407,7 +447,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend, legendPosition }),
+    ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

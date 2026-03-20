@@ -60,6 +60,7 @@ export function useStreamingLegend({
       if (!isPushMode || !colorBy) return
       let changed = false
       for (const d of items) {
+        if (!d || typeof d !== "object") continue
         const cat = extractCategory(d)
         if (cat != null && !categoriesRef.current.has(cat)) {
           categoriesRef.current.add(cat)
@@ -105,7 +106,7 @@ export function useStreamingLegend({
 
   // Build legend from discovered categories
   const streamingLegend = useMemo(() => {
-    if (!isPushMode || !colorBy || !showLegend) return undefined
+    if (!isPushMode || !colorBy || showLegend === false) return undefined
     // Use version to trigger recompute (consumed by useMemo dep)
     void version
     const categories = orderedRef.current

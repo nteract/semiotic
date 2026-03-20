@@ -172,6 +172,8 @@ export class PipelineStore {
   // ── Color map caching ──────────────────────────────────────────────
   /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
   private _colorMapCache: { key: string; map: Map<string, string> } | null = null
+  /** Separate group→color map for resolveGroupColor (insertion-order based, never invalidates _colorMapCache) */
+  private _groupColorMap: Map<string, string> = new Map()
   private _barCategoryCache: { key: string; order: string[] } | null = null
 
   // ── Stacked area extent caching ───────────────────────────────────
@@ -2041,21 +2043,24 @@ export class PipelineStore {
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
   }
 
-  /** Resolve a group name to a color from the cached color map or palette */
+  /** Resolve a group name to a color from the cached color map or a dedicated group palette.
+   *  First checks _colorMapCache (populated by resolveColorMap when colorAccessor is set).
+   *  Falls back to _groupColorMap (insertion-order, never mutates _colorMapCache). */
   private resolveGroupColor(group: string): string | null {
+    // Prefer the accessor-based color map when available
     if (this._colorMapCache) {
       const c = this._colorMapCache.map.get(group)
       if (c) return c
     }
+    // Fall back to dedicated group color map (does not pollute _colorMapCache)
+    const existing = this._groupColorMap.get(group)
+    if (existing) return existing
+
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
       : STREAMING_PALETTE
-    // Build/update cache entry for this group
-    if (!this._colorMapCache) this._colorMapCache = { key: "", map: new Map() }
-    const idx = this._colorMapCache.map.size
-    const color = palette[idx % palette.length]
-    this._colorMapCache.map.set(group, color)
-    this._colorMapCache.key = Array.from(this._colorMapCache.map.keys()).join('\0')
+    const color = palette[this._groupColorMap.size % palette.length]
+    this._groupColorMap.set(group, color)
     return color
   }
 
@@ -2108,6 +2113,7 @@ export class PipelineStore {
     this.scene = []
     this._quadtree = null
     this._colorMapCache = null
+    this._groupColorMap = new Map()
     this._barCategoryCache = null
     this._stackExtentCache = null
     this.version++
@@ -2137,6 +2143,7 @@ export class PipelineStore {
     // Invalidate color map caches when relevant config changes
     if (config.colorScheme !== undefined) {
       this._colorMapCache = null
+      this._groupColorMap = new Map()
     }
     if (config.barColors !== undefined || config.colorScheme !== undefined) {
       this._barCategoryCache = null

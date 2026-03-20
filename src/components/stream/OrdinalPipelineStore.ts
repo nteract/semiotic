@@ -392,7 +392,11 @@ export class OrdinalPipelineStore {
     let min = 0
     let max = 0
 
-    if (chartType === "bar" && this.getStack) {
+    if (chartType === "bar" && this.getStack && this.config.normalize) {
+      // Normalized stacked bars: values are divided by column total → domain is [0, 1]
+      min = 0
+      max = 1
+    } else if (chartType === "bar" && this.getStack) {
       // Stacked bars: compute per-category stacked sums
       const posSums = new Map<string, number>()
       const negSums = new Map<string, number>()
