@@ -333,6 +333,84 @@ const svg = renderToStaticSVG("xy", {
 })
 ```
 
+## MCP Server
+
+Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts and diagnose configuration problems via tool calls.
+
+### Setup
+
+Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desktop):
+
+```json
+{
+  "mcpServers": {
+    "semiotic": {
+      "command": "npx",
+      "args": ["semiotic-mcp"]
+    }
+  }
+}
+```
+
+No API keys or authentication required. The server runs locally via stdio.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| **`renderChart`** | Render any Semiotic chart to static SVG. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
+| **`diagnoseConfig`** | Check a chart configuration for common problems — empty data, bad dimensions, missing accessors, wrong data shape, and more. Returns structured diagnostics with actionable fixes. |
+| **`reportIssue`** | Generate a pre-filled GitHub issue URL for bug reports or feature requests. Pass `{ title: "...", body: "...", labels: ["bug"] }`. Returns a URL the user can open to submit. |
+
+### Example: render a chart
+
+```
+Tool: renderChart
+Args: {
+  "component": "BarChart",
+  "props": {
+    "data": [
+      { "category": "Q1", "revenue": 120 },
+      { "category": "Q2", "revenue": 180 },
+      { "category": "Q3", "revenue": 150 }
+    ],
+    "categoryAccessor": "category",
+    "valueAccessor": "revenue"
+  }
+}
+→ Returns: <svg>...</svg>
+```
+
+### Example: diagnose a broken config
+
+```
+Tool: diagnoseConfig
+Args: { "component": "LineChart", "props": { "data": [] } }
+→ Returns: ✗ [EMPTY_DATA] data is an empty array — Fix: provide at least one data point
+```
+
+### Example: report an issue
+
+```
+Tool: reportIssue
+Args: {
+  "title": "Bug: BarChart tooltip shows undefined for custom accessor",
+  "body": "When using valueAccessor='amount', tooltip displays 'undefined'.\n\ndiagnoseConfig output: ✓ no issues detected.",
+  "labels": ["bug"]
+}
+→ Returns: Open this URL to submit the issue: https://github.com/nteract/semiotic/issues/new?...
+```
+
+### CLI alternative
+
+For quick validation without an MCP client:
+
+```bash
+npx semiotic-ai --doctor       # validate component + props JSON
+npx semiotic-ai --schema       # dump all chart schemas
+npx semiotic-ai --compact      # compact schema (fewer tokens)
+```
+
 ## Documentation
 
 [Interactive docs and examples](https://semiotic.nteract.io)

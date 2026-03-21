@@ -2,13 +2,10 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes two tools:
+ * Exposes three tools:
  *   1. renderChart — renders any HOC chart to static SVG
  *   2. diagnoseConfig — anti-pattern detector for chart configurations
- *
- * Previously registered 17 individual chart tools (one per HOC). These were
- * redundant with renderChart which accepts { component, props } and handles
- * all chart types. Consolidated to 2 tools for token efficiency.
+ *   3. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -126,6 +123,42 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: lines.join("\n") }],
       isError: true,
+    }
+  }
+)
+
+// ── reportIssue tool ─────────────────────────────────────────────────────
+// Generates a pre-filled GitHub issue URL for bug reports or feature requests.
+// The user (or AI agent) can open the URL to submit — no auth needed.
+const REPO = "nteract/semiotic"
+
+server.tool(
+  "reportIssue",
+  "Generate a GitHub issue URL for Semiotic bug reports or feature requests. Pass { title, body, labels? }. Returns a URL the user can open to submit. For rendering bugs, include the component name, props summary, and any diagnoseConfig output in the body.",
+  {},
+  async (args: Record<string, unknown>) => {
+    const title = args.title as string
+    const body = args.body as string
+    const labels = args.labels as string[] | string | undefined
+
+    if (!title) {
+      return {
+        content: [{ type: "text" as const, text: "Missing 'title' field. Provide { title: 'Bug: ...', body: '...', labels?: ['bug'] }." }],
+        isError: true,
+      }
+    }
+
+    const params = new URLSearchParams()
+    params.set("title", title)
+    if (body) params.set("body", body)
+    if (labels) {
+      const labelList = Array.isArray(labels) ? labels.join(",") : labels
+      params.set("labels", labelList)
+    }
+
+    const url = `https://github.com/${REPO}/issues/new?${params.toString()}`
+    return {
+      content: [{ type: "text" as const, text: `Open this URL to submit the issue:\n\n${url}` }],
     }
   }
 )
