@@ -58,7 +58,7 @@ server.tool(
       const renderable = new Set(Object.keys(COMPONENT_REGISTRY))
       const list = all.map(name => renderable.has(name) ? `${name} [renderable]` : name)
       return {
-        content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart. Others (Realtime*, Geo) require a browser environment.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+        content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart. Others (Realtime*) require a browser environment.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
       }
     }
 
@@ -195,15 +195,8 @@ server.tool(
       suggestions.push({
         component: "ProportionalSymbolMap",
         confidence: "high",
-        reason: `Data has ${geoFields.lat}/${geoFields.lon} coordinates — map shows spatial distribution. Import from "semiotic/geo" (not renderable via renderChart — requires browser).`,
+        reason: `Data has ${geoFields.lat}/${geoFields.lon} coordinates — map shows spatial distribution`,
         props: { points: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...(sizeField ? { sizeBy: `"${sizeField}"` } : {}) },
-      })
-      // Also suggest Scatterplot as a renderable alternative
-      suggestions.push({
-        component: "Scatterplot",
-        confidence: "medium",
-        reason: `Renderable alternative to ProportionalSymbolMap — plots ${geoFields.lon}/${geoFields.lat} as x/y coordinates`,
-        props: { data: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...(sizeField ? { sizeBy: `"${sizeField}"` } : {}) },
       })
     }
 

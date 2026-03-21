@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **MCP server** — added `getSchema`, `suggestChart`, and `reportIssue` tools (5 tools total).
+- **MCP server** — added `getSchema`, `suggestChart`, and `reportIssue` tools (5 tools total). Added geo chart rendering support (ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram).
 - **npm description** — updated to highlight MCP server capability for discoverability.
 - **`prepublishOnly` cleans dist/** — prevents stale dynamic import chunks from accumulating in published tarball.
 
