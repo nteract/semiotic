@@ -870,6 +870,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       {
         const ictx = prepareCanvas(interactionCanvas, size, margin, dpr)
         if (ictx) {
+          // Clear previous frame (crosshair, highlights, etc.)
+          ictx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
           // Crosshair on hover
           if (effectiveHoverAnnotation && hoverRef.current && store.scales) {
