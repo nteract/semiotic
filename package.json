@@ -1,6 +1,7 @@
 {
   "name": "semiotic",
   "version": "3.1.2",
+  "mcpName": "io.github.nteract/semiotic",
   "description": "React data visualization library with built-in MCP server for AI-assisted chart generation",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
