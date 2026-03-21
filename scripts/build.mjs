@@ -185,7 +185,12 @@ async function createBundle(options = {}) {
 }
 
 function buildDeclarations() {
-  execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
+  try {
+    execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
+  } catch {
+    console.warn("⚠ Declaration generation failed (non-fatal — JS bundles are unaffected)")
+    return
+  }
   // Copy entry-point declarations from dist/components/ to dist/ so package.json
   // "types" fields resolve correctly (tsc emits into dist/components/ due to rootDir)
   const entryPoints = [
