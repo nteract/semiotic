@@ -519,59 +519,25 @@ test.describe("Accessibility - axe-core automated scanning", () => {
     await expect(canvas).toBeVisible({ timeout: 10000 })
   }
 
-  test("no accessibility violations on XY chart examples", async ({ page }) => {
-    await page.goto("/xy-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas") // canvas is opaque to axe — tested manually above
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
+  const axeScanRoutes = [
+    { path: "/xy-examples/", label: "XY chart examples" },
+    { path: "/ordinal-examples/", label: "ordinal chart examples" },
+    { path: "/network-examples/", label: "network chart examples" },
+    { path: "/geo-examples/", label: "geo chart examples" },
+    { path: "/coordinated-examples/", label: "coordinated views examples" },
+    { path: "/accessibility-examples/", label: "accessibility examples" },
+  ]
 
-  test("no accessibility violations on ordinal chart examples", async ({ page }) => {
-    await page.goto("/ordinal-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas")
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
-
-  test("no accessibility violations on network chart examples", async ({ page }) => {
-    await page.goto("/network-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas")
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
-
-  test("no accessibility violations on geo chart examples", async ({ page }) => {
-    await page.goto("/geo-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas")
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
-
-  test("no accessibility violations on coordinated views examples", async ({ page }) => {
-    await page.goto("/coordinated-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas")
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
-
-  test("no accessibility violations on accessibility examples", async ({ page }) => {
-    await page.goto("/accessibility-examples/")
-    await waitForChartsToRender(page)
-    const results = await new AxeBuilder({ page })
-      .exclude("canvas")
-      .analyze()
-    expect(results.violations).toEqual([])
-  })
+  for (const { path, label } of axeScanRoutes) {
+    test(`no accessibility violations on ${label}`, async ({ page }) => {
+      await page.goto(path)
+      await waitForChartsToRender(page)
+      const results = await new AxeBuilder({ page })
+        .exclude("canvas") // canvas is opaque to axe — tested manually above
+        .analyze()
+      expect(results.violations).toEqual([])
+    })
+  }
 })
 
 // ─── Smoke test: no JS errors on page load ───────────────────────────────────

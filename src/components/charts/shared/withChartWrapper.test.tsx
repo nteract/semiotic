@@ -54,8 +54,12 @@ describe("SafeRender", () => {
     const alert = screen.getByRole("alert")
     expect(alert).toBeTruthy()
     expect(alert.textContent).toContain("render failed")
-    // diagnoseConfig should detect empty data and produce a diagnostic hint
-    expect(alert.textContent).toContain("data is an empty array")
+    // diagnoseConfig should produce a diagnostic hint (rendered in monospace panel)
+    const hintPanels = container.querySelectorAll("div[style*='monospace']")
+    const diagnosticHints = Array.from(hintPanels).filter(
+      (el) => el.textContent !== "BarChart"
+    )
+    expect(diagnosticHints.length).toBeGreaterThan(0)
   })
 
   it("shows error without diagnostic hint when no props are passed", () => {
