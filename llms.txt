@@ -1,0 +1,45 @@
+# Semiotic
+
+> React data visualization library with 30+ chart types, streaming canvas rendering, coordinated views, and a built-in MCP server for AI-assisted chart generation.
+
+Semiotic provides two tiers: HOC Charts (simple props, sensible defaults) and Stream Frames (full control). Always prefer HOC charts unless you need low-level access. TypeScript strict mode throughout.
+
+Install: `npm install semiotic`
+MCP server: `npx semiotic-mcp`
+CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
+
+Entry points: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
+
+## Docs
+
+- [CLAUDE.md](https://github.com/nteract/semiotic/blob/main/CLAUDE.md): Comprehensive AI assistant guide with all component props, patterns, and pitfalls
+- [README](https://github.com/nteract/semiotic/blob/main/README.md): Project overview, MCP server setup, and quick start
+- [CHANGELOG](https://github.com/nteract/semiotic/blob/main/CHANGELOG.md): Version history and migration notes
+- [API Schema](https://github.com/nteract/semiotic/blob/main/ai/schema.json): Machine-readable prop schemas for all 30 components
+
+## Chart Types
+
+- [XY Charts](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#xy-charts-semioticxy): LineChart, AreaChart, StackedAreaChart, Scatterplot, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap
+- [Ordinal Charts](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#ordinal-charts-semioticordinal): BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, PieChart, DonutChart
+- [Network Charts](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#network-charts-semioticnetwork): ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
+- [Geo Charts](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#geo-charts-semioticgeo): ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
+- [Realtime Charts](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#realtime-charts-semioticrealtime): RealtimeLineChart, RealtimeHistogram, RealtimeSwarmChart, RealtimeWaterfallChart, RealtimeHeatmap
+
+## AI Integration
+
+- [MCP Server](https://github.com/nteract/semiotic/blob/main/README.md#mcp-server): 5 tools — getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue
+- [AI Examples](https://github.com/nteract/semiotic/blob/main/ai/examples.md): Code examples for AI code generation
+- [System Prompt](https://github.com/nteract/semiotic/blob/main/ai/system-prompt.md): Compact component reference for LLM context
+
+## Features
+
+- [Coordinated Views](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#coordinated-views): LinkedCharts, CategoryColorProvider, ScatterplotMatrix, cross-highlighting and brushing
+- [Server-Side Rendering](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#server-side-rendering): renderToStaticSVG, automatic SSR in Next.js/Remix/Astro
+- [Push API](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#push-api-on-hoc-charts): Streaming data via ref.current.push() on most HOC charts
+- [Annotations](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#annotations): Widget annotations, threshold coloring, data-anchored React elements
+
+## Optional
+
+- [Streaming Sankey](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#realtime-charts-semioticrealtime): StreamNetworkFrame with particles
+- [Realtime Encoding](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#realtime-charts-semioticrealtime): decay, pulse, transition, staleness
+- [Known Pitfalls](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#known-pitfalls): Common mistakes and workarounds
