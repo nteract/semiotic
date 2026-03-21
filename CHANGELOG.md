@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2026-03-21
+
+### Added
+
+- **MCP `reportIssue` tool** — generates pre-filled GitHub issue URLs for bug reports and feature requests directly from AI coding assistants. No auth required.
+- **MCP `getSchema` tool** — returns the prop schema for a specific component on demand, reducing token overhead vs loading the full 63KB schema. Omit `component` to list all 30 chart types.
+- **MCP `suggestChart` tool** — analyzes a data sample and recommends chart types with confidence levels and example props. Supports `intent` parameter for narrowing suggestions (comparison, trend, distribution, relationship, composition, geographic, network, hierarchy).
+- **MCP server documentation** — comprehensive setup instructions, tool descriptions, and usage examples in README.
+- **npm keywords** — `mcp`, `model-context-protocol`, `mcp-server`, and other discovery keywords for MCP directory indexing.
+- **CI coverage thresholds** — unit test coverage gated at 62/52/63/65% (statements/branches/functions/lines) with `@vitest/coverage-v8`.
+- **CI bundle size guardrails** — `size-limit` checks for all 6 entry bundles in CI pipeline.
+- **axe-core accessibility scanning** — automated `@axe-core/playwright` scans across all chart category pages in E2E tests.
+- **Self-healing error boundaries** — `SafeRender` runs `diagnoseConfig` on chart failures (dev mode) and displays actionable fix suggestions alongside the error message.
+- **61 new unit tests** — coverage for `withChartWrapper` (SafeRender, warnDataShape, warnMissingField, renderEmptyState, renderLoadingState), network utilities, and push API on 7 ordinal chart types.
+
+### Changed
+
+- **MCP server** — added `getSchema`, `suggestChart`, and `reportIssue` tools (5 tools total). Added geo chart rendering support (ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram).
+- **npm description** — updated to highlight MCP server capability for discoverability.
+- **`prepublishOnly` cleans dist/** — prevents stale dynamic import chunks from accumulating in published tarball.
+
+### Fixed
+
+- **MCP `component` key leaking into props** — flat-shape calls like `{ component: "LineChart", data: [...] }` no longer pass `component` as a chart prop.
+- **Missing dynamic import chunk** — `dist/*-statisticalOverlays-*.js` added to `files` array so forecast/anomaly features work when consumed via ESM.
+
 ## [3.1.0] - 2026-03-20
 
 ### Added

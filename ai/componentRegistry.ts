@@ -11,9 +11,13 @@ import {
   ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
 } from "semiotic/ai"
 
+import {
+  ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
+} from "semiotic/geo"
+
 export interface RegistryEntry {
   component: ComponentType<any>
-  category: "xy" | "ordinal" | "network"
+  category: "xy" | "ordinal" | "network" | "geo"
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
@@ -41,4 +45,9 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   Treemap: { component: Treemap, category: "network" },
   CirclePack: { component: CirclePack, category: "network" },
   OrbitDiagram: { component: OrbitDiagram, category: "network" },
+
+  ChoroplethMap: { component: ChoroplethMap, category: "geo" },
+  ProportionalSymbolMap: { component: ProportionalSymbolMap, category: "geo" },
+  FlowMap: { component: FlowMap, category: "geo" },
+  DistanceCartogram: { component: DistanceCartogram, category: "geo" },
 }

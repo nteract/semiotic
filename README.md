@@ -333,6 +333,110 @@ const svg = renderToStaticSVG("xy", {
 })
 ```
 
+## MCP Server
+
+Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, and get chart recommendations via tool calls.
+
+### Setup
+
+Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desktop):
+
+```json
+{
+  "mcpServers": {
+    "semiotic": {
+      "command": "npx",
+      "args": ["semiotic-mcp"]
+    }
+  }
+}
+```
+
+No API keys or authentication required. The server runs locally via stdio.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 30 chart types. Use before `renderChart` to look up valid props. |
+| **`suggestChart`** | Recommend chart types for a data sample. Pass `{ data: [{...}, ...] }` with 1–5 sample objects. Optionally include `intent` (`"comparison"`, `"trend"`, `"distribution"`, `"relationship"`, `"composition"`, `"geographic"`, `"network"`, `"hierarchy"`). Returns ranked suggestions with example props. |
+| **`diagnoseConfig`** | Check a chart configuration for common problems — empty data, bad dimensions, missing accessors, wrong data shape, and more. Returns a human-readable diagnostic report with actionable fixes. |
+| **`reportIssue`** | Generate a pre-filled GitHub issue URL for bug reports or feature requests. Pass `{ title: "...", body: "...", labels: ["bug"] }`. Returns a URL the user can open to submit. |
+
+### Example: get schema for a component
+
+```
+Tool: getSchema
+Args: { "component": "LineChart" }
+→ Returns: { "name": "LineChart", "description": "...", "parameters": { "properties": { "data": ..., "xAccessor": ..., ... } } }
+```
+
+### Example: suggest a chart for your data
+
+```
+Tool: suggestChart
+Args: {
+  "data": [
+    { "month": "Jan", "revenue": 120, "region": "East" },
+    { "month": "Feb", "revenue": 180, "region": "West" }
+  ]
+}
+→ Returns:
+  1. BarChart (high confidence) — categorical field (region) with values (revenue)
+  2. StackedBarChart (medium confidence) — two categorical fields (month, region)
+  3. DonutChart (medium confidence) — 2 categories — proportional composition
+```
+
+### Example: render a chart
+
+```
+Tool: renderChart
+Args: {
+  "component": "BarChart",
+  "props": {
+    "data": [
+      { "category": "Q1", "revenue": 120 },
+      { "category": "Q2", "revenue": 180 },
+      { "category": "Q3", "revenue": 150 }
+    ],
+    "categoryAccessor": "category",
+    "valueAccessor": "revenue"
+  }
+}
+→ Returns: <svg>...</svg>
+```
+
+### Example: diagnose a broken config
+
+```
+Tool: diagnoseConfig
+Args: { "component": "LineChart", "props": { "data": [] } }
+→ Returns: ✗ [EMPTY_DATA] data is an empty array — Fix: provide at least one data point
+```
+
+### Example: report an issue
+
+```
+Tool: reportIssue
+Args: {
+  "title": "Bug: BarChart tooltip shows undefined for custom accessor",
+  "body": "When using valueAccessor='amount', tooltip displays 'undefined'.\n\ndiagnoseConfig output: ✓ no issues detected.",
+  "labels": ["bug"]
+}
+→ Returns: Open this URL to submit the issue: https://github.com/nteract/semiotic/issues/new?...
+```
+
+### CLI alternative
+
+For quick validation without an MCP client:
+
+```bash
+npx semiotic-ai --doctor       # validate component + props JSON
+npx semiotic-ai --schema       # dump all chart schemas
+npx semiotic-ai --compact      # compact schema (fewer tokens)
+```
+
 ## Documentation
 
 [Interactive docs and examples](https://semiotic.nteract.io)

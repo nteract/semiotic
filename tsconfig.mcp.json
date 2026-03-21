@@ -14,7 +14,8 @@
     "rootDir": "./ai",
     "baseUrl": ".",
     "paths": {
-      "semiotic/ai": ["./dist/semiotic-ai.d.ts"]
+      "semiotic/ai": ["./dist/semiotic-ai.d.ts"],
+      "semiotic/geo": ["./dist/semiotic-geo.d.ts"]
     }
   },
   "include": [
