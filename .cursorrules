@@ -1,5 +1,24 @@
 # Semiotic — AI Assistant Guide
 
+## Contents
+- [Quick Start](#quick-start) — install, import, CLI, MCP
+- [Architecture](#architecture) — HOC Charts vs Stream Frames
+- [Common Props](#common-props-all-hocs) — tooltip, onObservation, legend, loading
+- [XY Charts](#xy-charts-semioticxy) — LineChart, AreaChart, Scatterplot, Heatmap, etc.
+- [Ordinal Charts](#ordinal-charts-semioticordinal) — BarChart, Histogram, PieChart, etc.
+- [Network Charts](#network-charts-semioticnetwork) — ForceDirectedGraph, Sankey, Treemap, etc.
+- [Geo Charts](#geo-charts-semioticgeo) — Choropleth, FlowMap, DistanceCartogram, tiles, zoom
+- [Realtime Charts](#realtime-charts-semioticrealtime) — streaming push API, time-series, encoding
+- [Stream Frame Callbacks](#stream-frame-callbacks-advanced--prefer-hocs) — RealtimeNode/Edge wrappers
+- [Coordinated Views](#coordinated-views) — LinkedCharts, selections, cross-highlighting
+- [ChartContainer](#chartcontainer) — title, status, toolbar actions
+- [Layout & Composition](#layout--composition) — ChartGrid, ContextLayout
+- [Key Patterns](#key-patterns) — code examples for common use cases
+- [Annotations](#annotations) — widget annotations at data coordinates
+- [Server-Side Rendering](#server-side-rendering) — SSR, renderToStaticSVG
+- [AI Features](#ai-features) — onObservation, toConfig/fromConfig, validateProps, diagnoseConfig
+- [Known Pitfalls](#known-pitfalls) — tooltip shape, legend, log scale, push API, barPadding
+
 ## Quick Start
 - Install: `npm install semiotic`
 - Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
