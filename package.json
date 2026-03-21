@@ -1,7 +1,7 @@
 {
   "name": "semiotic",
-  "version": "3.1.0",
-  "description": "The semiotic JavaScript data visualization framework",
+  "version": "3.1.1",
+  "description": "React data visualization library with built-in MCP server for AI-assisted chart generation",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
   "types": "dist/semiotic.d.ts",
@@ -113,7 +113,7 @@
     "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
     "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production"
+    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && rm -rf dist && node scripts/build.mjs --production"
   },
   "targets": {
     "website": {
@@ -140,6 +140,21 @@
   },
   "contributors": [
     "Susie Lu <susie.lu.shan@gmail.com>"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "data-visualization",
+    "charts",
+    "react",
+    "d3",
+    "canvas",
+    "svg",
+    "streaming",
+    "network-graph",
+    "ai",
+    "llm"
   ],
   "license": "Apache-2.0",
   "size-limit": [

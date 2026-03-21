@@ -335,7 +335,7 @@ const svg = renderToStaticSVG("xy", {
 
 ## MCP Server
 
-Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts and diagnose configuration problems via tool calls.
+Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, and get chart recommendations via tool calls.
 
 ### Setup
 
@@ -359,8 +359,34 @@ No API keys or authentication required. The server runs locally via stdio.
 | Tool | Description |
 |------|-------------|
 | **`renderChart`** | Render any Semiotic chart to static SVG. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 30 chart types. Use before `renderChart` to look up valid props. |
+| **`suggestChart`** | Recommend chart types for a data sample. Pass `{ data: [{...}, ...] }` with 1–5 sample objects. Optionally include `intent` (`"comparison"`, `"trend"`, `"distribution"`, `"relationship"`, `"composition"`, `"geographic"`, `"network"`, `"hierarchy"`). Returns ranked suggestions with example props. |
 | **`diagnoseConfig`** | Check a chart configuration for common problems — empty data, bad dimensions, missing accessors, wrong data shape, and more. Returns structured diagnostics with actionable fixes. |
 | **`reportIssue`** | Generate a pre-filled GitHub issue URL for bug reports or feature requests. Pass `{ title: "...", body: "...", labels: ["bug"] }`. Returns a URL the user can open to submit. |
+
+### Example: get schema for a component
+
+```
+Tool: getSchema
+Args: { "component": "LineChart" }
+→ Returns: { "name": "LineChart", "description": "...", "parameters": { "properties": { "data": ..., "xAccessor": ..., ... } } }
+```
+
+### Example: suggest a chart for your data
+
+```
+Tool: suggestChart
+Args: {
+  "data": [
+    { "month": "Jan", "revenue": 120, "region": "East" },
+    { "month": "Feb", "revenue": 180, "region": "West" }
+  ]
+}
+→ Returns:
+  1. BarChart (high confidence) — categorical field (region) with values (revenue)
+  2. StackedBarChart (medium confidence) — two categorical fields (month, region)
+  3. DonutChart (medium confidence) — 2 categories — proportional composition
+```
 
 ### Example: render a chart
 
