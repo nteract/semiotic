@@ -391,7 +391,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
         return defaultRules(annotation, i, context)
       })
       .filter(Boolean)
-  }, [annotations, svgAnnotationRules, width, height, annotationFrame, annXAccessor, annYAccessor, annotationData])
+  }, [annotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
 

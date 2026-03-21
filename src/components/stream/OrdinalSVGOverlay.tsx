@@ -275,7 +275,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         return defaultRules(annotation, i, context)
       })
       .filter(Boolean)
-  }, [annotations, svgAnnotationRules, width, height, annotationFrame, annXAccessor, annYAccessor, annotationData])
+  }, [annotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
   if (!hasContent) return null
