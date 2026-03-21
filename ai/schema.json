@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "semiotic",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "React data visualization library for charts, networks, and beyond",
   "tools": [
     {
