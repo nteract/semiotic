@@ -12,6 +12,7 @@ coverage
 *.sublime-project
 *.sublime-workspace
 dist
+!ai/dist/
 .parcel-cache
 test-results
 bundle-analysis.html
