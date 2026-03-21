@@ -325,7 +325,7 @@ export class NetworkPipelineStore {
           }
         }
       }
-      ;(this.config as any).__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
+      (this.config as any).__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
     }
 
     // Execute layout — hierarchical plugins push into the arrays directly
@@ -912,7 +912,7 @@ export class NetworkPipelineStore {
       if (alertColor) {
         sceneNode.style = { ...sceneNode.style, fill: alertColor }
         if (shouldPulse) {
-          ;(sceneNode as any)._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
+          (sceneNode as any)._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
           ;(sceneNode as any)._pulseColor = alertColor
           ;(sceneNode as any)._pulseGlowRadius = 6
         }

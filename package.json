@@ -42,7 +42,7 @@
       "default": "./dist/realtime.module.min.js"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
+      "types": "./dist/semiotic-server.d.ts",
       "import": "./dist/server.module.min.js",
       "require": "./dist/server.min.js",
       "default": "./dist/server.module.min.js"
@@ -167,6 +167,7 @@
     "@types/seedrandom": "^3.0.5",
     "@types/topojson-client": "^3.1.5",
     "@typescript-eslint/eslint-plugin": "^5.4.6",
+    "@typescript-eslint/parser": "^5.4.6",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/ui": "^4.0.18",
     "d3-dsv": "1.0.5",

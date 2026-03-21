@@ -132,7 +132,7 @@ function inlineStyles(source: Element, target: Element): void {
   for (const prop of important) {
     const value = computed.getPropertyValue(prop)
     if (value && value !== "none" && value !== "") {
-      ;(target as SVGElement | HTMLElement).style?.setProperty(prop, value)
+      (target as SVGElement | HTMLElement).style?.setProperty(prop, value)
     }
   }
 

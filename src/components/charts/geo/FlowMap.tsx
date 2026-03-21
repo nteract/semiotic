@@ -183,8 +183,9 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   const nodeFlowLookup = useMemo(() => {
     const map = new Map<string, (typeof safeFlows)[0]>()
     for (const flow of safeFlows) {
-      if (!map.has(flow.source)) map.set(flow.source, flow)
-      if (!map.has(flow.target)) map.set(flow.target, flow)
+      if (!flow || typeof flow !== "object") continue
+      if (flow.source != null && !map.has(flow.source)) map.set(flow.source, flow)
+      if (flow.target != null && !map.has(flow.target)) map.set(flow.target, flow)
     }
     return map
   }, [safeFlows])
@@ -242,6 +243,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
 
     return safeFlows.map(flow => {
+      if (!flow || typeof flow !== "object" || flow.source == null || flow.target == null) return null
       const src = nodeLookup.get(String(flow.source))
       const tgt = nodeLookup.get(String(flow.target))
       if (!src || !tgt) return null
@@ -257,7 +259,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   // Edge width scale
   const widthScale = useMemo(() => {
-    const vals = safeFlows.map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
+    const vals = safeFlows.filter(f => f && typeof f === "object").map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
     if (vals.length === 0) return () => edgeWidthRange[0]
     return scaleLinear()
       .domain([Math.min(...vals), Math.max(...vals)])

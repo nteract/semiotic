@@ -18,7 +18,7 @@ import { createMockCanvasContext } from "../../test-utils/canvasMock"
 // ── Canvas + rAF mocks ──────────────────────────────────────────────────
 
 function setupMocks() {
-  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => createMockCanvasContext())
+  (HTMLCanvasElement.prototype as any).getContext = vi.fn(() => createMockCanvasContext())
   // Path2D not available in jsdom — mock it for network edge rendering
   if (!(globalThis as any).Path2D) {
     (globalThis as any).Path2D = class { constructor() {} }

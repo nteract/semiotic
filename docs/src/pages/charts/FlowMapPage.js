@@ -173,7 +173,8 @@ function StreamingFlowDemo({ width }) {
     let i = 0
     const id = setInterval(() => {
       if (i < internationalFlights.length) {
-        setFlows(prev => [...prev, internationalFlights[i]])
+        const flow = internationalFlights[i]
+        setFlows(prev => [...prev, flow])
         i++
       } else {
         clearInterval(id)

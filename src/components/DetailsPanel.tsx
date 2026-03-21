@@ -100,7 +100,7 @@ export function DetailsPanel({
     } else if (dismissOnEmpty && (latest.type === "click-end" || latest.type === "hover-end")) {
       handleClose()
     }
-  }, [latest]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [latest])
 
   useEffect(() => {
     onToggle?.(isOpen)

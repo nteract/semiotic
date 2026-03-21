@@ -129,7 +129,6 @@ export function useStreamingLegend({
       colorScale: syntheticScale,
       getColor,
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPushMode, colorBy, showLegend, colorScheme, version])
 
   /** Margin adjustment needed for streaming legend */

@@ -49,6 +49,8 @@ import {
   spawnNetworkParticles
 } from "./renderers/networkParticleRenderer"
 import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
+import { useThemeSelector } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/ThemeStore"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -261,6 +263,10 @@ const StreamNetworkFrame = forwardRef<
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom
 
+  const resolvedForeground = typeof foregroundGraphics === "function"
+    ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+    : foregroundGraphics
+
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
     [tensionConfigProp]
@@ -382,6 +388,8 @@ const StreamNetworkFrame = forwardRef<
   const rafRef = useRef(0)
   const lastFrameTimeRef = useRef(0)
   const dirtyRef = useRef(true)
+  // Theme change tracking (effect added after scheduleRender is defined)
+  const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
   const renderFnRef = useRef<() => void>(() => {})
 
   // ── Store ────────────────────────────────────────────────────────────
@@ -501,6 +509,12 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = true
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
+
+  // Repaint canvas when ThemeProvider theme changes
+  useEffect(() => {
+    dirtyRef.current = true
+    scheduleRender()
+  }, [currentTheme, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -667,7 +681,6 @@ const StreamNetworkFrame = forwardRef<
       pushManyEdges(initialEdges)
     }
     // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ── Observation wrappers ─────────────────────────────────────────────
@@ -1139,7 +1152,7 @@ const StreamNetworkFrame = forwardRef<
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={foregroundGraphics}
+          foregroundGraphics={resolvedForeground}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={0}
@@ -1214,7 +1227,7 @@ const StreamNetworkFrame = forwardRef<
         legendClickBehavior={legendClickBehavior}
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
-        foregroundGraphics={foregroundGraphics}
+        foregroundGraphics={resolvedForeground}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}

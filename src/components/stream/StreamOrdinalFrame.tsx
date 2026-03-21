@@ -30,6 +30,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { useThemeSelector } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/ThemeStore"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
@@ -262,10 +264,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
 
+    const resolvedForeground = typeof foregroundGraphics === "function"
+      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : foregroundGraphics
+
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const dirtyRef = useRef(true)
+    // Theme change tracking (effect added after scheduleRender is defined)
+    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
     const rafRef = useRef<number>(0)
     const hoverRef = useRef<HoverData | null>(null)
     const renderFnRef = useRef<() => void>(() => {})
@@ -353,6 +361,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dirtyRef.current = true
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
+
+    // Repaint canvas when ThemeProvider theme changes
+    useEffect(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }, [currentTheme, scheduleRender])
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
@@ -768,7 +782,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
-            foregroundGraphics={foregroundGraphics}
+            foregroundGraphics={resolvedForeground}
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
@@ -876,7 +890,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
-          foregroundGraphics={foregroundGraphics}
+          foregroundGraphics={resolvedForeground}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

@@ -57,7 +57,7 @@ export function useChartObserver(
 
     return result
     // version triggers recompute when new observations are pushed
-  }, [allObservations, types, chartId, limit, version]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [allObservations, types, chartId, limit, version])
 
   const latest = filtered.length > 0 ? filtered[filtered.length - 1] : null
 
