@@ -214,7 +214,7 @@ When using `ChartContainer` with a chart that has `size={[w, h]}`, always set `h
   nodeSizeRange={[5, 25]}
   showLabels
   showLegend
-  tooltip={(d) => <div>{d.data.id}: {d.data.weight}</div>}
+  tooltip={(d) => <div>{d.id}: {d.weight}</div>}
   frameProps={{
     customClickBehavior: (d) => { if (d?.type === "node") console.log(d.data) },
     background: "#f5f5f5",
