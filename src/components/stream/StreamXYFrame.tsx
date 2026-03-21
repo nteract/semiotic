@@ -469,13 +469,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const rafRef = useRef(0)
     const dirtyRef = useRef(false)
 
-    // Mark canvas dirty when ThemeProvider theme changes
+    // Theme change tracking (effect added after scheduleRender is defined)
     const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-    const prevThemeRef = useRef(currentTheme)
-    if (prevThemeRef.current !== currentTheme) {
-      prevThemeRef.current = currentTheme
-      dirtyRef.current = true
-    }
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
@@ -589,6 +584,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       dirtyRef.current = true
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
+
+    // Repaint canvas when ThemeProvider theme changes
+    useEffect(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }, [currentTheme, scheduleRender])
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 

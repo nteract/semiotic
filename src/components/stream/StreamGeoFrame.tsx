@@ -266,13 +266,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }
     const rafRef = useRef(0)
     const dirtyRef = useRef(true)
-    // Mark canvas dirty when ThemeProvider theme changes
+    // Theme change tracking (effect added after scheduleRender is defined)
     const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-    const prevThemeRef = useRef(currentTheme)
-    if (prevThemeRef.current !== currentTheme) {
-      prevThemeRef.current = currentTheme
-      dirtyRef.current = true
-    }
     const prevAnnotationsRef = useRef(annotations)
     const renderFnRef = useRef<() => void>(() => {})
 
@@ -310,6 +305,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (rafRef.current) return
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }, [])
+
+    // ── Theme change → repaint canvas ─────────────────────────────
+    useEffect(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }, [currentTheme, scheduleRender])
 
     // ── Sync config ───────────────────────────────────────────────────
 

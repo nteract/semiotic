@@ -388,13 +388,8 @@ const StreamNetworkFrame = forwardRef<
   const rafRef = useRef(0)
   const lastFrameTimeRef = useRef(0)
   const dirtyRef = useRef(true)
-  // Mark canvas dirty when ThemeProvider theme changes
+  // Theme change tracking (effect added after scheduleRender is defined)
   const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-  const prevThemeRef = useRef(currentTheme)
-  if (prevThemeRef.current !== currentTheme) {
-    prevThemeRef.current = currentTheme
-    dirtyRef.current = true
-  }
   const renderFnRef = useRef<() => void>(() => {})
 
   // ── Store ────────────────────────────────────────────────────────────
@@ -514,6 +509,12 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = true
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
+
+  // Repaint canvas when ThemeProvider theme changes
+  useEffect(() => {
+    dirtyRef.current = true
+    scheduleRender()
+  }, [currentTheme, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 

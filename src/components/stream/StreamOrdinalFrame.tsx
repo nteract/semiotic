@@ -272,13 +272,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const dirtyRef = useRef(true)
-    // Mark canvas dirty when ThemeProvider theme changes
+    // Theme change tracking (effect added after scheduleRender is defined)
     const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-    const prevThemeRef = useRef(currentTheme)
-    if (prevThemeRef.current !== currentTheme) {
-      prevThemeRef.current = currentTheme
-      dirtyRef.current = true
-    }
     const rafRef = useRef<number>(0)
     const hoverRef = useRef<HoverData | null>(null)
     const renderFnRef = useRef<() => void>(() => {})
@@ -366,6 +361,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dirtyRef.current = true
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
+
+    // Repaint canvas when ThemeProvider theme changes
+    useEffect(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }, [currentTheme, scheduleRender])
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
