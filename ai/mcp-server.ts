@@ -48,15 +48,17 @@ for (const tool of schema.tools) {
 // Returns the prop schema for a specific component, or lists all components.
 server.tool(
   "getSchema",
-  `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Use this to look up valid props before calling renderChart.`,
+  `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
   {},
   async (args: Record<string, unknown>) => {
     const component = args.component as string | undefined
 
     if (!component) {
-      const list = Object.keys(schemaByComponent).sort()
+      const all = Object.keys(schemaByComponent).sort()
+      const renderable = new Set(Object.keys(COMPONENT_REGISTRY))
+      const list = all.map(name => renderable.has(name) ? `${name} [renderable]` : name)
       return {
-        content: [{ type: "text" as const, text: `Available components (${list.length}):\n${list.join(", ")}\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+        content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart. Others (Realtime*, Geo) require a browser environment.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
       }
     }
 
@@ -69,8 +71,9 @@ server.tool(
       }
     }
 
+    const renderable = COMPONENT_REGISTRY[component] ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
     return {
-      content: [{ type: "text" as const, text: JSON.stringify(entry, null, 2) }],
+      content: [{ type: "text" as const, text: `${renderable}\n\n${JSON.stringify(entry, null, 2)}` }],
     }
   }
 )
@@ -119,8 +122,9 @@ server.tool(
       if (typeof first === "number") {
         numericFields.push(key)
       } else if (typeof first === "string") {
-        // Check for dates
-        if (!isNaN(Date.parse(first)) && /\d{4}/.test(first)) {
+        // Check for dates — require ISO-like pattern (YYYY-MM or YYYY/MM or YYYY-MM-DD, etc.)
+        // to avoid false positives on 4-digit IDs like "1234"
+        if (/^\d{4}[-/]\d{2}/.test(first) && !isNaN(Date.parse(first))) {
           dateFields.push(key)
         } else {
           stringFields.push(key)
@@ -164,7 +168,7 @@ server.tool(
       suggestions.push({
         component: "ForceDirectedGraph",
         confidence: networkFields.value ? "medium" : "high",
-        reason: `Data has ${src}→${tgt} edges — force layout shows network structure`,
+        reason: `Data has ${src}→${tgt} edges — force layout shows network structure. Nodes are auto-inferred from edges when not provided.`,
         props: { edges: "data", sourceAccessor: `"${src}"`, targetAccessor: `"${tgt}"` },
       })
     }
@@ -187,11 +191,19 @@ server.tool(
 
     // Geographic data
     if (hasGeo && (!intent || intent === "geographic")) {
+      const sizeField = numericFields.find(f => f !== geoFields.lat && f !== geoFields.lon)
       suggestions.push({
         component: "ProportionalSymbolMap",
         confidence: "high",
-        reason: `Data has ${geoFields.lat}/${geoFields.lon} coordinates — map shows spatial distribution`,
-        props: { points: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...(numericFields.find(f => f !== geoFields.lat && f !== geoFields.lon) ? { sizeBy: `"${numericFields.find(f => f !== geoFields.lat && f !== geoFields.lon)}"` } : {}) },
+        reason: `Data has ${geoFields.lat}/${geoFields.lon} coordinates — map shows spatial distribution. Import from "semiotic/geo" (not renderable via renderChart — requires browser).`,
+        props: { points: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...(sizeField ? { sizeBy: `"${sizeField}"` } : {}) },
+      })
+      // Also suggest Scatterplot as a renderable alternative
+      suggestions.push({
+        component: "Scatterplot",
+        confidence: "medium",
+        reason: `Renderable alternative to ProportionalSymbolMap — plots ${geoFields.lon}/${geoFields.lat} as x/y coordinates`,
+        props: { data: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...(sizeField ? { sizeBy: `"${sizeField}"` } : {}) },
       })
     }
 
