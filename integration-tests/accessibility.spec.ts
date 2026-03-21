@@ -513,9 +513,15 @@ test.describe("Accessibility - ChartContainer toolbar buttons", () => {
 // ─── 7. Automated axe-core accessibility scanning ───────────────────────────
 
 test.describe("Accessibility - axe-core automated scanning", () => {
+  // Wait for canvas-based charts to render before running axe scan
+  async function waitForChartsToRender(page: Page) {
+    const canvas = page.locator("canvas").first()
+    await expect(canvas).toBeVisible({ timeout: 10000 })
+  }
+
   test("no accessibility violations on XY chart examples", async ({ page }) => {
     await page.goto("/xy-examples/")
-    await page.waitForTimeout(2000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas") // canvas is opaque to axe — tested manually above
       .analyze()
@@ -524,7 +530,7 @@ test.describe("Accessibility - axe-core automated scanning", () => {
 
   test("no accessibility violations on ordinal chart examples", async ({ page }) => {
     await page.goto("/ordinal-examples/")
-    await page.waitForTimeout(2000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas")
       .analyze()
@@ -533,7 +539,7 @@ test.describe("Accessibility - axe-core automated scanning", () => {
 
   test("no accessibility violations on network chart examples", async ({ page }) => {
     await page.goto("/network-examples/")
-    await page.waitForTimeout(3000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas")
       .analyze()
@@ -542,7 +548,7 @@ test.describe("Accessibility - axe-core automated scanning", () => {
 
   test("no accessibility violations on geo chart examples", async ({ page }) => {
     await page.goto("/geo-examples/")
-    await page.waitForTimeout(2000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas")
       .analyze()
@@ -551,7 +557,7 @@ test.describe("Accessibility - axe-core automated scanning", () => {
 
   test("no accessibility violations on coordinated views examples", async ({ page }) => {
     await page.goto("/coordinated-examples/")
-    await page.waitForTimeout(2000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas")
       .analyze()
@@ -560,7 +566,7 @@ test.describe("Accessibility - axe-core automated scanning", () => {
 
   test("no accessibility violations on accessibility examples", async ({ page }) => {
     await page.goto("/accessibility-examples/")
-    await page.waitForTimeout(2000)
+    await waitForChartsToRender(page)
     const results = await new AxeBuilder({ page })
       .exclude("canvas")
       .analyze()

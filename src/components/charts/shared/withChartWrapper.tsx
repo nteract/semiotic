@@ -24,7 +24,7 @@ export function SafeRender({ componentName, width, height, props, children }: Sa
     <ChartErrorBoundary
       fallback={(error: Error) => {
         let diagnosticHint = ""
-        if (props) {
+        if (IS_DEV && props) {
           try {
             const result: DiagnosisResult = diagnoseConfig(componentName, props)
             if (!result.ok) {

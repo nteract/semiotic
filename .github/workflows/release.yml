@@ -31,9 +31,6 @@ jobs:
       - name: Build MCP server
         run: npm run build:mcp
 
-      - name: Run tests
-        run: npm test
-
       - name: Run tests with coverage
         run: npx vitest run --coverage
 
