@@ -31,6 +31,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { useThemeSelector } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/ThemeStore"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -449,6 +451,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
 
+    // Resolve foregroundGraphics / backgroundGraphics — accept ReactNode or function({ size, margin })
+    const resolvedForeground = typeof foregroundGraphics === "function"
+      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : foregroundGraphics
+    const resolvedBackground = typeof backgroundGraphics === "function"
+      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : backgroundGraphics
+
     // Determine effective hover annotation config
     const effectiveHoverAnnotation = hoverAnnotation ?? enableHover
 
@@ -458,6 +468,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
     const rafRef = useRef(0)
     const dirtyRef = useRef(false)
+
+    // Mark canvas dirty when ThemeProvider theme changes
+    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    const prevThemeRef = useRef(currentTheme)
+    if (prevThemeRef.current !== currentTheme) {
+      prevThemeRef.current = currentTheme
+      dirtyRef.current = true
+    }
+
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
     // Scales state: updated after each scene computation so SVGOverlay re-renders
@@ -1033,7 +1052,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {backgroundGraphics}
+            {resolvedBackground}
             <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
@@ -1062,7 +1081,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
-            foregroundGraphics={foregroundGraphics}
+            foregroundGraphics={resolvedForeground}
             marginalGraphics={marginalGraphics}
             xValues={[]}
             yValues={[]}
@@ -1100,7 +1119,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onKeyDown={onKeyDown}
       >
-        {backgroundGraphics && (
+        {resolvedBackground && (
           <svg
             style={{
               position: "absolute",
@@ -1111,7 +1130,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               pointerEvents: "none"
             }}
           >
-            {backgroundGraphics}
+            {resolvedBackground}
           </svg>
         )}
         <SVGUnderlay
@@ -1168,7 +1187,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
-          foregroundGraphics={foregroundGraphics}
+          foregroundGraphics={resolvedForeground}
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}
           yValues={marginalYValues}

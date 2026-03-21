@@ -37,6 +37,8 @@ import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
 import type { LineSceneNode } from "./types"
+import { useThemeSelector } from "../store/ThemeStore"
+import type { SemioticTheme } from "../store/ThemeStore"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -199,6 +201,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
 
+    const resolvedForeground = typeof foregroundGraphics === "function"
+      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : foregroundGraphics
+    const resolvedBackground = typeof backgroundGraphics === "function"
+      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : backgroundGraphics
+
     // Resolve dragRotate — defaults to true for orthographic
     const effectiveDragRotate = useMemo(() => {
       if (dragRotateProp != null) return dragRotateProp
@@ -257,6 +266,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }
     const rafRef = useRef(0)
     const dirtyRef = useRef(true)
+    // Mark canvas dirty when ThemeProvider theme changes
+    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    const prevThemeRef = useRef(currentTheme)
+    if (prevThemeRef.current !== currentTheme) {
+      prevThemeRef.current = currentTheme
+      dirtyRef.current = true
+    }
     const prevAnnotationsRef = useRef(annotations)
     const renderFnRef = useRef<() => void>(() => {})
 
@@ -966,7 +982,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {backgroundGraphics}
+            {resolvedBackground}
             <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
@@ -989,7 +1005,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
-            foregroundGraphics={foregroundGraphics}
+            foregroundGraphics={resolvedForeground}
             annotations={annotations}
             annotationFrame={0}
             xValues={[]}
@@ -1031,7 +1047,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onClick={customClickBehavior ? onClick : undefined}
       >
-        {backgroundGraphics && (
+        {resolvedBackground && (
           <svg
             style={{
               position: "absolute",
@@ -1040,7 +1056,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
               pointerEvents: "none"
             }}
           >
-            {backgroundGraphics}
+            {resolvedBackground}
           </svg>
         )}
         {tileURL && (
@@ -1075,7 +1091,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={foregroundGraphics}
+          foregroundGraphics={resolvedForeground}
           annotations={annotations}
           annotationFrame={annotationFrame}
           xValues={[]}
