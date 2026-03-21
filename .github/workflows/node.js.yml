@@ -29,14 +29,23 @@ jobs:
       - name: Build MCP server
         run: npm run build:mcp
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
 
       - name: Run type check
         run: npm run typescript
 
       - name: Check schema freshness
         run: npm run check:schema
+
+      - name: Build production bundles
+        run: npm run dist:prod
+
+      - name: Check bundle sizes
+        run: npx size-limit
+
+      - name: Run benchmarks
+        run: npx vitest bench --reporter=verbose
 
   e2e:
     runs-on: ubuntu-latest

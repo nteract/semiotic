@@ -145,4 +145,54 @@ describe("DonutChart", () => {
 
     expect(lastOrdinalFrameProps.oLabel).toBe("category")
   })
+
+  describe("push API", () => {
+    it("ref exposes push, pushMany, getData, and clear", () => {
+      const ref = React.createRef<any>()
+      render(
+        <TooltipProvider>
+          <DonutChart ref={ref} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(ref.current).toBeTruthy()
+      expect(typeof ref.current.push).toBe("function")
+      expect(typeof ref.current.pushMany).toBe("function")
+      expect(typeof ref.current.getData).toBe("function")
+      expect(typeof ref.current.clear).toBe("function")
+    })
+
+    it("push does not throw when frame ref is not connected", () => {
+      const ref = React.createRef<any>()
+      render(
+        <TooltipProvider>
+          <DonutChart ref={ref} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(() => ref.current.push({ category: "A", value: 10 })).not.toThrow()
+      expect(() => ref.current.pushMany([{ category: "B", value: 20 }])).not.toThrow()
+      expect(() => ref.current.clear()).not.toThrow()
+    })
+
+    it("getData returns empty array when frame ref is not connected", () => {
+      const ref = React.createRef<any>()
+      render(
+        <TooltipProvider>
+          <DonutChart ref={ref} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(ref.current.getData()).toEqual([])
+    })
+  })
+
+  describe("tooltip disabled", () => {
+    it("passes noop tooltip when tooltip is false", () => {
+      render(
+        <TooltipProvider>
+          <DonutChart data={sampleData} tooltip={false} />
+        </TooltipProvider>
+      )
+      expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+      expect(lastOrdinalFrameProps.tooltipContent({ category: "A", value: 10 })).toBeNull()
+    })
+  })
 })

@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test"
+import AxeBuilder from "@axe-core/playwright"
 
 // Helper function to wait for canvas-based visualization to render
 async function waitForVisualization(page: Page, testId: string, timeout = 8000) {
@@ -507,6 +508,41 @@ test.describe("Accessibility - ChartContainer toolbar buttons", () => {
 
     await expect(testCase).toContainText("Revenue Overview")
   })
+})
+
+// ─── 7. Automated axe-core accessibility scanning ───────────────────────────
+
+test.describe("Accessibility - axe-core automated scanning", () => {
+  // Wait for canvas-based charts to render before running axe scan
+  async function waitForChartsToRender(page: Page) {
+    const canvas = page.locator("canvas").first()
+    await expect(canvas).toBeVisible({ timeout: 10000 })
+  }
+
+  const axeScanRoutes = [
+    { path: "/xy-examples/", label: "XY chart examples" },
+    { path: "/ordinal-examples/", label: "ordinal chart examples" },
+    { path: "/network-examples/", label: "network chart examples" },
+    { path: "/geo-examples/", label: "geo chart examples" },
+    { path: "/coordinated-examples/", label: "coordinated views examples" },
+    { path: "/accessibility-examples/", label: "accessibility examples" },
+  ]
+
+  for (const { path, label } of axeScanRoutes) {
+    test(`no accessibility violations on ${label}`, async ({ page }) => {
+      await page.goto(path)
+      await waitForChartsToRender(page)
+      const results = await new AxeBuilder({ page })
+        .exclude("canvas") // canvas is opaque to axe — tested manually above
+        // Excluded rules:
+        // - landmark-one-main, region: test harness pages lack <main>; not a chart library concern
+        // - color-contrast: some example themes have low-contrast text (tracked separately)
+        // - nested-interactive: ChartContainer toolbar nesting (tracked separately)
+        .disableRules(["landmark-one-main", "region", "color-contrast", "nested-interactive"])
+        .analyze()
+      expect(results.violations).toEqual([])
+    })
+  }
 })
 
 // ─── Smoke test: no JS errors on page load ───────────────────────────────────

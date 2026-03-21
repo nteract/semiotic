@@ -2,9 +2,13 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes every HOC chart component as an MCP tool.
- * Accepts component props as tool arguments, renders to static SVG,
- * and returns the SVG string.
+ * Exposes two tools:
+ *   1. renderChart — renders any HOC chart to static SVG
+ *   2. diagnoseConfig — anti-pattern detector for chart configurations
+ *
+ * Previously registered 17 individual chart tools (one per HOC). These were
+ * redundant with renderChart which accepts { component, props } and handles
+ * all chart types. Consolidated to 2 tools for token efficiency.
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -25,22 +29,9 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { diagnoseConfig } from "semiotic/ai"
 
-// Load schema.json for tool definitions
+// Load schema.json for version info
 const schemaPath = path.resolve(__dirname, "../schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
-
-interface SchemaToolDef {
-  type: string
-  function: {
-    name: string
-    description: string
-    parameters: {
-      type: string
-      properties: Record<string, any>
-      required?: string[]
-    }
-  }
-}
 
 // Build MCP server
 const server = new McpServer({
@@ -48,52 +39,35 @@ const server = new McpServer({
   version: schema.version || "3.0.0",
 })
 
-// Register each chart component as a tool
-for (const toolDef of schema.tools as SchemaToolDef[]) {
-  const { name, description, parameters } = toolDef.function
-
-  // Skip realtime charts (ref-based, can't render to static SVG)
-  if (name.startsWith("Realtime")) continue
-
-  // Skip components not in registry
-  if (!COMPONENT_REGISTRY[name]) continue
-
-  // Register the tool — use raw z.any() style since we have our own validation
-  server.tool(
-    name,
-    description,
-    {},
-    async (args: Record<string, unknown>) => {
-      const result = renderHOCToSVG(name, args as Record<string, any>)
-
-      if (result.error) {
-        return {
-          content: [{ type: "text" as const, text: result.error }],
-          isError: true,
-        }
-      }
-
-      return {
-        content: [{ type: "text" as const, text: result.svg! }],
-      }
-    }
-  )
-}
-
-// ── Generic renderChart tool ─────────────────────────────────────────────
-// Accepts { component, props } — closes the agent feedback loop by letting
-// an LLM render any chart type in a single tool call.
+// ── renderChart tool ─────────────────────────────────────────────────────
+// Generic tool that renders any Semiotic HOC chart to static SVG.
+// Accepts { component, props } — the single entry point for all chart rendering.
+const componentNames = Object.keys(COMPONENT_REGISTRY).sort()
 server.tool(
   "renderChart",
-  "Render any Semiotic chart to static SVG. Pass { component: 'LineChart', props: { data: [...], ... } }. Returns SVG string or validation errors.",
+  `Render any Semiotic chart to static SVG. Pass { component: '<name>', props: { ... } }. Returns SVG string or validation errors. Available components: ${componentNames.join(", ")}.`,
   {},
   async (args: Record<string, unknown>) => {
     const component = args.component as string
-    const props = (args.props || args) as Record<string, any>
+    let props: Record<string, any>
+    if (args.props) {
+      props = args.props as Record<string, any>
+    } else {
+      // Flatten shape: { component, data, ... } — strip component before forwarding
+      const { component: _, ...rest } = args
+      props = rest as Record<string, any>
+    }
 
     if (!component) {
       return {
-        content: [{ type: "text" as const, text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+        content: [{ type: "text" as const, text: `Missing 'component' field. Provide { component: '<name>', props: { ... } }. Available: ${componentNames.join(", ")}` }],
+        isError: true,
+      }
+    }
+
+    if (!COMPONENT_REGISTRY[component]) {
+      return {
+        content: [{ type: "text" as const, text: `Unknown component "${component}". Available: ${componentNames.join(", ")}` }],
         isError: true,
       }
     }
@@ -120,7 +94,13 @@ server.tool(
   {},
   async (args: Record<string, unknown>) => {
     const component = args.component as string
-    const props = (args.props || args) as Record<string, any>
+    let props: Record<string, any>
+    if (args.props) {
+      props = args.props as Record<string, any>
+    } else {
+      const { component: _, ...rest } = args
+      props = rest as Record<string, any>
+    }
 
     if (!component) {
       return {

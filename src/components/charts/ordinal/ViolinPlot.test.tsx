@@ -204,4 +204,66 @@ describe("ViolinPlot", () => {
 
     expect(lastOrdinalFrameProps.data).toBe(newData)
   })
+
+  describe("push API", () => {
+    it("ref exposes push, pushMany, getData, and clear", () => {
+      const ref = React.createRef<any>()
+      render(
+        <TooltipProvider>
+          <ViolinPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(ref.current).toBeTruthy()
+      expect(typeof ref.current.push).toBe("function")
+      expect(typeof ref.current.pushMany).toBe("function")
+      expect(typeof ref.current.getData).toBe("function")
+      expect(typeof ref.current.clear).toBe("function")
+    })
+
+    it("push does not throw when frame ref is not connected", () => {
+      const ref = React.createRef<any>()
+      render(
+        <TooltipProvider>
+          <ViolinPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(() => ref.current.push({ category: "A", value: 10 })).not.toThrow()
+      expect(() => ref.current.clear()).not.toThrow()
+      expect(ref.current.getData()).toEqual([])
+    })
+  })
+
+  describe("tooltip", () => {
+    it("passes noop tooltip when tooltip is false", () => {
+      render(
+        <TooltipProvider>
+          <ViolinPlot data={sampleData} tooltip={false} />
+        </TooltipProvider>
+      )
+      expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+      expect(lastOrdinalFrameProps.tooltipContent({ category: "A" })).toBeNull()
+    })
+
+    it("provides default tooltipContent when tooltip is true", () => {
+      render(
+        <TooltipProvider>
+          <ViolinPlot data={sampleData} tooltip={true} />
+        </TooltipProvider>
+      )
+      expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+    })
+
+    it("uses custom tooltip function when provided", () => {
+      const customTooltip = (d: any) => <div>custom: {d.category}</div>
+      render(
+        <TooltipProvider>
+          <ViolinPlot data={sampleData} tooltip={customTooltip} />
+        </TooltipProvider>
+      )
+      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const { container } = render(<>{tooltipFn({ category: "A" })}</>)
+      expect(container.textContent).toContain("custom: A")
+    })
+  })
+
 })

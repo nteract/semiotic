@@ -2,6 +2,7 @@
 import * as React from "react"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
+import { diagnoseConfig, type DiagnosisResult } from "./diagnoseConfig"
 
 const IS_DEV = typeof process !== "undefined" && process.env?.NODE_ENV !== "production"
 
@@ -9,25 +10,42 @@ interface SafeRenderProps {
   componentName: string
   width: number
   height: number
+  chartProps?: Record<string, unknown>
   children: React.ReactNode
 }
 
 /**
  * Wraps a chart's rendered output with an error boundary.
- * If the chart throws during render, shows a visible error box
- * with the component name and error message instead of crashing the page.
+ * If the chart throws during render, runs diagnoseConfig to produce
+ * actionable fix suggestions alongside the error message.
  */
-export function SafeRender({ componentName, width, height, children }: SafeRenderProps) {
+export function SafeRender({ componentName, width, height, chartProps, children }: SafeRenderProps) {
   return (
     <ChartErrorBoundary
-      fallback={(error: Error) => (
-        <ChartError
-          componentName={componentName}
-          message={error.message}
-          width={width}
-          height={height}
-        />
-      )}
+      fallback={(error: Error) => {
+        let diagnosticHint = ""
+        if (IS_DEV && chartProps) {
+          try {
+            const result: DiagnosisResult = diagnoseConfig(componentName, chartProps as Record<string, any>)
+            if (!result.ok) {
+              diagnosticHint = result.diagnoses
+                .map(d => `${d.severity === "error" ? "✗" : "⚠"} ${d.message}${d.fix ? ` — Fix: ${d.fix}` : ""}`)
+                .join("\n")
+            }
+          } catch {
+            // diagnoseConfig should never throw, but don't let diagnostics break the error boundary
+          }
+        }
+        return (
+          <ChartError
+            componentName={componentName}
+            message={error.message}
+            diagnosticHint={diagnosticHint}
+            width={width}
+            height={height}
+          />
+        )
+      }}
     >
       {children}
     </ChartErrorBoundary>

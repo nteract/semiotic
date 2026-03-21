@@ -6,6 +6,8 @@ export interface ChartErrorProps {
   componentName: string
   /** The error message to display */
   message: string
+  /** Optional diagnostic suggestions from diagnoseConfig */
+  diagnosticHint?: string
   /** Chart width */
   width: number
   /** Chart height */
@@ -22,6 +24,7 @@ export interface ChartErrorProps {
 export default function ChartError({
   componentName,
   message,
+  diagnosticHint,
   width,
   height,
 }: ChartErrorProps) {
@@ -62,6 +65,25 @@ export default function ChartError({
         >
           {message}
         </div>
+        {diagnosticHint && (
+          <div
+            data-testid="semiotic-diagnostic-hint"
+            style={{
+              marginTop: 10,
+              padding: "8px 12px",
+              background: "rgba(128, 128, 128, 0.06)",
+              borderRadius: 4,
+              fontSize: 12,
+              color: "rgba(128, 128, 128, 0.8)",
+              fontFamily: "monospace",
+              textAlign: "left",
+              whiteSpace: "pre-wrap",
+              lineHeight: 1.6,
+            }}
+          >
+            {diagnosticHint}
+          </div>
+        )}
       </div>
     </div>
   )
