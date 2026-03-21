@@ -231,11 +231,11 @@ async function suggestChartHandler(args: { data?: any[]; intent?: string }): Pro
       })
     }
 
-    if (data.length >= 10 && (!intent || intent === "distribution")) {
+    if (!intent || intent === "distribution") {
       suggestions.push({
         component: "Histogram",
         confidence: "medium",
-        reason: `${data.length}+ data points — histogram shows value distribution`,
+        reason: `Numeric distribution of ${valField} — histogram shows value spread`,
         props: { data: "data", categoryAccessor: `"${catField}"`, valueAccessor: `"${valField}"` },
       })
     }
@@ -302,15 +302,9 @@ async function suggestChartHandler(args: { data?: any[]; intent?: string }): Pro
   }
 }
 
-async function renderChartHandler(args: { component?: string; props?: Record<string, any>; [key: string]: any }): Promise<ToolResult> {
+async function renderChartHandler(args: { component?: string; props?: Record<string, any> }): Promise<ToolResult> {
   const component = args.component
-  let props: Record<string, any>
-  if (args.props) {
-    props = args.props as Record<string, any>
-  } else {
-    const { component: _, props: _p, ...rest } = args
-    props = rest
-  }
+  const props: Record<string, any> = args.props ?? {}
 
   if (!component) {
     return {
@@ -338,15 +332,9 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   }
 }
 
-async function diagnoseConfigHandler(args: { component?: string; props?: Record<string, any>; [key: string]: any }): Promise<ToolResult> {
+async function diagnoseConfigHandler(args: { component?: string; props?: Record<string, any> }): Promise<ToolResult> {
   const component = args.component
-  let props: Record<string, any>
-  if (args.props) {
-    props = args.props as Record<string, any>
-  } else {
-    const { component: _, props: _p, ...rest } = args
-    props = rest
-  }
+  const props: Record<string, any> = args.props ?? {}
 
   if (!component) {
     return {
@@ -423,7 +411,7 @@ function createServer(): McpServer {
     "suggestChart",
     "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions. Returns ranked recommendations with example props.",
     {
-      data: z.array(z.record(z.string(), z.unknown())).describe("1-5 sample data objects"),
+      data: z.array(z.record(z.string(), z.unknown())).min(1).max(5).describe("1-5 sample data objects"),
       intent: z.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
     },
     suggestChartHandler
@@ -434,7 +422,7 @@ function createServer(): McpServer {
     `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
-      props: z.record(z.string(), z.unknown()).optional().describe("Chart props object. Alternatively, pass props as top-level fields alongside component."),
+      props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
     },
     renderChartHandler
   )
@@ -444,7 +432,7 @@ function createServer(): McpServer {
     "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, etc). Returns a human-readable diagnostic report with actionable fixes.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: z.record(z.string(), z.unknown()).optional().describe("Chart props object. Alternatively, pass props as top-level fields alongside component."),
+      props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
     },
     diagnoseConfigHandler
   )
@@ -466,7 +454,12 @@ function createServer(): McpServer {
 // ── Startup ──────────────────────────────────────────────────────────────
 const cliArgs = process.argv.slice(2)
 const httpMode = cliArgs.includes("--http")
-const port = parseInt(cliArgs[cliArgs.indexOf("--port") + 1] || "3001", 10)
+const portFlagIndex = cliArgs.indexOf("--port")
+const parsedPort =
+  portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null
+    ? parseInt(cliArgs[portFlagIndex + 1], 10)
+    : NaN
+const port = Number.isFinite(parsedPort) ? parsedPort : 3001
 
 async function main() {
   if (httpMode) {
@@ -519,7 +512,7 @@ async function main() {
     })
 
     httpServer.listen(port, () => {
-      console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}/mcp`)
+      console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
       console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue")
     })
   } else {
