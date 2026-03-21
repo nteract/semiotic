@@ -1,3 +1,8 @@
+---
+description: Semiotic React data visualization — 30+ chart types (line, bar, network, geo, streaming), push API, MCP server, TypeScript strict mode
+globs: "**/*.tsx,**/*.jsx,**/*.ts"
+---
+
 # Semiotic — AI Assistant Guide
 
 ## Quick Start
