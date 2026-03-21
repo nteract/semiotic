@@ -67,6 +67,7 @@ export default function ChartError({
         </div>
         {diagnosticHint && (
           <div
+            data-testid="semiotic-diagnostic-hint"
             style={{
               marginTop: 10,
               padding: "8px 12px",

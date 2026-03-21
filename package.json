@@ -143,19 +143,38 @@
   ],
   "license": "Apache-2.0",
   "size-limit": [
-    { "path": "dist/semiotic.module.min.js", "limit": "475 KB" },
-    { "path": "dist/xy.module.min.js", "limit": "210 KB" },
-    { "path": "dist/ordinal.module.min.js", "limit": "160 KB" },
-    { "path": "dist/network.module.min.js", "limit": "160 KB" },
-    { "path": "dist/geo.module.min.js", "limit": "135 KB" },
-    { "path": "dist/realtime.module.min.js", "limit": "250 KB" }
+    {
+      "path": "dist/semiotic.module.min.js",
+      "limit": "475 KB"
+    },
+    {
+      "path": "dist/xy.module.min.js",
+      "limit": "210 KB"
+    },
+    {
+      "path": "dist/ordinal.module.min.js",
+      "limit": "160 KB"
+    },
+    {
+      "path": "dist/network.module.min.js",
+      "limit": "160 KB"
+    },
+    {
+      "path": "dist/geo.module.min.js",
+      "limit": "135 KB"
+    },
+    {
+      "path": "dist/realtime.module.min.js",
+      "limit": "250 KB"
+    }
   ],
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.0",
+    "@axe-core/playwright": "^4.11.1",
     "@parcel/transformer-inline-string": "^2.16.4",
     "@playwright/test": "^1.17.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
+    "@size-limit/file": "^11.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.0",
     "@types/d3-array": "^3.2.0",
@@ -197,7 +216,6 @@
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-typescript2": "^0.34.1",
     "rollup-plugin-visualizer": "^7.0.0",
-    "@size-limit/file": "^11.0.0",
     "seedrandom": "^3.0.5",
     "size-limit": "^11.0.0",
     "typedoc": "^0.28.17",

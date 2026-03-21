@@ -10,7 +10,7 @@ interface SafeRenderProps {
   componentName: string
   width: number
   height: number
-  props?: Record<string, any>
+  chartProps?: Record<string, unknown>
   children: React.ReactNode
 }
 
@@ -19,14 +19,14 @@ interface SafeRenderProps {
  * If the chart throws during render, runs diagnoseConfig to produce
  * actionable fix suggestions alongside the error message.
  */
-export function SafeRender({ componentName, width, height, props, children }: SafeRenderProps) {
+export function SafeRender({ componentName, width, height, chartProps, children }: SafeRenderProps) {
   return (
     <ChartErrorBoundary
       fallback={(error: Error) => {
         let diagnosticHint = ""
-        if (IS_DEV && props) {
+        if (IS_DEV && chartProps) {
           try {
-            const result: DiagnosisResult = diagnoseConfig(componentName, props)
+            const result: DiagnosisResult = diagnoseConfig(componentName, chartProps as Record<string, any>)
             if (!result.ok) {
               diagnosticHint = result.diagnoses
                 .map(d => `${d.severity === "error" ? "✗" : "⚠"} ${d.message}${d.fix ? ` — Fix: ${d.fix}` : ""}`)

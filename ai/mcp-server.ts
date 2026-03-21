@@ -49,7 +49,14 @@ server.tool(
   {},
   async (args: Record<string, unknown>) => {
     const component = args.component as string
-    const props = (args.props || args) as Record<string, any>
+    let props: Record<string, any>
+    if (args.props) {
+      props = args.props as Record<string, any>
+    } else {
+      // Flatten shape: { component, data, ... } — strip component before forwarding
+      const { component: _, ...rest } = args
+      props = rest as Record<string, any>
+    }
 
     if (!component) {
       return {
@@ -87,7 +94,13 @@ server.tool(
   {},
   async (args: Record<string, unknown>) => {
     const component = args.component as string
-    const props = (args.props || args) as Record<string, any>
+    let props: Record<string, any>
+    if (args.props) {
+      props = args.props as Record<string, any>
+    } else {
+      const { component: _, ...rest } = args
+      props = rest as Record<string, any>
+    }
 
     if (!component) {
       return {

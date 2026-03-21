@@ -45,7 +45,7 @@ describe("SafeRender", () => {
     const badProps = { data: [], width: 600, height: 400 }
 
     const { container } = render(
-      <SafeRender componentName="BarChart" width={600} height={400} props={badProps}>
+      <SafeRender componentName="BarChart" width={600} height={400} chartProps={badProps}>
         <ThrowingChild message="render failed" />
       </SafeRender>
     )
@@ -55,11 +55,8 @@ describe("SafeRender", () => {
     expect(alert).toBeTruthy()
     expect(alert.textContent).toContain("render failed")
     // diagnoseConfig should produce a diagnostic hint (rendered in monospace panel)
-    const hintPanels = container.querySelectorAll("div[style*='monospace']")
-    const diagnosticHints = Array.from(hintPanels).filter(
-      (el) => el.textContent !== "BarChart"
-    )
-    expect(diagnosticHints.length).toBeGreaterThan(0)
+    const hintPanel = container.querySelector("[data-testid='semiotic-diagnostic-hint']")
+    expect(hintPanel).toBeTruthy()
   })
 
   it("shows error without diagnostic hint when no props are passed", () => {
@@ -94,7 +91,7 @@ describe("SafeRender", () => {
     }
 
     const { container } = render(
-      <SafeRender componentName="LineChart" width={600} height={400} props={goodProps}>
+      <SafeRender componentName="LineChart" width={600} height={400} chartProps={goodProps}>
         <ThrowingChild message="unexpected error" />
       </SafeRender>
     )
