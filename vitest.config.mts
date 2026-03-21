@@ -14,10 +14,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary'],
       thresholds: {
-        statements: 40,
-        branches: 35,
-        functions: 35,
-        lines: 40
+        statements: 62,
+        branches: 52,
+        functions: 63,
+        lines: 65
       }
     },
     benchmark: {
