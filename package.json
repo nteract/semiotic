@@ -91,7 +91,7 @@
     "bench:ui": "vitest bench --ui",
     "bench:baseline": "vitest bench --run && node scripts/save-baseline.js",
     "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
-    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html integration-tests/accessibility-examples/index.html integration-tests/geo-examples/index.html integration-tests/realtime-examples/index.html integration-tests/streaming-regression-examples/index.html --dist-dir .parcel-cache/integration-tests",
+    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html integration-tests/accessibility-examples/index.html integration-tests/geo-examples/index.html integration-tests/realtime-examples/index.html integration-tests/streaming-regression-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "dist": "node scripts/build.mjs",
     "dist:prod": "node scripts/build.mjs --production",
     "lint": "eslint src",
@@ -109,6 +109,7 @@
     "docs:api": "typedoc",
     "docs:api:json": "typedoc --json docs/build/api/api.json",
     "typescript": "tsc --noEmit",
+    "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
     "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production && npm pack --dry-run",
     "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production"
@@ -140,7 +141,16 @@
     "Susie Lu <susie.lu.shan@gmail.com>"
   ],
   "license": "Apache-2.0",
+  "size-limit": [
+    { "path": "dist/semiotic.module.min.js", "limit": "475 KB" },
+    { "path": "dist/xy.module.min.js", "limit": "210 KB" },
+    { "path": "dist/ordinal.module.min.js", "limit": "160 KB" },
+    { "path": "dist/network.module.min.js", "limit": "160 KB" },
+    { "path": "dist/geo.module.min.js", "limit": "135 KB" },
+    { "path": "dist/realtime.module.min.js", "limit": "250 KB" }
+  ],
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@parcel/transformer-inline-string": "^2.16.4",
     "@playwright/test": "^1.17.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
@@ -186,7 +196,9 @@
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-typescript2": "^0.34.1",
     "rollup-plugin-visualizer": "^7.0.0",
+    "@size-limit/file": "^11.0.0",
     "seedrandom": "^3.0.5",
+    "size-limit": "^11.0.0",
     "typedoc": "^0.28.17",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"

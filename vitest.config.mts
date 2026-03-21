@@ -10,6 +10,16 @@ export default defineConfig({
       'dist',
       'integration-tests/**'
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary'],
+      thresholds: {
+        statements: 40,
+        branches: 35,
+        functions: 35,
+        lines: 40
+      }
+    },
     benchmark: {
       include: ['benchmarks/**/*.bench.ts'],
       exclude: ['node_modules', 'dist']

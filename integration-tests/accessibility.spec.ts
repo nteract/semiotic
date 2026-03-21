@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test"
+import AxeBuilder from "@axe-core/playwright"
 
 // Helper function to wait for canvas-based visualization to render
 async function waitForVisualization(page: Page, testId: string, timeout = 8000) {
@@ -506,6 +507,64 @@ test.describe("Accessibility - ChartContainer toolbar buttons", () => {
     await expect(testCase).toBeVisible({ timeout: 5000 })
 
     await expect(testCase).toContainText("Revenue Overview")
+  })
+})
+
+// ─── 7. Automated axe-core accessibility scanning ───────────────────────────
+
+test.describe("Accessibility - axe-core automated scanning", () => {
+  test("no accessibility violations on XY chart examples", async ({ page }) => {
+    await page.goto("/xy-examples/")
+    await page.waitForTimeout(2000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas") // canvas is opaque to axe — tested manually above
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test("no accessibility violations on ordinal chart examples", async ({ page }) => {
+    await page.goto("/ordinal-examples/")
+    await page.waitForTimeout(2000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas")
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test("no accessibility violations on network chart examples", async ({ page }) => {
+    await page.goto("/network-examples/")
+    await page.waitForTimeout(3000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas")
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test("no accessibility violations on geo chart examples", async ({ page }) => {
+    await page.goto("/geo-examples/")
+    await page.waitForTimeout(2000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas")
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test("no accessibility violations on coordinated views examples", async ({ page }) => {
+    await page.goto("/coordinated-examples/")
+    await page.waitForTimeout(2000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas")
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test("no accessibility violations on accessibility examples", async ({ page }) => {
+    await page.goto("/accessibility-examples/")
+    await page.waitForTimeout(2000)
+    const results = await new AxeBuilder({ page })
+      .exclude("canvas")
+      .analyze()
+    expect(results.violations).toEqual([])
   })
 })
 

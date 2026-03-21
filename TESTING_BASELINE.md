@@ -104,5 +104,3 @@ npm run lint                      # ESLint
 ## Known Issues
 
 1. **Snapshot baselines are OS-specific** — macOS and Linux render slightly differently. CI generates Linux baselines; commit them from the artifacts if needed.
-2. **`quick-canvas-test.spec.ts`** — debug test hardcoded to port 1235, fails when not running standalone. Should be removed.
-3. **`viz-examples.spec.ts`** — looks for `svg.visualization-layer` (v2 architecture). Should be removed.
