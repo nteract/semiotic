@@ -69,6 +69,7 @@
   },
   "files": [
     "dist/*.min.js",
+    "dist/*-statisticalOverlays-*.js",
     "dist/**/*.d.ts",
     "ai/schema.json",
     "ai/system-prompt.md",
