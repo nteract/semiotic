@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2026-03-21
+
+### Fixed
+
+- **MCP server tools received no arguments** — all 5 tools used empty `{}` Zod schemas, causing the MCP SDK to strip all incoming parameters. Every tool call silently fell into "missing field" error paths. Fixed by defining proper Zod input schemas for all tools (`getSchema`, `suggestChart`, `renderChart`, `diagnoseConfig`, `reportIssue`).
+- **MCP geo chart rendering** — `renderHOCToSVG` called `validateProps` which rejected geo components not in its validation map. Geo components (ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram) now skip validation and render correctly.
+
+### Added
+
+- **MCP geo chart support** — ChoroplethMap, ProportionalSymbolMap, FlowMap, and DistanceCartogram added to the MCP render registry (25 renderable components total).
+
 ## [3.1.1] - 2026-03-21
 
 ### Added

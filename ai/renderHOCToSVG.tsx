@@ -27,9 +27,9 @@ export function renderHOCToSVG(
     }
   }
 
-  // Validate props
+  // Validate props (skip for components not in the validation map, e.g. geo)
   const validation = validateProps(componentName, props)
-  if (!validation.valid) {
+  if (!validation.valid && !validation.errors.every(e => e.startsWith("Unknown component"))) {
     return {
       svg: null,
       error: `Validation errors:\n${validation.errors.join("\n")}`,
