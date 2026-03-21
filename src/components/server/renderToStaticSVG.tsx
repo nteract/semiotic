@@ -312,7 +312,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps): string {
         <svg xmlns="http://www.w3.org/2000/svg" className="stream-network-frame" width={size[0]} height={size[1]} />
       )
     }
-    ;(config as any).__hierarchyRoot = hierarchyRoot
+    (config as any).__hierarchyRoot = hierarchyRoot
     nodes = []
     edges = []
   } else {

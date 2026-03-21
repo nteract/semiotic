@@ -17,12 +17,14 @@
   "settings": {
     "react": { "version": "detect" }
   },
+  "ignorePatterns": ["src/vendor/**"],
   "rules": {
     "no-unused-vars": "off",
     "react/prop-types": "off",
     "react/display-name": "off",
     "react/no-children-prop": "off",
-    "no-empty-function": "off"
+    "no-empty-function": "off",
+    "no-inner-declarations": "off"
   },
   "overrides": [
     {

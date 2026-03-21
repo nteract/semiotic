@@ -133,7 +133,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         edgeLookup.get(`${targetId}\0${sourceId}`)
 
       if (matchedEdge) {
-        ;(matchedEdge as any).chordData = generatedChord
+        (matchedEdge as any).chordData = generatedChord
       }
     }
   },

@@ -147,7 +147,7 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
       }
 
       // Store the d3 hierarchy node reference for edge building
-      ;(node as any).__hierarchyNode = d
+      (node as any).__hierarchyNode = d
 
       nodes.push(node)
       nodeMap.set(d, node)
