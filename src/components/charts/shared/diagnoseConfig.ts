@@ -391,6 +391,57 @@ function checkHeatmapStringAccessor(
   }
 }
 
+/** Compute relative luminance of a hex color (WCAG formula) */
+function luminance(hex: string): number | null {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
+  if (!m) return null
+  const [r, g, b] = [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255]
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
+}
+
+/** WCAG contrast ratio between two hex colors */
+function contrastRatio(hex1: string, hex2: string): number | null {
+  const l1 = luminance(hex1)
+  const l2 = luminance(hex2)
+  if (l1 === null || l2 === null) return null
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function checkColorContrast(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  // Check categorical colors against background if both are hex
+  const colors = props.colorScheme
+  if (!colors || !Array.isArray(colors)) return
+
+  // Try to determine background — explicit prop or default white/dark
+  const bg = typeof props.background === "string" ? props.background : "#ffffff"
+  if (!bg.startsWith("#")) return
+
+  const lowContrast: string[] = []
+  for (const c of colors) {
+    if (typeof c !== "string" || !c.startsWith("#")) continue
+    const ratio = contrastRatio(c, bg)
+    if (ratio !== null && ratio < 3) {
+      lowContrast.push(`${c} (${ratio.toFixed(1)}:1)`)
+    }
+  }
+
+  if (lowContrast.length > 0) {
+    out.push({
+      severity: "warning",
+      code: "LOW_COLOR_CONTRAST",
+      message: `${lowContrast.length} color(s) in colorScheme have < 3:1 contrast against background "${bg}": ${lowContrast.join(", ")}. Data marks may be hard to see.`,
+      fix: `Use darker colors on light backgrounds or lighter colors on dark backgrounds. Import COLOR_BLIND_SAFE_CATEGORICAL from "semiotic" for an accessible preset.`,
+    })
+  }
+}
+
 function checkMarginOverflow(
   _component: string,
   props: Record<string, any>,
@@ -469,6 +520,7 @@ export function diagnoseConfig(
   checkBottomMarginWithLegend(componentName, props, diagnoses)
   checkLegendMarginTight(componentName, props, diagnoses)
   checkHeatmapStringAccessor(componentName, props, diagnoses)
+  checkColorContrast(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

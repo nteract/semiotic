@@ -426,11 +426,6 @@ export default function BenchmarkDashboard() {
                 showLegend
                 legendPosition="bottom"
                 legendInteraction="isolate"
-                frameProps={{
-                  annotations: [
-                    { type: "y-threshold", value: 90, label: "90% threshold", color: T.accent },
-                  ],
-                }}
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
@@ -448,6 +443,7 @@ export default function BenchmarkDashboard() {
           >
             <Card T={T} semioticVars={semioticVars}>
               <LineChart
+                key={chartKey + "-perf-summary"}
                 data={perfLines}
                 xAccessor="size"
                 yAccessor="ms"
@@ -464,6 +460,14 @@ export default function BenchmarkDashboard() {
                 showLegend
                 legendPosition="bottom"
                 legendInteraction="isolate"
+                annotations={[
+                  { type: "y-threshold", value: 100, label: "100ms budget", color: T.red },
+                  { type: "widget", size: 10000, ms: 8449, dy: -10, content: (
+                    <span style={{ fontSize: 9, color: T.red, fontWeight: 700, whiteSpace: "nowrap" }}>
+                      8.4s
+                    </span>
+                  )},
+                ]}
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
@@ -493,6 +497,7 @@ export default function BenchmarkDashboard() {
           >
             <Card T={T} semioticVars={semioticVars}>
               <LineChart
+                key={chartKey + "-perf-detail"}
                 data={perfLines}
                 xAccessor="size"
                 yAccessor="ms"
@@ -506,6 +511,20 @@ export default function BenchmarkDashboard() {
                 curve="monotoneX"
                 showPoints
                 pointRadius={4}
+                annotations={[
+                  { type: "y-threshold", value: 16.7, label: "Frame budget (16.7ms)", color: T.green },
+                  { type: "y-threshold", value: 1000, label: "Unusable (1s+)", color: T.red },
+                  { type: "widget", size: 10000, ms: 15.8, dy: 15, content: (
+                    <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: T.card, padding: "1px 4px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                      Semiotic: constant 16ms
+                    </span>
+                  )},
+                  { type: "widget", size: 10000, ms: 8449, dy: -12, content: (
+                    <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: T.card, padding: "1px 4px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                      Nivo: 8.4 seconds
+                    </span>
+                  )},
+                ]}
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
@@ -532,6 +551,7 @@ export default function BenchmarkDashboard() {
           >
             <Card T={T} semioticVars={semioticVars}>
               <StackedBarChart
+                key={chartKey + "-caps-stack"}
                 data={capFlat}
                 categoryAccessor="library"
                 valueAccessor="count"
@@ -559,6 +579,7 @@ export default function BenchmarkDashboard() {
           >
             <Card T={T} semioticVars={semioticVars}>
               <Heatmap
+                key={chartKey + "-heatmap"}
                 data={heatmapData}
                 xAccessor="scenario"
                 yAccessor="library"
@@ -589,6 +610,7 @@ export default function BenchmarkDashboard() {
           >
             <Card T={T} semioticVars={semioticVars}>
               <GroupedBarChart
+                key={chartKey + "-caps-detail"}
                 data={scenarios.flatMap((s) =>
                   libKeys
                     .filter((lib) => s[lib] >= 50)

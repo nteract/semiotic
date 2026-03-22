@@ -84,7 +84,7 @@ async function getSchemaHandler(args) {
         const renderable = new Set(Object.keys(componentRegistry_1.COMPONENT_REGISTRY));
         const list = all.map(name => renderable.has(name) ? `${name} [renderable]` : name);
         return {
-            content: [{ type: "text", text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart. Others (Realtime*) require a browser environment.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+            content: [{ type: "text", text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
         };
     }
     const entry = schemaByComponent[component];
@@ -305,13 +305,16 @@ async function suggestChartHandler(args) {
         const propsStr = Object.entries(s.props).map(([k, v]) => `${k}=${v}`).join(" ");
         return `${i + 1}. **${s.component}** (${s.confidence} confidence)\n   ${s.reason}\n   \`<${s.component} ${propsStr} />\``;
     });
+    // Theming guidance appended to every recommendation
+    const themingTip = `\n---\n**Styling**: All charts respond to CSS custom properties on any ancestor element:\n\`\`\`css\n.my-theme {\n  --semiotic-bg: #fff;           /* chart background */\n  --semiotic-text: #333;         /* primary text */\n  --semiotic-text-secondary: #666; /* tick labels */\n  --semiotic-grid: #e0e0e0;      /* grid lines */\n  --semiotic-border: #e0e0e0;    /* axis lines, borders */\n  --semiotic-font-family: sans-serif;\n  --semiotic-tooltip-bg: rgba(0,0,0,0.85);\n  --semiotic-tooltip-text: white;\n  --semiotic-tooltip-radius: 6px;\n}\n\`\`\`\nOr use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...}, typography: {...} }}>\`.\nFor accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic\`) — 8-color palette safe for all forms of color blindness.`;
     return {
-        content: [{ type: "text", text: lines.join("\n\n") }],
+        content: [{ type: "text", text: lines.join("\n\n") + themingTip }],
     };
 }
 async function renderChartHandler(args) {
     const component = args.component;
     const props = args.props ?? {};
+    const theme = args.theme;
     if (!component) {
         return {
             content: [{ type: "text", text: `Missing 'component' field. Provide { component: '<name>', props: { ... } }. Available: ${componentNames.join(", ")}` }],
@@ -331,8 +334,19 @@ async function renderChartHandler(args) {
             isError: true,
         };
     }
+    let svg = result.svg;
+    // Wrap SVG with theme CSS custom properties if provided
+    if (theme && Object.keys(theme).length > 0) {
+        const validVars = Object.entries(theme)
+            .filter(([k]) => k.startsWith("--semiotic-"))
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("; ");
+        if (validVars) {
+            svg = `<div style="${validVars}">${svg}</div>`;
+        }
+    }
     return {
-        content: [{ type: "text", text: result.svg }],
+        content: [{ type: "text", text: svg }],
     };
 }
 async function diagnoseConfigHandler(args) {
@@ -399,11 +413,12 @@ function createServer() {
         data: zod_1.z.array(zod_1.z.record(zod_1.z.string(), zod_1.z.unknown())).min(1).max(5).describe("1-5 sample data objects"),
         intent: zod_1.z.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
     }, suggestChartHandler);
-    srv.tool("renderChart", `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Available components: ${componentNames.join(", ")}.`, {
+    srv.tool("renderChart", `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. Available components: ${componentNames.join(", ")}.`, {
         component: zod_1.z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
         props: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
+        theme: zod_1.z.record(zod_1.z.string(), zod_1.z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
     }, renderChartHandler);
-    srv.tool("diagnoseConfig", "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, etc). Returns a human-readable diagnostic report with actionable fixes.", {
+    srv.tool("diagnoseConfig", "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.", {
         component: zod_1.z.string().describe("Chart component name, e.g. 'LineChart'"),
         props: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
     }, diagnoseConfigHandler);

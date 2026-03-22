@@ -902,3 +902,96 @@ const containerRef = useRef<HTMLDivElement>(null)
 ```
 
 Key: `exportChart(wrapperDiv, { format, filename, scale, background })`. It queries the wrapper for canvas and SVG elements internally. Default format: PNG with 2x scale.
+
+---
+
+## Theming & Brand Styling
+
+### CSS Custom Properties (no React context needed)
+
+```jsx
+// Dark theme via CSS custom properties on a wrapper div
+<div style={{
+  "--semiotic-bg": "#1a1a2e",
+  "--semiotic-text": "#ededed",
+  "--semiotic-text-secondary": "#aaa",
+  "--semiotic-grid": "#333",
+  "--semiotic-border": "#555",
+  "--semiotic-font-family": "'Georgia', serif",
+  "--semiotic-tooltip-bg": "#1a1a2e",
+  "--semiotic-tooltip-text": "#ededed",
+  "--semiotic-tooltip-radius": "8px",
+  "--semiotic-tooltip-shadow": "0 4px 12px rgba(0,0,0,0.4)",
+  "--semiotic-primary": "#ff6b6b",
+  "--semiotic-focus": "#ff6b6b",
+}}>
+  <LineChart
+    data={[{ x: 1, y: 10 }, { x: 2, y: 20 }, { x: 3, y: 15 }]}
+    xAccessor="x" yAccessor="y"
+    showGrid
+    annotations={[{ type: "y-threshold", value: 18, label: "Target" }]}
+  />
+</div>
+```
+
+### ThemeProvider (React context)
+
+```jsx
+import { ThemeProvider, DARK_THEME, COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
+
+// Preset dark theme
+<ThemeProvider theme="dark">
+  <BarChart data={data} categoryAccessor="name" valueAccessor="value" />
+</ThemeProvider>
+
+// Custom brand theme (partial merge with defaults)
+<ThemeProvider theme={{
+  mode: "light",
+  colors: {
+    primary: "#cc0000",
+    categorical: ["#cc0000", "#333333", "#c8a415", "#4682b4"],
+    background: "#fafafa",
+    text: "#1a1a1a",
+    textSecondary: "#666",
+    grid: "#e0e0e0",
+    border: "#e0e0e0",
+  },
+  typography: {
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    titleSize: 16, labelSize: 12, tickSize: 10,
+  },
+  tooltip: {
+    background: "#fafafa",
+    text: "#1a1a1a",
+    borderRadius: "4px",
+  },
+}}>
+  <GroupedBarChart data={data} categoryAccessor="quarter" valueAccessor="revenue"
+    groupBy="region" colorBy="region" showGrid showLegend />
+</ThemeProvider>
+
+// Color-blind safe palette (Wong 2011 — 8 colors)
+<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  colorBy="category" colorScheme={COLOR_BLIND_SAFE_CATEGORICAL} />
+```
+
+### Annotations with Theme Colors
+
+```jsx
+// Annotations inherit --semiotic-primary and --semiotic-text-secondary from theme
+<LineChart
+  data={salesData}
+  xAccessor="month" yAccessor="revenue"
+  annotations={[
+    // Threshold line — defaults to --semiotic-primary if no color set
+    { type: "y-threshold", value: 50000, label: "Q3 Target" },
+    // Widget annotation at specific data point
+    { type: "widget", month: "Jul", revenue: 72000, dy: -15, content: (
+      <span style={{ fontSize: 11, fontWeight: 700 }}>Record month</span>
+    )},
+    // Enclose a cluster of outliers
+    { type: "enclose", coordinates: outlierPoints, label: "Outlier cluster", padding: 15 },
+  ]}
+  showGrid
+/>
+```
