@@ -98,8 +98,7 @@ const navData = [
       { title: "Composition", path: "/features/composition" },
       { title: "Accessibility", path: "/features/accessibility" },
       { title: "Linked Charts", path: "/features/linked-charts" },
-      { title: "Styling", path: "/features/styling" },
-      { title: "Theming", path: "/features/theming" },
+      { title: "Canvas Rendering", path: "/features/canvas-rendering" },
       { title: "Legends", path: "/features/legends" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
       { title: "Chart Container", path: "/features/chart-container" },
@@ -109,6 +108,15 @@ const navData = [
       { title: "Serialization", path: "/features/serialization" },
       { title: "Vega-Lite Translator", path: "/features/vega-lite" },
       { title: "Streaming System Model", path: "/features/streaming-system-model" }
+    ]
+  },
+  {
+    title: "Theming",
+    path: "/theming",
+    children: [
+      { title: "Styling", path: "/theming/styling" },
+      { title: "Theme Provider", path: "/theming/theme-provider" },
+      { title: "Theme Explorer", path: "/theming/theme-explorer" }
     ]
   },
   {

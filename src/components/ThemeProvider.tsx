@@ -8,13 +8,19 @@ import {
   HIGH_CONTRAST_THEME
 } from "./store/ThemeStore"
 import type { SemioticTheme } from "./store/ThemeStore"
+import { resolveThemePreset } from "./semiotic-themes"
+import type { ThemePresetName } from "./semiotic-themes"
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
 interface ThemeProviderProps {
-  theme?: "light" | "dark" | "high-contrast" | Partial<SemioticTheme>
+  /** Theme preset name (e.g. "tufte", "pastels-dark", "bi-tool") or a partial SemioticTheme object. */
+  theme?: ThemePresetName | Partial<SemioticTheme>
   children: React.ReactNode
 }
+
+// Track the active preset name for the data-semiotic-theme attribute.
+const ThemeNameContext = React.createContext<string | undefined>(undefined)
 
 // ── ThemeInitializer ────────────────────────────────────────────────────────
 // Calls setTheme on mount to sync the store with the prop value.
@@ -22,14 +28,25 @@ interface ThemeProviderProps {
 function ThemeInitializer({
   theme
 }: {
-  theme?: "light" | "dark" | "high-contrast" | Partial<SemioticTheme>
+  theme?: ThemePresetName | Partial<SemioticTheme>
 }) {
   const setTheme = useThemeSelector(
     (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void }) => state.setTheme
   )
 
   React.useEffect(() => {
-    if (theme !== undefined) {
+    if (theme === undefined) return
+
+    if (typeof theme === "string") {
+      // Try named preset first (covers "light", "dark", "high-contrast", "tufte", etc.)
+      const preset = resolveThemePreset(theme)
+      if (preset) {
+        setTheme(preset as any)
+      } else {
+        // Fallback for the three built-in string presets
+        setTheme(theme as "light" | "dark" | "high-contrast")
+      }
+    } else {
       setTheme(theme)
     }
   }, [theme, setTheme])
@@ -65,16 +82,29 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.colors.diverging ? { "--semiotic-diverging": theme.colors.diverging } : {}),
   }
 
-  return <div style={style}>{children}</div>
+  const themeName = React.useContext(ThemeNameContext)
+  const dataAttrs: Record<string, string> = {}
+  if (themeName) {
+    dataAttrs["data-semiotic-theme"] = themeName
+  }
+
+  return <div style={style} {...dataAttrs}>{children}</div>
 }
 
 // ── ThemeProvider (public) ──────────────────────────────────────────────────
 
 function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
+  // Resolve the preset name for the data-semiotic-theme attribute.
+  // If `theme` is a string that maps to a known preset, use it directly.
+  // Otherwise leave undefined (custom object themes don't get a data attribute).
+  const themeName = typeof theme === "string" ? theme : undefined
+
   return (
     <StoreProvider>
-      <ThemeInitializer theme={theme} />
-      <ThemeCSSWrapper>{children}</ThemeCSSWrapper>
+      <ThemeNameContext.Provider value={themeName}>
+        <ThemeInitializer theme={theme} />
+        <ThemeCSSWrapper>{children}</ThemeCSSWrapper>
+      </ThemeNameContext.Provider>
     </StoreProvider>
   )
 }

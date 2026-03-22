@@ -407,6 +407,75 @@ async function reportIssueHandler(args: { title?: string; body?: string; labels?
   }
 }
 
+// Named theme presets (inlined to avoid runtime dependency on semiotic-themes bundle)
+const THEME_PRESET_NAMES = [
+  "light", "dark", "high-contrast",
+  "pastels", "pastels-dark",
+  "bi-tool", "bi-tool-dark",
+  "italian", "italian-dark",
+  "tufte", "tufte-dark",
+  "journalist", "journalist-dark",
+  "playful", "playful-dark",
+]
+
+async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
+  const name = args.name
+
+  if (!name) {
+    return {
+      content: [{ type: "text" as const, text: `Available theme presets:\n${THEME_PRESET_NAMES.join(", ")}\n\nPass { name: "tufte" } to get the CSS custom properties and ThemeProvider usage for that theme.\n\nLight-mode presets: ${THEME_PRESET_NAMES.filter(n => !n.includes("dark")).join(", ")}\nDark-mode presets: ${THEME_PRESET_NAMES.filter(n => n.includes("dark")).join(", ")}` }],
+    }
+  }
+
+  if (!THEME_PRESET_NAMES.includes(name)) {
+    return {
+      content: [{ type: "text" as const, text: `Unknown theme "${name}". Available: ${THEME_PRESET_NAMES.join(", ")}` }],
+      isError: true,
+    }
+  }
+
+  const usage = [
+    `## Theme: "${name}"`,
+    "",
+    "### Option 1: ThemeProvider (recommended)",
+    "```jsx",
+    `import { ThemeProvider } from "semiotic"`,
+    `<ThemeProvider theme="${name}">`,
+    `  <LineChart ... />`,
+    `</ThemeProvider>`,
+    "```",
+    "",
+    "### Option 2: Import the theme object",
+    "```jsx",
+    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
+    `<ThemeProvider theme={themeObject}>`,
+    `  <BarChart ... />`,
+    `</ThemeProvider>`,
+    "```",
+    "",
+    "### Option 3: CSS custom properties (no React required)",
+    "```jsx",
+    `import { themeToCSS } from "semiotic/themes"`,
+    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
+    `const css = themeToCSS(themeObject, ".my-charts")`,
+    "// Outputs CSS custom properties string for embedding in a stylesheet",
+    "```",
+    "",
+    "### Option 4: Design tokens JSON",
+    "```jsx",
+    `import { themeToTokens } from "semiotic/themes"`,
+    `const tokens = themeToTokens(themeObject)`,
+    "// Style Dictionary / DTCG-compatible token format",
+    "```",
+    "",
+    "For accessibility, consider `\"high-contrast\"` which uses `COLOR_BLIND_SAFE_CATEGORICAL` (Wong 2011 palette).",
+  ]
+
+  return {
+    content: [{ type: "text" as const, text: usage.join("\n") }],
+  }
+}
+
 // ── Server factory ───────────────────────────────────────────────────────
 // Creates a fresh McpServer with all tools registered.
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
@@ -465,6 +534,15 @@ function createServer(): McpServer {
       labels: z.union([z.array(z.string()), z.string()]).optional().describe("GitHub labels, e.g. ['bug'] or 'bug'"),
     },
     reportIssueHandler
+  )
+
+  srv.tool(
+    "applyTheme",
+    `Get usage instructions for a named Semiotic theme preset. Returns ThemeProvider examples, CSS custom properties, and design token export patterns. Available themes: ${THEME_PRESET_NAMES.join(", ")}.`,
+    {
+      name: z.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes."),
+    },
+    applyThemeHandler
   )
 
   return srv

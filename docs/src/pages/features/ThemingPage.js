@@ -49,11 +49,11 @@ const lineData = [
 const themeProviderProps = [
   {
     name: "theme",
-    type: '"light" | "dark" | Partial<SemioticTheme>',
+    type: 'ThemePresetName | Partial<SemioticTheme>',
     required: false,
     default: '"light"',
     description:
-      'Pass "light" or "dark" for built-in presets, or a partial theme object to customize specific values. Partial objects are merged with the current theme.',
+      'Pass a named preset string ("light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark") or a partial theme object. Partial objects are merged with the current theme.',
   },
   {
     name: "children",
@@ -246,11 +246,11 @@ export default function ThemingPage() {
     <PageLayout
       title="Theming"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Theming", path: "/features/theming" },
+        { label: "Theming", path: "/theming" },
+        { label: "Theme Provider", path: "/theming/theme-provider" },
       ]}
-      prevPage={{ title: "Styling", path: "/features/styling" }}
-      nextPage={{ title: "Legends", path: "/features/legends" }}
+      prevPage={{ title: "Styling", path: "/theming/styling" }}
+      nextPage={{ title: "Theme Explorer", path: "/theming/theme-explorer" }}
     >
       <p>
         The <code>ThemeProvider</code> component applies consistent colors,
@@ -307,17 +307,27 @@ export default function ThemingPage() {
       <h2 id="presets">Built-in Presets</h2>
 
       <p>
-        Semiotic ships with two theme presets. You can also import them directly
-        to inspect or extend:
+        Semiotic ships with 15 named theme presets. Pass any preset name as a
+        string to ThemeProvider. You can also import theme objects directly to
+        inspect or extend:
       </p>
 
       <CodeBlock
-        code={`import { LIGHT_THEME, DARK_THEME } from "semiotic"
+        code={`import { ThemeProvider } from "semiotic"
 
-// Extend the dark theme with a custom primary color
+// Named preset (15 options: "light", "dark", "high-contrast",
+// "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool",
+// "bi-tool-dark", "italian", "italian-dark", "journalist",
+// "journalist-dark", "playful", "playful-dark")
+<ThemeProvider theme="tufte">
+  {/* charts */}
+</ThemeProvider>
+
+// Extend a preset with custom overrides
+import { TUFTE_LIGHT } from "semiotic/themes"
 <ThemeProvider theme={{
-  ...DARK_THEME,
-  colors: { ...DARK_THEME.colors, primary: "#ff6b6b" }
+  ...TUFTE_LIGHT,
+  colors: { ...TUFTE_LIGHT.colors, primary: "#ff6b6b" }
 }}>
   {/* charts */}
 </ThemeProvider>`}
@@ -401,13 +411,23 @@ export default function ThemingPage() {
 
       <CodeBlock
         code={`/* Available CSS custom properties */
---semiotic-bg          /* colors.background */
---semiotic-text        /* colors.text */
---semiotic-text-secondary  /* colors.textSecondary */
---semiotic-grid        /* colors.grid */
---semiotic-border      /* colors.border */
---semiotic-primary     /* colors.primary */
---semiotic-font-family /* typography.fontFamily */`}
+--semiotic-bg                /* colors.background */
+--semiotic-text              /* colors.text */
+--semiotic-text-secondary    /* colors.textSecondary */
+--semiotic-grid              /* colors.grid */
+--semiotic-border            /* colors.border */
+--semiotic-primary           /* colors.primary */
+--semiotic-focus             /* colors.focus */
+--semiotic-font-family       /* typography.fontFamily */
+--semiotic-border-radius     /* borderRadius */
+--semiotic-tooltip-bg        /* tooltip.background */
+--semiotic-tooltip-text      /* tooltip.text */
+--semiotic-tooltip-radius    /* tooltip.borderRadius */
+--semiotic-tooltip-font-size /* tooltip.fontSize */
+--semiotic-tooltip-shadow    /* tooltip.shadow */
+--semiotic-selection-color   /* colors.selection */
+--semiotic-selection-opacity /* colors.selectionOpacity */
+--semiotic-diverging         /* colors.diverging */`}
         language="css"
       />
 
@@ -513,15 +533,19 @@ function ChartTitle({ text }) {
 
       <ul>
         <li>
-          <Link to="/features/styling">Styling</Link> — per-mark styling,
+          <Link to="/theming/styling">Styling</Link> — per-mark styling,
           sketchy rendering, SVG patterns and gradients
+        </li>
+        <li>
+          <Link to="/theming/theme-explorer">Theme Explorer</Link> — interactive
+          CSS variable playground with all 15 presets
         </li>
         <li>
           <Link to="/features/legends">Legends</Link> — automatic legends
           that respect theme colors
         </li>
         <li>
-          <Link to="/features/small-multiples">Linked Charts</Link> — coordinated
+          <Link to="/features/linked-charts">Linked Charts</Link> — coordinated
           views that share a theme
         </li>
       </ul>

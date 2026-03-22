@@ -285,11 +285,133 @@ const svg = renderOrdinalToStaticSVG({
 ```
 
 ## Annotations
-- `type: "widget"` — place any React element at data coordinates. Works on all frame types. XY/ordinal use data coordinates (`x`/`y` or field names). Network/orbit use `nodeId`. Default: info emoji. Renders as HTML overlay (not SVG) so popups/threads overflow freely.
+All HOC charts accept an `annotations` prop (array). Annotation types:
+- `type: "widget"` — place any React element at data coordinates. XY/ordinal use data field names (`month`, `revenue`). Network/orbit use `nodeId`. Renders as HTML overlay (not SVG).
+- `type: "y-threshold"` — horizontal line at a y value. Props: `value` (number), `label` (string), `color`. Great for budgets, targets, SLA lines.
+- `type: "x-threshold"` — vertical line at an x value. Same props as y-threshold.
+- `type: "enclose"` — circle enclosing a set of data points. Props: `coordinates` (array of data objects), `label`, `color`, `padding`.
+- `type: "rect-enclose"` — rectangle enclosing a set of data points. Same props as enclose.
+
+Annotation colors respect theme: threshold fills default to `--semiotic-primary`, enclosure strokes default to `--semiotic-text-secondary`.
+
 ```jsx
-annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlertButton /> }]}
-// OrbitDiagram: annotations={[{ type: "widget", nodeId: "Pipeline", content: <Alert /> }]}
+// Threshold line + callout widget
+<LineChart data={data} xAccessor="time" yAccessor="latency"
+  annotations={[
+    { type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050" },
+    { type: "widget", time: 42, latency: 850, dy: -10, content: <span>Incident</span> },
+  ]} />
+// Enclose outlier cluster
+<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  annotations={[{ type: "enclose", coordinates: outliers, label: "Outliers", color: "#888" }]} />
 ```
+
+## Theming & Brand Styling
+
+Semiotic charts are fully themeable via CSS custom properties. Set them on any ancestor element and all charts underneath respond — no React context required.
+
+### CSS Custom Properties
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `--semiotic-bg` | Chart/card background | `#fff` |
+| `--semiotic-text` | Primary text (axis labels, titles) | `#333` |
+| `--semiotic-text-secondary` | Secondary text (tick labels, captions) | `#666` |
+| `--semiotic-border` | Axis baselines, card borders | `#ccc` |
+| `--semiotic-grid` | Grid lines | `#e0e0e0` |
+| `--semiotic-primary` | Accent color (annotation fills, active states) | `#6366f1` |
+| `--semiotic-focus` | Keyboard focus rings | `#005fcc` |
+| `--semiotic-font-family` | Typography (axes, legends, ChartContainer) | `sans-serif` |
+| `--semiotic-border-radius` | ChartContainer corner radius | `8px` |
+| `--semiotic-tooltip-bg` | Tooltip background | `rgba(0,0,0,0.85)` |
+| `--semiotic-tooltip-text` | Tooltip text color | `white` |
+| `--semiotic-tooltip-radius` | Tooltip corner radius | `6px` |
+| `--semiotic-tooltip-font-size` | Tooltip font size | `14px` |
+| `--semiotic-tooltip-shadow` | Tooltip box shadow | `0 2px 8px rgba(0,0,0,0.15)` |
+| `--semiotic-selection-color` | Linked hover/selection highlight color | (none) |
+| `--semiotic-selection-opacity` | Non-selected element dimming (0–1) | `0.2` |
+| `--semiotic-diverging` | Diverging color scheme name (e.g. "RdBu") | (none) |
+
+### ThemeProvider (React context)
+
+```jsx
+import { ThemeProvider, LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "semiotic"
+
+// Use a preset
+<ThemeProvider theme="dark">
+  <LineChart ... />
+</ThemeProvider>
+
+// High-contrast preset (uses COLOR_BLIND_SAFE_CATEGORICAL palette)
+<ThemeProvider theme="high-contrast">
+  <LineChart ... />
+</ThemeProvider>
+
+// Custom theme (partial — merges with defaults)
+<ThemeProvider theme={{
+  mode: "dark",
+  colors: {
+    primary: "#ff6b6b",
+    categorical: ["#3a86c8", "#e45050", "#d4a843", "#888"],
+    diverging: "RdBu",
+    background: "#1a1a2e",
+    text: "#ededed",
+    textSecondary: "#aaa",
+    grid: "#333",
+    border: "#555",
+    selection: "#ff6b6b",
+    selectionOpacity: 0.15,
+  },
+  typography: { fontFamily: "Georgia, serif" },
+  tooltip: { background: "#1a1a2e", text: "#ededed", borderRadius: "8px" },
+}}>
+  <BarChart ... />
+</ThemeProvider>
+```
+
+### Theming without React (CSS-only)
+
+```css
+/* Dark mode for all Semiotic charts */
+.my-dashboard {
+  --semiotic-bg: #1a1a2e;
+  --semiotic-text: #ededed;
+  --semiotic-text-secondary: #aaa;
+  --semiotic-grid: #333;
+  --semiotic-border: #555;
+  --semiotic-font-family: 'Georgia', serif;
+  --semiotic-tooltip-bg: #1a1a2e;
+  --semiotic-tooltip-text: #ededed;
+}
+```
+
+### Color-Blind Safe Palette
+
+```jsx
+import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
+// 8-color Wong (2011) palette: safe for deuteranopia, protanopia, tritanopia
+<LineChart colorScheme={COLOR_BLIND_SAFE_CATEGORICAL} ... />
+```
+
+### CategoryColorProvider (cross-chart consistency)
+
+```jsx
+import { CategoryColorProvider, LinkedCharts } from "semiotic"
+<CategoryColorProvider categories={["North", "South"]} colorScheme={["#3a86c8", "#e45050"]}>
+  <LinkedCharts>
+    <LineChart colorBy="region" ... />
+    <BarChart colorBy="region" ... />
+  </LinkedCharts>
+</CategoryColorProvider>
+```
+
+### Key Points
+- CSS custom properties work with SSR — set them in your CSS file, no JS required
+- `ThemeProvider` sets CSS vars on a wrapper div — it does NOT use React context for styling
+- Canvas-rendered charts read `--semiotic-bg` via `getComputedStyle` at paint time
+- Tooltip chrome is fully themeable — override any `--semiotic-tooltip-*` variable
+- Annotation colors inherit from theme tokens (primary, text-secondary) unless explicitly set
+- `exportChart` inlines computed styles so exports match the themed appearance
 
 ## Server-Side Rendering
 - All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
@@ -305,7 +427,7 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX` — chart state serialization
 - `DetailsPanel` — click-driven detail panel inside `ChartContainer`
 - `validateProps(componentName, props)` — prop validation with Levenshtein typo suggestions
-- `diagnoseConfig(componentName, props)` — anti-pattern detector (12 checks: empty data, bad dimensions, missing accessors, margin overflow, etc.)
+- `diagnoseConfig(componentName, props)` — anti-pattern detector (13+ checks: empty data, bad dimensions, missing accessors, margin overflow, contrast ratio, etc.)
 - `ChartErrorBoundary` — error boundary
 - `exportChart(containerDiv, { format: "png"|"svg" })` — pass the **wrapper div** (not the SVG element); it finds canvas + SVG internally. Default: PNG, composites canvas + SVG layers
 - `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
@@ -333,4 +455,4 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 **`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
 
 ## Differentiators
-Network viz, geographic viz (choropleth, flow maps, distance cartograms), streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, global theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend
+Network viz, geographic viz (choropleth, flow maps, distance cartograms), streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, CSS custom property theming (17 tokens), ThemeProvider + CSS-only theming, color-blind safe palettes, tooltip theming, annotation theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend

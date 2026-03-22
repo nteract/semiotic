@@ -100,14 +100,14 @@ export default function StylingPage() {
     <PageLayout
       title="Styling"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Styling", path: "/features/styling" },
+        { label: "Theming", path: "/theming" },
+        { label: "Styling", path: "/theming/styling" },
       ]}
       prevPage={{
         title: "Linked Charts",
-        path: "/features/small-multiples",
+        path: "/features/linked-charts",
       }}
-      nextPage={{ title: "Theming", path: "/features/theming" }}
+      nextPage={{ title: "Theme Provider", path: "/theming/theme-provider" }}
     >
       <p>
         Semiotic provides multiple layers of styling control, from simple inline

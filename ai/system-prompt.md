@@ -97,11 +97,9 @@ All charts respond to CSS custom properties on any ancestor:
   --semiotic-tooltip-radius: 8px;
 }
 ```
-Or use ThemeProvider: `<ThemeProvider theme="dark">` / `<ThemeProvider theme="high-contrast">` / `<ThemeProvider theme={{ colors: {...}, typography: {...}, tooltip: {...} }}>`.
+Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"tufte-dark"`, `"pastels"`, `"bi-tool"`, `"italian"`, `"journalist"`, `"playful"` (each with `-dark` variant), `"dark"`, `"high-contrast"`.
 
-Additional CSS vars: `--semiotic-selection-opacity` (dims non-selected elements, default 0.2), `--semiotic-selection-color`, `--semiotic-diverging` (scheme name like "RdBu").
-
-Theme presets: `LIGHT_THEME`, `DARK_THEME`, `HIGH_CONTRAST_THEME` (uses `COLOR_BLIND_SAFE_CATEGORICAL`). Import from `semiotic`.
+`semiotic/themes` entry point: `themeToCSS(theme, selector)` generates CSS string, `themeToTokens(theme)` generates DTCG design tokens, `resolveThemePreset("tufte")` returns theme object by name. Theme objects: `TUFTE_LIGHT`, `TUFTE_DARK`, `PASTELS_LIGHT`, `BI_TOOL_LIGHT`, `ITALIAN_LIGHT`, `JOURNALIST_LIGHT`, `PLAYFUL_LIGHT`, etc.
 
 `COLOR_BLIND_SAFE_CATEGORICAL` — 8-color accessible palette (Wong 2011). Import from `semiotic`.
 
