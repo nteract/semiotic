@@ -255,7 +255,7 @@ export type {
 // ── Theme types ────────────────────────────────────────────────────────
 
 export type { SemioticTheme } from "./ThemeProvider"
-export { LIGHT_THEME, DARK_THEME } from "./ThemeProvider"
+export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeProvider"
 export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/ThemeStore"
 
 // ── Error boundary types ───────────────────────────────────────────────

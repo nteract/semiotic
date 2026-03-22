@@ -4,14 +4,15 @@ import {
   ThemeProvider as StoreProvider,
   useThemeSelector,
   LIGHT_THEME,
-  DARK_THEME
+  DARK_THEME,
+  HIGH_CONTRAST_THEME
 } from "./store/ThemeStore"
 import type { SemioticTheme } from "./store/ThemeStore"
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
 interface ThemeProviderProps {
-  theme?: "light" | "dark" | Partial<SemioticTheme>
+  theme?: "light" | "dark" | "high-contrast" | Partial<SemioticTheme>
   children: React.ReactNode
 }
 
@@ -21,10 +22,10 @@ interface ThemeProviderProps {
 function ThemeInitializer({
   theme
 }: {
-  theme?: "light" | "dark" | Partial<SemioticTheme>
+  theme?: "light" | "dark" | "high-contrast" | Partial<SemioticTheme>
 }) {
   const setTheme = useThemeSelector(
-    (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark") => void }) => state.setTheme
+    (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void }) => state.setTheme
   )
 
   React.useEffect(() => {
@@ -59,6 +60,9 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.tooltip?.fontSize ? { "--semiotic-tooltip-font-size": theme.tooltip.fontSize } : {}),
     ...(theme.tooltip?.shadow ? { "--semiotic-tooltip-shadow": theme.tooltip.shadow } : {}),
     ...(theme.borderRadius ? { "--semiotic-border-radius": theme.borderRadius } : {}),
+    ...(theme.colors.selection ? { "--semiotic-selection-color": theme.colors.selection } : {}),
+    ...(theme.colors.selectionOpacity != null ? { "--semiotic-selection-opacity": String(theme.colors.selectionOpacity) } : {}),
+    ...(theme.colors.diverging ? { "--semiotic-diverging": theme.colors.diverging } : {}),
   }
 
   return <div style={style}>{children}</div>
@@ -84,5 +88,5 @@ function useTheme(): SemioticTheme {
 // ── Exports ─────────────────────────────────────────────────────────────────
 
 export { ThemeProviderWrapper as ThemeProvider, useTheme }
-export { LIGHT_THEME, DARK_THEME }
+export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME }
 export type { SemioticTheme }

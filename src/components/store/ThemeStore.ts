@@ -9,12 +9,18 @@ export interface SemioticTheme {
     primary: string
     categorical: string[]
     sequential: string
+    /** d3-scale-chromatic diverging scheme name, e.g. "RdBu", "PiYG" */
+    diverging?: string
     background: string
     text: string
     textSecondary: string
     grid: string
     border: string
     focus?: string
+    /** Linked hover/selection highlight color */
+    selection?: string
+    /** Opacity for non-selected (dimmed) elements, 0–1 */
+    selectionOpacity?: number
   }
   typography: {
     fontFamily: string
@@ -96,24 +102,59 @@ export const DARK_THEME: SemioticTheme = {
   }
 }
 
+export const HIGH_CONTRAST_THEME: SemioticTheme = {
+  mode: "light",
+  colors: {
+    primary: "#0000cc",
+    categorical: COLOR_BLIND_SAFE_CATEGORICAL,
+    sequential: "blues",
+    diverging: "RdBu",
+    background: "#ffffff",
+    text: "#000000",
+    textSecondary: "#333333",
+    grid: "#999999",
+    border: "#000000",
+    focus: "#0000cc",
+    selection: "#0000cc",
+    selectionOpacity: 0.1,
+  },
+  typography: {
+    fontFamily: "system-ui, sans-serif",
+    titleSize: 18,
+    labelSize: 14,
+    tickSize: 12,
+  },
+  tooltip: {
+    background: "#000000",
+    text: "#ffffff",
+    borderRadius: "4px",
+    fontSize: "14px",
+    shadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+  },
+  borderRadius: "4px",
+}
+
 // ── Store ───────────────────────────────────────────────────────────────────
 
 export interface ThemeStoreState {
   theme: SemioticTheme
-  setTheme: (theme: Partial<SemioticTheme> | "light" | "dark") => void
+  setTheme: (theme: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void
 }
 
 export const [ThemeProvider, useThemeSelector] = createStore(
   (set: Function) => ({
     theme: LIGHT_THEME,
 
-    setTheme(theme: Partial<SemioticTheme> | "light" | "dark") {
+    setTheme(theme: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") {
       set((current: ThemeStoreState) => {
         if (theme === "light") {
           return { theme: LIGHT_THEME }
         }
         if (theme === "dark") {
           return { theme: DARK_THEME }
+        }
+        if (theme === "high-contrast") {
+          return { theme: HIGH_CONTRAST_THEME }
         }
         return {
           theme: {
