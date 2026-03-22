@@ -1,21 +1,96 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { GroupedBarChart, LineChart, BarChart, Heatmap, StackedBarChart } from "semiotic"
 
-// ── Color palette ───────────────────────────────────────────────────────
-const LC = {
-  semiotic: "#818cf8",
-  nivo: "#34d399",
-  recharts: "#fbbf24",
-  plot: "#f472b6",
+// ── Themes ──────────────────────────────────────────────────────────────
+const THEMES = {
+  pastels: {
+    label: "Pastels",
+    fontFamily: "Inter, system-ui, sans-serif",
+    light: {
+      bg: "#fdf6f0", card: "#fff5ee", border: "#e8d5c4", text: "#4a3728",
+      muted: "#8b7355", dim: "#b09a7e", accent: "#c9a0dc", green: "#88d4ab", red: "#e8a0a0",
+    },
+    dark: {
+      bg: "#1a1525", card: "#251e35", border: "#3d3455", text: "#e8ddf0",
+      muted: "#a899c0", dim: "#7b6e95", accent: "#c9a0dc", green: "#88d4ab", red: "#e8a0a0",
+    },
+    categorical: ["#f0a0c0", "#88d4ab", "#b0a0e8", "#f0c888"],
+  },
+  biTool: {
+    label: "BI Tool",
+    fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+    light: {
+      bg: "#f5f6f8", card: "#ffffff", border: "#d8dce3", text: "#2c3e50",
+      muted: "#7f8c9b", dim: "#a0aab5", accent: "#2563eb", green: "#16a34a", red: "#dc2626",
+    },
+    dark: {
+      bg: "#111827", card: "#1f2937", border: "#374151", text: "#f3f4f6",
+      muted: "#9ca3af", dim: "#6b7280", accent: "#3b82f6", green: "#22c55e", red: "#ef4444",
+    },
+    categorical: ["#2563eb", "#0d9488", "#ea580c", "#6b7280"],
+  },
+  italian: {
+    label: "Italian Designer",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    light: {
+      bg: "#fafafa", card: "#ffffff", border: "#e0e0e0", text: "#1a1a1a",
+      muted: "#666666", dim: "#999999", accent: "#cc0000", green: "#2e7d32", red: "#cc0000",
+    },
+    dark: {
+      bg: "#0a0a0a", card: "#1a1a1a", border: "#333333", text: "#f5f5f5",
+      muted: "#aaaaaa", dim: "#777777", accent: "#ff3333", green: "#4caf50", red: "#ff3333",
+    },
+    categorical: ["#cc0000", "#333333", "#c8a415", "#4682b4"],
+  },
+  tufte: {
+    label: "Tufte",
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    light: {
+      bg: "#fffff8", card: "#fffff8", border: "#e0ddd0", text: "#111111",
+      muted: "#555555", dim: "#888888", accent: "#8b0000", green: "#556b2f", red: "#8b0000",
+    },
+    dark: {
+      bg: "#1c1b18", card: "#262520", border: "#3d3c35", text: "#e8e4d8",
+      muted: "#a09880", dim: "#706858", accent: "#c05050", green: "#7a8b5a", red: "#c05050",
+    },
+    categorical: ["#8b4513", "#556b2f", "#4a5568", "#800020"],
+  },
+  journalist: {
+    label: "Data Journalist",
+    fontFamily: "'Franklin Gothic Medium', 'Libre Franklin', Arial, sans-serif",
+    light: {
+      bg: "#ffffff", card: "#f8f8f8", border: "#d4d4d4", text: "#222222",
+      muted: "#666666", dim: "#999999", accent: "#e45050", green: "#2a9d8f", red: "#e45050",
+    },
+    dark: {
+      bg: "#141414", card: "#1e1e1e", border: "#383838", text: "#ededed",
+      muted: "#a0a0a0", dim: "#707070", accent: "#ff6b6b", green: "#40c9a2", red: "#ff6b6b",
+    },
+    categorical: ["#3a86c8", "#e45050", "#d4a843", "#888888"],
+  },
+  playful: {
+    label: "Playful",
+    fontFamily: "'Nunito', 'Poppins', system-ui, sans-serif",
+    light: {
+      bg: "#fdf8ff", card: "#ffffff", border: "#e8d0f8", text: "#2d1b4e",
+      muted: "#7c5a9e", dim: "#a888c8", accent: "#8b5cf6", green: "#06d6a0", red: "#ff6b6b",
+    },
+    dark: {
+      bg: "#150a28", card: "#1f1138", border: "#3a2560", text: "#f0e8ff",
+      muted: "#b8a0d8", dim: "#8068a8", accent: "#a78bfa", green: "#06d6a0", red: "#ff6b6b",
+    },
+    categorical: ["#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"],
+  },
 }
-// Color array matching the library key order in data
-const libColors = [LC.semiotic, LC.nivo, LC.recharts, LC.plot]
+
+// ── Library names ────────────────────────────────────────────────────────
 const LN = {
   semiotic: "Semiotic v3",
   nivo: "Nivo",
   recharts: "Recharts",
   plot: "Obs. Plot",
 }
+const libKeys = ["semiotic", "nivo", "recharts", "plot"]
 
 // ── Data ────────────────────────────────────────────────────────────────
 const tierData = [
@@ -44,7 +119,6 @@ const perfData = [
   { size: 10000, semiotic: 15.8, nivo: 8449, recharts: 1085, plot: 73.2 },
 ]
 
-// Flat array for multi-series line
 const perfLines = perfData.flatMap((d) =>
   Object.entries(d)
     .filter(([k]) => k !== "size")
@@ -84,16 +158,14 @@ const scenarios = [
   { id: "S30", name: "SSR", semiotic: 82, nivo: 90, recharts: 90, plot: 97 },
 ]
 
-// Heatmap data: one row per scenario × library
 const heatmapData = scenarios.flatMap((s) =>
-  ["semiotic", "nivo", "recharts", "plot"].map((lib) => ({
+  libKeys.map((lib) => ({
     scenario: s.id,
     library: LN[lib],
     score: s[lib],
   })),
 )
 
-// Capability coverage for stacked bar
 const capabilityData = [
   { category: "Semiotic v3", supported: 14, missing: 0 },
   { category: "Nivo", supported: 8, missing: 6 },
@@ -105,33 +177,13 @@ const capFlat = capabilityData.flatMap((d) => [
   { library: d.category, count: d.missing, type: "Missing" },
 ])
 
-// ── Dark Theme ───────────────────────
-const C = {
-  bg: "#0f172a",
-  card: "#1e293b",
-  border: "#334155",
-  text: "#e2e8f0",
-  muted: "#94a3b8",
-  dim: "#64748b",
-  green: "#34d399",
-  red: "#f87171",
-  accent: "#6366f1",
-}
-
-// CSS custom properties for Semiotic dark mode
-const semioticDarkVars = {
-  "--semiotic-text": C.text,
-  "--semiotic-text-secondary": C.muted,
-  "--semiotic-border": C.border,
-  "--semiotic-grid": C.border,
-}
-
-function Stat({ label, value, color, sub }) {
+// ── Helper components ───────────────────────────────────────────────────
+function Stat({ label, value, color, sub, T }) {
   return (
     <div
       style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
+        background: T.card,
+        border: `1px solid ${T.border}`,
         borderRadius: 12,
         padding: "12px 16px",
         flex: 1,
@@ -140,7 +192,7 @@ function Stat({ label, value, color, sub }) {
     >
       <div
         style={{
-          color: C.dim,
+          color: T.dim,
           fontSize: 9,
           fontWeight: 700,
           textTransform: "uppercase",
@@ -149,33 +201,33 @@ function Stat({ label, value, color, sub }) {
       >
         {label}
       </div>
-      <div style={{ color: color || C.text, fontSize: 26, fontWeight: 800, marginTop: 1 }}>
+      <div style={{ color: color || T.text, fontSize: 26, fontWeight: 800, marginTop: 1 }}>
         {value}
       </div>
-      {sub && <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{sub}</div>}
+      {sub && <div style={{ color: T.dim, fontSize: 10, marginTop: 1 }}>{sub}</div>}
     </div>
   )
 }
 
-function Section({ title, sub, children }) {
+function Section({ title, sub, children, T }) {
   return (
     <div style={{ marginTop: 24 }}>
-      <h2 style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h2>
-      {sub && <p style={{ color: C.muted, fontSize: 11, margin: "2px 0 8px" }}>{sub}</p>}
+      <h2 style={{ color: T.text, fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h2>
+      {sub && <p style={{ color: T.muted, fontSize: 11, margin: "2px 0 8px" }}>{sub}</p>}
       {children}
     </div>
   )
 }
 
-function Card({ children, style }) {
+function Card({ children, style, T, semioticVars }) {
   return (
     <div
       style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
+        background: T.card,
+        border: `1px solid ${T.border}`,
         borderRadius: 12,
         padding: 12,
-        ...semioticDarkVars,
+        ...semioticVars,
         ...(style || {}),
       }}
     >
@@ -184,14 +236,43 @@ function Card({ children, style }) {
   )
 }
 
-// Color accessor for libraries
-function libColor(d) {
-  const lib = d.library || d.lib
-  return LC[lib] || C.muted
-}
+// No custom Tooltip wrapper — Semiotic's normalizeTooltip wraps user content
+// in defaultTooltipStyle chrome automatically. Just return plain content.
 
+// ── Main component ──────────────────────────────────────────────────────
 export default function BenchmarkDashboard() {
   const [view, setView] = useState("summary")
+  const [themeName, setThemeName] = useState("biTool")
+  const [mode, setMode] = useState(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"
+    }
+    return "dark"
+  })
+
+  useEffect(() => {
+    const el = document.documentElement
+    const observer = new MutationObserver(() => {
+      const attr = el.getAttribute("data-theme")
+      setMode(attr === "light" ? "light" : "dark")
+    })
+    observer.observe(el, { attributes: true, attributeFilter: ["data-theme"] })
+    return () => observer.disconnect()
+  }, [])
+
+  const theme = THEMES[themeName]
+  const T = theme[mode]
+  const categorical = theme.categorical
+  const LC = Object.fromEntries(libKeys.map((k, i) => [k, categorical[i]]))
+
+  const semioticVars = {
+    "--semiotic-text": T.text,
+    "--semiotic-text-secondary": T.muted,
+    "--semiotic-border": T.border,
+    "--semiotic-grid": T.border,
+    "--semiotic-bg": T.card,
+    "--semiotic-font-family": theme.fontFamily,
+  }
 
   function navBtn(v, label) {
     return (
@@ -204,8 +285,8 @@ export default function BenchmarkDashboard() {
           cursor: "pointer",
           fontSize: 11,
           fontWeight: 600,
-          background: view === v ? C.accent : "transparent",
-          color: view === v ? "#fff" : C.muted,
+          background: view === v ? T.accent : "transparent",
+          color: view === v ? "#fff" : T.muted,
         }}
       >
         {label}
@@ -213,24 +294,60 @@ export default function BenchmarkDashboard() {
     )
   }
 
+  function themeBtn(key) {
+    const t = THEMES[key]
+    const isActive = themeName === key
+    return (
+      <button
+        key={key}
+        onClick={() => setThemeName(key)}
+        style={{
+          padding: "5px 10px",
+          borderRadius: 6,
+          border: isActive ? `2px solid ${T.accent}` : `1px solid ${T.border}`,
+          cursor: "pointer",
+          fontSize: 10,
+          fontWeight: 600,
+          background: isActive ? T.accent : T.card,
+          color: isActive ? "#fff" : T.muted,
+          transition: "all 0.15s ease",
+        }}
+      >
+        {t.label}
+      </button>
+    )
+  }
+
   return (
     <div
       style={{
-        background: C.bg,
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        color: C.text,
+        background: T.bg,
+        fontFamily: theme.fontFamily,
+        color: T.text,
         padding: "16px 20px 50px",
         borderRadius: 12,
-        ...semioticDarkVars,
+        transition: "background 0.2s ease, color 0.2s ease",
+        ...semioticVars,
       }}
     >
+      {/* ── Theme selector ──────────────────────────────────────────── */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+          {Object.keys(THEMES).map((key) => themeBtn(key))}
+        </div>
+        <span style={{ fontSize: 10, color: T.dim }}>
+          Mode: {mode}. Use the site toggle to switch.
+        </span>
+      </div>
+
+      {/* ── Header ──────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 2 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>AI Dataviz Library Benchmark</h1>
         <span
           style={{
             fontSize: 9,
             fontWeight: 700,
-            background: C.accent,
+            background: T.accent,
             color: "#fff",
             padding: "2px 6px",
             borderRadius: 4,
@@ -239,17 +356,18 @@ export default function BenchmarkDashboard() {
           Semiotic
         </span>
       </div>
-      <p style={{ color: C.muted, fontSize: 11, margin: "2px 0 12px" }}>
+      <p style={{ color: T.muted, fontSize: 11, margin: "2px 0 12px" }}>
         4 libraries x 30 AI scenarios + runtime perf. All charts below use Semiotic HOC components
-        with CSS custom properties for dark mode.
+        with CSS custom properties for theming.
       </p>
 
+      {/* ── View tabs ───────────────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
           gap: 3,
           marginBottom: 14,
-          background: C.card,
+          background: T.card,
           padding: 3,
           borderRadius: 9,
           width: "fit-content",
@@ -263,38 +381,33 @@ export default function BenchmarkDashboard() {
 
       {/* Color legend */}
       <div style={{ display: "flex", gap: 12, marginBottom: 12, fontSize: 10, flexWrap: "wrap" }}>
-        {Object.entries(LN).map(([k, name]) => (
+        {libKeys.map((k) => (
           <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: LC[k] }} />
-            <span style={{ color: C.muted }}>{name}</span>
+            <span style={{ color: T.muted }}>{LN[k]}</span>
           </span>
         ))}
       </div>
 
-      {/* ── SUMMARY ────────────────────────────────────────────────────── */}
+      {/* ── SUMMARY ────────────────────────────────────────────────── */}
       {view === "summary" && (
         <div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Stat label="Semiotic" value="92%" color={LC.semiotic} sub="AI + constant-time perf" />
-            <Stat label="Nivo" value="87%" color={LC.nivo} sub="AI good, perf unusable at scale" />
-            <Stat
-              label="Recharts"
-              value="77%"
-              color={LC.recharts}
-              sub="Basics only, degrades at 10K+"
-            />
-            <Stat label="Plot" value="73%" color={LC.plot} sub="Fast but missing chart types" />
+            <Stat T={T} label="Semiotic" value="92%" color={LC.semiotic} sub="AI + constant-time perf" />
+            <Stat T={T} label="Nivo" value="87%" color={LC.nivo} sub="AI good, perf unusable at scale" />
+            <Stat T={T} label="Recharts" value="77%" color={LC.recharts} sub="Basics only, degrades at 10K+" />
+            <Stat T={T} label="Plot" value="73%" color={LC.plot} sub="Fast but missing chart types" />
           </div>
 
-          <Section title="AI Score by Difficulty Tier">
-            <Card>
+          <Section T={T} title="AI Score by Difficulty Tier">
+            <Card T={T} semioticVars={semioticVars}>
               <GroupedBarChart
                 data={tierData}
                 categoryAccessor="tier"
                 valueAccessor="score"
                 groupBy="library"
                 colorBy="library"
-                colorScheme={libColors}
+                colorScheme={categorical}
                 responsiveWidth
                 height={280}
                 showGrid
@@ -304,18 +417,7 @@ export default function BenchmarkDashboard() {
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
-                    <div
-                      style={{
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        color: C.text,
-                        fontSize: 11,
-                        padding: "6px 10px",
-                      }}
-                    >
-                      <strong>{LN[row.library]}</strong>: {row.score}%
-                    </div>
+                    <span><strong>{LN[row.library]}</strong>: {row.score}%</span>
                   )
                 }}
               />
@@ -323,10 +425,11 @@ export default function BenchmarkDashboard() {
           </Section>
 
           <Section
+            T={T}
             title="Scatter Re-render Scaling (log)"
             sub="The chart type that breaks libraries. Nivo hits 8.4s at 10K points."
           >
-            <Card>
+            <Card T={T} semioticVars={semioticVars}>
               <LineChart
                 data={perfLines}
                 xAccessor="size"
@@ -334,7 +437,7 @@ export default function BenchmarkDashboard() {
                 yScaleType="log"
                 lineBy="library"
                 colorBy="library"
-                colorScheme={libColors}
+                colorScheme={categorical}
                 responsiveWidth
                 height={260}
                 showGrid
@@ -347,23 +450,14 @@ export default function BenchmarkDashboard() {
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
-                    <div
-                      style={{
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        color: C.text,
-                        fontSize: 11,
-                        padding: "6px 10px",
-                      }}
-                    >
-                      <strong style={{ color: LC[row.library] || C.text }}>
+                    <span>
+                      <strong style={{ color: LC[row.library] || "inherit" }}>
                         {LN[row.library]}
                       </strong>
                       <br />
                       {sizeLabels[row.size] || row.size} points:{" "}
                       {typeof row.ms === "number" ? row.ms.toFixed(1) + "ms" : "N/S"}
-                    </div>
+                    </span>
                   )
                 }}
               />
@@ -372,14 +466,15 @@ export default function BenchmarkDashboard() {
         </div>
       )}
 
-      {/* ── PERFORMANCE ───────────────────────────────────────────────── */}
+      {/* ── PERFORMANCE ────────────────────────────────────────────── */}
       {view === "perf" && (
         <div>
           <Section
+            T={T}
             title="Scatter Re-render Scaling"
             sub="The chart type that breaks libraries. Nivo hits 8.4s at 10K points. Semiotic: 16ms constant."
           >
-            <Card>
+            <Card T={T} semioticVars={semioticVars}>
               <LineChart
                 data={perfLines}
                 xAccessor="size"
@@ -387,7 +482,7 @@ export default function BenchmarkDashboard() {
                 yScaleType="log"
                 lineBy="library"
                 colorBy="library"
-                colorScheme={libColors}
+                colorScheme={categorical}
                 responsiveWidth
                 height={300}
                 showGrid
@@ -397,23 +492,14 @@ export default function BenchmarkDashboard() {
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
-                    <div
-                      style={{
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        color: C.text,
-                        fontSize: 11,
-                        padding: "6px 10px",
-                      }}
-                    >
-                      <strong style={{ color: LC[row.library] || C.text }}>
+                    <span>
+                      <strong style={{ color: LC[row.library] || "inherit" }}>
                         {LN[row.library]}
                       </strong>
                       <br />
                       {sizeLabels[row.size] || row.size} points:{" "}
                       {typeof row.ms === "number" ? row.ms.toFixed(1) + "ms" : "N/S"}
-                    </div>
+                    </span>
                   )
                 }}
                 showLegend
@@ -423,17 +509,18 @@ export default function BenchmarkDashboard() {
           </Section>
 
           <Section
+            T={T}
             title="Feature Coverage"
             sub="Out of 14 features: realtime, network viz, coordination, statistical, SSR, export."
           >
-            <Card>
+            <Card T={T} semioticVars={semioticVars}>
               <StackedBarChart
                 data={capFlat}
                 categoryAccessor="library"
                 valueAccessor="count"
                 stackBy="type"
                 colorBy="type"
-                colorScheme={[C.green, C.border]}
+                colorScheme={[T.green, T.border]}
                 responsiveWidth
                 height={200}
                 showGrid
@@ -445,14 +532,15 @@ export default function BenchmarkDashboard() {
         </div>
       )}
 
-      {/* ── HEATMAP ───────────────────────────────────────────────────── */}
+      {/* ── HEATMAP ────────────────────────────────────────────────── */}
       {view === "heatmap" && (
         <div>
           <Section
+            T={T}
             title="All 30 Scenarios by Library"
             sub="Score heatmap. Blues = high (100%), reds = low (< 50%)."
           >
-            <Card>
+            <Card T={T} semioticVars={semioticVars}>
               <Heatmap
                 data={heatmapData}
                 xAccessor="scenario"
@@ -465,18 +553,7 @@ export default function BenchmarkDashboard() {
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
-                    <div
-                      style={{
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        color: C.text,
-                        fontSize: 11,
-                        padding: "6px 10px",
-                      }}
-                    >
-                      <strong>{row.library}</strong> — {row.scenario}: {row.score}%
-                    </div>
+                    <span><strong>{row.library}</strong> — {row.scenario}: {row.score}%</span>
                   )
                 }}
               />
@@ -485,17 +562,18 @@ export default function BenchmarkDashboard() {
         </div>
       )}
 
-      {/* ── CAPABILITIES ──────────────────────────────────────────────── */}
+      {/* ── CAPABILITIES ───────────────────────────────────────────── */}
       {view === "caps" && (
         <div>
           <Section
+            T={T}
             title="Score by Scenario"
             sub="All 30 scenarios. Libraries scoring below 50 are omitted (not supported)."
           >
-            <Card>
+            <Card T={T} semioticVars={semioticVars}>
               <GroupedBarChart
                 data={scenarios.flatMap((s) =>
-                  ["semiotic", "nivo", "recharts", "plot"]
+                  libKeys
                     .filter((lib) => s[lib] >= 50)
                     .map((lib) => ({ scenario: s.name, library: lib, score: s[lib] })),
                 )}
@@ -503,7 +581,7 @@ export default function BenchmarkDashboard() {
                 valueAccessor="score"
                 groupBy="library"
                 colorBy="library"
-                colorScheme={libColors}
+                colorScheme={categorical}
                 categoryLabel="Scenario"
                 valueLabel="Score"
                 orientation="horizontal"
@@ -517,18 +595,7 @@ export default function BenchmarkDashboard() {
                 tooltip={(d) => {
                   const row = d.data || d
                   return (
-                    <div
-                      style={{
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        color: C.text,
-                        fontSize: 11,
-                        padding: "6px 10px",
-                      }}
-                    >
-                      <strong>{LN[row.library]}</strong> — {row.scenario}: {row.score}%
-                    </div>
+                    <span><strong>{LN[row.library]}</strong> — {row.scenario}: {row.score}%</span>
                   )
                 }}
               />

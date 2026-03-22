@@ -167,11 +167,12 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    return scales.x.ticks(tickCount).map(v => ({
+    const candidates = scales.x.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.x(v),
       label: fmt(v)
     }))
+    return filterTicksByPixelDistance(candidates, 55)
   }, [scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
@@ -181,11 +182,12 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    return scales.y.ticks(tickCount).map(v => ({
+    const candidates = scales.y.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.y(v),
       label: fmt(v)
     }))
+    return filterTicksByPixelDistance(candidates, 22)
   }, [scales, axes, yFormat, height])
 
   const hasGrid = showGrid && scales
@@ -264,6 +266,27 @@ function defaultTickFormat(v: number): string {
   return String(Math.round(v * 100) / 100)
 }
 
+/** Greedily filter ticks so consecutive labels are at least `minPx` apart.
+ *  Always keeps the first and last tick. */
+function filterTicksByPixelDistance(
+  ticks: Array<{ value: number; pixel: number; label: string }>,
+  minPx: number
+): Array<{ value: number; pixel: number; label: string }> {
+  if (ticks.length <= 2) return ticks
+  const result = [ticks[0]]
+  for (let i = 1; i < ticks.length - 1; i++) {
+    if (Math.abs(ticks[i].pixel - result[result.length - 1].pixel) >= minPx) {
+      result.push(ticks[i])
+    }
+  }
+  const last = ticks[ticks.length - 1]
+  // Only add the last tick if it doesn't collide with the most recent kept tick
+  if (Math.abs(last.pixel - result[result.length - 1].pixel) >= minPx) {
+    result.push(last)
+  }
+  return result
+}
+
 /** Detect whether a tick marks a time boundary (new month, year, day) compared to the previous tick */
 function isTimeLandmark(value: any, prevValue: any): boolean {
   if (!(value instanceof Date)) return false
@@ -314,35 +337,37 @@ export function SVGOverlay(props: SVGOverlayProps) {
     children
   } = props
 
-  // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap
+  // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap.
+  // After generating candidate ticks, filter by minimum pixel distance so labels
+  // never collide — critical for log scales where ticks cluster non-uniformly.
   const xTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const bottomAxis = axes?.find(a => a.orient === "bottom")
     const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
-    // Estimate max ticks that fit: ~70px per x-axis label
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    return scales.x.ticks(tickCount).map(v => ({
+    const candidates = scales.x.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.x(v),
       label: fmt(v)
     }))
+    return filterTicksByPixelDistance(candidates, 55)
   }, [showAxes, scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
     const leftAxis = axes?.find(a => a.orient === "left")
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
-    // Estimate max ticks that fit: ~30px per y-axis label
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    return scales.y.ticks(tickCount).map(v => ({
+    const candidates = scales.y.ticks(tickCount).map(v => ({
       value: v,
       pixel: scales.y(v),
       label: fmt(v)
     }))
+    return filterTicksByPixelDistance(candidates, 22)
   }, [showAxes, scales, axes, yFormat, height])
 
   // Persistent cache for sticky annotation positions (survives re-renders)
