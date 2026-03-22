@@ -275,5 +275,8 @@
   },
   "volta": {
     "node": "22.22.1"
+  },
+  "overrides": {
+    "flatted": "3.4.2"
   }
 }
