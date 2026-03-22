@@ -566,7 +566,7 @@ export default function Legend(props: LegendProps) {
   const isInteractive = Boolean(customClickBehavior || customHoverBehavior)
 
   return (
-    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && (legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)) ? true : undefined} aria-label="Chart legend">
+    <g role={isInteractive ? "listbox" : undefined} aria-multiselectable={isInteractive && (legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)) ? true : undefined} aria-label="Chart legend" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
           className="legend-title"

@@ -482,7 +482,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const labelColor = "var(--semiotic-text, #333)"
 
           return (
-          <g className="stream-axes">
+          <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
             {/* X axis baseline (skipped when underlayRendered) */}
             {!underlayRendered && showBottomBaseline && !bottomJagged && (
               <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />

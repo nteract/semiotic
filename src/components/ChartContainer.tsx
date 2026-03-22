@@ -236,9 +236,10 @@ export const ChartContainer = React.forwardRef<
         style={{
           width,
           border: "1px solid var(--semiotic-border, #e0e0e0)",
-          borderRadius: 8,
+          borderRadius: "var(--semiotic-border-radius, 8px)",
           overflow: "hidden",
           background: "var(--semiotic-bg, #fff)",
+          fontFamily: "var(--semiotic-font-family, sans-serif)",
           position: "relative",
           ...(isFullscreen
             ? {

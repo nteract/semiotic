@@ -265,6 +265,10 @@ export default function BenchmarkDashboard() {
   const categorical = theme.categorical
   const LC = Object.fromEntries(libKeys.map((k, i) => [k, categorical[i]]))
 
+  // Force canvas repaint when theme/mode changes — canvas reads CSS vars via
+  // getComputedStyle at paint time, but doesn't know when they change.
+  const chartKey = `${themeName}-${mode}`
+
   const semioticVars = {
     "--semiotic-text": T.text,
     "--semiotic-text-secondary": T.muted,
@@ -272,6 +276,13 @@ export default function BenchmarkDashboard() {
     "--semiotic-grid": T.border,
     "--semiotic-bg": T.card,
     "--semiotic-font-family": theme.fontFamily,
+    "--semiotic-tooltip-bg": T.card,
+    "--semiotic-tooltip-text": T.text,
+    "--semiotic-tooltip-radius": "8px",
+    "--semiotic-tooltip-shadow": mode === "dark"
+      ? "0 4px 12px rgba(0, 0, 0, 0.4)"
+      : "0 2px 8px rgba(0, 0, 0, 0.12)",
+    "--semiotic-focus": T.accent,
   }
 
   function navBtn(v, label) {
@@ -402,6 +413,7 @@ export default function BenchmarkDashboard() {
           <Section T={T} title="AI Score by Difficulty Tier">
             <Card T={T} semioticVars={semioticVars}>
               <GroupedBarChart
+                key={chartKey + "-tier"}
                 data={tierData}
                 categoryAccessor="tier"
                 valueAccessor="score"
@@ -414,6 +426,11 @@ export default function BenchmarkDashboard() {
                 showLegend
                 legendPosition="bottom"
                 legendInteraction="isolate"
+                frameProps={{
+                  annotations: [
+                    { type: "y-threshold", value: 90, label: "90% threshold", color: T.accent },
+                  ],
+                }}
                 tooltip={(d) => {
                   const row = d.data || d
                   return (

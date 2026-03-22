@@ -14,6 +14,7 @@ export interface SemioticTheme {
     textSecondary: string
     grid: string
     border: string
+    focus?: string
   }
   typography: {
     fontFamily: string
@@ -21,7 +22,31 @@ export interface SemioticTheme {
     labelSize: number
     tickSize: number
   }
+  tooltip?: {
+    background?: string
+    text?: string
+    borderRadius?: string
+    fontSize?: string
+    shadow?: string
+  }
+  borderRadius?: string
 }
+
+// ── Curated palettes ────────────────────────────────────────────────────────
+
+/** Color-blind safe categorical palette (8 colors).
+ *  Derived from Wong (2011) "Points of view: Color blindness" — safe for
+ *  deuteranopia, protanopia, and tritanopia. */
+export const COLOR_BLIND_SAFE_CATEGORICAL = [
+  "#0072B2", // blue
+  "#E69F00", // orange
+  "#009E73", // bluish green
+  "#CC79A7", // reddish purple
+  "#56B4E9", // sky blue
+  "#D55E00", // vermillion
+  "#F0E442", // yellow
+  "#000000", // black
+]
 
 // ── Presets ─────────────────────────────────────────────────────────────────
 

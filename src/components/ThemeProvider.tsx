@@ -51,7 +51,14 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     "--semiotic-grid": theme.colors.grid,
     "--semiotic-border": theme.colors.border,
     "--semiotic-primary": theme.colors.primary,
-    "--semiotic-font-family": theme.typography.fontFamily
+    "--semiotic-font-family": theme.typography.fontFamily,
+    ...(theme.colors.focus ? { "--semiotic-focus": theme.colors.focus } : {}),
+    ...(theme.tooltip?.background ? { "--semiotic-tooltip-bg": theme.tooltip.background } : {}),
+    ...(theme.tooltip?.text ? { "--semiotic-tooltip-text": theme.tooltip.text } : {}),
+    ...(theme.tooltip?.borderRadius ? { "--semiotic-tooltip-radius": theme.tooltip.borderRadius } : {}),
+    ...(theme.tooltip?.fontSize ? { "--semiotic-tooltip-font-size": theme.tooltip.fontSize } : {}),
+    ...(theme.tooltip?.shadow ? { "--semiotic-tooltip-shadow": theme.tooltip.shadow } : {}),
+    ...(theme.borderRadius ? { "--semiotic-border-radius": theme.borderRadius } : {}),
   }
 
   return <div style={style}>{children}</div>
