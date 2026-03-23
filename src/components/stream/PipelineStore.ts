@@ -2140,7 +2140,7 @@ export class PipelineStore {
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
-    const prev = this.config
+    const prev = { ...this.config }
 
     // Invalidate color map caches when relevant config changes
     if (config.colorScheme !== undefined) {

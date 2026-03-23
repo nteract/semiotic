@@ -1000,7 +1000,7 @@ export class OrdinalPipelineStore {
   }
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
-    const prev = this.config
+    const prev = { ...this.config }
 
     if (config.colorScheme !== this.config.colorScheme) {
       this._colorSchemeMap = null
