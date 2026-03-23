@@ -586,7 +586,6 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,
-    svgPreRenderers,
     ...frameProps,
     // Override pre-renderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
