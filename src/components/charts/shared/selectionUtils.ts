@@ -84,7 +84,8 @@ export function readSelectionOpacityFromCSS(container: Element | null): number {
   const raw = getComputedStyle(container).getPropertyValue("--semiotic-selection-opacity").trim()
   if (!raw) return DEFAULT_SELECTION_OPACITY
   const val = parseFloat(raw)
-  return Number.isFinite(val) ? val : DEFAULT_SELECTION_OPACITY
+  if (!Number.isFinite(val)) return DEFAULT_SELECTION_OPACITY
+  return Math.min(1, Math.max(0, val))
 }
 
 /**

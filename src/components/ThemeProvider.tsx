@@ -41,7 +41,7 @@ function ThemeInitializer({
       // Try named preset first (covers "light", "dark", "high-contrast", "tufte", etc.)
       const preset = resolveThemePreset(theme)
       if (preset) {
-        setTheme(preset as any)
+        setTheme(preset)
       } else {
         // Fallback for the three built-in string presets
         setTheme(theme as "light" | "dark" | "high-contrast")
@@ -96,8 +96,9 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
 function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   // Resolve the preset name for the data-semiotic-theme attribute.
   // If `theme` is a string that maps to a known preset, use it directly.
-  // Otherwise leave undefined (custom object themes don't get a data attribute).
-  const themeName = typeof theme === "string" ? theme : undefined
+  // Otherwise leave undefined (custom object themes or unknown strings don't get a data attribute).
+  const themeName =
+    typeof theme === "string" && resolveThemePreset(theme) ? theme : undefined
 
   return (
     <StoreProvider>

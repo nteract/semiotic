@@ -3,6 +3,7 @@ import {
   normalizeLinkedHover,
   normalizeLinkedBrush,
   wrapStyleWithSelection,
+  readSelectionOpacityFromCSS,
   type SelectionHookResult,
 } from "./selectionUtils"
 
@@ -192,7 +193,7 @@ describe("wrapStyleWithSelection", () => {
     expect(style.opacity).toBe(0.1)
   })
 
-  it("does not mutate the base style object", () => {
+  it("does not mutate the base style object (wrapStyleWithSelection)", () => {
     const hook: SelectionHookResult = {
       isActive: true,
       predicate: () => false,
@@ -204,5 +205,64 @@ describe("wrapStyleWithSelection", () => {
     expect(style1).not.toBe(style2)
     expect(style1.fill).toBe("red")
     expect(style2.fill).toBe("blue")
+  })
+})
+
+// ── readSelectionOpacityFromCSS ───────────────────────────────────────────
+
+describe("readSelectionOpacityFromCSS", () => {
+  function mockContainer(value: string): Element {
+    return {
+      // Minimal mock for getComputedStyle
+      ownerDocument: document,
+    } as unknown as Element
+  }
+
+  it("returns default for null container", () => {
+    expect(readSelectionOpacityFromCSS(null)).toBe(0.2)
+  })
+
+  it("returns default when CSS var is unset", () => {
+    const el = document.createElement("div")
+    document.body.appendChild(el)
+    const result = readSelectionOpacityFromCSS(el)
+    expect(result).toBe(0.2)
+    document.body.removeChild(el)
+  })
+
+  it("parses a valid CSS var value", () => {
+    const el = document.createElement("div")
+    el.style.setProperty("--semiotic-selection-opacity", "0.5")
+    document.body.appendChild(el)
+    const result = readSelectionOpacityFromCSS(el)
+    expect(result).toBe(0.5)
+    document.body.removeChild(el)
+  })
+
+  it("clamps values above 1 to 1", () => {
+    const el = document.createElement("div")
+    el.style.setProperty("--semiotic-selection-opacity", "1.5")
+    document.body.appendChild(el)
+    const result = readSelectionOpacityFromCSS(el)
+    expect(result).toBe(1)
+    document.body.removeChild(el)
+  })
+
+  it("clamps negative values to 0", () => {
+    const el = document.createElement("div")
+    el.style.setProperty("--semiotic-selection-opacity", "-0.3")
+    document.body.appendChild(el)
+    const result = readSelectionOpacityFromCSS(el)
+    expect(result).toBe(0)
+    document.body.removeChild(el)
+  })
+
+  it("returns default for non-numeric value", () => {
+    const el = document.createElement("div")
+    el.style.setProperty("--semiotic-selection-opacity", "auto")
+    document.body.appendChild(el)
+    const result = readSelectionOpacityFromCSS(el)
+    expect(result).toBe(0.2)
+    document.body.removeChild(el)
   })
 })

@@ -280,9 +280,11 @@ function filterTicksByPixelDistance(
     }
   }
   const last = ticks[ticks.length - 1]
-  // Only add the last tick if it doesn't collide with the most recent kept tick
+  // Always keep the last tick (axis endpoint); if too close, replace the previous intermediate tick
   if (Math.abs(last.pixel - result[result.length - 1].pixel) >= minPx) {
     result.push(last)
+  } else {
+    result[result.length - 1] = last
   }
   return result
 }

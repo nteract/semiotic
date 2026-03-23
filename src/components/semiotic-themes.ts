@@ -1,4 +1,3 @@
-"use client"
 /**
  * semiotic/themes — Named theme presets for Semiotic charts.
  *
