@@ -1023,17 +1023,19 @@ export class OrdinalPipelineStore {
       }
     }
     if (config.rAccessor !== undefined) {
-      if (!accessorsEquivalent(
-        Array.isArray(config.rAccessor) ? config.rAccessor[0] : config.rAccessor,
-        Array.isArray(prev.rAccessor) ? prev.rAccessor[0] : prev.rAccessor
-      )) {
+      const newArr = Array.isArray(config.rAccessor) ? config.rAccessor : [config.rAccessor]
+      const prevArr = Array.isArray(prev.rAccessor) ? prev.rAccessor : [prev.rAccessor]
+      const rChanged = newArr.length !== prevArr.length || newArr.some((acc, i) => !accessorsEquivalent(acc, prevArr[i]))
+      if (rChanged) {
         const rawR = this.config.rAccessor
         if (Array.isArray(rawR)) {
           this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
           this.getR = this.rAccessors[0]
+          this.rExtents = rawR.map(() => new IncrementalExtent())
         } else {
           this.getR = resolveAccessor(rawR, "value")
           this.rAccessors = [this.getR]
+          this.rExtents = [this.rExtent]
         }
       }
     }

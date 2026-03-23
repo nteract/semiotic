@@ -477,7 +477,7 @@ const ACCESSOR_PROPS = [
   "categoryAccessor", "colorBy", "sizeBy", "lineBy", "areaBy",
   "stackBy", "groupBy", "orderAccessor", "y0Accessor",
   "sourceAccessor", "targetAccessor", "nodeIDAccessor",
-  "childrenAccessor", "valueAccessor", "costAccessor",
+  "childrenAccessor", "costAccessor",
 ]
 
 function checkFunctionAccessors(

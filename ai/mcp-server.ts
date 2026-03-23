@@ -335,14 +335,16 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
 
   let svg = result.svg!
 
-  // Wrap SVG with theme CSS custom properties if provided
+  // Inject theme CSS custom properties into the SVG root element.
+  // We add a <style> block inside the SVG rather than wrapping in a <div>,
+  // because sharp requires pure SVG input for PNG rasterization.
   if (theme && Object.keys(theme).length > 0) {
     const validVars = Object.entries(theme)
       .filter(([k]) => k.startsWith("--semiotic-"))
       .map(([k, v]) => `${k}: ${v}`)
       .join("; ")
     if (validVars) {
-      svg = `<div style="${validVars}">${svg}</div>`
+      svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`)
     }
   }
 

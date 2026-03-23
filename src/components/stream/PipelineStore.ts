@@ -2212,10 +2212,19 @@ export class PipelineStore {
       accessorChanged = true
     }
 
-    // Only mark full rebuild needed if non-accessor config changed or accessors actually changed.
-    // This prevents unnecessary scene rebuilds from unstable function references.
-    const nonAccessorKeys = Object.keys(config).filter(k => !k.endsWith("Accessor") && k !== "timeAccessor" && k !== "valueAccessor")
-    if (accessorChanged || nonAccessorKeys.length > 0) {
+    // Only mark full rebuild needed if non-accessor config actually changed or accessors changed.
+    // Compare values (not just key presence) because updateConfig receives the full config object
+    // on every React render, so all keys are always present.
+    if (!accessorChanged) {
+      const nonAccessorKeys = Object.keys(config).filter(k => !k.endsWith("Accessor") && k !== "timeAccessor" && k !== "valueAccessor")
+      for (const k of nonAccessorKeys) {
+        if ((config as any)[k] !== (prev as any)[k]) {
+          accessorChanged = true
+          break
+        }
+      }
+    }
+    if (accessorChanged) {
       this.needsFullRebuild = true
     }
   }

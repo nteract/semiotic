@@ -1,11 +1,17 @@
 // ── Accessor resolution ────────────────────────────────────────────────
 
 /**
- * Compare two accessor specs for functional equivalence.
+ * Compare two accessor specs for equivalence.
+ * - Same reference: always equivalent (`===`)
  * - String accessors: exact string match
  * - Function accessors: `.toString()` comparison (catches inline arrow functions
  *   like `d => d.value` that are recreated on every render but have identical source)
- * - Mismatched types or undefined: not equivalent
+ * - Mismatched types or undefined vs defined: not equivalent
+ *
+ * **Known limitation**: `.toString()` compares source text, not closure bindings.
+ * Two functions with identical source but different captured variables will appear
+ * equivalent. For closures that depend on changing values, use `useCallback` with
+ * the variable in the dependency array so the reference changes when behavior changes.
  */
 export function accessorsEquivalent(
   a: string | ((...args: any[]) => any) | undefined,

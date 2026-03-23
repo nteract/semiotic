@@ -97,6 +97,22 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(store.needsFullRebuild).toBe(true)
   })
 
+  it("does not set needsFullRebuild when full config is re-passed with same values", () => {
+    const config = makeConfig({
+      xAccessor: "time",
+      yAccessor: "value",
+      groupAccessor: "region"
+    })
+    const store = new PipelineStore(config)
+    store.ingest({ inserts: [{ time: 1, value: 2, region: "A" }], bounded: false })
+    store.computeScene({ width: 100, height: 100 })
+    store.needsFullRebuild = false
+
+    // Simulate React re-render passing the full config (as StreamXYFrame does)
+    store.updateConfig({ ...config })
+    expect(store.needsFullRebuild).toBe(false)
+  })
+
   it("resolved accessor functions still work after skipping re-resolution", () => {
     const store = new PipelineStore(makeConfig({
       xAccessor: (d: any) => d.ts,
