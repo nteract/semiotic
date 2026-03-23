@@ -1,5 +1,17 @@
 import React, { useState } from "react"
-import { BarChart, LineChart, ThemeProvider, LIGHT_THEME, DARK_THEME } from "semiotic"
+import {
+  BarChart,
+  LineChart,
+  Scatterplot,
+  DonutChart,
+  ThemeProvider,
+  useTheme,
+  LIGHT_THEME,
+  DARK_THEME,
+  HIGH_CONTRAST_THEME,
+  THEME_PRESETS,
+  themeToCSS,
+} from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
@@ -15,6 +27,7 @@ const barData = [
   { category: "Q2", value: 180 },
   { category: "Q3", value: 95 },
   { category: "Q4", value: 210 },
+  { category: "Q5", value: 155 },
 ]
 
 const lineData = [
@@ -42,6 +55,33 @@ const lineData = [
   },
 ]
 
+const scatterData = Array.from({ length: 24 }, (_, i) => ({
+  x: 10 + (i % 6) * 15 + Math.round(Math.random() * 8),
+  y: 10 + Math.floor(i / 6) * 20 + Math.round(Math.random() * 15),
+  group: ["Engineering", "Design", "Marketing", "Sales"][i % 4],
+}))
+
+const donutData = [
+  { category: "Engineering", value: 35 },
+  { category: "Design", value: 20 },
+  { category: "Marketing", value: 25 },
+  { category: "Sales", value: 20 },
+]
+
+// ---------------------------------------------------------------------------
+// Preset names grouped for UI
+// ---------------------------------------------------------------------------
+
+const PRESET_GROUPS = {
+  Base: ["light", "dark", "high-contrast"],
+  Tufte: ["tufte", "tufte-dark"],
+  Pastels: ["pastels", "pastels-dark"],
+  "BI Tool": ["bi-tool", "bi-tool-dark"],
+  Italian: ["italian", "italian-dark"],
+  Journalist: ["journalist", "journalist-dark"],
+  Playful: ["playful", "playful-dark"],
+}
+
 // ---------------------------------------------------------------------------
 // Props definitions
 // ---------------------------------------------------------------------------
@@ -49,18 +89,18 @@ const lineData = [
 const themeProviderProps = [
   {
     name: "theme",
-    type: 'ThemePresetName | Partial<SemioticTheme>',
+    type: "ThemePresetName | Partial<SemioticTheme>",
     required: false,
     default: '"light"',
     description:
-      'Pass a named preset string ("light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark") or a partial theme object. Partial objects are merged with the current theme.',
+      'A named preset string or a partial theme object. Named presets: "light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark". Partial objects are deep-merged with the active theme.',
   },
   {
     name: "children",
     type: "ReactNode",
     required: true,
     default: null,
-    description: "Any chart components to be themed.",
+    description: "Chart components to be themed.",
   },
 ]
 
@@ -70,70 +110,98 @@ const themeShapeProps = [
     type: '"light" | "dark" | "auto"',
     required: false,
     default: '"light"',
-    description: "The mode label for the current theme.",
+    description: "Theme mode label. Used by some components for mode-aware defaults.",
   },
   {
     name: "colors.primary",
     type: "string",
     required: false,
     default: '"#00a2ce"',
-    description: "Default chart color used when no colorBy is set.",
+    description: "Default chart accent color. Maps to --semiotic-primary.",
   },
   {
     name: "colors.categorical",
     type: "string[]",
     required: false,
     default: "d3 category10",
-    description: "Array of colors used for categorical color scales.",
+    description: "Categorical palette. Each chart's colorBy draws from this.",
   },
   {
     name: "colors.sequential",
     type: "string",
     required: false,
     default: '"blues"',
-    description: "Sequential color scheme name.",
+    description: "d3-scale-chromatic sequential scheme name (e.g. \"blues\", \"viridis\").",
+  },
+  {
+    name: "colors.diverging",
+    type: "string",
+    required: false,
+    default: "undefined",
+    description: "d3-scale-chromatic diverging scheme name (e.g. \"RdBu\"). Maps to --semiotic-diverging.",
   },
   {
     name: "colors.background",
     type: "string",
     required: false,
     default: '"transparent"',
-    description: "Chart background color.",
+    description: "Chart background. Maps to --semiotic-bg.",
   },
   {
     name: "colors.text",
     type: "string",
     required: false,
     default: '"#333"',
-    description: "Primary text color for titles and axis labels.",
+    description: "Primary text color (titles, axis labels). Maps to --semiotic-text.",
   },
   {
     name: "colors.textSecondary",
     type: "string",
     required: false,
     default: '"#666"',
-    description: "Secondary text color for tick labels.",
+    description: "Secondary text color (tick labels). Maps to --semiotic-text-secondary.",
   },
   {
     name: "colors.grid",
     type: "string",
     required: false,
     default: '"#e0e0e0"',
-    description: "Grid line color.",
+    description: "Grid line color. Maps to --semiotic-grid.",
   },
   {
     name: "colors.border",
     type: "string",
     required: false,
     default: '"#ccc"',
-    description: "Axis line / border color.",
+    description: "Axis / card border color. Maps to --semiotic-border.",
+  },
+  {
+    name: "colors.focus",
+    type: "string",
+    required: false,
+    default: '"#005fcc"',
+    description: "Focus ring color for keyboard navigation. Maps to --semiotic-focus.",
+  },
+  {
+    name: "colors.selection",
+    type: "string",
+    required: false,
+    default: "undefined",
+    description: "Linked hover/brush highlight color. Maps to --semiotic-selection-color.",
+  },
+  {
+    name: "colors.selectionOpacity",
+    type: "number",
+    required: false,
+    default: "0.2",
+    description: "Non-selected element opacity (0-1). Maps to --semiotic-selection-opacity.",
   },
   {
     name: "typography.fontFamily",
     type: "string",
     required: false,
     default: '"sans-serif"',
-    description: "Font family for all chart text.",
+    description: "Font family for all chart text. Maps to --semiotic-font-family.",
   },
   {
     name: "typography.titleSize",
@@ -156,81 +224,157 @@ const themeShapeProps = [
     default: "10",
     description: "Font size (px) for tick labels.",
   },
+  {
+    name: "tooltip.background",
+    type: "string",
+    required: false,
+    default: '"rgba(0,0,0,0.85)"',
+    description: "Tooltip background. Maps to --semiotic-tooltip-bg.",
+  },
+  {
+    name: "tooltip.text",
+    type: "string",
+    required: false,
+    default: '"white"',
+    description: "Tooltip text color. Maps to --semiotic-tooltip-text.",
+  },
+  {
+    name: "tooltip.borderRadius",
+    type: "string",
+    required: false,
+    default: '"6px"',
+    description: "Tooltip corner radius. Maps to --semiotic-tooltip-radius.",
+  },
+  {
+    name: "tooltip.shadow",
+    type: "string",
+    required: false,
+    default: '"0 2px 8px rgba(0,0,0,0.15)"',
+    description: "Tooltip box shadow. Maps to --semiotic-tooltip-shadow.",
+  },
+  {
+    name: "borderRadius",
+    type: "string",
+    required: false,
+    default: '"8px"',
+    description: "Global border radius token. Maps to --semiotic-border-radius.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
-// Interactive demo component
+// Interactive preset demo
 // ---------------------------------------------------------------------------
 
-function ThemeDemo() {
-  const [mode, setMode] = useState("light")
-
-  const themeValue = mode === "custom"
-    ? {
-        colors: {
-          primary: "#d4a373",
-          categorical: ["#d4a373", "#a3b18a", "#588157", "#bc6c25"],
-          background: "#fefae0",
-          text: "#283618",
-          textSecondary: "#606c38",
-          grid: "#dda15e44",
-          border: "#bc6c25",
-        },
-        typography: {
-          fontFamily: '"Georgia", serif',
-          titleSize: 18,
-          labelSize: 13,
-          tickSize: 11,
-        },
-      }
-    : mode
+function PresetDemo() {
+  const [preset, setPreset] = useState("light")
+  const activeTheme = THEME_PRESETS[preset] || LIGHT_THEME
+  const categorical = activeTheme.colors.categorical
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        {["light", "dark", "custom"].map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            style={{
-              padding: "6px 16px",
-              border: `2px solid ${mode === m ? "var(--accent, #6366f1)" : "var(--surface-3, #ccc)"}`,
-              borderRadius: "6px",
-              background: mode === m ? "var(--accent, #6366f1)" : "transparent",
-              color: mode === m ? "#fff" : "var(--text-primary, #333)",
-              cursor: "pointer",
-              fontWeight: mode === m ? 600 : 400,
-              textTransform: "capitalize",
-            }}
-          >
-            {m}
-          </button>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {Object.entries(PRESET_GROUPS).map(([group, names]) => (
+          <div key={group} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", width: 70, flexShrink: 0 }}>
+              {group}
+            </span>
+            {names.map((name) => {
+              const t = THEME_PRESETS[name]
+              return (
+                <button
+                  key={name}
+                  onClick={() => setPreset(name)}
+                  style={{
+                    padding: "4px 10px",
+                    border: `2px solid ${preset === name ? "var(--accent, #6366f1)" : t.colors.border}`,
+                    borderRadius: 6,
+                    background: preset === name ? "var(--accent, #6366f1)" : t.colors.background,
+                    color: preset === name ? "#fff" : t.colors.text,
+                    cursor: "pointer",
+                    fontWeight: preset === name ? 600 : 400,
+                    fontSize: 12,
+                    fontFamily: t.typography.fontFamily,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {name}
+                  <span style={{ display: "flex", gap: 1 }}>
+                    {t.colors.categorical.slice(0, 4).map((c, i) => (
+                      <span key={i} style={{ width: 8, height: 8, borderRadius: 1, background: c, display: "inline-block" }} />
+                    ))}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         ))}
       </div>
 
-      <ThemeProvider theme={themeValue}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <BarChart
-            data={barData}
-            categoryAccessor="category"
-            valueAccessor="value"
-            title="Quarterly Revenue"
-            categoryLabel="Quarter"
-            valueLabel="Revenue ($K)"
-            height={300}
-            width={350}
-          />
-          <LineChart
-            data={lineData}
-            xAccessor="x"
-            yAccessor="y"
-            lineBy="id"
-            title="Revenue vs Costs"
-            xLabel="Month"
-            yLabel="Amount ($K)"
-            height={300}
-            width={350}
-          />
+      <ThemeProvider theme={preset}>
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 8,
+            background: activeTheme.colors.background,
+            border: `1px solid ${activeTheme.colors.border}`,
+            "--semiotic-bg": activeTheme.colors.background,
+            "--semiotic-text": activeTheme.colors.text,
+            "--semiotic-text-secondary": activeTheme.colors.textSecondary,
+            "--semiotic-border": activeTheme.colors.border,
+            "--semiotic-grid": activeTheme.colors.grid,
+            "--semiotic-font-family": activeTheme.typography.fontFamily,
+          }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <BarChart
+              key={preset + "-bar"}
+              data={barData}
+              categoryAccessor="category"
+              valueAccessor="value"
+              title="Quarterly Revenue"
+              height={250}
+              width={340}
+              frameProps={{
+                pieceStyle: () => ({ fill: categorical[0] || activeTheme.colors.primary }),
+              }}
+            />
+            <LineChart
+              key={preset + "-line"}
+              data={lineData}
+              xAccessor="x"
+              yAccessor="y"
+              lineBy="id"
+              colorBy="id"
+              colorScheme={categorical}
+              title="Revenue vs Costs"
+              height={250}
+              width={340}
+            />
+            <Scatterplot
+              key={preset + "-scatter"}
+              data={scatterData}
+              xAccessor="x"
+              yAccessor="y"
+              colorBy="group"
+              colorScheme={categorical}
+              title="Team Distribution"
+              height={250}
+              width={340}
+            />
+            <DonutChart
+              key={preset + "-donut"}
+              data={donutData}
+              categoryAccessor="category"
+              valueAccessor="value"
+              colorBy="category"
+              colorScheme={categorical}
+              title="Department Split"
+              height={250}
+              width={340}
+            />
+          </div>
         </div>
       </ThemeProvider>
     </div>
@@ -244,7 +388,7 @@ function ThemeDemo() {
 export default function ThemingPage() {
   return (
     <PageLayout
-      title="Theming"
+      title="Theme Provider"
       breadcrumbs={[
         { label: "Theming", path: "/theming" },
         { label: "Theme Provider", path: "/theming/theme-provider" },
@@ -253,164 +397,89 @@ export default function ThemingPage() {
       nextPage={{ title: "Theme Explorer", path: "/theming/theme-explorer" }}
     >
       <p>
-        The <code>ThemeProvider</code> component applies consistent colors,
-        typography, and styling to all Semiotic charts it wraps. It ships with
-        light and dark presets and supports fully custom theme objects.
+        <code>ThemeProvider</code> applies consistent colors, typography,
+        tooltips, and borders to every Semiotic chart it wraps. It ships with{" "}
+        <strong>15 named presets</strong> covering light/dark variants of six
+        distinct design vocabularies, plus a high-contrast accessibility preset.
+        You can also pass a custom theme object.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       <h2 id="quick-start">Quick Start</h2>
-
-      <p>
-        Wrap your charts with <code>ThemeProvider</code> and pass a theme preset
-        or custom object:
-      </p>
 
       <CodeBlock
         code={`import { ThemeProvider, BarChart } from "semiotic"
 
-// Built-in preset
-<ThemeProvider theme="dark">
+// Named preset — one line for brand-consistent charts
+<ThemeProvider theme="tufte">
   <BarChart data={data} categoryAccessor="name" valueAccessor="value" />
 </ThemeProvider>
 
-// Custom theme
+// Custom theme object — only specify what you want to override
 <ThemeProvider theme={{
   colors: {
     primary: "#e63946",
+    categorical: ["#e63946", "#457b9d", "#a8dadc", "#1d3557"],
     background: "#f1faee",
     text: "#1d3557",
-  }
+  },
+  typography: { fontFamily: '"Inter", sans-serif' },
 }}>
   <BarChart data={data} categoryAccessor="name" valueAccessor="value" />
 </ThemeProvider>`}
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Interactive Demo */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="interactive-demo">Interactive Demo</h2>
+      {/* ================================================================= */}
+      {/* Named Presets Demo */}
+      {/* ================================================================= */}
+      <h2 id="presets">15 Named Presets</h2>
 
       <p>
-        Toggle between the built-in presets and a custom theme to see how
-        ThemeProvider affects charts:
+        Select a preset to see it applied to four chart types simultaneously.
+        Each preset defines colors, typography, tooltips, and border radius:
       </p>
 
-      <ThemeDemo />
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Built-in Presets */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="presets">Built-in Presets</h2>
-
-      <p>
-        Semiotic ships with 15 named theme presets. Pass any preset name as a
-        string to ThemeProvider. You can also import theme objects directly to
-        inspect or extend:
-      </p>
+      <PresetDemo />
 
       <CodeBlock
-        code={`import { ThemeProvider } from "semiotic"
+        code={`// All 15 preset names:
+// "light"           "dark"             "high-contrast"
+// "tufte"           "tufte-dark"
+// "pastels"         "pastels-dark"
+// "bi-tool"         "bi-tool-dark"
+// "italian"         "italian-dark"
+// "journalist"      "journalist-dark"
+// "playful"         "playful-dark"
 
-// Named preset (15 options: "light", "dark", "high-contrast",
-// "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool",
-// "bi-tool-dark", "italian", "italian-dark", "journalist",
-// "journalist-dark", "playful", "playful-dark")
-<ThemeProvider theme="tufte">
-  {/* charts */}
-</ThemeProvider>
+// Import theme objects directly for inspection or extension
+import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
 
-// Extend a preset with custom overrides
-import { TUFTE_LIGHT } from "semiotic/themes"
 <ThemeProvider theme={{
   ...TUFTE_LIGHT,
-  colors: { ...TUFTE_LIGHT.colors, primary: "#ff6b6b" }
+  colors: { ...TUFTE_LIGHT.colors, primary: "#cc0000" },
 }}>
-  {/* charts */}
+  {/* Tufte with a red accent */}
 </ThemeProvider>`}
         language="jsx"
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "16px" }}>
-        <div>
-          <h4 style={{ marginTop: 0 }}>Light (default)</h4>
-          <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Primary</td><td><code>#00a2ce</code> <span style={{ display: "inline-block", width: 12, height: 12, background: "#00a2ce", borderRadius: 2, verticalAlign: "middle" }} /></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Background</td><td><code>transparent</code></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Text</td><td><code>#333</code></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Grid</td><td><code>#e0e0e0</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div>
-          <h4 style={{ marginTop: 0 }}>Dark</h4>
-          <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Primary</td><td><code>#4fc3f7</code> <span style={{ display: "inline-block", width: 12, height: 12, background: "#4fc3f7", borderRadius: 2, verticalAlign: "middle" }} /></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Background</td><td><code>#1a1a2e</code> <span style={{ display: "inline-block", width: 12, height: 12, background: "#1a1a2e", borderRadius: 2, verticalAlign: "middle", border: "1px solid #555" }} /></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Text</td><td><code>#e0e0e0</code></td></tr>
-              <tr><td style={{ padding: "4px 8px", fontWeight: 600 }}>Grid</td><td><code>#333</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Custom Themes */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="custom-themes">Custom Themes</h2>
-
-      <p>
-        Pass a partial theme object and it will be deep-merged with the current
-        theme. You only need to specify the properties you want to change:
-      </p>
-
-      <CodeBlock
-        code={`// Only override colors — typography stays at defaults
-<ThemeProvider theme={{
-  colors: {
-    primary: "#6366f1",
-    categorical: ["#6366f1", "#ec4899", "#14b8a6", "#f59e0b"],
-    background: "#fafafa",
-    text: "#1e293b",
-    textSecondary: "#64748b",
-    grid: "#e2e8f0",
-    border: "#cbd5e1",
-  }
-}}>
-  {/* charts */}
-</ThemeProvider>
-
-// Only override typography
-<ThemeProvider theme={{
-  typography: {
-    fontFamily: '"Inter", sans-serif',
-    titleSize: 18,
-    labelSize: 13,
-    tickSize: 11,
-  }
-}}>
-  {/* charts */}
-</ThemeProvider>`}
-        language="jsx"
-      />
-
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       {/* CSS Custom Properties */}
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       <h2 id="css-custom-properties">CSS Custom Properties</h2>
 
       <p>
-        ThemeProvider injects CSS custom properties on a wrapper <code>div</code>,
-        making it easy to style surrounding UI elements to match:
+        ThemeProvider sets CSS custom properties on a wrapper{" "}
+        <code>div</code>, so surrounding UI can inherit the active theme.
+        It also sets a <code>data-semiotic-theme</code> attribute when using
+        a named preset, enabling CSS-only theme switching for SSR:
       </p>
 
       <CodeBlock
-        code={`/* Available CSS custom properties */
+        code={`/* ThemeProvider emits all of these: */
 --semiotic-bg                /* colors.background */
 --semiotic-text              /* colors.text */
 --semiotic-text-secondary    /* colors.textSecondary */
@@ -432,121 +501,206 @@ import { TUFTE_LIGHT } from "semiotic/themes"
       />
 
       <CodeBlock
-        code={`/* Example: style a dashboard wrapper to match the theme */
+        code={`/* Style surrounding UI to match the chart theme */
 .dashboard-panel {
   background: var(--semiotic-bg);
   color: var(--semiotic-text);
   font-family: var(--semiotic-font-family);
   border: 1px solid var(--semiotic-border);
-}`}
+  border-radius: var(--semiotic-border-radius, 8px);
+}
+
+/* CSS-only theme switching without JS (SSR-friendly) */
+[data-semiotic-theme="tufte"] .dashboard-panel {
+  font-family: Georgia, serif;
+}
+
+/* Or use themeToCSS() to generate all vars at build time */`}
         language="css"
       />
 
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       {/* useTheme Hook */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="usetheme-hook">useTheme Hook</h2>
+      {/* ================================================================= */}
+      <h2 id="usetheme">useTheme Hook</h2>
 
       <p>
-        For custom components that need to read the current theme, use the{" "}
-        <code>useTheme</code> hook. It returns the full{" "}
-        <code>SemioticTheme</code> object:
+        Custom components can read the active theme with <code>useTheme()</code>,
+        which returns the full <code>SemioticTheme</code> object:
       </p>
 
       <CodeBlock
         code={`import { useTheme } from "semiotic"
 
-function ChartTitle({ text }) {
+function DashboardHeader({ title, subtitle }) {
   const theme = useTheme()
   return (
-    <h3 style={{
-      color: theme.colors.text,
+    <div style={{
+      background: theme.colors.background,
+      borderBottom: \`1px solid \${theme.colors.border}\`,
+      padding: "16px 24px",
       fontFamily: theme.typography.fontFamily,
-      fontSize: theme.typography.titleSize,
     }}>
-      {text}
-    </h3>
+      <h2 style={{ color: theme.colors.text, fontSize: theme.typography.titleSize, margin: 0 }}>
+        {title}
+      </h2>
+      {subtitle && (
+        <p style={{ color: theme.colors.textSecondary, fontSize: theme.typography.labelSize, margin: "4px 0 0" }}>
+          {subtitle}
+        </p>
+      )}
+    </div>
   )
 }`}
         language="jsx"
       />
 
+      {/* ================================================================= */}
+      {/* Theme Serialization */}
+      {/* ================================================================= */}
+      <h2 id="serialization">Theme Serialization</h2>
+
       <p>
-        <strong>Note:</strong> <code>useTheme</code> must be called inside a{" "}
-        <code>ThemeProvider</code>. Without a provider, it returns the default
-        light theme.
+        The <code>semiotic/themes</code> entry point exports utilities for
+        converting themes to CSS or design tokens:
       </p>
 
-      {/* ----------------------------------------------------------------- */}
+      <CodeBlock
+        code={`import {
+  themeToCSS,
+  themeToTokens,
+  resolveThemePreset,
+  THEME_PRESETS,
+} from "semiotic/themes"
+
+// Generate a CSS stylesheet for a theme
+const css = themeToCSS(resolveThemePreset("tufte"), ".my-charts")
+// .my-charts {
+//   --semiotic-bg: #fffff8;
+//   --semiotic-text: #111111;
+//   ...
+// }
+
+// Generate design tokens (DTCG format, Style Dictionary compatible)
+const tokens = themeToTokens(resolveThemePreset("tufte"))
+// { semiotic: { bg: { $value: "#fffff8", $type: "color" }, ... } }
+
+// Generate CSS for SSR with data-semiotic-theme attribute
+const ssrCSS = Object.entries(THEME_PRESETS)
+  .map(([name, theme]) =>
+    themeToCSS(theme, \`[data-semiotic-theme="\${name}"]\`)
+  )
+  .join("\\n\\n")`}
+        language="jsx"
+      />
+
+      {/* ================================================================= */}
+      {/* CSS-only theming (no ThemeProvider) */}
+      {/* ================================================================= */}
+      <h2 id="css-only">CSS-Only Theming</h2>
+
+      <p>
+        You don't need <code>ThemeProvider</code> at all — Semiotic charts
+        read <code>--semiotic-*</code> CSS custom properties from any ancestor
+        element. Set them in your stylesheet or inline:
+      </p>
+
+      <CodeBlock
+        code={`/* In your global CSS */
+.brand-charts {
+  --semiotic-bg: #1a1a2e;
+  --semiotic-text: #ededed;
+  --semiotic-text-secondary: #aaa;
+  --semiotic-grid: #333;
+  --semiotic-border: #555;
+  --semiotic-font-family: Georgia, serif;
+  --semiotic-tooltip-bg: #1a1a2e;
+  --semiotic-tooltip-text: #ededed;
+  --semiotic-tooltip-radius: 8px;
+}
+
+/* In JSX — no ThemeProvider needed */
+<div className="brand-charts">
+  <BarChart data={data} categoryAccessor="name" valueAccessor="value" />
+  <LineChart data={lines} xAccessor="x" yAccessor="y" />
+</div>`}
+        language="css"
+      />
+
+      {/* ================================================================= */}
+      {/* Accessibility */}
+      {/* ================================================================= */}
+      <h2 id="accessibility">Accessibility</h2>
+
+      <p>
+        The <code>"high-contrast"</code> preset uses the Wong 2011
+        color-blind-safe palette (<code>COLOR_BLIND_SAFE_CATEGORICAL</code>),
+        bold text, and high-contrast borders. Import the palette directly for
+        custom themes:
+      </p>
+
+      <CodeBlock
+        code={`import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
+
+// Use the 8-color CB-safe palette in a custom theme
+<ThemeProvider theme={{
+  colors: {
+    categorical: COLOR_BLIND_SAFE_CATEGORICAL,
+    text: "#000000",
+    border: "#000000",
+  },
+}}>
+  <BarChart data={data} categoryAccessor="group" valueAccessor="value" colorBy="group" />
+</ThemeProvider>
+
+// Or just use the high-contrast preset
+<ThemeProvider theme="high-contrast">
+  {/* charts */}
+</ThemeProvider>`}
+        language="jsx"
+      />
+
+      <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+        The <code>diagnoseConfig</code> utility also checks contrast ratios —
+        run <code>npx semiotic-ai --doctor</code> to audit your chart configs.
+      </p>
+
+      {/* ================================================================= */}
       {/* Props */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="props">Props</h2>
+      {/* ================================================================= */}
+      <h2 id="props">Props Reference</h2>
 
       <h3>ThemeProvider</h3>
       <PropTable componentName="ThemeProvider" props={themeProviderProps} />
 
-      <h3 style={{ marginTop: "32px" }}>SemioticTheme Shape</h3>
+      <h3 style={{ marginTop: 32 }}>SemioticTheme Shape</h3>
       <PropTable componentName="SemioticTheme" props={themeShapeProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Theming vs Styling */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="theming-vs-styling">Theming vs Styling</h2>
-
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--surface-3, #e0e0e0)" }}>
-            <th style={{ textAlign: "left", padding: "8px" }}>Approach</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Scope</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Best for</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
-            <td style={{ padding: "8px" }}><code>ThemeProvider</code></td>
-            <td style={{ padding: "8px" }}>All wrapped charts</td>
-            <td style={{ padding: "8px" }}>Consistent brand colors, dark mode, typography</td>
-          </tr>
-          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
-            <td style={{ padding: "8px" }}><code>colorBy</code> / <code>colorScheme</code></td>
-            <td style={{ padding: "8px" }}>Single chart</td>
-            <td style={{ padding: "8px" }}>Data-driven color encoding per chart</td>
-          </tr>
-          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
-            <td style={{ padding: "8px" }}><code>frameProps.style</code></td>
-            <td style={{ padding: "8px" }}>Individual marks</td>
-            <td style={{ padding: "8px" }}>Fine-grained per-mark styling, patterns, sketchy rendering</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p style={{ marginTop: "16px" }}>
-        These approaches compose — a ThemeProvider sets the base look, individual
-        charts can override with <code>colorScheme</code>, and{" "}
-        <code>frameProps</code> handles the edge cases.
-      </p>
-
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       {/* Related */}
-      {/* ----------------------------------------------------------------- */}
+      {/* ================================================================= */}
       <h2 id="related">Related</h2>
 
       <ul>
         <li>
           <Link to="/theming/styling">Styling</Link> — per-mark styling,
-          sketchy rendering, SVG patterns and gradients
+          data-driven colors, SVG patterns
         </li>
         <li>
           <Link to="/theming/theme-explorer">Theme Explorer</Link> — interactive
-          CSS variable playground with all 15 presets
+          playground to customize and export themes
         </li>
         <li>
-          <Link to="/features/legends">Legends</Link> — automatic legends
-          that respect theme colors
+          <Link to="/features/legends">Legends</Link> — legends automatically
+          respect theme colors and interactive state
         </li>
         <li>
           <Link to="/features/linked-charts">Linked Charts</Link> — coordinated
           views that share a theme
+        </li>
+        <li>
+          <Link to="/recipes/benchmark-dashboard">Benchmark Dashboard</Link>{" "}
+          — recipe with live theme switching across 4 views
         </li>
       </ul>
     </PageLayout>

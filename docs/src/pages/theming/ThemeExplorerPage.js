@@ -523,6 +523,12 @@ ${overrideLines.join("\n")}
             borderRadius: 8,
             background: resolvedTheme.colors.background,
             border: `1px solid ${resolvedTheme.colors.border}`,
+            "--semiotic-bg": resolvedTheme.colors.background,
+            "--semiotic-text": resolvedTheme.colors.text,
+            "--semiotic-text-secondary": resolvedTheme.colors.textSecondary,
+            "--semiotic-border": resolvedTheme.colors.border,
+            "--semiotic-grid": resolvedTheme.colors.grid,
+            "--semiotic-font-family": resolvedTheme.typography.fontFamily,
           }}
         >
           <div
@@ -537,15 +543,22 @@ ${overrideLines.join("\n")}
               categoryAccessor="category"
               valueAccessor="value"
               title="Bar Chart"
+              showGrid
               height={260}
               width={340}
+              frameProps={{
+                pieceStyle: () => ({ fill: resolvedTheme.colors.categorical[0] || resolvedTheme.colors.primary }),
+              }}
             />
             <LineChart
               data={lineData}
               xAccessor="x"
               yAccessor="y"
               lineBy="id"
+              colorBy="id"
+              colorScheme={resolvedTheme.colors.categorical}
               title="Line Chart"
+              showGrid
               height={260}
               width={340}
             />
@@ -554,7 +567,9 @@ ${overrideLines.join("\n")}
               xAccessor="x"
               yAccessor="y"
               colorBy="group"
+              colorScheme={resolvedTheme.colors.categorical}
               title="Scatterplot"
+              showGrid
               height={260}
               width={340}
             />
@@ -562,6 +577,8 @@ ${overrideLines.join("\n")}
               data={donutData}
               categoryAccessor="category"
               valueAccessor="value"
+              colorBy="category"
+              colorScheme={resolvedTheme.colors.categorical}
               title="Donut Chart"
               height={260}
               width={340}
