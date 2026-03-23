@@ -131,8 +131,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // Sort by orderAccessor if provided, and build a WeakMap of ordering
   // metadata so pointStyle can read the index directly without mutating user data.
-  const orderMapRef = useRef(new WeakMap<Record<string, any>, { idx: number; total: number }>())
-  const safeData = useMemo(() => {
+  const { safeData, orderMap } = useMemo(() => {
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
     let sorted = rawData
@@ -162,8 +161,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         map.set(d, { idx: idx++, total })
       }
     }
-    orderMapRef.current = map
-    return sorted
+    return { safeData: sorted, orderMap: map }
   }, [rawData, orderAccessor, xAccessor, yAccessor])
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
@@ -286,7 +284,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const order = orderMapRef.current.get(d)
+      const order = orderMap.get(d)
       const i = order?.idx ?? 0
       const n = order?.total ?? 1
       return {
@@ -297,7 +295,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         fillOpacity: 1,
       }
     }
-  }, [pointRadius])
+  }, [pointRadius, orderMap])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),

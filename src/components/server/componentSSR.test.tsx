@@ -83,6 +83,10 @@ function renderComponent(element: React.ReactElement): string {
   return ReactDOMServer.renderToStaticMarkup(element)
 }
 
+function countPattern(html: string, pattern: RegExp): number {
+  return (html.match(pattern) || []).length
+}
+
 function countOccurrences(html: string, tag: string): number {
   const regex = new RegExp(`<${tag}[\\s/>]`, "g")
   return (html.match(regex) || []).length
@@ -924,9 +928,10 @@ describe("Component SSR — ConnectedScatterplot", () => {
       />
     )
 
-    // svgPreRenderers should produce <line> elements connecting points
-    // 5 points = 4 connecting segments
-    expect(countOccurrences(html, "line")).toBeGreaterThanOrEqual(4)
+    // Connecting segments use stroke-linecap="round" — unique to svgPreRenderer lines
+    // 5 points = 4 connecting segments (each with stroke-linecap="round")
+    const roundCapLines = countPattern(html, /stroke-linecap="round"/g)
+    expect(roundCapLines).toBeGreaterThanOrEqual(4)
   })
 
   it("renders halo lines when fewer than 100 points", () => {
@@ -940,10 +945,10 @@ describe("Component SSR — ConnectedScatterplot", () => {
       />
     )
 
-    // Halo lines (white stroke) + segment lines = 8 total for 5 points
-    // At minimum, more lines than just segments
-    const lineCount = countOccurrences(html, "line")
-    expect(lineCount).toBeGreaterThanOrEqual(8) // 4 halos + 4 segments
+    // Halo lines have stroke="white" + stroke-linecap="round"
+    // 5 points = 4 halos
+    const haloLines = countPattern(html, /stroke="white"[^>]*stroke-linecap="round"/g)
+    expect(haloLines).toBe(4)
   })
 
   it("applies viridis colors to connecting segments", () => {
@@ -957,8 +962,9 @@ describe("Component SSR — ConnectedScatterplot", () => {
       />
     )
 
-    // Viridis colors are hex strings like #440154 — segments should have stroke attributes
-    expect(html).toMatch(/stroke="#[0-9a-f]{6}"/i)
+    // Connecting segments have hex stroke + stroke-linecap="round" (unique to pre-renderer)
+    const viridisSegments = countPattern(html, /stroke="#[0-9a-f]{6}"[^>]*stroke-linecap="round"/gi)
+    expect(viridisSegments).toBe(4) // 4 connecting segments
   })
 
   it("respects orderAccessor for sorting", () => {
@@ -980,9 +986,9 @@ describe("Component SSR — ConnectedScatterplot", () => {
       />
     )
 
-    // Should still render circles and connecting lines
+    // Should still render circles and round-capped connecting lines
     expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
-    expect(countOccurrences(html, "line")).toBeGreaterThanOrEqual(4)
+    expect(countPattern(html, /stroke-linecap="round"/g)).toBeGreaterThanOrEqual(4)
   })
 })
 
@@ -1052,8 +1058,9 @@ describe("Component SSR — QuadrantChart", () => {
       />
     )
 
-    // 2 center lines (vertical + horizontal)
-    expect(countOccurrences(html, "line")).toBeGreaterThanOrEqual(2)
+    // 2 center lines (vertical + horizontal) with default stroke="#999"
+    const centerLines = countPattern(html, /stroke="#999"/g)
+    expect(centerLines).toBe(2)
   })
 
   it("renders quadrant labels when showQuadrantLabels is true", () => {
