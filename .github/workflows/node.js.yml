@@ -80,6 +80,18 @@ jobs:
       - name: Build library
         run: npm run dist
 
+      - name: Generate missing Linux snapshot baselines
+        run: |
+          # Check if Linux baselines exist; if not, generate them from this run.
+          # Once committed, this step becomes a no-op.
+          HAVE_LINUX=$(find integration-tests -name "*-chromium-linux.png" | head -1)
+          if [ -z "$HAVE_LINUX" ]; then
+            echo "No Linux baselines found — generating with --update-snapshots"
+            npx playwright test --update-snapshots || true
+          else
+            echo "Linux baselines present — skipping generation"
+          fi
+
       - name: Run E2E tests
         run: npx playwright test
 

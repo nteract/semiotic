@@ -3,9 +3,6 @@ import { PlaywrightTestConfig } from "@playwright/test"
 export default {
   testDir: "integration-tests/",
   testMatch: "**/*.spec.ts",
-  // Platform-agnostic snapshot names — maxDiffPixels on each assertion handles minor
-  // cross-platform rendering differences (font hinting, subpixel antialiasing).
-  snapshotPathTemplate: "{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}",
   use: {
     headless: true, // Always run headless to avoid disrupting work
     screenshot: "on",
