@@ -12,7 +12,7 @@
   ],
   "entryPointStrategy": "expand",
   "out": "docs/build/api",
-  "json": "docs/build/api/api.json",
+  "json": "docs/public/api/api.json",
   "tsconfig": "tsconfig.json",
   "excludePrivate": true,
   "excludeProtected": true,

@@ -18,3 +18,4 @@ test-results
 bundle-analysis.html
 test-imports.mjs
 lbe.md
+docs/public/api/

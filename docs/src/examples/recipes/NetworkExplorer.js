@@ -118,7 +118,8 @@ export default function NetworkExplorer({
           size={[width, height]}
           nodes={nodes}
           edges={edges}
-          networkType={{ type: "force", iterations: 500 }}
+          chartType="force"
+          iterations={500}
           nodeSize={5}
           sourceAccessor="source"
           targetAccessor="target"

@@ -19,11 +19,9 @@ export default function IsotypeChartPage() {
       <p>
         Isotype charts (pictogram charts) replace abstract bar lengths with
         repeated icons, making quantities more tangible and engaging. This
-        recipe renders a survey of data visualization practitioners and
-        journalists, with each person represented by a small person-shaped
-        SVG silhouette. Journalists are colored in{" "}
-        <span style={{ color: "#9fd0cb" }}>teal</span> and viz experts in{" "}
-        <span style={{ color: "#E0488B" }}>pink</span>.
+        recipe uses <code>StreamOrdinalFrame</code> as a stacked bar chart
+        where each person is a separate bar segment, with person silhouette
+        icons rendered as an SVG overlay via <code>foregroundGraphics</code>.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
@@ -40,23 +38,32 @@ export default function IsotypeChartPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The chart lays out a person silhouette SVG path for each respondent in
-        a column. Each column corresponds to a data bin (how much they
-        write vs. create data viz), and the number of repeated icons in
-        each column encodes the count. A color hash maps the respondent
-        type to the appropriate color:
+        The data is expanded so each person is a separate data point with a
+        unique <code>personId</code>. StreamOrdinalFrame stacks these
+        unit-height bars in each column. The bars themselves are made
+        transparent, and a <code>foregroundGraphics</code> function renders
+        person silhouette SVG paths at the computed positions:
       </p>
       <CodeBlock
-        code={`const personPath = "M 9.12,3.34 C ... Z" // head + body silhouette
+        code={`// Expand: one row per person with unique stack key
+expandedData.push({
+  bin: d.writeviz.toFixed(2),
+  type: d.type,
+  count: 1,
+  personId: \`\${d.type}-\${bin}-\${i}\`
+})
 
-const colorHash = {
-  journalist: theme[2],  // teal
-  viz: theme[1]          // pink
-}
-
-// For each data point, repeat the person icon vertically:
-for (let i = 0; i < d.number; i++) {
-  <path d={personPath} fill={color} stroke={color} strokeWidth={1.5} />
+// StreamOrdinalFrame stacks by personId
+const frameProps = {
+  chartType: "bar",
+  oAccessor: "bin",
+  rAccessor: "count",
+  stackBy: "personId",
+  pieceStyle: () => ({ fillOpacity: 0 }), // invisible bars
+  foregroundGraphics: ({ size, margin }) => {
+    // Compute icon positions from chart dimensions
+    // Render person silhouettes colored by type
+  }
 }`}
         language="jsx"
       />
@@ -64,20 +71,23 @@ for (let i = 0; i < d.number; i++) {
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
-          Repeated SVG path shapes create a pictogram / isotype chart where
-          each icon represents one person.
+          <strong>StreamOrdinalFrame as backbone</strong> — provides category
+          layout, axes, margins, and responsiveness. The chart is a real
+          stacked bar chart with transparent bars.
+        </li>
+        <li>
+          <strong>foregroundGraphics for custom marks</strong> — the function
+          form receives <code>{"{size, margin}"}</code>, letting you compute
+          icon positions from the frame&apos;s layout.
+        </li>
+        <li>
+          Each person is a separate bar segment (
+          <code>stackBy: &quot;personId&quot;</code>), so the stacking logic
+          handles ordering. Icons are positioned to match.
         </li>
         <li>
           Color distinguishes categories (journalist vs. viz expert) using
           the same silhouette shape for both.
-        </li>
-        <li>
-          The chart is responsive, using a <code>ResizeObserver</code> to
-          adjust column widths and icon scaling to fit the container.
-        </li>
-        <li>
-          SVG rendering ensures crisp icons at any resolution, with no
-          canvas rasterization artifacts.
         </li>
       </ul>
 
@@ -85,15 +95,14 @@ for (let i = 0; i < d.number; i++) {
       <ul>
         <li>
           <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the
-          underlying ordinal frame for bar charts
+          underlying ordinal frame
         </li>
         <li>
           <Link to="/charts/bar-chart">BarChart</Link> — standard bar chart
-          for comparison
         </li>
         <li>
-          <Link to="/cookbook/waterfall-chart">Waterfall Chart</Link> — another
-          custom rendering approach
+          <Link to="/charts/stacked-bar-chart">StackedBarChart</Link> — stacked
+          bar chart HOC
         </li>
       </ul>
     </PageLayout>
