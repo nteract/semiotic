@@ -161,7 +161,13 @@
     "streaming",
     "network-graph",
     "ai",
-    "llm"
+    "llm",
+    "claude",
+    "copilot",
+    "geographic",
+    "choropleth",
+    "sankey",
+    "force-directed"
   ],
   "license": "Apache-2.0",
   "size-limit": [

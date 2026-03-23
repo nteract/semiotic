@@ -41,6 +41,16 @@ jobs:
       - name: Build production bundles
         run: npm run dist:prod
 
+      - name: Verify TypeScript declarations
+        run: |
+          for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+          done
+          echo "All declaration files present"
+
       - name: Check bundle sizes
         run: npx size-limit
 
@@ -71,7 +81,7 @@ jobs:
         run: npm run dist
 
       - name: Run E2E tests
-        run: npx playwright test --update-snapshots
+        run: npx playwright test
 
       - name: Upload snapshot baselines
         if: always()

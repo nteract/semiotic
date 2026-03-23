@@ -147,7 +147,7 @@ export default function NetworkExplorer({
             const targetMatch = !searchTerm || tgt.toLowerCase().includes(searchLower)
             return {
               stroke: "var(--text-secondary)",
-              strokeWidth: raw.value || 1,
+              strokeWidth: raw.weight || 1,
               opacity: sourceMatch || targetMatch ? 0.4 : 0.05,
             }
           }}
