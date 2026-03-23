@@ -588,8 +588,9 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     canvasPreRenderers: mergedPreRenderers,
     svgPreRenderers,
     ...frameProps,
-    // Override canvasPreRenderers after spread so user can't clobber quadrant renderers
+    // Override pre-renderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
+    svgPreRenderers,
   }
 
   return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

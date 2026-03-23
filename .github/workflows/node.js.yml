@@ -43,7 +43,7 @@ jobs:
 
       - name: Verify TypeScript declarations
         run: |
-          for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts; do
+          for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts dist/semiotic-ai.d.ts dist/semiotic-data.d.ts dist/semiotic-server.d.ts dist/semiotic-themes.d.ts; do
             if [ ! -f "$f" ]; then
               echo "MISSING: $f"
               exit 1

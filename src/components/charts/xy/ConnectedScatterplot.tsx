@@ -129,8 +129,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const rawData = (data || []) as Record<string, any>[]
 
-  // Sort by orderAccessor if provided, then stamp __orderIndex/__orderTotal
-  // on each datum so pointStyle can read the index directly (order-independent).
+  // Sort by orderAccessor if provided, and build a WeakMap of ordering
+  // metadata so pointStyle can read the index directly without mutating user data.
+  const orderMapRef = useRef(new WeakMap<Record<string, any>, { idx: number; total: number }>())
   const safeData = useMemo(() => {
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
@@ -147,20 +148,21 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         return na - nb
       })
     }
-    // Count renderable points and stamp ordering metadata
-    const renderable = sorted.filter((p: any) => {
-      const x = xAcc(p); const y = yAcc(p)
-      return x != null && y != null && isFinite(x) && isFinite(y)
-    })
-    const total = renderable.length
+    // Count renderable points and store ordering metadata in a WeakMap
+    const map = new WeakMap<Record<string, any>, { idx: number; total: number }>()
+    let total = 0
+    for (const d of sorted) {
+      const x = xAcc(d); const y = yAcc(d)
+      if (x != null && y != null && isFinite(x) && isFinite(y)) total++
+    }
     let idx = 0
     for (const d of sorted) {
       const x = xAcc(d); const y = yAcc(d)
       if (x != null && y != null && isFinite(x) && isFinite(y)) {
-        (d as any).__orderIndex = idx++;
-        (d as any).__orderTotal = total
+        map.set(d, { idx: idx++, total })
       }
     }
+    orderMapRef.current = map
     return sorted
   }, [rawData, orderAccessor, xAccessor, yAccessor])
 
@@ -242,9 +244,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   )
 
   // ── SVG pre-renderer for SSR (same logic as canvas, produces SVG elements) ──
+  // Reads point node style.opacity to respect selection dimming in SSR output.
   const connectingLineSVGRenderer = useMemo(() => {
     return (nodes: SceneNode[], _scales: StreamScales, _layout: StreamLayout): React.ReactNode => {
-      const pts = nodes.filter((n) => n.type === "point") as Array<{ x: number; y: number; datum?: any }>
+      const pts = nodes.filter((n) => n.type === "point") as Array<{ x: number; y: number; style?: { opacity?: number }; datum?: any }>
       if (pts.length < 2) return null
       const count = pts.length
       const halo = count < 100
@@ -254,15 +257,18 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         const p0 = pts[i]
         const p1 = pts[i + 1]
         const color = viridisColor(i, count)
+        const o0 = typeof p0.style?.opacity === "number" ? p0.style.opacity : 1
+        const o1 = typeof p1.style?.opacity === "number" ? p1.style.opacity : 1
+        const segmentOpacity = Math.min(o0, o1)
         if (halo) {
           elements.push(
             <line key={`halo-${i}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y}
-              stroke="white" strokeWidth={pointRadius + 2} strokeLinecap="round" opacity={0.5} />
+              stroke="white" strokeWidth={pointRadius + 2} strokeLinecap="round" opacity={0.5 * segmentOpacity} />
           )
         }
         elements.push(
           <line key={`seg-${i}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y}
-            stroke={color} strokeWidth={pointRadius} strokeLinecap="round" />
+            stroke={color} strokeWidth={pointRadius} strokeLinecap="round" opacity={segmentOpacity} />
         )
       }
       return <>{elements}</>
@@ -276,13 +282,13 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Point style — viridis colored, fixed radius ───────────────────────
   //
-  // Each datum has __orderIndex and __orderTotal stamped during sorting,
-  // so pointStyle reads the index directly without relying on call order.
+  // Reads ordering from the WeakMap (no user data mutation).
 
   const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const i = (d as any).__orderIndex ?? 0
-      const n = (d as any).__orderTotal ?? 1
+      const order = orderMapRef.current.get(d)
+      const i = order?.idx ?? 0
+      const n = order?.total ?? 1
       return {
         fill: n > 0 ? viridisColor(i, n) : "#6366f1",
         stroke: "white",
