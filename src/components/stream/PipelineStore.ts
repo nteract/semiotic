@@ -35,7 +35,7 @@ import {
   buildRectNode,
   buildHeatcellNode
 } from "./SceneGraph"
-import { resolveAccessor, resolveRawAccessor, resolveStringAccessor } from "./accessorUtils"
+import { resolveAccessor, resolveRawAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -2140,6 +2140,8 @@ export class PipelineStore {
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
+    const prev = { ...this.config }
+
     // Invalidate color map caches when relevant config changes
     if (config.colorScheme !== undefined) {
       this._colorMapCache = null
@@ -2156,44 +2158,79 @@ export class PipelineStore {
       this._stackExtentCache = null
     }
 
+    // Track whether any accessor actually changed (not just new function identity)
+    let accessorChanged = false
+
     Object.assign(this.config, config)
 
-    // Re-resolve accessor functions when accessor config changes
-    if (config.xAccessor !== undefined || config.yAccessor !== undefined
+    // Re-resolve accessor functions only when the accessor source actually changed.
+    // Uses .toString() comparison to detect inline arrow functions that are
+    // recreated on every parent render but have identical source code.
+    // Re-resolve getX/getY when accessor props change, OR when chartType/runtimeMode
+    // changes (which changes which fallback defaults apply: x/y vs time/value).
+    const modeChanged = ("chartType" in config && config.chartType !== prev.chartType)
+      || ("runtimeMode" in config && config.runtimeMode !== prev.runtimeMode)
+    if (modeChanged
+      || config.xAccessor !== undefined || config.yAccessor !== undefined
       || config.timeAccessor !== undefined || config.valueAccessor !== undefined) {
-      const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
-      const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
-      if (useStreamingDefaults) {
-        this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
-        this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
-      } else {
-        this.getX = resolveAccessor(this.config.xAccessor, "x")
-        this.getY = resolveAccessor(this.config.yAccessor, "y")
+      const xChanged = modeChanged || !accessorsEquivalent(config.xAccessor ?? config.timeAccessor, prev.xAccessor ?? prev.timeAccessor)
+      const yChanged = modeChanged || !accessorsEquivalent(config.yAccessor ?? config.valueAccessor, prev.yAccessor ?? prev.valueAccessor)
+      if (xChanged || yChanged) {
+        const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+        const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
+        if (useStreamingDefaults) {
+          this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
+          this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
+        } else {
+          this.getX = resolveAccessor(this.config.xAccessor, "x")
+          this.getY = resolveAccessor(this.config.yAccessor, "y")
+        }
+        accessorChanged = true
       }
     }
-    if (config.groupAccessor !== undefined) {
-      this.getGroup = resolveStringAccessor(this.config.groupAccessor)
+    if ("groupAccessor" in config && !accessorsEquivalent(config.groupAccessor, prev.groupAccessor)) {
+      this.getGroup = this.config.groupAccessor != null ? resolveStringAccessor(this.config.groupAccessor) : undefined
+      accessorChanged = true
     }
-    if (config.categoryAccessor !== undefined) {
-      this.getCategory = resolveStringAccessor(this.config.categoryAccessor)
+    if ("categoryAccessor" in config && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor)) {
+      this.getCategory = this.config.categoryAccessor != null ? resolveStringAccessor(this.config.categoryAccessor) : undefined
+      accessorChanged = true
     }
-    if (config.sizeAccessor !== undefined) {
+    if ("sizeAccessor" in config && !accessorsEquivalent(config.sizeAccessor, prev.sizeAccessor)) {
       this.getSize = this.config.sizeAccessor
         ? resolveAccessor(this.config.sizeAccessor, "size")
         : undefined
+      accessorChanged = true
     }
-    if (config.colorAccessor !== undefined) {
-      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
+      this.getColor = this.config.colorAccessor != null ? resolveStringAccessor(this.config.colorAccessor) : undefined
+      accessorChanged = true
     }
-    if (config.y0Accessor !== undefined) {
+    if ("y0Accessor" in config && !accessorsEquivalent(config.y0Accessor, prev.y0Accessor)) {
       this.getY0 = this.config.y0Accessor
         ? resolveAccessor(this.config.y0Accessor, "y0")
         : undefined
+      accessorChanged = true
     }
-    if (config.pointIdAccessor !== undefined) {
-      this.getPointId = resolveStringAccessor(this.config.pointIdAccessor)
+    if ("pointIdAccessor" in config && !accessorsEquivalent(config.pointIdAccessor, prev.pointIdAccessor)) {
+      this.getPointId = this.config.pointIdAccessor != null ? resolveStringAccessor(this.config.pointIdAccessor) : undefined
+      accessorChanged = true
     }
 
-    this.needsFullRebuild = true
+    // Only mark full rebuild needed if non-accessor config actually changed or accessors changed.
+    // Compare values (not just key presence) because updateConfig receives the full config object
+    // on every React render, so all keys are always present.
+    if (!accessorChanged) {
+      const nonAccessorKeys = Object.keys(config).filter(k => !k.endsWith("Accessor") && k !== "timeAccessor" && k !== "valueAccessor")
+      for (const k of nonAccessorKeys) {
+        if ((config as any)[k] !== (prev as any)[k]) {
+          accessorChanged = true
+          break
+        }
+      }
+    }
+    if (accessorChanged) {
+      this.needsFullRebuild = true
+    }
   }
 }

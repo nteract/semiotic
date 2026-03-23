@@ -209,6 +209,45 @@ describe("diagnoseConfig", () => {
     expect(diag.severity).toBe("warning")
   })
 
+  it("warns about function accessors", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: (d: any) => d.x,
+      yAccessor: (d: any) => d.y,
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("FUNCTION_ACCESSOR")
+    const diag = result.diagnoses.find(d => d.code === "FUNCTION_ACCESSOR")!
+    expect(diag.severity).toBe("warning")
+    expect(diag.message).toContain("xAccessor")
+    expect(diag.message).toContain("yAccessor")
+    // ok should still be true since it's only a warning
+    expect(result.ok).toBe(true)
+  })
+
+  it("does not warn about function accessors when only string accessors used", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("FUNCTION_ACCESSOR")
+  })
+
+  it("warns about a single function accessor among strings", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 10 }],
+      categoryAccessor: "category",
+      valueAccessor: (d: any) => d.value,
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("FUNCTION_ACCESSOR")
+    const diag = result.diagnoses.find(d => d.code === "FUNCTION_ACCESSOR")!
+    expect(diag.message).toContain("valueAccessor")
+    expect(diag.message).not.toContain("categoryAccessor")
+  })
+
   it("detects string accessor on heatmap", () => {
     const result = diagnoseConfig("Heatmap", {
       data: [{ x: "Mon", y: 1, value: 10 }],

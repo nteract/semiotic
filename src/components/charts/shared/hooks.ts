@@ -231,6 +231,7 @@ export function useChartLegendAndMargin({
   legendPosition = "right",
   userMargin,
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
+  categories,
 }: {
   data: Array<Record<string, any>>
   colorBy: Accessor<string> | undefined
@@ -239,6 +240,7 @@ export function useChartLegendAndMargin({
   legendPosition?: LegendPosition
   userMargin: MarginType | undefined
   defaults?: { top: number; bottom: number; left: number; right: number }
+  categories?: string[]
 }): {
   legend: ReturnType<typeof createLegend> | undefined
   margin: { top: number; bottom: number; left: number; right: number }
@@ -252,8 +254,8 @@ export function useChartLegendAndMargin({
 
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data, colorBy, colorScale, getColor })
-  }, [shouldShowLegend, colorBy, data, colorScale])
+    return createLegend({ data, colorBy, colorScale, getColor, categories })
+  }, [shouldShowLegend, colorBy, data, colorScale, categories])
 
   const margin = useMemo(() => {
     const finalMargin = { ...defaults, ...userMargin }
@@ -268,6 +270,8 @@ export function useChartLegendAndMargin({
 
   return { legend, margin, legendPosition }
 }
+
+// ── Push API category tracking ────────────────────────────────────────
 
 // ── Legend interaction ──────────────────────────────────────────────────
 

@@ -81,16 +81,16 @@ const frameProps = {
   connectorAccessor: d => d.name,
   foregroundGraphics: [
     <g transform="translate(400, 73)" key="legend">
-      <text key={1} fill={theme[3]}>
+      <text key="pikachu" fill={theme[3]}>
         Pikachu
       </text>
-      <text key={1} y={20} fill={theme[2]}>
+      <text key="bulbasaur" y={20} fill={theme[2]}>
         Bulbasaur
       </text>
-      <text key={1} y={40} fill={theme[1]}>
+      <text key="charmander" y={40} fill={theme[1]}>
         Charmander
       </text>
-      <text key={1} y={60} fill={theme[4]}>
+      <text key="squirtle" y={60} fill={theme[4]}>
         Squirtle
       </text>
     </g>
@@ -100,16 +100,16 @@ const frameProps = {
 const overrideProps = {
   foregroundGraphics: ` [
     <g transform="translate(400, 73)" key="legend">
-      <text key={1} fill={theme[3]}>
+      <text key="pikachu" fill={theme[3]}>
         Pikachu
       </text>
-      <text key={1} y={20} fill={theme[2]}>
+      <text key="bulbasaur" y={20} fill={theme[2]}>
         Bulbasaur
       </text>
-      <text key={1} y={40} fill={theme[1]}>
+      <text key="charmander" y={40} fill={theme[1]}>
         Charmander
       </text>
-      <text key={1} y={60} fill={theme[4]}>
+      <text key="squirtle" y={60} fill={theme[4]}>
         Squirtle
       </text>
     </g>

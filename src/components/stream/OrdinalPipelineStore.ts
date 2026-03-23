@@ -12,7 +12,7 @@ import type {
 import type { Changeset, Style, DecayConfig } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
-import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
@@ -450,8 +450,8 @@ export class OrdinalPipelineStore {
     // Apply padding
     const range = max - min
     const padAmount = range > 0 ? range * pad : 1
-    if (!this.config.rExtent?.[0]) min -= padAmount
-    if (!this.config.rExtent?.[1]) max += padAmount
+    if (this.config.rExtent?.[0] == null) min -= padAmount
+    if (this.config.rExtent?.[1] == null) max += padAmount
 
     // Bars should include zero
     if (chartType === "bar" || chartType === "clusterbar") {
@@ -1000,10 +1000,58 @@ export class OrdinalPipelineStore {
   }
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
+    const prev = { ...this.config }
+
     if (config.colorScheme !== this.config.colorScheme) {
       this._colorSchemeMap = null
       this._colorSchemeIndex = 0
     }
+
     Object.assign(this.config, config)
+
+    // Re-resolve accessors only when the accessor source actually changed.
+    // Uses .toString() comparison to skip re-resolution for inline arrow functions
+    // that are recreated on every parent render but have identical source code.
+    if (config.oAccessor !== undefined || config.categoryAccessor !== undefined) {
+      const newO = config.oAccessor || config.categoryAccessor
+      const prevO = prev.oAccessor || prev.categoryAccessor
+      if (!accessorsEquivalent(newO, prevO)) {
+        this.getO = resolveStringAccessor(
+          this.config.oAccessor || this.config.categoryAccessor,
+          "category"
+        ) as (d: any) => string
+        // Clear discovered categories so they're rebuilt with the new accessor
+        this.categories.clear()
+      }
+    }
+    if (config.rAccessor !== undefined) {
+      const newArr = Array.isArray(config.rAccessor) ? config.rAccessor : [config.rAccessor]
+      const prevArr = Array.isArray(prev.rAccessor) ? prev.rAccessor : [prev.rAccessor]
+      const rChanged = newArr.length !== prevArr.length || newArr.some((acc, i) => !accessorsEquivalent(acc, prevArr[i]))
+      if (rChanged) {
+        const rawR = this.config.rAccessor
+        if (Array.isArray(rawR)) {
+          this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
+          this.getR = this.rAccessors[0]
+          this.rExtents = rawR.map(() => new IncrementalExtent())
+        } else {
+          this.getR = resolveAccessor(rawR, "value")
+          this.rAccessors = [this.getR]
+          this.rExtents = [this.rExtent]
+        }
+      }
+    }
+    if ("stackBy" in config && !accessorsEquivalent(config.stackBy, prev.stackBy)) {
+      this.getStack = this.config.stackBy != null ? resolveStringAccessor(this.config.stackBy) : undefined
+    }
+    if ("groupBy" in config && !accessorsEquivalent(config.groupBy, prev.groupBy)) {
+      this.getGroup = this.config.groupBy != null ? resolveStringAccessor(this.config.groupBy) : undefined
+    }
+    if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
+      this.getColor = this.config.colorAccessor != null ? resolveStringAccessor(this.config.colorAccessor) : undefined
+    }
+    if ("connectorAccessor" in config && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
+      this.getConnector = this.config.connectorAccessor != null ? resolveStringAccessor(this.config.connectorAccessor) : undefined
+    }
   }
 }

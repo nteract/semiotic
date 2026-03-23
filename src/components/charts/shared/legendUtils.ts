@@ -1,5 +1,6 @@
 import type { Accessor } from "./types"
 import type { LegendItem } from "../../types/legendTypes"
+import { STREAMING_PALETTE } from "./colorUtils"
 
 /**
  * Create a legend configuration for HOC components
@@ -18,7 +19,8 @@ export function createLegend({
   colorScale,
   getColor,
   strokeColor,
-  strokeWidth
+  strokeWidth,
+  categories
 }: {
   data: Array<Record<string, any>>
   colorBy: Accessor<string>
@@ -26,21 +28,24 @@ export function createLegend({
   getColor: (d: Record<string, any>, accessor: Accessor<string>, scale?: ((v: string) => string)) => string
   strokeColor?: string
   strokeWidth?: number
+  categories?: string[]
 }) {
-  // Get unique category values
-  const uniqueValues = Array.from(
-    new Set(
-      data.map((d) => {
-        if (typeof colorBy === "function") {
-          return colorBy(d)
-        }
-        return d[colorBy as string]
-      })
+  // Get unique category values — prefer explicit categories (from push API tracking)
+  const uniqueValues = categories && categories.length > 0
+    ? categories
+    : Array.from(
+      new Set(
+        data.map((d) => {
+          if (typeof colorBy === "function") {
+            return colorBy(d)
+          }
+          return d[colorBy as string]
+        })
+      )
     )
-  )
 
   // Create items array for the legend
-  const items = uniqueValues.map((value) => {
+  const items = uniqueValues.map((value, i) => {
     const sampleData =
       typeof colorBy === "function"
         ? data.find((d) => colorBy(d) === value)
@@ -50,7 +55,7 @@ export function createLegend({
       ? getColor(sampleData, colorBy, colorScale)
       : colorScale
       ? colorScale(value)
-      : "#000000"
+      : STREAMING_PALETTE[i % STREAMING_PALETTE.length]
 
     return {
       label: String(value),

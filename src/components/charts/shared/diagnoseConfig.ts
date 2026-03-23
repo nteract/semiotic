@@ -472,6 +472,35 @@ function checkMarginOverflow(
   }
 }
 
+const ACCESSOR_PROPS = [
+  "xAccessor", "yAccessor", "timeAccessor", "valueAccessor",
+  "categoryAccessor", "colorBy", "sizeBy", "lineBy", "areaBy",
+  "stackBy", "groupBy", "orderAccessor", "y0Accessor",
+  "sourceAccessor", "targetAccessor", "nodeIDAccessor",
+  "childrenAccessor", "costAccessor",
+]
+
+function checkFunctionAccessors(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  const fnAccessors: string[] = []
+  for (const prop of ACCESSOR_PROPS) {
+    if (typeof props[prop] === "function") {
+      fnAccessors.push(prop)
+    }
+  }
+  if (fnAccessors.length > 0) {
+    out.push({
+      severity: "warning",
+      code: "FUNCTION_ACCESSOR",
+      message: `Function accessor${fnAccessors.length > 1 ? "s" : ""} detected: ${fnAccessors.join(", ")}. If defined inline (e.g. \`xAccessor={d => d.value}\`), every parent re-render creates a new reference which may trigger unnecessary scene rebuilds.`,
+      fix: `Use string accessors when possible (e.g. xAccessor="value"), or memoize with useCallback / define outside the component.`,
+    })
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -521,6 +550,7 @@ export function diagnoseConfig(
   checkLegendMarginTight(componentName, props, diagnoses)
   checkHeatmapStringAccessor(componentName, props, diagnoses)
   checkColorContrast(componentName, props, diagnoses)
+  checkFunctionAccessors(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

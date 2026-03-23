@@ -10,6 +10,25 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   const isHorizontal = projection === "horizontal"
   const normalize = config.normalize
 
+  // Discover all stack keys globally for consistent ordering across columns.
+  // When stacking is disabled (no getStack), short-circuit to the single default key
+  // to avoid an unnecessary full pass over all columns and pieces.
+  const stackKeys: string[] = []
+  if (getStack) {
+    const stackKeySet = new Set<string>()
+    for (const col of Object.values(columns)) {
+      for (const d of col.pieceData) {
+        const key = getStack(d)
+        if (!stackKeySet.has(key)) {
+          stackKeySet.add(key)
+          stackKeys.push(key)
+        }
+      }
+    }
+  } else {
+    stackKeys.push("_default")
+  }
+
   for (const col of Object.values(columns)) {
     // Group pieces by stack key if stacking, and aggregate values per group
     const stacks = new Map<string, { total: number; pieces: Record<string, any>[] }>()
@@ -30,7 +49,10 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
     let posOffset = 0
     let negOffset = 0
 
-    for (const [stackKey, group] of stacks) {
+    // Iterate in global stack key order for consistent stacking across columns
+    for (const stackKey of stackKeys) {
+      const group = stacks.get(stackKey)
+      if (!group) continue
       // Use the aggregated total for the stack group (one rect per group)
       let val = group.total
       if (normalize && colTotal > 0) val = val / colTotal

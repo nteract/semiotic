@@ -315,6 +315,7 @@ async function renderChartHandler(args) {
     const component = args.component;
     const props = args.props ?? {};
     const theme = args.theme;
+    const format = args.format || "svg";
     if (!component) {
         return {
             content: [{ type: "text", text: `Missing 'component' field. Provide { component: '<name>', props: { ... } }. Available: ${componentNames.join(", ")}` }],
@@ -335,14 +336,41 @@ async function renderChartHandler(args) {
         };
     }
     let svg = result.svg;
-    // Wrap SVG with theme CSS custom properties if provided
+    // Inject theme CSS custom properties into the SVG root element.
+    // We add a <style> block inside the SVG rather than wrapping in a <div>,
+    // because sharp requires pure SVG input for PNG rasterization.
     if (theme && Object.keys(theme).length > 0) {
         const validVars = Object.entries(theme)
             .filter(([k]) => k.startsWith("--semiotic-"))
             .map(([k, v]) => `${k}: ${v}`)
             .join("; ");
         if (validVars) {
-            svg = `<div style="${validVars}">${svg}</div>`;
+            svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`);
+        }
+    }
+    // PNG rasterization via sharp (optional dependency)
+    if (format === "png") {
+        try {
+            // Dynamic import — sharp is an optional dependency
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const sharpMod = await Function('return import("sharp")')();
+            const sharpFn = sharpMod.default || sharpMod;
+            const pngBuffer = await sharpFn(Buffer.from(svg)).png().toBuffer();
+            const base64 = pngBuffer.toString("base64");
+            return {
+                content: [{ type: "text", text: `data:image/png;base64,${base64}` }],
+            };
+        }
+        catch (err) {
+            if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
+                return {
+                    content: [{ type: "text", text: `PNG output requires the 'sharp' package. Install it with: npm install sharp\n\nFalling back to SVG output:\n\n${svg}` }],
+                };
+            }
+            return {
+                content: [{ type: "text", text: `PNG conversion failed: ${err.message}\n\nSVG output:\n\n${svg}` }],
+                isError: true,
+            };
         }
     }
     return {
@@ -476,10 +504,11 @@ function createServer() {
         data: zod_1.z.array(zod_1.z.record(zod_1.z.string(), zod_1.z.unknown())).min(1).max(5).describe("1-5 sample data objects"),
         intent: zod_1.z.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
     }, suggestChartHandler);
-    srv.tool("renderChart", `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. Available components: ${componentNames.join(", ")}.`, {
+    srv.tool("renderChart", `Render a Semiotic chart to static SVG or PNG. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`, {
         component: zod_1.z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
         props: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
         theme: zod_1.z.record(zod_1.z.string(), zod_1.z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
+        format: zod_1.z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package."),
     }, renderChartHandler);
     srv.tool("diagnoseConfig", "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.", {
         component: zod_1.z.string().describe("Chart component name, e.g. 'LineChart'"),

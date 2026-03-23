@@ -109,13 +109,13 @@
     "clean": "rm -rf .parcel-cache docs/build dist && echo 'All caches and build artifacts cleared'",
     "website:clean": "npm run clean && npm run dist:prod",
     "docs:dev": "parcel serve --target website --no-cache --port 3000",
-    "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
+    "website:start": "npm run dist:prod && npm run docs:api:json && parcel serve --target website --no-cache",
     "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
     "generate:ssr-gallery": "npx tsx scripts/ssr-gallery.tsx > docs/public/ssr-gallery.html 2>/dev/null",
-    "website:build": "npm run dist:prod && npm run generate:ssr-gallery && parcel build --target website && node scripts/prerender.mjs",
+    "website:build": "npm run dist:prod && npm run docs:api:json && npm run generate:ssr-gallery && parcel build --target website && node scripts/prerender.mjs",
     "build:mcp": "tsc -p tsconfig.mcp.json",
     "docs:api": "typedoc",
-    "docs:api:json": "typedoc --json docs/build/api/api.json",
+    "docs:api:json": "typedoc --json docs/public/api/api.json",
     "typescript": "tsc --noEmit",
     "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
@@ -247,6 +247,9 @@
   "peerDependencies": {
     "react": "^18.1.0 || ^19.0.0",
     "react-dom": "^18.1.0 || ^19.0.0"
+  },
+  "optionalDependencies": {
+    "sharp": ">=0.33.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

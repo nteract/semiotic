@@ -1,11 +1,12 @@
 "use client"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -212,13 +213,6 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
 export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
-
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -277,6 +271,34 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   if (emptyEl) return emptyEl
 
   const safeData = data || []
+  const isPushMode = data === undefined
+
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+  })
+
+  const wrappedPush = useCallback(
+    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    [streaming.wrapPush]
+  )
+  const wrappedPushMany = useCallback(
+    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
+    [streaming.wrapPushMany]
+  )
+
+  useImperativeHandle(ref, () => ({
+    push: wrappedPush,
+    pushMany: wrappedPushMany,
+    clear: () => {
+      streaming.resetCategories()
+      frameRef.current?.clear()
+    },
+    getData: () => frameRef.current?.getData() ?? []
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
@@ -371,6 +393,23 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     defaults: resolved.marginDefaults,
   })
 
+  // Merge streaming legend when in push API mode
+  const effectiveLegend = streaming.streamingLegend || legend
+  const effectiveLegendPosition = legendPositionProp || legendPosition
+
+  // Adjust margin for streaming legend
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return margin
+  }, [margin, streaming.streamingMarginAdjust])
+
   // Default tooltip showing all configured fields
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
     { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
@@ -405,7 +444,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: effectiveMargin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -413,7 +452,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend, legendPosition }),
+    ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,
