@@ -467,5 +467,29 @@ import { CategoryColorProvider, LinkedCharts } from "semiotic"
 
 **`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
 
+## Performance
+
+**Prefer string accessors over function accessors**: `xAccessor="value"` is always referentially stable. `xAccessor={d => d.value}` creates a new function on every parent render, which can trigger unnecessary scene rebuilds. The pipeline stores use `.toString()` comparison to detect functionally identical inline arrow functions and skip re-resolution, but this heuristic doesn't work for closures that capture changing variables. When you must use a function accessor, memoize it with `useCallback` or define it outside the component:
+
+```jsx
+// Best: string accessor (always stable)
+<LineChart data={d} xAccessor="time" yAccessor="value" />
+
+// Good: function defined outside component (stable reference)
+const getX = (d) => d.timestamp.getTime()
+function MyChart() {
+  return <LineChart data={d} xAccessor={getX} yAccessor="value" />
+}
+
+// Acceptable: memoized function (stable across re-renders)
+function MyChart() {
+  const getX = useCallback((d) => d.timestamp.getTime(), [])
+  return <LineChart data={d} xAccessor={getX} yAccessor="value" />
+}
+
+// Avoid: inline arrow function (new reference every render)
+<LineChart data={d} xAccessor={d => d.timestamp.getTime()} yAccessor="value" />
+```
+
 ## Differentiators
 Network viz, geographic viz (choropleth, flow maps, distance cartograms), streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, CSS custom property theming (17 tokens), ThemeProvider + CSS-only theming, color-blind safe palettes, tooltip theming, annotation theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend

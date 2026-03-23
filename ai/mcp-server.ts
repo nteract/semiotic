@@ -305,10 +305,11 @@ async function suggestChartHandler(args: { data?: any[]; intent?: string }): Pro
   }
 }
 
-async function renderChartHandler(args: { component?: string; props?: Record<string, any>; theme?: Record<string, string> }): Promise<ToolResult> {
+async function renderChartHandler(args: { component?: string; props?: Record<string, any>; theme?: Record<string, string>; format?: string }): Promise<ToolResult> {
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
   const theme = args.theme
+  const format = args.format || "svg"
 
   if (!component) {
     return {
@@ -342,6 +343,31 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       .join("; ")
     if (validVars) {
       svg = `<div style="${validVars}">${svg}</div>`
+    }
+  }
+
+  // PNG rasterization via sharp (optional dependency)
+  if (format === "png") {
+    try {
+      // Dynamic import — sharp is an optional dependency
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const sharpMod = await (Function('return import("sharp")')() as Promise<any>)
+      const sharpFn = sharpMod.default || sharpMod
+      const pngBuffer: Buffer = await sharpFn(Buffer.from(svg)).png().toBuffer()
+      const base64 = pngBuffer.toString("base64")
+      return {
+        content: [{ type: "text" as const, text: `data:image/png;base64,${base64}` }],
+      }
+    } catch (err: any) {
+      if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
+        return {
+          content: [{ type: "text" as const, text: `PNG output requires the 'sharp' package. Install it with: npm install sharp\n\nFalling back to SVG output:\n\n${svg}` }],
+        }
+      }
+      return {
+        content: [{ type: "text" as const, text: `PNG conversion failed: ${err.message}\n\nSVG output:\n\n${svg}` }],
+        isError: true,
+      }
     }
   }
 
@@ -506,11 +532,12 @@ function createServer(): McpServer {
 
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       theme: z.record(z.string(), z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
+      format: z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package."),
     },
     renderChartHandler
   )

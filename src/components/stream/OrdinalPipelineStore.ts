@@ -12,7 +12,7 @@ import type {
 import type { Changeset, Style, DecayConfig } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
-import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
@@ -1000,10 +1000,54 @@ export class OrdinalPipelineStore {
   }
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
+    const prev = this.config
+
     if (config.colorScheme !== this.config.colorScheme) {
       this._colorSchemeMap = null
       this._colorSchemeIndex = 0
     }
+
     Object.assign(this.config, config)
+
+    // Re-resolve accessors only when the accessor source actually changed.
+    // Uses .toString() comparison to skip re-resolution for inline arrow functions
+    // that are recreated on every parent render but have identical source code.
+    if (config.oAccessor !== undefined || config.categoryAccessor !== undefined) {
+      const newO = config.oAccessor || config.categoryAccessor
+      const prevO = prev.oAccessor || prev.categoryAccessor
+      if (!accessorsEquivalent(newO, prevO)) {
+        this.getO = resolveStringAccessor(
+          this.config.oAccessor || this.config.categoryAccessor,
+          "category"
+        ) as (d: any) => string
+      }
+    }
+    if (config.rAccessor !== undefined) {
+      if (!accessorsEquivalent(
+        Array.isArray(config.rAccessor) ? config.rAccessor[0] : config.rAccessor,
+        Array.isArray(prev.rAccessor) ? prev.rAccessor[0] : prev.rAccessor
+      )) {
+        const rawR = this.config.rAccessor
+        if (Array.isArray(rawR)) {
+          this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
+          this.getR = this.rAccessors[0]
+        } else {
+          this.getR = resolveAccessor(rawR, "value")
+          this.rAccessors = [this.getR]
+        }
+      }
+    }
+    if (config.stackBy !== undefined && !accessorsEquivalent(config.stackBy, prev.stackBy)) {
+      this.getStack = resolveStringAccessor(this.config.stackBy)
+    }
+    if (config.groupBy !== undefined && !accessorsEquivalent(config.groupBy, prev.groupBy)) {
+      this.getGroup = resolveStringAccessor(this.config.groupBy)
+    }
+    if (config.colorAccessor !== undefined && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
+      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    }
+    if (config.connectorAccessor !== undefined && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
+      this.getConnector = resolveStringAccessor(this.config.connectorAccessor)
+    }
   }
 }

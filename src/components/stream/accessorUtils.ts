@@ -1,5 +1,24 @@
 // ── Accessor resolution ────────────────────────────────────────────────
 
+/**
+ * Compare two accessor specs for functional equivalence.
+ * - String accessors: exact string match
+ * - Function accessors: `.toString()` comparison (catches inline arrow functions
+ *   like `d => d.value` that are recreated on every render but have identical source)
+ * - Mismatched types or undefined: not equivalent
+ */
+export function accessorsEquivalent(
+  a: string | ((...args: any[]) => any) | undefined,
+  b: string | ((...args: any[]) => any) | undefined
+): boolean {
+  if (a === b) return true
+  if (typeof a !== typeof b) return false
+  if (typeof a === "function" && typeof b === "function") {
+    return a.toString() === b.toString()
+  }
+  return false
+}
+
 export function resolveAccessor<T>(
   accessor: string | ((d: T) => number) | undefined,
   fallback: string
