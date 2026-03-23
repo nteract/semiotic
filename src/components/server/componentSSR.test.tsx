@@ -17,6 +17,8 @@ import { AreaChart } from "../charts/xy/AreaChart"
 import { StackedAreaChart } from "../charts/xy/StackedAreaChart"
 import { Scatterplot } from "../charts/xy/Scatterplot"
 import { Heatmap } from "../charts/xy/Heatmap"
+import { ConnectedScatterplot } from "../charts/xy/ConnectedScatterplot"
+import { QuadrantChart } from "../charts/xy/QuadrantChart"
 import { BarChart } from "../charts/ordinal/BarChart"
 import { StackedBarChart } from "../charts/ordinal/StackedBarChart"
 import { PieChart } from "../charts/ordinal/PieChart"
@@ -79,6 +81,10 @@ const heatmapData = [
 
 function renderComponent(element: React.ReactElement): string {
   return ReactDOMServer.renderToStaticMarkup(element)
+}
+
+function countPattern(html: string, pattern: RegExp): number {
+  return (html.match(pattern) || []).length
 }
 
 function countOccurrences(html: string, tag: string): number {
@@ -880,5 +886,221 @@ describe("SSR mark count contracts — Geo", () => {
       } as any)
       expect((svg.match(/<circle /g) || []).length).toBe(n)
     }
+  })
+})
+
+// ── ConnectedScatterplot SSR ──────────────────────────────────────────────
+
+describe("Component SSR — ConnectedScatterplot", () => {
+  const trajectoryData = [
+    { x: 10, y: 20 },
+    { x: 20, y: 40 },
+    { x: 30, y: 35 },
+    { x: 40, y: 60 },
+    { x: 50, y: 50 },
+  ]
+
+  it("renders point circles in SSR", () => {
+    const html = renderComponent(
+      <ConnectedScatterplot
+        data={trajectoryData}
+        xAccessor="x"
+        yAccessor="y"
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    // 5 data points = 5 circles
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
+  })
+
+  it("renders connecting line segments via svgPreRenderers", () => {
+    const html = renderComponent(
+      <ConnectedScatterplot
+        data={trajectoryData}
+        xAccessor="x"
+        yAccessor="y"
+        width={400}
+        height={300}
+      />
+    )
+
+    // Connecting segments use stroke-linecap="round" — unique to svgPreRenderer lines
+    // 5 points = 4 connecting segments (each with stroke-linecap="round")
+    const roundCapLines = countPattern(html, /stroke-linecap="round"/g)
+    expect(roundCapLines).toBeGreaterThanOrEqual(4)
+  })
+
+  it("renders halo lines when fewer than 100 points", () => {
+    const html = renderComponent(
+      <ConnectedScatterplot
+        data={trajectoryData}
+        xAccessor="x"
+        yAccessor="y"
+        width={400}
+        height={300}
+      />
+    )
+
+    // Halo lines have stroke="white" + stroke-linecap="round"
+    // 5 points = 4 halos
+    const haloLines = countPattern(html, /stroke="white"[^>]*stroke-linecap="round"/g)
+    expect(haloLines).toBe(4)
+  })
+
+  it("applies viridis colors to connecting segments", () => {
+    const html = renderComponent(
+      <ConnectedScatterplot
+        data={trajectoryData}
+        xAccessor="x"
+        yAccessor="y"
+        width={400}
+        height={300}
+      />
+    )
+
+    // Connecting segments have hex stroke + stroke-linecap="round" (unique to pre-renderer)
+    const viridisSegments = countPattern(html, /stroke="#[0-9a-f]{6}"[^>]*stroke-linecap="round"/gi)
+    expect(viridisSegments).toBe(4) // 4 connecting segments
+  })
+
+  it("respects orderAccessor for sorting", () => {
+    const unordered = [
+      { x: 30, y: 35, t: 3 },
+      { x: 10, y: 20, t: 1 },
+      { x: 50, y: 50, t: 5 },
+      { x: 20, y: 40, t: 2 },
+      { x: 40, y: 60, t: 4 },
+    ]
+    const html = renderComponent(
+      <ConnectedScatterplot
+        data={unordered}
+        xAccessor="x"
+        yAccessor="y"
+        orderAccessor="t"
+        width={400}
+        height={300}
+      />
+    )
+
+    // Should still render circles and round-capped connecting lines
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(5)
+    expect(countPattern(html, /stroke-linecap="round"/g)).toBeGreaterThanOrEqual(4)
+  })
+})
+
+// ── QuadrantChart SSR ─────────────────────────────────────────────────────
+
+describe("Component SSR — QuadrantChart", () => {
+  const quadrantData = [
+    { x: 10, y: 80 },
+    { x: 90, y: 90 },
+    { x: 20, y: 20 },
+    { x: 80, y: 10 },
+  ]
+
+  const quadrants = {
+    topRight: { label: "Stars", color: "#4caf50" },
+    topLeft: { label: "Question Marks", color: "#ff9800" },
+    bottomRight: { label: "Cash Cows", color: "#2196f3" },
+    bottomLeft: { label: "Dogs", color: "#f44336" },
+  }
+
+  it("renders point circles in SSR", () => {
+    const html = renderComponent(
+      <QuadrantChart
+        data={quadrantData}
+        xAccessor="x"
+        yAccessor="y"
+        quadrants={quadrants}
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<svg")
+    expect(countOccurrences(html, "circle")).toBeGreaterThanOrEqual(4)
+  })
+
+  it("renders quadrant fill rects via svgPreRenderers", () => {
+    const html = renderComponent(
+      <QuadrantChart
+        data={quadrantData}
+        xAccessor="x"
+        yAccessor="y"
+        quadrants={quadrants}
+        xCenter={50}
+        yCenter={50}
+        width={400}
+        height={300}
+      />
+    )
+
+    // 4 quadrant fill rects (from svgPreRenderers) + any axis/bg rects
+    expect(countOccurrences(html, "rect")).toBeGreaterThanOrEqual(4)
+  })
+
+  it("renders center lines via svgPreRenderers", () => {
+    const html = renderComponent(
+      <QuadrantChart
+        data={quadrantData}
+        xAccessor="x"
+        yAccessor="y"
+        quadrants={quadrants}
+        xCenter={50}
+        yCenter={50}
+        width={400}
+        height={300}
+      />
+    )
+
+    // 2 center lines (vertical + horizontal) with default stroke="#999"
+    const centerLines = countPattern(html, /stroke="#999"/g)
+    expect(centerLines).toBe(2)
+  })
+
+  it("renders quadrant labels when showQuadrantLabels is true", () => {
+    const html = renderComponent(
+      <QuadrantChart
+        data={quadrantData}
+        xAccessor="x"
+        yAccessor="y"
+        quadrants={quadrants}
+        xCenter={50}
+        yCenter={50}
+        showQuadrantLabels
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).toContain("Stars")
+    expect(html).toContain("Question Marks")
+    expect(html).toContain("Cash Cows")
+    expect(html).toContain("Dogs")
+  })
+
+  it("renders quadrant fill colors", () => {
+    const html = renderComponent(
+      <QuadrantChart
+        data={quadrantData}
+        xAccessor="x"
+        yAccessor="y"
+        quadrants={quadrants}
+        xCenter={50}
+        yCenter={50}
+        width={400}
+        height={300}
+      />
+    )
+
+    expect(html).toContain("#4caf50")
+    expect(html).toContain("#ff9800")
+    expect(html).toContain("#2196f3")
+    expect(html).toContain("#f44336")
   })
 })

@@ -1185,13 +1185,15 @@ const StreamNetworkFrame = forwardRef<
     >
       {backgroundGraphics && (
         <svg
+          overflow="visible"
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             width: size[0],
             height: size[1],
-            pointerEvents: "none"
+            pointerEvents: "none",
+            overflow: "visible"
           }}
         >
           <g transform={`translate(${margin.left},${margin.top})`}>

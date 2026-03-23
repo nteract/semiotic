@@ -414,6 +414,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       backgroundGraphics,
       foregroundGraphics,
       canvasPreRenderers,
+      svgPreRenderers,
       title,
       categoryAccessor,
       brush,
@@ -1060,6 +1061,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
+              {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
+                <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
+              ))}
               {scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)}
             </g>
           </svg>

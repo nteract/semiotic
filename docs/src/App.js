@@ -278,6 +278,12 @@ export default function DocsApp() {
             <Route path="features/styling" element={<Navigate to="/theming/styling" replace />} />
             <Route path="features/theming" element={<Navigate to="/theming/theme-provider" replace />} />
 
+            {/* Redirects for legacy v1/v2 API routes (SEO: prevent stale search results) */}
+            <Route path="api/xyframe" element={<Navigate to="/frames/xy-frame" replace />} />
+            <Route path="api/ordinalframe" element={<Navigate to="/frames/ordinal-frame" replace />} />
+            <Route path="api/networkframe" element={<Navigate to="/frames/network-frame" replace />} />
+            <Route path="api/mark" element={<Navigate to="/api/charts" replace />} />
+
             {/* Cookbook routes */}
             <Route path="cookbook" element={<Outlet />}>
               <Route

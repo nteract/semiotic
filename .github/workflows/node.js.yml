@@ -41,6 +41,16 @@ jobs:
       - name: Build production bundles
         run: npm run dist:prod
 
+      - name: Verify TypeScript declarations
+        run: |
+          for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts dist/semiotic-ai.d.ts dist/semiotic-data.d.ts dist/semiotic-server.d.ts dist/semiotic-themes.d.ts; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+          done
+          echo "All declaration files present"
+
       - name: Check bundle sizes
         run: npx size-limit
 
@@ -70,8 +80,20 @@ jobs:
       - name: Build library
         run: npm run dist
 
+      - name: Generate missing Linux snapshot baselines
+        run: |
+          # Check if Linux baselines exist; if not, generate them from this run.
+          # Once committed, this step becomes a no-op.
+          HAVE_LINUX=$(find integration-tests -name "*-chromium-linux.png" | head -1)
+          if [ -z "$HAVE_LINUX" ]; then
+            echo "No Linux baselines found — generating with --update-snapshots"
+            npx playwright test --update-snapshots || true
+          else
+            echo "Linux baselines present — skipping generation"
+          fi
+
       - name: Run E2E tests
-        run: npx playwright test --update-snapshots
+        run: npx playwright test
 
       - name: Upload snapshot baselines
         if: always()

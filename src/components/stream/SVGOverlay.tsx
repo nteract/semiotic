@@ -429,11 +429,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
       role="img"
       width={totalWidth}
       height={totalHeight}
+      overflow="visible"
       style={{
         position: "absolute",
         top: 0,
         left: 0,
-        pointerEvents: "none"
+        pointerEvents: "none",
+        overflow: "visible"
       }}
     >
       <title>{typeof title === "string" ? title : "XY Chart"}</title>

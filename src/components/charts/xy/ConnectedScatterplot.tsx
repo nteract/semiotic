@@ -2,7 +2,7 @@
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -129,20 +129,40 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const rawData = (data || []) as Record<string, any>[]
 
-  // Sort by orderAccessor if provided (bounded data mode only)
-  const safeData = useMemo(() => {
-    if (!orderAccessor || rawData.length === 0) return rawData
-    const getOrder = typeof orderAccessor === "function"
-      ? orderAccessor as (d: any) => number | Date
-      : (d: any) => d[orderAccessor]
-    return [...rawData].sort((a, b) => {
-      const va = getOrder(a)
-      const vb = getOrder(b)
-      const na = va instanceof Date ? va.getTime() : +va
-      const nb = vb instanceof Date ? vb.getTime() : +vb
-      return na - nb
-    })
-  }, [rawData, orderAccessor])
+  // Sort by orderAccessor if provided, and build a WeakMap of ordering
+  // metadata so pointStyle can read the index directly without mutating user data.
+  const { safeData, orderMap } = useMemo(() => {
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
+    let sorted = rawData
+    if (orderAccessor && rawData.length > 0) {
+      const getOrder = typeof orderAccessor === "function"
+        ? orderAccessor as (d: any) => number | Date
+        : (d: any) => d[orderAccessor]
+      sorted = [...rawData].sort((a, b) => {
+        const va = getOrder(a)
+        const vb = getOrder(b)
+        const na = va instanceof Date ? va.getTime() : +va
+        const nb = vb instanceof Date ? vb.getTime() : +vb
+        return na - nb
+      })
+    }
+    // Count renderable points and store ordering metadata in a WeakMap
+    const map = new WeakMap<Record<string, any>, { idx: number; total: number }>()
+    let total = 0
+    for (const d of sorted) {
+      const x = xAcc(d); const y = yAcc(d)
+      if (x != null && y != null && isFinite(x) && isFinite(y)) total++
+    }
+    let idx = 0
+    for (const d of sorted) {
+      const x = xAcc(d); const y = yAcc(d)
+      if (x != null && y != null && isFinite(x) && isFinite(y)) {
+        map.set(d, { idx: idx++, total })
+      }
+    }
+    return { safeData: sorted, orderMap: map }
+  }, [rawData, orderAccessor, xAccessor, yAccessor])
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("ConnectedScatterplot", safeData, "xAccessor", xAccessor)
@@ -221,35 +241,52 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     [connectingLineRenderer]
   )
 
+  // ── SVG pre-renderer for SSR (same logic as canvas, produces SVG elements) ──
+  // Reads point node style.opacity to respect selection dimming in SSR output.
+  const connectingLineSVGRenderer = useMemo(() => {
+    return (nodes: SceneNode[], _scales: StreamScales, _layout: StreamLayout): React.ReactNode => {
+      const pts = nodes.filter((n) => n.type === "point") as Array<{ x: number; y: number; style?: { opacity?: number }; datum?: any }>
+      if (pts.length < 2) return null
+      const count = pts.length
+      const halo = count < 100
+      const elements: React.ReactElement[] = []
+
+      for (let i = 0; i < count - 1; i++) {
+        const p0 = pts[i]
+        const p1 = pts[i + 1]
+        const color = viridisColor(i, count)
+        const o0 = typeof p0.style?.opacity === "number" ? p0.style.opacity : 1
+        const o1 = typeof p1.style?.opacity === "number" ? p1.style.opacity : 1
+        const segmentOpacity = Math.min(o0, o1)
+        if (halo) {
+          elements.push(
+            <line key={`halo-${i}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y}
+              stroke="white" strokeWidth={pointRadius + 2} strokeLinecap="round" opacity={0.5 * segmentOpacity} />
+          )
+        }
+        elements.push(
+          <line key={`seg-${i}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y}
+            stroke={color} strokeWidth={pointRadius} strokeLinecap="round" opacity={segmentOpacity} />
+        )
+      }
+      return <>{elements}</>
+    }
+  }, [pointRadius])
+
+  const svgPreRenderers = useMemo(
+    () => [connectingLineSVGRenderer],
+    [connectingLineSVGRenderer]
+  )
+
   // ── Point style — viridis colored, fixed radius ───────────────────────
   //
-  // pointStyle is called once per datum during scene build, in data order.
-  // We use a call counter (reset each time the function reference changes)
-  // so each datum gets the correct viridis position. The total count comes
-  // from getData() which reflects the pipeline's current windowed data.
-
-  const pointCallCounter = useRef({ idx: 0, total: 0 })
+  // Reads ordering from the WeakMap (no user data mutation).
 
   const basePointStyle = useMemo(() => {
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
     return (d: Record<string, any>) => {
-      const counter = pointCallCounter.current
-      // On first call of a batch, snapshot the renderable point count
-      // (filter out invalid x/y so gradient matches the connecting-line renderer)
-      if (counter.idx === 0) {
-        const allData = frameRef.current?.getData() ?? safeData
-        counter.total = allData.filter((p: any) => {
-          const x = xAcc(p); const y = yAcc(p)
-          return x != null && y != null && isFinite(x) && isFinite(y)
-        }).length
-      }
-      const n = counter.total
-      const i = counter.idx
-      counter.idx++
-      // Reset for next scene build cycle
-      if (counter.idx >= n) counter.idx = 0
-
+      const order = orderMap.get(d)
+      const i = order?.idx ?? 0
+      const n = order?.total ?? 1
       return {
         fill: n > 0 ? viridisColor(i, n) : "#6366f1",
         stroke: "white",
@@ -258,7 +295,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         fillOpacity: 1,
       }
     }
-  }, [pointRadius, safeData.length, xAccessor, yAccessor])
+  }, [pointRadius, orderMap])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -321,6 +358,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
+    svgPreRenderers,
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

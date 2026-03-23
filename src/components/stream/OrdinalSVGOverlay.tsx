@@ -109,11 +109,13 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     <svg
       width={totalWidth}
       height={totalHeight}
+      overflow="visible"
       style={{
         position: "absolute",
         top: 0,
         left: 0,
-        pointerEvents: "none"
+        pointerEvents: "none",
+        overflow: "visible"
       }}
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
@@ -285,11 +287,13 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       role="img"
       width={totalWidth}
       height={totalHeight}
+      overflow="visible"
       style={{
         position: "absolute",
         top: 0,
         left: 0,
-        pointerEvents: "none"
+        pointerEvents: "none",
+        overflow: "visible"
       }}
     >
       <title>{typeof title === "string" ? title : "Ordinal Chart"}</title>

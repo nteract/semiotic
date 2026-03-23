@@ -496,6 +496,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   // ── Custom canvas renderers ───────────────────
   /** Canvas renderers executed before the chart-type renderers (e.g. connecting lines under points) */
   canvasPreRenderers?: CanvasRendererFn[]
+  /** SVG pre-renderers for SSR — SVG equivalent of canvasPreRenderers, rendered under data marks */
+  svgPreRenderers?: SVGPreRendererFn[]
 
   // ── Title ────────────────────────────────────────
   title?: string | ReactNode
@@ -555,6 +557,13 @@ export type CanvasRendererFn = (
   scales: StreamScales,
   layout: StreamLayout
 ) => void
+
+/** SVG equivalent of CanvasRendererFn — returns React elements for SSR/SVG rendering */
+export type SVGPreRendererFn = (
+  nodes: SceneNode[],
+  scales: StreamScales,
+  layout: StreamLayout
+) => ReactNode
 
 // ── Re-exports for convenience ─────────────────────────────────────────
 export type {
