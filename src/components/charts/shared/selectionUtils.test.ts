@@ -172,27 +172,6 @@ describe("wrapStyleWithSelection", () => {
     expect(noMatchStyle.opacity).toBe(0.2)
   })
 
-  it("uses cssOpacity when config.unselectedOpacity is not set", () => {
-    const hook: SelectionHookResult = {
-      isActive: true,
-      predicate: (d) => d.category === "A",
-    }
-    const wrapped = wrapStyleWithSelection(baseStyleFn, hook, undefined, 0.35)
-    const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.35)
-    expect(style.fillOpacity).toBe(0.35)
-  })
-
-  it("prefers config.unselectedOpacity over cssOpacity", () => {
-    const hook: SelectionHookResult = {
-      isActive: true,
-      predicate: (d) => d.category === "A",
-    }
-    const wrapped = wrapStyleWithSelection(baseStyleFn, hook, { unselectedOpacity: 0.1 }, 0.35)
-    const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.1)
-  })
-
   it("does not mutate the base style object (wrapStyleWithSelection)", () => {
     const hook: SelectionHookResult = {
       isActive: true,
@@ -211,13 +190,6 @@ describe("wrapStyleWithSelection", () => {
 // ── readSelectionOpacityFromCSS ───────────────────────────────────────────
 
 describe("readSelectionOpacityFromCSS", () => {
-  function mockContainer(value: string): Element {
-    return {
-      // Minimal mock for getComputedStyle
-      ownerDocument: document,
-    } as unknown as Element
-  }
-
   it("returns default for null container", () => {
     expect(readSelectionOpacityFromCSS(null)).toBe(0.2)
   })

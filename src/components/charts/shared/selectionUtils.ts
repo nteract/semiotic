@@ -94,14 +94,12 @@ export function readSelectionOpacityFromCSS(container: Element | null): number {
  *
  * Dimming opacity is resolved in this order:
  * 1. `config.unselectedOpacity` (explicit prop)
- * 2. `cssOpacity` parameter (read from `--semiotic-selection-opacity` by caller)
- * 3. `DEFAULT_SELECTION_OPACITY` (0.2)
+ * 2. `DEFAULT_SELECTION_OPACITY` (0.2)
  */
 export function wrapStyleWithSelection(
   baseStyleFn: (d: Record<string, any>) => Record<string, any>,
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
-  cssOpacity?: number
 ): (d: Record<string, any>) => Record<string, any> {
   if (!selectionHook) return baseStyleFn
 
@@ -116,7 +114,7 @@ export function wrapStyleWithSelection(
         }
       } else {
         // Unselected: dim the element
-        const dimOpacity = config?.unselectedOpacity ?? cssOpacity ?? DEFAULT_SELECTION_OPACITY
+        const dimOpacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
         style.opacity = dimOpacity
         style.fillOpacity = dimOpacity
         style.strokeOpacity = dimOpacity

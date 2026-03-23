@@ -204,7 +204,10 @@ function VariableEditor({ theme, overrides, onOverride }) {
       }}
     >
       {EDITABLE_VARS.map((v) => {
-        const currentValue = overrides[v.key] || theme.colors[v.key] || ""
+        const rawValue = overrides[v.key] || theme.colors[v.key] || ""
+        // <input type="color"> requires a 7-char hex string; fall back for non-hex values like "transparent"
+        const isHex = /^#[0-9a-fA-F]{6}$/.test(rawValue)
+        const currentValue = isHex ? rawValue : "#000000"
         const isOverridden = v.key in overrides
         return (
           <div

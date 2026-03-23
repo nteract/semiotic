@@ -63,9 +63,9 @@ const barData = [
   { region: "East", quarter: "Q1", revenue: 145, target: 130 },
   { region: "West", quarter: "Q1", revenue: 110, target: 120 },
   { region: "North", quarter: "Q2", revenue: 135, target: 110 },
-  { region: "South", quarter: "Q2", revenue: 105, target: 105 },
+  { region: "South", quarter: "Q2", revenue: 88, target: 105 },
   { region: "East", quarter: "Q2", revenue: 160, target: 140 },
-  { region: "West", quarter: "Q2", revenue: 128, target: 125 },
+  { region: "West", quarter: "Q2", revenue: 115, target: 125 },
 ]
 
 const scatterData = Array.from({ length: 30 }, (_, i) => ({
@@ -585,7 +585,7 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         <rect width="3" height="6" fill="#06b6d4" />
       </pattern>,
     ],
-    style: (d) => ({
+    pieceStyle: (d) => ({
       fill: d.revenue > 130 ? "url(#bar-gradient)" : "url(#stripes)",
     }),
   }}
