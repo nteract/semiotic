@@ -227,7 +227,7 @@
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.27.1",
     "jsdom": "^26.1.0",
-    "marked": "4.0.10",
+    "marked": "17.0.5",
     "parcel": "^2.16.4",
     "playwright-chromium": "^1.17.1",
     "prettier": "^3.8.1",
