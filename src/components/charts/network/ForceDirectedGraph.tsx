@@ -2,7 +2,7 @@
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
-import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
+import type { StreamNetworkFrameProps, StreamNetworkFrameHandle, EdgePush } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -49,8 +49,8 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
 export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point as any),
-    pushMany: (points) => frameRef.current?.pushMany(points as any),
+    push: (point) => frameRef.current?.push(point as EdgePush),
+    pushMany: (points) => frameRef.current?.pushMany(points as EdgePush[]),
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
   }))
@@ -145,7 +145,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const edgeStyle = useMemo(() => {
     return (d: Record<string, any>) => ({
       stroke: edgeColor,
-      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d as any) : d[edgeWidth] || 1,
+      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d) : d[edgeWidth] || 1,
       opacity: edgeOpacity
     })
   }, [edgeWidth, edgeColor, edgeOpacity])

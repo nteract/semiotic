@@ -2,7 +2,7 @@
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, StreamScales, StreamLayout } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, SVGPreRendererFn, StreamScales, StreamLayout, SceneNode } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -487,6 +487,65 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     return [...fullPreRenderers, ...userRenderers]
   }, [fullPreRenderers, frameProps.canvasPreRenderers])
 
+  // ── SVG pre-renderer for SSR (quadrant fills + center lines + labels) ──
+  const svgPreRenderers = useMemo((): SVGPreRendererFn[] => {
+    const clStyle = {
+      stroke: centerlineStyle.stroke || "#999",
+      strokeWidth: centerlineStyle.strokeWidth ?? 1,
+      dashArray: centerlineStyle.strokeDasharray
+        ? Array.isArray(centerlineStyle.strokeDasharray)
+          ? (centerlineStyle.strokeDasharray as number[]).join(",")
+          : centerlineStyle.strokeDasharray
+        : undefined,
+    }
+
+    return [(_nodes: SceneNode[], scales: StreamScales, layout: StreamLayout): React.ReactNode => {
+      if (!scales?.x || !scales?.y) return null
+      const w = layout.width
+      const h = layout.height
+      const xC = xCenter != null ? scales.x(xCenter) : w / 2
+      const yC = yCenter != null ? scales.y(yCenter) : h / 2
+      if (xCenter != null && !isFinite(xC)) return null
+      if (yCenter != null && !isFinite(yC)) return null
+      const cx = Math.max(0, Math.min(w, xC))
+      const cy = Math.max(0, Math.min(h, yC))
+
+      const quads = [
+        { config: quadrants.topLeft, x: 0, y: 0, w: cx, h: cy },
+        { config: quadrants.topRight, x: cx, y: 0, w: w - cx, h: cy },
+        { config: quadrants.bottomLeft, x: 0, y: cy, w: cx, h: h - cy },
+        { config: quadrants.bottomRight, x: cx, y: cy, w: w - cx, h: h - cy },
+      ]
+      const padding = 8
+      return (
+        <>
+          {quads.map((q, i) => q.w > 0 && q.h > 0 ? (
+            <rect key={`qf-${i}`} x={q.x} y={q.y} width={q.w} height={q.h}
+              fill={q.config.color} opacity={q.config.opacity ?? 0.08} />
+          ) : null)}
+          <line x1={cx} y1={0} x2={cx} y2={h}
+            stroke={clStyle.stroke} strokeWidth={clStyle.strokeWidth}
+            strokeDasharray={clStyle.dashArray} />
+          <line x1={0} y1={cy} x2={w} y2={cy}
+            stroke={clStyle.stroke} strokeWidth={clStyle.strokeWidth}
+            strokeDasharray={clStyle.dashArray} />
+          {showQuadrantLabels && (
+            <>
+              <text x={padding} y={padding + quadrantLabelSize} fill={quadrants.topLeft.color}
+                fontWeight={600} fontSize={quadrantLabelSize} opacity={0.5}>{quadrants.topLeft.label}</text>
+              <text x={w - padding} y={padding + quadrantLabelSize} fill={quadrants.topRight.color}
+                fontWeight={600} fontSize={quadrantLabelSize} opacity={0.5} textAnchor="end">{quadrants.topRight.label}</text>
+              <text x={padding} y={h - padding} fill={quadrants.bottomLeft.color}
+                fontWeight={600} fontSize={quadrantLabelSize} opacity={0.5}>{quadrants.bottomLeft.label}</text>
+              <text x={w - padding} y={h - padding} fill={quadrants.bottomRight.color}
+                fontWeight={600} fontSize={quadrantLabelSize} opacity={0.5} textAnchor="end">{quadrants.bottomRight.label}</text>
+            </>
+          )}
+        </>
+      )
+    }]
+  }, [xCenter, yCenter, quadrants, centerlineStyle, showQuadrantLabels, quadrantLabelSize])
+
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
     ...(data != null && { data: safeData }),
@@ -527,6 +586,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,
+    svgPreRenderers,
     ...frameProps,
     // Override canvasPreRenderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
