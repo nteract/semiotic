@@ -456,4 +456,89 @@ describe("OrdinalPipelineStore", () => {
       expect(store.lastIngestTime).toBe(0)
     })
   })
+
+  // ── rExtent with zero ─────────────────────────────────────────────────
+
+  describe("rExtent with explicit zero", () => {
+    it("respects rExtent: [0, N] without adding padding to the zero end", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        rExtent: [0, 9],
+        extentPadding: 0.05
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 3 },
+          { category: "B", value: 5 },
+          { category: "C", value: 9 }
+        ],
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      // rScale should map exactly [0, 9] → [300, 0] for vertical projection
+      const scales = store.scales!
+      expect(scales.r(0)).toBe(300)   // bottom of chart
+      expect(scales.r(9)).toBe(0)     // top of chart
+    })
+
+    it("respects rExtent: [0, undefined] — pads only the max end", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        rExtent: [0, undefined],
+        extentPadding: 0.05
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 3 },
+          { category: "B", value: 5 }
+        ],
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      const scales = store.scales!
+      // Min should be exactly 0 (user-specified)
+      expect(scales.r(0)).toBe(300)
+      // Max should be padded beyond 5
+      expect(scales.r(5)).toBeGreaterThan(0)
+    })
+
+    it("produces uniform bar heights when each piece has value=1", () => {
+      // Simulate isotype chart: 3 persons stacked in one column, each value=1
+      const store = new OrdinalPipelineStore(makeConfig({
+        rExtent: [0, 3],
+        stackBy: "personId",
+        extentPadding: 0.05
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 1, personId: "p0" },
+          { category: "A", value: 1, personId: "p1" },
+          { category: "A", value: 1, personId: "p2" }
+        ],
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      const scales = store.scales!
+      // Each unit should occupy exactly 100px (300 / 3)
+      const unitHeight = scales.r(0) - scales.r(1)
+      expect(unitHeight).toBeCloseTo(100, 5)
+
+      // All units should be the same height
+      const unit2 = scales.r(1) - scales.r(2)
+      const unit3 = scales.r(2) - scales.r(3)
+      expect(unit2).toBeCloseTo(100, 5)
+      expect(unit3).toBeCloseTo(100, 5)
+
+      // Bar scene nodes should align with these positions
+      const scene = store.scene
+      expect(scene.length).toBe(3)
+      for (const node of scene) {
+        if (node.type === "rect") {
+          // All rects should have equal height of 100px
+          expect(node.h).toBeCloseTo(100, 1)
+        }
+      }
+    })
+  })
 })

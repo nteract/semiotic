@@ -10,17 +10,23 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   const isHorizontal = projection === "horizontal"
   const normalize = config.normalize
 
-  // Discover all stack keys globally for consistent ordering across columns
+  // Discover all stack keys globally for consistent ordering across columns.
+  // When stacking is disabled (no getStack), short-circuit to the single default key
+  // to avoid an unnecessary full pass over all columns and pieces.
   const stackKeys: string[] = []
-  const stackKeySet = new Set<string>()
-  for (const col of Object.values(columns)) {
-    for (const d of col.pieceData) {
-      const key = getStack ? getStack(d) : "_default"
-      if (!stackKeySet.has(key)) {
-        stackKeySet.add(key)
-        stackKeys.push(key)
+  if (getStack) {
+    const stackKeySet = new Set<string>()
+    for (const col of Object.values(columns)) {
+      for (const d of col.pieceData) {
+        const key = getStack(d)
+        if (!stackKeySet.has(key)) {
+          stackKeySet.add(key)
+          stackKeys.push(key)
+        }
       }
     }
+  } else {
+    stackKeys.push("_default")
   }
 
   for (const col of Object.values(columns)) {

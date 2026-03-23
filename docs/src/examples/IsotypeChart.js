@@ -59,19 +59,20 @@ const colorHash = {
 // Sort by writeviz ascending (left = more viz, right = more writing)
 const sortedData = [...vizzers].sort((a, b) => a.writeviz - b.writeviz)
 
-// All bin labels in sorted order
-const allBins = sortedData.map(d => d.writeviz.toFixed(2))
+// Deduplicated bin labels in sorted order
+const allBins = [...new Set(sortedData.map(d => d.writeviz.toFixed(2)))]
 
 // Expand to one row per person, with unique stack keys so each person
-// gets its own bar segment. Sort types within each bin so they group visually.
+// gets its own bar segment. Also build a lookup for icon rendering.
 const expandedData = []
-const binPersons = {} // bin → [{type, color}...] for icon rendering
+const binPersons = {} // bin → [{type}...] for icon rendering
+let personCounter = 0
 for (const d of sortedData) {
   const bin = d.writeviz.toFixed(2)
   if (!binPersons[bin]) binPersons[bin] = []
   if (d.type === "none" || d.number === 0) continue
   for (let i = 0; i < d.number; i++) {
-    const id = `${d.type}-${bin}-${i}`
+    const id = `p${personCounter++}`
     expandedData.push({ bin, type: d.type, count: 1, personId: id })
     binPersons[bin].push({ type: d.type })
   }
@@ -80,28 +81,49 @@ for (const d of sortedData) {
 const maxCount = Math.max(...Object.values(binPersons).map(arr => arr.length), 0)
 
 // Build person icons as foregroundGraphics (SVG overlay)
+// The function form receives { size, margin } from StreamOrdinalFrame
 function buildIcons({ size, margin }) {
   const chartWidth = size[0] - margin.left - margin.right
   const chartHeight = size[1] - margin.top - margin.bottom
-  const bandWidth = chartWidth / allBins.length
-  const iconWidth = Math.min(bandWidth * 0.7, 14)
-  const iconScale = iconWidth / 18
-  const iconHeight = 40 * iconScale + 2
+  const numCols = allBins.length
+  const bandWidth = chartWidth / numCols
+
+  // Each bar segment is 1 unit tall on the r-scale.
+  // The r-scale maps [0, maxCount] → [chartHeight, 0] (bottom to top).
+  // So 1 unit = chartHeight / maxCount pixels.
+  const unitHeight = chartHeight / maxCount
+
+  // Scale person path (native 18×40) to fit within one unit cell.
+  // Leave a small vertical gap (2px) between icons.
+  const gap = 2
+  const availH = unitHeight - gap
+  const availW = bandWidth * 0.8
+  // Scale uniformly to fit both width and height constraints
+  const scaleByH = availH / 40
+  const scaleByW = availW / 18
+  const iconScale = Math.min(scaleByH, scaleByW)
+  const iconW = 18 * iconScale
+  const iconH = 40 * iconScale
 
   const icons = []
-  for (let bi = 0; bi < allBins.length; bi++) {
+  for (let bi = 0; bi < numCols; bi++) {
     const bin = allBins[bi]
     const persons = binPersons[bin] || []
     const cx = bi * bandWidth + bandWidth / 2
 
-    for (let i = 0; i < persons.length; i++) {
-      const color = colorHash[persons[i].type]
+    for (let pi = 0; pi < persons.length; pi++) {
+      const color = colorHash[persons[pi].type]
       if (!color) continue
-      const iy = chartHeight - (i + 1) * iconHeight
+      // Position: bottom of this unit cell, centered in the band.
+      // Unit pi occupies y range: [chartHeight - (pi+1)*unitHeight, chartHeight - pi*unitHeight]
+      // Place the icon at the bottom of the cell, vertically centered with the gap.
+      const cellTop = chartHeight - (pi + 1) * unitHeight
+      const iy = cellTop + (unitHeight - iconH) / 2
+      const ix = cx - iconW / 2
       icons.push(
         <g
-          key={`${bin}-${i}`}
-          transform={`translate(${cx - iconWidth / 2},${iy}) scale(${iconScale})`}
+          key={`icon-${bi}-${pi}`}
+          transform={`translate(${ix},${iy}) scale(${iconScale})`}
         >
           <path d={personPath} fill={color} stroke={color} strokeWidth={1.5} />
         </g>
@@ -157,6 +179,19 @@ function buildIcons({ size, margin }) {
     </g>
   )
 
+  // Baseline
+  icons.push(
+    <line
+      key="baseline"
+      x1={0}
+      x2={chartWidth}
+      y1={chartHeight}
+      y2={chartHeight}
+      stroke="darkgray"
+      strokeWidth={2}
+    />
+  )
+
   return <g>{icons}</g>
 }
 
@@ -170,7 +205,8 @@ const frameProps = {
   margin: { top: 60, bottom: 70, left: 10, right: 80 },
   chartType: "bar",
   stackBy: "personId",
-  pieceStyle: () => ({ fillOpacity: 0, strokeOpacity: 0 }),
+  barPadding: 0,
+  pieceStyle: () => ({ opacity: 0 }),
   showAxes: false,
   foregroundGraphics: buildIcons
 }

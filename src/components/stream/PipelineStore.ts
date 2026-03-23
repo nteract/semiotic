@@ -2166,10 +2166,15 @@ export class PipelineStore {
     // Re-resolve accessor functions only when the accessor source actually changed.
     // Uses .toString() comparison to detect inline arrow functions that are
     // recreated on every parent render but have identical source code.
-    if (config.xAccessor !== undefined || config.yAccessor !== undefined
+    // Re-resolve getX/getY when accessor props change, OR when chartType/runtimeMode
+    // changes (which changes which fallback defaults apply: x/y vs time/value).
+    const modeChanged = ("chartType" in config && config.chartType !== prev.chartType)
+      || ("runtimeMode" in config && config.runtimeMode !== prev.runtimeMode)
+    if (modeChanged
+      || config.xAccessor !== undefined || config.yAccessor !== undefined
       || config.timeAccessor !== undefined || config.valueAccessor !== undefined) {
-      const xChanged = !accessorsEquivalent(config.xAccessor ?? config.timeAccessor, prev.xAccessor ?? prev.timeAccessor)
-      const yChanged = !accessorsEquivalent(config.yAccessor ?? config.valueAccessor, prev.yAccessor ?? prev.valueAccessor)
+      const xChanged = modeChanged || !accessorsEquivalent(config.xAccessor ?? config.timeAccessor, prev.xAccessor ?? prev.timeAccessor)
+      const yChanged = modeChanged || !accessorsEquivalent(config.yAccessor ?? config.valueAccessor, prev.yAccessor ?? prev.valueAccessor)
       if (xChanged || yChanged) {
         const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
         const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
@@ -2183,32 +2188,32 @@ export class PipelineStore {
         accessorChanged = true
       }
     }
-    if (config.groupAccessor !== undefined && !accessorsEquivalent(config.groupAccessor, prev.groupAccessor)) {
-      this.getGroup = resolveStringAccessor(this.config.groupAccessor)
+    if ("groupAccessor" in config && !accessorsEquivalent(config.groupAccessor, prev.groupAccessor)) {
+      this.getGroup = this.config.groupAccessor != null ? resolveStringAccessor(this.config.groupAccessor) : undefined
       accessorChanged = true
     }
-    if (config.categoryAccessor !== undefined && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor)) {
-      this.getCategory = resolveStringAccessor(this.config.categoryAccessor)
+    if ("categoryAccessor" in config && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor)) {
+      this.getCategory = this.config.categoryAccessor != null ? resolveStringAccessor(this.config.categoryAccessor) : undefined
       accessorChanged = true
     }
-    if (config.sizeAccessor !== undefined && !accessorsEquivalent(config.sizeAccessor, prev.sizeAccessor)) {
+    if ("sizeAccessor" in config && !accessorsEquivalent(config.sizeAccessor, prev.sizeAccessor)) {
       this.getSize = this.config.sizeAccessor
         ? resolveAccessor(this.config.sizeAccessor, "size")
         : undefined
       accessorChanged = true
     }
-    if (config.colorAccessor !== undefined && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
-      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
+      this.getColor = this.config.colorAccessor != null ? resolveStringAccessor(this.config.colorAccessor) : undefined
       accessorChanged = true
     }
-    if (config.y0Accessor !== undefined && !accessorsEquivalent(config.y0Accessor, prev.y0Accessor)) {
+    if ("y0Accessor" in config && !accessorsEquivalent(config.y0Accessor, prev.y0Accessor)) {
       this.getY0 = this.config.y0Accessor
         ? resolveAccessor(this.config.y0Accessor, "y0")
         : undefined
       accessorChanged = true
     }
-    if (config.pointIdAccessor !== undefined && !accessorsEquivalent(config.pointIdAccessor, prev.pointIdAccessor)) {
-      this.getPointId = resolveStringAccessor(this.config.pointIdAccessor)
+    if ("pointIdAccessor" in config && !accessorsEquivalent(config.pointIdAccessor, prev.pointIdAccessor)) {
+      this.getPointId = this.config.pointIdAccessor != null ? resolveStringAccessor(this.config.pointIdAccessor) : undefined
       accessorChanged = true
     }
 

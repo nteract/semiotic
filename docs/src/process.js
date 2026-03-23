@@ -122,6 +122,7 @@ export const processNodes = [
       "yExtent",
       "xExtent",
       "rExtent",
+      "oExtent",
       "boundsAccessor",
       "invertX",
       "invertY",

@@ -450,8 +450,8 @@ export class OrdinalPipelineStore {
     // Apply padding
     const range = max - min
     const padAmount = range > 0 ? range * pad : 1
-    if (!this.config.rExtent?.[0]) min -= padAmount
-    if (!this.config.rExtent?.[1]) max += padAmount
+    if (this.config.rExtent?.[0] == null) min -= padAmount
+    if (this.config.rExtent?.[1] == null) max += padAmount
 
     // Bars should include zero
     if (chartType === "bar" || chartType === "clusterbar") {
@@ -1020,6 +1020,8 @@ export class OrdinalPipelineStore {
           this.config.oAccessor || this.config.categoryAccessor,
           "category"
         ) as (d: any) => string
+        // Clear discovered categories so they're rebuilt with the new accessor
+        this.categories.clear()
       }
     }
     if (config.rAccessor !== undefined) {
@@ -1039,17 +1041,17 @@ export class OrdinalPipelineStore {
         }
       }
     }
-    if (config.stackBy !== undefined && !accessorsEquivalent(config.stackBy, prev.stackBy)) {
-      this.getStack = resolveStringAccessor(this.config.stackBy)
+    if ("stackBy" in config && !accessorsEquivalent(config.stackBy, prev.stackBy)) {
+      this.getStack = this.config.stackBy != null ? resolveStringAccessor(this.config.stackBy) : undefined
     }
-    if (config.groupBy !== undefined && !accessorsEquivalent(config.groupBy, prev.groupBy)) {
-      this.getGroup = resolveStringAccessor(this.config.groupBy)
+    if ("groupBy" in config && !accessorsEquivalent(config.groupBy, prev.groupBy)) {
+      this.getGroup = this.config.groupBy != null ? resolveStringAccessor(this.config.groupBy) : undefined
     }
-    if (config.colorAccessor !== undefined && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
-      this.getColor = resolveStringAccessor(this.config.colorAccessor)
+    if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
+      this.getColor = this.config.colorAccessor != null ? resolveStringAccessor(this.config.colorAccessor) : undefined
     }
-    if (config.connectorAccessor !== undefined && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
-      this.getConnector = resolveStringAccessor(this.config.connectorAccessor)
+    if ("connectorAccessor" in config && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
+      this.getConnector = this.config.connectorAccessor != null ? resolveStringAccessor(this.config.connectorAccessor) : undefined
     }
   }
 }
