@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Routes, Route, NavLink, Outlet, Link } from "react-router-dom"
+import { Routes, Route, Outlet, Link, Navigate } from "react-router-dom"
 
 // New components
 import Sidebar, { SidebarToggle } from "./components/Sidebar"
@@ -70,6 +70,7 @@ import AccessibilityPage from "./pages/features/AccessibilityPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
+import ThemeExplorerPage from "./pages/theming/ThemeExplorerPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
 import ChartContainersPage from "./pages/features/ChartContainersPage"
@@ -265,6 +266,17 @@ export default function DocsApp() {
               <Route path="typedoc" element={<ApiReferencePage />} />
             </Route>
 
+            {/* Theming routes */}
+            <Route path="theming" element={<Outlet />}>
+              <Route path="styling" element={<StylingPage />} />
+              <Route path="theme-provider" element={<ThemingPage />} />
+              <Route path="theme-explorer" element={<ThemeExplorerPage />} />
+            </Route>
+
+            {/* Redirects for old feature paths */}
+            <Route path="features/styling" element={<Navigate to="/theming/styling" replace />} />
+            <Route path="features/theming" element={<Navigate to="/theming/theme-provider" replace />} />
+
             {/* Cookbook routes */}
             <Route path="cookbook" element={<Outlet />}>
               <Route
@@ -348,8 +360,6 @@ export default function DocsApp() {
               <Route path="accessibility" element={<AccessibilityPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="linked-charts" element={<SmallMultiplesPage />} />
-              <Route path="styling" element={<StylingPage />} />
-              <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
               <Route path="chart-container" element={<ChartContainersPage />} />

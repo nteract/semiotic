@@ -309,7 +309,7 @@ export function createDefaultAnnotationRules(
               r={enclosure.r + padding}
               fill={ann.fill || "none"}
               fillOpacity={ann.fillOpacity || 0.1}
-              stroke={ann.color || "#666"}
+              stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
               strokeWidth={1.5}
               strokeDasharray="4,2"
             />
@@ -318,7 +318,7 @@ export function createDefaultAnnotationRules(
                 x={enclosure.x}
                 y={enclosure.y - enclosure.r - padding - 4}
                 textAnchor="middle"
-                fill={ann.color || "#666"}
+                fill={ann.color || "var(--semiotic-text-secondary, #666)"}
                 fontSize={12}
               >
                 {ann.label}
@@ -356,7 +356,7 @@ export function createDefaultAnnotationRules(
               height={maxY - minY}
               fill={ann.fill || "none"}
               fillOpacity={ann.fillOpacity || 0.1}
-              stroke={ann.color || "#666"}
+              stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
               strokeWidth={1.5}
               strokeDasharray="4,2"
             />
@@ -365,7 +365,7 @@ export function createDefaultAnnotationRules(
                 x={(minX + maxX) / 2}
                 y={minY - 4}
                 textAnchor="middle"
-                fill={ann.color || "#666"}
+                fill={ann.color || "var(--semiotic-text-secondary, #666)"}
                 fontSize={12}
               >
                 {ann.label}
@@ -502,7 +502,7 @@ export function createDefaultAnnotationRules(
               y={Math.min(y0px, y1px)}
               width={context.width || 0}
               height={Math.abs(y1px - y0px)}
-              fill={ann.fill || "#6366f1"}
+              fill={ann.fill || "var(--semiotic-primary, #6366f1)"}
               fillOpacity={ann.fillOpacity || 0.1}
             />
             {ann.label && (
@@ -510,7 +510,7 @@ export function createDefaultAnnotationRules(
                 x={(context.width || 0) - 4}
                 y={Math.min(y0px, y1px) - 4}
                 textAnchor="end"
-                fill={ann.color || "#6366f1"}
+                fill={ann.color || "var(--semiotic-primary, #6366f1)"}
                 fontSize={11}
               >
                 {ann.label}

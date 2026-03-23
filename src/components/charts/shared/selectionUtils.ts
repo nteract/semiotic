@@ -72,20 +72,39 @@ export interface SelectionStyleConfig {
   selectedStyle?: Record<string, any>
 }
 
+/** Default opacity for unselected (dimmed) elements */
+export const DEFAULT_SELECTION_OPACITY = 0.2
+
+/**
+ * Read the --semiotic-selection-opacity CSS variable from a container element.
+ * Returns the numeric value or the default if not set or not parseable.
+ */
+export function readSelectionOpacityFromCSS(container: Element | null): number {
+  if (!container) return DEFAULT_SELECTION_OPACITY
+  const raw = getComputedStyle(container).getPropertyValue("--semiotic-selection-opacity").trim()
+  if (!raw) return DEFAULT_SELECTION_OPACITY
+  const val = parseFloat(raw)
+  if (!Number.isFinite(val)) return DEFAULT_SELECTION_OPACITY
+  return Math.min(1, Math.max(0, val))
+}
+
 /**
  * Wrap a base style function with selection awareness.
  * When a selection is active, non-matching datums get dimmed.
+ *
+ * Dimming opacity is resolved in this order:
+ * 1. `config.unselectedOpacity` (explicit prop)
+ * 2. `DEFAULT_SELECTION_OPACITY` (0.2)
  */
 export function wrapStyleWithSelection(
   baseStyleFn: (d: Record<string, any>) => Record<string, any>,
   selectionHook: SelectionHookResult | null,
-  config?: SelectionStyleConfig
+  config?: SelectionStyleConfig,
 ): (d: Record<string, any>) => Record<string, any> {
   if (!selectionHook) return baseStyleFn
 
   return (d: Record<string, any>) => {
     const style = { ...baseStyleFn(d) }
-
 
     if (selectionHook.isActive) {
       if (selectionHook.predicate(d)) {
@@ -95,7 +114,7 @@ export function wrapStyleWithSelection(
         }
       } else {
         // Unselected: dim the element
-        const dimOpacity = config?.unselectedOpacity ?? 0.2
+        const dimOpacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
         style.opacity = dimOpacity
         style.fillOpacity = dimOpacity
         style.strokeOpacity = dimOpacity

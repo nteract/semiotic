@@ -76,6 +76,33 @@ Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selecti
 ### emphasis
 `emphasis="primary"` makes a chart span two columns inside a `ChartGrid`.
 
+## Annotations (XY charts)
+- `annotations={[{ type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050" }]}` — horizontal reference line
+- `annotations={[{ type: "x-threshold", value: 50, label: "Cutoff" }]}` — vertical reference line
+- `annotations={[{ type: "widget", time: 42, latency: 850, dy: -10, content: <span>Alert</span> }]}` — place React element at data coordinates
+- `annotations={[{ type: "enclose", coordinates: [datum1, datum2], label: "Cluster" }]}` — circle enclosing data points
+
+## Theming & Brand Styling
+All charts respond to CSS custom properties on any ancestor:
+```css
+.my-theme {
+  --semiotic-bg: #1a1a2e;        /* chart background */
+  --semiotic-text: #ededed;       /* primary text */
+  --semiotic-text-secondary: #aaa; /* tick labels */
+  --semiotic-grid: #333;          /* grid lines */
+  --semiotic-border: #555;        /* axis lines */
+  --semiotic-font-family: Georgia, serif;
+  --semiotic-tooltip-bg: #1a1a2e;
+  --semiotic-tooltip-text: #ededed;
+  --semiotic-tooltip-radius: 8px;
+}
+```
+Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"tufte-dark"`, `"pastels"`, `"bi-tool"`, `"italian"`, `"journalist"`, `"playful"` (each with `-dark` variant), `"dark"`, `"high-contrast"`.
+
+`semiotic/themes` entry point: `themeToCSS(theme, selector)` generates CSS string, `themeToTokens(theme)` generates DTCG design tokens, `resolveThemePreset("tufte")` returns theme object by name. Theme objects: `TUFTE_LIGHT`, `TUFTE_DARK`, `PASTELS_LIGHT`, `BI_TOOL_LIGHT`, `ITALIAN_LIGHT`, `JOURNALIST_LIGHT`, `PLAYFUL_LIGHT`, etc.
+
+`COLOR_BLIND_SAFE_CATEGORICAL` — 8-color accessible palette (Wong 2011). Import from `semiotic`.
+
 ## Key Patterns
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
 - **SSR**: `renderToStaticSVG("ordinal", props)` or `renderOrdinalToStaticSVG(props)` from `semiotic/server`. Frame type is `"xy"` | `"ordinal"` | `"network"` (NOT component name).

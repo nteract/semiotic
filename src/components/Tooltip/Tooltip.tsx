@@ -77,13 +77,14 @@ export interface MultiLineTooltipConfig extends TooltipConfig {
  * Default tooltip styles following best practices
  */
 export const defaultTooltipStyle: React.CSSProperties = {
-  background: "rgba(0, 0, 0, 0.85)",
-  color: "white",
+  background: "var(--semiotic-tooltip-bg, rgba(0, 0, 0, 0.85))",
+  color: "var(--semiotic-tooltip-text, white)",
   padding: "8px 12px",
-  borderRadius: "4px",
-  fontSize: "14px",
+  borderRadius: "var(--semiotic-tooltip-radius, 6px)",
+  fontSize: "var(--semiotic-tooltip-font-size, 14px)",
+  fontFamily: "var(--semiotic-font-family, inherit)",
   lineHeight: "1.5",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+  boxShadow: "var(--semiotic-tooltip-shadow, 0 2px 8px rgba(0, 0, 0, 0.15))",
   pointerEvents: "none",
   maxWidth: "300px",
   wordWrap: "break-word"

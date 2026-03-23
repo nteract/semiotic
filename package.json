@@ -66,6 +66,12 @@
       "require": "./dist/geo.min.js",
       "default": "./dist/geo.module.min.js"
     },
+    "./themes": {
+      "types": "./dist/semiotic-themes.d.ts",
+      "import": "./dist/semiotic-themes.module.min.js",
+      "require": "./dist/semiotic-themes.min.js",
+      "default": "./dist/semiotic-themes.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

@@ -60,7 +60,7 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
     const renderable = new Set(Object.keys(COMPONENT_REGISTRY))
     const list = all.map(name => renderable.has(name) ? `${name} [renderable]` : name)
     return {
-      content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart. Others (Realtime*) require a browser environment.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
     }
   }
 
@@ -297,14 +297,18 @@ async function suggestChartHandler(args: { data?: any[]; intent?: string }): Pro
     return `${i + 1}. **${s.component}** (${s.confidence} confidence)\n   ${s.reason}\n   \`<${s.component} ${propsStr} />\``
   })
 
+  // Theming guidance appended to every recommendation
+  const themingTip = `\n---\n**Styling**: All charts respond to CSS custom properties on any ancestor element:\n\`\`\`css\n.my-theme {\n  --semiotic-bg: #fff;           /* chart background */\n  --semiotic-text: #333;         /* primary text */\n  --semiotic-text-secondary: #666; /* tick labels */\n  --semiotic-grid: #e0e0e0;      /* grid lines */\n  --semiotic-border: #e0e0e0;    /* axis lines, borders */\n  --semiotic-font-family: sans-serif;\n  --semiotic-tooltip-bg: rgba(0,0,0,0.85);\n  --semiotic-tooltip-text: white;\n  --semiotic-tooltip-radius: 6px;\n}\n\`\`\`\nOr use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...}, typography: {...} }}>\`.\nFor accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic\`) — 8-color palette safe for all forms of color blindness.`
+
   return {
-    content: [{ type: "text" as const, text: lines.join("\n\n") }],
+    content: [{ type: "text" as const, text: lines.join("\n\n") + themingTip }],
   }
 }
 
-async function renderChartHandler(args: { component?: string; props?: Record<string, any> }): Promise<ToolResult> {
+async function renderChartHandler(args: { component?: string; props?: Record<string, any>; theme?: Record<string, string> }): Promise<ToolResult> {
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
+  const theme = args.theme
 
   if (!component) {
     return {
@@ -327,8 +331,22 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       isError: true,
     }
   }
+
+  let svg = result.svg!
+
+  // Wrap SVG with theme CSS custom properties if provided
+  if (theme && Object.keys(theme).length > 0) {
+    const validVars = Object.entries(theme)
+      .filter(([k]) => k.startsWith("--semiotic-"))
+      .map(([k, v]) => `${k}: ${v}`)
+      .join("; ")
+    if (validVars) {
+      svg = `<div style="${validVars}">${svg}</div>`
+    }
+  }
+
   return {
-    content: [{ type: "text" as const, text: result.svg! }],
+    content: [{ type: "text" as const, text: svg }],
   }
 }
 
@@ -389,6 +407,75 @@ async function reportIssueHandler(args: { title?: string; body?: string; labels?
   }
 }
 
+// Named theme presets (inlined to avoid runtime dependency on semiotic-themes bundle)
+const THEME_PRESET_NAMES = [
+  "light", "dark", "high-contrast",
+  "pastels", "pastels-dark",
+  "bi-tool", "bi-tool-dark",
+  "italian", "italian-dark",
+  "tufte", "tufte-dark",
+  "journalist", "journalist-dark",
+  "playful", "playful-dark",
+]
+
+async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
+  const name = args.name
+
+  if (!name) {
+    return {
+      content: [{ type: "text" as const, text: `Available theme presets:\n${THEME_PRESET_NAMES.join(", ")}\n\nPass { name: "tufte" } to get the CSS custom properties and ThemeProvider usage for that theme.\n\nLight-mode presets: ${THEME_PRESET_NAMES.filter(n => !n.includes("dark")).join(", ")}\nDark-mode presets: ${THEME_PRESET_NAMES.filter(n => n.includes("dark")).join(", ")}` }],
+    }
+  }
+
+  if (!THEME_PRESET_NAMES.includes(name)) {
+    return {
+      content: [{ type: "text" as const, text: `Unknown theme "${name}". Available: ${THEME_PRESET_NAMES.join(", ")}` }],
+      isError: true,
+    }
+  }
+
+  const usage = [
+    `## Theme: "${name}"`,
+    "",
+    "### Option 1: ThemeProvider (recommended)",
+    "```jsx",
+    `import { ThemeProvider } from "semiotic"`,
+    `<ThemeProvider theme="${name}">`,
+    `  <LineChart ... />`,
+    `</ThemeProvider>`,
+    "```",
+    "",
+    "### Option 2: Import the theme object",
+    "```jsx",
+    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
+    `<ThemeProvider theme={themeObject}>`,
+    `  <BarChart ... />`,
+    `</ThemeProvider>`,
+    "```",
+    "",
+    "### Option 3: CSS custom properties (no React required)",
+    "```jsx",
+    `import { themeToCSS } from "semiotic/themes"`,
+    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
+    `const css = themeToCSS(themeObject, ".my-charts")`,
+    "// Outputs CSS custom properties string for embedding in a stylesheet",
+    "```",
+    "",
+    "### Option 4: Design tokens JSON",
+    "```jsx",
+    `import { themeToTokens } from "semiotic/themes"`,
+    `const tokens = themeToTokens(themeObject)`,
+    "// Style Dictionary / DTCG-compatible token format",
+    "```",
+    "",
+    "For accessibility, consider `\"high-contrast\"` which uses `COLOR_BLIND_SAFE_CATEGORICAL` (Wong 2011 palette).",
+  ]
+
+  return {
+    content: [{ type: "text" as const, text: usage.join("\n") }],
+  }
+}
+
 // ── Server factory ───────────────────────────────────────────────────────
 // Creates a fresh McpServer with all tools registered.
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
@@ -419,17 +506,18 @@ function createServer(): McpServer {
 
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG. Returns SVG string or validation errors. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
+      theme: z.record(z.string(), z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
     },
     renderChartHandler
   )
 
   srv.tool(
     "diagnoseConfig",
-    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, etc). Returns a human-readable diagnostic report with actionable fixes.",
+    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
@@ -446,6 +534,15 @@ function createServer(): McpServer {
       labels: z.union([z.array(z.string()), z.string()]).optional().describe("GitHub labels, e.g. ['bug'] or 'bug'"),
     },
     reportIssueHandler
+  )
+
+  srv.tool(
+    "applyTheme",
+    `Get usage instructions for a named Semiotic theme preset. Returns ThemeProvider examples, CSS custom properties, and design token export patterns. Available themes: ${THEME_PRESET_NAMES.join(", ")}.`,
+    {
+      name: z.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes."),
+    },
+    applyThemeHandler
   )
 
   return srv
