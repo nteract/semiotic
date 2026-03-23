@@ -1,11 +1,9 @@
 import React, { useState } from "react"
 import {
   StreamXYFrame,
-  StreamOrdinalFrame,
   BarChart,
   LineChart,
   Scatterplot,
-  ThemeProvider,
 } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Routes, Route, NavLink, Outlet, Link, Navigate } from "react-router-dom"
+import { Routes, Route, Outlet, Link, Navigate } from "react-router-dom"
 
 // New components
 import Sidebar, { SidebarToggle } from "./components/Sidebar"

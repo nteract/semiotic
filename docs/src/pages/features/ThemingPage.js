@@ -5,12 +5,8 @@ import {
   Scatterplot,
   DonutChart,
   ThemeProvider,
-  useTheme,
   LIGHT_THEME,
-  DARK_THEME,
-  HIGH_CONTRAST_THEME,
   THEME_PRESETS,
-  themeToCSS,
 } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"

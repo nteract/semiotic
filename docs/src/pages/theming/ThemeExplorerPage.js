@@ -6,8 +6,6 @@ import {
   Scatterplot,
   DonutChart,
   LIGHT_THEME,
-  DARK_THEME,
-  HIGH_CONTRAST_THEME,
 } from "semiotic"
 import {
   THEME_PRESETS,
@@ -331,7 +329,6 @@ function FontEditor({ theme, overrides, onOverride }) {
 export default function ThemeExplorerPage() {
   const [activePreset, setActivePreset] = useState("light")
   const [overrides, setOverrides] = useState({})
-  const [showCode, setShowCode] = useState(false)
   const [codeFormat, setCodeFormat] = useState("css")
 
   const baseTheme = THEME_PRESETS[activePreset] || LIGHT_THEME
@@ -641,7 +638,6 @@ ${overrideLines.join("\n")}
             key={fmt.key}
             onClick={() => {
               setCodeFormat(fmt.key)
-              setShowCode(true)
             }}
             style={{
               padding: "6px 14px",
