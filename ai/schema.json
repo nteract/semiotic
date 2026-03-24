@@ -836,6 +836,105 @@
     {
       "type": "function",
       "function": {
+        "name": "MultiAxisLineChart",
+        "description": "Dual Y-axis line chart for comparing two series with different scales on the same x axis. Data is unitized (normalized to [0,1]) internally; left axis shows series[0] values and right axis shows series[1] values in original units. Falls back to standard multi-line if not exactly 2 series.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of data objects shared by both series"
+            },
+            "xAccessor": {
+              "type": "string",
+              "default": "x",
+              "description": "Key for x values"
+            },
+            "series": {
+              "type": "array",
+              "description": "Exactly 2 series configs for dual-axis mode. Each: { yAccessor, label?, color?, format?, extent? }",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "yAccessor": {
+                    "type": "string",
+                    "description": "Field name for y values of this series"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Axis label for this series"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "Override color for this series"
+                  },
+                  "extent": {
+                    "type": "array",
+                    "items": { "type": "number" },
+                    "description": "Fixed [min, max] extent. Required for push API streaming."
+                  }
+                },
+                "required": ["yAccessor"]
+              }
+            },
+            "colorScheme": {
+              "type": ["string", "array"],
+              "default": "category10"
+            },
+            "curve": {
+              "type": "string",
+              "default": "monotoneX"
+            },
+            "lineWidth": {
+              "type": "number",
+              "default": 2
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 800
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "annotations": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": ["series"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "BubbleChart",
         "description": "Scatterplot with required size dimension for three-variable comparison. Bubble area encodes a numeric value.",
         "parameters": {

@@ -533,8 +533,8 @@ const StreamNetworkFrame = forwardRef<
     // the HOC's nodeStyleFn (which may use ThemeProvider, colorBy, or
     // resolveDefaultFill) — those are the authoritative colors.
     for (const sceneNode of store.sceneNodes) {
-      if (sceneNode.id && sceneNode.style?.fill) {
-        nodeColorMap.current.set(sceneNode.id, String(sceneNode.style.fill))
+      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
       }
     }
     // Fill remaining from palette (streaming: new nodes not yet in scene)

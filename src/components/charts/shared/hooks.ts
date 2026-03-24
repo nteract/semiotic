@@ -23,15 +23,9 @@ export const DEFAULT_COLOR = "#007bff"
  * the palette is empty. Safe to call outside a ThemeProvider (returns undefined).
  */
 export function useThemeCategorical(): string[] | undefined {
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const theme = useTheme()
-    const cat = theme?.colors?.categorical
-    return cat && cat.length > 0 ? cat : undefined
-  } catch {
-    // No ThemeProvider in tree — return undefined
-    return undefined
-  }
+  const theme = useTheme()
+  const cat = theme?.colors?.categorical
+  return cat && cat.length > 0 ? cat : undefined
 }
 
 /**

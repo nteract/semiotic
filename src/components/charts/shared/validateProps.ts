@@ -225,6 +225,23 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  MultiAxisLineChart: {
+    required: ["series"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      series: { type: "array" },
+      colorScheme: { type: ["string", "array"] },
+      curve: { type: "string" },
+      lineWidth: { type: "number" },
+      annotations: { type: "array" },
+    },
+  },
+
   ConnectedScatterplot: {
     required: ["data"],
     dataShape: "array",

@@ -10,14 +10,17 @@ import { createHatchPattern } from "../../charts/shared/hatchPattern"
  * background matches the bar's solid fill color.
  */
 
-// Cache hatch patterns by base color to avoid re-creating them every frame
+// Cache hatch patterns by (color + DPR) to avoid re-creating every frame
+// while ensuring patterns aren't reused across contexts with different pixel ratios
 const hatchCache = new Map<string, CanvasPattern | null>()
 
 function getHatchForColor(
   baseColor: string,
   ctx: CanvasRenderingContext2D
 ): CanvasPattern | null {
-  const cached = hatchCache.get(baseColor)
+  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+  const key = `${baseColor}@${dpr}`
+  const cached = hatchCache.get(key)
   if (cached !== undefined) return cached
   const pattern = createHatchPattern(
     {
@@ -29,7 +32,7 @@ function getHatchForColor(
     },
     ctx
   )
-  hatchCache.set(baseColor, pattern)
+  hatchCache.set(key, pattern)
   return pattern
 }
 
