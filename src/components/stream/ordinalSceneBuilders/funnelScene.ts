@@ -135,8 +135,12 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
       const barW = widthScale(val)
       const barX = centerX - barW / 2
 
-      const datum = step.groups.get(categoryKeys[0])?.pieces[0] ?? col.pieceData[0]
-      const style = resolvePieceStyle(datum, col.name)
+      // Use the real category key (not step name) so tooltips/selection work
+      const catKey = categoryKeys[0]
+      const isRealCategory = catKey !== "_default"
+      const datum = step.groups.get(catKey)?.pieces[0] ?? col.pieceData[0]
+      const styleKey = isRealCategory ? catKey : col.name
+      const style = resolvePieceStyle(datum, styleKey)
       const pct = firstStepTotal > 0 ? (val / firstStepTotal * 100) : 0
 
       const labelData: Record<string, any> = {
@@ -145,7 +149,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
         __funnelPercent: pct,
         __funnelStep: col.name,
         __funnelIsFirstStep: isFirstStep,
-        category: col.name,
+        category: isRealCategory ? catKey : col.name,
       }
 
       if (showLabels) {
@@ -158,8 +162,8 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
         labelData.__funnelBarW = barW
       }
 
-      nodes.push(buildRectNode(barX, barY, barW, barH, style, labelData, col.name))
-      currentBars.set("_default", { x: barX, y: barY, w: barW, h: barH })
+      nodes.push(buildRectNode(barX, barY, barW, barH, style, labelData, styleKey))
+      currentBars.set(catKey, { x: barX, y: barY, w: barW, h: barH })
     } else {
       // Multi-category: mirror around center
       // Pre-compute total row width for step label suppression
@@ -220,7 +224,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
 
     // Build trapezoid connectors between this step and the previous
     if (si > 0 && prevBars.size > 0) {
-      const keys = hasMultipleCategories ? categoryKeys : ["_default"]
+      const keys = hasMultipleCategories ? categoryKeys : [categoryKeys[0]]
       for (const key of keys) {
         const prev = prevBars.get(key)
         const curr = currentBars.get(key)
@@ -228,8 +232,9 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
 
         const style = (() => {
           const group = step.groups.get(key)
-          if (group) return resolvePieceStyle(group.pieces[0], key === "_default" ? col.name : key)
-          return resolvePieceStyle(col.pieceData[0], col.name)
+          const styleKey = key === "_default" ? col.name : key
+          if (group) return resolvePieceStyle(group.pieces[0], styleKey)
+          return resolvePieceStyle(col.pieceData[0], styleKey)
         })()
 
         const trapezoid: TrapezoidSceneNode = {
