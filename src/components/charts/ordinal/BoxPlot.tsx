@@ -4,7 +4,7 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -30,6 +30,7 @@ export interface BoxPlotProps<TDatum extends Record<string, any> = Record<string
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
@@ -48,6 +49,8 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -68,7 +71,9 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     onObservation, chartId,
     loading, emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color: colorProp,
+    showCategoryTicks
   } = props
 
   const width = resolved.width
@@ -107,12 +112,15 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
 
   if (setup.earlyReturn) return setup.earlyReturn
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const color = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
-      return { fill: color, stroke: color, fillOpacity: 0.8 }
+      const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.8 }
     }
-  }, [colorBy, setup.colorScale])
+  }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
     () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, selection),
@@ -166,6 +174,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
+    showCategoryTicks,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),

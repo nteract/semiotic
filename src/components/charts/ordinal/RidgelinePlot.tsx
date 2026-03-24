@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -30,6 +30,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
@@ -53,6 +54,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const {
@@ -64,7 +67,9 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color: colorProp,
+    showCategoryTicks
   } = props
 
   const width = resolved.width
@@ -103,12 +108,15 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
 
   if (setup.earlyReturn) return setup.earlyReturn
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const color = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
-      return { fill: color, stroke: color, fillOpacity: 0.5 }
+      const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.5 }
     }
-  }, [colorBy, setup.colorScale])
+  }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
     () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
@@ -166,6 +174,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
+    showCategoryTicks,
     oSort: false,
     amplitude,
     ...setup.legendBehaviorProps,

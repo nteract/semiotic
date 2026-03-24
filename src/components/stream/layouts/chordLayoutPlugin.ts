@@ -119,6 +119,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     for (const e of edges) {
       const eSrc = typeof e.source === "string" ? e.source : e.source.id
       const eTgt = typeof e.target === "string" ? e.target : e.target.id
+      // Store by source\0target for bidirectional lookup (chord parallel edges are less common)
       edgeLookup.set(`${eSrc}\0${eTgt}`, e)
     }
 

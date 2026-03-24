@@ -53,7 +53,7 @@ function renderBezierEdge(
       // Gradient fill for stub circular edges
       const gradient = ctx.createLinearGradient(grad.x0, 0, grad.x1, 0)
       const baseAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
-      const color = edge.style.fill
+      const color = typeof edge.style.fill === "string" ? edge.style.fill : "#999"
       gradient.addColorStop(0, grad.from === 1 ? color : "transparent")
       gradient.addColorStop(1, grad.to === 1 ? color : "transparent")
       ctx.fillStyle = gradient

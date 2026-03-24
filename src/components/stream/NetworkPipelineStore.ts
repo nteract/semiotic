@@ -189,8 +189,11 @@ export class NetworkPipelineStore {
       })
     }
 
-    // Build edge map (creating nodes if not provided)
-    for (const raw of rawEdges) {
+    // Build edge map (creating nodes if not provided).
+    // Use a unique index key so parallel edges (same source→target, different
+    // groups) are preserved. Streaming ingestion still aggregates by source+target.
+    for (let i = 0; i < rawEdges.length; i++) {
+      const raw = rawEdges[i]
       const sourceId = String(getSource(raw))
       const targetId = String(getTarget(raw))
       const value = Number(getValue(raw)) || 1
@@ -202,7 +205,7 @@ export class NetworkPipelineStore {
         this.nodes.set(targetId, { ...createNode(targetId), data: raw })
       }
 
-      const key = `${sourceId}\0${targetId}`
+      const key = `${sourceId}\0${targetId}\0${i}`
       this.edges.set(key, {
         source: sourceId,
         target: targetId,
@@ -210,7 +213,8 @@ export class NetworkPipelineStore {
         y0: 0,
         y1: 0,
         sankeyWidth: 0,
-        data: raw
+        data: raw,
+        _edgeKey: key
       })
     }
 
@@ -343,10 +347,13 @@ export class NetworkPipelineStore {
       for (const node of nodesArr) {
         this.nodes.set(node.id, node)
       }
-      for (const edge of edgesArr) {
+      for (let i = 0; i < edgesArr.length; i++) {
+        const edge = edgesArr[i]
         const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
         const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
-        this.edges.set(`${srcId}\0${tgtId}`, edge)
+        const key = edge._edgeKey || `${srcId}\0${tgtId}\0${i}`
+        edge._edgeKey = key
+        this.edges.set(key, edge)
       }
     }
 
@@ -647,8 +654,11 @@ export class NetworkPipelineStore {
     const hw = (edge.sankeyWidth || 1) / 2
 
     if (edge.direction === "down") {
-      const y0 = sourceNode.y1
-      const y1 = targetNode.y0
+      // Vertical sankey: d3-sankey uses swapped extent so x = depth, y = breadth.
+      // For rendering: breadth (y) → horizontal, depth (x) → vertical.
+      // source.x1 = depth bottom of source, target.x0 = depth top of target.
+      const y0 = sourceNode.x1
+      const y1 = targetNode.x0
       const xi = interpolateNumber(y0, y1)
       const p0: BezierPoint = { x: edge.y0, y: y0 }
       const p1: BezierPoint = { x: edge.y0, y: xi(CURVATURE) }

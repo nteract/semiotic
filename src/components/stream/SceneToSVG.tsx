@@ -36,7 +36,8 @@ import type {
   WedgeSceneNode,
   BoxplotSceneNode,
   ViolinSceneNode,
-  ConnectorSceneNode
+  ConnectorSceneNode,
+  TrapezoidSceneNode
 } from "./ordinalTypes"
 
 import type {
@@ -57,6 +58,13 @@ function parseHeatcellColor(color: string): [number, number, number] {
   const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
   if (m) return [+m[1], +m[2], +m[3]]
   return [128, 128, 128]
+}
+
+// ── Fill helper (CanvasPattern → fallback for SVG) ─────────────────────
+
+function svgFill(fill: string | CanvasPattern | undefined, fallback = "#4e79a7"): string {
+  if (!fill || typeof fill !== "string") return fallback
+  return fill
 }
 
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
@@ -89,7 +97,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
         <path
           key={`area-${i}`}
           d={d}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -104,7 +112,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
           cx={n.x}
           cy={n.y}
           r={n.r}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           opacity={n.style.opacity ?? 0.8}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -120,7 +128,7 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
           y={n.y}
           width={n.w}
           height={n.h}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           opacity={n.style.opacity}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -201,7 +209,7 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
         <circle
           key={`net-circle-${i}`}
           cx={n.cx} cy={n.cy} r={n.r}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
           opacity={n.style.opacity}
@@ -214,7 +222,7 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
         <rect
           key={`net-rect-${i}`}
           x={n.x} y={n.y} width={n.w} height={n.h}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
           opacity={n.style.opacity}
@@ -233,7 +241,7 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
           key={`net-arc-${i}`}
           d={arcPath}
           transform={`translate(${n.cx},${n.cy})`}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
           opacity={n.style.opacity}
@@ -265,7 +273,7 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
-          fill={e.style.fill || "#999"}
+          fill={svgFill(e.style.fill, "#999")}
           fillOpacity={e.style.fillOpacity}
           stroke={e.style.stroke || "none"}
           strokeWidth={e.style.strokeWidth}
@@ -279,7 +287,7 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
-          fill={e.style.fill || "#999"}
+          fill={svgFill(e.style.fill, "#999")}
           fillOpacity={e.style.fillOpacity}
           stroke={e.style.stroke || "none"}
           strokeWidth={e.style.strokeWidth}
@@ -293,7 +301,7 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
-          fill={e.style.fill || "none"}
+          fill={svgFill(e.style.fill, "none")}
           stroke={e.style.stroke || "#999"}
           strokeWidth={e.style.strokeWidth || 1}
           opacity={e.style.opacity}
@@ -341,7 +349,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         <rect
           key={baseKey}
           x={n.x} y={n.y} width={n.w} height={n.h}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           opacity={n.style.opacity}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -354,7 +362,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         <circle
           key={baseKey}
           cx={n.x} cy={n.y} r={n.r}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           opacity={n.style.opacity ?? 0.8}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -373,7 +381,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
           key={baseKey}
           d={arcPath}
           transform={`translate(${n.cx},${n.cy})`}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
           opacity={n.style.opacity}
@@ -390,7 +398,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
             <rect
               x={n.x - halfW} y={Math.min(n.q1Pos, n.q3Pos)}
               width={n.columnWidth} height={Math.abs(n.q3Pos - n.q1Pos)}
-              fill={n.style.fill || "#4e79a7"} fillOpacity={n.style.fillOpacity ?? 0.6}
+              fill={svgFill(n.style.fill)} fillOpacity={n.style.fillOpacity ?? 0.6}
               stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
             <line x1={n.x - halfW} y1={n.medianPos} x2={n.x + halfW} y2={n.medianPos} stroke={n.style.stroke || "#333"} strokeWidth={2} />
@@ -405,7 +413,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
             <rect
               x={Math.min(n.q1Pos, n.q3Pos)} y={n.y - halfW}
               width={Math.abs(n.q3Pos - n.q1Pos)} height={n.columnWidth}
-              fill={n.style.fill || "#4e79a7"} fillOpacity={n.style.fillOpacity ?? 0.6}
+              fill={svgFill(n.style.fill)} fillOpacity={n.style.fillOpacity ?? 0.6}
               stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
             <line x1={n.medianPos} y1={n.y - halfW} x2={n.medianPos} y2={n.y + halfW} stroke={n.style.stroke || "#333"} strokeWidth={2} />
@@ -422,7 +430,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
           key={nodeKey("path")}
           d={n.pathString}
           transform={n.translateX || n.translateY ? `translate(${n.translateX},${n.translateY})` : undefined}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           fillOpacity={n.style.fillOpacity ?? 0.6}
           stroke={n.style.stroke || "#333"}
           strokeWidth={n.style.strokeWidth || 1}
@@ -471,6 +479,20 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         />
       )
     }
+    case "trapezoid": {
+      const n = node as TrapezoidSceneNode
+      const pts = n.points.map(p => `${p[0]},${p[1]}`).join(" ")
+      return (
+        <polygon
+          key={baseKey}
+          points={pts}
+          fill={svgFill(n.style.fill, "#999")}
+          opacity={n.style.opacity}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+        />
+      )
+    }
     default:
       return null
   }
@@ -487,7 +509,7 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
         <path
           key={`geoarea-${i}`}
           d={n.pathData}
-          fill={n.style.fill || "#e0e0e0"}
+          fill={svgFill(n.style.fill, "#e0e0e0")}
           fillOpacity={n.style.fillOpacity ?? 1}
           stroke={n.style.stroke || "none"}
           strokeWidth={n.style.strokeWidth || 0.5}
@@ -504,7 +526,7 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
           cx={n.x}
           cy={n.y}
           r={n.r}
-          fill={n.style.fill || "#4e79a7"}
+          fill={svgFill(n.style.fill)}
           fillOpacity={n.style.fillOpacity ?? 0.8}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}

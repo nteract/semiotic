@@ -2,49 +2,32 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
+- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`, `semiotic/themes`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
-- Every HOC has a built-in error boundary (never blanks the page) and dev-mode validation warnings
+- Every HOC has a built-in error boundary and dev-mode validation warnings
 
 ## Architecture
 - **HOC Charts**: Simple props, sensible defaults. **Stream Frames**: Full control.
-- **Always use HOC charts** (`ForceDirectedGraph`, `SankeyDiagram`, `LineChart`, `RealtimeLineChart`, `ChoroplethMap`, etc.) unless you need sophisticated control they don't expose. Stream Frames (`StreamNetworkFrame`, `StreamXYFrame`, `StreamOrdinalFrame`, `StreamGeoFrame`) are low-level escape hatches — they accept raw `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data objects directly.
+- **Always use HOC charts** unless you need control they don't expose. Stream Frames (`StreamNetworkFrame`, `StreamXYFrame`, `StreamOrdinalFrame`, `StreamGeoFrame`) are low-level — they pass `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data.
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation` (callback, see below), `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom", default "right"), `emphasis` ("primary"|"secondary")
+`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array)
 
-### tooltip
-`tooltip` accepts: `true` (default tooltip), `false` (disabled), a **function** `(datum: Record<string, any>) => ReactNode`, or a config `{ fields?: string[], title?: accessor, format?: fn, style?: CSSProperties }`. The function form receives your raw data object directly.
-
-### onObservation
-`onObservation` receives a `ChartObservation` with `type` and event-specific fields:
-- **hover**: `{ type: "hover", datum: <your data>, x, y, timestamp, chartType, chartId }`
-- **hover-end**: `{ type: "hover-end", timestamp, chartType, chartId }`
-- **click**: `{ type: "click", datum: <your data>, x, y, timestamp, chartType, chartId }`
-- **brush**: `{ type: "brush", extent: { x: [min, max], y: [min, max] }, timestamp, chartType }`
-- **selection**: `{ type: "selection", selection: { name, fields }, timestamp, chartType }`
-
-The `datum` field contains your original data object (not a wrapper).
+`onObservation` receives `{ type: "hover"|"hover-end"|"click"|"brush"|"selection", datum?, x?, y?, timestamp, chartType, chartId }`. The `datum` is your original data object.
 
 ## XY Charts (`semiotic/xy`)
 
-**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea`, `areaOpacity` (0.3), `anomaly` (AnomalyConfig), `forecast` (ForecastConfig), `directLabel` (boolean|{position,fontSize}), `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType` ("linear"|"log"), `yScaleType` ("linear"|"log")
-
+**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea`, `areaOpacity` (0.3), `anomaly`, `forecast`, `directLabel`, `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType`/`yScaleType` ("linear"|"log")
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}), `areaOpacity` (0.7), `showLine` (true)
-
-**StackedAreaChart** — flat array data + `areaBy` (required, groups into stacked areas), `colorBy`, `normalize` (false). Do NOT use `lineBy` or `lineDataAccessor` — those are LineChart props.
-
+**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`. Do NOT use `lineBy` or `lineDataAccessor`.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
-
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `bubbleOpacity` (0.6)
-
-**ConnectedScatterplot** — `data`, `xAccessor`, `yAccessor`, `orderAccessor` (number|Date field for sequencing), `pointRadius` (4). Viridis colored start→end, line width = point radius, white halo under lines when <100 points.
-
-**QuadrantChart** — Scatterplot divided into four labeled, colored quadrants. `data`, `xAccessor`, `yAccessor`, `quadrants` (required: `{ topRight, topLeft, bottomRight, bottomLeft }` each with `label`, `color`, optional `opacity`), `xCenter` (vertical center line in data units), `yCenter` (horizontal center line), `centerlineStyle` (`{ stroke, strokeWidth, strokeDasharray }`), `showQuadrantLabels` (true), `quadrantLabelSize` (12), `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8). Supports push API. Quadrant fills and labels drawn via `canvasPreRenderers`.
-
-**Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis" or custom), `showValues`, `cellBorderColor`. Accessors can be string field names (including string/categorical fields) or functions.
+**ConnectedScatterplot** — `data`, `xAccessor`, `yAccessor`, `orderAccessor` (sequencing field), `pointRadius` (4)
+**QuadrantChart** — Scatterplot + `quadrants` (required: `{ topRight, topLeft, bottomRight, bottomLeft }` each `{ label, color, opacity? }`), `xCenter`, `yCenter`, `centerlineStyle`, `showQuadrantLabels` (true). Supports push API.
+**MultiAxisLineChart** — Dual Y-axis. `data`, `xAccessor` ("x"), `series` (required: array of `{ yAccessor, label?, color?, format?, extent? }`), `colorScheme`, `curve` ("monotoneX"), `lineWidth` (2). Data unitized to [0,1] internally; left axis=series[0], right axis=series[1] in original units. For push API, provide `series[].extent` for stable unitization. Falls back to standard multi-line if not exactly 2 series.
+**Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `showValues`, `cellBorderColor`. Supports string/categorical axes.
 
 ## Ordinal Charts (`semiotic/ordinal`)
 
@@ -53,406 +36,207 @@ The `datum` field contains your original data object (not a wrapper).
 **GroupedBarChart** — + `groupBy` (required), `barPadding` (60)
 **SwarmPlot** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
 **BoxPlot** — + `showOutliers`, `outlierRadius`
-**Histogram** — + `bins` (25), `relative`. Always horizontal. `categoryAccessor` is optional (defaults to `"category"`) — for a single-group histogram, either omit it or ensure your data has a `category` field with a single value.
+**Histogram** — + `bins` (25), `relative`. Always horizontal. `categoryAccessor` optional (defaults to `"category"`).
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
+**RidgelinePlot** — + `bins`, `amplitude` (1.5, unitless multiplier of lane width)
 **DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
 **PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
-**DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode — any React element, e.g. `<div>50%</div>`)
+**DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode)
+**FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"), `categoryAccessor` (optional), `colorBy`, `connectorOpacity` (0.3), `orientation` ("horizontal"|"vertical"). Horizontal: centered bars with trapezoid connectors. Vertical: bars with diagonal hatch for dropoff. Multi-category: `categoryAccessor="channel"` mirrors (horizontal) or groups (vertical).
+
+All ordinal HOCs support `colorBy` and `colorScheme`. `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
 ## Network Charts (`semiotic/network`)
 
-**ForceDirectedGraph** — `nodes`, `edges`, `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `colorScheme`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeColor`, `edgeOpacity`, `iterations` (300), `forceStrength` (0.1), `showLabels`, `nodeLabel`, `tooltip`, `showLegend`, `legendInteraction`
-**SankeyDiagram** — `edges`, `nodes`, `valueAccessor`, `edgeColorBy`, `orientation`, `nodeAlign`, `nodeWidth`, `showLabels`, `edgeOpacity`
+**ForceDirectedGraph** — `nodes`, `edges`, `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `colorScheme`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeColor`, `edgeOpacity`, `iterations` (300), `forceStrength` (0.1), `showLabels`, `nodeLabel`, `legendInteraction`
+**SankeyDiagram** — `edges`, `nodes`, `valueAccessor`, `nodeIdAccessor` ("id"), `sourceAccessor` ("source"), `targetAccessor` ("target"), `colorBy`, `edgeColorBy` ("source"|"target"|"gradient"|fn), `orientation`, `nodeAlign`, `nodeWidth`, `nodePaddingRatio`, `nodeLabel`, `showLabels`, `edgeOpacity`
 **ChordDiagram** — `edges`, `nodes`, `valueAccessor`, `edgeColorBy`, `padAngle`, `groupWidth`, `showLabels`
 **TreeDiagram** — `data` (root), `layout`, `orientation`, `childrenAccessor`, `colorBy`, `colorByDepth`, `edgeStyle`
 **Treemap** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `showLabels`, `labelMode`
 **CirclePack** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `circleOpacity`
-**OrbitDiagram** — animated radial/orbital hierarchy. Use this (not TreeDiagram) when you want animated orbiting nodes. `data` (root), `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed` (0.25), `revolution`, `eccentricity`, `orbitSize`, `nodeRadius`, `showRings`, `showLabels`, `animated` (true), `colorBy`, `colorByDepth`, `annotations` (widget annotations anchor by nodeId). For static radial trees, use `TreeDiagram layout="radial"` instead.
+**OrbitDiagram** — animated radial/orbital hierarchy. `data` (root), `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed` (0.25), `revolution`, `eccentricity`, `orbitSize`, `nodeRadius`, `showRings`, `showLabels`, `animated` (true), `colorBy`, `colorByDepth`. For static radial trees, use `TreeDiagram layout="radial"`.
 
 ## Geo Charts (`semiotic/geo`)
 
-Geographic visualization with d3-geo projections. Canvas-rendered via `StreamGeoFrame`. Import from `semiotic/geo` to avoid adding d3-geo to non-geo bundles.
+Import from `semiotic/geo` — NOT `semiotic` — to avoid pulling d3-geo into non-geo bundles.
 
-**ChoroplethMap** — `areas` (GeoJSON Feature[] or reference string like "world-110m"), `valueAccessor`, `colorScheme` ("blues"|"reds"|"greens"|"viridis"), `areaOpacity` (1), `projection` ("equalEarth"), `graticule`, `tooltip`, `showLegend`
+**ChoroplethMap** — `areas` (GeoJSON Feature[] or "world-110m"), `valueAccessor`, `colorScheme`, `areaOpacity` (1), `projection` ("equalEarth"), `graticule`, `tooltip`, `showLegend`
 **ProportionalSymbolMap** — `points`, `xAccessor` ("lon"), `yAccessor` ("lat"), `sizeBy`, `sizeRange` ([3,30]), `colorBy`, `areas` (optional background), `projection`
-**FlowMap** — `flows` ({source, target, value}), `nodes`, `xAccessor`, `yAccessor`, `nodeIdAccessor` ("id"), `valueAccessor` ("value"), `edgeColorBy`, `edgeOpacity` (0.6), `edgeWidthRange` ([1,8]), `edgeLinecap` ("round"), `lineType` ("geo"|"line"), `areas` (optional background), `showParticles`, `particleStyle` ({ radius, color, opacity, speedMultiplier, maxPerLine, spawnRate }). Particle `color` accepts a string, `"source"` (inherit line stroke), or `(datum) => string`.
-**DistanceCartogram** — `points`, `center` (id of center node), `costAccessor`, `strength` (0-1), `lineMode` ("straight"|"fractional"), `nodeIdAccessor` ("id"), `lines`, `projection`, `showRings` (true|false|number[]), `ringStyle` ({ stroke, strokeWidth, ... }), `showNorth` (true), `costLabel` (string for ring labels), `transition` (ms for smooth animation), `pointRadius`
+**FlowMap** — `flows`, `nodes`, `xAccessor`, `yAccessor`, `nodeIdAccessor`, `valueAccessor`, `edgeColorBy`, `edgeOpacity` (0.6), `edgeWidthRange` ([1,8]), `lineType` ("geo"|"line"), `showParticles`, `particleStyle`
+**DistanceCartogram** — `points`, `center` (id), `costAccessor`, `strength` (0-1), `lineMode`, `showRings` (true|false|number[]), `ringStyle`, `showNorth`, `costLabel`, `transition`, `pointRadius`
 
-All geo HOCs support: `selection`, `linkedHover`, `onObservation`, `showLegend`, `legendInteraction`, `tooltip`, `loading`, `emptyContent`, `frameProps`, `fitPadding` (0–1 fraction, insets auto-fit projection from edges), `zoomable` (defaults true with tileURL, false otherwise), `zoomExtent`, `onZoom`, `dragRotate`, `graticule`, `tileURL`, `tileAttribution`, `tileCacheSize`
+All geo HOCs: `fitPadding` (0–1), `zoomable` (defaults true with tileURL), `zoomExtent` ([1,8]), `onZoom`, `dragRotate` (true for orthographic), `graticule`, `tileURL`, `tileAttribution`, `tileCacheSize`, `selection`, `linkedHover`, `onObservation`
 
-**Zoom/Pan**: All geo charts accept `zoomable` (boolean), `zoomExtent` ([minZoom, maxZoom], default [1, 8]), and `onZoom` (callback with `{ projection, zoom }`). Re-renders projection directly on every zoom tick (no CSS transform). Imperative API: `ref.current.getZoom()`, `ref.current.resetZoom()`.
-
-**Geo Particles**: `FlowMap` and `StreamGeoFrame` support `showParticles` (boolean) and `particleStyle` to animate dots flowing along line paths. Uses `GeoParticlePool` — an object-pool polyline particle system. Particle `color` accepts: `"source"` (inherit line stroke), a CSS string, or `(datum) => string` for per-line color.
-
-**Drag Rotate (Globe Spinning)**: `dragRotate` (boolean) — when true, drag gestures rotate the projection (globe spinning) instead of panning. **Defaults to true for orthographic projection.** Scroll-wheel zoom still works normally. Explicitly set `dragRotate={false}` on orthographic to get standard pan behavior, or `dragRotate={true}` on other projections to enable rotation. Latitude rotation is clamped to [-90, 90] to prevent flipping.
-
-**Tile Maps**: All geo charts accept `tileURL` (string template like `"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"` or `(z, x, y, dpr) => string`), `tileAttribution` (e.g., `"© OpenStreetMap contributors"`), `tileCacheSize` (default 256). Tiles render on a background canvas behind data layers. **Mercator projection only** — a dev warning is emitted for non-Mercator projections. Tiles update on zoom/pan. Retina support via `{r}` placeholder or DPR parameter. **Production**: OpenStreetMap tiles are for development/demo only. For production, use a commercial tile provider (Mapbox, MapTiler, Stadia Maps) with your own API key passed via environment variable (never hard-code keys in client code). Example: `tileURL={\`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=\${process.env.MAPBOX_TOKEN}\`}`.
-
-**StreamGeoFrame** — low-level frame with full control. Props: `projection`, `areas`, `points`, `lines`, `xAccessor`, `yAccessor`, `areaStyle`, `pointStyle`, `lineStyle`, `graticule`, `projectionTransform` (distance cartogram config), `projectionExtent`, `enableHover`, `tooltipContent`, `zoomable`, `zoomExtent`, `onZoom`, `tileURL`, `tileAttribution`, `tileCacheSize`, `decay`, `pulse`, `transition`. Push API: `ref.current.push(datum)`, `ref.current.pushMany(data)`, `ref.current.clear()`.
-
-**Reference geography**: `resolveReferenceGeography("world-110m")` returns GeoJSON features from Natural Earth data (world-atlas). Supported: `"world-110m"`, `"world-50m"`, `"land-110m"`, `"land-50m"`. All geo HOCs accept `areas` as `GeoJSON.Feature[]` or a reference string.
-
-**mergeData(features, data, { featureKey, dataKey })** — join external data into GeoJSON features by key field. Supports nested paths (e.g., `"properties.iso_a3"`). World-atlas uses ISO 3166-1 numeric codes as the `id` field. Also available from `semiotic/data` as a general join-by-key utility.
+**Tiles**: `tileURL` accepts string template (`{z}/{x}/{y}`) or function. Mercator only. OSM tiles are dev-only — use commercial provider with env var key in production.
+**Zoom**: Imperative: `ref.current.getZoom()`, `ref.current.resetZoom()`.
+**Reference geography**: `resolveReferenceGeography("world-110m"|"world-50m"|"land-110m"|"land-50m")` returns GeoJSON features.
+**mergeData(features, data, { featureKey, dataKey })** — join data into GeoJSON by key. World-atlas uses ISO numeric codes as `id`.
 
 ```jsx
-// World choropleth with reference geography + data joining
 import { ChoroplethMap, resolveReferenceGeography, mergeData } from "semiotic/geo"
 const world = await resolveReferenceGeography("world-110m")
 const areas = mergeData(world, gdpData, { featureKey: "id", dataKey: "id" })
 <ChoroplethMap areas={areas} valueAccessor="gdpPerCapita" colorScheme="viridis"
   projection="equalEarth" zoomable tooltip />
-
-// Distance cartogram (ORBIS-style) with concentric rings overlay
-import { DistanceCartogram } from "semiotic/geo"
-<DistanceCartogram
-  points={cities} center="rome" costAccessor="travelDays"
-  strength={0.8} lines={routes} showLegend zoomable
-  showRings costLabel="days" showNorth
-  ringStyle={{ stroke: "#999", strokeWidth: 0.5 }}
-/>
-
-// Tile map basemap with proportional symbols
-<ProportionalSymbolMap
-  points={earthquakes} xAccessor="lon" yAccessor="lat"
-  sizeBy="magnitude" sizeRange={[2, 20]}
-  projection="mercator" zoomable
-  tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-  tileAttribution="© OpenStreetMap contributors"
-/>
-
-// Streaming geo points with zoom
-const geoRef = useRef()
-geoRef.current.push({ lon: -122.4, lat: 37.8, value: 42 })
-<StreamGeoFrame ref={geoRef} projection="mercator" xAccessor="lon" yAccessor="lat"
-  runtimeMode="streaming" decay={{ type: "linear", minOpacity: 0.1 }}
-  zoomable zoomExtent={[1, 12]} onZoom={({ zoom }) => console.log(zoom)} />
 ```
+
+**StreamGeoFrame** — low-level frame. Push API: `ref.current.push(datum)`, `.pushMany()`, `.clear()`. Props: `projection`, `areas`, `points`, `lines`, `xAccessor`, `yAccessor`, `areaStyle`, `pointStyle`, `lineStyle`, `graticule`, `zoomable`, `decay`, `pulse`, `transition`.
 
 ## Realtime Charts (`semiotic/realtime`)
 
 Push API: `chartRef.current.push({ time, value })`
 
-**IMPORTANT**: All pushed data must include a time field (default: `"time"`). If your data uses a different field name, set `timeAccessor` explicitly. Without a valid time field, charts render blank with no error.
+**IMPORTANT**: All pushed data must include a time field (default: `"time"`). Set `timeAccessor` if your field differs. Without valid time field, charts render blank.
 
-Sizing: all Realtime HOCs accept both `size={[600, 400]}` (tuple) and `width={600} height={400}`. Either works.
+**RealtimeLineChart** — `timeAccessor` ("time"), `valueAccessor` ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
+**RealtimeHistogram** — `binSize` (required), `timeAccessor`, `valueAccessor`, `categoryAccessor`, `colors`
+**RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`, `radius`, `opacity`
+**RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
+**RealtimeHeatmap** — `timeAccessor`, `valueAccessor`, `heatmapXBins`, `heatmapYBins`, `aggregation`
+**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles`, `particleStyle`. Push individual edges: `ref.current.push({ source, target, value })`.
 
-**RealtimeLineChart** — `size`|`width`+`height`, **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
-**RealtimeHistogram** — **`binSize`** (required), **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `colors`. Time field is required even though this shows a distribution — it's used for windowing.
-**RealtimeSwarmChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `categoryAccessor`, `radius`, `opacity`
-**RealtimeWaterfallChart** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `positiveColor`, `negativeColor`
-**RealtimeHeatmap** — **`timeAccessor`** ("time"), **`valueAccessor`** ("value"), `heatmapXBins`, `heatmapYBins`, `aggregation`. Both accessors must match your data fields or the chart renders blank.
-**Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles` (boolean), `particleStyle` (`{ radius, opacity, speedMultiplier, maxPerEdge, colorBy }`), `tensionConfig`, `thresholds`. Push **individual edges**: `ref.current.push({ source: "A", target: "B", value: 42 })`. Use `ref.current.pushMany([...edges])` for batches.
-
-Realtime encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
-
-### Realtime data shape
-```jsx
-// Every pushed datum should have a time field
-ref.current.push({ time: Date.now(), value: 42 })              // line, waterfall
-ref.current.push({ time: Date.now(), value: 42, category: "A" }) // histogram, swarm
-ref.current.push({ time: Date.now(), value: 42 })              // heatmap (time=x, value=y)
-```
+Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
 
 ### Push API on HOC charts
-Many HOC charts support the push API via `forwardRef`. Omit the `data` prop and push data imperatively:
+Most HOC charts support push via `forwardRef`. **Omit** `data`/`nodes`/`edges` — do NOT pass `data={[]}`.
 ```jsx
-const chartRef = useRef()
-chartRef.current.push({ x: 1, y: 2 })          // single point
-chartRef.current.pushMany([...points])           // batch
-chartRef.current.clear()                          // reset
-chartRef.current.getData()                        // read current data
-<Scatterplot ref={chartRef} xAccessor="x" yAccessor="y" />
+const ref = useRef()
+ref.current.push({ x: 1, y: 2 })       // single
+ref.current.pushMany([...points])        // batch
+ref.current.clear()                       // reset
+ref.current.getData()                     // read
+<Scatterplot ref={ref} xAccessor="x" yAccessor="y" />
 ```
-**IMPORTANT**: When using the push API, **omit** the `data`/`nodes`/`edges` prop entirely — do NOT pass `data={[]}`, which clears pushed data on every render. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`.
+Supported: all XY, ordinal, network (Force, Sankey, Chord), geo point charts. **Not supported**: hierarchy charts (Tree, Treemap, CirclePack, Orbit), ChoroplethMap, FlowMap, ScatterplotMatrix.
 
-Supported: all XY charts (LineChart, AreaChart, Scatterplot, etc.), all ordinal charts (BarChart, Histogram, etc.), network charts (ForceDirectedGraph, SankeyDiagram, ChordDiagram), and geo point charts (ProportionalSymbolMap, DistanceCartogram). **Not supported**: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram) — their root-object data shape is incompatible with flat push. ChoroplethMap (area-based, not point-based), FlowMap (line-based), and ScatterplotMatrix also do not support push.
-
-## Stream Frame Callbacks (advanced — prefer HOCs)
-Stream Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as function, `colorBy` as function, `nodeLabel` as function) receive **`RealtimeNode`/`RealtimeEdge`** wrappers, NOT your raw data. Access your original data via `.data`:
+## Stream Frame Callbacks (advanced)
+Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as fn) receive `RealtimeNode`/`RealtimeEdge` wrappers. Access original data via `.data`:
 ```jsx
-// WRONG: nodeSize={(d) => d.weight}         — d is RealtimeNode, d.weight is undefined
-// RIGHT: nodeSize={(d) => d.data?.weight}   — d.data is your original node object
-// RIGHT: nodeSize="weight"                  — string accessor handles this automatically
-// WRONG: nodeStyle={(d) => ({ fill: d.datum.color })}  — .datum does not exist
-// RIGHT: nodeStyle={(d) => ({ fill: d.data?.color })}  — use .data
+// WRONG: nodeSize={(d) => d.weight}         — d.weight is undefined
+// RIGHT: nodeSize={(d) => d.data?.weight}   — or use string: nodeSize="weight"
 ```
-`customHoverBehavior` and `customClickBehavior` receive `{ type: "node"|"edge", data: <your raw object>, x, y } | null`.
-`tooltipContent` receives `{ type: "node"|"edge", data: <your raw object> }`.
+Same applies to `frameProps` style functions on HOCs. `customHoverBehavior`/`customClickBehavior` receive `{ type, data, x, y } | null`. `tooltipContent` receives `{ type, data }`.
 
 ## Coordinated Views
 
-**LinkedCharts** — wraps charts. Props: `selections` (resolution: "union"|"intersect"|"crossfilter"), `showLegend` (auto when CategoryColorProvider present), `legendPosition` ("top"|"bottom"), `legendInteraction` ("highlight"|"isolate"|"none"), `legendSelectionName` (selection name for legend-driven cross-highlighting), `legendField` (data field for legend selections)
-**CategoryColorProvider** — stable category→color mapping. Props: `colors` (map) or `categories` + `colorScheme`
+**LinkedCharts** — `selections` (resolution: "union"|"intersect"|"crossfilter"), `showLegend`, `legendPosition`, `legendInteraction`, `legendSelectionName`, `legendField`
+**CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
-
-## ChartContainer
-
-**ChartContainer** — wrapper with title, subtitle, status indicator, toolbar actions. Props: `title`, `subtitle`, `height` (default **400** — set this to match your chart's height or you'll get extra whitespace), `width` (default "100%"), `status` ("live"|"stale"|"error"), `loading`, `error`, `errorBoundary`, `actions` (`{ export, fullscreen, copyConfig }`), `controls`, `style`, `className`
-
-When using `ChartContainer` with a chart that has `size={[w, h]}`, always set `height={h}` on the container to avoid a mismatch.
-
-## Layout & Composition
-
-**ChartGrid** — CSS Grid layout. `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). Children with `emphasis="primary"` span two columns.
-**ContextLayout** — primary + context panel. `context` (ReactNode), `position`, `contextSize` (250)
+**ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig }), `controls`
+**ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
+**ContextLayout** — `context` (ReactNode), `position`, `contextSize` (250)
 
 ## Key Patterns
 
 ```jsx
-// Force-directed graph with custom sizing and hover
-<ForceDirectedGraph
-  nodes={[{ id: "A", group: "eng", weight: 10 }, { id: "B", group: "design", weight: 5 }]}
-  edges={[{ source: "A", target: "B" }]}
-  colorBy="group"
-  nodeSize="weight"           // string accessor → reads node.weight, scales to nodeSizeRange
-  nodeSizeRange={[5, 25]}
-  showLabels
-  showLegend
-  tooltip={(d) => <div>{d.id}: {d.weight}</div>}
-  frameProps={{
-    customClickBehavior: (d) => { if (d?.type === "node") console.log(d.data) },
-    background: "#f5f5f5",
-  }}
-/>
-
-// Cross-highlighting dashboard with column spanning
-// emphasis="primary" makes a chart span 2 columns in ChartGrid
+// Cross-highlighting dashboard
 <CategoryColorProvider categories={["North", "South", "East"]}>
 <LinkedCharts>
   <ChartGrid columns={2}>
     <LineChart data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} emphasis="primary" responsiveWidth />
     <BarChart data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} responsiveWidth />
-    <Scatterplot data={d} colorBy="region" linkedHover={{ name: "hl", fields: ["region"] }} selection={{ name: "hl" }} responsiveWidth />
   </ChartGrid>
 </LinkedCharts>
 </CategoryColorProvider>
 
-// Forecast + anomaly (auto)
+// Forecast + anomaly
 <LineChart data={ts} xAccessor="time" yAccessor="value"
   forecast={{ trainEnd: 60, steps: 15, confidence: 0.95 }}
   anomaly={{ threshold: 2 }} />
 
-// Forecast (pre-computed ML bounds)
+// Pre-computed forecast bounds
 <LineChart data={ml} xAccessor="time" yAccessor="value"
   forecast={{ isTraining: "isTraining", isForecast: "isForecast", isAnomaly: "isAnomaly", upperBounds: "upper", lowerBounds: "lower" }} />
 
-// Stacked area (flat array + areaBy, NOT lineBy)
-<StackedAreaChart data={flatData} xAccessor="month" yAccessor="value"
-  areaBy="category" colorBy="category" />
-
-// Percentile band (p5–p95) with main line (p50) — MUST layer two charts
-// AreaChart with y0Accessor renders the band; showLine only draws the TOP edge (p95), not p50
-// To show a separate main line, add a LineChart on top:
+// Percentile band — layer AreaChart + LineChart
 <>
   <AreaChart data={d} xAccessor="x" yAccessor="p95" y0Accessor="p5"
     showLine={false} areaOpacity={0.3} gradientFill />
   <LineChart data={d} xAccessor="x" yAccessor="p50" lineWidth={2} />
 </>
-// Simple gradient area (no band):
-<AreaChart data={d} xAccessor="x" yAccessor="y" gradientFill />
 
-// Realtime — always include time field in pushed data
-const ref = useRef()
-ref.current.push({ time: Date.now(), value: 42 })
-<RealtimeLineChart ref={ref} timeAccessor="time" valueAccessor="value" />
-
-// Realtime histogram — time field required even for distribution charts
-const histRef = useRef()
-histRef.current.push({ time: Date.now(), value: Math.abs(delta) })
-<RealtimeHistogram ref={histRef} timeAccessor="time" valueAccessor="value" binSize={100} />
-
-// Streaming sankey with particles — push individual edges, NOT full snapshots
+// Streaming sankey with particles
 const sankeyRef = useRef()
-sankeyRef.current.push({ source: "Web", target: "API", value: 1 })    // one edge at a time
-sankeyRef.current.pushMany([                                            // or batch
-  { source: "Web", target: "API", value: 3 },
-  { source: "API", target: "DB", value: 2 },
-])
-<StreamNetworkFrame
-  ref={sankeyRef}
-  chartType="sankey"
-  showParticles={true}
-  particleStyle={{ radius: 2, colorBy: "source", speedMultiplier: 1.5 }}
-  width={600} height={400}
-/>
+sankeyRef.current.push({ source: "Web", target: "API", value: 1 })
+<StreamNetworkFrame ref={sankeyRef} chartType="sankey"
+  showParticles particleStyle={{ radius: 2, colorBy: "source" }}
+  width={600} height={400} />
 
-// SSR — renderToStaticSVG takes frame type string, not component name
+// SSR
 import { renderOrdinalToStaticSVG } from "semiotic/server"
-const svg = renderOrdinalToStaticSVG({
-  data, categoryAccessor: "category", valueAccessor: "value", width: 600, height: 400
-})
+const svg = renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })
 ```
 
 ## Annotations
-All HOC charts accept an `annotations` prop (array). Annotation types:
-- `type: "widget"` — place any React element at data coordinates. XY/ordinal use data field names (`month`, `revenue`). Network/orbit use `nodeId`. Renders as HTML overlay (not SVG).
-- `type: "y-threshold"` — horizontal line at a y value. Props: `value` (number), `label` (string), `color`. Great for budgets, targets, SLA lines.
-- `type: "x-threshold"` — vertical line at an x value. Same props as y-threshold.
-- `type: "enclose"` — circle enclosing a set of data points. Props: `coordinates` (array of data objects), `label`, `color`, `padding`.
-- `type: "rect-enclose"` — rectangle enclosing a set of data points. Same props as enclose.
 
-Annotation colors respect theme: threshold fills default to `--semiotic-primary`, enclosure strokes default to `--semiotic-text-secondary`.
+All HOCs accept `annotations` (array). Coordinates use your data field names. Network/orbit use `nodeId`.
+
+**Positioning**: `widget` (React content at data coords — v3 replacement for v2 `htmlAnnotationRules`; props: `content`, `dx`, `dy`, `width`, `height`, `anchor`), `label` (callout with connector), `callout` (circle + label), `text` (plain text), `bracket`
+**Reference lines**: `y-threshold` (`value`, `label`, `color`), `x-threshold`, `band` (`y0`, `y1`, `label`, `fill`)
+**Enclosures**: `enclose` (circle around `coordinates`), `rect-enclose`, `highlight` (`filter` fn or `field`+`value`)
+**Statistical** (XY): `trend` (`method`: linear/polynomial/loess), `envelope`, `anomaly-band`, `forecast`
+**Streaming anchors**: `"fixed"` (default), `"latest"` (tracks newest datum), `"sticky"` (freezes when evicted)
+
+Custom rendering: `frameProps.svgAnnotationRules = (annotation, index, context) => ReactNode | null`. Context has `scales`, `width`, `height`, `data`. Colors inherit from theme (`--semiotic-primary`, `--semiotic-text-secondary`).
 
 ```jsx
-// Threshold line + callout widget
 <LineChart data={data} xAccessor="time" yAccessor="latency"
   annotations={[
     { type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050" },
-    { type: "widget", time: 42, latency: 850, dy: -10, content: <span>Incident</span> },
+    { type: "widget", time: 42, latency: 850, dy: -30, content: <span>Incident</span> },
   ]} />
-// Enclose outlier cluster
-<Scatterplot data={data} xAccessor="x" yAccessor="y"
-  annotations={[{ type: "enclose", coordinates: outliers, label: "Outliers", color: "#888" }]} />
 ```
 
-## Theming & Brand Styling
+## Theming
 
-Semiotic charts are fully themeable via CSS custom properties. Set them on any ancestor element and all charts underneath respond — no React context required.
-
-### CSS Custom Properties
-
-| Variable | Purpose | Default |
-|---|---|---|
-| `--semiotic-bg` | Chart/card background | `#fff` |
-| `--semiotic-text` | Primary text (axis labels, titles) | `#333` |
-| `--semiotic-text-secondary` | Secondary text (tick labels, captions) | `#666` |
-| `--semiotic-border` | Axis baselines, card borders | `#ccc` |
-| `--semiotic-grid` | Grid lines | `#e0e0e0` |
-| `--semiotic-primary` | Accent color (annotation fills, active states) | `#6366f1` |
-| `--semiotic-focus` | Keyboard focus rings | `#005fcc` |
-| `--semiotic-font-family` | Typography (axes, legends, ChartContainer) | `sans-serif` |
-| `--semiotic-border-radius` | ChartContainer corner radius | `8px` |
-| `--semiotic-tooltip-bg` | Tooltip background | `rgba(0,0,0,0.85)` |
-| `--semiotic-tooltip-text` | Tooltip text color | `white` |
-| `--semiotic-tooltip-radius` | Tooltip corner radius | `6px` |
-| `--semiotic-tooltip-font-size` | Tooltip font size | `14px` |
-| `--semiotic-tooltip-shadow` | Tooltip box shadow | `0 2px 8px rgba(0,0,0,0.15)` |
-| `--semiotic-selection-color` | Linked hover/selection highlight color | (none) |
-| `--semiotic-selection-opacity` | Non-selected element dimming (0–1) | `0.2` |
-| `--semiotic-diverging` | Diverging color scheme name (e.g. "RdBu") | (none) |
-
-### ThemeProvider (React context)
+Charts are themeable via CSS custom properties on any ancestor element. Key vars: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-secondary`, `--semiotic-border`, `--semiotic-grid`, `--semiotic-primary`, `--semiotic-focus`, `--semiotic-font-family`, `--semiotic-border-radius`, `--semiotic-tooltip-bg`/`text`/`radius`/`font-size`/`shadow`, `--semiotic-selection-color`/`opacity`, `--semiotic-diverging`.
 
 ```jsx
-import { ThemeProvider, LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "semiotic"
-
-// Use a preset
-<ThemeProvider theme="dark">
-  <LineChart ... />
-</ThemeProvider>
-
-// High-contrast preset (uses COLOR_BLIND_SAFE_CATEGORICAL palette)
-<ThemeProvider theme="high-contrast">
-  <LineChart ... />
-</ThemeProvider>
-
-// Custom theme (partial — merges with defaults)
-<ThemeProvider theme={{
-  mode: "dark",
-  colors: {
-    primary: "#ff6b6b",
-    categorical: ["#3a86c8", "#e45050", "#d4a843", "#888"],
-    diverging: "RdBu",
-    background: "#1a1a2e",
-    text: "#ededed",
-    textSecondary: "#aaa",
-    grid: "#333",
-    border: "#555",
-    selection: "#ff6b6b",
-    selectionOpacity: 0.15,
-  },
-  typography: { fontFamily: "Georgia, serif" },
-  tooltip: { background: "#1a1a2e", text: "#ededed", borderRadius: "8px" },
-}}>
-  <BarChart ... />
-</ThemeProvider>
+import { ThemeProvider } from "semiotic"
+<ThemeProvider theme="tufte">       {/* Named preset */}
+<ThemeProvider theme={{ colors: { primary: "#ff6b6b", categorical: [...] } }}> {/* Custom */}
 ```
 
-### Theming without React (CSS-only)
+Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`, `bi-tool-dark`, `italian`, `italian-dark`, `tufte`, `tufte-dark`, `journalist`, `journalist-dark`, `playful`, `playful-dark`.
 
-```css
-/* Dark mode for all Semiotic charts */
-.my-dashboard {
-  --semiotic-bg: #1a1a2e;
-  --semiotic-text: #ededed;
-  --semiotic-text-secondary: #aaa;
-  --semiotic-grid: #333;
-  --semiotic-border: #555;
-  --semiotic-font-family: 'Georgia', serif;
-  --semiotic-tooltip-bg: #1a1a2e;
-  --semiotic-tooltip-text: #ededed;
-}
-```
+Serialization (`semiotic/themes`): `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
+Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (8-color Wong 2011).
 
-### Color-Blind Safe Palette
-
-```jsx
-import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
-// 8-color Wong (2011) palette: safe for deuteranopia, protanopia, tritanopia
-<LineChart colorScheme={COLOR_BLIND_SAFE_CATEGORICAL} ... />
-```
-
-### CategoryColorProvider (cross-chart consistency)
-
-```jsx
-import { CategoryColorProvider, LinkedCharts } from "semiotic"
-<CategoryColorProvider categories={["North", "South"]} colorScheme={["#3a86c8", "#e45050"]}>
-  <LinkedCharts>
-    <LineChart colorBy="region" ... />
-    <BarChart colorBy="region" ... />
-  </LinkedCharts>
-</CategoryColorProvider>
-```
-
-### Key Points
-- CSS custom properties work with SSR — set them in your CSS file, no JS required
-- `ThemeProvider` sets CSS vars on a wrapper div — it does NOT use React context for styling
-- Canvas-rendered charts read `--semiotic-bg` via `getComputedStyle` at paint time
-- Tooltip chrome is fully themeable — override any `--semiotic-tooltip-*` variable
-- Annotation colors inherit from theme tokens (primary, text-secondary) unless explicitly set
-- `exportChart` inlines computed styles so exports match the themed appearance
+Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas charts read vars via `getComputedStyle`. `exportChart` inlines computed styles.
 
 ## Server-Side Rendering
-- All HOC charts and Stream Frames render SVG automatically in server environments (no window/document)
-- `renderToStaticSVG(frameType, props)` — standalone SVG string from `semiotic/server`. `frameType` is `"xy"` | `"ordinal"` | `"network"` | `"geo"` (NOT a component name like "BarChart")
-- Type-specific shortcuts: `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)`
-- For a bar chart: `renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAccessor: "val", width: 600, height: 400 })`
-- Works with Next.js App Router, Remix, Astro — same component on server and client
-- **Geo SSR requires pre-resolved features**: `renderGeoToStaticSVG` is synchronous — pass GeoJSON features directly, not reference strings like `"world-110m"`. Call `await resolveReferenceGeography("world-110m")` first and pass the result as `areas`.
+- HOC charts and Frames render SVG automatically in server environments
+- `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)` from `semiotic/server`
+- `frameType` is `"xy"|"ordinal"|"network"|"geo"` (NOT component names)
+- Geo SSR requires pre-resolved features (synchronous — call `resolveReferenceGeography` first)
+- Works with Next.js App Router, Remix, Astro
 
 ## AI Features
-- `onObservation` — structured events (hover, click, brush, selection) on all HOCs
-- `useChartObserver` — aggregates observations across LinkedCharts
-- `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX` — chart state serialization
-- `DetailsPanel` — click-driven detail panel inside `ChartContainer`
-- `validateProps(componentName, props)` — prop validation with Levenshtein typo suggestions
-- `diagnoseConfig(componentName, props)` — anti-pattern detector (13+ checks: empty data, bad dimensions, missing accessors, margin overflow, contrast ratio, etc.)
-- `ChartErrorBoundary` — error boundary
-- `exportChart(containerDiv, { format: "png"|"svg" })` — pass the **wrapper div** (not the SVG element); it finds canvas + SVG internally. Default: PNG, composites canvas + SVG layers
-- `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
+- `onObservation` / `useChartObserver` — structured events across charts
+- `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX` — serialization
+- `DetailsPanel` — click-driven detail panel in `ChartContainer`
+- `validateProps(componentName, props)` — prop validation with typo suggestions
+- `diagnoseConfig(componentName, props)` — anti-pattern detector (13+ checks)
+- `exportChart(containerDiv, { format: "png"|"svg" })` — pass wrapper div, composites canvas+SVG
+- `npx semiotic-ai --doctor` — CLI validation
+
+## Canvas Pattern Fills
+
+`createHatchPattern({ background, stroke, lineWidth, spacing, angle })` from `semiotic` — returns `CanvasPattern | null` for use as `fill` in style functions. Used by FunnelChart vertical mode for dropoff bars.
 
 ## Known Pitfalls
 
-**Tooltip datum shape**: HOC tooltip functions receive your raw data object. When using `frameProps.tooltipContent` on Stream Frames, the datum may be wrapped — access your data via `d.data`. HOC `tooltip` functions don't need this.
+- **Tooltip datum shape**: HOC tooltip functions get raw data. Frame `tooltipContent` gets wrapped data — use `d.data`.
+- **Legend positioning**: "bottom" auto-expands margin ~80px. For narrow charts (<400px), prefer "bottom" or "top".
+- **Log scale**: Clamps domain min to 1e-6 (log(0) undefined).
+- **barPadding**: Pixel value, defaults 40/60. Reduce for small charts.
+- **Horizontal bars**: Need wider left margin with long labels: `margin={{ left: 120 }}`.
+- **LinkedCharts legends**: `CategoryColorProvider` suppresses child legends. Force with `showLegend={true}`.
+- **Push API**: Omit `data` prop entirely. `data={[]}` clears pushed data every render.
+- **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead. Frame style functions receive `(datum, categoryName)`, not `(datum, index)`.
+- **v2 migration**: `htmlAnnotationRules` → `widget` annotations + `svgAnnotationRules`. v2 `summaryStyle` index-based coloring → v3 category-string-based.
 
-**Legend positioning**: `legendPosition` controls where the legend renders. When set to "bottom", the chart automatically expands the bottom margin to ~80px to clear axis labels. For "top", margin expands to ~50px. If you need more space, override `margin` explicitly. For charts narrower than ~400px, prefer `legendPosition="bottom"` or `"top"` (bottom is more common) to avoid squeezing the chart area. Similarly, for short charts (~250px or less), a side legend may compress the chart too much — use top or bottom instead.
+## Performance
 
-**Log scale and zero**: `xScaleType="log"` / `yScaleType="log"` clamp domain minimums to 1e-6 because log(0) is undefined. Data with zero or negative values will be clamped.
-
-**Heatmap with string axes**: Heatmap supports string/categorical x and y values (e.g., weekday names, hour labels). The `colorScheme` prop accepts d3-scale-chromatic names: "blues", "reds", "greens", "viridis".
-
-**barPadding is in pixels**: `barPadding` on ordinal charts is an absolute pixel value divided by the chart width to compute a band scale padding ratio. The defaults (40 for bar/stacked, 60 for grouped) work well at 600px width. For very small charts, you may need to reduce it.
-
-**Horizontal bar charts need wider left margins**: When using `orientation="horizontal"` with long category labels, increase the left margin manually: `margin={{ left: 120 }}`. There is no auto-measurement of label width.
-
-**LinkedCharts suppresses child legends**: When a `CategoryColorProvider` wraps `LinkedCharts`, individual chart legends are suppressed in favor of a unified legend. To force a child chart to show its own legend, set `showLegend={true}` explicitly.
-
-**Geo bundle isolation**: `semiotic/geo` is a separate entry point. Do NOT import geo components from `semiotic` — use `import { ChoroplethMap } from "semiotic/geo"` to avoid pulling d3-geo (~30KB) into non-geo bundles.
-
-**Push API: omit data, don't pass empty array**: When using `ref.current.push()` on HOCs, **omit** the `data`/`nodes`/`edges` prop entirely. Passing `data={[]}` clears pushed data on every render because the HOC forwards it to the Stream Frame's `setBoundedData([])`. Similarly, `data={undefined}` is fine (prop not present), but `data={null}` is treated the same as omitted.
-
-**`diagnoseConfig` catches common mistakes**: Run `diagnoseConfig("BarChart", props)` to check for empty data, bad dimensions, missing accessors, margin overflow, invisible bar padding, and more. Use `npx semiotic-ai --doctor` from CLI.
-
-## Differentiators
-Network viz, geographic viz (choropleth, flow maps, distance cartograms), streaming canvas, realtime encoding, coordinated views, statistical summaries, AI hooks, chart serialization, CSS custom property theming (17 tokens), ThemeProvider + CSS-only theming, color-blind safe palettes, tooltip theming, annotation theming, keyboard navigation, interactive legends (highlight/isolate), direct labeling, gap handling, empty/loading states, landmark tick labels, LinkedCharts unified legend
+Prefer string accessors (`xAccessor="value"`) over function accessors — always referentially stable. If you must use functions, memoize with `useCallback` or define outside the component. The pipeline uses `.toString()` comparison for inline arrows but this fails for closures capturing changing variables.

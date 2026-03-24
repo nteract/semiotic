@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, FunnelChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -14,6 +14,9 @@ import { ThemeProvider, useTheme } from "./ThemeProvider"
 
 // ── Export utility ─────────────────────────────────────────────────────
 import { exportChart } from "./export/exportChart"
+
+// ── Pattern fills ─────────────────────────────────────────────────────
+import { createHatchPattern } from "./charts/shared/hatchPattern"
 
 // ── Chart state serialization ─────────────────────────────────────────
 import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
@@ -73,6 +76,7 @@ export {
   TreeDiagram,
   PieChart,
   DonutChart,
+  FunnelChart,
   GroupedBarChart,
   Treemap,
   CirclePack,
@@ -80,6 +84,7 @@ export {
   ScatterplotMatrix,
   MinimapChart,
   QuadrantChart,
+  MultiAxisLineChart,
   // Coordinated views
   LinkedCharts,
   // Theme
@@ -121,7 +126,9 @@ export {
   RealtimeHistogram,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
-  RealtimeHeatmap
+  RealtimeHeatmap,
+  // Pattern fills
+  createHatchPattern
 }
 
 // ── Chart HOC prop types ───────────────────────────────────────────────
@@ -143,6 +150,7 @@ export {
   DotPlotProps,
   PieChartProps,
   DonutChartProps,
+  FunnelChartProps,
   GroupedBarChartProps,
   RidgelinePlotProps,
   OrbitDiagramProps,
@@ -157,6 +165,8 @@ export {
   MinimapChartProps,
   MinimapConfig,
   QuadrantChartProps,
+  MultiAxisLineChartProps,
+  MultiAxisSeriesConfig,
   QuadrantsConfig,
   QuadrantConfig,
   CenterlineStyle,
@@ -277,6 +287,10 @@ export type { DetailsPanelProps } from "./DetailsPanel"
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
 export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
 export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+
+// ── Pattern fill types ────────────────────────────────────────────────
+
+export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
 // ── Format utilities ───────────────────────────────────────────────────
 

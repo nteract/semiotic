@@ -196,6 +196,9 @@ export class PipelineStore {
   scene: SceneNode[] = []
   version = 0
 
+  /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
+  xIsDate = false
+
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private _quadtree: Quadtree<PointSceneNode> | null = null
   private static readonly QUADTREE_THRESHOLD = 500
@@ -267,6 +270,18 @@ export class PipelineStore {
       this.xExtent.clear()
       this.yExtent.clear()
       if (this.timestampBuffer) this.timestampBuffer.clear()
+
+      // Auto-detect Date x values on first bounded ingestion.
+      // Check by calling the raw (pre-coercion) accessor on the first datum.
+      if (changeset.inserts.length > 0) {
+        const sample = changeset.inserts[0]
+        const rawAccessor = this.config.xAccessor
+        const rawVal = typeof rawAccessor === "function"
+          ? rawAccessor(sample)
+          : (sample as any)[rawAccessor || "x"]
+        this.xIsDate = rawVal instanceof Date
+          || (typeof rawVal === "string" && rawVal.length >= 10 && !isNaN(new Date(rawVal).getTime()) && isNaN(Number(rawVal)))
+      }
 
       // Auto-resize buffer to fit all bounded data.
       // totalSize is set when data is progressively chunked — pre-allocate

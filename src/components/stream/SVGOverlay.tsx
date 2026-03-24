@@ -75,6 +75,8 @@ interface SVGOverlayProps {
   axes?: AxisConfig[]
   xLabel?: string
   yLabel?: string
+  /** Label for the right Y axis (dual-axis charts) */
+  yLabelRight?: string
   xFormat?: (d: any) => string
   yFormat?: (d: any) => string
 
@@ -313,6 +315,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     axes,
     xLabel,
     yLabel,
+    yLabelRight,
     xFormat,
     yFormat,
     showGrid,
@@ -363,6 +366,23 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
+    const tickCount = Math.min(requested, maxFit)
+    const candidates = scales.y.ticks(tickCount).map(v => ({
+      value: v,
+      pixel: scales.y(v),
+      label: fmt(v)
+    }))
+    return filterTicksByPixelDistance(candidates, 22)
+  }, [showAxes, scales, axes, yFormat, height])
+
+  // Right Y axis ticks — same pixel positions as left but different labels
+  const yTicksRight = useMemo(() => {
+    if (!showAxes || !scales) return []
+    const rightAxis = axes?.find(a => a.orient === "right")
+    if (!rightAxis) return []
+    const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
+    const maxFit = Math.max(2, Math.floor(height / 30))
+    const requested = rightAxis.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
     const candidates = scales.y.ticks(tickCount).map(v => ({
       value: v,
@@ -572,6 +592,58 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {yLabel}
               </text>
             )}
+
+            {/* Right Y axis */}
+            {(() => {
+              const rightAxis = axes?.find(a => a.orient === "right")
+              if (!rightAxis || yTicksRight.length === 0) return null
+              const showRightBaseline = rightAxis.baseline !== false
+              const rightLandmark = rightAxis.landmarkTicks
+              const rightLabel = rightAxis.label || yLabelRight
+              return (
+                <>
+                  {!underlayRendered && showRightBaseline && (
+                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+                  )}
+                  {yTicksRight.map((tick, i) => {
+                    const isLandmark = rightLandmark
+                      ? typeof rightLandmark === "function"
+                        ? rightLandmark(tick.value, i)
+                        : isTimeLandmark(tick.value, i > 0 ? yTicksRight[i - 1].value : undefined)
+                      : false
+                    return (
+                    <g key={`ytick-r-${i}`} transform={`translate(${width},${tick.pixel})`}>
+                      <line x2={5} stroke={axisStroke} strokeWidth={1} />
+                      <text
+                        x={8}
+                        textAnchor="start"
+                        dominantBaseline="middle"
+                        fontSize={isLandmark ? 11 : 10}
+                        fontWeight={isLandmark ? 600 : 400}
+                        fill={tickColor}
+                        style={{ userSelect: "none" }}
+                      >
+                        {tick.label}
+                      </text>
+                    </g>
+                    )
+                  })}
+                  {rightLabel && (
+                    <text
+                      x={width + margin.right - 15}
+                      y={height / 2}
+                      textAnchor="middle"
+                      fontSize={12}
+                      fill={labelColor}
+                      transform={`rotate(90, ${width + margin.right - 15}, ${height / 2})`}
+                      style={{ userSelect: "none" }}
+                    >
+                      {rightLabel}
+                    </text>
+                  )}
+                </>
+              )
+            })()}
           </g>
           )
         })()}

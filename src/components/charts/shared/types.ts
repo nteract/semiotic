@@ -78,6 +78,10 @@ export interface BaseChartProps {
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: React.ReactNode | false
 
+  /** Uniform fill color for all data marks. Overrides colorScheme and theme categorical.
+   * For per-category coloring, use `colorBy` + `colorScheme` instead. */
+  color?: string
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 

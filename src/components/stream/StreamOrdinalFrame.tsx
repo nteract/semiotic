@@ -41,6 +41,8 @@ import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
+import { trapezoidCanvasRenderer, funnelLabelRenderer } from "./renderers/trapezoidCanvasRenderer"
+import { barFunnelHatchRenderer, barFunnelLabelRenderer } from "./renderers/barFunnelCanvasRenderer"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
@@ -60,7 +62,9 @@ const RENDERERS: Record<OrdinalChartType, OrdinalRendererFn[]> = {
   violin: withConnectors([violinCanvasRenderer as any]),
   histogram: withConnectors([barCanvasRenderer as any]),
   ridgeline: withConnectors([violinCanvasRenderer as any]),
-  timeline: withConnectors([barCanvasRenderer as any])
+  timeline: withConnectors([barCanvasRenderer as any]),
+  funnel: [barCanvasRenderer as any, trapezoidCanvasRenderer as any, funnelLabelRenderer as any],
+  "bar-funnel": [barCanvasRenderer as any, barFunnelHatchRenderer as any, barFunnelLabelRenderer as any]
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -213,6 +217,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showOutliers,
       showIQR,
       amplitude,
+      connectorOpacity,
+      showLabels,
       connectorAccessor,
       connectorStyle,
       rExtent,
@@ -227,6 +233,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       colorScheme,
       barColors,
       showAxes = true,
+      showCategoryTicks,
       oLabel,
       rLabel,
       oFormat,
@@ -320,6 +327,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showOutliers,
       showIQR,
       amplitude,
+      connectorOpacity,
+      showLabels,
       connectorAccessor,
       connectorStyle,
       oSort,
@@ -337,7 +346,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, barPadding, innerRadius, normalize, startAngle,
       dynamicColumnWidth,
-      bins, showOutliers, showIQR, amplitude, connectorAccessor, connectorStyle, oSort,
+      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition, staleness,
       isStreaming
@@ -770,6 +779,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             margin={margin}
             scales={scales}
             showAxes={showAxes}
+            showCategoryTicks={showCategoryTicks}
             oLabel={oLabel}
             rLabel={rLabel}
             oFormat={oFormat}
@@ -878,6 +888,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           margin={margin}
           scales={currentScales}
           showAxes={showAxes}
+          showCategoryTicks={showCategoryTicks}
           oLabel={oLabel}
           rLabel={rLabel}
           oFormat={oFormat}

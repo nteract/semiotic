@@ -541,4 +541,52 @@ describe("OrdinalPipelineStore", () => {
       }
     })
   })
+
+  // ── Histogram shared bins with rExtent ────────────────────────────────
+
+  describe("histogram shared bins via rExtent", () => {
+    it("two categories with disjoint data ranges produce bins on the same global grid", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "histogram",
+        bins: 10,
+        rExtent: [0, 100],
+        projection: "horizontal",
+        extentPadding: 0
+      }))
+
+      store.ingest({
+        inserts: [
+          // Category A: values in [5, 45]
+          { category: "A", value: 5 },
+          { category: "A", value: 15 },
+          { category: "A", value: 25 },
+          { category: "A", value: 35 },
+          { category: "A", value: 45 },
+          // Category B: values in [55, 95]
+          { category: "B", value: 55 },
+          { category: "B", value: 65 },
+          { category: "B", value: 75 },
+          { category: "B", value: 85 },
+          { category: "B", value: 95 },
+        ],
+        bounded: true
+      })
+
+      store.computeScene({ width: 400, height: 300 })
+
+      // rScale domain should be [0, 100] from the rExtent override
+      const scales = store.scales!
+      expect(scales.r.domain()[0]).toBe(0)
+      expect(scales.r.domain()[1]).toBe(100)
+
+      // Scene should have rect nodes for both categories
+      const rects = store.scene.filter(n => n.type === "rect")
+      expect(rects.length).toBeGreaterThan(0)
+
+      // All rects should have the same bin width (same grid)
+      const widths = rects.map(r => Math.round((r as any).w * 100) / 100)
+      const uniqueWidths = new Set(widths)
+      expect(uniqueWidths.size).toBe(1)
+    })
+  })
 })

@@ -728,6 +728,34 @@ describe("buildViolinScene", () => {
     })
     expect(buildViolinScene(ctx, layout)).toHaveLength(0)
   })
+
+  it("violin path extends to vMin and vMax (no bin-center inset)", () => {
+    // Horizontal projection: values on x-axis
+    // sampleData ranges from value=10 to value=90
+    const scales = makeScales({ rDomain: [0, 100], rRange: [0, 400], projection: "horizontal" })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "violin", bins: 10, projection: "horizontal" }),
+      columns: { A: makeColumn("A", sampleData) }
+    })
+    const nodes = buildViolinScene(ctx, layout)
+    expect(nodes).toHaveLength(1)
+    if (nodes[0].type === "violin") {
+      const path = nodes[0].pathString
+      // sampleData: value = 10 + (i * 80) / 49, so vMin ≈ 10, vMax ≈ 90
+      // rScale(10) = 40, rScale(90) = 360
+      const xAtVMin = scales.r(10)  // 40
+      const xAtVMax = scales.r(90)  // 360
+
+      // Extract all x-coordinates from the path
+      const coords = path.match(/[ML]\s+([\d.e+-]+)\s+([\d.e+-]+)/g)!
+      const xValues = coords.map(c => parseFloat(c.replace(/^[ML]\s+/, '').split(/\s+/)[0]))
+
+      // Path should start and end at the data extremes, not half a bin inset
+      expect(Math.min(...xValues)).toBeCloseTo(xAtVMin, 0)
+      expect(Math.max(...xValues)).toBeCloseTo(xAtVMax, 0)
+    }
+  })
 })
 
 describe("buildHistogramScene", () => {
@@ -798,6 +826,37 @@ describe("buildHistogramScene", () => {
         expect(n.h).toBeGreaterThan(0)
       }
     }
+  })
+  it("two categories with disjoint ranges share the same bin boundaries when rScale domain covers both", () => {
+    // Category A: values in [0, 50], Category B: values in [60, 100]
+    // With a shared rScale domain of [0, 100], both should use the same bin edges
+    const catA = Array.from({ length: 10 }, (_, i) => ({ category: "A", value: i * 5 }))
+    const catB = Array.from({ length: 10 }, (_, i) => ({ category: "B", value: 60 + i * 4 }))
+
+    // Global domain covers the full range
+    const scales = makeScales({ rDomain: [0, 100], rRange: [0, 400], projection: "horizontal" })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "histogram", bins: 10, projection: "horizontal" }),
+      columns: {
+        A: makeColumn("A", catA, { x: 0, width: 80, middle: 40 }),
+        B: makeColumn("B", catB, { x: 100, width: 80, middle: 140 })
+      }
+    })
+
+    const nodes = buildHistogramScene(ctx, layout)
+    const rectsA = nodes.filter(n => n.type === "rect" && (n as any).group === "A")
+    const rectsB = nodes.filter(n => n.type === "rect" && (n as any).group === "B")
+
+    expect(rectsA.length).toBeGreaterThan(0)
+    expect(rectsB.length).toBeGreaterThan(0)
+
+    // All rects should have x positions that align to the same bin grid
+    // Bin width = (100 - 0) / 10 = 10 data units → each bin spans the same x-pixel width
+    const allRects = nodes.filter(n => n.type === "rect") as Array<{ x: number; w: number }>
+    const binWidths = new Set(allRects.map(r => Math.round(r.w * 100) / 100))
+    // All bins should have the same width (within floating-point tolerance)
+    expect(binWidths.size).toBe(1)
   })
 })
 

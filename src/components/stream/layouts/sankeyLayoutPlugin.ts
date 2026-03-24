@@ -194,12 +194,17 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
-    // Build edge lookup map (source\0target → edge)
+    // Build edge lookup map — use _edgeKey for parallel edge support,
+    // fall back to source\0target for streaming edges without _edgeKey
     const edgeMap = new Map<string, RealtimeEdge>()
     for (const e of edges) {
-      const eSrc = typeof e.source === "string" ? e.source : e.source.id
-      const eTgt = typeof e.target === "string" ? e.target : e.target.id
-      edgeMap.set(`${eSrc}\0${eTgt}`, e)
+      if (e._edgeKey) {
+        edgeMap.set(e._edgeKey, e)
+      } else {
+        const eSrc = typeof e.source === "string" ? e.source : e.source.id
+        const eTgt = typeof e.target === "string" ? e.target : e.target.id
+        edgeMap.set(`${eSrc}\0${eTgt}`, e)
+      }
     }
 
     // Write computed positions back to original edges
@@ -209,7 +214,9 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const sourceId = typeof src === "object" && src !== null ? src.id : String(src)
       const targetId = typeof tgt === "object" && tgt !== null ? tgt.id : String(tgt)
 
-      const original = edgeMap.get(`${sourceId}\0${targetId}`)
+      const original = (se as any)._edgeKey
+        ? edgeMap.get((se as any)._edgeKey)
+        : edgeMap.get(`${sourceId}\0${targetId}`)
 
       if (original) {
         original.y0 = (se as any).y0
@@ -262,8 +269,12 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     const sceneNodes: NetworkRectNode[] = []
     const sceneEdges: NetworkBezierEdge[] = []
     const labels: NetworkLabel[] = []
+    // Maps node ID → actual rendered fill color, so edges can inherit via edgeColorBy
+    const resolvedNodeFills = new Map<string, string>()
 
     // Build rect nodes
+    // For vertical (direction="down"), d3-sankey computed layout with swapped extent
+    // so x = depth (vertical) and y = breadth (horizontal). Swap back for rendering.
     for (const node of nodes) {
       const w = node.x1 - node.x0
       const h = node.y1 - node.y0
@@ -277,17 +288,34 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         opacity: userStyle.opacity
       }
 
-      sceneNodes.push({
-        type: "rect",
-        x: node.x0,
-        y: node.y0,
-        w,
-        h,
-        style,
-        datum: node,
-        id: node.id,
-        label: node.id
-      })
+      // Track the resolved fill per node so edges can inherit the actual rendered color
+      resolvedNodeFills.set(node.id, (typeof style.fill === "string" ? style.fill : null) || nodeColorMap.get(node.id) || "#4d430c")
+
+      if (direction === "down") {
+        sceneNodes.push({
+          type: "rect",
+          x: node.y0,
+          y: node.x0,
+          w: h,
+          h: w,
+          style,
+          datum: node,
+          id: node.id,
+          label: node.id
+        })
+      } else {
+        sceneNodes.push({
+          type: "rect",
+          x: node.x0,
+          y: node.y0,
+          w,
+          h,
+          style,
+          datum: node,
+          id: node.id,
+          label: node.id
+        })
+      }
     }
 
     // Build bezier edge bands
@@ -303,15 +331,17 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const targetNode = typeof edge.target === "object" ? edge.target : null
       if (!sourceNode || !targetNode) continue
 
-      // Resolve edge fill
+      // Resolve edge fill.
+      // For source/target coloring, use the ACTUAL rendered node fill (resolvedNodeFills)
+      // so edges inherit colors even when frameProps.nodeStyle overrides the HOC's nodeStyle.
       let fill = "#999"
-      if (edgeStyleFn) {
-        const userStyle = edgeStyleFn(edge)
-        fill = userStyle.fill || fill
-      } else if (edgeColorBy === "target" && targetNode) {
-        fill = nodeColorMap.get(targetNode.id) || fill
-      } else if (sourceNode) {
-        fill = nodeColorMap.get(sourceNode.id) || fill
+      if (typeof edgeColorBy === "function") {
+        fill = edgeColorBy(edge) || fill
+      } else if (edgeColorBy === "target") {
+        fill = resolvedNodeFills.get(targetNode.id) || nodeColorMap.get(targetNode.id) || fill
+      } else {
+        // "source" (default) or any other value
+        fill = resolvedNodeFills.get(sourceNode.id) || nodeColorMap.get(sourceNode.id) || fill
       }
 
       const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
@@ -401,8 +431,10 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         let anchor: "start" | "end"
 
         if (direction === "down") {
-          x = node.x0 + w / 2
-          y = node.y1 + 14
+          // Vertical: x = depth (0→height), y = breadth (0→width) in raw sankey coords.
+          // Swap for rendering: horizontal = breadth (y), vertical = depth (x).
+          x = node.y0 + (node.y1 - node.y0) / 2
+          y = node.x1 + 14
           anchor = "middle" as any
         } else {
           // Horizontal: label to the right or left depending on position

@@ -310,12 +310,17 @@ export const areaLink = (d) => {
   let x0, x1, x2, x3, y0, y1, xi, y2, y3
 
   if (d.direction === "down") {
+    // Vertical sankey: d3-sankey uses swapped extent so x = depth, y = breadth.
+    // For screen rendering: breadth → horizontal (x), depth → vertical (y).
+    // edge.y0/y1 = breadth offsets at source/target → horizontal center
+    // source.x1 = depth bottom of source node → vertical start
+    // target.x0 = depth top of target node → vertical end
     x0 = d.y0 - d.sankeyWidth / 2
     x1 = d.y1 - d.sankeyWidth / 2
     x2 = d.y1 + d.sankeyWidth / 2
     x3 = d.y0 + d.sankeyWidth / 2
-    y0 = d.source.y1
-    y1 = d.target.y0
+    y0 = d.source.x1
+    y1 = d.target.x0
     xi = interpolateNumber(y0, y1)
     y2 = xi(curvature)
     y3 = xi(1 - curvature)

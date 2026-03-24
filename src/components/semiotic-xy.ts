@@ -18,6 +18,7 @@ export { Heatmap } from "./charts/xy/Heatmap"
 export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
 export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
+export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 
 // Stream Frame types
 export type {

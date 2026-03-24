@@ -79,7 +79,9 @@ describe("NetworkPipelineStore", () => {
         [{ source: "A", target: "B" }],  // no value
         [600, 400]
       )
-      const edge = store.edges.get("A\0B")
+      // Bounded ingestion keys edges by source\0target\0index
+      expect(store.edges.size).toBe(1)
+      const edge = Array.from(store.edges.values())[0]
       expect(edge).toBeDefined()
       expect(edge!.value).toBe(1)
     })

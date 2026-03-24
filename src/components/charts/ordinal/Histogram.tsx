@@ -4,7 +4,7 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -29,6 +29,7 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
@@ -46,6 +47,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: "horizontal",
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -65,7 +68,9 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color: colorProp,
+    showCategoryTicks
   } = props
 
   const width = resolved.width
@@ -104,12 +109,31 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
 
   if (setup.earlyReturn) return setup.earlyReturn
 
+  // Compute global value extent across all categories so bins are shared
+  const rExtent = useMemo(() => {
+    if (safeData.length === 0) return undefined
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+    let min = Infinity
+    let max = -Infinity
+    for (const d of safeData) {
+      const v = getVal(d)
+      if (v != null && isFinite(v)) {
+        if (v < min) min = v
+        if (v > max) max = v
+      }
+    }
+    return min <= max ? [min, max] as [number, number] : undefined
+  }, [safeData, valueAccessor])
+
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const color = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
-      return { fill: color, stroke: color, fillOpacity: 0.8 }
+      const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.8 }
     }
-  }, [colorBy, setup.colorScale])
+  }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
     () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
@@ -151,6 +175,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     summaryStyle,
     bins,
     normalize: relative,
+    ...(rExtent && { rExtent }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
@@ -162,6 +187,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
+    showCategoryTicks,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),

@@ -3,11 +3,11 @@ import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
+import { getColor, createColorScale, DEPTH_PALETTE_COLORS, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
@@ -106,6 +106,17 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: any) => string) | undefined, allCategories)
 
+  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+
+  const effectivePalette = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
+  }, [colorScheme, themeCategorical])
+
   // d is a RealtimeNode — user data on d.data, depth on d.depth
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -115,11 +126,11 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       } else if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       return baseStyle
     }
-  }, [colorBy, colorByDepth, colorScale])
+  }, [colorBy, colorByDepth, colorScale, themeCategorical, colorScheme, categoryIndexMap])
 
   const edgeStyleFn = useMemo(() => {
     return () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
@@ -161,7 +172,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       nodeStyle={nodeStyleFn}
       edgeStyle={edgeStyleFn}
       colorBy={colorBy}
-      colorScheme={colorScheme}
+      colorScheme={effectivePalette}
       colorByDepth={colorByDepth}
       nodeSize={nodeSize}
       nodeLabel={showLabels ? (nodeLabel || nodeIdAccessor) : undefined}

@@ -4,12 +4,12 @@ import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "r
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor } from "../shared/colorUtils"
+import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartLegendAndMargin, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartLegendAndMargin, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -131,6 +131,21 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
+  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+
+  // Resolve the effective palette array. This is passed to StreamNetworkFrame so that
+  // its internal getNodeColor (used for particles, hover, interactions) uses the same
+  // colors as the HOC's nodeStyle. Without this, the frame only sees the raw colorScheme
+  // string and falls back to category10 regardless of ThemeProvider.
+  const effectivePalette = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
+  }, [colorScheme, themeCategorical])
+
   // Node style function
   // d is a RealtimeNode — user data lives on d.data
   const nodeStyle = useMemo(() => {
@@ -143,12 +158,12 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#4d430c"
+        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
 
       return baseStyle
     }
-  }, [colorBy, colorScale])
+  }, [colorBy, colorScale, themeCategorical, colorScheme, categoryIndexMap])
 
   // Edge style function
   // d is a RealtimeEdge — d.source/d.target are RealtimeNode objects
@@ -213,7 +228,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={colorScheme}
+      colorScheme={effectivePalette}
       edgeColorBy={edgeColorBy}
       edgeOpacity={edgeOpacity}
       edgeSort={edgeSort}

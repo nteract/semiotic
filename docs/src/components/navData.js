@@ -25,6 +25,7 @@ const navData = [
           { title: "Heatmap", path: "/charts/heatmap" },
           { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" },
           { title: "Quadrant Chart", path: "/charts/quadrant-chart" },
+          { title: "Multi-Axis Line Chart", path: "/charts/multi-axis-line-chart" },
           { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
@@ -45,7 +46,8 @@ const navData = [
           { title: "Dot Plot", path: "/charts/dot-plot" },
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
-          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" }
+          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
+          { title: "Funnel Chart", path: "/charts/funnel-chart" }
         ]
       },
       {

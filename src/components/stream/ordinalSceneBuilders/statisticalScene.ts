@@ -131,13 +131,15 @@ export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
     let pathStr = ""
 
     if (isVertical) {
-      // Right side (top to bottom)
+      // Right side: start at vMin (zero width), through bin centers, end at vMax (zero width)
+      pathStr = `M ${col.middle} ${rScale(vMin)}`
       for (let i = 0; i < bins; i++) {
         const y = rScale(vMin + (i + 0.5) * binWidth)
         const w = (counts[i] / maxCount) * halfWidth
-        pathStr += i === 0 ? `M ${col.middle + w} ${y}` : ` L ${col.middle + w} ${y}`
+        pathStr += ` L ${col.middle + w} ${y}`
       }
-      // Left side (bottom to top)
+      pathStr += ` L ${col.middle} ${rScale(vMax)}`
+      // Left side: vMax back to vMin
       for (let i = bins - 1; i >= 0; i--) {
         const y = rScale(vMin + (i + 0.5) * binWidth)
         const w = (counts[i] / maxCount) * halfWidth
@@ -145,13 +147,15 @@ export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
       }
       pathStr += " Z"
     } else {
-      // Top side (left to right)
+      // Top side: start at vMin (zero width), through bin centers, end at vMax (zero width)
+      pathStr = `M ${rScale(vMin)} ${col.middle}`
       for (let i = 0; i < bins; i++) {
         const x = rScale(vMin + (i + 0.5) * binWidth)
         const w = (counts[i] / maxCount) * halfWidth
-        pathStr += i === 0 ? `M ${x} ${col.middle - w}` : ` L ${x} ${col.middle - w}`
+        pathStr += ` L ${x} ${col.middle - w}`
       }
-      // Bottom side (right to left)
+      pathStr += ` L ${rScale(vMax)} ${col.middle}`
+      // Bottom side: vMax back to vMin
       for (let i = bins - 1; i >= 0; i--) {
         const x = rScale(vMin + (i + 0.5) * binWidth)
         const w = (counts[i] / maxCount) * halfWidth
@@ -205,6 +209,12 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, layout: OrdinalLay
   const numBins = config.bins || 25
   const isRelative = config.normalize
 
+  // Use rScale domain as global extent so all categories share the same bin boundaries.
+  // The domain comes from rExtent (set by the Histogram HOC) or from auto-computed data extent.
+  const domain = rScale.domain?.() as [number, number] | undefined
+  const globalMin = domain ? +domain[0] : undefined
+  const globalMax = domain ? +domain[1] : undefined
+
   // Histograms always render horizontally: categories on y-axis, value bins on x-axis
   for (const col of Object.values(columns)) {
     const values = col.pieceData
@@ -213,8 +223,8 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, layout: OrdinalLay
 
     if (values.length === 0) continue
 
-    const vMin = Math.min(...values)
-    const vMax = Math.max(...values)
+    const vMin = globalMin != null && isFinite(globalMin) ? globalMin : Math.min(...values)
+    const vMax = globalMax != null && isFinite(globalMax) ? globalMax : Math.max(...values)
     const binWidth = (vMax - vMin) / numBins || 1
 
     const counts = new Array(numBins).fill(0)

@@ -31,6 +31,8 @@ export type OrdinalChartType =
   | "histogram"
   | "ridgeline"
   | "timeline"
+  | "funnel"
+  | "bar-funnel"
 
 // ── Scales ─────────────────────────────────────────────────────────────
 
@@ -124,6 +126,16 @@ export interface ConnectorSceneNode {
   _targetOpacity?: number
 }
 
+export interface TrapezoidSceneNode {
+  type: "trapezoid"
+  /** Four corners: [top-left, top-right, bottom-right, bottom-left] */
+  points: [number, number][]
+  style: Style
+  datum: any
+  category?: string
+  _targetOpacity?: number
+}
+
 // Re-export scene node types from XY that we reuse
 export type { Style, PointSceneNode, RectSceneNode } from "./types"
 import type { PointSceneNode, RectSceneNode } from "./types"
@@ -135,6 +147,7 @@ export type OrdinalSceneNode =
   | BoxplotSceneNode
   | ViolinSceneNode
   | ConnectorSceneNode
+  | TrapezoidSceneNode
 
 // ── Projected column ───────────────────────────────────────────────────
 
@@ -192,6 +205,10 @@ export interface OrdinalPipelineConfig {
   showOutliers?: boolean
   showIQR?: boolean
   amplitude?: number
+
+  // Funnel
+  connectorOpacity?: number
+  showLabels?: boolean
 
   // Sort — comparator receives category names (strings)
   oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc"
@@ -257,6 +274,8 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   showOutliers?: boolean
   showIQR?: boolean
   amplitude?: number
+  connectorOpacity?: number
+  showLabels?: boolean
 
   // Extents
   rExtent?: [number?, number?]
@@ -283,6 +302,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
   // Axes
   showAxes?: boolean
+  showCategoryTicks?: boolean
   oLabel?: string
   rLabel?: string
   oFormat?: (d: string) => string
