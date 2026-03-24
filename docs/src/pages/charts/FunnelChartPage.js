@@ -71,48 +71,6 @@ const fourCategoryData = [
 // Code examples
 // ---------------------------------------------------------------------------
 
-const singleCode = `import { FunnelChart } from "semiotic"
-
-const data = [
-  { step: "Awareness", value: 10000 },
-  { step: "Interest", value: 7500 },
-  { step: "Consideration", value: 5000 },
-  { step: "Intent", value: 3200 },
-  { step: "Evaluation", value: 1800 },
-  { step: "Purchase", value: 900 },
-]
-
-<FunnelChart
-  data={data}
-  stepAccessor="step"
-  valueAccessor="value"
-  width={600}
-  height={400}
-  tooltip
-/>`
-
-const multiCode = `import { FunnelChart } from "semiotic"
-
-const data = [
-  { step: "Awareness", category: "control", value: 900 },
-  { step: "Awareness", category: "treatment", value: 1000 },
-  { step: "Interest", category: "control", value: 777 },
-  { step: "Interest", category: "treatment", value: 800 },
-  // ...
-]
-
-<FunnelChart
-  data={data}
-  stepAccessor="step"
-  valueAccessor="value"
-  categoryAccessor="category"
-  colorBy="category"
-  showLegend
-  width={600}
-  height={400}
-  tooltip
-/>`
-
 // ---------------------------------------------------------------------------
 // Props table
 // ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "r
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle, EdgePush } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, getSize, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
