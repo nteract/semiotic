@@ -4,7 +4,7 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useSortedData, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -33,6 +33,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   barPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
@@ -54,6 +55,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -86,7 +89,9 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color,
+    showCategoryTicks,
   } = props
 
   const width = resolved.width
@@ -134,17 +139,20 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Record<string, any>, category?: string) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, setup.colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
       }
       return baseStyle
     }
-  }, [colorBy, setup.colorScale])
+  }, [colorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -188,6 +196,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
+    showCategoryTicks,
     oSort: sort,
     ...setup.legendBehaviorProps,
     ...(title && { title }),

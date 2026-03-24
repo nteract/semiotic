@@ -4,6 +4,7 @@ import {
   BarChart,
   LineChart,
   Scatterplot,
+  createHatchPattern,
 } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
@@ -281,6 +282,79 @@ function ConditionalStylingDemo() {
         />
         <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
           Bright = above threshold, Faded = below. Colors from <code>colorBy</code>.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Hatch pattern demo
+// ---------------------------------------------------------------------------
+
+const hatchBlue = createHatchPattern({
+  background: "#4e79a7",
+  stroke: "rgba(255,255,255,0.6)",
+  lineWidth: 1.5,
+  spacing: 6,
+})
+
+const hatchRed = createHatchPattern({
+  background: "#e15759",
+  stroke: "rgba(255,255,255,0.6)",
+  lineWidth: 1.5,
+  spacing: 6,
+})
+
+function HatchPatternDemo() {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div>
+        <h4 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 600 }}>
+          Hatched Bars (below target)
+        </h4>
+        <BarChart
+          data={barData.filter((d) => d.quarter === "Q2")}
+          categoryAccessor="region"
+          valueAccessor="revenue"
+          height={250}
+          width={320}
+          frameProps={{
+            pieceStyle: (d) => ({
+              fill:
+                d.revenue >= d.target
+                  ? "#4e79a7"
+                  : hatchBlue || "#4e79a7",
+            }),
+          }}
+        />
+        <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
+          Solid = met target, Hatched = below target
+        </p>
+      </div>
+      <div>
+        <h4 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 600 }}>
+          Multiple Hatch Colors
+        </h4>
+        <BarChart
+          data={barData.filter((d) => d.quarter === "Q1")}
+          categoryAccessor="region"
+          valueAccessor="revenue"
+          height={250}
+          width={320}
+          frameProps={{
+            pieceStyle: (d) => ({
+              fill:
+                d.revenue >= d.target
+                  ? "#4e79a7"
+                  : (d.revenue >= d.target * 0.9
+                      ? hatchBlue || "#4e79a7"
+                      : hatchRed || "#e15759"),
+            }),
+          }}
+        />
+        <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
+          Solid = met, Blue hatch = close, Red hatch = far below
         </p>
       </div>
     </div>
@@ -592,6 +666,99 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
 />`}
         language="jsx"
       />
+
+      {/* ================================================================= */}
+      {/* Canvas Hatch Patterns */}
+      {/* ================================================================= */}
+      <h2 id="canvas-hatch-patterns">Canvas Hatch Patterns</h2>
+
+      <p>
+        SVG <code>additionalDefs</code> patterns don't work on canvas-rendered
+        charts. For canvas fills, use <code>createHatchPattern</code> to generate
+        a repeating diagonal-line <code>CanvasPattern</code> that can be passed
+        as a <code>fill</code> value in any style function.
+      </p>
+
+      <HatchPatternDemo />
+
+      <CodeBlock
+        code={`import { BarChart, createHatchPattern } from "semiotic"
+
+// Create a hatch pattern (call once, reuse across renders)
+const hatch = createHatchPattern({
+  background: "#4e79a7",  // tile background color
+  stroke: "#fff",         // diagonal line color
+  lineWidth: 1.5,         // line thickness (default 1.5)
+  spacing: 6,             // distance between lines (default 6)
+  angle: 45,              // line angle in degrees (default 45)
+})
+
+<BarChart
+  data={data}
+  categoryAccessor="region"
+  valueAccessor="revenue"
+  frameProps={{
+    pieceStyle: (d) => ({
+      fill: d.revenue < d.target ? hatch : "#4e79a7",
+    }),
+  }}
+/>`}
+        language="jsx"
+      />
+
+      <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+        <strong>Note:</strong> <code>createHatchPattern</code> requires a browser
+        environment (canvas). It returns <code>null</code> during SSR or in test
+        environments where canvas is unavailable. The pattern is a native{" "}
+        <code>CanvasPattern</code> object — assign it directly as{" "}
+        <code>fill</code> in any <code>pieceStyle</code>, <code>nodeStyle</code>,{" "}
+        <code>edgeStyle</code>, or <code>pointStyle</code> function.
+      </p>
+
+      <h3>Options</h3>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead>
+          <tr style={{ borderBottom: "2px solid var(--surface-3, #e0e0e0)" }}>
+            <th style={{ textAlign: "left", padding: 8 }}>Option</th>
+            <th style={{ textAlign: "left", padding: 8 }}>Type</th>
+            <th style={{ textAlign: "left", padding: 8 }}>Default</th>
+            <th style={{ textAlign: "left", padding: 8 }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+            <td style={{ padding: 8 }}><code>background</code></td>
+            <td style={{ padding: 8 }}>string</td>
+            <td style={{ padding: 8 }}><code>"transparent"</code></td>
+            <td style={{ padding: 8 }}>Background color of the pattern tile</td>
+          </tr>
+          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+            <td style={{ padding: 8 }}><code>stroke</code></td>
+            <td style={{ padding: 8 }}>string</td>
+            <td style={{ padding: 8 }}><code>"#000"</code></td>
+            <td style={{ padding: 8 }}>Color of the diagonal lines</td>
+          </tr>
+          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+            <td style={{ padding: 8 }}><code>lineWidth</code></td>
+            <td style={{ padding: 8 }}>number</td>
+            <td style={{ padding: 8 }}><code>1.5</code></td>
+            <td style={{ padding: 8 }}>Width of the diagonal lines in pixels</td>
+          </tr>
+          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+            <td style={{ padding: 8 }}><code>spacing</code></td>
+            <td style={{ padding: 8 }}>number</td>
+            <td style={{ padding: 8 }}><code>6</code></td>
+            <td style={{ padding: 8 }}>Distance between lines in pixels</td>
+          </tr>
+          <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+            <td style={{ padding: 8 }}><code>angle</code></td>
+            <td style={{ padding: 8 }}>number</td>
+            <td style={{ padding: 8 }}><code>45</code></td>
+            <td style={{ padding: 8 }}>Line angle in degrees (0 = horizontal, 45 = diagonal, 90 = vertical)</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* ================================================================= */}
       {/* Styling Hierarchy */}

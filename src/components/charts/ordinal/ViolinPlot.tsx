@@ -4,7 +4,7 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -31,6 +31,7 @@ export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<str
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
@@ -48,6 +49,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -67,7 +70,9 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color: colorProp,
+    showCategoryTicks
   } = props
 
   const width = resolved.width
@@ -106,12 +111,15 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
 
   if (setup.earlyReturn) return setup.earlyReturn
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const color = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
-      return { fill: color, stroke: color, fillOpacity: 0.6 }
+      const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.6 }
     }
-  }, [colorBy, setup.colorScale])
+  }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
     () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
@@ -180,6 +188,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
+    showCategoryTicks,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(className && { className }),

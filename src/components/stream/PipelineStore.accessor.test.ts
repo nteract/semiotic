@@ -134,3 +134,95 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(store.scene.length).toBeGreaterThan(0)
   })
 })
+
+describe("PipelineStore — xIsDate auto-detection", () => {
+  it("detects Date objects from function xAccessor", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: (d: any) => new Date(d.timestamp),
+      yAccessor: "value"
+    }))
+    store.ingest({
+      inserts: [
+        { timestamp: "2003-01-06 00:00:00.000000", value: 72 },
+        { timestamp: "2003-01-09 00:00:00.000000", value: 71 },
+      ],
+      bounded: true
+    })
+    expect(store.xIsDate).toBe(true)
+  })
+
+  it("detects date strings from string xAccessor", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "timestamp",
+      yAccessor: "value"
+    }))
+    store.ingest({
+      inserts: [
+        { timestamp: "2003-01-06 00:00:00.000000", value: 72 },
+        { timestamp: "2003-01-09 00:00:00.000000", value: 71 },
+      ],
+      bounded: true
+    })
+    expect(store.xIsDate).toBe(true)
+  })
+
+  it("does not flag numeric x values as dates", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "x",
+      yAccessor: "y"
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: 10 },
+        { x: 1, y: 20 },
+      ],
+      bounded: true
+    })
+    expect(store.xIsDate).toBe(false)
+  })
+
+  it("produces valid scene nodes (not NaN) for date-string x values", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "timestamp",
+      yAccessor: "value"
+    }))
+    store.ingest({
+      inserts: [
+        { timestamp: "2003-01-06 00:00:00.000000", value: 72 },
+        { timestamp: "2003-01-09 00:00:00.000000", value: 71 },
+      ],
+      bounded: true
+    })
+    store.computeScene({ width: 400, height: 300 })
+    expect(store.scene.length).toBeGreaterThan(0)
+    // Verify no NaN in scene node x positions
+    for (const node of store.scene) {
+      if ("x" in node) expect(isNaN(node.x as number)).toBe(false)
+    }
+  })
+
+  it("does not flag numeric string values as dates", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "x",
+      yAccessor: "y"
+    }))
+    store.ingest({
+      inserts: [
+        { x: "100", y: 10 },
+        { x: "200", y: 20 },
+      ],
+      bounded: true
+    })
+    expect(store.xIsDate).toBe(false)
+  })
+})

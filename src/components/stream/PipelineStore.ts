@@ -196,6 +196,9 @@ export class PipelineStore {
   scene: SceneNode[] = []
   version = 0
 
+  /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
+  xIsDate = false
+
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private _quadtree: Quadtree<PointSceneNode> | null = null
   private static readonly QUADTREE_THRESHOLD = 500
@@ -267,6 +270,43 @@ export class PipelineStore {
       this.xExtent.clear()
       this.yExtent.clear()
       if (this.timestampBuffer) this.timestampBuffer.clear()
+
+      // Auto-detect Date x values on bounded ingestion.
+      // Reset getX to the default resolved accessor first, so a previous
+      // date-parsing override doesn't persist if data changes to non-date.
+      const isStreaming = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+        || this.config.runtimeMode === "streaming"
+      this.getX = isStreaming
+        ? resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
+        : resolveAccessor(this.config.xAccessor, "x")
+      this.xIsDate = false
+      if (changeset.inserts.length > 0) {
+        const sample = changeset.inserts[0]
+        const rawAccessor = this.config.xAccessor
+        const rawVal = typeof rawAccessor === "function"
+          ? rawAccessor(sample)
+          : (sample as any)[rawAccessor || "x"]
+
+        const isDateObj = rawVal instanceof Date
+        const isDateStr = typeof rawVal === "string"
+          && rawVal.length >= 10
+          && !isNaN(new Date(rawVal).getTime())
+          && isNaN(Number(rawVal))
+
+        this.xIsDate = isDateObj || isDateStr
+
+        // resolveAccessor wraps with unary + which converts Date objects to
+        // epoch ms correctly, but date strings like "2003-01-06" become NaN.
+        // Swap getX to a date-parsing accessor when date strings are detected.
+        if (isDateStr) {
+          const key = typeof rawAccessor === "string" ? rawAccessor : undefined
+          this.getX = key
+            ? (d: any) => +new Date(d[key])
+            : (d: any) => +((rawAccessor as (d: any) => any)(d) instanceof Date
+                ? (rawAccessor as (d: any) => any)(d)
+                : new Date((rawAccessor as (d: any) => any)(d)))
+        }
+      }
 
       // Auto-resize buffer to fit all bounded data.
       // totalSize is set when data is progressively chunked — pre-allocate

@@ -40,6 +40,9 @@ export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
 export { QuadrantChart } from "./xy/QuadrantChart"
 export type { QuadrantChartProps, QuadrantsConfig, QuadrantConfig, CenterlineStyle } from "./xy/QuadrantChart"
 
+export { MultiAxisLineChart } from "./xy/MultiAxisLineChart"
+export type { MultiAxisLineChartProps, MultiAxisSeriesConfig } from "./xy/MultiAxisLineChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================
@@ -64,6 +67,9 @@ export type { ViolinPlotProps } from "./ordinal/ViolinPlot"
 
 export { RidgelinePlot } from "./ordinal/RidgelinePlot"
 export type { RidgelinePlotProps } from "./ordinal/RidgelinePlot"
+
+export { FunnelChart } from "./ordinal/FunnelChart"
+export type { FunnelChartProps } from "./ordinal/FunnelChart"
 
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"
@@ -162,3 +168,7 @@ export type {
   TooltipField,
   MultiLineTooltipConfig
 } from "../Tooltip/Tooltip"
+
+// Pattern fills for canvas charts
+export { createHatchPattern } from "./shared/hatchPattern"
+export type { HatchPatternOptions } from "./shared/hatchPattern"

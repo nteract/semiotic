@@ -262,7 +262,7 @@ function checkNonZeroBaseline(
 }
 
 const ORDINAL_BAR_COMPONENTS = new Set([
-  "BarChart", "StackedBarChart", "GroupedBarChart"
+  "BarChart", "StackedBarChart", "GroupedBarChart", "FunnelChart"
 ])
 
 function checkDegenerateExtent(

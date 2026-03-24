@@ -8,7 +8,7 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -124,6 +124,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
+  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+
+  const effectivePalette = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
+  }, [colorScheme, themeCategorical])
+
   // When data is empty (push API, no edges at mount), the HOC's colorScale
   // is built from zero data points and returns "#999" for everything.
   // In that case, skip passing nodeStyle/edgeStyle so the chord layout
@@ -157,11 +168,11 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       edgeColorBy,
       colorBy,
       colorScale,
-      nodeStyleFn: nodeStyle || ((d: Record<string, any>) => ({ fill: DEFAULT_COLOR })),
+      nodeStyleFn: nodeStyle || ((d: Record<string, any>) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
       edgeOpacity,
       baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
     })
-  }, [hasColorData, edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+  }, [hasColorData, edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity, themeCategorical, colorScheme, categoryIndexMap])
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {
@@ -210,7 +221,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={colorScheme}
+      colorScheme={effectivePalette}
       edgeColorBy={edgeColorBy}
       edgeOpacity={edgeOpacity}
       nodeLabel={nodeLabelFn}

@@ -7,7 +7,7 @@ import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from ".
 import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, useColorScale, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
@@ -152,6 +152,17 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
 
+  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+
+  const effectivePalette = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
+  }, [colorScheme, themeCategorical])
+
   // ── Node style — d is a RealtimeNode, user data on d.data ───────────────
   // Resolve the scheme colors array for root node coloring
   const schemeColors = useMemo(() => {
@@ -172,12 +183,12 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
       } else if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       baseStyle.opacity = isRoot ? 1 : 0.85
       return baseStyle
     }
-  }, [colorBy, colorByDepth, colorScale, schemeColors])
+  }, [colorBy, colorByDepth, colorScale, schemeColors, themeCategorical, colorScheme, categoryIndexMap])
 
   // Edge style — use semi-transparent grey that works in both light and dark mode
   // (canvas cannot resolve "currentColor")
@@ -227,7 +238,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         nodeStyle={nodeStyleFn}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}
-        colorScheme={colorScheme}
+        colorScheme={effectivePalette}
         colorByDepth={colorByDepth}
         nodeSize={nodeRadiusProp}
         nodeLabel={showLabels ? nodeIdAccessor : undefined}

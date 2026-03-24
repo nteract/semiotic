@@ -147,7 +147,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       let bottomY = -Infinity
       for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
       // Use rgba color stops to vary opacity across the gradient
-      const parsed = parseColor(fillColor)
+      const parsed = parseColor(typeof fillColor === "string" ? fillColor : "#4e79a7")
       const topAlpha = node.fillGradient.topOpacity
       const bottomAlpha = node.fillGradient.bottomOpacity
       const grad = ctx.createLinearGradient(0, topY, 0, bottomY)

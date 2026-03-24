@@ -55,6 +55,7 @@ const commonProps: Record<string, PropDef> = {
   colorBy: { type: ["string", "function"] },
   colorScheme: { type: ["string", "array"] },
   tooltip: { type: ["boolean", "function", "object"] },
+  annotations: { type: "array" },
   frameProps: { type: "object" },
 }
 
@@ -224,6 +225,23 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  MultiAxisLineChart: {
+    required: ["series"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      series: { type: "array" },
+      colorScheme: { type: ["string", "array"] },
+      curve: { type: "string" },
+      lineWidth: { type: "number" },
+      annotations: { type: "array" },
+    },
+  },
+
   ConnectedScatterplot: {
     required: ["data"],
     dataShape: "array",
@@ -362,6 +380,22 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  RidgelinePlot: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["categoryAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      categoryAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      bins: { type: "number" },
+      amplitude: { type: "number" },
+      categoryPadding: { type: "number" },
+    },
+  },
+
   DotPlot: {
     required: ["data"],
     dataShape: "array",
@@ -406,6 +440,25 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       centerContent: { type: ["object", "string", "number"] },
       startAngle: { type: "number" },
       slicePadding: { type: "number" },
+    },
+  },
+
+  FunnelChart: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["stepAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      stepAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      categoryAccessor: { type: ["string", "function"] },
+      orientation: { type: "string", enum: ["horizontal", "vertical"] as unknown as string[] },
+      connectorOpacity: { type: "number" },
+      showCategoryTicks: { type: "boolean" },
+      responsiveWidth: { type: "boolean" },
+      legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as unknown as string[] },
     },
   },
 

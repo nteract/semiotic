@@ -19,6 +19,8 @@ import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointSc
 import { buildPieScene } from "./ordinalSceneBuilders/pieScene"
 import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./ordinalSceneBuilders/statisticalScene"
 import { buildTimelineScene } from "./ordinalSceneBuilders/timelineScene"
+import { buildFunnelScene } from "./ordinalSceneBuilders/funnelScene"
+import { buildBarFunnelScene } from "./ordinalSceneBuilders/barFunnelScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
 
@@ -34,6 +36,8 @@ const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
   histogram: buildHistogramScene,
   ridgeline: buildRidgelineScene,
   timeline: buildTimelineScene,
+  funnel: buildFunnelScene,
+  "bar-funnel": buildBarFunnelScene,
 }
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
@@ -426,8 +430,8 @@ export class OrdinalPipelineStore {
         if (s > max) max = s
         if (s < min) min = s
       }
-    } else if (chartType === "clusterbar") {
-      // Cluster bars: individual values (side-by-side)
+    } else if (chartType === "clusterbar" || chartType === "bar-funnel") {
+      // Cluster bars / bar-funnel: individual values (side-by-side grouping)
       for (const d of data) {
         const val = this.getR(d)
         if (val > max) max = val
@@ -447,14 +451,16 @@ export class OrdinalPipelineStore {
       if (this.config.rExtent[1] != null) max = this.config.rExtent[1]
     }
 
-    // Apply padding
-    const range = max - min
-    const padAmount = range > 0 ? range * pad : 1
-    if (this.config.rExtent?.[0] == null) min -= padAmount
-    if (this.config.rExtent?.[1] == null) max += padAmount
+    // Apply padding (bar-funnel needs exact [0, max] — no padding)
+    if (chartType !== "bar-funnel") {
+      const range = max - min
+      const padAmount = range > 0 ? range * pad : 1
+      if (this.config.rExtent?.[0] == null) min -= padAmount
+      if (this.config.rExtent?.[1] == null) max += padAmount
+    }
 
     // Bars should include zero
-    if (chartType === "bar" || chartType === "clusterbar") {
+    if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel") {
       if (min > 0) min = 0
       if (max < 0) max = 0
     }

@@ -123,7 +123,7 @@ describe("ForceDirectedGraph", () => {
     )
 
     const style = lastNetworkFrameProps.nodeStyle({ data: { id: "A" } })
-    expect(style.fill).toBe("#007bff")
+    expect(style.fill).toBe("#1f77b4")
   })
 
   it("nodeStyle includes r when nodeSize is a number", () => {

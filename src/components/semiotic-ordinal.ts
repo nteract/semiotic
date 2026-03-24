@@ -19,6 +19,11 @@ export { DotPlot } from "./charts/ordinal/DotPlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
 export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
+export { FunnelChart } from "./charts/ordinal/FunnelChart"
+
+// Utilities
+export { createHatchPattern } from "./charts/shared/hatchPattern"
+export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
 // Stream Frame types
 export type {

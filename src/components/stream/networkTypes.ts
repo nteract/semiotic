@@ -68,6 +68,8 @@ export interface RealtimeEdge {
   circularPathData?: any
   bezier?: BezierCache
   data?: Record<string, any>
+  /** Unique key for this edge (supports parallel edges between same node pair) */
+  _edgeKey?: string
 }
 
 // ── Bezier cache ───────────────────────────────────────────────────────

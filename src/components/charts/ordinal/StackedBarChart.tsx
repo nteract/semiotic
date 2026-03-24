@@ -4,7 +4,7 @@ import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "r
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -32,6 +32,7 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   barPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
@@ -50,6 +51,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -63,7 +66,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     onObservation, chartId,
     loading, emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -131,15 +135,18 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
 
   if (setup.earlyReturn) return setup.earlyReturn
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Record<string, any>, category?: string) => {
       if (actualColorBy) {
         if (setup.colorScale) return { fill: getColor(d, actualColorBy, setup.colorScale) }
         return {} // Let frame use its own color scheme (push API)
       }
-      return { fill: DEFAULT_COLOR }
+      return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
     }
-  }, [actualColorBy, setup.colorScale])
+  }, [actualColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),

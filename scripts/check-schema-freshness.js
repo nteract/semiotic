@@ -84,7 +84,7 @@ try {
 
     // Check for spread operators to include common props
     if (body.includes("...commonProps")) {
-      for (const k of ["width", "height", "margin", "className", "title", "enableHover", "showLegend", "showGrid", "colorBy", "colorScheme", "tooltip", "frameProps"]) {
+      for (const k of ["width", "height", "margin", "className", "title", "enableHover", "showLegend", "showGrid", "colorBy", "colorScheme", "tooltip", "annotations", "frameProps"]) {
         propSet.add(k)
       }
     }

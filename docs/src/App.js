@@ -43,6 +43,7 @@ import RealtimeHeatmapPage from "./pages/charts/RealtimeHeatmapPage"
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
+import FunnelChartPage from "./pages/charts/FunnelChartPage"
 import TreemapPage from "./pages/charts/TreemapPage"
 import CirclePackPage from "./pages/charts/CirclePackPage"
 import ChoroplethMapPage from "./pages/charts/ChoroplethMapPage"
@@ -51,6 +52,7 @@ import FlowMapPage from "./pages/charts/FlowMapPage"
 import DistanceCartogramPage from "./pages/charts/DistanceCartogramPage"
 import TileMapPage from "./pages/charts/TileMapPage"
 import QuadrantChartPage from "./pages/charts/QuadrantChartPage"
+import MultiAxisLineChartPage from "./pages/charts/MultiAxisLineChartPage"
 
 // New frame pages
 import StreamXYFramePage from "./pages/frames/XYFramePage"
@@ -401,6 +403,7 @@ export default function DocsApp() {
               <Route path="heatmap" element={<HeatmapPage />} />
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
               <Route path="quadrant-chart" element={<QuadrantChartPage />} />
+              <Route path="multi-axis-line-chart" element={<MultiAxisLineChartPage />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
               <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
               <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
@@ -416,6 +419,7 @@ export default function DocsApp() {
               <Route path="pie-chart" element={<PieChartPage />} />
               <Route path="donut-chart" element={<DonutChartPage />} />
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
+              <Route path="funnel-chart" element={<FunnelChartPage />} />
               <Route path="realtime-bar-chart" element={<RealtimeHistogramPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />

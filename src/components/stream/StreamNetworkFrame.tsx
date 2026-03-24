@@ -436,16 +436,18 @@ const StreamNetworkFrame = forwardRef<
           return nodeColorMap.current.get(String(val))!
         }
       }
-      if (!nodeColorMap.current.has(node.id)) {
-        const colors = Array.isArray(colorScheme)
-          ? colorScheme
-          : DEFAULT_COLORS
-        nodeColorMap.current.set(
-          node.id,
-          colors[colorIndexRef.current++ % colors.length]
-        )
+      // Check if scene-fill sync already assigned this node a color
+      if (nodeColorMap.current.has(node.id)) {
+        return nodeColorMap.current.get(node.id)!
       }
-      return nodeColorMap.current.get(node.id)!
+      // No colorBy → all nodes get the same first palette color (matches HOC nodeStyle).
+      // With colorBy (handled above), nodes cycle through the palette by category.
+      const colors = Array.isArray(colorScheme)
+        ? colorScheme
+        : DEFAULT_COLORS
+      const color = colorBy ? colors[colorIndexRef.current++ % colors.length] : colors[0]
+      nodeColorMap.current.set(node.id, color)
+      return color
     },
     [colorBy, colorScheme]
   )
@@ -526,13 +528,16 @@ const StreamNetworkFrame = forwardRef<
     store.buildScene([adjustedWidth, adjustedHeight])
     dirtyRef.current = true
 
-    // Sync the component's node color map with the scene builder's
-    // color assignments. The scene builder (layout plugin) assigns
-    // node colors by iteration order, while this component's
-    // getNodeColor assigns lazily. Without syncing, particle colors
-    // diverge from the rendered edge band colors.
-    // We only ADD missing entries (never overwrite) so that existing
-    // streaming color assignments remain stable.
+    // Sync nodeColorMap from actual scene fills so particle/hover colors
+    // match the rendered node colors exactly. The scene builder applies
+    // the HOC's nodeStyleFn (which may use ThemeProvider, colorBy, or
+    // resolveDefaultFill) — those are the authoritative colors.
+    for (const sceneNode of store.sceneNodes) {
+      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
+      }
+    }
+    // Fill remaining from palette (streaming: new nodes not yet in scene)
     const colors = Array.isArray(colorScheme)
       ? colorScheme
       : DEFAULT_COLORS
@@ -656,7 +661,14 @@ const StreamNetworkFrame = forwardRef<
       store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
 
-      // Sync component node color map (same logic as runLayout sync)
+      // Sync nodeColorMap from actual scene fills so particle/hover colors
+      // match the rendered node colors exactly (same logic as runLayout sync)
+      for (const sceneNode of store.sceneNodes) {
+        if (sceneNode.id && sceneNode.style?.fill) {
+          nodeColorMap.current.set(sceneNode.id, String(sceneNode.style.fill))
+        }
+      }
+      // Fill remaining from palette (streaming: new nodes not yet in scene)
       const colors = Array.isArray(colorScheme)
         ? colorScheme
         : DEFAULT_COLORS

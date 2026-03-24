@@ -4,7 +4,7 @@ import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useSortedData, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -31,6 +31,7 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
+  showCategoryTicks?: boolean
   showLegend?: boolean
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
@@ -49,6 +50,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     title: props.title,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
+    showCategoryTicks: props.showCategoryTicks,
+    orientation: props.orientation,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -68,7 +71,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     onObservation, chartId,
     loading, emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -109,13 +113,16 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)
 
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Record<string, any>, category?: string) => {
       const baseStyle: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR
+      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
       return baseStyle
     }
-  }, [colorBy, setup.colorScale, dotRadius])
+  }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),

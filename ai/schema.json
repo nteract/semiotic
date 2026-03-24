@@ -14,7 +14,9 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "xAccessor": {
@@ -41,13 +43,26 @@
               "description": "Key to determine color encoding per line/group"
             },
             "colorScheme": {
-              "type": ["string", "array"],
+              "type": [
+                "string",
+                "array"
+              ],
               "description": "Named d3 color scheme or array of color strings",
               "default": "category10"
             },
             "curve": {
               "type": "string",
-              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "enum": [
+                "linear",
+                "monotoneX",
+                "monotoneY",
+                "step",
+                "stepAfter",
+                "stepBefore",
+                "basis",
+                "cardinal",
+                "catmullRom"
+              ],
               "description": "Curve interpolation method",
               "default": "linear"
             },
@@ -119,9 +134,44 @@
             "className": {
               "type": "string",
               "description": "CSS class name"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
             }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -135,7 +185,9 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "xAccessor": {
@@ -162,13 +214,26 @@
               "description": "Key to determine color encoding"
             },
             "colorScheme": {
-              "type": ["string", "array"],
+              "type": [
+                "string",
+                "array"
+              ],
               "description": "Named d3 color scheme or array of color strings",
               "default": "category10"
             },
             "curve": {
               "type": "string",
-              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "enum": [
+                "linear",
+                "monotoneX",
+                "monotoneY",
+                "step",
+                "stepAfter",
+                "stepBefore",
+                "basis",
+                "cardinal",
+                "catmullRom"
+              ],
               "default": "monotoneX"
             },
             "areaOpacity": {
@@ -185,18 +250,77 @@
               "type": "number",
               "default": 2
             },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -210,43 +334,140 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "xAccessor": { "type": "string", "default": "x" },
-            "yAccessor": { "type": "string", "default": "y" },
+            "xAccessor": {
+              "type": "string",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "default": "y"
+            },
             "areaBy": {
               "type": "string",
               "description": "Key to group data into stacked areas"
             },
-            "lineDataAccessor": { "type": "string", "default": "coordinates" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "lineDataAccessor": {
+              "type": "string",
+              "default": "coordinates"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "curve": {
               "type": "string",
-              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "enum": [
+                "linear",
+                "monotoneX",
+                "monotoneY",
+                "step",
+                "stepAfter",
+                "stepBefore",
+                "basis",
+                "cardinal",
+                "catmullRom"
+              ],
               "default": "monotoneX"
             },
-            "areaOpacity": { "type": "number", "default": 0.7 },
-            "showLine": { "type": "boolean", "default": true },
-            "lineWidth": { "type": "number", "default": 2 },
+            "areaOpacity": {
+              "type": "number",
+              "default": 0.7
+            },
+            "showLine": {
+              "type": "boolean",
+              "default": true
+            },
+            "lineWidth": {
+              "type": "number",
+              "default": 2
+            },
             "normalize": {
               "type": "boolean",
               "description": "Normalize stacks to 100%",
               "default": false
             },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -260,37 +481,125 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "xAccessor": { "type": "string", "default": "x" },
-            "yAccessor": { "type": "string", "default": "y" },
-            "colorBy": { "type": "string", "description": "Key to determine point color" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "xAccessor": {
+              "type": "string",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "default": "y"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine point color"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "sizeBy": {
               "type": "string",
               "description": "Key for variable point sizing"
             },
             "sizeRange": {
               "type": "array",
-              "items": { "type": "number" },
+              "items": {
+                "type": "number"
+              },
               "description": "Min and max radius for sizeBy scaling",
-              "default": [3, 15]
+              "default": [
+                3,
+                15
+              ]
             },
-            "pointRadius": { "type": "number", "description": "Fixed point radius", "default": 5 },
-            "pointOpacity": { "type": "number", "default": 0.8 },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "pointRadius": {
+              "type": "number",
+              "description": "Fixed point radius",
+              "default": 5
+            },
+            "pointOpacity": {
+              "type": "number",
+              "default": 0.8
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -304,44 +613,322 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "xAccessor": { "type": "string", "default": "x" },
-            "yAccessor": { "type": "string", "default": "y" },
-            "xCenter": { "type": "number", "description": "X-coordinate of the vertical center line. Defaults to midpoint of x domain." },
-            "yCenter": { "type": "number", "description": "Y-coordinate of the horizontal center line. Defaults to midpoint of y domain." },
+            "xAccessor": {
+              "type": "string",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "default": "y"
+            },
+            "xCenter": {
+              "type": "number",
+              "description": "X-coordinate of the vertical center line. Defaults to midpoint of x domain."
+            },
+            "yCenter": {
+              "type": "number",
+              "description": "Y-coordinate of the horizontal center line. Defaults to midpoint of y domain."
+            },
             "quadrants": {
               "type": "object",
               "description": "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with { label, color, opacity? }",
               "properties": {
-                "topRight": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
-                "topLeft": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
-                "bottomRight": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] },
-                "bottomLeft": { "type": "object", "properties": { "label": { "type": "string" }, "color": { "type": "string" }, "opacity": { "type": "number" } }, "required": ["label", "color"] }
+                "topRight": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "opacity": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "color"
+                  ]
+                },
+                "topLeft": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "opacity": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "color"
+                  ]
+                },
+                "bottomRight": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "opacity": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "color"
+                  ]
+                },
+                "bottomLeft": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "opacity": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "color"
+                  ]
+                }
               },
-              "required": ["topRight", "topLeft", "bottomRight", "bottomLeft"]
+              "required": [
+                "topRight",
+                "topLeft",
+                "bottomRight",
+                "bottomLeft"
+              ]
             },
-            "showQuadrantLabels": { "type": "boolean", "default": true },
-            "quadrantLabelSize": { "type": "number", "default": 12 },
-            "colorBy": { "type": "string", "description": "Key to determine point color" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "sizeBy": { "type": "string", "description": "Key for variable point sizing" },
-            "sizeRange": { "type": "array", "items": { "type": "number" }, "default": [3, 15] },
-            "pointRadius": { "type": "number", "default": 5 },
-            "pointOpacity": { "type": "number", "default": 0.8 },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "showQuadrantLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "quadrantLabelSize": {
+              "type": "number",
+              "default": 12
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine point color"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "sizeBy": {
+              "type": "string",
+              "description": "Key for variable point sizing"
+            },
+            "sizeRange": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                3,
+                15
+              ]
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 5
+            },
+            "pointOpacity": {
+              "type": "number",
+              "default": 0.8
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["quadrants"]
+          "required": [
+            "quadrants"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "MultiAxisLineChart",
+        "description": "Dual Y-axis line chart for comparing two series with different scales on the same x axis. Data is unitized (normalized to [0,1]) internally; left axis shows series[0] values and right axis shows series[1] values in original units. Falls back to standard multi-line if not exactly 2 series.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of data objects shared by both series"
+            },
+            "xAccessor": {
+              "type": "string",
+              "default": "x",
+              "description": "Key for x values"
+            },
+            "series": {
+              "type": "array",
+              "description": "Exactly 2 series configs for dual-axis mode. Each: { yAccessor, label?, color?, format?, extent? }",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "yAccessor": {
+                    "type": "string",
+                    "description": "Field name for y values of this series"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Axis label for this series"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "Override color for this series"
+                  },
+                  "extent": {
+                    "type": "array",
+                    "items": { "type": "number" },
+                    "description": "Fixed [min, max] extent. Required for push API streaming."
+                  }
+                },
+                "required": ["yAccessor"]
+              }
+            },
+            "colorScheme": {
+              "type": ["string", "array"],
+              "default": "category10"
+            },
+            "curve": {
+              "type": "string",
+              "default": "monotoneX"
+            },
+            "lineWidth": {
+              "type": "number",
+              "default": 2
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 800
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "annotations": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": ["series"]
         }
       }
     },
@@ -355,37 +942,127 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "sizeBy": {
               "type": "string",
               "description": "Key for bubble size (required)"
             },
-            "xAccessor": { "type": "string", "default": "x" },
-            "yAccessor": { "type": "string", "default": "y" },
+            "xAccessor": {
+              "type": "string",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "default": "y"
+            },
             "sizeRange": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [5, 40]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                5,
+                40
+              ]
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "bubbleOpacity": { "type": "number", "default": 0.6 },
-            "bubbleStrokeWidth": { "type": "number", "default": 1 },
-            "bubbleStrokeColor": { "type": "string", "default": "white" },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "bubbleOpacity": {
+              "type": "number",
+              "default": 0.6
+            },
+            "bubbleStrokeWidth": {
+              "type": "number",
+              "default": 1
+            },
+            "bubbleStrokeColor": {
+              "type": "string",
+              "default": "white"
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data", "sizeBy"]
+          "required": [
+            "data",
+            "sizeBy"
+          ]
         }
       }
     },
@@ -399,11 +1076,19 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects with x, y, and value"
             },
-            "xAccessor": { "type": "string", "default": "x" },
-            "yAccessor": { "type": "string", "default": "y" },
+            "xAccessor": {
+              "type": "string",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "default": "y"
+            },
             "valueAccessor": {
               "type": "string",
               "description": "Key for the cell value",
@@ -411,7 +1096,13 @@
             },
             "colorScheme": {
               "type": "string",
-              "enum": ["blues", "reds", "greens", "viridis", "custom"],
+              "enum": [
+                "blues",
+                "reds",
+                "greens",
+                "viridis",
+                "custom"
+              ],
               "default": "blues"
             },
             "showValues": {
@@ -419,16 +1110,41 @@
               "description": "Display numeric values in cells",
               "default": false
             },
-            "cellBorderColor": { "type": "string", "default": "#fff" },
-            "cellBorderWidth": { "type": "number", "default": 1 },
-            "xLabel": { "type": "string" },
-            "yLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
+            "cellBorderColor": {
+              "type": "string",
+              "default": "#fff"
+            },
+            "cellBorderWidth": {
+              "type": "number",
+              "default": 1
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
             "showLegend": {
               "type": "boolean",
               "description": "Show a gradient color legend",
@@ -436,12 +1152,52 @@
             },
             "legendPosition": {
               "type": "string",
-              "enum": ["right", "left", "top", "bottom"],
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
               "description": "Position of the gradient legend",
               "default": "right"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
             }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -455,27 +1211,111 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "xAccessor": { "type": "string", "description": "Key for x-axis values", "default": "x" },
-            "yAccessor": { "type": "string", "description": "Key for y-axis values", "default": "y" },
-            "orderAccessor": { "type": "string", "description": "Key for point ordering (number or Date field)" },
-            "orderLabel": { "type": "string", "description": "Label for the ordering metric in tooltips" },
-            "pointRadius": { "type": "number", "description": "Point radius", "default": 4 },
-            "pointIdAccessor": { "type": "string", "description": "Accessor for unique point IDs, used by point-anchored annotations" },
-            "annotations": { "type": "array", "description": "Annotation objects to render on the chart" },
-            "colorBy": { "type": "string", "description": "Key to determine color encoding" },
-            "colorScheme": { "type": ["string", "array"], "description": "Named d3 color scheme or array of color strings" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "xAccessor": {
+              "type": "string",
+              "description": "Key for x-axis values",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "description": "Key for y-axis values",
+              "default": "y"
+            },
+            "orderAccessor": {
+              "type": "string",
+              "description": "Key for point ordering (number or Date field)"
+            },
+            "orderLabel": {
+              "type": "string",
+              "description": "Label for the ordering metric in tooltips"
+            },
+            "pointRadius": {
+              "type": "number",
+              "description": "Point radius",
+              "default": 4
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Accessor for unique point IDs, used by point-anchored annotations"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Named d3 color scheme or array of color strings"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -489,7 +1329,9 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "categoryAccessor": {
@@ -504,29 +1346,105 @@
             },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "sort": {
-              "type": ["boolean", "string"],
+              "type": [
+                "boolean",
+                "string"
+              ],
               "description": "Sort bars: false, true, 'asc', 'desc', or comparator function",
               "default": false
             },
-            "barPadding": { "type": "number", "default": 5 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "barPadding": {
+              "type": "number",
+              "default": 5
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -540,40 +1458,123 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "stackBy": {
               "type": "string",
               "description": "Key to define the stacking dimension (required)"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "normalize": {
               "type": "boolean",
               "description": "Normalize stacks to 100%",
               "default": false
             },
-            "barPadding": { "type": "number", "default": 5 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean", "default": true },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "barPadding": {
+              "type": "number",
+              "default": 5
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data", "stackBy"]
+          "required": [
+            "data",
+            "stackBy"
+          ]
         }
       }
     },
@@ -587,35 +1588,118 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
             "groupBy": {
               "type": "string",
               "description": "Key to define the grouping dimension (required)"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "barPadding": { "type": "number", "default": 5 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean", "default": true },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "barPadding": {
+              "type": "number",
+              "default": 5
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data", "groupBy"]
+          "required": [
+            "data",
+            "groupBy"
+          ]
         }
       }
     },
@@ -629,39 +1713,134 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "sizeBy": { "type": "string", "description": "Key for variable point sizing" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "sizeBy": {
+              "type": "string",
+              "description": "Key for variable point sizing"
+            },
             "sizeRange": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [3, 8]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                3,
+                8
+              ]
             },
-            "pointRadius": { "type": "number", "default": 4 },
-            "pointOpacity": { "type": "number", "default": 0.7 },
-            "categoryPadding": { "type": "number", "default": 20 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "pointRadius": {
+              "type": "number",
+              "default": 4
+            },
+            "pointOpacity": {
+              "type": "number",
+              "default": 0.7
+            },
+            "categoryPadding": {
+              "type": "number",
+              "default": 20
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -675,37 +1854,121 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "showOutliers": {
               "type": "boolean",
               "description": "Show outlier points",
               "default": true
             },
-            "outlierRadius": { "type": "number", "default": 3 },
-            "categoryPadding": { "type": "number", "default": 20 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "outlierRadius": {
+              "type": "number",
+              "default": 3
+            },
+            "categoryPadding": {
+              "type": "number",
+              "default": 20
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -719,11 +1982,19 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "bins": {
               "type": "number",
               "description": "Number of bins for the histogram",
@@ -734,21 +2005,91 @@
               "description": "Normalize counts per category to show relative frequency",
               "default": false
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "categoryPadding": { "type": "number", "default": 20 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "categoryPadding": {
+              "type": "number",
+              "default": 20
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -762,14 +2103,25 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "vertical"
             },
             "bins": {
@@ -787,21 +2139,203 @@
               "description": "Show interquartile range lines",
               "default": true
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "categoryPadding": { "type": "number", "default": 20 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": false },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "categoryPadding": {
+              "type": "number",
+              "default": 20
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RidgelinePlot",
+        "description": "Overlapping density distributions for comparing distributions across categories. Each category gets a density curve that can overlap with adjacent rows.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Key for category grouping"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for numeric values to build distributions from"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding per category"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Named d3 color scheme or array of color strings"
+            },
+            "bins": {
+              "type": "number",
+              "description": "Number of bins for density estimation"
+            },
+            "amplitude": {
+              "type": "number",
+              "description": "Unitless multiplier of row height (>1 creates overlap)",
+              "default": 1.5
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Chart margins: { top, right, bottom, left }"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -815,37 +2349,124 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal"],
+              "enum": [
+                "vertical",
+                "horizontal"
+              ],
               "default": "horizontal"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "sort": {
-              "type": ["boolean", "string"],
+              "type": [
+                "boolean",
+                "string"
+              ],
               "description": "Sort dots: true, false, 'asc', 'desc'",
               "default": true
             },
-            "dotRadius": { "type": "number", "default": 5 },
-            "categoryPadding": { "type": "number", "default": 10 },
-            "categoryLabel": { "type": "string" },
-            "valueLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean" },
-            "showGrid": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "dotRadius": {
+              "type": "number",
+              "default": 5
+            },
+            "categoryPadding": {
+              "type": "number",
+              "default": 10
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -859,28 +2480,100 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "startAngle": {
               "type": "number",
               "description": "Starting angle in radians",
               "default": 0
             },
-            "slicePadding": { "type": "number", "default": 2 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 400 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "slicePadding": {
+              "type": "number",
+              "default": 2
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 400
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -894,11 +2587,19 @@
           "properties": {
             "data": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of data objects"
             },
-            "categoryAccessor": { "type": "string", "default": "category" },
-            "valueAccessor": { "type": "string", "default": "value" },
+            "categoryAccessor": {
+              "type": "string",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
             "innerRadius": {
               "type": "number",
               "description": "Inner radius of the donut hole in pixels",
@@ -908,19 +2609,86 @@
               "type": "string",
               "description": "React node to render in the center of the donut (accepts string key or JSX)"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "startAngle": { "type": "number", "default": 0 },
-            "slicePadding": { "type": "number", "default": 2 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 400 },
-            "height": { "type": "number", "default": 400 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "startAngle": {
+              "type": "number",
+              "default": 0
+            },
+            "slicePadding": {
+              "type": "number",
+              "default": 2
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 400
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -934,12 +2702,16 @@
           "properties": {
             "nodes": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of node objects"
             },
             "edges": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of edge objects with source and target"
             },
             "nodeIDAccessor": {
@@ -961,41 +2733,126 @@
               "type": "string",
               "description": "Key or accessor for node labels"
             },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "nodeSize": {
-              "type": ["number", "string"],
+              "type": [
+                "number",
+                "string"
+              ],
               "description": "Fixed node radius or key for variable sizing",
               "default": 8
             },
             "nodeSizeRange": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [5, 20]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                5,
+                20
+              ]
             },
             "edgeWidth": {
-              "type": ["number", "string"],
+              "type": [
+                "number",
+                "string"
+              ],
               "description": "Fixed edge width or key for variable width",
               "default": 1
             },
-            "edgeColor": { "type": "string", "default": "#999" },
-            "edgeOpacity": { "type": "number", "default": 0.6 },
+            "edgeColor": {
+              "type": "string",
+              "default": "#999"
+            },
+            "edgeOpacity": {
+              "type": "number",
+              "default": 0.6
+            },
             "iterations": {
               "type": "number",
               "description": "Force simulation iterations",
               "default": 300
             },
-            "forceStrength": { "type": "number", "default": 0.1 },
-            "showLabels": { "type": "boolean", "default": false },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "showLegend": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "forceStrength": {
+              "type": "number",
+              "default": 0.1
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": false
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["nodes", "edges"]
+          "required": [
+            "nodes",
+            "edges"
+          ]
         }
       }
     },
@@ -1009,53 +2866,151 @@
           "properties": {
             "edges": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of edge objects with source, target, and value"
             },
             "nodes": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Optional array of node objects (auto-derived from edges if omitted)"
             },
-            "sourceAccessor": { "type": "string", "default": "source" },
-            "targetAccessor": { "type": "string", "default": "target" },
+            "sourceAccessor": {
+              "type": "string",
+              "default": "source"
+            },
+            "targetAccessor": {
+              "type": "string",
+              "default": "target"
+            },
             "valueAccessor": {
               "type": "string",
               "description": "Key for edge flow value",
               "default": "value"
             },
-            "nodeIdAccessor": { "type": "string", "default": "id" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "nodeIdAccessor": {
+              "type": "string",
+              "default": "id"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "edgeColorBy": {
               "type": "string",
-              "enum": ["source", "target", "gradient"],
+              "enum": [
+                "source",
+                "target",
+                "gradient"
+              ],
               "description": "How to color edges",
               "default": "source"
             },
             "orientation": {
               "type": "string",
-              "enum": ["horizontal", "vertical"],
+              "enum": [
+                "horizontal",
+                "vertical"
+              ],
               "default": "horizontal"
             },
             "nodeAlign": {
               "type": "string",
-              "enum": ["justify", "left", "right", "center"],
+              "enum": [
+                "justify",
+                "left",
+                "right",
+                "center"
+              ],
               "default": "justify"
             },
-            "nodePaddingRatio": { "type": "number", "default": 0.05 },
-            "nodeWidth": { "type": "number", "default": 15 },
-            "nodeLabel": { "type": "string", "description": "Key for node labels" },
-            "showLabels": { "type": "boolean", "default": true },
-            "edgeOpacity": { "type": "number", "default": 0.5 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 800 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "nodePaddingRatio": {
+              "type": "number",
+              "default": 0.05
+            },
+            "nodeWidth": {
+              "type": "number",
+              "default": 15
+            },
+            "nodeLabel": {
+              "type": "string",
+              "description": "Key for node labels"
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "edgeOpacity": {
+              "type": "number",
+              "default": 0.5
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 800
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["edges"]
+          "required": [
+            "edges"
+          ]
         }
       }
     },
@@ -1069,38 +3024,129 @@
           "properties": {
             "edges": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Array of edge objects with source, target, and value"
             },
             "nodes": {
               "type": "array",
-              "items": { "type": "object" },
+              "items": {
+                "type": "object"
+              },
               "description": "Optional array of node objects"
             },
-            "sourceAccessor": { "type": "string", "default": "source" },
-            "targetAccessor": { "type": "string", "default": "target" },
-            "valueAccessor": { "type": "string", "default": "value" },
-            "nodeIdAccessor": { "type": "string", "default": "id" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "edgeColorBy": {
+            "sourceAccessor": {
               "type": "string",
-              "enum": ["source", "target"],
               "default": "source"
             },
-            "padAngle": { "type": "number", "default": 0.01 },
-            "groupWidth": { "type": "number", "default": 20 },
-            "nodeLabel": { "type": "string" },
-            "showLabels": { "type": "boolean", "default": true },
-            "edgeOpacity": { "type": "number", "default": 0.5 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "targetAccessor": {
+              "type": "string",
+              "default": "target"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
+            "nodeIdAccessor": {
+              "type": "string",
+              "default": "id"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "edgeColorBy": {
+              "type": "string",
+              "enum": [
+                "source",
+                "target"
+              ],
+              "default": "source"
+            },
+            "padAngle": {
+              "type": "number",
+              "default": 0.01
+            },
+            "groupWidth": {
+              "type": "number",
+              "default": 20
+            },
+            "nodeLabel": {
+              "type": "string"
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "edgeOpacity": {
+              "type": "number",
+              "default": 0.5
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["edges"]
+          "required": [
+            "edges"
+          ]
         }
       }
     },
@@ -1118,12 +3164,22 @@
             },
             "layout": {
               "type": "string",
-              "enum": ["tree", "cluster", "partition", "treemap", "circlepack"],
+              "enum": [
+                "tree",
+                "cluster",
+                "partition",
+                "treemap",
+                "circlepack"
+              ],
               "default": "tree"
             },
             "orientation": {
               "type": "string",
-              "enum": ["vertical", "horizontal", "radial"],
+              "enum": [
+                "vertical",
+                "horizontal",
+                "radial"
+              ],
               "default": "vertical"
             },
             "childrenAccessor": {
@@ -1131,10 +3187,24 @@
               "description": "Key for the children array in each node",
               "default": "children"
             },
-            "valueAccessor": { "type": "string", "default": "value" },
-            "nodeIdAccessor": { "type": "string", "default": "name" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
+            "nodeIdAccessor": {
+              "type": "string",
+              "default": "name"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
             "colorByDepth": {
               "type": "boolean",
               "description": "Color nodes by their depth in the hierarchy",
@@ -1142,20 +3212,81 @@
             },
             "edgeStyle": {
               "type": "string",
-              "enum": ["line", "curve"],
+              "enum": [
+                "line",
+                "curve"
+              ],
               "default": "curve"
             },
-            "nodeLabel": { "type": "string" },
-            "showLabels": { "type": "boolean", "default": true },
-            "nodeSize": { "type": "number", "default": 5 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "nodeLabel": {
+              "type": "string"
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "nodeSize": {
+              "type": "number",
+              "default": 5
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -1171,22 +3302,97 @@
               "type": "object",
               "description": "Root node object with nested children"
             },
-            "childrenAccessor": { "type": "string", "default": "children" },
-            "valueAccessor": { "type": "string", "default": "value" },
-            "nodeIdAccessor": { "type": "string", "default": "name" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "colorByDepth": { "type": "boolean", "default": false },
-            "showLabels": { "type": "boolean", "default": true },
-            "nodeLabel": { "type": "string" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "childrenAccessor": {
+              "type": "string",
+              "default": "children"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
+            "nodeIdAccessor": {
+              "type": "string",
+              "default": "name"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "colorByDepth": {
+              "type": "boolean",
+              "default": false
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "nodeLabel": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -1202,23 +3408,101 @@
               "type": "object",
               "description": "Root node object with nested children"
             },
-            "childrenAccessor": { "type": "string", "default": "children" },
-            "valueAccessor": { "type": "string", "default": "value" },
-            "nodeIdAccessor": { "type": "string", "default": "name" },
-            "colorBy": { "type": "string" },
-            "colorScheme": { "type": ["string", "array"], "default": "category10" },
-            "colorByDepth": { "type": "boolean", "default": false },
-            "showLabels": { "type": "boolean", "default": true },
-            "nodeLabel": { "type": "string" },
-            "circleOpacity": { "type": "number", "default": 0.7 },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "childrenAccessor": {
+              "type": "string",
+              "default": "children"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value"
+            },
+            "nodeIdAccessor": {
+              "type": "string",
+              "default": "name"
+            },
+            "colorBy": {
+              "type": "string"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "colorByDepth": {
+              "type": "boolean",
+              "default": false
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "nodeLabel": {
+              "type": "string"
+            },
+            "circleOpacity": {
+              "type": "number",
+              "default": 0.7
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -1234,28 +3518,134 @@
               "type": "object",
               "description": "Hierarchical root object with children: { name: 'root', children: [...] }"
             },
-            "childrenAccessor": { "type": "string", "description": "Key to access children from each datum", "default": "children" },
-            "nodeIdAccessor": { "type": "string", "description": "Key to identify each node", "default": "name" },
-            "colorBy": { "type": "string", "description": "Field or function for node color" },
-            "colorScheme": { "type": ["string", "array"], "description": "Color scheme", "default": "category10" },
-            "colorByDepth": { "type": "boolean", "description": "Color by hierarchy depth", "default": false },
-            "orbitMode": { "type": ["string", "array"], "description": "Ring arrangement: 'flat', 'solar', 'atomic', or number[]", "default": "flat" },
-            "orbitSize": { "type": "number", "description": "Ring size divisor per depth", "default": 2.95 },
-            "speed": { "type": "number", "description": "Orbit speed in degrees per frame", "default": 0.25 },
-            "eccentricity": { "type": "number", "description": "Vertical squash for elliptical orbits (1 = circle)", "default": 1 },
-            "showRings": { "type": "boolean", "description": "Show orbital ring paths", "default": true },
-            "nodeRadius": { "type": "number", "description": "Node radius", "default": 6 },
-            "showLabels": { "type": "boolean", "description": "Show node labels", "default": false },
-            "animated": { "type": "boolean", "description": "Enable animation", "default": true },
-            "annotations": { "type": "array", "description": "Annotations anchored by nodeId" },
-            "title": { "type": "string" },
-            "width": { "type": "number", "default": 600 },
-            "height": { "type": "number", "default": 600 },
-            "enableHover": { "type": "boolean", "default": true },
-            "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "childrenAccessor": {
+              "type": "string",
+              "description": "Key to access children from each datum",
+              "default": "children"
+            },
+            "nodeIdAccessor": {
+              "type": "string",
+              "description": "Key to identify each node",
+              "default": "name"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Field or function for node color"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Color scheme",
+              "default": "category10"
+            },
+            "colorByDepth": {
+              "type": "boolean",
+              "description": "Color by hierarchy depth",
+              "default": false
+            },
+            "orbitMode": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Ring arrangement: 'flat', 'solar', 'atomic', or number[]",
+              "default": "flat"
+            },
+            "orbitSize": {
+              "type": "number",
+              "description": "Ring size divisor per depth",
+              "default": 2.95
+            },
+            "speed": {
+              "type": "number",
+              "description": "Orbit speed in degrees per frame",
+              "default": 0.25
+            },
+            "eccentricity": {
+              "type": "number",
+              "description": "Vertical squash for elliptical orbits (1 = circle)",
+              "default": 1
+            },
+            "showRings": {
+              "type": "boolean",
+              "description": "Show orbital ring paths",
+              "default": true
+            },
+            "nodeRadius": {
+              "type": "number",
+              "description": "Node radius",
+              "default": 6
+            },
+            "showLabels": {
+              "type": "boolean",
+              "description": "Show node labels",
+              "default": false
+            },
+            "animated": {
+              "type": "boolean",
+              "description": "Enable animation",
+              "default": true
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 600
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       }
     },
@@ -1269,12 +3659,23 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": { "type": "number" },
+              "items": {
+                "type": "number"
+              },
               "description": "[width, height] in pixels",
-              "default": [500, 300]
+              "default": [
+                500,
+                300
+              ]
             },
-            "timeAccessor": { "type": "string", "description": "Key for time/x values" },
-            "valueAccessor": { "type": "string", "description": "Key for y values" },
+            "timeAccessor": {
+              "type": "string",
+              "description": "Key for time/x values"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for y values"
+            },
             "windowSize": {
               "type": "number",
               "description": "Number of data points visible",
@@ -1282,27 +3683,105 @@
             },
             "windowMode": {
               "type": "string",
-              "enum": ["sliding", "stepping"],
+              "enum": [
+                "sliding",
+                "stepping"
+              ],
               "default": "sliding"
             },
             "arrowOfTime": {
               "type": "string",
-              "enum": ["left", "right"],
+              "enum": [
+                "left",
+                "right"
+              ],
               "default": "right"
             },
-            "stroke": { "type": "string", "default": "#007bff" },
-            "strokeWidth": { "type": "number", "default": 2 },
-            "showAxes": { "type": "boolean", "default": true },
-            "background": { "type": "string" },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
-            "width": { "type": "number", "description": "Alias for size[0]" },
-            "height": { "type": "number", "description": "Alias for size[1]" },
-            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
-            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
-            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
-            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
-            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
+            "stroke": {
+              "type": "string",
+              "default": "#007bff"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 2
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "background": {
+              "type": "string"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
           "required": []
         }
@@ -1322,32 +3801,138 @@
             },
             "size": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [500, 300]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                500,
+                300
+              ]
             },
-            "timeAccessor": { "type": "string" },
-            "valueAccessor": { "type": "string" },
-            "categoryAccessor": { "type": "string", "description": "Key for category grouping" },
-            "colors": { "type": "object", "description": "Map of category to color string" },
-            "windowSize": { "type": "number", "default": 200 },
-            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
-            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
-            "fill": { "type": "string" },
-            "stroke": { "type": "string" },
-            "gap": { "type": "number" },
-            "showAxes": { "type": "boolean", "default": true },
-            "background": { "type": "string" },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
-            "width": { "type": "number", "description": "Alias for size[0]" },
-            "height": { "type": "number", "description": "Alias for size[1]" },
-            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
-            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
-            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
-            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
-            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
+            "timeAccessor": {
+              "type": "string"
+            },
+            "valueAccessor": {
+              "type": "string"
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Key for category grouping"
+            },
+            "colors": {
+              "type": "object",
+              "description": "Map of category to color string"
+            },
+            "windowSize": {
+              "type": "number",
+              "default": 200
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ],
+              "default": "sliding"
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ],
+              "default": "right"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "gap": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "background": {
+              "type": "string"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
-          "required": ["binSize"]
+          "required": [
+            "binSize"
+          ]
         }
       }
     },
@@ -1361,31 +3946,135 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [500, 300]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                500,
+                300
+              ]
             },
-            "timeAccessor": { "type": "string" },
-            "valueAccessor": { "type": "string" },
-            "categoryAccessor": { "type": "string" },
-            "colors": { "type": "object" },
-            "windowSize": { "type": "number", "default": 200 },
-            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
-            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
-            "radius": { "type": "number" },
-            "fill": { "type": "string" },
-            "opacity": { "type": "number" },
-            "stroke": { "type": "string" },
-            "showAxes": { "type": "boolean", "default": true },
-            "background": { "type": "string" },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
-            "width": { "type": "number", "description": "Alias for size[0]" },
-            "height": { "type": "number", "description": "Alias for size[1]" },
-            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
-            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
-            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
-            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
-            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
+            "timeAccessor": {
+              "type": "string"
+            },
+            "valueAccessor": {
+              "type": "string"
+            },
+            "categoryAccessor": {
+              "type": "string"
+            },
+            "colors": {
+              "type": "object"
+            },
+            "windowSize": {
+              "type": "number",
+              "default": 200
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ],
+              "default": "sliding"
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ],
+              "default": "right"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "background": {
+              "type": "string"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
           "required": []
         }
@@ -1401,31 +4090,135 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [500, 300]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                500,
+                300
+              ]
             },
-            "timeAccessor": { "type": "string" },
-            "valueAccessor": { "type": "string" },
-            "windowSize": { "type": "number", "default": 200 },
-            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
-            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
-            "positiveColor": { "type": "string" },
-            "negativeColor": { "type": "string" },
-            "connectorStroke": { "type": "string" },
-            "connectorWidth": { "type": "number" },
-            "gap": { "type": "number" },
-            "stroke": { "type": "string" },
-            "showAxes": { "type": "boolean", "default": true },
-            "background": { "type": "string" },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
-            "width": { "type": "number", "description": "Alias for size[0]" },
-            "height": { "type": "number", "description": "Alias for size[1]" },
-            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
-            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
-            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
-            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
-            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
+            "timeAccessor": {
+              "type": "string"
+            },
+            "valueAccessor": {
+              "type": "string"
+            },
+            "windowSize": {
+              "type": "number",
+              "default": 200
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ],
+              "default": "sliding"
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ],
+              "default": "right"
+            },
+            "positiveColor": {
+              "type": "string"
+            },
+            "negativeColor": {
+              "type": "string"
+            },
+            "connectorStroke": {
+              "type": "string"
+            },
+            "connectorWidth": {
+              "type": "number"
+            },
+            "gap": {
+              "type": "number"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "background": {
+              "type": "string"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
           "required": []
         }
@@ -1441,29 +4234,274 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": { "type": "number" },
-              "default": [500, 300]
+              "items": {
+                "type": "number"
+              },
+              "default": [
+                500,
+                300
+              ]
             },
-            "timeAccessor": { "type": "string" },
-            "valueAccessor": { "type": "string" },
-            "heatmapXBins": { "type": "number", "default": 20, "description": "Number of horizontal bins" },
-            "heatmapYBins": { "type": "number", "default": 20, "description": "Number of vertical bins" },
-            "aggregation": { "type": "string", "enum": ["count", "sum", "mean"], "default": "count" },
-            "windowSize": { "type": "number", "default": 200 },
-            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
-            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
-            "showAxes": { "type": "boolean", "default": true },
-            "background": { "type": "string" },
-            "margin": { "type": "object" },
-            "className": { "type": "string" },
-            "width": { "type": "number", "description": "Alias for size[0]" },
-            "height": { "type": "number", "description": "Alias for size[1]" },
-            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
-            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
-            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
-            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" }
+            "timeAccessor": {
+              "type": "string"
+            },
+            "valueAccessor": {
+              "type": "string"
+            },
+            "heatmapXBins": {
+              "type": "number",
+              "default": 20,
+              "description": "Number of horizontal bins"
+            },
+            "heatmapYBins": {
+              "type": "number",
+              "default": 20,
+              "description": "Number of vertical bins"
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "count",
+                "sum",
+                "mean"
+              ],
+              "default": "count"
+            },
+            "windowSize": {
+              "type": "number",
+              "default": 200
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ],
+              "default": "sliding"
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ],
+              "default": "right"
+            },
+            "showAxes": {
+              "type": "boolean",
+              "default": true
+            },
+            "background": {
+              "type": "string"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
           },
           "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "FunnelChart",
+        "description": "Funnel visualization with two orientations. Horizontal (default): steps top-to-bottom with centered bars and trapezoid connectors; multi-category mirrors around center axis. Vertical: steps on x-axis as vertical bars with hatched dropoff stacking (solid = retained, hatched = dropoff from previous step); multi-category renders grouped bars.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of data objects with step and value fields"
+            },
+            "stepAccessor": {
+              "type": "string",
+              "description": "Key for funnel step/stage name",
+              "default": "step"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for numeric value per step",
+              "default": "value"
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Key to split each step into mirrored categories (optional)"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding per category"
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Named d3 color scheme or array of color strings"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["horizontal", "vertical"],
+              "description": "Horizontal (default): centered bars top-to-bottom with trapezoid connectors. Vertical: vertical bars with hatched dropoff stacking — solid = retained, hatched = dropoff from previous step. Multi-category renders grouped bars in vertical mode.",
+              "default": "horizontal"
+            },
+            "connectorOpacity": {
+              "type": "number",
+              "description": "Opacity of trapezoid connectors between steps (0-1). Horizontal orientation only.",
+              "default": 0.3
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category tick labels on ordinal axis",
+              "default": false
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Chart margins: { top, right, bottom, left }"
+            },
+            "responsiveWidth": {
+              "type": "boolean",
+              "description": "Auto-resize to container width"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config. Default shows step name, value, and percentage of first step."
+            },
+            "showLegend": {
+              "type": "boolean",
+              "description": "Show legend (auto-enabled with colorBy)"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "default": "right"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "data"
+          ]
         }
       }
     }

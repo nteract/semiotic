@@ -151,7 +151,7 @@ describe("OrbitDiagram", () => {
   it("passes colorBy and colorScheme", () => {
     render(<OrbitDiagram data={sampleData} colorBy="group" colorScheme="viridis" animated={false} />)
     expect(lastNetworkFrameProps.colorBy).toBe("group")
-    expect(lastNetworkFrameProps.colorScheme).toBe("viridis")
+    expect(Array.isArray(lastNetworkFrameProps.colorScheme)).toBe(true)
   })
 
   it("passes colorByDepth", () => {

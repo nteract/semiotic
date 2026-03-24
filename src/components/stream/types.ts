@@ -100,7 +100,8 @@ export interface Style {
   strokeWidth?: number
   strokeDasharray?: string
   strokeLinecap?: "butt" | "round" | "square"
-  fill?: string
+  /** Fill color or CanvasPattern (e.g. from createHatchPattern) */
+  fill?: string | CanvasPattern
   fillOpacity?: number
   opacity?: number
   /** For icon/isotype bars: an image to stamp instead of filling */
@@ -446,6 +447,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   }>
   xLabel?: string
   yLabel?: string
+  /** Label for the right Y axis (dual-axis charts) */
+  yLabelRight?: string
   xFormat?: (d: any) => string
   yFormat?: (d: any) => string
   tickFormatTime?: (value: number) => string

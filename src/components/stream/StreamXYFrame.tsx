@@ -48,6 +48,38 @@ import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
 import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
 import type { StreamRendererFn } from "./renderers/types"
 
+// ── Auto-date tick formatting ─────────────────────────────────────────
+
+const DATE_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+function makeDateTickFormatter(domain: [number, number]): (v: number) => string {
+  const span = domain[1] - domain[0]
+  const MS_DAY = 8.64e7
+  const MS_YEAR = 3.156e10
+
+  // Use UTC getters throughout so SSR and client produce identical labels
+  // regardless of server/browser timezone differences.
+  if (span < MS_DAY) {
+    return (v) => {
+      const d = new Date(v)
+      return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`
+    }
+  }
+  if (span < MS_YEAR) {
+    return (v) => {
+      const d = new Date(v)
+      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCDate()}`
+    }
+  }
+  if (span < 5 * MS_YEAR) {
+    return (v) => {
+      const d = new Date(v)
+      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+    }
+  }
+  return (v) => String(new Date(v).getUTCFullYear())
+}
+
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
 const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
@@ -394,6 +426,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       axes: axesConfig,
       xLabel,
       yLabel,
+      yLabelRight,
       xFormat,
       yFormat,
       tickFormatTime,
@@ -973,6 +1006,17 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
+    // ── Auto-detect date x-axis formatting ──────────────────────────────
+    const autoDateXFormat = useMemo(() => {
+      if (xFormat || tickFormatTime) return undefined
+      const store = storeRef.current
+      if (!store?.xIsDate || !currentScales) return undefined
+      const domain = currentScales.x.domain() as [number, number]
+      return makeDateTickFormatter(domain)
+    }, [xFormat, tickFormatTime, currentScales])
+
+    const effectiveXFormat = xFormat || tickFormatTime || autoDateXFormat
+
     // ── Tooltip positioning ──────────────────────────────────────────────
 
     const tooltipRendered = effectiveHoverAnnotation && hoverPoint
@@ -1039,6 +1083,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const scene = store?.scene ?? []
       const scales = store?.scales ?? null
 
+      // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
+      const ssrXFormat = effectiveXFormat || (() => {
+        if (store?.xIsDate && scales) {
+          const domain = scales.x.domain() as [number, number]
+          return makeDateTickFormatter(domain)
+        }
+        return undefined
+      })()
+
       return (
         <div
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
@@ -1078,7 +1131,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             axes={axesConfig}
             xLabel={xLabel}
             yLabel={yLabel}
-            xFormat={xFormat || tickFormatTime}
+            yLabelRight={yLabelRight}
+            xFormat={ssrXFormat}
             yFormat={yFormat || tickFormatValue}
             showGrid={showGrid}
             title={title}
@@ -1150,7 +1204,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           showAxes={showAxes}
           axes={axesConfig}
           showGrid={showGrid}
-          xFormat={xFormat || tickFormatTime}
+          xFormat={effectiveXFormat}
           yFormat={yFormat || tickFormatValue}
         />
         <canvas
@@ -1184,7 +1238,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           axes={axesConfig}
           xLabel={xLabel}
           yLabel={yLabel}
-          xFormat={xFormat || tickFormatTime}
+          yLabelRight={yLabelRight}
+          xFormat={effectiveXFormat}
           yFormat={yFormat || tickFormatValue}
           showGrid={showGrid}
           title={title}

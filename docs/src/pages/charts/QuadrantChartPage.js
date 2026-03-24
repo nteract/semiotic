@@ -192,7 +192,7 @@ export default function QuadrantChartPage() {
         { label: "Quadrant Chart", path: "/charts/quadrant-chart" },
       ]}
       prevPage={{ title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }}
-      nextPage={{ title: "Realtime Line Chart", path: "/charts/realtime-line-chart" }}
+      nextPage={{ title: "Multi-Axis Line Chart", path: "/charts/multi-axis-line-chart" }}
     >
       <ComponentMeta
         componentName="QuadrantChart"

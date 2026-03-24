@@ -156,7 +156,9 @@ async function createBundle(options = {}) {
     }
   }
 
-  const suffix = minify ? ".min" : ""
+  // Always use .min suffix so filenames match package.json exports map
+  // (terser only runs for --production builds, but the filename stays consistent)
+  const suffix = ".min"
 
   // CJS: must inline dynamic imports (no code-splitting support)
   await bundle.write({

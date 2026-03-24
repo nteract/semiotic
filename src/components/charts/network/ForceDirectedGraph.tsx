@@ -4,10 +4,10 @@ import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "r
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle, EdgePush } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, getSize } from "../shared/colorUtils"
+import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -125,6 +125,17 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
+  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
+  const themeCategorical = useThemeCategorical()
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+
+  const effectivePalette = useMemo(() => {
+    if (Array.isArray(colorScheme)) return colorScheme
+    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
+  }, [colorScheme, themeCategorical])
+
   // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -132,14 +143,14 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       if (typeof nodeSize === "number") {
         baseStyle.r = nodeSize
       }
       return baseStyle
     }
-  }, [colorBy, colorScale, nodeSize])
+  }, [colorBy, colorScale, nodeSize, themeCategorical, colorScheme, categoryIndexMap])
 
   // Edge style function
   const edgeStyle = useMemo(() => {
@@ -207,7 +218,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={colorScheme}
+      colorScheme={effectivePalette}
       nodeSize={nodeSize}
       nodeSizeRange={nodeSizeRange}
       nodeLabel={nodeLabelFn}

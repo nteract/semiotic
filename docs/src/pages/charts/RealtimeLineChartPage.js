@@ -285,7 +285,7 @@ export default function RealtimeLineChartPage() {
         { label: "Realtime", path: "/charts" },
         { label: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
       ]}
-      prevPage={{ title: "Tree Diagram", path: "/charts/tree-diagram" }}
+      prevPage={{ title: "Multi-Axis Line Chart", path: "/charts/multi-axis-line-chart" }}
       nextPage={{ title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" }}
     >
       <ComponentMeta

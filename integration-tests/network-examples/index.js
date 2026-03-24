@@ -1,4 +1,4 @@
-import * as Semiotic from "../../dist/semiotic.module.js"
+import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
 import { networkData, hierarchyData, chordData, colors } from "../test-data.js"

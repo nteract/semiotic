@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useState } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedLegendSuppression } from "../../LinkedCharts"
-import { createColorScale, getColor } from "./colorUtils"
+import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
@@ -11,11 +11,63 @@ import type { OnObservationCallback, ChartObservation } from "../../store/Observ
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
 import type { MarginType } from "../../types/generalTypes"
 import type { TransitionConfig } from "../../stream/types"
+import { useTheme } from "../../ThemeProvider"
 
 /**
  * Default fill color used when no colorBy is specified
  */
 export const DEFAULT_COLOR = "#007bff"
+
+/**
+ * Returns the theme's categorical palette, or undefined if no ThemeProvider or
+ * the palette is empty. Safe to call outside a ThemeProvider (returns undefined).
+ */
+export function useThemeCategorical(): string[] | undefined {
+  const theme = useTheme()
+  const cat = theme?.colors?.categorical
+  return cat && cat.length > 0 ? cat : undefined
+}
+
+/**
+ * Resolve the effective color for a data element when no colorBy is specified.
+ * Priority: color prop > theme categorical > colorScheme > DEFAULT_COLOR.
+ * When a palette is available, cycles through colors by category name.
+ */
+export function resolveDefaultFill(
+  color: string | undefined,
+  themeCategorical: string[] | undefined,
+  colorScheme: string | string[] | undefined,
+  category: string | undefined,
+  categoryIndexMap: Map<string, number>
+): string {
+  // Uniform color prop takes highest priority
+  if (color) return color
+
+  // Priority: color > explicit colorScheme array > theme categorical > named colorScheme > DEFAULT_COLOR
+  // An explicit array colorScheme is a user override that takes precedence over the theme default.
+  // A named string colorScheme (like "category10") defers to the theme since it's often a prop default.
+  let palette: string[] | undefined
+  if (Array.isArray(colorScheme)) {
+    palette = colorScheme
+  } else if (themeCategorical && themeCategorical.length > 0) {
+    palette = themeCategorical
+  } else if (typeof colorScheme === "string") {
+    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
+    if (Array.isArray(resolved)) palette = resolved as string[]
+  }
+
+  if (!palette || palette.length === 0) return DEFAULT_COLOR
+
+  // Cycle through palette by category
+  if (category != null) {
+    if (!categoryIndexMap.has(category)) {
+      categoryIndexMap.set(category, categoryIndexMap.size)
+    }
+    return palette[categoryIndexMap.get(category)! % palette.length]
+  }
+
+  return palette[0]
+}
 
 /**
  * Resolve an accessor (string key or function) into a function.
@@ -397,6 +449,9 @@ interface ChartModeInput {
   enableHover?: boolean
   showLegend?: boolean
   showLabels?: boolean
+  showCategoryTicks?: boolean
+  /** "vertical" | "horizontal" — used to shrink the category-axis margin when showCategoryTicks is false */
+  orientation?: string
   title?: string
   xLabel?: string
   yLabel?: string
@@ -448,8 +503,30 @@ export function useChartMode(
     yLabel: suppressLabels ? undefined : userProps.yLabel,
     categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,
     valueLabel: suppressLabels ? undefined : userProps.valueLabel,
-    marginDefaults: m.marginDefaults,
+    marginDefaults: adjustMarginsForCategoryTicks(m.marginDefaults, userProps.showCategoryTicks, userProps.orientation),
   }
+}
+
+/**
+ * When showCategoryTicks is false, shrink the margin on the category axis side
+ * since tick labels no longer need space. Keep a small margin (15px) for the
+ * axis baseline and optional axis title.
+ */
+function adjustMarginsForCategoryTicks(
+  defaults: { top: number; bottom: number; left: number; right: number },
+  showCategoryTicks: boolean | undefined,
+  orientation: string | undefined
+): { top: number; bottom: number; left: number; right: number } {
+  if (showCategoryTicks !== false) return defaults
+  const adjusted = { ...defaults }
+  if (orientation === "horizontal") {
+    // Horizontal: categories on left axis
+    adjusted.left = Math.min(adjusted.left, 15)
+  } else {
+    // Vertical (default): categories on bottom axis
+    adjusted.bottom = Math.min(adjusted.bottom, 15)
+  }
+  return adjusted
 }
 
 // ── Animate prop → transition config ────────────────────────────────
