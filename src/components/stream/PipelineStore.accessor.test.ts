@@ -187,6 +187,28 @@ describe("PipelineStore — xIsDate auto-detection", () => {
     expect(store.xIsDate).toBe(false)
   })
 
+  it("produces valid scene nodes (not NaN) for date-string x values", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "timestamp",
+      yAccessor: "value"
+    }))
+    store.ingest({
+      inserts: [
+        { timestamp: "2003-01-06 00:00:00.000000", value: 72 },
+        { timestamp: "2003-01-09 00:00:00.000000", value: 71 },
+      ],
+      bounded: true
+    })
+    store.computeScene({ width: 400, height: 300 })
+    expect(store.scene.length).toBeGreaterThan(0)
+    // Verify no NaN in scene node x positions
+    for (const node of store.scene) {
+      if ("x" in node) expect(isNaN(node.x as number)).toBe(false)
+    }
+  })
+
   it("does not flag numeric string values as dates", () => {
     const store = new PipelineStore(makeConfig({
       chartType: "line",

@@ -280,8 +280,26 @@ export class PipelineStore {
         const rawVal = typeof rawAccessor === "function"
           ? rawAccessor(sample)
           : (sample as any)[rawAccessor || "x"]
-        this.xIsDate = rawVal instanceof Date
-          || (typeof rawVal === "string" && rawVal.length >= 10 && !isNaN(new Date(rawVal).getTime()) && isNaN(Number(rawVal)))
+
+        const isDateObj = rawVal instanceof Date
+        const isDateStr = typeof rawVal === "string"
+          && rawVal.length >= 10
+          && !isNaN(new Date(rawVal).getTime())
+          && isNaN(Number(rawVal))
+
+        this.xIsDate = isDateObj || isDateStr
+
+        // resolveAccessor wraps with unary + which converts Date objects to
+        // epoch ms correctly, but date strings like "2003-01-06" become NaN.
+        // Swap getX to a date-parsing accessor when date strings are detected.
+        if (isDateStr) {
+          const key = typeof rawAccessor === "string" ? rawAccessor : undefined
+          this.getX = key
+            ? (d: any) => +new Date(d[key])
+            : (d: any) => +((rawAccessor as (d: any) => any)(d) instanceof Date
+                ? (rawAccessor as (d: any) => any)(d)
+                : new Date((rawAccessor as (d: any) => any)(d)))
+        }
       }
 
       // Auto-resize buffer to fit all bounded data.

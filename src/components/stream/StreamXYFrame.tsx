@@ -57,29 +57,27 @@ function makeDateTickFormatter(domain: [number, number]): (v: number) => string 
   const MS_DAY = 8.64e7
   const MS_YEAR = 3.156e10
 
+  // Use UTC getters throughout so SSR and client produce identical labels
+  // regardless of server/browser timezone differences.
   if (span < MS_DAY) {
-    // Sub-day: show hours:minutes
     return (v) => {
       const d = new Date(v)
-      return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+      return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`
     }
   }
   if (span < MS_YEAR) {
-    // Sub-year: show "Mon DD"
     return (v) => {
       const d = new Date(v)
-      return `${DATE_MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
+      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCDate()}`
     }
   }
   if (span < 5 * MS_YEAR) {
-    // 1–5 years: show "Mon YYYY"
     return (v) => {
       const d = new Date(v)
-      return `${DATE_MONTH_SHORT[d.getMonth()]} ${d.getFullYear()}`
+      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`
     }
   }
-  // 5+ years: show year only
-  return (v) => String(new Date(v).getFullYear())
+  return (v) => String(new Date(v).getUTCFullYear())
 }
 
 // ── Renderer dispatch ──────────────────────────────────────────────────

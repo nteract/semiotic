@@ -1,4 +1,4 @@
-import * as SemioticGeo from "../../dist/geo.module.js"
+import * as SemioticGeo from "../../dist/geo.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
 
