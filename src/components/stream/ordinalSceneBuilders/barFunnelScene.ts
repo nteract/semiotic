@@ -163,10 +163,7 @@ export function buildBarFunnelScene(
 
         // Use same fill color but mark for hatching — the renderer will
         // apply the hatch pattern based on __barFunnelIsDropoff
-        const dropoffStyle = {
-          ...retainedStyle,
-          __isDropoff: true,
-        }
+        const dropoffStyle = { ...retainedStyle }
 
         const dropoffDatum: Record<string, any> = {
           ...group.pieces[0],

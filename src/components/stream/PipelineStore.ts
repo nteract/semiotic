@@ -272,7 +272,13 @@ export class PipelineStore {
       if (this.timestampBuffer) this.timestampBuffer.clear()
 
       // Auto-detect Date x values on bounded ingestion.
-      // Reset first so an empty re-ingestion doesn't keep a stale flag.
+      // Reset getX to the default resolved accessor first, so a previous
+      // date-parsing override doesn't persist if data changes to non-date.
+      const isStreaming = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+        || this.config.runtimeMode === "streaming"
+      this.getX = isStreaming
+        ? resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
+        : resolveAccessor(this.config.xAccessor, "x")
       this.xIsDate = false
       if (changeset.inserts.length > 0) {
         const sample = changeset.inserts[0]
