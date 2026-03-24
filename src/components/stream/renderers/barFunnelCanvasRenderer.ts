@@ -1,5 +1,4 @@
-import type { RectSceneNode } from "../ordinalTypes"
-import type { OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
+import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { createHatchPattern } from "../../charts/shared/hatchPattern"
 
 /**

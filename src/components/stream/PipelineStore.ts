@@ -271,8 +271,9 @@ export class PipelineStore {
       this.yExtent.clear()
       if (this.timestampBuffer) this.timestampBuffer.clear()
 
-      // Auto-detect Date x values on first bounded ingestion.
-      // Check by calling the raw (pre-coercion) accessor on the first datum.
+      // Auto-detect Date x values on bounded ingestion.
+      // Reset first so an empty re-ingestion doesn't keep a stale flag.
+      this.xIsDate = false
       if (changeset.inserts.length > 0) {
         const sample = changeset.inserts[0]
         const rawAccessor = this.config.xAccessor

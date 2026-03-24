@@ -54,7 +54,6 @@ const DATE_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"
 
 function makeDateTickFormatter(domain: [number, number]): (v: number) => string {
   const span = domain[1] - domain[0]
-  const MS_HOUR = 3.6e6
   const MS_DAY = 8.64e7
   const MS_YEAR = 3.156e10
 

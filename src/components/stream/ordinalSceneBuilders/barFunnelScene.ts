@@ -12,9 +12,9 @@ import type { OrdinalSceneContext } from "./types"
  * Multi-category: bars are grouped side-by-side within each step,
  * each with its own retained + dropoff stack.
  *
- * The rScale (y-axis) is set by the pipeline based on the data's max value,
- * but we override it here to use the first-step max so all bars are
- * proportional to 100%.
+ * The rScale (y-axis) is set by the pipeline based on the data's max value.
+ * Bars are sized proportionally via scales.r so the first step fills the
+ * available height and subsequent steps shrink relative to it.
  *
  * Metadata on each rect datum (used by barFunnelLabelRenderer):
  *  - __barFunnelValue: numeric value for this bar
@@ -30,7 +30,7 @@ export function buildBarFunnelScene(
   ctx: OrdinalSceneContext,
   layout: OrdinalLayout
 ): OrdinalSceneNode[] {
-  const { columns, getR, getO, getStack, resolvePieceStyle, scales } = ctx
+  const { columns, getR, getStack, resolvePieceStyle, scales } = ctx
   const nodes: OrdinalSceneNode[] = []
 
   // Get steps in ordinal domain order (left to right)

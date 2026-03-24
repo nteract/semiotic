@@ -27,7 +27,7 @@ import type { OrdinalSceneContext } from "./types"
  * scale maps to layout.height (y-axis). col.x = y-position, col.width = band height.
  */
 export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { columns, getR, getO, getStack, resolvePieceStyle } = ctx
+  const { columns, getR, getStack, resolvePieceStyle } = ctx
   const nodes: OrdinalSceneNode[] = []
   const centerX = layout.width / 2
   const showLabels = ctx.config.showLabels !== false

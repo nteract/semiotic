@@ -602,7 +602,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
               const rightLabel = rightAxis.label || yLabelRight
               return (
                 <>
-                  {!underlayRendered && showRightBaseline && (
+                  {showRightBaseline && (
                     <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
                   )}
                   {yTicksRight.map((tick, i) => {

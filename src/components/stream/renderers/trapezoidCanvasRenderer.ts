@@ -1,5 +1,4 @@
-import type { TrapezoidSceneNode, RectSceneNode } from "../ordinalTypes"
-import type { OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
+import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.
