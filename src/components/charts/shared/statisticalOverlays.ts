@@ -201,8 +201,9 @@ function buildPrecomputed(
 
   if (groupByField) {
     // Group-aware boundary duplication: collect points per group, find
-    // segment transitions within each group, then emit all points in
-    // original order with bridge points inserted at the right positions.
+    // segment transitions within each group, then append bridge points
+    // after the tagged data. Ordering within groups is handled by the
+    // downstream pipeline which sorts by x-accessor per group.
     const groups = new Map<string, Record<string, any>[]>()
     for (const d of tagged) {
       const key = d[groupByField] ?? "__default"
@@ -210,8 +211,7 @@ function buildPrecomputed(
       groups.get(key)!.push(d)
     }
 
-    // For each group, find segment boundaries and collect bridge points
-    // keyed by their position in the original tagged array (insert-after index).
+    // For each group, find segment boundaries and collect bridge points.
     const bridgePoints: Record<string, any>[] = []
     for (const [, groupPoints] of groups) {
       for (let j = 0; j < groupPoints.length - 1; j++) {

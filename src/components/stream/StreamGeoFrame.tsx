@@ -684,20 +684,22 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
           if (hoveredNode && hoveredNode.type === "point") {
             const pn = hoveredNode as PointSceneNode
-            const nodeColor = resolveNodeColor(hoveredNode)
+            // Respect hoverAnnotation.pointColor for consistency with XY frame
+            const hoverConfig = typeof hoverAnnotation === "object" ? hoverAnnotation : undefined
+            const pointColor = hoverConfig?.pointColor || resolveNodeColor(hoveredNode)
             ictx.beginPath()
             ictx.arc(pn.x, pn.y, pn.r + 3, 0, Math.PI * 2)
-            if (nodeColor) {
+            if (pointColor) {
               ictx.save()
               ictx.globalAlpha = 0.4
-              ictx.fillStyle = nodeColor
+              ictx.fillStyle = pointColor
               ictx.fill()
               ictx.restore()
             } else {
               ictx.fillStyle = "rgba(255, 255, 255, 0.4)"
               ictx.fill()
             }
-            ictx.strokeStyle = nodeColor || "rgba(0, 0, 0, 0.5)"
+            ictx.strokeStyle = pointColor || "rgba(0, 0, 0, 0.5)"
             ictx.lineWidth = 2
             ictx.stroke()
           }
