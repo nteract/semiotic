@@ -88,7 +88,7 @@ function StreamingCountryData() {
         chartRef.current.push({
           time: i,
           value: 60 + Math.random() * 25,
-          population: 10 + Math.random() * 50,
+          population: 5 + Math.random() * 200,
           continent,
         })
       }
@@ -102,7 +102,7 @@ function StreamingCountryData() {
       xAccessor="time"
       yAccessor="value"
       sizeBy="population"
-      sizeRange={[4, 20]}
+      sizeRange={[3, 30]}
       colorBy="continent"
       width={600}
       height={280}
@@ -124,7 +124,7 @@ function StreamingBubbleDemo({ width }) {
         chartRef.current.push({
           time: i,
           value: 60 + Math.random() * 25,
-          population: 10 + Math.random() * 50,
+          population: 5 + Math.random() * 200,
           continent,
         })
       }
@@ -138,7 +138,7 @@ function StreamingBubbleDemo({ width }) {
       xAccessor="time"
       yAccessor="value"
       sizeBy="population"
-      sizeRange={[4, 20]}
+      sizeRange={[3, 30]}
       colorBy="continent"
       width={width}
       height={280}

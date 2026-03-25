@@ -119,6 +119,7 @@ function StreamingDualAxis() {
         { yAccessor: "humidity", label: "Humidity", extent: [0, 1],
           format: d => (d * 100).toFixed(0) + "%" },
       ]}
+      showLegend legendPosition="bottom"
       width={500} height={350}
     />
   )
@@ -148,6 +149,7 @@ function StreamingDualAxisDemo({ width }) {
         { yAccessor: "humidity", label: "Humidity", extent: [0, 1],
           format: d => (d * 100).toFixed(0) + "%" },
       ]}
+      showLegend legendPosition="bottom"
       width={width || 500} height={350}
     />
   )
@@ -205,6 +207,7 @@ export default function MultiAxisLineChartPage() {
               title: "Weather Station — 24h",
               tooltip: true,
               showLegend: true,
+              legendPosition: "bottom",
             }}
             type={MultiAxisLineChart}
             overrideProps={{
@@ -252,6 +255,7 @@ export default function MultiAxisLineChartPage() {
           title: "API Metrics During Load Test",
           tooltip: true,
           showGrid: true,
+          legendPosition: "bottom",
         }}
         type={MultiAxisLineChart}
         overrideProps={{

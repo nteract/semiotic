@@ -343,21 +343,14 @@ export class OrdinalPipelineStore {
     // insertion order by default to avoid jarring category shuffling as
     // values fluctuate in the sliding window
     if ((this.config.runtimeMode === "streaming" || this._hasStreamingData) && sort === undefined) {
-      // Prune ghost categories whose data has been fully evicted from the
-      // ring buffer, so they don't waste band space in the scale domain
+      // Filter to only categories with live data in the buffer, but do NOT
+      // delete from the Set — so if a category's data is evicted and later
+      // re-pushed, it retains its original FIFO position (no shuffling)
       const liveCategories = new Set<string>()
       for (const d of data) {
         liveCategories.add(this.getO(d))
       }
-      const pruned: string[] = []
-      for (const cat of cats) {
-        if (liveCategories.has(cat)) {
-          pruned.push(cat)
-        } else {
-          this.categories.delete(cat)
-        }
-      }
-      return pruned
+      return cats.filter(cat => liveCategories.has(cat))
     }
 
     if (sort === false) return cats

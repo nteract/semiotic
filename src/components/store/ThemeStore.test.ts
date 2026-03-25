@@ -15,7 +15,7 @@ function applySetTheme(
   if (theme === "dark") return DARK_THEME
   if (theme === "high-contrast") return HIGH_CONTRAST_THEME
 
-  if (theme.mode) {
+  if (theme.mode && theme.mode !== "auto") {
     const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
     return {
       ...base,
@@ -69,6 +69,19 @@ describe("ThemeStore — setTheme merge rules", () => {
     expect(result.colors.text).toBe(LIGHT_THEME.colors.text)
     expect(result.colors.categorical).toBe(custom)
     expect(result.mode).toBe("light")
+  })
+
+  it("object with mode:'auto' merges onto current theme (not a base theme)", () => {
+    const custom = ["#111", "#222"]
+    const result = applySetTheme(DARK_THEME, {
+      mode: "auto",
+      colors: { categorical: custom },
+    })
+    // 'auto' should merge onto current (dark), not force light base
+    expect(result.colors.background).toBe(DARK_THEME.colors.background)
+    expect(result.colors.text).toBe(DARK_THEME.colors.text)
+    expect(result.colors.categorical).toBe(custom)
+    expect(result.mode).toBe("auto")
   })
 
   it("object without mode merges onto current theme", () => {

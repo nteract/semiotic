@@ -76,7 +76,6 @@ function StreamingDonutDemo() {
       showLegend
       width={400}
       height={400}
-      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
       frameProps={{ windowSize: 200 }}
     />
   )
@@ -99,7 +98,6 @@ function StreamingDonutDemo({ width }) {
     return () => clearInterval(id)
   }, [])
 
-  const size = Math.min(width, 400)
   return (
     <DonutChart
       ref={chartRef}
@@ -107,9 +105,8 @@ function StreamingDonutDemo({ width }) {
       valueAccessor="value"
       innerRadius={60}
       showLegend
-      width={size}
-      height={size}
-      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      width={width}
+      height={400}
       frameProps={{ windowSize: 200 }}
     />
   )

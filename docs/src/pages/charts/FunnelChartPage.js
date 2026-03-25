@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { FunnelChart } from "semiotic"
 
 import { Link } from "react-router-dom"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 
 // ---------------------------------------------------------------------------
 // Sample data — single category
@@ -97,6 +99,82 @@ const funnelChartProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const funnelSteps = ["Awareness", "Interest", "Consideration", "Intent", "Evaluation", "Purchase"]
+
+const streamingFunnelCode = `import { useRef, useEffect } from "react"
+import { FunnelChart } from "semiotic"
+
+const steps = ["Awareness", "Interest", "Consideration", "Intent", "Evaluation", "Purchase"]
+
+function StreamingFunnelDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const step = steps[i % steps.length]
+        // Earlier steps get higher values to maintain funnel shape
+        const stepIdx = steps.indexOf(step)
+        const base = 1900 - stepIdx * 300
+        chartRef.current.push({
+          step,
+          value: Math.round(base + (Math.random() - 0.5) * 200),
+        })
+      }
+    }, 400)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <FunnelChart
+      ref={chartRef}
+      stepAccessor="step"
+      valueAccessor="value"
+      width={600}
+      height={400}
+      frameProps={{ windowSize: 200 }}
+    />
+  )
+}`
+
+function StreamingFunnelDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const step = funnelSteps[i % funnelSteps.length]
+        const stepIdx = funnelSteps.indexOf(step)
+        const base = 1900 - stepIdx * 300
+        chartRef.current.push({
+          step,
+          value: Math.round(base + (Math.random() - 0.5) * 200),
+        })
+      }
+    }, 400)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <FunnelChart
+      ref={chartRef}
+      stepAccessor="step"
+      valueAccessor="value"
+      width={width}
+      height={400}
+      frameProps={{ windowSize: 200 }}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Interactive demo
 // ---------------------------------------------------------------------------
 
@@ -177,16 +255,18 @@ export default function FunnelChartPage() {
         A basic funnel with one value per step. Bars narrow from top to bottom,
         centered horizontally. Hover to see step values and conversion percentages.
       </p>
-      <LiveExample
-        frameProps={{
-          data: singleCategoryData,
-          stepAccessor: "step",
-          valueAccessor: "value",
-        }}
-        type={FunnelChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: singleCategoryData,
+              stepAccessor: "step",
+              valueAccessor: "value",
+            }}
+            type={FunnelChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { step: "Awareness", value: 10000 },
   { step: "Interest", value: 7500 },
   { step: "Consideration", value: 5000 },
@@ -194,8 +274,16 @@ export default function FunnelChartPage() {
   { step: "Evaluation", value: 1800 },
   { step: "Purchase", value: 900 },
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingFunnelDemo width={w} />}
+            code={streamingFunnelCode}
+          />
+        }
       />
 
       <h2>Multi-Category (A/B Test)</h2>

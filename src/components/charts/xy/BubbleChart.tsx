@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -271,6 +271,27 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const safeData = data || []
   const isPushMode = data === undefined
 
+  // ── Streaming size domain — track min/max from pushed data ───────────
+  const streamingSizeDomainRef = useRef<[number, number] | null>(null)
+  const [sizeDomainVersion, setSizeDomainVersion] = useState(0)
+
+  const updateSizeDomain = useCallback((items: Record<string, any>[]) => {
+    if (!isPushMode) return
+    let changed = false
+    for (const d of items) {
+      const val = typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy as string]
+      if (val == null || !isFinite(val)) continue
+      if (!streamingSizeDomainRef.current) {
+        streamingSizeDomainRef.current = [val, val]
+        changed = true
+      } else {
+        if (val < streamingSizeDomainRef.current[0]) { streamingSizeDomainRef.current[0] = val; changed = true }
+        if (val > streamingSizeDomainRef.current[1]) { streamingSizeDomainRef.current[1] = val; changed = true }
+      }
+    }
+    if (changed) setSizeDomainVersion(v => v + 1)
+  }, [isPushMode, sizeBy])
+
   const streaming = useStreamingLegend({
     isPushMode,
     colorBy,
@@ -280,12 +301,18 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   })
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
-    [streaming.wrapPush]
+    streaming.wrapPush((d: any) => {
+      updateSizeDomain([d])
+      frameRef.current?.push(d)
+    }),
+    [streaming.wrapPush, updateSizeDomain]
   )
   const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
-    [streaming.wrapPushMany]
+    streaming.wrapPushMany((d: any[]) => {
+      updateSizeDomain(d)
+      frameRef.current?.pushMany(d)
+    }),
+    [streaming.wrapPushMany, updateSizeDomain]
   )
 
   useImperativeHandle(ref, () => ({
@@ -293,6 +320,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     pushMany: wrappedPushMany,
     clear: () => {
       streaming.resetCategories()
+      streamingSizeDomainRef.current = null
+      setSizeDomainVersion(v => v + 1)
       frameRef.current?.clear()
     },
     getData: () => frameRef.current?.getData() ?? []
@@ -339,8 +368,12 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     return activeSelectionHook
   }, [legendState.legendSelectionHook, activeSelectionHook])
 
-  // Calculate size domain
+  // Calculate size domain (bounded mode from data, push mode from tracked range)
   const sizeDomain = useMemo(() => {
+    if (isPushMode) {
+      void sizeDomainVersion // trigger recompute when streaming domain changes
+      return streamingSizeDomainRef.current || [0, 1] as [number, number]
+    }
     const sizes = safeData.map((d) => {
       if (typeof sizeBy === "function") {
         return sizeBy(d)
@@ -349,7 +382,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     })
 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [safeData, sizeBy])
+  }, [safeData, sizeBy, isPushMode, sizeDomainVersion])
 
   // Point style function
   const basePointStyle = useMemo(() => {

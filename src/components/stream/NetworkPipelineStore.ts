@@ -260,10 +260,12 @@ export class NetworkPipelineStore {
     const key = this.edgeKey(source, target)
     const existing = this.edges.get(key)
 
+    let valueChanged = false
     if (existing) {
       existing.value += value
       this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.weightChange
+      valueChanged = true
     } else {
       this.edges.set(key, {
         source,
@@ -278,7 +280,7 @@ export class NetworkPipelineStore {
       topologyChanged = true
     }
 
-    return isFirst || topologyChanged || this.tension >= this.tensionConfig.threshold
+    return isFirst || topologyChanged || valueChanged || this.tension >= this.tensionConfig.threshold
   }
 
   // ── Layout execution ──────────────────────────────────────────────────

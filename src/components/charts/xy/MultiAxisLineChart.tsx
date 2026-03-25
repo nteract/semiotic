@@ -252,7 +252,12 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
 
   // ── Compute extents and unitized data ─────────────────────────────────
   const { unitizedData, extents } = useMemo(() => {
-    if (safeData.length === 0) return { unitizedData: [], extents: [] }
+    if (safeData.length === 0) {
+      // Push mode: no data yet, but series[].extent provides axis ranges
+      const exts = series.map(s => s.extent || null).filter(Boolean) as [number, number][]
+      if (exts.length === series.length) extentsRef.current = exts
+      return { unitizedData: [], extents: exts.length === series.length ? exts : [] }
+    }
 
     const exts = series.map((s) =>
       s.extent || computeExtent(safeData, s.yAccessor)
@@ -315,9 +320,16 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ]
   }, [isDualAxis, extents, series, seriesLabels])
 
+  // ── In push mode, synthesize minimal data so the legend can resolve categories
+  const legendData = useMemo(() => {
+    if (unitizedData.length > 0) return unitizedData
+    // Push mode: no data yet, but we know the series labels from props
+    return seriesLabels.map(label => ({ [SERIES_FIELD]: label }))
+  }, [unitizedData, seriesLabels])
+
   // ── Chart setup (legend, selection, margin) ───────────────────────────
   const setup = useChartSetup({
-    data: unitizedData,
+    data: legendData,
     rawData: data,
     colorBy: SERIES_FIELD,
     colorScheme: seriesColors,

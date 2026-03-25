@@ -176,7 +176,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
 
   const resolvedPaddingTop = paddingTopProp !== undefined
     ? paddingTopProp
-    : (showLabels && labelMode === "parent" ? 18 : undefined)
+    : (showLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
 
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }

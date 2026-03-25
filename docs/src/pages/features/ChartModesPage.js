@@ -105,10 +105,68 @@ const kpiData = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming forecast sparkline
+// ---------------------------------------------------------------------------
+
+const FORECAST_WINDOW = 50
+const FORECAST_LEN = 12
+
+function useForecastSparkData() {
+  const counterRef = useRef(FORECAST_WINDOW)
+  const [data, setData] = useState(() => {
+    const d = []
+    for (let i = 0; i < FORECAST_WINDOW; i++) {
+      const base = 60 + Math.sin(i * 0.12) * 20
+      const isAnomaly = i === 31
+      d.push({
+        x: i,
+        y: isAnomaly ? base + 40 : base + (Math.random() - 0.5) * 8,
+        isTraining: i < FORECAST_WINDOW - FORECAST_LEN,
+        isForecast: i >= FORECAST_WINDOW - FORECAST_LEN,
+        isAnomaly,
+        upper: base + 14,
+        lower: base - 14,
+      })
+    }
+    return d
+  })
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const c = counterRef.current++
+      setData(prev => {
+        const next = prev.slice(1)
+        // Only the point crossing the boundary needs a flag update
+        const boundary = FORECAST_WINDOW - FORECAST_LEN - 1
+        if (next[boundary] && next[boundary].isForecast) {
+          next[boundary] = { ...next[boundary], isTraining: true, isForecast: false }
+        }
+        const base = 60 + Math.sin(c * 0.12) * 20
+        const isAnomaly = c % 41 === 0
+        next.push({
+          x: c,
+          y: isAnomaly ? base + 40 : base + (Math.random() - 0.5) * 8,
+          isTraining: false,
+          isForecast: true,
+          isAnomaly,
+          upper: base + 14,
+          lower: base - 14,
+        })
+        return next
+      })
+    }, 150)
+    return () => clearInterval(id)
+  }, [])
+
+  return data
+}
+
+// ---------------------------------------------------------------------------
 // Streaming spark chart
 // ---------------------------------------------------------------------------
 
 function StreamingSparkRow() {
+  const forecastData = useForecastSparkData()
   const cpuRef = useRef()
   const memRef = useRef()
   const netRef = useRef()
@@ -184,6 +242,28 @@ function StreamingSparkRow() {
               valueAccessor="value"
               windowSize={40}
               fill="#ef4444"
+            />
+          </td>
+        </tr>
+        <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+          <td style={tdStyle}>Latency (forecast)</td>
+          <td style={{ ...tdStyle, fontWeight: 600, fontFamily: "var(--font-code, monospace)" }}>91ms</td>
+          <td style={tdStyle}>
+            <LineChart
+              data={forecastData}
+              xAccessor="x"
+              yAccessor="y"
+              mode="sparkline"
+              width={140}
+              height={28}
+              colorScheme={["#8b5cf6"]}
+              forecast={{
+                isTraining: "isTraining",
+                isForecast: "isForecast",
+                isAnomaly: "isAnomaly",
+                upperBounds: "upper",
+                lowerBounds: "lower",
+              }}
             />
           </td>
         </tr>
@@ -559,12 +639,16 @@ export default function ChartModesPage() {
       <StreamingSparkRow />
 
       <div style={{ marginTop: 12, fontSize: 13, color: "var(--text-secondary, #666)" }}>
-        Each cell contains a live <code>RealtimeLineChart</code> with{" "}
-        <code>mode="sparkline"</code> — 140x28px, no axes, no hover.
+        The first four rows use live streaming charts with{" "}
+        <code>mode="sparkline"</code> — 140x28px, no axes, no hover. The last
+        row is a static <code>LineChart</code> sparkline with{" "}
+        <code>forecast</code> and <code>anomaly</code> decoration, showing
+        training data, predicted values with confidence bands, and flagged anomalies.
       </div>
 
       <CodeBlock
-        code={`<RealtimeLineChart
+        code={`// Streaming sparkline
+<RealtimeLineChart
   ref={cpuRef}
   mode="sparkline"
   size={[140, 28]}
@@ -573,6 +657,25 @@ export default function ChartModesPage() {
   windowSize={60}
   stroke="#6366f1"
   strokeWidth={1.5}
+/>
+
+// Forecast + anomaly sparkline (animated via state)
+// Each datum has pre-computed flags: isTraining, isForecast, isAnomaly, upper, lower
+<LineChart
+  data={forecastData}
+  xAccessor="x"
+  yAccessor="y"
+  mode="sparkline"
+  width={140}
+  height={28}
+  colorScheme={["#8b5cf6"]}
+  forecast={{
+    isTraining: "isTraining",
+    isForecast: "isForecast",
+    isAnomaly: "isAnomaly",
+    upperBounds: "upper",
+    lowerBounds: "lower",
+  }}
 />`}
         language="jsx"
       />

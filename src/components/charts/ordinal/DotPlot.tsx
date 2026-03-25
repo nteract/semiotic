@@ -119,7 +119,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
       const baseStyle: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
+      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
       return baseStyle
     }
   }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap])

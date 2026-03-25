@@ -240,6 +240,7 @@ Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas c
 
 - **Tooltip datum shape**: HOC tooltip functions get raw data. Frame `tooltipContent` gets wrapped data — use `d.data`.
 - **Legend positioning**: "bottom" auto-expands margin ~80px. For narrow charts (<400px), prefer "bottom" or "top".
+- **MultiAxisLineChart legend**: Always use `legendPosition="bottom"` (or `"top"`) — the right-hand axis occupies the space where a right-side legend would go.
 - **Log scale**: Clamps domain min to 1e-6 (log(0) undefined).
 - **barPadding**: Pixel value, defaults 40/60. Reduce for small charts.
 - **Horizontal bars**: Need wider left margin with long labels: `margin={{ left: 120 }}`.

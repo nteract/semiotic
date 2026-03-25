@@ -516,10 +516,6 @@ renderNetworkToStaticSVG(networkProps)       // => string`}
           <Link to="/features/responsive">Responsive</Link> — client-side
           responsive sizing (not available in server rendering)
         </li>
-        <li>
-          <Link to="/features/canvas-rendering">Canvas Rendering</Link> —
-          client-side canvas rendering (not available in server rendering)
-        </li>
       </ul>
     </PageLayout>
   )

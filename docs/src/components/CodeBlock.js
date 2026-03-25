@@ -2,11 +2,14 @@ import React, { useState } from "react"
 
 export default function CodeBlock({
   code,
+  children,
   language = "jsx",
   showLineNumbers = false,
   showCopyButton = true,
   className = ""
 }) {
+  // Support children as fallback for code prop
+  code = code || (typeof children === "string" ? children : "")
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {

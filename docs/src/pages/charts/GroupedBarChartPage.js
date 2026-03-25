@@ -202,7 +202,6 @@ export default function GroupedBarChartPage() {
               categoryAccessor: "category",
               groupBy: "product",
               valueAccessor: "value",
-              barPadding: 8,
               categoryLabel: "Quarter",
               valueLabel: "Units Sold",
             }}
