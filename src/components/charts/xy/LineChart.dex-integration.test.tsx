@@ -30,12 +30,12 @@ import { MultiAxisLineChart } from "./MultiAxisLineChart"
 // ── Sample data mimicking chart shapes ────────────────────────────────
 
 const processedData = [
-  { x: "2003-01-06 00:00:00", value: 72, metricLabel: "valueA" },
-  { x: "2003-01-07 00:00:00", value: 75, metricLabel: "valueA" },
-  { x: "2003-01-08 00:00:00", value: 74, metricLabel: "valueA" },
-  { x: "2003-01-06 00:00:00", value: 78, metricLabel: "valueB" },
-  { x: "2003-01-07 00:00:00", value: 76, metricLabel: "valueB" },
-  { x: "2003-01-08 00:00:00", value: 77, metricLabel: "valueB" }
+  { x: "2003-01-06T00:00:00Z", value: 72, metricLabel: "valueA" },
+  { x: "2003-01-07T00:00:00Z", value: 75, metricLabel: "valueA" },
+  { x: "2003-01-08T00:00:00Z", value: 74, metricLabel: "valueA" },
+  { x: "2003-01-06T00:00:00Z", value: 78, metricLabel: "valueB" },
+  { x: "2003-01-07T00:00:00Z", value: 76, metricLabel: "valueB" },
+  { x: "2003-01-08T00:00:00Z", value: 77, metricLabel: "valueB" }
 ]
 
 const multiAxisRows = Array.from({ length: 10 }, (_, i) => ({
@@ -82,7 +82,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     // lineStyle should return valid stroke for each group
     if (typeof capturedProps.lineStyle === "function") {
       const styleA = capturedProps.lineStyle(
-        { x: "2003-01-06 00:00:00", value: 72, metricLabel: "valueA" },
+        { x: "2003-01-06T00:00:00Z", value: 72, metricLabel: "valueA" },
         "valueA"
       )
       expect(styleA.stroke).toBeTruthy()

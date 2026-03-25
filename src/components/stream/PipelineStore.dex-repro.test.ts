@@ -21,48 +21,48 @@ function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
 
 // "Processed" data: points with x (Date-like) and value fields
 const processedData = [
-  { x: "2003-01-06 00:00:00", value: 72, metricLabel: "valueA" },
-  { x: "2003-01-07 00:00:00", value: 75, metricLabel: "valueA" },
-  { x: "2003-01-08 00:00:00", value: 74, metricLabel: "valueA" },
-  { x: "2003-01-06 00:00:00", value: 78, metricLabel: "valueB" },
-  { x: "2003-01-07 00:00:00", value: 76, metricLabel: "valueB" },
-  { x: "2003-01-08 00:00:00", value: 77, metricLabel: "valueB" }
+  { x: "2003-01-06T00:00:00Z", value: 72, metricLabel: "valueA" },
+  { x: "2003-01-07T00:00:00Z", value: 75, metricLabel: "valueA" },
+  { x: "2003-01-08T00:00:00Z", value: 74, metricLabel: "valueA" },
+  { x: "2003-01-06T00:00:00Z", value: 78, metricLabel: "valueB" },
+  { x: "2003-01-07T00:00:00Z", value: 76, metricLabel: "valueB" },
+  { x: "2003-01-08T00:00:00Z", value: 77, metricLabel: "valueB" }
 ]
 
 // "Raw story" data: points with metric names as fields (no 'value')
 const rawStoryData = [
   {
-    timestamp: "2003-01-06 00:00:00",
+    timestamp: "2003-01-06T00:00:00Z",
     valueA: 72,
     valueB: 78,
     metricLabel: "valueA"
   },
   {
-    timestamp: "2003-01-07 00:00:00",
+    timestamp: "2003-01-07T00:00:00Z",
     valueA: 75,
     valueB: 76,
     metricLabel: "valueA"
   },
   {
-    timestamp: "2003-01-08 00:00:00",
+    timestamp: "2003-01-08T00:00:00Z",
     valueA: 74,
     valueB: 77,
     metricLabel: "valueA"
   },
   {
-    timestamp: "2003-01-06 00:00:00",
+    timestamp: "2003-01-06T00:00:00Z",
     valueA: 72,
     valueB: 78,
     metricLabel: "valueB"
   },
   {
-    timestamp: "2003-01-07 00:00:00",
+    timestamp: "2003-01-07T00:00:00Z",
     valueA: 75,
     valueB: 76,
     metricLabel: "valueB"
   },
   {
-    timestamp: "2003-01-08 00:00:00",
+    timestamp: "2003-01-08T00:00:00Z",
     valueA: 74,
     valueB: 77,
     metricLabel: "valueB"

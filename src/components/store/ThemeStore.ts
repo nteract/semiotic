@@ -159,7 +159,7 @@ export const [ThemeProvider, useThemeSelector] = createStore(
         // If the object has `mode`, merge onto the matching base theme so
         // unspecified fields (background, text, grid, etc.) inherit correctly.
         // Without `mode`, shallow-merge into the current theme (partial override).
-        if (theme.mode) {
+        if (theme.mode && theme.mode !== "auto") {
           const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
           return {
             theme: {

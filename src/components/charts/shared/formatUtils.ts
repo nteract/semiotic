@@ -227,14 +227,14 @@ function pad2(n: number): string { return n < 10 ? `0${n}` : String(n) }
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-/** Full anchor label — gives the reader absolute context. */
+/** Full anchor label — gives the reader absolute context. Uses UTC for SSR determinism. */
 function fullLabel(d: Date, granularity: TimeGranularity): string {
-  const mon = MONTH_SHORT[d.getMonth()]
-  const day = d.getDate()
-  const year = d.getFullYear()
-  const hh = pad2(d.getHours())
-  const mm = pad2(d.getMinutes())
-  const ss = pad2(d.getSeconds())
+  const mon = MONTH_SHORT[d.getUTCMonth()]
+  const day = d.getUTCDate()
+  const year = d.getUTCFullYear()
+  const hh = pad2(d.getUTCHours())
+  const mm = pad2(d.getUTCMinutes())
+  const ss = pad2(d.getUTCSeconds())
 
   switch (granularity) {
     case "seconds":  return `${mon} ${day}, ${year} ${hh}:${mm}:${ss}`
@@ -248,21 +248,21 @@ function fullLabel(d: Date, granularity: TimeGranularity): string {
 
 /**
  * Contextual label — only shows units that changed from `prev`.
- * Re-qualifies upward when a boundary is crossed.
+ * Re-qualifies upward when a boundary is crossed. Uses UTC for SSR determinism.
  */
 function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
-  const yearChanged  = d.getFullYear() !== prev.getFullYear()
-  const monthChanged = yearChanged || d.getMonth() !== prev.getMonth()
-  const dayChanged   = monthChanged || d.getDate() !== prev.getDate()
-  const hourChanged  = dayChanged || d.getHours() !== prev.getHours()
-  const minChanged   = hourChanged || d.getMinutes() !== prev.getMinutes()
+  const yearChanged  = d.getUTCFullYear() !== prev.getUTCFullYear()
+  const monthChanged = yearChanged || d.getUTCMonth() !== prev.getUTCMonth()
+  const dayChanged   = monthChanged || d.getUTCDate() !== prev.getUTCDate()
+  const hourChanged  = dayChanged || d.getUTCHours() !== prev.getUTCHours()
+  const minChanged   = hourChanged || d.getUTCMinutes() !== prev.getUTCMinutes()
 
-  const mon = MONTH_SHORT[d.getMonth()]
-  const day = d.getDate()
-  const year = d.getFullYear()
-  const hh = pad2(d.getHours())
-  const mm = pad2(d.getMinutes())
-  const ss = pad2(d.getSeconds())
+  const mon = MONTH_SHORT[d.getUTCMonth()]
+  const day = d.getUTCDate()
+  const year = d.getUTCFullYear()
+  const hh = pad2(d.getUTCHours())
+  const mm = pad2(d.getUTCMinutes())
+  const ss = pad2(d.getUTCSeconds())
 
   switch (granularity) {
     case "seconds":

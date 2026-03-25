@@ -73,7 +73,8 @@ export interface ForecastConfig {
   forecastOpacity?: number
   /**
    * Training line stroke color.
-   * - `"darken"`: auto-darken the line's own color by 50%.
+   * - `"darken"`: auto-darken the line's own color by 50% (hex colors only —
+   *   non-hex values like `rgb()` or CSS variables pass through unchanged).
    * - Any CSS color string: use that color explicitly.
    * - Omit to inherit the line's color unchanged.
    */
