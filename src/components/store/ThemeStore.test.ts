@@ -1,4 +1,4 @@
-import { LIGHT_THEME, DARK_THEME } from "./ThemeStore"
+import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeStore"
 
 /**
  * ThemeStore is created via createStore which is tightly coupled to React.
@@ -13,7 +13,7 @@ function applySetTheme(
 ) {
   if (theme === "light") return LIGHT_THEME
   if (theme === "dark") return DARK_THEME
-  if (theme === "high-contrast") return LIGHT_THEME // simplified
+  if (theme === "high-contrast") return HIGH_CONTRAST_THEME
 
   if (theme.mode) {
     const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME

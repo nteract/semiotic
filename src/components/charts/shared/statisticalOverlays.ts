@@ -571,7 +571,7 @@ export function createSegmentLineStyle(
       return {
         ...base,
         stroke,
-        strokeDasharray: "none",
+        strokeDasharray: undefined,
       }
     }
     if (segment === "forecast") {

@@ -1157,8 +1157,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
-            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : "__resolvedX"}
-            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : "__resolvedY"}
+            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
+            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
             annotationData={store?.getData()}
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
