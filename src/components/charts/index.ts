@@ -157,7 +157,7 @@ export {
 } from "./shared/formatUtils"
 
 // Color manipulation utilities for anomaly/forecast styling
-export { darkenColor, lightenColor } from "./shared/statisticalOverlays"
+export { darkenColor, lightenColor } from "./shared/colorManipulation"
 
 // Tooltip utilities
 export {

@@ -324,12 +324,14 @@ export function adaptiveTimeTicks(
   granularity?: TimeGranularity
 ): (value: any, index?: number, allTicks?: number[]) => string {
   let resolved: TimeGranularity | undefined = granularity
+  let lastTicksRef: number[] | undefined
 
   return (value: any, index?: number, allTicks?: number[]): string => {
     const d = value instanceof Date ? value : new Date(value)
 
-    // Auto-detect granularity on first call if not explicit
-    if (!resolved && allTicks && allTicks.length >= 2) {
+    // Re-detect granularity when ticks change (responsive resize, zoom/pan)
+    if (!granularity && allTicks && allTicks.length >= 2 && allTicks !== lastTicksRef) {
+      lastTicksRef = allTicks
       resolved = detectGranularity(allTicks)
     }
     const gran = resolved || "days"

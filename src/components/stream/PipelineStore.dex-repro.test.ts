@@ -72,8 +72,8 @@ const rawStoryData = [
 // Multi-axis data: rows with multiple metric fields
 const multiAxisData = Array.from({ length: 20 }, (_, i) => ({
   x: new Date(2003, 0, 6 + i).toISOString(),
-  requests: 50 + Math.round(Math.random() * 150),
-  latencyMs: 3000 + Math.round(Math.random() * 3500)
+  requests: 50 + ((i * 37) % 150),
+  latencyMs: 3000 + ((i * 173) % 3500)
 }))
 
 describe("Chart Repro — LineChart with Date xAccessor", () => {
