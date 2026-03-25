@@ -31,6 +31,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
 
@@ -473,8 +475,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointIdAccessor,
       xScaleType,
       yScaleType,
-      accessibleTable
+      accessibleTable = true
     } = props
+
+    // ── Reduced motion ────────────────────────────────────────────────────
+    const reducedMotion = useReducedMotion()
+    const reducedMotionRef = useRef(reducedMotion)
+    reducedMotionRef.current = reducedMotion
 
     // ── Responsive sizing ──────────────────────────────────────────────────
     const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
@@ -834,7 +841,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const now = typeof performance !== "undefined" ? performance.now() : Date.now()
 
       // Advance transition animation (before scene rebuild)
-      const isTransitioning = store.advanceTransition(now)
+      // When reduced motion is active, skip animation — treat as instant
+      const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
 
       // Determine if data canvas needs repaint (data/props changed or animating)
       const needsDataRepaint = dirtyRef.current || isTransitioning
@@ -1054,29 +1062,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Keyboard focus ring ──────────────────────────────────────────────
 
-    const focusRing = kbFocusIndexRef.current >= 0 && hoverPoint ? (
-      <svg
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: size[0],
-          height: size[1],
-          pointerEvents: "none",
-          zIndex: 2,
-        }}
-      >
-        <circle
-          cx={hoverPoint.x + margin.left}
-          cy={hoverPoint.y + margin.top}
-          r={8}
-          fill="none"
-          stroke="var(--accent, #6366f1)"
-          strokeWidth={2}
-          strokeDasharray="4,2"
-        />
-      </svg>
-    ) : null
+    const focusRing = (
+      <FocusRing
+        active={kbFocusIndexRef.current >= 0}
+        hoverPoint={hoverPoint}
+        margin={margin}
+        size={size}
+      />
+    )
 
     // ── Annotation accessor resolution ─────────────────────────────────
     // SVGOverlay needs string keys to look up coordinates in annotationData.

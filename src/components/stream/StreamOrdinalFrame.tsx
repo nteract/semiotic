@@ -30,6 +30,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
 
@@ -261,8 +263,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pulse,
       transition,
       staleness,
-      accessibleTable
+      accessibleTable = true
     } = props
+
+    // ── Reduced motion ────────────────────────────────────────────────────
+    const reducedMotion = useReducedMotion()
+    const reducedMotionRef = useRef(reducedMotion)
+    reducedMotionRef.current = reducedMotion
 
     // ── Layout ───────────────────────────────────────────────────────────
 
@@ -580,7 +587,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const now = typeof performance !== "undefined" ? performance.now() : Date.now()
 
       // Advance transition animation
-      const isTransitioning = store.advanceTransition(now)
+      const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
 
       const wasDirty = dirtyRef.current
       if (wasDirty && !isTransitioning) {
@@ -948,6 +955,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             {isStale ? "STALE" : "LIVE"}
           </div>
         )}
+        <FocusRing
+          active={kbFocusIndexRef.current >= 0}
+          hoverPoint={hoverPoint}
+          margin={margin}
+          size={size}
+        />
         {tooltipElement}
       </div>
     )

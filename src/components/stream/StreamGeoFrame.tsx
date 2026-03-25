@@ -25,6 +25,9 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
 import { select } from "d3-selection"
@@ -186,8 +189,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       legendHighlightedCategory,
       legendIsolatedCategories,
       showAxes,
-      accessibleTable
+      accessibleTable = true
     } = props
+
+    // ── Reduced motion ────────────────────────────────────────────────
+    const reducedMotion = useReducedMotion()
+    const reducedMotionRef = useRef(reducedMotion)
+    reducedMotionRef.current = reducedMotion
 
     // ── Sizing ────────────────────────────────────────────────────────
 
@@ -496,6 +504,49 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
     }, [customClickBehavior, margin])
 
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractGeoNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return
+
+      e.preventDefault()
+
+      if (next < 0) {
+        kbFocusIndexRef.current = -1
+        hoverRef.current = null
+        hoveredNodeRef.current = null
+        setHoverPoint(null)
+        customHoverBehavior?.(null)
+        scheduleRender()
+        return
+      }
+
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+      const point = navPoints[idx]
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      customHoverBehavior?.({ type: "point", data: point.datum, x: point.x, y: point.y })
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    // Clear keyboard focus on mouse interaction
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      hoverHandlerRef.current(e)
+    }, [])
+
     // ── Main render function ──────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -515,8 +566,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         store.applyRotation(pendingRot, rotLayout)
       }
 
-      // Advance transition
-      const isTransitioning = store.advanceTransition(now)
+      // Advance transition — skip when reduced motion
+      const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
 
       // Recompute scene when dirty
       if (dirtyRef.current && !isTransitioning) {
@@ -1056,9 +1107,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           overflow: "hidden",
           ...(zoomable ? { touchAction: "none" } : {})
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
+        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onClick={customClickBehavior ? onClick : undefined}
+        onKeyDown={onKeyDown}
       >
         {resolvedBackground && (
           <svg
@@ -1198,6 +1250,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             {tileAttribution}
           </div>
         )}
+        <FocusRing
+          active={kbFocusIndexRef.current >= 0}
+          hoverPoint={hoverPoint}
+          margin={margin}
+          size={size}
+        />
         {tooltipElement}
       </div>
     )

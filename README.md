@@ -282,11 +282,11 @@ for color, size, aggregation, and binning.
 Import only what you need:
 
 ```jsx
-import { LineChart } from "semiotic/xy"                 // ~156 KB
-import { BarChart } from "semiotic/ordinal"              // ~124 KB
-import { ForceDirectedGraph } from "semiotic/network"    // ~123 KB
-import { ChoroplethMap } from "semiotic/geo"             // ~102 KB (+ d3-geo peer)
-import { LineChart } from "semiotic/ai"                  // ~397 KB (all HOCs)
+import { LineChart } from "semiotic/xy"                 // ~123 KB gzip
+import { BarChart } from "semiotic/ordinal"              // ~88 KB gzip
+import { ForceDirectedGraph } from "semiotic/network"    // ~89 KB gzip
+import { ChoroplethMap } from "semiotic/geo"             // ~82 KB gzip
+import { LineChart } from "semiotic/ai"                  // ~236 KB gzip (all HOCs)
 ```
 
 Granular entry points export only v3 Stream Frames and HOC charts — no legacy

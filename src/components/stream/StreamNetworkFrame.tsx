@@ -30,6 +30,8 @@ import {
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
@@ -246,7 +248,7 @@ const StreamNetworkFrame = forwardRef<
     pulse,
     staleness,
     thresholds,
-    accessibleTable,
+    accessibleTable = true,
     orbitMode,
     orbitSize,
     orbitSpeed,
@@ -256,6 +258,11 @@ const StreamNetworkFrame = forwardRef<
     orbitShowRings,
     orbitAnimated
   } = props
+
+  // ── Reduced motion ────────────────────────────────────────────────────
+  const reducedMotion = useReducedMotion()
+  const reducedMotionRef = useRef(reducedMotion)
+  reducedMotionRef.current = reducedMotion
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
   const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
@@ -930,10 +937,11 @@ const StreamNetworkFrame = forwardRef<
     lastFrameTimeRef.current = now
 
     // Advance transition animation
-    const isTransitioning = store.advanceTransition(now)
+    // When reduced motion is active, skip animation — treat as instant
+    const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
 
-    // Advance layout animation (e.g. orbit rotation)
-    const animationTicked = store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+    // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
+    const animationTicked = reducedMotionRef.current ? false : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
     if (isTransitioning || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
@@ -1245,6 +1253,13 @@ const StreamNetworkFrame = forwardRef<
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}
+      />
+
+      <FocusRing
+        active={kbFocusIndexRef.current >= 0}
+        hoverPoint={hoverData}
+        margin={margin}
+        size={size}
       />
 
       {tooltipElement}

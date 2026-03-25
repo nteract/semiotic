@@ -2,6 +2,7 @@ import {
   extractXYNavPoints,
   extractOrdinalNavPoints,
   extractNetworkNavPoints,
+  extractGeoNavPoints,
   nextIndex,
   navPointToHover,
   type NavPoint
@@ -16,8 +17,8 @@ describe("extractXYNavPoints", () => {
     const result = extractXYNavPoints(scene)
     expect(result).toHaveLength(2)
     // Should be sorted by x
-    expect(result[0]).toEqual({ x: 10, y: 20, datum: { id: 2 } })
-    expect(result[1]).toEqual({ x: 50, y: 30, datum: { id: 1 } })
+    expect(result[0]).toEqual({ x: 10, y: 20, datum: { id: 2 }, shape: "circle" })
+    expect(result[1]).toEqual({ x: 50, y: 30, datum: { id: 1 }, shape: "circle" })
   })
 
   it("extracts points from a line scene using path + datum array", () => {
@@ -30,9 +31,9 @@ describe("extractXYNavPoints", () => {
     ]
     const result = extractXYNavPoints(scene)
     expect(result).toHaveLength(3)
-    expect(result[0]).toEqual({ x: 0, y: 100, datum: { t: 0 } })
-    expect(result[1]).toEqual({ x: 50, y: 50, datum: { t: 1 } })
-    expect(result[2]).toEqual({ x: 100, y: 0, datum: { t: 2 } })
+    expect(result[0]).toEqual({ x: 0, y: 100, datum: { t: 0 }, shape: "circle" })
+    expect(result[1]).toEqual({ x: 50, y: 50, datum: { t: 1 }, shape: "circle" })
+    expect(result[2]).toEqual({ x: 100, y: 0, datum: { t: 2 }, shape: "circle" })
   })
 
   it("handles line with non-array datum gracefully", () => {
@@ -54,8 +55,8 @@ describe("extractXYNavPoints", () => {
     ]
     const result = extractXYNavPoints(scene)
     expect(result).toHaveLength(2)
-    expect(result[0]).toEqual({ x: 10, y: 80, datum: { v: "a" } })
-    expect(result[1]).toEqual({ x: 50, y: 40, datum: { v: "b" } })
+    expect(result[0]).toEqual({ x: 10, y: 80, datum: { v: "a" }, shape: "circle" })
+    expect(result[1]).toEqual({ x: 50, y: 40, datum: { v: "b" }, shape: "circle" })
   })
 
   it("handles area with non-array datum gracefully", () => {
@@ -72,7 +73,7 @@ describe("extractXYNavPoints", () => {
     ]
     const result = extractXYNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ x: 40, y: 40, datum: { cat: "A" } })
+    expect(result[0]).toEqual({ x: 40, y: 40, datum: { cat: "A" }, shape: "rect", w: 40, h: 60 })
   })
 
   it("extracts center of heatcell nodes", () => {
@@ -81,7 +82,7 @@ describe("extractXYNavPoints", () => {
     ]
     const result = extractXYNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ x: 10, y: 10, datum: { val: 5 } })
+    expect(result[0]).toEqual({ x: 10, y: 10, datum: { val: 5 }, shape: "rect", w: 20, h: 20 })
   })
 
   it("returns empty array for empty scene", () => {
@@ -130,8 +131,8 @@ describe("extractOrdinalNavPoints", () => {
     ]
     const result = extractOrdinalNavPoints(scene)
     expect(result).toHaveLength(2)
-    expect(result[0]).toEqual({ x: 15, y: 50, datum: { cat: "A" } })
-    expect(result[1]).toEqual({ x: 55, y: 55, datum: { cat: "B" } })
+    expect(result[0]).toEqual({ x: 15, y: 50, datum: { cat: "A" }, shape: "rect", w: 30, h: 80 })
+    expect(result[1]).toEqual({ x: 55, y: 55, datum: { cat: "B" }, shape: "rect", w: 30, h: 70 })
   })
 
   it("extracts swarm (point) nodes", () => {
@@ -140,7 +141,7 @@ describe("extractOrdinalNavPoints", () => {
     ]
     const result = extractOrdinalNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ x: 25, y: 60, datum: { val: 3 } })
+    expect(result[0]).toEqual({ x: 25, y: 60, datum: { val: 3 }, shape: "circle" })
   })
 
   it("extracts pie (wedge) nodes using arc midpoint", () => {
@@ -215,8 +216,8 @@ describe("extractNetworkNavPoints", () => {
     const result = extractNetworkNavPoints(scene)
     expect(result).toHaveLength(2)
     // Sorted by x
-    expect(result[0]).toEqual({ x: 50, y: 150, datum: { id: "B" } })
-    expect(result[1]).toEqual({ x: 100, y: 200, datum: { id: "A" } })
+    expect(result[0]).toEqual({ x: 50, y: 150, datum: { id: "B" }, shape: "circle" })
+    expect(result[1]).toEqual({ x: 100, y: 200, datum: { id: "A" }, shape: "circle" })
   })
 
   it("extracts rect nodes (sankey layout)", () => {
@@ -225,7 +226,7 @@ describe("extractNetworkNavPoints", () => {
     ]
     const result = extractNetworkNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ x: 20, y: 50, datum: { id: "node1" } })
+    expect(result[0]).toEqual({ x: 20, y: 50, datum: { id: "node1" }, shape: "rect", w: 20, h: 60 })
   })
 
   it("extracts arc nodes (chord layout)", () => {
@@ -234,7 +235,7 @@ describe("extractNetworkNavPoints", () => {
     ]
     const result = extractNetworkNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ x: 200, y: 200, datum: { id: "group1" } })
+    expect(result[0]).toEqual({ x: 200, y: 200, datum: { id: "group1" }, shape: "circle" })
   })
 
   it("ignores edge types (line, bezier, ribbon)", () => {
@@ -340,6 +341,62 @@ describe("nextIndex", () => {
     expect(nextIndex("Enter", 0, 5)).toBeNull()
   })
 
+  it("PageDown skips by 10% of total", () => {
+    expect(nextIndex("PageDown", 0, 100)).toBe(10)
+    expect(nextIndex("PageDown", 95, 100)).toBe(99) // clamps at end
+  })
+
+  it("PageUp skips back by 10% of total", () => {
+    expect(nextIndex("PageUp", 50, 100)).toBe(40)
+    expect(nextIndex("PageUp", 3, 100)).toBe(0) // clamps at start
+  })
+
+  it("PageDown/PageUp with small total still moves at least 1", () => {
+    expect(nextIndex("PageDown", 0, 5)).toBe(1)
+    expect(nextIndex("PageUp", 2, 5)).toBe(1)
+  })
+
+})
+
+describe("extractGeoNavPoints", () => {
+  it("extracts point nodes", () => {
+    const scene = [
+      { type: "point", x: 100, y: 200, datum: { name: "city1" } },
+      { type: "point", x: 50, y: 150, datum: { name: "city2" } }
+    ]
+    const result = extractGeoNavPoints(scene)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({ x: 50, y: 150, datum: { name: "city2" }, shape: "circle" })
+    expect(result[1]).toEqual({ x: 100, y: 200, datum: { name: "city1" }, shape: "circle" })
+  })
+
+  it("extracts geoarea nodes using centroid", () => {
+    const scene = [
+      { type: "geoarea", centroid: [300, 200], datum: { properties: { name: "France" } } }
+    ]
+    const result = extractGeoNavPoints(scene)
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({ x: 300, y: 200, datum: { properties: { name: "France" } }, shape: "circle" })
+  })
+
+  it("returns empty array for empty scene", () => {
+    expect(extractGeoNavPoints([])).toEqual([])
+  })
+
+  it("ignores non-navigable node types", () => {
+    const scene = [
+      { type: "line", path: [[0, 0], [100, 100]], datum: {} },
+      { type: "graticule", pathData: "M...", datum: null }
+    ]
+    expect(extractGeoNavPoints(scene)).toEqual([])
+  })
+
+  it("skips point nodes with null x", () => {
+    const scene = [
+      { type: "point", x: null, y: 100, datum: { id: "skip" } }
+    ]
+    expect(extractGeoNavPoints(scene)).toEqual([])
+  })
 })
 
 describe("navPointToHover", () => {
