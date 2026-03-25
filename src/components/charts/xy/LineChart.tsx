@@ -375,8 +375,8 @@ export const LineChart = forwardRef(
   // When the user provides a function accessor, we bake resolved values into
   // each datum under a synthetic field so the overlay pipeline + annotation
   // renderer can access them by string key.
-  const xAccStr = typeof xAccessor === "string" ? xAccessor : "__resolvedX"
-  const yAccStr = typeof yAccessor === "string" ? yAccessor : "__resolvedY"
+  const xAccStr = typeof xAccessor === "string" ? xAccessor : "__semiotic_resolvedX"
+  const yAccStr = typeof yAccessor === "string" ? yAccessor : "__semiotic_resolvedY"
 
   // Lazy-load statistical overlays — only fetches the module when forecast/anomaly props are used
   const [statisticalResult, setStatisticalResult] = useState<{
@@ -393,8 +393,8 @@ export const LineChart = forwardRef(
     if (!needsX && !needsY) return safeData as Record<string, any>[]
     return (safeData as Record<string, any>[]).map(d => {
       const copy = { ...d }
-      if (needsX) copy.__resolvedX = (xAccessor as (d: any) => any)(d)
-      if (needsY) copy.__resolvedY = (yAccessor as (d: any) => any)(d)
+      if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
+      if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
       return copy
     })
   }, [safeData, forecast, anomaly, xAccessor, yAccessor])

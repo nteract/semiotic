@@ -192,27 +192,12 @@ function buildPrecomputed(
     return { ...d, [SEGMENT_FIELD]: segment }
   })
 
-  // Collect training-base copies BEFORE boundary duplication so they don't
-  // interfere with the sequential boundary-point logic.
-  const trainBaseCopies: Record<string, any>[] = []
-  if (config.trainUnderline) {
-    for (const d of tagged) {
-      if (d[SEGMENT_FIELD] === "training") {
-        trainBaseCopies.push({ ...d, [SEGMENT_FIELD]: "training-base" as SegmentType })
-      }
-    }
-  }
-
   // Duplicate boundary points so adjacent segments share an endpoint (no gap).
   // When _groupBy is set (multi-metric data), we must group by metric first
   // because the flat data is interleaved by timestamp (A_t1, B_t1, A_t2, B_t2...),
   // so adjacent-pair scanning would never find within-group segment transitions.
   const groupByField = config._groupBy
   const processedData: Record<string, any>[] = []
-  // Prepend training-base copies so they appear first in the data stream —
-  // PipelineStore iterates groups in insertion order, so the solid underline
-  // renders before (beneath) the dashed training line.
-  processedData.push(...trainBaseCopies)
 
   if (groupByField) {
     // Group-aware boundary duplication: collect points per group, find
@@ -252,6 +237,20 @@ function buildPrecomputed(
         processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
       }
     }
+  }
+
+  // Collect training-base copies AFTER boundary duplication so the solid
+  // underline includes bridge points and covers the same x-extent as the
+  // dashed training segment.
+  if (config.trainUnderline) {
+    const trainBaseCopies: Record<string, any>[] = []
+    for (const d of processedData) {
+      if (d[SEGMENT_FIELD] === "training") {
+        trainBaseCopies.push({ ...d, [SEGMENT_FIELD]: "training-base" as SegmentType })
+      }
+    }
+    // Prepend so training-base renders first (beneath the dashed training line)
+    processedData.unshift(...trainBaseCopies)
   }
 
   const annotations: Record<string, any>[] = []
