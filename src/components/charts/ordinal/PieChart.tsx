@@ -151,11 +151,10 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     [categoryAccessor, valueAccessor, colorBy]
   )
 
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "PieChart", data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
-  if (error) return <ChartError componentName="PieChart" message={error} width={width} height={height} />
 
   // Merge streaming legend into legendBehaviorProps when in push API mode
   const effectiveLegendProps = useMemo(() => {
@@ -206,6 +205,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  if (validationError) return <ChartError componentName="PieChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="PieChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

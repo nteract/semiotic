@@ -288,7 +288,7 @@ function PushApiDemo() {
     chartRef.current.push({
       source: randomEdge.source,
       target: randomEdge.target,
-      value: Math.round(Math.random() * 200 + 50)
+      value: Math.round(Math.random() * 2000 + 1000)
     })
   }
 

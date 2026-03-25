@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-03-25
+
+### Added
+
+- **Hover dot color matching** — The hover indicator dot now automatically matches the hovered element's color (line stroke, area stroke, point fill) instead of hardcoded blue. Override with `frameProps={{ hoverAnnotation: { pointColor: "#custom" } }}`. Fallback chain: explicit `pointColor` → element color → `--semiotic-primary` CSS var → `#007bff`. Affects all XY and Geo charts.
+- **`pointColor` option on `HoverAnnotationConfig`** — New opt-in override for hover dot color on Stream Frames.
+- **Adaptive time tick formatting** — New `adaptiveTimeTicks(granularity?)` export from `semiotic`. Produces hierarchical axis labels: first tick is fully qualified, subsequent ticks only show what changed (e.g. seconds when the minute is the same, full timestamp when the hour rolls over). Tick labels auto-space based on label width to prevent overlap.
+- **Forecast: training line styling** — `trainStroke` ("darken" or CSS color), `trainLinecap` ("round"), `trainUnderline` (true | "lighten"), `trainOpacity`, `forecastOpacity` on `ForecastConfig`. Enables dashed training lines with solid underlines for visual distinction.
+- **Forecast: per-datum anomaly styling** — `anomalyColor`, `anomalyRadius`, and `anomalyStyle` on `ForecastConfig` now accept functions `(datum) => value` for data-driven anomaly rendering (e.g. sizing dots by anomaly count).
+- **Forecast: multi-metric boundary duplication** — `_groupBy` internal field on `ForecastConfig`. When `lineBy` and `forecast` are both active, boundary points are duplicated within each metric group (not across groups), preventing stray cross-metric connecting lines in interleaved data.
+- **`training-base` segment type** — New segment for solid underlines beneath dashed training lines. PipelineStore renders training-base first (insertion order) so the solid line appears beneath the dashed one.
+- **`resolveNodeColor` shared utility** — Extracted to `sceneUtils.ts`, used by both StreamXYFrame and StreamGeoFrame for consistent hover color resolution. Handles `CanvasPattern` fills correctly.
+- **128 new unit tests** — Multi-metric boundary duplication (3 tests), ThemeStore dark mode merging (5 tests), PipelineStore reproduction (9 tests), LineChart integration (8 tests), plus expanded statisticalOverlays coverage.
+
+### Fixed
+
+- **SVGOverlay left axis label missing in dual-axis mode** — `MultiAxisLineChart` passes left axis label via `axes` config, but SVGOverlay only read the `yLabel` prop (which is suppressed in dual-axis mode). Now reads `leftAxis?.label || yLabel`.
+- **ThemeStore `mode: "dark"` merged onto wrong base** — `{ mode: "dark", colors: { categorical: [...] } }` was merging onto `LIGHT_THEME`, so dark-mode text/background/grid colors were lost. Now correctly merges onto `DARK_THEME`.
+- **Tick label overlap on time axes** — X-axis tick spacing now accounts for actual label width (estimated at 6.5px/char) instead of using a fixed 55px minimum, preventing label collision on dense time axes.
+- **`tickFormat` signature expanded** — `AxisConfig.tickFormat` and `xFormat` now receive `(value, index, allTickValues)` so formatters can produce hierarchical labels (e.g. show full date only on first tick or at boundary crossings).
+- **Function accessors with forecast/anomaly** — When `xAccessor` or `yAccessor` is a function, resolved values are now baked into data under `__resolvedX`/`__resolvedY` fields so the statistical overlay pipeline and annotation renderer can access them by string key.
+- **Geo hover ring color** — Geo frame point hover ring now uses `resolveNodeColor` (shared utility) instead of inline logic, and correctly handles `CanvasPattern` fills.
+- **Tick color dark mode fallback** — SVGOverlay tick color CSS var chain is now `--semiotic-text-secondary` → `--semiotic-text` → `#666`, improving visibility when only `--semiotic-text` is set.
+- **Annotation accessor fallback** — SVGOverlay annotation renderer receives `"__resolvedX"`/`"__resolvedY"` when accessors are functions, preventing annotations from rendering at wrong positions.
+
+### Changed
+
+- **`SegmentType` union expanded** — Added `"training-base"` to the exported type.
+- **`ForecastConfig` interface expanded** — Added `trainStroke`, `trainLinecap`, `trainUnderline`, `trainOpacity`, `forecastOpacity`, `anomalyStyle`, `_groupBy`. `anomalyColor` and `anomalyRadius` now accept functions.
+- **HOC early return guard** — LineChart (and other HOCs with statistical overlays) no longer returns early before loading/empty state, ensuring all hooks are called unconditionally (React rules of hooks compliance).
+
 ## [3.1.2] - 2026-03-21
 
 > **Note:** v3.1.1 was yanked from npm due to broken MCP tool schemas. Upgrade directly from 3.1.0 to 3.1.2.

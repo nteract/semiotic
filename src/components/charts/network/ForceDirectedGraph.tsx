@@ -101,11 +101,9 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const showLabels = resolved.showLabels ?? false
   const title = resolved.title
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(nodes, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(nodes, width, height, emptyContent) : null
 
   const safeNodes = nodes || []
   const safeEdges = edges || []
@@ -198,6 +196,10 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     accessors: { nodeIDAccessor },
   })
   if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="ForceDirectedGraph" width={width} height={height}>

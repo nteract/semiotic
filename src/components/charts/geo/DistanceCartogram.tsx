@@ -356,11 +356,9 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     )
   }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, margin, frameProps.foregroundGraphics])
 
-  // ── Early returns (after all hooks) ─────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(points, resolved.width, resolved.height, emptyContent) : null
 
   warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
   warnMissingField("DistanceCartogram", safeData, "yAccessor", yAccessor)
@@ -399,6 +397,10 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)
     ...(overlayGraphics && { foregroundGraphics: overlayGraphics })
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="DistanceCartogram" width={resolved.width} height={resolved.height}>

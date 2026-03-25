@@ -100,7 +100,6 @@ const navData = [
       { title: "Composition", path: "/features/composition" },
       { title: "Accessibility", path: "/features/accessibility" },
       { title: "Linked Charts", path: "/features/linked-charts" },
-      { title: "Canvas Rendering", path: "/features/canvas-rendering" },
       { title: "Legends", path: "/features/legends" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
       { title: "Chart Container", path: "/features/chart-container" },

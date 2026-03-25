@@ -133,11 +133,6 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/facet.png", import.meta.url)}
         />
         <PageLink
-          href="/guides/canvas-rendering"
-          title="Canvas Rendering"
-          thumbnail={new URL("../public/assets/img/canvas-interaction.png", import.meta.url)}
-        />
-        <PageLink
           href="/guides/sparklines"
           title="Sparklines"
           thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}

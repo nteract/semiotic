@@ -220,11 +220,9 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     )
   }
 
-  // ── Loading / empty states ────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -254,7 +252,12 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
 
   // ── Compute extents and unitized data ─────────────────────────────────
   const { unitizedData, extents } = useMemo(() => {
-    if (safeData.length === 0) return { unitizedData: [], extents: [] }
+    if (safeData.length === 0) {
+      // Push mode: no data yet, but series[].extent provides axis ranges
+      const exts = series.map(s => s.extent || null).filter(Boolean) as [number, number][]
+      if (exts.length === series.length) extentsRef.current = exts
+      return { unitizedData: [], extents: exts.length === series.length ? exts : [] }
+    }
 
     const exts = series.map((s) =>
       s.extent || computeExtent(safeData, s.yAccessor)
@@ -317,9 +320,16 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ]
   }, [isDualAxis, extents, series, seriesLabels])
 
+  // ── In push mode, synthesize minimal data so the legend can resolve categories
+  const legendData = useMemo(() => {
+    if (unitizedData.length > 0) return unitizedData
+    // Push mode: no data yet, but we know the series labels from props
+    return seriesLabels.map(label => ({ [SERIES_FIELD]: label }))
+  }, [unitizedData, seriesLabels])
+
   // ── Chart setup (legend, selection, margin) ───────────────────────────
   const setup = useChartSetup({
-    data: unitizedData,
+    data: legendData,
     rawData: data,
     colorBy: SERIES_FIELD,
     colorScheme: seriesColors,
@@ -403,12 +413,11 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }, [tooltip, seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
 
   // ── Validation ────────────────────────────────────────────────────────
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "MultiAxisLineChart",
     data: data,
     accessors: { xAccessor },
   })
-  if (error) return <ChartError componentName="MultiAxisLineChart" message={error} width={width} height={height} />
 
   // ── Y extent for unitized data ────────────────────────────────────────
   // Force [0, 1] when dual-axis to keep unitization stable
@@ -446,6 +455,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(onObservation && { customClickBehavior: setup.customClickBehavior }),
     ...frameProps
   }
+
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="MultiAxisLineChart" message={validationError} width={width} height={height} />
 
   return (
     <SafeRender componentName="MultiAxisLineChart" width={width} height={height}>

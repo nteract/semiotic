@@ -179,18 +179,10 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     ...userMargin
   }), [userMargin])
 
-  // ── Early returns (after all hooks) ─────────────────────────────────
-
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-
-  // Show loading state while reference geography is loading (async resolve in progress)
-  if (!resolvedAreas) {
-    return renderLoadingState(true, resolved.width, resolved.height) || null
-  }
-
-  const emptyEl = renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
+    || (!resolvedAreas ? renderLoadingState(true, resolved.width, resolved.height) : null)
+  const emptyEl = !loadingEl ? renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent) : null
 
   // Validate areas is a valid GeoJSON feature array.
   // We skip accessor validation here because valueAccessor resolves through
@@ -204,7 +196,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    areas: resolvedAreas,
+    areas: resolvedAreas!,
     areaStyle: areaStyleFn,
     size: [resolved.width, resolved.height],
     margin,
@@ -225,6 +217,10 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     ...(className && { className }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="ChoroplethMap" width={resolved.width} height={resolved.height}>

@@ -324,12 +324,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     accessors: { xAccessor, yAccessor },
   })
 
-  // ── Loading / empty / error states (after all hooks) ──────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
-  if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   // ── Render ────────────────────────────────────────────────────────────
 
@@ -362,6 +359,11 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />
 
   return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

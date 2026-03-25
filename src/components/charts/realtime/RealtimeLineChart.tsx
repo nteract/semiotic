@@ -203,17 +203,19 @@ export const RealtimeLineChart = forwardRef(
       getData: () => frameRef.current?.getData() ?? []
     }))
 
-    // ── Loading / empty state ──
+    // ── Loading / empty states (computed early, returned after all hooks) ───
     const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
-    if (loadingEl) return loadingEl
-    const emptyEl = renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
-    if (emptyEl) return emptyEl
+    const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
 
     const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
       : className
+
+    // ── Loading / empty guards (deferred to after all hooks) ───────────────
+    if (loadingEl) return loadingEl
+    if (emptyEl) return emptyEl
 
     return (
       <StreamXYFrame

@@ -69,7 +69,6 @@ function StreamingPieDemo() {
       showLegend
       width={400}
       height={400}
-      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
       frameProps={{
         windowSize: 200,
         pulse: { duration: 800, color: "rgba(255,255,255,0.7)" },
@@ -95,16 +94,14 @@ function StreamingPieDemo({ width }) {
     return () => clearInterval(id)
   }, [])
 
-  const size = Math.min(width, 400)
   return (
     <PieChart
       ref={chartRef}
       categoryAccessor="category"
       valueAccessor="value"
       showLegend
-      width={size}
-      height={size}
-      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      width={width}
+      height={400}
       frameProps={{
         windowSize: 200,
         pulse: { duration: 800, color: "rgba(255,255,255,0.7)" },

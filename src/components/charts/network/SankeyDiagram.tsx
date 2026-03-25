@@ -100,11 +100,9 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(edges, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(edges, width, height, emptyContent) : null
 
   // Safe data defaults (hooks must always run)
   const safeEdges = edges || []
@@ -205,6 +203,10 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     edgesRequired: true,
   })
   if (error) return <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="SankeyDiagram" width={width} height={height}>

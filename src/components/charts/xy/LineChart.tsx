@@ -359,11 +359,9 @@ export const LineChart = forwardRef(
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -373,8 +371,12 @@ export const LineChart = forwardRef(
 
   // ── Statistical overlay processing ────────────────────────────────────
 
-  const xAccStr = typeof xAccessor === "string" ? xAccessor : "x"
-  const yAccStr = typeof yAccessor === "string" ? yAccessor : "y"
+  // Statistical overlays need a string accessor to read x/y values from data.
+  // When the user provides a function accessor, we bake resolved values into
+  // each datum under a synthetic field so the overlay pipeline + annotation
+  // renderer can access them by string key.
+  const xAccStr = typeof xAccessor === "string" ? xAccessor : "__semiotic_resolvedX"
+  const yAccStr = typeof yAccessor === "string" ? yAccessor : "__semiotic_resolvedY"
 
   // Lazy-load statistical overlays — only fetches the module when forecast/anomaly props are used
   const [statisticalResult, setStatisticalResult] = useState<{
@@ -383,6 +385,20 @@ export const LineChart = forwardRef(
   } | null>(null)
   const [statisticalAnnotations, setStatisticalAnnotations] = useState<Record<string, any>[]>([])
 
+  // When accessors are functions, bake resolved values into data for the overlay pipeline
+  const overlayData = useMemo(() => {
+    if (!forecast && !anomaly) return safeData as Record<string, any>[]
+    const needsX = typeof xAccessor === "function"
+    const needsY = typeof yAccessor === "function"
+    if (!needsX && !needsY) return safeData as Record<string, any>[]
+    return (safeData as Record<string, any>[]).map(d => {
+      const copy = { ...d }
+      if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
+      if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
+      return copy
+    })
+  }, [safeData, forecast, anomaly, xAccessor, yAccessor])
+
   useEffect(() => {
     if (!forecast && !anomaly) return
     let cancelled = false
@@ -390,7 +406,12 @@ export const LineChart = forwardRef(
     setStatisticalResult(null)
     setStatisticalAnnotations([])
     if (forecast) {
-      buildForecastLazy(safeData as Record<string, any>[], xAccStr, yAccStr, forecast, anomaly).then(result => {
+      // When lineBy is a string, tell buildPrecomputed to do group-aware
+      // boundary duplication so multi-metric data doesn't create stray lines
+      const enrichedForecast = lineBy && typeof lineBy === "string" && typeof forecast === "object"
+        ? { ...forecast, _groupBy: lineBy }
+        : forecast
+      buildForecastLazy(overlayData, xAccStr, yAccStr, enrichedForecast, anomaly).then(result => {
         if (!cancelled) {
           setStatisticalResult(result)
           setStatisticalAnnotations(result.annotations)
@@ -414,10 +435,72 @@ export const LineChart = forwardRef(
       })
     }
     return () => { cancelled = true }
-  }, [safeData, forecast, anomaly, xAccStr, yAccStr])
+  }, [overlayData, forecast, anomaly, xAccStr, yAccStr])
 
   const effectiveData = statisticalResult ? statisticalResult.processedData : safeData
-  const effectiveGroupAccessor = forecast && !lineBy ? SEGMENT_FIELD : lineBy
+
+  // When both lineBy and forecast are present, we need a compound group that
+  // splits lines by BOTH the user's grouping field AND the forecast segment.
+  // This ensures training/observed/forecast segments become separate lines
+  // (each with distinct dash patterns) while colorBy still maps to the metric.
+  const COMPOUND_GROUP = "__compoundGroup"
+  const needsCompoundGroup = !!(forecast && lineBy)
+  const effectiveGroupAccessor = needsCompoundGroup
+    ? COMPOUND_GROUP
+    : forecast ? SEGMENT_FIELD : lineBy
+
+  // Stamp compound group field onto data when both lineBy and forecast are active
+  const compoundData = useMemo(() => {
+    if (!needsCompoundGroup) return effectiveData
+    const lineByAcc = typeof lineBy === "function" ? lineBy : (d: Record<string, any>) => d[lineBy as string]
+    return (effectiveData as Record<string, any>[]).map(d => {
+      const copy: Record<string, any> = { ...d }
+      copy[COMPOUND_GROUP] = `${lineByAcc(d)}__${d[SEGMENT_FIELD] || "observed"}`
+      return copy
+    })
+  }, [effectiveData, needsCompoundGroup, lineBy])
+
+  // Use compoundData instead of effectiveData for downstream processing
+  const chartData = needsCompoundGroup ? compoundData : effectiveData
+
+  // ── Envelope-aware y extent ──────────────────────────────────────────
+  // When forecast/anomaly has upper/lower bounds, the default y extent only
+  // sees the value field.  Expand to include the envelope so it doesn't clip.
+  const envelopeYExtent = useMemo(() => {
+    if (!forecast) return undefined
+    const upperAcc = (forecast as ForecastConfig).upperBounds
+    const lowerAcc = (forecast as ForecastConfig).lowerBounds
+    if (!upperAcc && !lowerAcc) return undefined
+
+    const getUpper = typeof upperAcc === "function" ? upperAcc
+      : typeof upperAcc === "string" ? (d: Record<string, any>) => d[upperAcc] as number
+      : null
+    const getLower = typeof lowerAcc === "function" ? lowerAcc
+      : typeof lowerAcc === "string" ? (d: Record<string, any>) => d[lowerAcc] as number
+      : null
+
+    let min = Infinity
+    let max = -Infinity
+    const dataToScan = statisticalResult ? statisticalResult.processedData : safeData
+    for (const d of dataToScan as Record<string, any>[]) {
+      // Include the y value itself
+      const yVal = typeof yAccessor === "function" ? (yAccessor as (d: any) => number)(d) : +(d[yAccessor as string])
+      if (isFinite(yVal)) {
+        if (yVal < min) min = yVal
+        if (yVal > max) max = yVal
+      }
+      if (getUpper) {
+        const u = getUpper(d)
+        if (u != null && isFinite(u)) { if (u > max) max = u; if (u < min) min = u }
+      }
+      if (getLower) {
+        const l = getLower(d)
+        if (l != null && isFinite(l)) { if (l < min) min = l; if (l > max) max = l }
+      }
+    }
+    if (!isFinite(min) || !isFinite(max)) return undefined
+    return [min, max] as [number, number]
+  }, [forecast, statisticalResult, safeData, yAccessor])
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
@@ -438,24 +521,30 @@ export const LineChart = forwardRef(
   // ── Core chart logic ───────────────────────────────────────────────────
 
   // Check if data is in line objects format (has lineDataAccessor field)
-  const isLineObjectFormat = effectiveData[0]?.[lineDataAccessor] !== undefined
+  const isLineObjectFormat = chartData[0]?.[lineDataAccessor] !== undefined
 
   // Transform data to line format if needed
   const lineData = useMemo(() => {
     if (isLineObjectFormat) {
       // Data is already in line objects format
-      return effectiveData
+      return chartData
     }
 
     if (effectiveGroupAccessor) {
       // Group data by lineBy field (or segment field for forecast)
-      const grouped = (effectiveData as Record<string, any>[]).reduce((acc, d) => {
+      const grouped = (chartData as Record<string, any>[]).reduce((acc, d) => {
         const key = typeof effectiveGroupAccessor === "function" ? effectiveGroupAccessor(d) : d[effectiveGroupAccessor]
         if (!acc[key]) {
           const lineObj: Record<string, any> = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof effectiveGroupAccessor === "string") {
             lineObj[effectiveGroupAccessor] = key
+          }
+          // When using compound grouping, also copy the segment and lineBy fields
+          // onto the line object so createSegmentLineStyle and color resolution work
+          if (needsCompoundGroup) {
+            lineObj[SEGMENT_FIELD] = d[SEGMENT_FIELD]
+            if (typeof lineBy === "string") lineObj[lineBy] = d[lineBy]
           }
           acc[key] = lineObj
         }
@@ -467,8 +556,8 @@ export const LineChart = forwardRef(
     }
 
     // Single line - wrap in line object
-    return [{ [lineDataAccessor]: effectiveData }]
-  }, [effectiveData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat])
+    return [{ [lineDataAccessor]: chartData }]
+  }, [chartData, effectiveGroupAccessor, lineDataAccessor, isLineObjectFormat])
 
   // Apply gap strategy to line data
   //
@@ -751,13 +840,13 @@ export const LineChart = forwardRef(
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
 
-  // Validate data (after all hooks)
+  // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates
   // inside the first line object rather than the top-level line objects
   const validationData = isLineObjectFormat
     ? (effectiveData[0]?.[lineDataAccessor] || [])
     : data
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "LineChart",
     data: validationData,
     accessors: {
@@ -765,7 +854,6 @@ export const LineChart = forwardRef(
       yAccessor,
     },
   })
-  if (error) return <ChartError componentName="LineChart" message={error} width={width} height={height} />
 
   // Flatten line data into a single array for StreamXYFrame.
   // When gapStrategy is "break" or "interpolate", we always flatten from
@@ -782,8 +870,8 @@ export const LineChart = forwardRef(
         return coords
       })
     }
-    return effectiveData
-  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, effectiveData, hasGaps])
+    return chartData
+  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, effectiveGroupAccessor, chartData, hasGaps])
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
@@ -793,6 +881,7 @@ export const LineChart = forwardRef(
     yAccessor,
     xScaleType,
     yScaleType,
+    ...(envelopeYExtent && { yExtent: envelopeYExtent }),
     groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
     curve,
     lineStyle,
@@ -827,6 +916,11 @@ export const LineChart = forwardRef(
     }),
     ...frameProps
   }
+
+  // ── Loading / empty / validation guards (deferred to after all hooks) ──
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="LineChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

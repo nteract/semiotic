@@ -14,7 +14,7 @@ export interface AxisConfig {
   orient: "left" | "right" | "top" | "bottom"
   label?: string
   ticks?: number
-  tickFormat?: (d: any) => string
+  tickFormat?: (d: any, index?: number, allTicks?: number[]) => string
   baseline?: boolean | "under"
   jaggedBase?: boolean
   /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
@@ -77,7 +77,7 @@ interface SVGOverlayProps {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
   yFormat?: (d: any) => string
 
   // Grid
@@ -143,7 +143,7 @@ interface SVGUnderlayProps {
   showAxes?: boolean
   axes?: AxisConfig[]
   showGrid?: boolean
-  xFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
   yFormat?: (d: any) => string
 }
 
@@ -169,12 +169,18 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    const candidates = scales.x.ticks(tickCount).map(v => ({
+    const rawTicks = scales.x.ticks(tickCount)
+    const rawValues = rawTicks.map(v => v.valueOf())
+    const candidates = rawTicks.map((v, i) => ({
       value: v,
       pixel: scales.x(v),
-      label: fmt(v)
+      label: fmt(v, i, rawValues)
     }))
-    return filterTicksByPixelDistance(candidates, 55)
+    // Estimate the widest label and use that as minimum spacing so labels
+    // (which are center-anchored) don't overlap.
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, c.label.length * 6.5), 0)
+    const minPx = Math.max(55, maxLabelWidth + 8)
+    return filterTicksByPixelDistance(candidates, minPx)
   }, [scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
@@ -264,7 +270,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
 }
 
 
-function defaultTickFormat(v: number): string {
+function defaultTickFormat(v: number, _index?: number, _allTicks?: number[]): string {
   return String(Math.round(v * 100) / 100)
 }
 
@@ -352,12 +358,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
     const tickCount = Math.min(requested, maxFit)
-    const candidates = scales.x.ticks(tickCount).map(v => ({
+    const rawTicks = scales.x.ticks(tickCount)
+    const rawValues = rawTicks.map(v => v.valueOf())
+    const candidates = rawTicks.map((v, i) => ({
       value: v,
       pixel: scales.x(v),
-      label: fmt(v)
+      label: fmt(v, i, rawValues)
     }))
-    return filterTicksByPixelDistance(candidates, 55)
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, c.label.length * 6.5), 0)
+    const minPx = Math.max(55, maxLabelWidth + 8)
+    return filterTicksByPixelDistance(candidates, minPx)
   }, [showAxes, scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
@@ -502,7 +512,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const leftLandmark = leftAxis?.landmarkTicks
 
           const axisStroke = "var(--semiotic-border, #ccc)"
-          const tickColor = "var(--semiotic-text-secondary, #666)"
+          const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
 
           return (
@@ -579,7 +589,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
               </g>
               )
             })}
-            {yLabel && (
+            {(() => {
+              const leftLabel = leftAxis?.label || yLabel
+              return leftLabel ? (
               <text
                 x={-margin.left + 15}
                 y={height / 2}
@@ -589,9 +601,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
                 style={{ userSelect: "none" }}
               >
-                {yLabel}
+                {leftLabel}
               </text>
-            )}
+              ) : null
+            })()}
 
             {/* Right Y axis */}
             {(() => {

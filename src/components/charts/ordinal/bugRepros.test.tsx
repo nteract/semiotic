@@ -78,10 +78,10 @@ describe("BR-2: colorScheme without colorBy", () => {
     const styleA = lastFrameProps.pieceStyle(barData[0], "A")
     const styleB = lastFrameProps.pieceStyle(barData[1], "B")
     const styleC = lastFrameProps.pieceStyle(barData[2], "C")
-    // Without colorBy, each category should cycle through colorScheme
+    // Without colorBy, all bars should use uniform color (first in scheme)
     expect(styleA.fill).toBe("#FF0000")
-    expect(styleB.fill).toBe("#00FF00")
-    expect(styleC.fill).toBe("#0000FF")
+    expect(styleB.fill).toBe("#FF0000")
+    expect(styleC.fill).toBe("#FF0000")
   })
 
   it("single-color bar: color prop sets uniform fill", () => {

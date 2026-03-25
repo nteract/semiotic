@@ -127,7 +127,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
+      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
       baseStyle.r = sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius
       return baseStyle
     }

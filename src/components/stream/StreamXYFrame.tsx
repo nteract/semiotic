@@ -47,6 +47,7 @@ import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
 import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
 import type { StreamRendererFn } from "./renderers/types"
+import { resolveNodeColor } from "./sceneUtils"
 
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
@@ -184,7 +185,7 @@ function drawCrosshair(
   width: number,
   height: number,
   config: HoverAnnotationConfig,
-  pointColor: string,
+  hoveredNode: SceneNode | null,
   theme: ThemeColors
 ) {
   const showCrosshair = config.crosshair !== false
@@ -212,7 +213,14 @@ function drawCrosshair(
 
   ctx.restore()
 
-  // Point indicator
+  // Point indicator — use hovered element's color, then theme primary, then fallback
+  let semioticPrimary = ""
+  try {
+    if (ctx.canvas?.parentElement) {
+      semioticPrimary = getComputedStyle(ctx.canvas).getPropertyValue("--semiotic-primary").trim()
+    }
+  } catch { /* jsdom or SSR — fall through to hardcoded default */ }
+  const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || semioticPrimary || "#007bff"
   ctx.beginPath()
   ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
   ctx.fillStyle = pointColor
@@ -917,7 +925,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               adjustedWidth,
               adjustedHeight,
               config,
-              "#007bff",
+              hoveredNodeRef.current,
               theme
             )
           }

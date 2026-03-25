@@ -155,11 +155,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     [categoryAccessor, valueAccessor, colorBy]
   )
 
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "DonutChart", data: data,
     accessors: { categoryAccessor, valueAccessor },
   })
-  if (error) return <ChartError componentName="DonutChart" message={error} width={width} height={height} />
 
   // Merge streaming legend into legendBehaviorProps when in push API mode
   const effectiveLegendProps = useMemo(() => {
@@ -212,6 +211,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  if (validationError) return <ChartError componentName="DonutChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

@@ -236,9 +236,9 @@ describe("NetworkPipelineStore", () => {
       // Reset tension to simulate a prior layout
       store.tension = 0
 
-      // Existing edge weight change: small tension
+      // Existing edge weight change: triggers relayout for value-dependent layouts
       const result = store.ingestEdge({ source: "A", target: "B", value: 1 })
-      expect(result).toBe(false) // tension 0.1 < threshold 3.0
+      expect(result).toBe(true) // value changed — layout needs updated widths
 
       // New topology change with new nodes: large tension
       const result2 = store.ingestEdge({ source: "C", target: "D", value: 1 })

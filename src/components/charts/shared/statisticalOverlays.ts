@@ -12,6 +12,8 @@
  *     Use this when bounds come from an external ML model.
  */
 
+import { darkenColor, lightenColor } from "./colorManipulation"
+
 // ── Config types ───────────────────────────────────────────────────────
 
 export interface AnomalyConfig {
@@ -65,17 +67,60 @@ export interface ForecastConfig {
   trainDasharray?: string
   /** Dash pattern for forecast line segment. Default: "4,4" */
   forecastDasharray?: string
-  /** Outlier dot color (pre-computed mode). Default: "#ef4444" */
-  anomalyColor?: string
-  /** Outlier dot radius (pre-computed mode). Default: 6 */
-  anomalyRadius?: number
+  /** Stroke opacity for the training line segment (0–1). Default: 1 */
+  trainOpacity?: number
+  /** Stroke opacity for the forecast line segment (0–1). Default: 1 */
+  forecastOpacity?: number
+  /**
+   * Training line stroke color.
+   * - `"darken"`: auto-darken the line's own color by 50% (hex colors only —
+   *   non-hex values like `rgb()` or CSS variables pass through unchanged).
+   * - Any CSS color string: use that color explicitly.
+   * - Omit to inherit the line's color unchanged.
+   */
+  trainStroke?: string
+  /** Training line linecap (e.g. "round"). Default: inherits from base style */
+  trainLinecap?: string
+  /**
+   * Render a solid underline beneath the dashed training line.
+   * - `true`: solid line in the base (or lightened) color beneath the dashed training line
+   * - `"lighten"`: solid line in a 40% lightened version of the line's color
+   * - Omit or `false`: no underline (default)
+   */
+  trainUnderline?: boolean | "lighten"
+  /**
+   * Outlier dot color.
+   * - `string`: fixed color (default: "#ef4444")
+   * - `(datum) => string`: per-datum color function
+   */
+  anomalyColor?: string | ((datum: Record<string, any>) => string)
+  /**
+   * Outlier dot radius.
+   * - `number`: fixed radius (default: 6)
+   * - `(datum) => number`: per-datum radius function (e.g. for count-based sizing)
+   */
+  anomalyRadius?: number | ((datum: Record<string, any>) => number)
+  /**
+   * Full style override for anomaly dots.
+   * When provided as a function, receives the datum and should return a CSS style object.
+   * Overrides `anomalyColor` when provided.
+   */
+  anomalyStyle?: Record<string, any> | ((datum: Record<string, any>) => Record<string, any>)
+  /**
+   * Internal: field name used to group data into separate lines (e.g. "metricLabel").
+   * When set, boundary point duplication only bridges within the same group,
+   * preventing cross-metric stray lines. Set automatically by LineChart when
+   * both lineBy and forecast are active.
+   * @internal
+   */
+  _groupBy?: string
   /** Label for the forecast/envelope region */
   label?: string
 }
 
 /** Internal segment marker added to each datum */
 export const SEGMENT_FIELD = "__forecastSegment" as const
-export type SegmentType = "training" | "observed" | "forecast"
+export type SegmentType = "training" | "training-base" | "observed" | "forecast"
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -147,14 +192,65 @@ function buildPrecomputed(
     return { ...d, [SEGMENT_FIELD]: segment }
   })
 
-  // Duplicate boundary points so adjacent segments share an endpoint (no gap)
+  // Duplicate boundary points so adjacent segments share an endpoint (no gap).
+  // When _groupBy is set (multi-metric data), we must group by metric first
+  // because the flat data is interleaved by timestamp (A_t1, B_t1, A_t2, B_t2...),
+  // so adjacent-pair scanning would never find within-group segment transitions.
+  const groupByField = config._groupBy
   const processedData: Record<string, any>[] = []
-  for (let i = 0; i < tagged.length; i++) {
-    processedData.push(tagged[i])
-    if (i < tagged.length - 1 && tagged[i][SEGMENT_FIELD] !== tagged[i + 1][SEGMENT_FIELD]) {
-      // Insert a copy of the current point tagged with the NEXT segment
-      processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
+
+  if (groupByField) {
+    // Group-aware boundary duplication: collect points per group, find
+    // segment transitions within each group, then append bridge points
+    // after the tagged data. Ordering within groups is handled by the
+    // downstream pipeline which sorts by x-accessor per group.
+    const groups = new Map<string, Record<string, any>[]>()
+    for (const d of tagged) {
+      const key = d[groupByField] ?? "__default"
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(d)
     }
+
+    // For each group, find segment boundaries and collect bridge points.
+    const bridgePoints: Record<string, any>[] = []
+    for (const [, groupPoints] of groups) {
+      for (let j = 0; j < groupPoints.length - 1; j++) {
+        if (groupPoints[j][SEGMENT_FIELD] !== groupPoints[j + 1][SEGMENT_FIELD]) {
+          // Copy the NEXT point tagged with the CURRENT segment so the previous
+          // segment extends forward to the boundary rather than the next segment
+          // reaching backward (which would start forecast styling one point early).
+          bridgePoints.push({ ...groupPoints[j + 1], [SEGMENT_FIELD]: groupPoints[j][SEGMENT_FIELD] })
+          // Also copy the CURRENT point tagged with the NEXT segment so the next
+          // segment extends backward to the boundary (no gap on the other side).
+          bridgePoints.push({ ...groupPoints[j], [SEGMENT_FIELD]: groupPoints[j + 1][SEGMENT_FIELD] })
+        }
+      }
+    }
+    processedData.push(...tagged, ...bridgePoints)
+  } else {
+    // Single-group: scan adjacent pairs directly
+    for (let i = 0; i < tagged.length; i++) {
+      processedData.push(tagged[i])
+      if (i < tagged.length - 1 && tagged[i][SEGMENT_FIELD] !== tagged[i + 1][SEGMENT_FIELD]) {
+        // Bridge in both directions so neither segment has a gap
+        processedData.push({ ...tagged[i + 1], [SEGMENT_FIELD]: tagged[i][SEGMENT_FIELD] })
+        processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
+      }
+    }
+  }
+
+  // Collect training-base copies AFTER boundary duplication so the solid
+  // underline includes bridge points and covers the same x-extent as the
+  // dashed training segment.
+  if (config.trainUnderline) {
+    const trainBaseCopies: Record<string, any>[] = []
+    for (const d of processedData) {
+      if (d[SEGMENT_FIELD] === "training") {
+        trainBaseCopies.push({ ...d, [SEGMENT_FIELD]: "training-base" as SegmentType })
+      }
+    }
+    // Prepend so training-base renders first (beneath the dashed training line)
+    processedData.unshift(...trainBaseCopies)
   }
 
   const annotations: Record<string, any>[] = []
@@ -185,18 +281,37 @@ function buildPrecomputed(
 
   // Anomaly dots from isAnomaly field
   if (isAnomalyAcc) {
-    annotations.push({
+    const anomalyStyleProp = config.anomalyStyle
+    // Build the annotation — support function-based r and style
+    const highlightAnn: Record<string, any> = {
       type: "highlight",
       filter: (d: Record<string, any>) => readBool(d, isAnomalyAcc!),
-      color: anomalyColor,
-      r: anomalyRadius,
-      style: {
+    }
+
+    if (anomalyStyleProp) {
+      // Full style override — function or object
+      highlightAnn.style = anomalyStyleProp
+      highlightAnn.r = anomalyRadius
+    } else if (typeof anomalyColor === "function") {
+      // Per-datum color function
+      highlightAnn.style = (d: Record<string, any>) => {
+        const c = (anomalyColor as (d: Record<string, any>) => string)(d)
+        return { stroke: c, strokeWidth: 1.5, fill: c, fillOpacity: 0.7 }
+      }
+      highlightAnn.r = anomalyRadius
+    } else {
+      // Static color
+      highlightAnn.color = anomalyColor
+      highlightAnn.r = anomalyRadius
+      highlightAnn.style = {
         stroke: anomalyColor,
         strokeWidth: 1.5,
         fill: anomalyColor,
         fillOpacity: 0.7,
-      },
-    })
+      }
+    }
+
+    annotations.push(highlightAnn)
   }
 
   // Anomaly band (IQR-based) if anomaly config provided alongside pre-computed
@@ -386,6 +501,11 @@ export function buildForecast(
   return buildAutoForecast(data, xAccessor, yAccessor, forecastConfig, anomalyConfig)
 }
 
+// Re-export color helpers from standalone module (avoids pulling this heavy
+// module into the barrel import graph for consumers who only need color utils)
+export { darkenColor, lightenColor } from "./colorManipulation"
+
+
 // ── Segment-aware line style wrapper ───────────────────────────────────
 
 export function createSegmentLineStyle(
@@ -395,19 +515,49 @@ export function createSegmentLineStyle(
   const trainDash = forecastConfig.trainDasharray ?? "8,4"
   const forecastDash = forecastConfig.forecastDasharray ?? "4,4"
   const forecastColor = forecastConfig.color || "#6366f1"
+  const trainOpacity = forecastConfig.trainOpacity
+  const forecastOpacity = forecastConfig.forecastOpacity
+  const trainStrokeCfg = forecastConfig.trainStroke
+  const trainLinecap = forecastConfig.trainLinecap
+  const trainUnderline = forecastConfig.trainUnderline
 
   return (d: Record<string, any>) => {
     const base = baseStyle(d)
     const segment = d[SEGMENT_FIELD] as SegmentType | undefined
 
     if (segment === "training") {
-      return { ...base, strokeDasharray: trainDash }
+      let stroke = base.stroke
+      if (trainStrokeCfg === "darken") {
+        stroke = darkenColor(base.stroke || "#666", 0.5)
+      } else if (trainStrokeCfg) {
+        stroke = trainStrokeCfg
+      }
+      return {
+        ...base,
+        stroke,
+        strokeDasharray: trainDash,
+        ...(trainLinecap && { strokeLinecap: trainLinecap }),
+        ...(trainOpacity != null && { strokeOpacity: trainOpacity }),
+      }
+    }
+    if (segment === "training-base") {
+      // Solid underline beneath the dashed training line
+      let stroke = base.stroke || "#666"
+      if (trainUnderline === "lighten") {
+        stroke = lightenColor(stroke, 0.4)
+      }
+      return {
+        ...base,
+        stroke,
+        strokeDasharray: undefined,
+      }
     }
     if (segment === "forecast") {
       return {
         ...base,
         stroke: forecastColor,
         strokeDasharray: forecastDash,
+        ...(forecastOpacity != null && { strokeOpacity: forecastOpacity }),
       }
     }
     return base

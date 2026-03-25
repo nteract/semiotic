@@ -141,7 +141,7 @@ const legendProps = [
     required: false,
     default: '"right"',
     description:
-      "Which side of the frame the legend appears on.",
+      "Which side of the frame the legend appears on. For Chart components, use the legendPosition prop instead, which also supports \"top\" and \"bottom\".",
   },
 ]
 
@@ -527,7 +527,7 @@ import { Heatmap } from "semiotic"
         language="jsx"
       />
 
-      <h3 id="legend-positioning">Legend Positioning</h3>
+      <h2 id="legend-positioning">Legend Positioning</h2>
       <p>
         Chart components accept a <code>legendPosition</code> prop to place the
         legend on any side of the chart: <code>"right"</code> (default),{" "}
@@ -536,7 +536,7 @@ import { Heatmap } from "semiotic"
         automatically to make room.
       </p>
 
-      <h4>Top Legend</h4>
+      <h3 id="top-legend">Top Legend</h3>
 
       <LiveExample
         frameProps={{
@@ -564,7 +564,7 @@ import { Heatmap } from "semiotic"
         hiddenProps={{}}
       />
 
-      <h4>Bottom Legend</h4>
+      <h3 id="bottom-legend">Bottom Legend</h3>
 
       <LiveExample
         frameProps={{

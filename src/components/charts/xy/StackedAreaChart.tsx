@@ -230,11 +230,9 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
   const actualColorBy = colorBy || areaBy
@@ -402,7 +400,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
 
   // Validate data (after all hooks)
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "StackedAreaChart",
     data: data,
     accessors: {
@@ -410,7 +408,6 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
       yAccessor,
     },
   })
-  if (error) return <ChartError componentName="StackedAreaChart" message={error} width={width} height={height} />
 
   // Flatten area data into a single array for StreamXYFrame
   const flattenedData = useMemo(() => {
@@ -463,6 +460,10 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="StackedAreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

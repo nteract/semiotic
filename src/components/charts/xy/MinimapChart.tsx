@@ -253,11 +253,9 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     emptyContent,
   } = props
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -469,6 +467,10 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
       <StreamXYFrame {...mainProps} />
     </div>
   )
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="MinimapChart" width={width} height={height}>

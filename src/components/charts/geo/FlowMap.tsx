@@ -333,12 +333,9 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     ...userMargin
   }), [userMargin])
 
-  // ── Early returns (after all hooks) ─────────────────────────────────
-
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(flows, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(flows, resolved.width, resolved.height, emptyContent) : null
 
   const streamProps: StreamGeoFrameProps = {
     projection,
@@ -375,6 +372,10 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     ...(className && { className }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>

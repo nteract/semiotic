@@ -178,10 +178,11 @@ export default function TreemapPage() {
         hiddenProps={{}}
       />
 
-      <h3 id="parent-labels">Parent Labels</h3>
+      <h3 id="parent-labels">All Labels</h3>
       <p>
-        Use <code>labelMode="parent"</code> to label only the top-level groups.
-        This automatically adds <code>paddingTop</code> for header space.
+        Use <code>labelMode="all"</code> to label both top-level groups and
+        leaf cells. Parent labels appear as bold headers; leaf labels are
+        centered in each cell.
       </p>
 
       <LiveExample
@@ -190,14 +191,14 @@ export default function TreemapPage() {
           nodeIdAccessor: "name",
           valueAccessor: "value",
           colorBy: "name",
-          labelMode: "parent",
+          labelMode: "all",
           padding: 3,
         }}
         type={Treemap}
         overrideProps={{
           data: "hierarchyData",
           colorBy: '"name"',
-          labelMode: '"parent"',
+          labelMode: '"all"',
           padding: "3",
         }}
         hiddenProps={{}}

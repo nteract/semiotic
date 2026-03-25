@@ -117,6 +117,13 @@ Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize` as fn) receive `RealtimeNo
 ```
 Same applies to `frameProps` style functions on HOCs. `customHoverBehavior`/`customClickBehavior` receive `{ type, data, x, y } | null`. `tooltipContent` receives `{ type, data }`.
 
+## Hover Indicator
+The hover dot automatically matches the hovered element's color (line stroke, point fill, etc.). Override via `frameProps`:
+```jsx
+<LineChart frameProps={{ hoverAnnotation: { pointColor: "#ff0000" } }} />
+```
+Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var → `#007bff`.
+
 ## Coordinated Views
 
 **LinkedCharts** — `selections` (resolution: "union"|"intersect"|"crossfilter"), `showLegend`, `legendPosition`, `legendInteraction`, `legendSelectionName`, `legendField`
@@ -205,6 +212,10 @@ Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (
 
 Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas charts read vars via `getComputedStyle`. `exportChart` inlines computed styles.
 
+**Dark/light mode merge rules:** String preset (e.g. `"dark"`) → full replacement with that preset's theme. Object with `mode` (e.g. `{ mode: "dark", colors: { categorical: [...] } }`) → merges onto the matching base theme (`DARK_THEME` or `LIGHT_THEME`), so background/text/grid adapt while your overrides are preserved. Object without `mode` → shallow-merges onto the current theme (partial override). ThemeProvider is reactive — changing the `theme` prop re-applies immediately.
+
+**CSS interop:** Host app `--semiotic-*` vars on `:root` are overridden by ThemeProvider's closer wrapper div. To let app tokens flow through, either skip ThemeProvider and set `--semiotic-*` vars in CSS, or use the hybrid approach (ThemeProvider for palette only, CSS vars for chrome).
+
 ## Server-Side Rendering
 - HOC charts and Frames render SVG automatically in server environments
 - `renderXYToStaticSVG(props)`, `renderOrdinalToStaticSVG(props)`, `renderNetworkToStaticSVG(props)`, `renderGeoToStaticSVG(props)` from `semiotic/server`
@@ -229,6 +240,7 @@ Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas c
 
 - **Tooltip datum shape**: HOC tooltip functions get raw data. Frame `tooltipContent` gets wrapped data — use `d.data`.
 - **Legend positioning**: "bottom" auto-expands margin ~80px. For narrow charts (<400px), prefer "bottom" or "top".
+- **MultiAxisLineChart legend**: Always use `legendPosition="bottom"` (or `"top"`) — the right-hand axis occupies the space where a right-side legend would go.
 - **Log scale**: Clamps domain min to 1e-6 (log(0) undefined).
 - **barPadding**: Pixel value, defaults 40/60. Reduce for small charts.
 - **Horizontal bars**: Need wider left margin with long labels: `margin={{ left: 120 }}`.

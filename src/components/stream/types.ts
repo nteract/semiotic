@@ -441,7 +441,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
     orient: "left" | "right" | "top" | "bottom"
     label?: string
     ticks?: number
-    tickFormat?: (d: any) => string
+    tickFormat?: (d: any, index?: number, allTicks?: number[]) => string
     baseline?: boolean | "under"
     jaggedBase?: boolean
   }>
@@ -449,7 +449,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
   yFormat?: (d: any) => string
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string

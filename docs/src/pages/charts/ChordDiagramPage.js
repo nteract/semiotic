@@ -273,6 +273,9 @@ export default function ChordDiagramPage() {
       <LiveExample
         frameProps={{
           edges: trafficEdges,
+          colorBy: "id",
+          edgeColorBy: "source",
+          colorScheme: ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4"],
           edgeOpacity: 0.4,
           padAngle: 0.03,
         }}
@@ -284,6 +287,9 @@ export default function ChordDiagramPage() {
   { source: "Products", target: "Checkout", value: 200 },
   // ...page-to-page traffic flows
 ]`,
+          colorBy: '"id"',
+          edgeColorBy: '"source"',
+          colorScheme: '["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4"]',
           edgeOpacity: "0.4",
           padAngle: "0.03",
         }}

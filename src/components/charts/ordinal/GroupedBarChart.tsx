@@ -161,11 +161,10 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     [groupBy, categoryAccessor, valueAccessor]
   )
 
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "GroupedBarChart", data: data,
     accessors: { categoryAccessor, valueAccessor }, requiredProps: { groupBy },
   })
-  if (error) return <ChartError componentName="GroupedBarChart" message={error} width={width} height={height} />
 
   // Merge streaming legend into legendBehaviorProps when in push API mode
   const effectiveLegendProps = useMemo(() => {
@@ -221,6 +220,8 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  if (validationError) return <ChartError componentName="GroupedBarChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

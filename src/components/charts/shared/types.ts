@@ -99,7 +99,7 @@ export interface AxisConfig {
   /** Label for the y-axis */
   yLabel?: string
   /** Format function for x-axis tick labels */
-  xFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
   /** Format function for y-axis tick labels */
   yFormat?: (d: any) => string
 }

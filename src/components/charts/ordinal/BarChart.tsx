@@ -148,7 +148,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       return baseStyle
     }

@@ -54,6 +54,8 @@ export interface CrosshairStyle {
 export interface HoverAnnotationConfig {
   crosshair?: boolean | CrosshairStyle
   snapToPoint?: boolean
+  /** Color of the hover indicator dot. Defaults to the hovered element's color (stroke for lines, fill for points). Set a CSS color string to override. */
+  pointColor?: string
 }
 
 export interface HoverData {
