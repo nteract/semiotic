@@ -252,11 +252,9 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -388,7 +386,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
 
   // Validate data (after all hooks)
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "AreaChart",
     data: data,
     accessors: {
@@ -396,7 +394,6 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
       yAccessor,
     },
   })
-  if (error) return <ChartError componentName="AreaChart" message={error} width={width} height={height} />
 
   // Flatten area data into a single array for StreamXYFrame
   const flattenedData = useMemo(() => {
@@ -450,6 +447,11 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="AreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

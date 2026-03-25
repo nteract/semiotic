@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { copyFileSync } from "fs"
+import { copyFileSync, existsSync } from "fs"
 import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
 import typescript from "rollup-plugin-typescript2"
@@ -222,6 +222,23 @@ function syncAIInstructions() {
   console.log("\u2705 AI instruction files synced from CLAUDE.md")
 }
 
+/** Copy .min.js → .js for backwards compatibility with consumers that
+ *  reference the old (pre-.min) filenames (e.g. webpack aliases). */
+function createLegacyAliases(bundles) {
+  for (const b of bundles) {
+    const minESM = `dist/${b.name}.module.min.js`
+    const legacyESM = `dist/${b.name}.module.js`
+    const minCJS = `dist/${b.name}.min.js`
+    const legacyCJS = `dist/${b.name}.js`
+    for (const [src, dst] of [[minESM, legacyESM], [minCJS, legacyCJS]]) {
+      if (existsSync(src)) {
+        try { copyFileSync(src, dst) } catch { /* non-fatal */ }
+      }
+    }
+  }
+  console.log("\u2705 legacy filename aliases created")
+}
+
 async function build() {
   syncAIInstructions()
 
@@ -245,6 +262,8 @@ async function build() {
     ...bundles.map(b => createBundle(b)),
     buildDeclarations()
   ])
+
+  createLegacyAliases(bundles)
 }
 
 build().catch(err => {

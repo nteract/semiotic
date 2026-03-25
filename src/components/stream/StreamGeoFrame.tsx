@@ -39,6 +39,7 @@ import { GeoParticlePool } from "./GeoParticlePool"
 import type { LineSceneNode } from "./types"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
+import { resolveNodeColor } from "./sceneUtils"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -683,11 +684,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
           if (hoveredNode && hoveredNode.type === "point") {
             const pn = hoveredNode as PointSceneNode
+            const nodeColor = resolveNodeColor(hoveredNode)
             ictx.beginPath()
             ictx.arc(pn.x, pn.y, pn.r + 3, 0, Math.PI * 2)
-            ictx.fillStyle = "rgba(255, 255, 255, 0.4)"
+            ictx.fillStyle = nodeColor ? `${nodeColor}66` : "rgba(255, 255, 255, 0.4)"
             ictx.fill()
-            ictx.strokeStyle = "rgba(0, 0, 0, 0.5)"
+            ictx.strokeStyle = nodeColor || "rgba(0, 0, 0, 0.5)"
             ictx.lineWidth = 2
             ictx.stroke()
           }

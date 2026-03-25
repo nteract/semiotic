@@ -81,9 +81,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
 
-  // ── Loading state ───────────────────────────────────────────────────────
+  // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
 
   const { activeSelectionHook, customHoverBehavior: baseHoverBehavior } = useChartSelection({
     selection,
@@ -185,6 +184,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   // Validate
   const error = validateObjectData({ componentName: "Treemap", data })
   if (error) return <ChartError componentName="Treemap" message={error} width={width} height={height} />
+
+  // ── Loading guard (deferred to after all hooks) ────────────────────────
+  if (loadingEl) return loadingEl
 
   return (<SafeRender componentName="Treemap" width={width} height={height}>
     <StreamNetworkFrame

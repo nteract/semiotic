@@ -152,8 +152,12 @@ export {
   formatAxis,
   createTooltip,
   formatLargeNumber,
-  truncateText
+  truncateText,
+  adaptiveTimeTicks
 } from "./shared/formatUtils"
+
+// Color manipulation utilities for anomaly/forecast styling
+export { darkenColor, lightenColor } from "./shared/statisticalOverlays"
 
 // Tooltip utilities
 export {

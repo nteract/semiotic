@@ -61,7 +61,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   /**
    * Format function for x-axis tick labels
    */
-  xFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
 
   /**
    * Format function for y-axis tick labels
@@ -264,11 +264,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -377,7 +375,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   ]), [xAccessor, yAccessor, xLabel, yLabel, valueAccessor])
 
   // Validate data (after all hooks)
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "Heatmap",
     data: data,
     accessors: {
@@ -386,7 +384,6 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
       valueAccessor,
     },
   })
-  if (error) return <ChartError componentName="Heatmap" message={error} width={width} height={height} />
 
   // Build gradient legend
   const gradientLegend = useMemo(() => {
@@ -430,6 +427,11 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="Heatmap" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

@@ -225,11 +225,9 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     )
   }, [sizeBy, colorBy])
 
-  // ── Early returns (after all hooks) ─────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(points, resolved.width, resolved.height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(points, resolved.width, resolved.height, emptyContent) : null
 
   warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
   warnMissingField("ProportionalSymbolMap", safeData, "yAccessor", yAccessor)
@@ -269,6 +267,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(className && { className }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <SafeRender componentName="ProportionalSymbolMap" width={resolved.width} height={resolved.height}>

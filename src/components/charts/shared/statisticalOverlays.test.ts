@@ -354,6 +354,131 @@ describe("buildForecast — pre-computed mode", () => {
   })
 })
 
+// ── buildForecast — multi-metric (groupBy) boundary duplication ──────────
+
+describe("buildForecast — multi-metric _groupBy boundary duplication", () => {
+  it("creates bridge points within each metric group, not across groups", () => {
+    // Interleaved multi-metric data: A_t0, B_t0, A_t1, B_t1, ...
+    // Metric A: training at t0,t1 → observed at t2,t3
+    // Metric B: training at t0,t1 → observed at t2,t3
+    const data = [
+      { time: 0, value: 10, metric: "A", isTraining: true, isForecast: false },
+      { time: 0, value: 20, metric: "B", isTraining: true, isForecast: false },
+      { time: 1, value: 12, metric: "A", isTraining: true, isForecast: false },
+      { time: 1, value: 22, metric: "B", isTraining: true, isForecast: false },
+      { time: 2, value: 14, metric: "A", isTraining: false, isForecast: false },
+      { time: 2, value: 24, metric: "B", isTraining: false, isForecast: false },
+      { time: 3, value: 16, metric: "A", isTraining: false, isForecast: false },
+      { time: 3, value: 26, metric: "B", isTraining: false, isForecast: false },
+    ]
+
+    const config: ForecastConfig = {
+      isTraining: "isTraining",
+      isForecast: "isForecast",
+      _groupBy: "metric",
+    }
+
+    const result = buildForecast(data, "time", "value", config)
+    const pd = result.processedData
+
+    // Should have more points than original due to bridge duplication
+    expect(pd.length).toBeGreaterThan(data.length)
+
+    // Bridge points should exist within each group
+    const metricAPoints = pd.filter((d) => d.metric === "A")
+    const metricBPoints = pd.filter((d) => d.metric === "B")
+
+    // Each group should have bridge points at the training→observed boundary
+    // Original: 2 training + 2 observed = 4 per group
+    // With bridges: 4 + 2 (one bridge in each direction) = 6 per group
+    expect(metricAPoints.length).toBe(6)
+    expect(metricBPoints.length).toBe(6)
+
+    // Verify bridges: there should be a training point at t=2 and an observed point at t=1
+    const aBridgeForward = metricAPoints.find(
+      (d) => d.time === 2 && d[SEGMENT_FIELD] === "training"
+    )
+    const aBridgeBackward = metricAPoints.find(
+      (d) => d.time === 1 && d[SEGMENT_FIELD] === "observed"
+    )
+    expect(aBridgeForward).toBeDefined()
+    expect(aBridgeBackward).toBeDefined()
+
+    // Same for metric B
+    const bBridgeForward = metricBPoints.find(
+      (d) => d.time === 2 && d[SEGMENT_FIELD] === "training"
+    )
+    const bBridgeBackward = metricBPoints.find(
+      (d) => d.time === 1 && d[SEGMENT_FIELD] === "observed"
+    )
+    expect(bBridgeForward).toBeDefined()
+    expect(bBridgeBackward).toBeDefined()
+  })
+
+  it("does not create cross-group bridges from interleaved data without _groupBy", () => {
+    // Without _groupBy, adjacent-pair scanning on interleaved data
+    // would find A_training→B_training (same segment, no bridge) and
+    // A_training→B_observed (cross-group, wrong bridge). This test verifies
+    // the single-group path still works for non-interleaved data.
+    const data = [
+      { time: 0, value: 10, isTraining: true, isForecast: false },
+      { time: 1, value: 12, isTraining: true, isForecast: false },
+      { time: 2, value: 14, isTraining: false, isForecast: false },
+      { time: 3, value: 16, isTraining: false, isForecast: false },
+    ]
+
+    const config: ForecastConfig = {
+      isTraining: "isTraining",
+      isForecast: "isForecast",
+    }
+
+    const result = buildForecast(data, "time", "value", config)
+    const pd = result.processedData
+
+    // 4 original + 2 bridge points (one in each direction at t=1/t=2 boundary)
+    expect(pd.length).toBe(6)
+
+    // Training bridge at t=2
+    const bridgeForward = pd.find(
+      (d) => d.time === 2 && d[SEGMENT_FIELD] === "training"
+    )
+    expect(bridgeForward).toBeDefined()
+
+    // Observed bridge at t=1
+    const bridgeBackward = pd.find(
+      (d) => d.time === 1 && d[SEGMENT_FIELD] === "observed"
+    )
+    expect(bridgeBackward).toBeDefined()
+  })
+
+  it("handles three-way transition (training→observed→forecast) per group", () => {
+    const data = [
+      { time: 0, value: 10, metric: "A", isTraining: true, isForecast: false },
+      { time: 1, value: 12, metric: "A", isTraining: true, isForecast: false },
+      { time: 2, value: 14, metric: "A", isTraining: false, isForecast: false },
+      { time: 3, value: 16, metric: "A", isTraining: false, isForecast: true },
+      { time: 4, value: 18, metric: "A", isTraining: false, isForecast: true },
+    ]
+
+    const config: ForecastConfig = {
+      isTraining: "isTraining",
+      isForecast: "isForecast",
+      _groupBy: "metric",
+    }
+
+    const result = buildForecast(data, "time", "value", config)
+    const pd = result.processedData
+
+    // 5 original + 2 bridges (training→observed) + 2 bridges (observed→forecast) = 9
+    expect(pd.length).toBe(9)
+
+    const segments = [...new Set(pd.map((d) => d[SEGMENT_FIELD]))]
+    expect(segments).toContain("training")
+    expect(segments).toContain("observed")
+    expect(segments).toContain("forecast")
+  })
+})
+
 // ── createSegmentLineStyle ──────────────────────────────────────────────
 
 describe("createSegmentLineStyle", () => {

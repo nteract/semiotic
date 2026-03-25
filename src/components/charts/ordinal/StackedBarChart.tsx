@@ -162,11 +162,10 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     [stackBy, categoryAccessor, valueAccessor]
   )
 
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "StackedBarChart", data: data,
     accessors: { categoryAccessor, valueAccessor }, requiredProps: { stackBy },
   })
-  if (error) return <ChartError componentName="StackedBarChart" message={error} width={width} height={height} />
 
   // Merge streaming legend into legendBehaviorProps when in push API mode
   const effectiveLegendProps = useMemo(() => {
@@ -223,6 +222,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  if (validationError) return <ChartError componentName="StackedBarChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

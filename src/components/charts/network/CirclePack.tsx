@@ -78,9 +78,8 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
 
-  // ── Loading state ───────────────────────────────────────────────────────
+  // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
 
   const allNodes = useMemo(() => {
     return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
@@ -147,6 +146,9 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   // Validate
   const error = validateObjectData({ componentName: "CirclePack", data })
   if (error) return <ChartError componentName="CirclePack" message={error} width={width} height={height} />
+
+  // ── Loading guard (deferred to after all hooks) ────────────────────────
+  if (loadingEl) return loadingEl
 
   return (
     <SafeRender componentName="CirclePack" width={width} height={height}>

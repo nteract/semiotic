@@ -156,15 +156,17 @@ export const [ThemeProvider, useThemeSelector] = createStore(
         if (theme === "high-contrast") {
           return { theme: HIGH_CONTRAST_THEME }
         }
-        // If the object has `mode`, treat it as a complete theme (full replacement).
-        // Otherwise shallow-merge into the current theme (partial override).
+        // If the object has `mode`, merge onto the matching base theme so
+        // unspecified fields (background, text, grid, etc.) inherit correctly.
+        // Without `mode`, shallow-merge into the current theme (partial override).
         if (theme.mode) {
+          const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
           return {
             theme: {
-              ...LIGHT_THEME,
+              ...base,
               ...theme,
-              colors: { ...LIGHT_THEME.colors, ...(theme.colors || {}) },
-              typography: { ...LIGHT_THEME.typography, ...(theme.typography || {}) },
+              colors: { ...base.colors, ...(theme.colors || {}) },
+              typography: { ...base.typography, ...(theme.typography || {}) },
             }
           }
         }

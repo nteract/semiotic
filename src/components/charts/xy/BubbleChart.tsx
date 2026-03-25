@@ -264,11 +264,9 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states ──────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
   const isPushMode = data === undefined
@@ -470,6 +468,10 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
+
+  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

@@ -384,7 +384,7 @@ export function createDefaultAnnotationRules(
             : ann.field && ann.value != null
               ? data.filter((d) => d[ann.field] === ann.value)
               : []
-        const style = ann.style || {
+        const defaultStyle = {
           stroke: ann.color || "#f97316",
           strokeWidth: 2,
           fill: "none"
@@ -395,8 +395,12 @@ export function createDefaultAnnotationRules(
               const px = resolveX(d, context)
               const py = resolveY(d, context)
               if (px == null || py == null) return null
+              const r = typeof ann.r === "function" ? ann.r(d) : (ann.r || 6)
+              const style = typeof ann.style === "function"
+                ? ann.style(d)
+                : (ann.style || defaultStyle)
               return (
-                <circle key={`hl-${i}`} cx={px} cy={py} r={ann.r || 6} {...style} />
+                <circle key={`hl-${i}`} cx={px} cy={py} r={r} {...style} />
               )
             })}
           </g>

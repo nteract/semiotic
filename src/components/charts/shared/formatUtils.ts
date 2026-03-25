@@ -182,6 +182,169 @@ export function smartTickFormat(value: any): string {
   return String(parseFloat(cleaned.toPrecision(6)))
 }
 
+// ── Hierarchical / adaptive time tick formatting ───────────────────────
+//
+// The idea: the first tick on a time axis should be fully qualified so
+// the reader knows the absolute position ("Mon Mar 24, 14:33:52").
+// Subsequent ticks only show what changed from the previous tick — if
+// the next tick is one second later, just show ":53".  But when a
+// higher-order boundary is crossed (new minute, hour, day, month, year)
+// the label re-qualifies up to that boundary.
+//
+// This is a solved pattern in journalism / dashboard design and avoids
+// the redundancy of repeating "Mar 24, 2026" on every tick when only
+// the seconds are changing.
+
+type TimeGranularity = "seconds" | "minutes" | "hours" | "days" | "months" | "years"
+
+const MS_SECOND = 1000
+const MS_MINUTE = 60 * MS_SECOND
+const MS_HOUR = 60 * MS_MINUTE
+const MS_DAY = 24 * MS_HOUR
+
+/**
+ * Detect the finest meaningful granularity from a sorted array of
+ * epoch-ms tick values by looking at the median gap.
+ */
+function detectGranularity(ticks: number[]): TimeGranularity {
+  if (ticks.length < 2) return "days"
+  // Use median gap to be robust against one-off outliers
+  const gaps = []
+  for (let i = 1; i < ticks.length; i++) gaps.push(ticks[i] - ticks[i - 1])
+  gaps.sort((a, b) => a - b)
+  const median = gaps[Math.floor(gaps.length / 2)]
+
+  if (median < 2 * MS_MINUTE) return "seconds"
+  if (median < 2 * MS_HOUR) return "minutes"
+  if (median < 2 * MS_DAY) return "hours"
+  if (median < 60 * MS_DAY) return "days"
+  if (median < 400 * MS_DAY) return "months"
+  return "years"
+}
+
+function pad2(n: number): string { return n < 10 ? `0${n}` : String(n) }
+
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+/** Full anchor label — gives the reader absolute context. */
+function fullLabel(d: Date, granularity: TimeGranularity): string {
+  const mon = MONTH_SHORT[d.getMonth()]
+  const day = d.getDate()
+  const year = d.getFullYear()
+  const hh = pad2(d.getHours())
+  const mm = pad2(d.getMinutes())
+  const ss = pad2(d.getSeconds())
+
+  switch (granularity) {
+    case "seconds":  return `${mon} ${day}, ${year} ${hh}:${mm}:${ss}`
+    case "minutes":  return `${mon} ${day}, ${year} ${hh}:${mm}`
+    case "hours":    return `${mon} ${day}, ${year} ${hh}:${mm}`
+    case "days":     return `${mon} ${day}, ${year}`
+    case "months":   return `${mon} ${year}`
+    case "years":    return `${year}`
+  }
+}
+
+/**
+ * Contextual label — only shows units that changed from `prev`.
+ * Re-qualifies upward when a boundary is crossed.
+ */
+function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
+  const yearChanged  = d.getFullYear() !== prev.getFullYear()
+  const monthChanged = yearChanged || d.getMonth() !== prev.getMonth()
+  const dayChanged   = monthChanged || d.getDate() !== prev.getDate()
+  const hourChanged  = dayChanged || d.getHours() !== prev.getHours()
+  const minChanged   = hourChanged || d.getMinutes() !== prev.getMinutes()
+
+  const mon = MONTH_SHORT[d.getMonth()]
+  const day = d.getDate()
+  const year = d.getFullYear()
+  const hh = pad2(d.getHours())
+  const mm = pad2(d.getMinutes())
+  const ss = pad2(d.getSeconds())
+
+  switch (granularity) {
+    case "seconds":
+      if (dayChanged) return `${mon} ${day} ${hh}:${mm}:${ss}`
+      if (hourChanged) return `${hh}:${mm}:${ss}`
+      if (minChanged) return `${mm}:${ss}`
+      return `:${ss}`
+
+    case "minutes":
+      if (dayChanged) return `${mon} ${day} ${hh}:${mm}`
+      if (hourChanged) return `${hh}:${mm}`
+      return `:${mm}`
+
+    case "hours":
+      if (monthChanged) return `${mon} ${day} ${hh}:${mm}`
+      if (dayChanged) return `${mon} ${day} ${hh}:00`
+      return `${hh}:00`
+
+    case "days":
+      if (yearChanged) return `${mon} ${day}, ${year}`
+      if (monthChanged) return `${mon} ${day}`
+      return `${day}`
+
+    case "months":
+      if (yearChanged) return `${mon} ${year}`
+      return `${mon}`
+
+    case "years":
+      return `${year}`
+  }
+}
+
+/**
+ * Creates a hierarchical time axis formatter.
+ *
+ * The first tick is fully qualified (e.g., "Mar 24, 2026 14:33:52").
+ * Subsequent ticks show only the significant unit change (e.g., ":53").
+ * When a time boundary is crossed (new minute, hour, day, etc.), the
+ * label re-qualifies up to that boundary (e.g., "14:34:00").
+ *
+ * Designed to be passed as `xFormat` on any Semiotic XY chart.
+ * Uses the extended `(value, index, allTicks)` signature.
+ *
+ * @param granularity - Optional explicit granularity. If omitted,
+ *   auto-detected from the tick spacing on first call.
+ *
+ * @example
+ * ```tsx
+ * import { adaptiveTimeTicks } from "semiotic"
+ *
+ * // Auto-detect granularity from the data
+ * <LineChart data={ts} xFormat={adaptiveTimeTicks()} />
+ *
+ * // Explicit granularity
+ * <LineChart data={ts} xFormat={adaptiveTimeTicks("minutes")} />
+ * ```
+ */
+export function adaptiveTimeTicks(
+  granularity?: TimeGranularity
+): (value: any, index?: number, allTicks?: number[]) => string {
+  let resolved: TimeGranularity | undefined = granularity
+
+  return (value: any, index?: number, allTicks?: number[]): string => {
+    const d = value instanceof Date ? value : new Date(value)
+
+    // Auto-detect granularity on first call if not explicit
+    if (!resolved && allTicks && allTicks.length >= 2) {
+      resolved = detectGranularity(allTicks)
+    }
+    const gran = resolved || "days"
+
+    // First tick: full anchor label
+    if (index == null || index === 0 || !allTicks || allTicks.length === 0) {
+      return fullLabel(d, gran)
+    }
+
+    // Subsequent ticks: show only what changed
+    const prev = new Date(allTicks[index - 1])
+    return deltaLabel(d, prev, gran)
+  }
+}
+
 /**
  * Truncates text to specified length with ellipsis
  *

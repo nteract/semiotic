@@ -463,9 +463,141 @@ import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
       />
 
       {/* ================================================================= */}
+      {/* Dark / Light Mode Integration */}
+      {/* ================================================================= */}
+      <h2 id="dark-light-mode">Dark / Light Mode Integration</h2>
+
+      <p>
+        <code>ThemeProvider</code> is reactive — changing the <code>theme</code>{" "}
+        prop re-initializes the store, so you can wire it to your app's dark mode
+        toggle, a media query, or a context value.
+      </p>
+
+      <h3 id="reactive-switching">Reactive mode switching</h3>
+
+      <p>
+        Pass a string preset or object — ThemeProvider re-applies whenever the
+        prop changes:
+      </p>
+
+      <CodeBlock
+        code={`import { ThemeProvider, BarChart } from "semiotic"
+
+function Dashboard({ children }) {
+  const [dark, setDark] = useState(
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  )
+
+  return (
+    <ThemeProvider theme={dark ? "dark" : "light"}>
+      <button onClick={() => setDark(d => !d)}>Toggle mode</button>
+      {children}
+    </ThemeProvider>
+  )
+}`}
+        language="jsx"
+      />
+
+      <h3 id="custom-colors-with-mode">Preserving custom colors across mode changes</h3>
+
+      <p>
+        Passing a string preset like <code>"dark"</code> replaces the entire
+        theme — including categorical colors. To keep your brand palette in both
+        modes, pass an object with <code>mode</code> set. This merges your
+        overrides onto the matching base theme (light or dark):
+      </p>
+
+      <CodeBlock
+        code={`const MY_COLORS = ["#e63946", "#457b9d", "#a8dadc", "#1d3557"]
+
+function Dashboard({ children }) {
+  const [dark, setDark] = useState(false)
+
+  // Object with \`mode\` → merges onto DARK_THEME or LIGHT_THEME base,
+  // so background/text/grid adapt to mode while categorical stays yours.
+  const theme = {
+    mode: dark ? "dark" : "light",
+    colors: { categorical: MY_COLORS },
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
+  )
+}
+
+// Equivalent explicit approach (if you need full control):
+import { LIGHT_THEME, DARK_THEME } from "semiotic"
+
+const lightTheme = { ...LIGHT_THEME, colors: { ...LIGHT_THEME.colors, categorical: MY_COLORS } }
+const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorical: MY_COLORS } }
+
+<ThemeProvider theme={dark ? darkTheme : lightTheme}>`}
+        language="jsx"
+      />
+
+      <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+        <strong>Merge rules:</strong> String preset (e.g. <code>"dark"</code>)
+        → full replacement. Object with <code>mode</code> → merge onto the
+        matching base theme. Object without <code>mode</code> → merge onto the
+        current theme (partial override, keeps existing mode/colors).
+      </p>
+
+      <h3 id="css-interop">CSS custom properties interop</h3>
+
+      <p>
+        ThemeProvider sets <code>--semiotic-*</code> CSS vars on a wrapper{" "}
+        <code>&lt;div&gt;</code>. If your host app also sets{" "}
+        <code>--semiotic-*</code> vars (e.g. on <code>:root</code>),
+        ThemeProvider's closer div wins for charts inside it. To let your app's
+        tokens flow through, use CSS-only theming instead — skip ThemeProvider
+        and set the vars yourself:
+      </p>
+
+      <CodeBlock
+        code={`/* Let your app's design tokens drive chart colors directly */
+:root {
+  --semiotic-bg: var(--app-surface);
+  --semiotic-text: var(--app-text);
+  --semiotic-text-secondary: var(--app-text-muted);
+  --semiotic-grid: var(--app-border-subtle);
+  --semiotic-border: var(--app-border);
+  --semiotic-primary: var(--app-accent);
+  --semiotic-font-family: var(--app-font);
+}
+
+/* Dark mode automatically inherits when your app switches tokens */
+[data-theme="dark"] {
+  --app-surface: #1a1a2e;
+  --app-text: #e0e0e0;
+  /* ... Semiotic vars follow because they reference --app-* */
+}
+
+/* Or combine: use ThemeProvider for categorical/sequential colors,
+   and let CSS vars handle the rest */`}
+        language="css"
+      />
+
+      <CodeBlock
+        code={`// Hybrid approach: ThemeProvider for palette only, CSS vars for chrome
+// Since this object has no \`mode\`, it merges onto the current theme
+// without overriding background/text/grid (which come from your CSS vars)
+<ThemeProvider theme={{
+  colors: {
+    categorical: BRAND_COLORS,
+    sequential: "viridis",
+  },
+}}>
+  <BarChart data={data} categoryAccessor="name" valueAccessor="value" />
+</ThemeProvider>`}
+        language="jsx"
+      />
+
+      {/* ================================================================= */}
       {/* CSS Custom Properties */}
       {/* ================================================================= */}
-      <h2 id="css-custom-properties">CSS Custom Properties</h2>
+      <h2 id="css-custom-properties">CSS Custom Properties Reference</h2>
 
       <p>
         ThemeProvider sets CSS custom properties on a wrapper{" "}

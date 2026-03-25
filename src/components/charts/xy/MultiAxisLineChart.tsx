@@ -220,11 +220,9 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     )
   }
 
-  // ── Loading / empty states ────────────────────────────────────────────
+  // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
-  if (loadingEl) return loadingEl
-  const emptyEl = renderEmptyState(data, width, height, emptyContent)
-  if (emptyEl) return emptyEl
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
 
@@ -403,12 +401,11 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }, [tooltip, seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
 
   // ── Validation ────────────────────────────────────────────────────────
-  const error = validateArrayData({
+  const validationError = validateArrayData({
     componentName: "MultiAxisLineChart",
     data: data,
     accessors: { xAccessor },
   })
-  if (error) return <ChartError componentName="MultiAxisLineChart" message={error} width={width} height={height} />
 
   // ── Y extent for unitized data ────────────────────────────────────────
   // Force [0, 1] when dual-axis to keep unitization stable
@@ -446,6 +443,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(onObservation && { customClickBehavior: setup.customClickBehavior }),
     ...frameProps
   }
+
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
+  if (validationError) return <ChartError componentName="MultiAxisLineChart" message={validationError} width={width} height={height} />
 
   return (
     <SafeRender componentName="MultiAxisLineChart" width={width} height={height}>

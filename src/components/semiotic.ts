@@ -294,7 +294,10 @@ export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
 // ── Format utilities ───────────────────────────────────────────────────
 
-export { smartTickFormat } from "./charts/shared/formatUtils"
+export { smartTickFormat, adaptiveTimeTicks } from "./charts/shared/formatUtils"
+
+// Color manipulation utilities
+export { darkenColor, lightenColor } from "./charts/shared/statisticalOverlays"
 
 // ── Tooltip types ──────────────────────────────────────────────────────
 
