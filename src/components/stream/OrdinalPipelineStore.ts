@@ -350,6 +350,22 @@ export class OrdinalPipelineStore {
       for (const d of data) {
         liveCategories.add(this.getO(d))
       }
+
+      // Cap the retained history to prevent unbounded growth in high-cardinality
+      // streams. Prune dead categories from the front (oldest first) when the
+      // Set exceeds 3x the live count, keeping recent evictions for FIFO stability.
+      const maxRetained = Math.max(50, liveCategories.size * 3)
+      if (this.categories.size > maxRetained) {
+        let toRemove = this.categories.size - maxRetained
+        for (const cat of this.categories) {
+          if (toRemove <= 0) break
+          if (!liveCategories.has(cat)) {
+            this.categories.delete(cat)
+            toRemove--
+          }
+        }
+      }
+
       return cats.filter(cat => liveCategories.has(cat))
     }
 

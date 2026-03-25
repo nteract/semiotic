@@ -266,17 +266,20 @@ function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
 
   switch (granularity) {
     case "seconds":
+      if (yearChanged) return `${mon} ${day}, ${year} ${hh}:${mm}:${ss}`
       if (dayChanged) return `${mon} ${day} ${hh}:${mm}:${ss}`
       if (hourChanged) return `${hh}:${mm}:${ss}`
       if (minChanged) return `${mm}:${ss}`
       return `:${ss}`
 
     case "minutes":
+      if (yearChanged) return `${mon} ${day}, ${year} ${hh}:${mm}`
       if (dayChanged) return `${mon} ${day} ${hh}:${mm}`
       if (hourChanged) return `${hh}:${mm}`
       return `:${mm}`
 
     case "hours":
+      if (yearChanged) return `${mon} ${day}, ${year} ${hh}:00`
       if (monthChanged) return `${mon} ${day} ${hh}:${mm}`
       if (dayChanged) return `${mon} ${day} ${hh}:00`
       return `${hh}:00`
