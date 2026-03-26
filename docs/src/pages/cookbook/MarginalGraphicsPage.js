@@ -18,7 +18,7 @@ export default function MarginalGraphicsPage() {
         title: "Uncertainty Visualization",
         path: "/cookbook/uncertainty-visualization",
       }}
-      nextPage={{ title: "Bar to Parallel Coordinates", path: "/cookbook/bar-to-parallel-coordinates" }}
+      nextPage={{ title: "Slope Chart", path: "/cookbook/slope-chart" }}
     >
       <p>
         Scatter plots reveal relationships between two variables, but they hide

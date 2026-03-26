@@ -14,8 +14,8 @@ export default function SlopeChartPage() {
         { label: "Slope Chart", path: "/cookbook/slope-chart" },
       ]}
       prevPage={{
-        title: "Waterfall Chart",
-        path: "/cookbook/waterfall-chart",
+        title: "Marginal Graphics",
+        path: "/cookbook/marginal-graphics",
       }}
       nextPage={{
         title: "Marimekko Chart",
@@ -118,10 +118,6 @@ export default function SlopeChartPage() {
         <li>
           <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame for slope chart rendering
-        </li>
-        <li>
-          <Link to="/cookbook/bar-to-parallel">Bar to Parallel</Link> — another
-          recipe using connectors between ordinal columns
         </li>
         <li>
           <Link to="/cookbook/dot-plot">Dot Plot</Link> — a related

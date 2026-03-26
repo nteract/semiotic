@@ -14,7 +14,6 @@ export default function IsotypeChartPage() {
         { label: "Isotype Chart", path: "/cookbook/isotype-chart" },
       ]}
       prevPage={{ title: "Radar Plot", path: "/cookbook/radar-plot" }}
-      nextPage={{ title: "Matrix", path: "/cookbook/matrix" }}
     >
       <p>
         Isotype charts (pictogram charts) replace abstract bar lengths with

@@ -105,7 +105,7 @@ export default function MarimekkoChartPage() {
           without variable widths
         </li>
         <li>
-          <Link to="/cookbook/waterfall-chart">Waterfall Chart</Link> — another
+          <Link to="/cookbook/slope-chart">Slope Chart</Link> — another
           custom ordinal layout
         </li>
       </ul>

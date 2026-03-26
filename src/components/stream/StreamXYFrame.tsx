@@ -1078,6 +1078,43 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       </svg>
     ) : null
 
+    // ── Annotation accessor resolution ─────────────────────────────────
+    // SVGOverlay needs string keys to look up coordinates in annotationData.
+    // When accessors are functions, we bake resolved values under synthetic keys.
+    // Priority: string accessor → function accessor (resolved) → string fallback
+    // (timeAccessor/valueAccessor) → function fallback (resolved) → undefined.
+    const resolveAnnAccessor = (
+      primary: any, fallback: any, resolvedKey: string, fallbackKey: string
+    ): { key: string | undefined; fn: ((d: any) => any) | null } => {
+      if (typeof primary === "string") return { key: primary, fn: null }
+      if (typeof primary === "function") return { key: resolvedKey, fn: primary }
+      if (typeof fallback === "string") return { key: fallback, fn: null }
+      if (typeof fallback === "function") return { key: fallbackKey, fn: fallback }
+      return { key: undefined, fn: null }
+    }
+
+    const xResolved = resolveAnnAccessor(xAccessor, timeAccessor, "__semiotic_resolvedX", "__semiotic_resolvedTime")
+    const yResolved = resolveAnnAccessor(yAccessor, valueAccessor, "__semiotic_resolvedY", "__semiotic_resolvedValue")
+    const annXAccessor = xResolved.key
+    const annYAccessor = yResolved.key
+    const hasAnnotations = annotations && annotations.length > 0
+
+    const enrichAnnotationData = (rawData: Record<string, any>[] | undefined): Record<string, any>[] | undefined => {
+      if (!rawData || !hasAnnotations || (!xResolved.fn && !yResolved.fn)) return rawData
+      let didChange = false
+      const result = rawData.map(d => {
+        const computeX = xResolved.fn && xResolved.key && !(xResolved.key in d)
+        const computeY = yResolved.fn && yResolved.key && !(yResolved.key in d)
+        if (!computeX && !computeY) return d
+        didChange = true
+        const copy = { ...d }
+        if (computeX) copy[xResolved.key!] = xResolved.fn!(d)
+        if (computeY) copy[yResolved.key!] = yResolved.fn!(d)
+        return copy
+      })
+      return didChange ? result : rawData
+    }
+
     // ── SSR path: render SVG instead of canvas ──────────────────────────
 
     if (isServerEnvironment) {
@@ -1157,9 +1194,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
-            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
-            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
-            annotationData={store?.getData()}
+            xAccessor={annXAccessor}
+            yAccessor={annYAccessor}
+            annotationData={enrichAnnotationData(store?.getData())}
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
             )}
@@ -1264,9 +1301,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
-          xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
-          yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
-          annotationData={storeRef.current?.getData()}
+          xAccessor={annXAccessor}
+          yAccessor={annYAccessor}
+          annotationData={enrichAnnotationData(storeRef.current?.getData())}
           pointNodes={storeRef.current?.scene.filter(
             (n): n is PointSceneNode => n.type === "point"
           )}
