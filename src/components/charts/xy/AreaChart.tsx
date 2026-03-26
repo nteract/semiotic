@@ -249,6 +249,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -439,6 +441,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
       legendIsolatedCategories: legendState.isolatedCategories,
     }),
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

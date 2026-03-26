@@ -55,3 +55,6 @@ export { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // ── Tooltip utilities ────────────────────────────────────────────────────
 export { normalizeTooltip } from "./Tooltip/Tooltip"
+
+// ── Accessibility hooks ─────────────────────────────────────────────────
+export { useReducedMotion, useHighContrast } from "./stream/useMediaPreferences"

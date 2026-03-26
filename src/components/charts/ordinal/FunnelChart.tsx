@@ -69,6 +69,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     showCategoryTicks: false,
   })
 
@@ -113,6 +115,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
   const enableHover = resolved.enableHover
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // Horizontal funnel has no axes — tight margins.
   // Vertical bar-funnel needs room for axis labels and floating labels above bars.
@@ -241,6 +245,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     showLabels,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

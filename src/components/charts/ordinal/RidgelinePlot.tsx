@@ -52,6 +52,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
     showCategoryTicks: props.showCategoryTicks,
@@ -78,6 +80,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
@@ -179,6 +183,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     amplitude,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

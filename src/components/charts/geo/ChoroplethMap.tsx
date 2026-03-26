@@ -74,6 +74,8 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     height: props.height,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   })
 
   const {
@@ -214,6 +216,8 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
+    ...(resolved.description && { description: resolved.description }),
+    ...(resolved.summary && { summary: resolved.summary }),
     ...(className && { className }),
     ...frameProps
   }

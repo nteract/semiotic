@@ -29,7 +29,7 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, navPointToHover } from "./keyboardNav"
+import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"

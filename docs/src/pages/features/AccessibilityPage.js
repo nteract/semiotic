@@ -265,9 +265,8 @@ export default function AccessibilityPage() {
 // Transitions fast-forward to final state, orbit stops ticking.
 // Pulse/decay encodings render statically (no animation).
 //
-// The hook is also available for your own UI:
-import { useReducedMotion } from "semiotic"
-const prefersReduced = useReducedMotion()`}
+// You can also read the preference directly for your own UI:
+const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches`}
         language="jsx"
       />
 

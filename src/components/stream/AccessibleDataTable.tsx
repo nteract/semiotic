@@ -404,6 +404,7 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
       }}
       onBlur={(e) => {
         const el = e.currentTarget
+        el.removeAttribute("style")
         Object.assign(el.style, SR_ONLY_STYLE)
       }}
     >

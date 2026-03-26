@@ -62,6 +62,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     enableHover: props.enableHover,
     showLabels: props.showLabels,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   }, { width: 800, height: 600 })
 
   const {
@@ -99,6 +101,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
@@ -248,6 +252,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       })}
       className={className}
       title={title}
+      description={description}
+      summary={summary}
       {...frameProps}
     />
   </SafeRender>)

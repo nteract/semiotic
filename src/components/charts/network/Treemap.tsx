@@ -48,6 +48,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     enableHover: props.enableHover,
     showLabels: props.showLabels,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     linkedHover: props.linkedHover,
   }, { width: 600, height: 600 })
 
@@ -80,6 +82,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -219,6 +223,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       })}
       className={className}
       title={title}
+      description={description}
+      summary={summary}
       {...frameProps}
     />
   </SafeRender>)

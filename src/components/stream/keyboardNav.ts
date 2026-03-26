@@ -76,7 +76,7 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
     arr.sort((a, b) => a.x - b.x || a.y - b.y)
   }
 
-  // Sort groups by average y of first few points (top-to-bottom ordering)
+  // Sort groups by first point's y position (top-to-bottom ordering)
   const groups = Array.from(byGroup.keys()).sort((a, b) => {
     const aPoints = byGroup.get(a)!
     const bPoints = byGroup.get(b)!
@@ -94,13 +94,18 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
 
 /**
  * Resolve the current NavPosition from a flat index.
+ * Clamps to valid range if the index is stale (e.g. scene changed between key presses).
  */
 export function resolvePosition(graph: NavGraph, flatIndex: number): NavPosition {
-  const point = graph.flat[flatIndex]
+  if (graph.flat.length === 0) {
+    return { flatIndex: -1, group: "_default", indexInGroup: -1 }
+  }
+  const clamped = Math.max(0, Math.min(flatIndex, graph.flat.length - 1))
+  const point = graph.flat[clamped]
   const group = point.group ?? "_default"
-  const groupPoints = graph.byGroup.get(group)!
-  const indexInGroup = groupPoints.indexOf(point)
-  return { flatIndex, group, indexInGroup }
+  const groupPoints = graph.byGroup.get(group) ?? []
+  const idx = groupPoints.indexOf(point)
+  return { flatIndex: clamped, group, indexInGroup: idx >= 0 ? idx : 0 }
 }
 
 /**

@@ -44,6 +44,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     linkedHover: props.linkedHover,
     showCategoryTicks: props.showCategoryTicks,
   })
@@ -69,6 +71,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
   const enableHover = resolved.enableHover
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   const safeData = data || []
   const actualColorBy = colorBy || categoryAccessor
@@ -203,6 +207,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     showAxes: false,
     ...effectiveLegendProps,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

@@ -48,6 +48,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
     showCategoryTicks: props.showCategoryTicks,
@@ -81,6 +83,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
@@ -161,6 +165,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     oSort: sort,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

@@ -261,6 +261,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   const height = resolved.height
   const enableHover = resolved.enableHover
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -419,6 +421,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     enableHover,
     ...(gradientLegend && { legend: gradientLegend, legendPosition }),
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

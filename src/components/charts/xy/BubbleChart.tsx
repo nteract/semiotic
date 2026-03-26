@@ -261,6 +261,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -491,6 +493,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
       legendIsolatedCategories: legendState.isolatedCategories,
     }),
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

@@ -207,6 +207,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend ?? true
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
 
   const isDualAxis = series.length === 2
@@ -448,6 +450,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     curve,
     ...setup.legendBehaviorProps,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),

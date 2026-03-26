@@ -62,6 +62,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   }, { width: 600, height: 600 })
 
   const {
@@ -100,6 +102,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const showLegend = resolved.showLegend
   const showLabels = resolved.showLabels ?? false
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
@@ -238,6 +242,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       })}
       className={className}
       title={title}
+      description={description}
+      summary={summary}
       {...frameProps}
     />
   </SafeRender>)

@@ -190,6 +190,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   const showGrid = resolved.showGrid
   const showLegend = resolved.showLegend
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -573,6 +575,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       legendIsolatedCategories: legendState.isolatedCategories,
     }),
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
