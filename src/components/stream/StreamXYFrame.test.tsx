@@ -572,9 +572,7 @@ describe("StreamXYFrame", () => {
         />
       )
 
-      // The envelope renders as a <path> inside the SVGOverlay with fill="#6366f1"
-      const svgOverlay = container.querySelector("svg.svg-overlay, svg[class*='overlay']")
-      // Even if the SVG overlay class changes, look for the envelope path anywhere
+      // The envelope renders as a <path> inside the SVGOverlay
       const envelopePath = container.querySelector(`path[fill="#6366f1"]`)
       expect(envelopePath).toBeTruthy()
       expect(envelopePath?.getAttribute("d")).toBeTruthy()

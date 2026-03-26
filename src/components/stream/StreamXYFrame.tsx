@@ -1090,16 +1090,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       : typeof valueAccessor === "string" ? valueAccessor
       : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined
 
+    const needsEnrichX = typeof xAccessor === "function" && annXAccessor === "__semiotic_resolvedX"
+    const needsEnrichY = typeof yAccessor === "function" && annYAccessor === "__semiotic_resolvedY"
+    const needsEnrich = (needsEnrichX || needsEnrichY) && annotations && annotations.length > 0
+
     const enrichAnnotationData = (rawData: Record<string, any>[] | undefined): Record<string, any>[] | undefined => {
-      if (!rawData) return rawData
-      const needsX = typeof xAccessor === "function" && annXAccessor === "__semiotic_resolvedX"
-      const needsY = typeof yAccessor === "function" && annYAccessor === "__semiotic_resolvedY"
-      if (!needsX && !needsY) return rawData
+      if (!rawData || !needsEnrich) return rawData
       return rawData.map(d => {
-        if (d.__semiotic_resolvedX !== undefined || d.__semiotic_resolvedY !== undefined) return d
+        const needComputeX = needsEnrichX && d.__semiotic_resolvedX === undefined
+        const needComputeY = needsEnrichY && d.__semiotic_resolvedY === undefined
+        if (!needComputeX && !needComputeY) return d
         const copy = { ...d }
-        if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
-        if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
+        if (needComputeX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
+        if (needComputeY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
         return copy
       })
     }
