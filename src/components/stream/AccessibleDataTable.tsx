@@ -588,6 +588,14 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
     <a
       href={`#${tableId}`}
       style={SR_ONLY_STYLE}
+      onClick={(e) => {
+        e.preventDefault()
+        // Programmatically focus the target so it reliably expands via onFocus
+        const target = document.getElementById(tableId)
+        if (target) {
+          requestAnimationFrame(() => target.focus())
+        }
+      }}
       onFocus={(e) => {
         // Briefly make visible on focus for sighted keyboard users
         const el = e.currentTarget

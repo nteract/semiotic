@@ -361,7 +361,7 @@ const dataByYear = {
       </div>
 
       <CodeBlock
-        code={`// Data summary action — shows stats + sample rows below the chart
+        code={`// Data summary action — shows stats + sample rows in an overlay above the plot
 <ChartContainer
   title="Quarterly Sales"
   actions={{ dataSummary: true, export: true }}

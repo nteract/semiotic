@@ -356,6 +356,13 @@ export function nextNetworkIndex(
     return nextGraphIndex(key, pos, graph)
   }
 
+  // Build O(1) id → flatIndex lookup
+  const idToIdx = new Map<string, number>()
+  for (let i = 0; i < graph.flat.length; i++) {
+    const id = graph.flat[i].datum?.id
+    if (id != null) idToIdx.set(id, i)
+  }
+
   // Collect neighbor ids
   const neighborIds: string[] = []
   for (const edge of edges) {
@@ -371,7 +378,7 @@ export function nextNetworkIndex(
       if (neighborIds.length === 0) return pos.flatIndex
       const next = (neighborIndexRef.current + 1) % neighborIds.length
       const targetId = neighborIds[next]
-      const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
+      const targetIdx = idToIdx.get(targetId) ?? -1
       if (targetIdx >= 0) neighborIndexRef.current = next
       return targetIdx >= 0 ? targetIdx : pos.flatIndex
     }
@@ -381,7 +388,7 @@ export function nextNetworkIndex(
       if (neighborIds.length === 0) return pos.flatIndex
       const prev = (neighborIndexRef.current - 1 + neighborIds.length) % neighborIds.length
       const targetId = neighborIds[prev]
-      const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
+      const targetIdx = idToIdx.get(targetId) ?? -1
       if (targetIdx >= 0) neighborIndexRef.current = prev
       return targetIdx >= 0 ? targetIdx : pos.flatIndex
     }
@@ -391,7 +398,7 @@ export function nextNetworkIndex(
       if (neighborIds.length === 0) return pos.flatIndex
       const idx = Math.max(0, Math.min(neighborIndexRef.current, neighborIds.length - 1))
       const targetId = neighborIds[idx]
-      const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
+      const targetIdx = idToIdx.get(targetId) ?? -1
       if (targetIdx >= 0) {
         neighborIndexRef.current = -1 // reset for new node
         return targetIdx

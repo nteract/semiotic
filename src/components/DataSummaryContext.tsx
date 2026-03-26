@@ -4,7 +4,7 @@ import * as React from "react"
 interface DataSummaryState {
   /** When true, AccessibleDataTable renders visibly instead of sr-only */
   visible: boolean
-  setVisible: (v: boolean) => void
+  setVisible: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const DataSummaryContext = React.createContext<DataSummaryState | null>(null)
@@ -25,5 +25,5 @@ export function useDataSummary(): DataSummaryState | null {
 
 export function useDataSummaryToggle(): (() => void) | null {
   const ctx = React.useContext(DataSummaryContext)
-  return ctx ? () => ctx.setVisible(!ctx.visible) : null
+  return ctx ? () => ctx.setVisible(v => !v) : null
 }
