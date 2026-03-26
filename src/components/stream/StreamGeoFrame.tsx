@@ -199,7 +199,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const reducedMotionRef = useRef(reducedMotion)
     reducedMotionRef.current = reducedMotion
 
-    const tableId = `semiotic-table-${React.useId?.() ?? "geo"}`
+    const tableId = `semiotic-table-${React.useId()}`
 
     // ── Sizing ────────────────────────────────────────────────────────
 
@@ -1120,7 +1120,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       <div
         ref={combinedRef}
         className={`stream-geo-frame${className ? ` ${className}` : ""}`}
-        role="img"
+        role="group"
         aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
         tabIndex={0}
         style={{
@@ -1130,14 +1130,19 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           overflow: "hidden",
           ...(zoomable ? { touchAction: "none" } : {})
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-        onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
-        onClick={customClickBehavior ? onClick : undefined}
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} />}
         <ScreenReaderSummary summary={summary} />
+        <div
+          role="img"
+          aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onClick={customClickBehavior ? onClick : undefined}
+        >
         {resolvedBackground && (
           <svg
             style={{
@@ -1285,6 +1290,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           height={focusedNavPointRef.current?.h}
         />
         {tooltipElement}
+        </div>{/* end role="img" */}
       </div>
     )
   }

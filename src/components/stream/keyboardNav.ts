@@ -24,6 +24,8 @@ export interface NavPoint {
   h?: number
   /** Group identifier for graph navigation (series name, category, node id) */
   group?: string
+  /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
+  _flatIndex?: number
 }
 
 // ── Navigation Graph ─────────────────────────────────────────────────────
@@ -89,6 +91,11 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
   const flat = Array.from(byGroup.values()).flat()
   flat.sort((a, b) => a.x - b.x || a.y - b.y)
 
+  // Stamp flat index on each point for O(1) lookup
+  for (let i = 0; i < flat.length; i++) {
+    flat[i]._flatIndex = i
+  }
+
   return { flat, groups, byGroup }
 }
 
@@ -104,7 +111,8 @@ export function resolvePosition(graph: NavGraph, flatIndex: number): NavPosition
   const point = graph.flat[clamped]
   const group = point.group ?? "_default"
   const groupPoints = graph.byGroup.get(group) ?? []
-  const idx = groupPoints.indexOf(point)
+  // Use _flatIndex equality for O(1) lookup within group
+  const idx = groupPoints.findIndex(p => p._flatIndex === clamped)
   return { flatIndex: clamped, group, indexInGroup: idx >= 0 ? idx : 0 }
 }
 
@@ -124,7 +132,7 @@ export function nextGraphIndex(
     case "ArrowRight": {
       // Next within group
       if (indexInGroup < groupPoints.length - 1) {
-        return graph.flat.indexOf(groupPoints[indexInGroup + 1])
+        return groupPoints[indexInGroup + 1]._flatIndex!
       }
       return pos.flatIndex // at end, stay
     }
@@ -132,7 +140,7 @@ export function nextGraphIndex(
     case "ArrowLeft": {
       // Prev within group
       if (indexInGroup > 0) {
-        return graph.flat.indexOf(groupPoints[indexInGroup - 1])
+        return groupPoints[indexInGroup - 1]._flatIndex!
       }
       return pos.flatIndex // at start, stay
     }
@@ -193,7 +201,7 @@ function findNearestInGroup(graph: NavGraph, targetGroup: string, ref: NavPoint)
       bestIdx = i
     }
   }
-  return graph.flat.indexOf(targetPoints[bestIdx])
+  return targetPoints[bestIdx]._flatIndex!
 }
 
 // ── XY Extraction ────────────────────────────────────────────────────────

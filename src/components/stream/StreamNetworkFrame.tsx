@@ -266,7 +266,7 @@ const StreamNetworkFrame = forwardRef<
   const reducedMotionRef = useRef(reducedMotion)
   reducedMotionRef.current = reducedMotion
 
-  const tableId = `semiotic-table-${React.useId?.() ?? "network"}`
+  const tableId = `semiotic-table-${React.useId()}`
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
   const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
@@ -1227,7 +1227,7 @@ const StreamNetworkFrame = forwardRef<
     <div
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="img"
+      role="group"
       aria-label={description || (typeof title === "string" ? title : "Network chart")}
       tabIndex={0}
       style={{
@@ -1236,14 +1236,19 @@ const StreamNetworkFrame = forwardRef<
         height: responsiveHeight ? "100%" : size[1],
         overflow: "visible",
       }}
-      onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
-      onMouseLeave={enableHover ? onMouseLeave : undefined}
-      onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       onKeyDown={onKeyDown}
     >
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
       {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} />}
       <ScreenReaderSummary summary={summary} />
+      <div
+        role="img"
+        aria-label={description || (typeof title === "string" ? title : "Network chart")}
+        style={{ position: "relative", width: "100%", height: "100%" }}
+        onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
+        onMouseLeave={enableHover ? onMouseLeave : undefined}
+        onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
+      >
       {backgroundGraphics && (
         <svg
           overflow="visible"
@@ -1333,6 +1338,7 @@ const StreamNetworkFrame = forwardRef<
           {isStale ? "STALE" : "LIVE"}
         </div>
       )}
+      </div>{/* end role="img" */}
     </div>
   )
 })

@@ -25,7 +25,7 @@ import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
-import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover } from "./keyboardNav"
+import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
@@ -787,15 +787,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const kbFocusIndexRef = useRef(-1)
     const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      const navPoints = extractXYNavPoints(store.scene)
-      if (navPoints.length === 0) return
+      // Cache NavGraph keyed off scene identity to avoid O(n log n) rebuild per keypress
+      const sceneRef = store.scene
+      let graph: NavGraph
+      if (navGraphCacheRef.current && navGraphCacheRef.current.version === sceneRef.length) {
+        graph = navGraphCacheRef.current.graph
+      } else {
+        const navPoints = extractXYNavPoints(sceneRef)
+        if (navPoints.length === 0) return
+        graph = buildNavGraph(navPoints)
+        navGraphCacheRef.current = { version: sceneRef.length, graph }
+      }
 
-      const graph = buildNavGraph(navPoints)
       const current = kbFocusIndexRef.current
 
       // First arrow press when unfocused: start at 0
@@ -1235,13 +1244,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId?.() ?? "xy"}`
+    const tableId = `semiotic-table-${React.useId()}`
 
     return (
       <div
         ref={responsiveRef}
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
-        role="img"
+        role="group"
         aria-label={description || (typeof title === "string" ? title : "XY chart")}
         tabIndex={0}
         style={{
@@ -1250,13 +1259,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-        onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} />}
         <ScreenReaderSummary summary={summary} />
+        {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
+        <div
+          role="img"
+          aria-label={description || (typeof title === "string" ? title : "XY chart")}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        >
         {resolvedBackground && (
           <svg
             style={{
@@ -1376,6 +1391,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         )}
         {focusRing}
         {tooltipElement}
+        </div>{/* end role="img" */}
       </div>
     )
   }

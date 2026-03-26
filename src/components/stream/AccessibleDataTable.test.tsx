@@ -140,7 +140,7 @@ describe("extractAllRows — data shape resilience", () => {
         return {
           label: "Wedge",
           values: {
-            category: node.datum?.category || node.datum?.label || "",
+            category: node.datum?.category ?? node.datum?.label ?? "",
             value: node.datum?.value ?? "",
           },
         }
@@ -233,8 +233,8 @@ describe("extractAllRows — data shape resilience", () => {
 
   it("handles wedge where datum.category is 0 (falsy but valid)", () => {
     const row = extractRow({ type: "wedge", datum: { category: 0, value: 100 } })
-    // 0 || "" → "" because || treats 0 as falsy
-    // This is a known behavior — category will be empty string for numeric 0
+    // ?? preserves 0 (unlike ||)
+    expect(row!.values.category).toBe(0)
     expect(row!.values.value).toBe(100)
   })
 

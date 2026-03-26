@@ -860,13 +860,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId?.() ?? "ordinal"}`
+    const tableId = `semiotic-table-${React.useId()}`
 
     return (
       <div
         ref={responsiveRef}
         className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
-        role="img"
+        role="group"
         aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
         tabIndex={0}
         style={{
@@ -875,13 +875,18 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-        onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} />}
         <ScreenReaderSummary summary={summary} />
+        <div
+          role="img"
+          aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        >
         {backgroundGraphics && (
           <svg
             style={{
@@ -1002,6 +1007,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           height={focusedNavPointRef.current?.h}
         />
         {tooltipElement}
+        </div>{/* end role="img" */}
       </div>
     )
   }
