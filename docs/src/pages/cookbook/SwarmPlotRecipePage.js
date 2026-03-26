@@ -120,10 +120,6 @@ rExtent: [0]`}
           <Link to="/cookbook/ridgeline-plot">Ridgeline Plot</Link> — another
           way to show distributions across categories
         </li>
-        <li>
-          <Link to="/cookbook/bar-to-parallel">Bar to Parallel</Link> — swarm
-          used as an intermediate step in iterative design
-        </li>
       </ul>
     </PageLayout>
   )

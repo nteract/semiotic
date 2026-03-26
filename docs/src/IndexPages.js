@@ -187,21 +187,6 @@ export function ExamplesIndex() {
         <div className="sub-header">StreamOrdinalFrame</div>
 
         <PageLink
-          href="/cookbook/bar-line-chart"
-          title="Bar &amp; Line Chart"
-          thumbnail={new URL("../public/assets/img/bar-line.png", import.meta.url)}
-        />
-        <PageLink
-          href="/cookbook/bar-to-parallel-coordinates"
-          title="Bar to Parallel Coordinates"
-          thumbnail={new URL("../public/assets/img/bar-to-parallel.png", import.meta.url)}
-        />
-        <PageLink
-          href="/cookbook/waterfall-chart"
-          title="Waterfall Chart"
-          thumbnail={new URL("../public/assets/img/waterfall.png", import.meta.url)}
-        />
-        <PageLink
           href="/cookbook/slope-chart"
           title="Slope Chart"
           thumbnail={new URL("../public/assets/img/slope.png", import.meta.url)}
@@ -240,14 +225,6 @@ export function ExamplesIndex() {
           href="/cookbook/isotype-chart"
           title="Isotype Chart"
           thumbnail={new URL("../public/assets/img/isotype.png", import.meta.url)}
-        />
-
-        <div className="sub-header">StreamNetworkFrame</div>
-
-        <PageLink
-          href="/cookbook/matrix"
-          title="Adjacency Matrix"
-          thumbnail={new URL("../public/assets/img/matrix.png", import.meta.url)}
         />
       </div>
     </div>

@@ -210,7 +210,16 @@ Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`,
 Serialization (`semiotic/themes`): `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
 Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (8-color Wong 2011).
 
-**`semiotic/utils`** — Lightweight entry point for `ThemeProvider`, `useTheme`, `adaptiveTimeTicks`, `smartTickFormat`, `createHatchPattern`, `validateProps`, `diagnoseConfig`, `exportChart`, and chart config serialization (`toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`). Use this instead of the main `semiotic` barrel when you only need utilities without any chart components.
+**`semiotic/utils`** (~137KB, ~10% of full bundle) — Lightweight entry point for utilities without any chart components:
+- **Theme**: `ThemeProvider`, `useTheme`, `LIGHT_THEME`, `DARK_THEME`, `HIGH_CONTRAST_THEME`, `COLOR_BLIND_SAFE_CATEGORICAL`, `themeToCSS`, `themeToTokens`, `resolveThemePreset`, `THEME_PRESETS`
+- **Format**: `adaptiveTimeTicks`, `smartTickFormat`
+- **Color**: `darkenColor`, `lightenColor`
+- **Patterns**: `createHatchPattern`
+- **Validation**: `validateProps`, `diagnoseConfig`
+- **Serialization**: `toConfig`, `fromConfig`, `toURL`, `fromURL`, `copyConfig`, `configToJSX`, `serializeSelections`, `deserializeSelections`, `exportChart`
+- **Vega-Lite**: `fromVegaLite` — convert Vega-Lite specs to Semiotic configs
+- **Data structures**: `RingBuffer`, `IncrementalExtent`
+- **Tooltip**: `normalizeTooltip`
 
 Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas charts read vars via `getComputedStyle`. `exportChart` inlines computed styles.
 

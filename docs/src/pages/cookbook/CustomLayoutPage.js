@@ -13,7 +13,7 @@ export default function CustomLayoutPage() {
         { label: "Cookbook", path: "/cookbook" },
         { label: "Custom Network Layout", path: "/cookbook/custom-layout" },
       ]}
-      prevPage={{ title: "Adjacency Matrix", path: "/cookbook/matrix" }}
+      prevPage={{ title: "Isotype Chart", path: "/cookbook/isotype-chart" }}
     >
       <p>
         Semiotic's StreamNetworkFrame ships with force, tree, cluster, and other
@@ -128,10 +128,6 @@ export default function CustomLayoutPage() {
         <li>
           <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the underlying
           frame for all network visualizations
-        </li>
-        <li>
-          <Link to="/cookbook/matrix">Adjacency Matrix</Link> — an alternative
-          network representation
         </li>
         <li>
           <Link to="/features/custom-mark">Custom Marks</Link> — more on

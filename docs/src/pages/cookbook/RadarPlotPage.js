@@ -113,10 +113,6 @@ foregroundGraphics: [
           <Link to="/cookbook/slope-chart">Slope Chart</Link> — another
           multi-entity comparison using connectors
         </li>
-        <li>
-          <Link to="/cookbook/bar-to-parallel">Bar to Parallel</Link> — shows
-          radial projection as the final step in iterative design
-        </li>
       </ul>
     </PageLayout>
   )

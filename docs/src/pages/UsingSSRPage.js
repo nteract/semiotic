@@ -10,7 +10,7 @@ export default function UsingSSRPage() {
       breadcrumbs={[
         { label: "Server-Side Rendering", path: "/using-ssr" }
       ]}
-      prevPage={{ title: "Matrix", path: "/cookbook/matrix" }}
+      prevPage={{ title: "Isotype Chart", path: "/cookbook/isotype-chart" }}
       nextPage={{ title: "SSR Gallery", path: "/ssr-gallery" }}
     >
       <p>

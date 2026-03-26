@@ -1078,6 +1078,32 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       </svg>
     ) : null
 
+    // ── Annotation accessor resolution ─────────────────────────────────
+    // When xAccessor/yAccessor are functions, SVGOverlay needs a string key
+    // to look up coordinates in annotationData. We resolve to the string key
+    // if available, or bake resolved values into annotationData under synthetic
+    // keys so the envelope/annotation handlers can find them.
+    const annXAccessor = typeof xAccessor === "string" ? xAccessor
+      : typeof timeAccessor === "string" ? timeAccessor
+      : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined
+    const annYAccessor = typeof yAccessor === "string" ? yAccessor
+      : typeof valueAccessor === "string" ? valueAccessor
+      : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined
+
+    const enrichAnnotationData = (rawData: Record<string, any>[] | undefined): Record<string, any>[] | undefined => {
+      if (!rawData) return rawData
+      const needsX = typeof xAccessor === "function" && annXAccessor === "__semiotic_resolvedX"
+      const needsY = typeof yAccessor === "function" && annYAccessor === "__semiotic_resolvedY"
+      if (!needsX && !needsY) return rawData
+      return rawData.map(d => {
+        if (d.__semiotic_resolvedX !== undefined || d.__semiotic_resolvedY !== undefined) return d
+        const copy = { ...d }
+        if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
+        if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
+        return copy
+      })
+    }
+
     // ── SSR path: render SVG instead of canvas ──────────────────────────
 
     if (isServerEnvironment) {
@@ -1157,9 +1183,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
-            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined}
-            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined}
-            annotationData={store?.getData()}
+            xAccessor={annXAccessor}
+            yAccessor={annYAccessor}
+            annotationData={enrichAnnotationData(store?.getData())}
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
             )}
@@ -1264,9 +1290,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
-          xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined}
-          yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined}
-          annotationData={storeRef.current?.getData()}
+          xAccessor={annXAccessor}
+          yAccessor={annYAccessor}
+          annotationData={enrichAnnotationData(storeRef.current?.getData())}
           pointNodes={storeRef.current?.scene.filter(
             (n): n is PointSceneNode => n.type === "point"
           )}

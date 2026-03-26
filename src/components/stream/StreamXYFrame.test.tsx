@@ -538,4 +538,76 @@ describe("StreamXYFrame", () => {
       expect(frame.style.height).toBe("100%")
     })
   })
+
+  // ── Annotation accessor resolution ─────────────────────────────────
+
+  describe("function accessor annotation resolution", () => {
+    it("renders envelope annotation when xAccessor is a function", () => {
+      // Regression test: when xAccessor is a function, the SVGOverlay must
+      // receive annotationData with __semiotic_resolvedX baked in, and
+      // annXAccessor set to "__semiotic_resolvedX", so envelope annotations
+      // can look up x-coordinates by field name.
+      const data = [
+        { ts: 1, value: 10, _upper: 15, _lower: 5, isForecast: true },
+        { ts: 2, value: 20, _upper: 25, _lower: 15, isForecast: true },
+        { ts: 3, value: 30, _upper: 35, _lower: 25, isForecast: true },
+      ]
+
+      const { container } = render(
+        <StreamXYFrame
+          chartType="line"
+          data={data}
+          xAccessor={(d: any) => d.ts}
+          yAccessor="value"
+          size={[400, 300]}
+          annotations={[
+            {
+              type: "envelope",
+              upperAccessor: "_upper",
+              lowerAccessor: "_lower",
+              fill: "#6366f1",
+              fillOpacity: 0.15,
+            },
+          ]}
+        />
+      )
+
+      // The envelope renders as a <path> inside the SVGOverlay with fill="#6366f1"
+      const svgOverlay = container.querySelector("svg.svg-overlay, svg[class*='overlay']")
+      // Even if the SVG overlay class changes, look for the envelope path anywhere
+      const envelopePath = container.querySelector(`path[fill="#6366f1"]`)
+      expect(envelopePath).toBeTruthy()
+      expect(envelopePath?.getAttribute("d")).toBeTruthy()
+    })
+
+    it("does not break when xAccessor is a string (no enrichment needed)", () => {
+      const data = [
+        { x: 1, y: 10, _upper: 15, _lower: 5 },
+        { x: 2, y: 20, _upper: 25, _lower: 15 },
+        { x: 3, y: 30, _upper: 35, _lower: 25 },
+      ]
+
+      const { container } = render(
+        <StreamXYFrame
+          chartType="line"
+          data={data}
+          xAccessor="x"
+          yAccessor="y"
+          size={[400, 300]}
+          annotations={[
+            {
+              type: "envelope",
+              upperAccessor: "_upper",
+              lowerAccessor: "_lower",
+              fill: "#ff0000",
+              fillOpacity: 0.2,
+            },
+          ]}
+        />
+      )
+
+      const envelopePath = container.querySelector(`path[fill="#ff0000"]`)
+      expect(envelopePath).toBeTruthy()
+    })
+  })
 })

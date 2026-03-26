@@ -407,10 +407,6 @@ function StreamingWaterfall() {
           <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
-        <li>
-          <Link to="/cookbook/waterfall-chart">Waterfall Chart (Cookbook)</Link> —
-          static waterfall chart recipe using StreamOrdinalFrame
-        </li>
       </ul>
     </PageLayout>
   )
