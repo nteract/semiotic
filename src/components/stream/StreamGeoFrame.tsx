@@ -1133,7 +1133,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
         <div
           role="img"

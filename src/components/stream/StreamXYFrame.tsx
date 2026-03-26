@@ -1262,7 +1262,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
         {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div

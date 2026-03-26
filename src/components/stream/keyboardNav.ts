@@ -374,11 +374,12 @@ export function nextNetworkIndex(
     if (id != null) idToIdx.set(id, i)
   }
 
-  // Collect neighbor ids
+  // Collect neighbor ids — scene edges store the topology edge as `datum`
   const neighborIds: string[] = []
   for (const edge of edges) {
-    const srcId = typeof edge.source === "object" ? edge.source.id : edge.source
-    const tgtId = typeof edge.target === "object" ? edge.target.id : edge.target
+    const raw = edge.datum ?? edge
+    const srcId = typeof raw.source === "object" ? raw.source.id : raw.source
+    const tgtId = typeof raw.target === "object" ? raw.target.id : raw.target
     if (srcId === nodeId && tgtId) neighborIds.push(tgtId)
     else if (tgtId === nodeId && srcId) neighborIds.push(srcId)
   }

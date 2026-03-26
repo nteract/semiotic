@@ -1239,7 +1239,7 @@ const StreamNetworkFrame = forwardRef<
       onKeyDown={onKeyDown}
     >
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} />}
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
       <ScreenReaderSummary summary={summary} />
       <div
         role="img"

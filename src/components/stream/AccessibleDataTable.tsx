@@ -262,6 +262,8 @@ interface AccessibleDataTableProps {
   chartType: string
   /** Unique ID for skip-navigation link targeting */
   tableId?: string
+  /** Chart title — used to disambiguate aria-labels when multiple charts of the same type exist */
+  chartTitle?: string
 }
 
 const SAMPLE_SIZE = 5
@@ -354,12 +356,13 @@ function fmtCell(v: unknown): string {
  * On activation (or when ChartContainer's dataSummary action is toggled),
  * computes a statistical summary (.describe()-style) and shows 5 sample rows.
  */
-export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDataTableProps) {
+export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: AccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
 
   // When the skip link targets this element, expand visibly.
   const handleFocus = React.useCallback(() => {
@@ -382,7 +385,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({totalCount} elements)
         </button>
@@ -408,7 +411,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   }
 
   return (
-    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
       <div role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
       <table role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
@@ -445,16 +448,18 @@ interface NetworkAccessibleDataTableProps {
   edges: Array<{ datum?: any; source?: string; target?: string }>
   chartType: string
   tableId?: string
+  chartTitle?: string
 }
 
 /**
  * JIT accessible data summary for network charts.
  */
-export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }: NetworkAccessibleDataTableProps) {
+export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, chartTitle }: NetworkAccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
+  const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   const handleFocus = React.useCallback(() => {
@@ -473,7 +478,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({nodes.length} nodes, {edges.length} edges)
         </button>
@@ -534,7 +539,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
   }
 
   return (
-    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
       <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
       <table role="table" aria-label={`Sample nodes for ${chartType}`} style={VISIBLE_TABLE_STYLE}>

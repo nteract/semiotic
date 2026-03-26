@@ -252,11 +252,10 @@ export const ChartContainer = React.forwardRef<
     children
   )
 
-  const chartContent = showDataSummary ? (
-    <DataSummaryProvider>{innerContent}</DataSummaryProvider>
-  ) : innerContent
+  const wrapper = (node: React.ReactNode) =>
+    showDataSummary ? <DataSummaryProvider>{node}</DataSummaryProvider> : node
 
-  return (
+  return wrapper(
     <>
       <style
         dangerouslySetInnerHTML={{
@@ -451,7 +450,7 @@ export const ChartContainer = React.forwardRef<
             ...(isFullscreen ? { flex: 1 } : { height }),
           }}
         >
-          {chartContent}
+          {innerContent}
           {detailsPanel}
         </div>
 
