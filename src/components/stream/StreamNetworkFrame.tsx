@@ -1242,6 +1242,7 @@ const StreamNetworkFrame = forwardRef<
       onKeyDown={onKeyDown}
     >
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} />}
       <ScreenReaderSummary summary={summary} />
       {backgroundGraphics && (
         <svg
@@ -1272,7 +1273,6 @@ const StreamNetworkFrame = forwardRef<
         }}
       />
       <AriaLiveTooltip hoverPoint={hoverData} />
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}

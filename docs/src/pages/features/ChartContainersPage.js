@@ -1,10 +1,32 @@
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { ChartContainer, LineChart, BarChart, ThemeProvider } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
+
+// ---------------------------------------------------------------------------
+// Site theme hook — reads data-theme from the docs site root element
+// ---------------------------------------------------------------------------
+
+function useSiteTheme() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof document === "undefined") return "dark"
+    return document.documentElement.getAttribute("data-theme") || "dark"
+  })
+
+  useEffect(() => {
+    const el = document.documentElement
+    const observer = new MutationObserver(() => {
+      setTheme(el.getAttribute("data-theme") || "dark")
+    })
+    observer.observe(el, { attributes: true, attributeFilter: ["data-theme"] })
+    return () => observer.disconnect()
+  }, [])
+
+  return theme
+}
 
 // ---------------------------------------------------------------------------
 // Sample data
@@ -91,11 +113,11 @@ const containerProps = [
   },
   {
     name: "actions",
-    type: "{ export?: boolean | ExportConfig, fullscreen?: boolean }",
+    type: "{ export?, fullscreen?, copyConfig?, dataSummary? }",
     required: false,
     default: "undefined",
     description:
-      "Built-in action buttons. Set export or fullscreen to true for default config, false to hide, or pass a config object for export { format, scale, filename }.",
+      "Built-in action buttons. Each can be true or false. export also accepts { format, scale, filename }. dataSummary shows a statistical summary + sample rows panel.",
   },
   {
     name: "controls",
@@ -162,6 +184,7 @@ const containerProps = [
 // ---------------------------------------------------------------------------
 
 export default function ChartContainersPage() {
+  const siteTheme = useSiteTheme()
   const [statusDemo, setStatusDemo] = useState("live")
   const [loadingDemo, setLoadingDemo] = useState(false)
   const [selectedYear, setSelectedYear] = useState("2024")
@@ -197,22 +220,24 @@ export default function ChartContainersPage() {
       </p>
 
       <div style={{ maxWidth: 620, marginBottom: 24 }}>
-        <ChartContainer
-          title="Monthly Revenue"
-          subtitle="USD thousands, 2024"
-          actions={{ export: true, fullscreen: true }}
-          height={300}
-        >
-          <LineChart
-            data={lineData}
-            lineBy="id"
-            xAccessor="x"
-            yAccessor="y"
-            curve="monotoneX"
-            width={600}
+        <ThemeProvider theme={siteTheme}>
+          <ChartContainer
+            title="Monthly Revenue"
+            subtitle="USD thousands, 2024"
+            actions={{ export: true, fullscreen: true, dataSummary: true }}
             height={300}
-          />
-        </ChartContainer>
+          >
+            <LineChart
+              data={lineData}
+              lineBy="id"
+              xAccessor="x"
+              yAccessor="y"
+              curve="monotoneX"
+              width={600}
+              height={300}
+            />
+          </ChartContainer>
+        </ThemeProvider>
       </div>
 
       <CodeBlock
@@ -221,7 +246,7 @@ export default function ChartContainersPage() {
 <ChartContainer
   title="Monthly Revenue"
   subtitle="USD thousands, 2024"
-  actions={{ export: true, fullscreen: true }}
+  actions={{ export: true, fullscreen: true, dataSummary: true }}
 >
   <LineChart
     data={data}
@@ -245,37 +270,39 @@ export default function ChartContainersPage() {
       </p>
 
       <div style={{ maxWidth: 620, marginBottom: 24 }}>
-        <ChartContainer
-          title="Quarterly Sales"
-          actions={{ export: { format: "png", filename: "sales" } }}
-          controls={
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              style={{
-                fontSize: 12,
-                padding: "2px 6px",
-                borderRadius: 4,
-                border: "1px solid var(--semiotic-border, #e0e0e0)",
-                background: "transparent",
-                color: "var(--semiotic-text, #333)",
-                marginRight: 4,
-              }}
-            >
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-            </select>
-          }
-        >
-          <BarChart
-            data={barDataByYear[selectedYear]}
-            categoryAccessor="category"
-            valueAccessor="value"
-            width={600}
-            height={300}
-          />
-        </ChartContainer>
+        <ThemeProvider theme={siteTheme}>
+          <ChartContainer
+            title="Quarterly Sales"
+            actions={{ export: { format: "png", filename: "sales" } }}
+            controls={
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                style={{
+                  fontSize: 12,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: "1px solid var(--semiotic-border, #e0e0e0)",
+                  background: "transparent",
+                  color: "var(--semiotic-text, #333)",
+                  marginRight: 4,
+                }}
+              >
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+              </select>
+            }
+          >
+            <BarChart
+              data={barDataByYear[selectedYear]}
+              categoryAccessor="category"
+              valueAccessor="value"
+              width={600}
+              height={300}
+            />
+          </ChartContainer>
+        </ThemeProvider>
       </div>
 
       <CodeBlock
@@ -302,6 +329,57 @@ const dataByYear = {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Data Summary */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="data-summary">Data Summary</h2>
+
+      <p>
+        Enable <code>actions.dataSummary</code> to add a toolbar button that
+        reveals a statistical summary of the chart's data — field ranges, means,
+        and 5 sample rows. This is useful for everyone: screen reader users get
+        it automatically, but sighted users can also inspect what data the chart
+        is actually rendering. Click the bar-chart icon in the toolbar below.
+      </p>
+
+      <div style={{ maxWidth: 620, marginBottom: 24 }}>
+        <ThemeProvider theme={siteTheme}>
+          <ChartContainer
+            title="Quarterly Sales"
+            subtitle="Click the summary icon to inspect the data"
+            actions={{ dataSummary: true, export: true }}
+            height={300}
+          >
+            <BarChart
+              data={barData}
+              categoryAccessor="category"
+              valueAccessor="value"
+              width={600}
+              height={300}
+            />
+          </ChartContainer>
+        </ThemeProvider>
+      </div>
+
+      <CodeBlock
+        code={`// Data summary action — shows stats + sample rows below the chart
+<ChartContainer
+  title="Quarterly Sales"
+  actions={{ dataSummary: true, export: true }}
+>
+  <BarChart data={data} categoryAccessor="category" valueAccessor="value" />
+</ChartContainer>
+
+// The summary panel shows something like:
+// "4 data points. category: Q1, Q2, Q3, Q4. value: 95 to 210, mean 151.25."
+// + a 4-row sample table
+
+// Works with all chart types — XY, ordinal, network, geo.
+// For screen readers, the same data is always available via a
+// hidden button (accessibleTable={true} by default).`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Loading and Error states */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="loading-error">Loading & Error States</h2>
@@ -317,11 +395,11 @@ const dataByYear = {
           style={{
             padding: "4px 12px",
             borderRadius: 4,
-            border: "1px solid var(--semiotic-border, #ccc)",
-            background: loadingDemo ? "var(--semiotic-border, #e0e0e0)" : "transparent",
+            border: "1px solid var(--surface-3, #ccc)",
+            background: loadingDemo ? "var(--surface-3, #e0e0e0)" : "transparent",
             cursor: "pointer",
             fontSize: 13,
-            color: "var(--semiotic-text, #333)",
+            color: "var(--text-primary, #333)",
           }}
         >
           {loadingDemo ? "Stop Loading" : "Simulate Loading"}
@@ -330,20 +408,24 @@ const dataByYear = {
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div style={{ flex: "1 1 290px", minWidth: 290 }}>
-          <ChartContainer title="Loading Demo" loading={loadingDemo} height={200}>
-            <BarChart
-              data={barData}
-              categoryAccessor="category"
-              valueAccessor="value"
-              width={290}
-              height={200}
-            />
-          </ChartContainer>
+          <ThemeProvider theme={siteTheme}>
+            <ChartContainer title="Loading Demo" loading={loadingDemo} height={200}>
+              <BarChart
+                data={barData}
+                categoryAccessor="category"
+                valueAccessor="value"
+                width={290}
+                height={200}
+              />
+            </ChartContainer>
+          </ThemeProvider>
         </div>
         <div style={{ flex: "1 1 290px", minWidth: 290 }}>
-          <ChartContainer title="Error Demo" error="Failed to fetch data from API." height={200}>
-            <div />
-          </ChartContainer>
+          <ThemeProvider theme={siteTheme}>
+            <ChartContainer title="Error Demo" error="Failed to fetch data from API." height={200}>
+              <div />
+            </ChartContainer>
+          </ThemeProvider>
         </div>
       </div>
 
@@ -390,12 +472,12 @@ const dataByYear = {
             style={{
               padding: "4px 12px",
               borderRadius: 4,
-              border: "1px solid var(--semiotic-border, #ccc)",
-              background: statusDemo === s ? "var(--semiotic-border, #e0e0e0)" : "transparent",
+              border: "1px solid var(--surface-3, #ccc)",
+              background: statusDemo === s ? "var(--surface-3, #e0e0e0)" : "transparent",
               cursor: "pointer",
               fontSize: 13,
               textTransform: "capitalize",
-              color: "var(--semiotic-text, #333)",
+              color: "var(--text-primary, #333)",
             }}
           >
             {s}
@@ -404,22 +486,24 @@ const dataByYear = {
       </div>
 
       <div style={{ maxWidth: 620, marginBottom: 24 }}>
-        <ChartContainer
-          title="Sensor Feed"
-          subtitle="Temperature readings"
-          status={statusDemo}
-          actions={{ fullscreen: true }}
-          height={250}
-        >
-          <LineChart
-            data={lineData}
-            lineBy="id"
-            xAccessor="x"
-            yAccessor="y"
-            width={600}
+        <ThemeProvider theme={siteTheme}>
+          <ChartContainer
+            title="Sensor Feed"
+            subtitle="Temperature readings"
+            status={statusDemo}
+            actions={{ fullscreen: true }}
             height={250}
-          />
-        </ChartContainer>
+          >
+            <LineChart
+              data={lineData}
+              lineBy="id"
+              xAccessor="x"
+              yAccessor="y"
+              width={600}
+              height={250}
+            />
+          </ChartContainer>
+        </ThemeProvider>
       </div>
 
       <CodeBlock
@@ -472,14 +556,15 @@ function Dashboard() {
       <p>
         <code>ChartContainer</code> reads CSS custom properties from{" "}
         <Link to="/features/theming">ThemeProvider</Link>, so it adapts
-        automatically.
+        automatically. All examples on this page already follow the site
+        theme — toggle dark/light mode in the header to see it.
       </p>
 
       <div style={{ maxWidth: 620, marginBottom: 24 }}>
         <ThemeProvider theme="dark">
           <ChartContainer
-            title="Dark Mode"
-            subtitle="Automatically themed"
+            title="Always Dark"
+            subtitle="Pinned to dark theme regardless of site mode"
             actions={{ export: true, fullscreen: true }}
             status="live"
             height={250}
@@ -500,8 +585,16 @@ function Dashboard() {
       <CodeBlock
         code={`import { ThemeProvider, ChartContainer, LineChart } from "semiotic"
 
+// Pin to dark theme explicitly
 <ThemeProvider theme="dark">
   <ChartContainer title="Dark Mode" actions={{ export: true }} status="live">
+    <LineChart data={data} xAccessor="x" yAccessor="y" />
+  </ChartContainer>
+</ThemeProvider>
+
+// Or follow a dynamic theme
+<ThemeProvider theme={isDark ? "dark" : "light"}>
+  <ChartContainer title="Adaptive">
     <LineChart data={data} xAccessor="x" yAccessor="y" />
   </ChartContainer>
 </ThemeProvider>`}
@@ -524,6 +617,10 @@ function Dashboard() {
         <li>
           <Link to="/features/theming">Theming</Link> — ThemeProvider controls
           the CSS custom properties that ChartContainer reads
+        </li>
+        <li>
+          <Link to="/features/accessibility">Accessibility</Link> — data summary,
+          keyboard navigation, screen reader support
         </li>
         <li>
           <Link to="/features/styling">Styling</Link> — styling the chart marks

@@ -249,13 +249,34 @@ interface AccessibleDataTableProps {
 const SAMPLE_SIZE = 5
 
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
+  position: "relative",
+  zIndex: 5,
   padding: "12px 16px",
-  borderTop: "1px solid var(--semiotic-border, #e0e0e0)",
+  borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
   fontFamily: "var(--semiotic-font-family, sans-serif)",
   fontSize: 13,
   lineHeight: 1.5,
   color: "var(--semiotic-text, #333)",
   background: "var(--semiotic-bg, #fff)",
+}
+
+const CLOSE_BUTTON_STYLE: React.CSSProperties = {
+  position: "absolute",
+  top: 8,
+  right: 8,
+  width: 20,
+  height: 20,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "none",
+  background: "transparent",
+  cursor: "pointer",
+  color: "var(--semiotic-text-secondary, #666)",
+  fontSize: 14,
+  lineHeight: 1,
+  padding: 0,
+  borderRadius: 4,
 }
 
 const VISIBLE_TABLE_STYLE: React.CSSProperties = {
@@ -294,6 +315,20 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  // When the skip link targets this element, expand visibly.
+  const handleFocus = React.useCallback(() => {
+    if (!srExpanded && !visible) setSrExpanded(true)
+  }, [srExpanded, visible])
+
+  // Collapse when focus leaves the panel entirely (not for context-controlled mode).
+  const handleBlur = React.useCallback((e: React.FocusEvent) => {
+    if (visible) return // ChartContainer controls visibility
+    // Check if focus moved to another element inside this container
+    if (containerRef.current?.contains(e.relatedTarget as Node)) return
+    setSrExpanded(false)
+  }, [visible])
 
   if (!scene || scene.length === 0) {
     return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
@@ -303,7 +338,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({totalCount} elements)
         </button>
@@ -323,43 +358,38 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   }
   const columns = Array.from(columnSet)
 
-  // When triggered via context (visible panel), render styled; otherwise sr-only
-  const containerStyle = visible ? VISIBLE_PANEL_STYLE : SR_ONLY_STYLE
-  const tableStyle = visible ? VISIBLE_TABLE_STYLE : undefined
-  const thStyle = visible ? VISIBLE_TH_STYLE : undefined
-  const tdStyle = visible ? VISIBLE_TD_STYLE : undefined
+  const dismiss = () => {
+    if (visible && dataSummary) dataSummary.setVisible(false)
+    setSrExpanded(false)
+  }
 
   return (
-    <div id={tableId} tabIndex={-1} style={containerStyle} role="region" aria-label={`Data summary for ${chartType}`}>
-      <div role="note" style={visible ? { marginBottom: 4, color: "var(--semiotic-text-secondary, #666)" } : undefined}>{summary}</div>
-      <table role="table" aria-label={`Sample data for ${chartType}`} style={tableStyle}>
-        <caption style={visible ? { textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 } : undefined}>
+    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
+      <div role="note" style={{ marginBottom: 4, color: "var(--semiotic-text-secondary, #666)", paddingRight: 24 }}>{summary}</div>
+      <table role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+        <caption style={{ textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 }}>
           First {sampleRows.length} of {allRows.length} data points
         </caption>
         <thead>
           <tr>
-            <th style={thStyle}>type</th>
+            <th style={VISIBLE_TH_STYLE}>type</th>
             {columns.map((c) => (
-              <th key={c} style={thStyle}>{c}</th>
+              <th key={c} style={VISIBLE_TH_STYLE}>{c}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {sampleRows.map((r, i) => (
             <tr key={i}>
-              <td style={tdStyle}>{r.label}</td>
+              <td style={VISIBLE_TD_STYLE}>{r.label}</td>
               {columns.map((c) => (
-                <td key={c} style={tdStyle}>{fmtCell(r.values[c])}</td>
+                <td key={c} style={VISIBLE_TD_STYLE}>{fmtCell(r.values[c])}</td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-      {!visible && (
-        <button type="button" onClick={() => setSrExpanded(false)}>
-          Collapse data summary
-        </button>
-      )}
     </div>
   )
 }
@@ -381,6 +411,17 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  const handleFocus = React.useCallback(() => {
+    if (!srExpanded && !visible) setSrExpanded(true)
+  }, [srExpanded, visible])
+
+  const handleBlur = React.useCallback((e: React.FocusEvent) => {
+    if (visible) return
+    if (containerRef.current?.contains(e.relatedTarget as Node)) return
+    setSrExpanded(false)
+  }, [visible])
 
   if (!nodes || nodes.length === 0) {
     return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
@@ -388,7 +429,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({nodes.length} nodes, {edges.length} edges)
         </button>
@@ -438,40 +479,36 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
 
   const sampleNodes = nodes.slice(0, SAMPLE_SIZE)
 
-  const containerStyle = visible ? VISIBLE_PANEL_STYLE : SR_ONLY_STYLE
-  const tableStyle = visible ? VISIBLE_TABLE_STYLE : undefined
-  const thStyle = visible ? VISIBLE_TH_STYLE : undefined
-  const tdStyle = visible ? VISIBLE_TD_STYLE : undefined
+  const dismiss = () => {
+    if (visible && dataSummary) dataSummary.setVisible(false)
+    setSrExpanded(false)
+  }
 
   return (
-    <div id={tableId} tabIndex={-1} style={containerStyle} role="region" aria-label={`Data summary for ${chartType}`}>
-      <div role="note" style={visible ? { marginBottom: 4, color: "var(--semiotic-text-secondary, #666)" } : undefined}>{summaryParts.join(" ")}</div>
-      <table role="table" aria-label={`Sample nodes for ${chartType}`} style={tableStyle}>
-        <caption style={visible ? { textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 } : undefined}>
+    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+      <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
+      <div role="note" style={{ marginBottom: 4, color: "var(--semiotic-text-secondary, #666)", paddingRight: 24 }}>{summaryParts.join(" ")}</div>
+      <table role="table" aria-label={`Sample nodes for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+        <caption style={{ textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 }}>
           First {sampleNodes.length} of {nodes.length} nodes
         </caption>
         <thead>
           <tr>
-            <th style={thStyle}>id</th>
-            <th style={thStyle}>x</th>
-            <th style={thStyle}>y</th>
+            <th style={VISIBLE_TH_STYLE}>id</th>
+            <th style={VISIBLE_TH_STYLE}>x</th>
+            <th style={VISIBLE_TH_STYLE}>y</th>
           </tr>
         </thead>
         <tbody>
           {sampleNodes.map((n, i) => (
             <tr key={i}>
-              <td style={tdStyle}>{n.datum?.id || n.id || ""}</td>
-              <td style={tdStyle}>{fmt(n.cx ?? n.x)}</td>
-              <td style={tdStyle}>{fmt(n.cy ?? n.y)}</td>
+              <td style={VISIBLE_TD_STYLE}>{n.datum?.id || n.id || ""}</td>
+              <td style={VISIBLE_TD_STYLE}>{fmt(n.cx ?? n.x)}</td>
+              <td style={VISIBLE_TD_STYLE}>{fmt(n.cy ?? n.y)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {!visible && (
-        <button type="button" onClick={() => setSrExpanded(false)}>
-          Collapse data summary
-        </button>
-      )}
     </div>
   )
 }

@@ -1136,6 +1136,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         onKeyDown={onKeyDown}
       >
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} />}
         <ScreenReaderSummary summary={summary} />
         {resolvedBackground && (
           <svg
@@ -1165,7 +1166,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
         <AriaLiveTooltip hoverPoint={hoverPoint} />
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}
