@@ -24,7 +24,7 @@ import type {
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
-import { extractOrdinalNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
@@ -539,8 +539,32 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const navPoints = extractOrdinalNavPoints(store.scene)
       if (navPoints.length === 0) return
 
+      const graph = buildNavGraph(navPoints)
       const current = kbFocusIndexRef.current
-      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+
+      if (current < 0) {
+        if (e.key === "Escape") return
+        const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)
+        if (!isNav) return
+        e.preventDefault()
+        kbFocusIndexRef.current = 0
+        const point = graph.flat[0]
+        focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+        const hover = {
+          ...navPointToHover(point),
+          __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
+          __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+          __chartType: chartType
+        } as HoverData
+        hoverRef.current = hover
+        setHoverPoint(hover)
+        if (customHoverBehavior) customHoverBehavior(hover)
+        scheduleRender()
+        return
+      }
+
+      const pos = resolvePosition(graph, current)
+      const next = nextGraphIndex(e.key, pos, graph)
       if (next === null) return
 
       e.preventDefault()
@@ -555,9 +579,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         return
       }
 
-      const idx = current < 0 ? 0 : next
-      kbFocusIndexRef.current = idx
-      const point = navPoints[idx]
+      kbFocusIndexRef.current = next
+      const point = graph.flat[next]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const hover = {
         ...navPointToHover(point),

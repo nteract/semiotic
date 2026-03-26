@@ -68,8 +68,13 @@ function ThemeInitializer({
         themeBeforeForcedColorsRef.current = null
       }
     }
-    mql.addEventListener("change", handler)
-    return () => mql.removeEventListener("change", handler)
+    // Safari 14 fallback: addListener/removeListener
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", handler)
+      return () => mql.removeEventListener("change", handler)
+    }
+    mql.addListener(handler as any)
+    return () => mql.removeListener(handler as any)
   }, [theme, setTheme])
 
   React.useEffect(() => {

@@ -163,23 +163,43 @@ export default function AccessibilityPage() {
 
       <p>
         All charts are focusable via <strong>Tab</strong>. Once focused, use
-        arrow keys to navigate between data points — the tooltip follows the
-        keyboard focus, and a shape-appropriate dashed ring highlights the
-        active element (circle for points, rectangle for bars). Keyboard
-        navigation works across all four frame types: XY, Ordinal, Network,
-        and Geo.
+        arrow keys to navigate data — the tooltip follows keyboard focus, and
+        a shape-appropriate dashed ring highlights the active element.
+      </p>
+
+      <p>
+        Navigation is <strong>graph-based</strong>, not a flat list. In
+        multi-series line charts, ArrowRight/Left moves along a series while
+        ArrowUp/Down switches between series at the same x position. In
+        stacked bar charts, ArrowRight/Left moves across categories and
+        ArrowUp/Down moves between stacked segments. In network charts,
+        ArrowRight/Left cycles through a node's neighbors and Enter follows
+        the highlighted edge to that neighbor.
       </p>
 
       <CodeBlock
-        code={`// Keyboard navigation is built in — no props needed
-// Tab → focus chart
-// ←/→ or ↑/↓ → move between data points
+        code={`// Graph-based keyboard navigation — no props needed
+
+// XY charts (line, area, scatter):
+// ←/→ → move along series (x-axis order)
+// ↑/↓ → switch between series at nearest x position
+
+// Ordinal charts (bar, stacked bar):
+// ←/→ → move within group (across categories)
+// ↑/↓ → switch between groups (stack segments)
+
+// Network charts (force, sankey, chord):
+// ←/→ → cycle through neighbors
+// ↑/↓ → cycle neighbors in reverse
+// Enter → follow edge to highlighted neighbor
+
+// Geo charts (choropleth, proportional symbol):
+// ←/→/↑/↓ → spatial order (flat navigation)
+
+// All chart types:
 // PageDown/PageUp → skip by 10% of data points
 // Home/End → jump to first/last point
-// Escape → clear focus
-
-// Works on all chart types including geo:
-<ChoroplethMap areas={world} valueAccessor="gdp" />`}
+// Escape → clear focus`}
         language="jsx"
       />
 
@@ -233,16 +253,21 @@ export default function AccessibilityPage() {
 
       <p>
         Semiotic automatically detects <code>prefers-reduced-motion: reduce</code>{" "}
-        and disables pulse animations, decay transitions, and orbit animation
-        when the preference is active. No props needed — this is built into
-        all four Stream Frames.
+        and fast-forwards data transitions to their final state (no animated
+        interpolation), stops orbit animation ticking, and completes any
+        in-progress layout transitions immediately. Pulse and decay visual
+        encodings still render their static state but skip animated effects.
+        No props needed — this is built into all four Stream Frames.
       </p>
 
       <CodeBlock
-        code={`// Semiotic handles this automatically, but you can also
-// read the preference for your own UI:
-const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
-// Semiotic's streaming animations stop when mql.matches is true`}
+        code={`// Semiotic handles this automatically — no configuration needed.
+// Transitions fast-forward to final state, orbit stops ticking.
+// Pulse/decay encodings render statically (no animation).
+//
+// The hook is also available for your own UI:
+import { useReducedMotion } from "semiotic"
+const prefersReduced = useReducedMotion()`}
         language="jsx"
       />
 
@@ -444,6 +469,10 @@ const result = diagnoseConfig("LineChart", {
           <strong>Streaming charts</strong> — realtime charts continuously
           update their scene graph. Keyboard navigation works but the point
           list refreshes as new data arrives.
+        </li>
+        <li>
+          <strong>Touch navigation</strong> — swipe gestures are not yet mapped
+          to the navigation graph. Touch users can use the data table.
         </li>
       </ul>
 

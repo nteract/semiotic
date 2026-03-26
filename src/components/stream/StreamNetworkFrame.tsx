@@ -29,7 +29,7 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, navPointToHover } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
@@ -876,6 +876,7 @@ const StreamNetworkFrame = forwardRef<
 
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+  const neighborIndexRef = useRef(0)
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
@@ -884,8 +885,35 @@ const StreamNetworkFrame = forwardRef<
     const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
     if (navPoints.length === 0) return
 
+    const graph = buildNavGraph(navPoints)
     const current = kbFocusIndexRef.current
-    const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+
+    if (current < 0) {
+      if (e.key === "Escape") return
+      const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Enter"].includes(e.key)
+      if (!isNav) return
+      e.preventDefault()
+      kbFocusIndexRef.current = 0
+      neighborIndexRef.current = 0
+      const point = graph.flat[0]
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+      const rawDatum = point.datum || {}
+      const hover = {
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+        type: "node" as const,
+        data: rawDatum,
+        x: point.x,
+        y: point.y
+      }
+      hoverRef.current = hover
+      setHoverData(hover)
+      if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
+      scheduleRender()
+      return
+    }
+
+    const pos = resolvePosition(graph, current)
+    const next = nextNetworkIndex(e.key, pos, graph, store.sceneEdges ?? [], neighborIndexRef)
     if (next === null) return
 
     e.preventDefault()
@@ -893,6 +921,7 @@ const StreamNetworkFrame = forwardRef<
     if (next < 0) {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
+      neighborIndexRef.current = 0
       hoverRef.current = null
       setHoverData(null)
       if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
@@ -900,9 +929,8 @@ const StreamNetworkFrame = forwardRef<
       return
     }
 
-    const idx = current < 0 ? 0 : next
-    kbFocusIndexRef.current = idx
-    const point = navPoints[idx]
+    kbFocusIndexRef.current = next
+    const point = graph.flat[next]
     focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
     const rawDatum = point.datum || {}
     const hover = {

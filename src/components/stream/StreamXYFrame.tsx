@@ -25,7 +25,7 @@ import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
-import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
@@ -795,8 +795,28 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const navPoints = extractXYNavPoints(store.scene)
       if (navPoints.length === 0) return
 
-      const current = kbFocusIndexRef.current < 0 ? -1 : kbFocusIndexRef.current
-      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      const graph = buildNavGraph(navPoints)
+      const current = kbFocusIndexRef.current
+
+      // First arrow press when unfocused: start at 0
+      if (current < 0) {
+        if (e.key === "Escape") return
+        const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)
+        if (!isNav) return
+        e.preventDefault()
+        kbFocusIndexRef.current = 0
+        const point = graph.flat[0]
+        focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+        const hover = navPointToHover(point)
+        hoverRef.current = hover
+        setHoverPoint(hover)
+        if (customHoverBehavior) customHoverBehavior(hover)
+        scheduleRender()
+        return
+      }
+
+      const pos = resolvePosition(graph, current)
+      const next = nextGraphIndex(e.key, pos, graph)
       if (next === null) return // unhandled key
 
       e.preventDefault()
@@ -813,11 +833,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         return
       }
 
-      // First arrow press when unfocused: start at 0
-      const idx = current < 0 ? 0 : next
-      kbFocusIndexRef.current = idx
-
-      const point = navPoints[idx]
+      kbFocusIndexRef.current = next
+      const point = graph.flat[next]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const hover = navPointToHover(point)
       hoverRef.current = hover

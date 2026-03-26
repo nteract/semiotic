@@ -77,8 +77,12 @@ export function computeNetworkAriaLabel(
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
-const fmt = (v: number | undefined | null): string =>
-  String(Math.round((v ?? 0) * 100) / 100)
+const fmt = (v: number | undefined | null): string => {
+  if (v == null) return ""
+  const n = Math.round(v * 100) / 100
+  if (Number.isNaN(n)) return ""
+  return String(n)
+}
 
 function extractRow(node: AnySceneNode): { label: string; values: Record<string, string> } | null {
   switch (node.type) {
@@ -93,14 +97,18 @@ function extractRow(node: AnySceneNode): { label: string; values: Record<string,
     }
     case "area":
       return null // handled separately like line
-    case "rect":
+    case "rect": {
+      const datum = node.datum ?? {}
+      const category = datum.category ?? node.group ?? ""
+      const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
       return {
         label: "Bar",
         values: {
-          category: node.datum?.category || "",
-          value: fmt(node.datum?.value),
+          category,
+          value: rawValue != null ? fmt(rawValue) : "",
         },
       }
+    }
     case "heatcell":
       return {
         label: "Cell",
@@ -228,7 +236,10 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
     }
   }
 
-  if (rows.length === 0) return null
+  if (rows.length === 0) {
+    // Render an anchor target so SkipToTableLink doesn't point to a missing id
+    return tableId ? <span id={tableId} style={SR_ONLY_STYLE} /> : null
+  }
 
   // Compute union of all keys across rows
   const columnSet = new Set<string>()
@@ -300,7 +311,9 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
     })
   }
 
-  if (rows.length === 0) return null
+  if (rows.length === 0) {
+    return tableId ? <span id={tableId} style={SR_ONLY_STYLE} /> : null
+  }
 
   const columnSet = new Set<string>()
   for (const r of rows) {
