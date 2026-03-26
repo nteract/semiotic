@@ -1079,32 +1079,40 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     ) : null
 
     // ── Annotation accessor resolution ─────────────────────────────────
-    // When xAccessor/yAccessor are functions, SVGOverlay needs a string key
-    // to look up coordinates in annotationData. We resolve to the string key
-    // if available, or bake resolved values into annotationData under synthetic
-    // keys so the envelope/annotation handlers can find them.
-    const annXAccessor = typeof xAccessor === "string" ? xAccessor
-      : typeof timeAccessor === "string" ? timeAccessor
-      : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined
-    const annYAccessor = typeof yAccessor === "string" ? yAccessor
-      : typeof valueAccessor === "string" ? valueAccessor
-      : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined
+    // SVGOverlay needs string keys to look up coordinates in annotationData.
+    // When accessors are functions, we bake resolved values under synthetic keys.
+    // Priority: string accessor → function accessor (resolved) → string fallback
+    // (timeAccessor/valueAccessor) → function fallback (resolved) → undefined.
+    const resolveAnnAccessor = (
+      primary: any, fallback: any, resolvedKey: string, fallbackKey: string
+    ): { key: string | undefined; fn: ((d: any) => any) | null } => {
+      if (typeof primary === "string") return { key: primary, fn: null }
+      if (typeof primary === "function") return { key: resolvedKey, fn: primary }
+      if (typeof fallback === "string") return { key: fallback, fn: null }
+      if (typeof fallback === "function") return { key: fallbackKey, fn: fallback }
+      return { key: undefined, fn: null }
+    }
 
-    const needsEnrichX = typeof xAccessor === "function" && annXAccessor === "__semiotic_resolvedX"
-    const needsEnrichY = typeof yAccessor === "function" && annYAccessor === "__semiotic_resolvedY"
-    const needsEnrich = (needsEnrichX || needsEnrichY) && annotations && annotations.length > 0
+    const xResolved = resolveAnnAccessor(xAccessor, timeAccessor, "__semiotic_resolvedX", "__semiotic_resolvedTime")
+    const yResolved = resolveAnnAccessor(yAccessor, valueAccessor, "__semiotic_resolvedY", "__semiotic_resolvedValue")
+    const annXAccessor = xResolved.key
+    const annYAccessor = yResolved.key
+    const hasAnnotations = annotations && annotations.length > 0
 
     const enrichAnnotationData = (rawData: Record<string, any>[] | undefined): Record<string, any>[] | undefined => {
-      if (!rawData || !needsEnrich) return rawData
-      return rawData.map(d => {
-        const needComputeX = needsEnrichX && d.__semiotic_resolvedX === undefined
-        const needComputeY = needsEnrichY && d.__semiotic_resolvedY === undefined
-        if (!needComputeX && !needComputeY) return d
+      if (!rawData || !hasAnnotations || (!xResolved.fn && !yResolved.fn)) return rawData
+      let didChange = false
+      const result = rawData.map(d => {
+        const computeX = xResolved.fn && xResolved.key && !(xResolved.key in d)
+        const computeY = yResolved.fn && yResolved.key && !(yResolved.key in d)
+        if (!computeX && !computeY) return d
+        didChange = true
         const copy = { ...d }
-        if (needComputeX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
-        if (needComputeY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
+        if (computeX) copy[xResolved.key!] = xResolved.fn!(d)
+        if (computeY) copy[yResolved.key!] = yResolved.fn!(d)
         return copy
       })
+      return didChange ? result : rawData
     }
 
     // ── SSR path: render SVG instead of canvas ──────────────────────────
