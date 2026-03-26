@@ -21,6 +21,7 @@ import {
 export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, COLOR_BLIND_SAFE_CATEGORICAL }
 export type { SemioticTheme }
 
+
 // ── Pastels ───────────────────────────────────────────────────────────────
 
 export const PASTELS_LIGHT: SemioticTheme = {

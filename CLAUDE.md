@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`, `semiotic/themes`
+- Import: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`, `semiotic/themes`, `semiotic/utils`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 - Every HOC has a built-in error boundary and dev-mode validation warnings
@@ -209,6 +209,8 @@ Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`,
 
 Serialization (`semiotic/themes`): `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
 Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (8-color Wong 2011).
+
+**`semiotic/utils`** — Lightweight entry point for `ThemeProvider`, `useTheme`, `adaptiveTimeTicks`, `smartTickFormat`, `createHatchPattern`, `validateProps`, `diagnoseConfig`, `exportChart`, and chart config serialization (`toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`). Use this instead of the main `semiotic` barrel when you only need utilities without any chart components.
 
 Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas charts read vars via `getComputedStyle`. `exportChart` inlines computed styles.
 

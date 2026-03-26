@@ -72,6 +72,12 @@
       "require": "./dist/semiotic-themes.min.js",
       "default": "./dist/semiotic-themes.module.min.js"
     },
+    "./utils": {
+      "types": "./dist/semiotic-utils.d.ts",
+      "import": "./dist/semiotic-utils.module.min.js",
+      "require": "./dist/semiotic-utils.min.js",
+      "default": "./dist/semiotic-utils.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

@@ -1157,8 +1157,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
-            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
-            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
+            xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined}
+            yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined}
             annotationData={store?.getData()}
             pointNodes={store?.scene.filter(
               (n): n is PointSceneNode => n.type === "point"
@@ -1264,8 +1264,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
-          xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : undefined}
-          yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : undefined}
+          xAccessor={typeof xAccessor === "string" ? xAccessor : typeof timeAccessor === "string" ? timeAccessor : typeof xAccessor === "function" ? "__semiotic_resolvedX" : undefined}
+          yAccessor={typeof yAccessor === "string" ? yAccessor : typeof valueAccessor === "string" ? valueAccessor : typeof yAccessor === "function" ? "__semiotic_resolvedY" : undefined}
           annotationData={storeRef.current?.getData()}
           pointNodes={storeRef.current?.scene.filter(
             (n): n is PointSceneNode => n.type === "point"

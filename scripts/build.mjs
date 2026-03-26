@@ -198,7 +198,7 @@ function buildDeclarations() {
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
-    "semiotic-geo", "semiotic-themes"
+    "semiotic-geo", "semiotic-themes", "semiotic-utils"
   ]
   for (const name of entryPoints) {
     try { copyFileSync(`dist/components/${name}.d.ts`, `dist/${name}.d.ts`) } catch { /* may not exist */ }
@@ -255,7 +255,8 @@ async function build() {
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify },
-    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify }
+    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
+    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify }
   ]
 
   await Promise.all([
