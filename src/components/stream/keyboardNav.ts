@@ -266,7 +266,7 @@ export function extractXYNavPoints(scene: any[]): NavPoint[] {
 
 /**
  * Extract navigable points from ordinal scene nodes.
- * Bars carry `group` (stack/group key) and `datum.category`.
+ * Bars use `node.group` (stack/group key) falling back to `datum.category`.
  * ArrowRight/Left = across categories, ArrowUp/Down = within stacked segments.
  */
 export function extractOrdinalNavPoints(scene: any[]): NavPoint[] {
@@ -274,8 +274,7 @@ export function extractOrdinalNavPoints(scene: any[]): NavPoint[] {
 
   for (const node of scene) {
     if (node.type === "rect" && node.x != null) {
-      // For ordinal bars: group by category so ArrowRight/Left moves across categories,
-      // ArrowUp/Down moves between stack segments within the same category.
+      // Group by node.group (set by stacking/grouping) falling back to category.
       const category = node.datum?.category ?? ""
       points.push({
         x: node.x + node.w / 2,
@@ -370,18 +369,20 @@ export function nextNetworkIndex(
     case "ArrowRight":
     case "ArrowDown": {
       if (neighborIds.length === 0) return pos.flatIndex
-      neighborIndexRef.current = (neighborIndexRef.current + 1) % neighborIds.length
-      const targetId = neighborIds[neighborIndexRef.current]
+      const next = (neighborIndexRef.current + 1) % neighborIds.length
+      const targetId = neighborIds[next]
       const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
+      if (targetIdx >= 0) neighborIndexRef.current = next
       return targetIdx >= 0 ? targetIdx : pos.flatIndex
     }
 
     case "ArrowLeft":
     case "ArrowUp": {
       if (neighborIds.length === 0) return pos.flatIndex
-      neighborIndexRef.current = (neighborIndexRef.current - 1 + neighborIds.length) % neighborIds.length
-      const targetId = neighborIds[neighborIndexRef.current]
+      const prev = (neighborIndexRef.current - 1 + neighborIds.length) % neighborIds.length
+      const targetId = neighborIds[prev]
       const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
+      if (targetIdx >= 0) neighborIndexRef.current = prev
       return targetIdx >= 0 ? targetIdx : pos.flatIndex
     }
 
@@ -392,7 +393,7 @@ export function nextNetworkIndex(
       const targetId = neighborIds[idx]
       const targetIdx = graph.flat.findIndex(p => p.datum?.id === targetId)
       if (targetIdx >= 0) {
-        neighborIndexRef.current = 0 // reset for new node
+        neighborIndexRef.current = -1 // reset for new node
         return targetIdx
       }
       return pos.flatIndex

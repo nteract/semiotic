@@ -876,7 +876,7 @@ const StreamNetworkFrame = forwardRef<
 
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
-  const neighborIndexRef = useRef(0)
+  const neighborIndexRef = useRef(-1)
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
@@ -894,7 +894,7 @@ const StreamNetworkFrame = forwardRef<
       if (!isNav) return
       e.preventDefault()
       kbFocusIndexRef.current = 0
-      neighborIndexRef.current = 0
+      neighborIndexRef.current = -1
       const point = graph.flat[0]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const rawDatum = point.datum || {}
@@ -921,7 +921,7 @@ const StreamNetworkFrame = forwardRef<
     if (next < 0) {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      neighborIndexRef.current = 0
+      neighborIndexRef.current = -1
       hoverRef.current = null
       setHoverData(null)
       if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }

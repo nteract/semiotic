@@ -453,6 +453,8 @@ interface ChartModeInput {
   /** "vertical" | "horizontal" — used to shrink the category-axis margin when showCategoryTicks is false */
   orientation?: string
   title?: string
+  description?: string
+  summary?: string
   xLabel?: string
   yLabel?: string
   categoryLabel?: string
@@ -470,6 +472,8 @@ interface ChartModeResult {
   showLegend: boolean | undefined
   showLabels: boolean | undefined
   title: string | undefined
+  description: string | undefined
+  summary: string | undefined
   xLabel: string | undefined
   yLabel: string | undefined
   categoryLabel: string | undefined
@@ -499,6 +503,8 @@ export function useChartMode(
     showLegend: userProps.showLegend ?? m.showLegend,
     showLabels: userProps.showLabels ?? m.showLabels,
     title: suppressLabels ? undefined : userProps.title,
+    description: userProps.description,
+    summary: userProps.summary,
     xLabel: suppressLabels ? undefined : userProps.xLabel,
     yLabel: suppressLabels ? undefined : userProps.yLabel,
     categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,

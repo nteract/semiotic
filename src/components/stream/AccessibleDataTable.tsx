@@ -238,7 +238,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
 
   if (rows.length === 0) {
     // Render an anchor target so SkipToTableLink doesn't point to a missing id
-    return tableId ? <span id={tableId} style={SR_ONLY_STYLE} /> : null
+    return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
   }
 
   // Compute union of all keys across rows
@@ -253,6 +253,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   return (
     <table
       id={tableId}
+      tabIndex={-1}
       style={SR_ONLY_STYLE}
       role="table"
       aria-label={`Data table for ${chartType}`}
@@ -312,7 +313,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
   }
 
   if (rows.length === 0) {
-    return tableId ? <span id={tableId} style={SR_ONLY_STYLE} /> : null
+    return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
   }
 
   const columnSet = new Set<string>()
@@ -324,6 +325,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
   return (
     <table
       id={tableId}
+      tabIndex={-1}
       style={SR_ONLY_STYLE}
       role="table"
       aria-label={`Data table for ${chartType}`}

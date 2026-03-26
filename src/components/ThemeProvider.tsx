@@ -10,6 +10,7 @@ import {
 import type { SemioticTheme } from "./store/ThemeStore"
 import { resolveThemePreset } from "./semiotic-themes"
 import type { ThemePresetName } from "./semiotic-themes"
+import { addMqlListener } from "./stream/useMediaPreferences"
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -68,13 +69,7 @@ function ThemeInitializer({
         themeBeforeForcedColorsRef.current = null
       }
     }
-    // Safari 14 fallback: addListener/removeListener
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", handler)
-      return () => mql.removeEventListener("change", handler)
-    }
-    mql.addListener(handler as any)
-    return () => mql.removeListener(handler as any)
+    return addMqlListener(mql, handler)
   }, [theme, setTheme])
 
   React.useEffect(() => {

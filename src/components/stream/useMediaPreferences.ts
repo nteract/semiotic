@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 
 /** Safari 14 fallback for MediaQueryList listener registration */
-function addMqlListener(mql: MediaQueryList, handler: (e: MediaQueryListEvent) => void): () => void {
+export function addMqlListener(mql: MediaQueryList, handler: (e: MediaQueryListEvent) => void): () => void {
   if (typeof mql.addEventListener === "function") {
     mql.addEventListener("change", handler)
     return () => mql.removeEventListener("change", handler)

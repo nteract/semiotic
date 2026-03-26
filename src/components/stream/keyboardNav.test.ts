@@ -666,7 +666,7 @@ describe("nextNetworkIndex — neighbor traversal", () => {
   function setup() {
     const navPoints = extractNetworkNavPoints(scene)
     const graph = buildNavGraph(navPoints)
-    const neighborIdx = { current: 0 }
+    const neighborIdx = { current: -1 }
     return { graph, neighborIdx }
   }
 
@@ -710,7 +710,7 @@ describe("nextNetworkIndex — neighbor traversal", () => {
     ]
     const navPoints = extractNetworkNavPoints(isolated)
     const graph = buildNavGraph(navPoints)
-    const neighborIdx = { current: 0 }
+    const neighborIdx = { current: -1 }
     const pos = resolvePosition(graph, 0)
     const next = nextNetworkIndex("ArrowRight", pos, graph, [], neighborIdx)!
     expect(next).toBe(0)
