@@ -89,78 +89,91 @@ const fmt = (v: number | undefined | null): string => {
 
 interface DataRow { label: string; values: Record<string, string | number> }
 
-/** Extract a flat list of typed rows from scene nodes, preserving raw numeric values. */
+/** Extract a flat list of typed rows from scene nodes, preserving raw numeric values.
+ *  Defensively handles missing/malformed data — never throws. */
 function extractAllRows(scene: AnySceneNode[]): DataRow[] {
   const rows: DataRow[] = []
+  if (!Array.isArray(scene)) return rows
+
   for (const node of scene) {
-    switch (node.type) {
-      case "point":
-        rows.push({ label: "Point", values: { x: node.x, y: node.y } })
-        break
-      case "line": {
-        const path = node.path
-        const data = Array.isArray(node.datum) ? node.datum : []
-        if (!path) break
-        for (let i = 0; i < path.length && i < data.length; i++) {
-          rows.push({ label: "Line point", values: { x: path[i][0], y: path[i][1] } })
+    if (!node || typeof node !== "object") continue
+    try {
+      switch (node.type) {
+        case "point":
+          rows.push({ label: "Point", values: { x: node.x, y: node.y } })
+          break
+        case "line": {
+          const path = node.path
+          const data = Array.isArray(node.datum) ? node.datum : []
+          if (!Array.isArray(path)) break
+          for (let i = 0; i < path.length && i < data.length; i++) {
+            const pt = path[i]
+            if (!Array.isArray(pt)) continue
+            rows.push({ label: "Line point", values: { x: pt[0], y: pt[1] } })
+          }
+          break
         }
-        break
-      }
-      case "area": {
-        const topPath = node.topPath
-        const data = Array.isArray(node.datum) ? node.datum : []
-        if (!topPath) break
-        for (let i = 0; i < topPath.length && i < data.length; i++) {
-          rows.push({ label: "Area point", values: { x: topPath[i][0], y: topPath[i][1] } })
+        case "area": {
+          const topPath = node.topPath
+          const data = Array.isArray(node.datum) ? node.datum : []
+          if (!Array.isArray(topPath)) break
+          for (let i = 0; i < topPath.length && i < data.length; i++) {
+            const pt = topPath[i]
+            if (!Array.isArray(pt)) continue
+            rows.push({ label: "Area point", values: { x: pt[0], y: pt[1] } })
+          }
+          break
         }
-        break
+        case "rect": {
+          const datum = (node.datum != null && typeof node.datum === "object") ? node.datum : {}
+          const category = datum.category ?? node.group ?? ""
+          const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
+          rows.push({ label: "Bar", values: { category, value: rawValue ?? "" } })
+          break
+        }
+        case "heatcell":
+          rows.push({ label: "Cell", values: { x: node.x, y: node.y, value: node.value } })
+          break
+        case "wedge":
+          rows.push({
+            label: "Wedge",
+            values: {
+              category: node.datum?.category ?? node.datum?.label ?? "",
+              value: node.datum?.value ?? "",
+            },
+          })
+          break
+        case "circle":
+          rows.push({
+            label: "Node",
+            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
+          })
+          break
+        case "arc":
+          rows.push({
+            label: "Arc",
+            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
+          })
+          break
+        case "candlestick":
+          rows.push({
+            label: "Candlestick",
+            values: { x: node.x, open: node.open, high: node.high, low: node.low, close: node.close },
+          })
+          break
+        case "geoarea":
+          rows.push({
+            label: "Region",
+            values: {
+              name: node.datum?.properties?.name ?? node.datum?.name ?? "",
+              value: node.datum?.value ?? "",
+            },
+          })
+          break
+        // Unknown types are silently skipped
       }
-      case "rect": {
-        const datum = node.datum ?? {}
-        const category = datum.category ?? node.group ?? ""
-        const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
-        rows.push({ label: "Bar", values: { category, value: rawValue ?? "" } })
-        break
-      }
-      case "heatcell":
-        rows.push({ label: "Cell", values: { x: node.x, y: node.y, value: node.value } })
-        break
-      case "wedge":
-        rows.push({
-          label: "Wedge",
-          values: {
-            category: node.datum?.category || node.datum?.label || "",
-            value: node.datum?.value ?? "",
-          },
-        })
-        break
-      case "circle":
-        rows.push({
-          label: "Node",
-          values: { id: node.datum?.id || "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-        })
-        break
-      case "arc":
-        rows.push({
-          label: "Arc",
-          values: { id: node.datum?.id || "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-        })
-        break
-      case "candlestick":
-        rows.push({
-          label: "Candlestick",
-          values: { x: node.x, open: node.open, high: node.high, low: node.low, close: node.close },
-        })
-        break
-      case "geoarea":
-        rows.push({
-          label: "Region",
-          values: {
-            name: node.datum?.properties?.name || node.datum?.name || "",
-            value: node.datum?.value ?? "",
-          },
-        })
-        break
+    } catch {
+      // Malformed node — skip rather than crash the panel
     }
   }
   return rows
@@ -178,13 +191,14 @@ interface FieldStats {
   uniqueValues?: string[]
 }
 
-/** Compute per-field statistics from extracted rows. */
+/** Compute per-field statistics from extracted rows. Defensive against weird values. */
 function computeFieldStats(rows: DataRow[]): FieldStats[] {
-  if (rows.length === 0) return []
+  if (!rows || rows.length === 0) return []
 
   // Collect all field names
   const fieldNames = new Set<string>()
   for (const r of rows) {
+    if (!r || !r.values) continue
     for (const k of Object.keys(r.values)) fieldNames.add(k)
   }
 
@@ -194,13 +208,17 @@ function computeFieldStats(rows: DataRow[]): FieldStats[] {
     const strs = new Set<string>()
 
     for (const r of rows) {
+      if (!r || !r.values) continue
       const v = r.values[name]
       if (v == null || v === "") continue
-      if (typeof v === "number" && !Number.isNaN(v)) {
+      if (typeof v === "number" && !Number.isNaN(v) && Number.isFinite(v)) {
         nums.push(v)
-      } else {
+      } else if (typeof v === "number") {
+        // NaN/Infinity — skip rather than corrupt stats
+      } else if (typeof v !== "object" && typeof v !== "function") {
         strs.add(String(v))
       }
+      // Objects/functions silently skipped — not meaningful for stats
     }
 
     if (nums.length > 0) {
@@ -251,57 +269,83 @@ const SAMPLE_SIZE = 5
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
   position: "relative",
   zIndex: 5,
-  padding: "12px 16px",
+  padding: "14px 16px 12px",
   borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
-  fontFamily: "var(--semiotic-font-family, sans-serif)",
+  fontFamily: "var(--semiotic-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
   fontSize: 13,
   lineHeight: 1.5,
   color: "var(--semiotic-text, #333)",
   background: "var(--semiotic-bg, #fff)",
+  borderRadius: "var(--semiotic-border-radius, 0px) var(--semiotic-border-radius, 0px) 0 0",
+}
+
+const SUMMARY_NOTE_STYLE: React.CSSProperties = {
+  marginBottom: 8,
+  paddingRight: 28,
+  color: "var(--semiotic-text-secondary, #666)",
+  fontSize: 12,
+  letterSpacing: "0.01em",
 }
 
 const CLOSE_BUTTON_STYLE: React.CSSProperties = {
   position: "absolute",
-  top: 8,
-  right: 8,
-  width: 20,
-  height: 20,
+  top: 10,
+  right: 10,
+  width: 22,
+  height: 22,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  border: "none",
-  background: "transparent",
+  border: "1px solid var(--semiotic-border, #e0e0e0)",
+  background: "var(--semiotic-bg, #fff)",
   cursor: "pointer",
   color: "var(--semiotic-text-secondary, #666)",
-  fontSize: 14,
+  fontSize: 13,
   lineHeight: 1,
   padding: 0,
-  borderRadius: 4,
+  borderRadius: "var(--semiotic-border-radius, 4px)",
 }
 
 const VISIBLE_TABLE_STYLE: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 12,
-  marginTop: 8,
+  marginTop: 4,
+  fontVariantNumeric: "tabular-nums",
 }
 
 const VISIBLE_TH_STYLE: React.CSSProperties = {
   textAlign: "left",
-  padding: "4px 8px",
+  padding: "5px 10px",
   borderBottom: "2px solid var(--semiotic-border, #e0e0e0)",
   fontWeight: 600,
+  fontSize: 11,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.04em",
   color: "var(--semiotic-text-secondary, #666)",
 }
 
 const VISIBLE_TD_STYLE: React.CSSProperties = {
-  padding: "4px 8px",
+  padding: "4px 10px",
   borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
 }
 
-function fmtCell(v: string | number | undefined | null): string {
-  if (v == null || v === "") return ""
-  if (typeof v === "number") return fmt(v)
+const CAPTION_STYLE: React.CSSProperties = {
+  textAlign: "left",
+  fontSize: 11,
+  color: "var(--semiotic-text-secondary, #999)",
+  marginBottom: 4,
+  fontStyle: "italic",
+}
+
+function fmtCell(v: unknown): string {
+  if (v == null || v === "") return "—"
+  if (typeof v === "number") {
+    if (Number.isNaN(v)) return "—"
+    return fmt(v)
+  }
+  if (typeof v === "boolean") return v ? "true" : "false"
+  if (typeof v === "object") return "—" // Don't render [object Object]
   return String(v)
 }
 
@@ -366,9 +410,9 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   return (
     <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div role="note" style={{ marginBottom: 4, color: "var(--semiotic-text-secondary, #666)", paddingRight: 24 }}>{summary}</div>
+      <div role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
       <table role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption style={{ textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 }}>
+        <caption style={CAPTION_STYLE}>
           First {sampleRows.length} of {allRows.length} data points
         </caption>
         <thead>
@@ -437,14 +481,18 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
     )
   }
 
-  // JIT: compute stats on activation
+  // JIT: compute stats on activation — defensive against weird data shapes
+  const safeNodes = Array.isArray(nodes) ? nodes : []
+  const safeEdges = Array.isArray(edges) ? edges : []
+
   const xVals: number[] = []
   const yVals: number[] = []
-  for (const n of nodes) {
+  for (const n of safeNodes) {
+    if (!n || typeof n !== "object") continue
     const x = n.cx ?? n.x
     const y = n.cy ?? n.y
-    if (typeof x === "number" && !Number.isNaN(x)) xVals.push(x)
-    if (typeof y === "number" && !Number.isNaN(y)) yVals.push(y)
+    if (typeof x === "number" && !Number.isNaN(x) && Number.isFinite(x)) xVals.push(x)
+    if (typeof y === "number" && !Number.isNaN(y) && Number.isFinite(y)) yVals.push(y)
   }
 
   const rangePart = (name: string, vals: number[]) => {
@@ -456,11 +504,12 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
 
   // Degree distribution
   const degreeMap = new Map<string, number>()
-  for (const e of edges) {
+  for (const e of safeEdges) {
+    if (!e || typeof e !== "object") continue
     const src = typeof e.source === "object" ? (e.source as any)?.id : e.source
     const tgt = typeof e.target === "object" ? (e.target as any)?.id : e.target
-    if (src) degreeMap.set(src, (degreeMap.get(src) ?? 0) + 1)
-    if (tgt) degreeMap.set(tgt, (degreeMap.get(tgt) ?? 0) + 1)
+    if (src != null && src !== "") degreeMap.set(String(src), (degreeMap.get(String(src)) ?? 0) + 1)
+    if (tgt != null && tgt !== "") degreeMap.set(String(tgt), (degreeMap.get(String(tgt)) ?? 0) + 1)
   }
   const degrees = Array.from(degreeMap.values())
   let avgDegree = 0
@@ -470,14 +519,14 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
     avgDegree = sum / degrees.length
   }
 
-  const summaryParts = [`${nodes.length} nodes, ${edges.length} edges.`]
+  const summaryParts = [`${safeNodes.length} nodes, ${safeEdges.length} edges.`]
   const xRange = rangePart("x", xVals)
   const yRange = rangePart("y", yVals)
   if (xRange) summaryParts.push(xRange)
   if (yRange) summaryParts.push(yRange)
   if (degrees.length > 0) summaryParts.push(`Mean degree: ${fmt(avgDegree)}.`)
 
-  const sampleNodes = nodes.slice(0, SAMPLE_SIZE)
+  const sampleNodes = safeNodes.slice(0, SAMPLE_SIZE)
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
@@ -487,10 +536,10 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }:
   return (
     <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div role="note" style={{ marginBottom: 4, color: "var(--semiotic-text-secondary, #666)", paddingRight: 24 }}>{summaryParts.join(" ")}</div>
+      <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
       <table role="table" aria-label={`Sample nodes for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption style={{ textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 }}>
-          First {sampleNodes.length} of {nodes.length} nodes
+        <caption style={CAPTION_STYLE}>
+          First {sampleNodes.length} of {safeNodes.length} nodes
         </caption>
         <thead>
           <tr>
