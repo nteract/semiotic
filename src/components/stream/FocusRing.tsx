@@ -6,7 +6,7 @@ import * as React from "react"
  *
  * Renders an SVG overlay with a dashed focus ring whose shape adapts
  * to the focused element type (circle for points, rect for bars/nodes,
- * arc highlight for wedges).
+ * emphasized arc for wedges).
  */
 
 export interface FocusRingProps {
@@ -26,6 +26,8 @@ export interface FocusRingProps {
   height?: number
 }
 
+const FOCUS_STROKE = "var(--semiotic-focus, #005fcc)"
+
 export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", width, height }: FocusRingProps) {
   if (!active || !hoverPoint) return null
 
@@ -34,18 +36,34 @@ export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", 
 
   let indicator: React.ReactNode
 
-  if (shape === "rect" && width && height) {
+  if (shape === "rect" && width != null && height != null) {
+    // Clamp to minimum 4px so the ring is always visible
+    const w = Math.max(width, 4)
+    const h = Math.max(height, 4)
     indicator = (
       <rect
-        x={cx - width / 2 - 3}
-        y={cy - height / 2 - 3}
-        width={width + 6}
-        height={height + 6}
+        x={cx - w / 2 - 3}
+        y={cy - h / 2 - 3}
+        width={w + 6}
+        height={h + 6}
         rx={3}
         fill="none"
-        stroke="var(--semiotic-focus, #005fcc)"
+        stroke={FOCUS_STROKE}
         strokeWidth={2}
         strokeDasharray="4,2"
+      />
+    )
+  } else if (shape === "wedge") {
+    // Wedge focus: larger dashed circle centered on the wedge midpoint
+    indicator = (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={12}
+        fill="none"
+        stroke={FOCUS_STROKE}
+        strokeWidth={2.5}
+        strokeDasharray="6,3"
       />
     )
   } else {
@@ -55,7 +73,7 @@ export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", 
         cy={cy}
         r={8}
         fill="none"
-        stroke="var(--semiotic-focus, #005fcc)"
+        stroke={FOCUS_STROKE}
         strokeWidth={2}
         strokeDasharray="4,2"
       />

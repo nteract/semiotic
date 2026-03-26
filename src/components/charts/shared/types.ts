@@ -82,6 +82,13 @@ export interface BaseChartProps {
    * For per-category coloring, use `colorBy` + `colorScheme` instead. */
   color?: string
 
+  /** Accessible description overriding the auto-generated aria-label on the chart container.
+   * Should describe the chart's purpose or content for screen reader users. */
+  description?: string
+  /** Accessible summary rendered as a screen-reader-only note.
+   * Use for trend descriptions or key takeaways that supplement the visual. */
+  summary?: string
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 

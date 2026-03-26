@@ -228,8 +228,12 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   showAxes?: boolean
 
   // ── Accessibility ─────────────────────────────────
-  /** Render a visually-hidden data table from the scene graph for screen readers (first 50 rows) */
+  /** Render a visually-hidden data table from the scene graph for screen readers */
   accessibleTable?: boolean
+  /** Accessible description overriding the auto-generated aria-label on the chart container */
+  description?: string
+  /** Accessible summary rendered as a screen-reader-only note */
+  summary?: string
 }
 
 export interface StreamGeoFrameHandle {

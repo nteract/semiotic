@@ -1,5 +1,6 @@
 import React from "react"
 import { LineChart, BarChart } from "semiotic"
+import { diagnoseConfig } from "semiotic/utils"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
@@ -26,6 +27,46 @@ const barData = [
 ]
 
 // ---------------------------------------------------------------------------
+// DiagnoseConfig demo
+// ---------------------------------------------------------------------------
+
+function DiagnoseDemo() {
+  const result = diagnoseConfig("LineChart", {
+    data: [{ x: 1, y: 2 }],
+    xAccessor: "x",
+    yAccessor: "y",
+    // No title, description, or summary — will trigger MISSING_DESCRIPTION
+  })
+
+  return (
+    <div style={{
+      background: "var(--surface-1)",
+      borderRadius: 8,
+      padding: 16,
+      border: "1px solid var(--surface-3)",
+      fontFamily: "var(--font-mono)",
+      fontSize: 13,
+      lineHeight: 1.6,
+    }}>
+      <div style={{ marginBottom: 8, fontWeight: 600 }}>
+        diagnoseConfig("LineChart", {"{"} data, xAccessor, yAccessor {"}"})
+      </div>
+      {result.diagnoses.map((d, i) => (
+        <div key={i} style={{
+          padding: "4px 8px",
+          marginBottom: 4,
+          borderRadius: 4,
+          background: d.severity === "error" ? "rgba(220,53,69,0.1)" : "rgba(255,193,7,0.1)",
+          color: d.severity === "error" ? "#dc3545" : "#856404",
+        }}>
+          <strong>[{d.code}]</strong> {d.message}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -44,22 +85,31 @@ export default function AccessibilityPage() {
         Semiotic renders charts on canvas for performance. Canvas-based rendering
         presents accessibility challenges because the visual output has no DOM
         structure for screen readers to traverse. This page documents what
-        Semiotic provides today and what you should add in your application.
+        Semiotic provides and what you should add in your application.
+      </p>
+
+      <p>
+        Semiotic's accessibility approach is informed by{" "}
+        <a href="https://chartability.github.io/POUR-CAF/" target="_blank" rel="noopener noreferrer">
+          Chartability
+        </a>{" "}
+        (Frank Elavsky's audit framework for data visualization accessibility)
+        and aims to address its critical heuristics at the toolkit level.
       </p>
 
       {/* ----------------------------------------------------------------- */}
-      {/* What Semiotic Provides */}
+      {/* Built-in Features */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="what-semiotic-provides">What Semiotic Provides</h2>
+      <h2 id="built-in">Built-in Accessibility Features</h2>
 
-      <h3 id="aria-labels">ARIA Labels on Chart Containers</h3>
+      <h3 id="aria-labels">ARIA Labels and Descriptions</h3>
 
       <p>
-        Every Stream Frame and HOC chart renders its root container with{" "}
-        <code>role="img"</code> and an <code>aria-label</code>. When you
-        provide a <code>title</code> prop (as a string), it becomes the
-        aria-label. Without a title, a default is used ("XY chart",
-        "Ordinal chart", or "Network chart").
+        Every chart renders its root container with <code>role="img"</code> and
+        an <code>aria-label</code>. Use <code>title</code> for a brief label,{" "}
+        <code>description</code> for a detailed aria-label override, and{" "}
+        <code>summary</code> for a screen-reader-only note with trend information
+        or key takeaways.
       </p>
 
       <LiveExample
@@ -68,6 +118,8 @@ export default function AccessibilityPage() {
           xAccessor: "month",
           yAccessor: "revenue",
           title: "Monthly Revenue Trend",
+          description: "Line chart showing monthly revenue from January to June 2024",
+          summary: "Revenue grew from $12,000 in January to $27,000 in June, with a brief dip in March to $14,000.",
           showGrid: true,
         }}
         type={LineChart}
@@ -79,31 +131,31 @@ export default function AccessibilityPage() {
   // ...
 ]`,
           title: '"Monthly Revenue Trend"',
+          description: '"Line chart showing monthly revenue from January to June 2024"',
+          summary: '"Revenue grew from $12,000 in January to $27,000 in June..."',
         }}
         hiddenProps={{}}
-        title="Chart with ARIA Label"
+        title="Chart with Description and Summary"
       />
 
-      <p>
-        Inspect the rendered HTML — the root <code>&lt;div&gt;</code> has{" "}
-        <code>role="img"</code> and{" "}
-        <code>aria-label="Monthly Revenue Trend"</code>. This tells screen
-        readers that the element is an image with a meaningful description.
-      </p>
-
       <CodeBlock
-        code={`// The title prop becomes the aria-label
+        code={`// title → visible heading + fallback aria-label
+// description → overrides aria-label with detailed text
+// summary → screen-reader-only note (role="note")
 <LineChart
   data={salesData}
   xAccessor="month"
   yAccessor="revenue"
-  title="Monthly Revenue Trend"  // → aria-label="Monthly Revenue Trend"
+  title="Monthly Revenue Trend"
+  description="Line chart showing monthly revenue from January to June 2024"
+  summary="Revenue grew steadily with a dip in March"
 />
 
 // Works on all chart types
-<BarChart title="Quarterly Sales" ... />
-<SankeyDiagram title="Budget Flow" ... />
-<RealtimeLineChart title="CPU Usage" ... />`}
+<BarChart title="Quarterly Sales"
+  description="Bar chart comparing quarterly sales figures" ... />
+<SankeyDiagram title="Budget Flow"
+  summary="Engineering receives 45% of total budget" ... />`}
         language="jsx"
       />
 
@@ -112,51 +164,167 @@ export default function AccessibilityPage() {
       <p>
         All charts are focusable via <strong>Tab</strong>. Once focused, use
         arrow keys to navigate between data points — the tooltip follows the
-        keyboard focus, and a dashed ring highlights the active point. Press{" "}
-        <strong>Escape</strong> to clear focus. Mouse interaction automatically
-        clears keyboard focus.
+        keyboard focus, and a shape-appropriate dashed ring highlights the
+        active element (circle for points, rectangle for bars). Keyboard
+        navigation works across all four frame types: XY, Ordinal, Network,
+        and Geo.
       </p>
 
       <CodeBlock
         code={`// Keyboard navigation is built in — no props needed
 // Tab → focus chart
 // ←/→ or ↑/↓ → move between data points
+// PageDown/PageUp → skip by 10% of data points
 // Home/End → jump to first/last point
 // Escape → clear focus
 
-// Works on all chart types:
-<LineChart data={data} xAccessor="x" yAccessor="y" title="Revenue" />
-<BarChart data={data} categoryAccessor="cat" valueAccessor="val" />
-<ForceDirectedGraph nodes={n} edges={e} />`}
+// Works on all chart types including geo:
+<ChoroplethMap areas={world} valueAccessor="gdp" />`}
         language="jsx"
       />
 
-      <h3 id="svg-overlay-labels">SVG Overlay Labels</h3>
+      <h3 id="data-table">Screen Reader Data Table</h3>
 
       <p>
-        While the canvas itself is opaque to assistive technology, Semiotic
-        renders labels, annotations, and axis text in an SVG overlay on top of
-        the canvas. These SVG text elements <em>are</em> accessible to screen
-        readers and provide some structural information about the chart.
+        Every chart renders a visually-hidden data table (up to 500 rows)
+        derived from the scene graph. This table is accessible to screen
+        readers and provides a non-visual alternative to the chart. The table
+        supports all scene node types: points, lines, areas, bars, wedges
+        (pie/donut), circles (network nodes), arcs, candlesticks, heatmap
+        cells, and geographic regions.
       </p>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* What You Should Do */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="what-you-should-do">What You Should Do</h2>
 
       <p>
-        Semiotic's built-in accessibility covers the baseline — identifying the
-        chart as an image with a description. For production applications, you
-        should provide additional context:
+        The data table is on by default (<code>accessibleTable={"{true}"}</code>).
+        When a chart receives keyboard focus, a <strong>"Skip to data table"</strong>{" "}
+        link appears for screen readers and sighted keyboard users, allowing
+        them to bypass navigating through every data point.
       </p>
+
+      <CodeBlock
+        code={`// Data table is on by default — disable if needed
+<LineChart data={data} accessibleTable={false} />
+
+// The skip link appears automatically when the chart is focused
+// and accessibleTable is enabled (the default)`}
+        language="jsx"
+      />
+
+      <h3 id="focus-ring">Focus Ring</h3>
+
+      <p>
+        When navigating with the keyboard, a dashed focus ring highlights the
+        currently focused data element. The ring shape adapts to the element
+        type — circles for points and network nodes, rectangles for bars and
+        Sankey nodes. The focus color uses the{" "}
+        <code>--semiotic-focus</code> CSS custom property (default: #005fcc).
+      </p>
+
+      <h3 id="aria-live">Live Announcements</h3>
+
+      <p>
+        When keyboard focus moves to a data point, an <code>aria-live="polite"</code>{" "}
+        region announces the focused datum's values. This works automatically
+        for all chart types — no configuration needed. Custom tooltips do
+        not override the aria-live announcement.
+      </p>
+
+      <h3 id="reduced-motion">Reduced Motion</h3>
+
+      <p>
+        Semiotic automatically detects <code>prefers-reduced-motion: reduce</code>{" "}
+        and disables pulse animations, decay transitions, and orbit animation
+        when the preference is active. No props needed — this is built into
+        all four Stream Frames.
+      </p>
+
+      <CodeBlock
+        code={`// Semiotic handles this automatically, but you can also
+// read the preference for your own UI:
+const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
+// Semiotic's streaming animations stop when mql.matches is true`}
+        language="jsx"
+      />
+
+      <h3 id="high-contrast">High Contrast Mode</h3>
+
+      <p>
+        When the operating system's high contrast or forced-colors mode is
+        active, <code>ThemeProvider</code> automatically applies the{" "}
+        <code>HIGH_CONTRAST_THEME</code> if no explicit theme is set. This
+        ensures data marks have sufficient contrast and visibility without
+        any configuration. When the user exits forced-colors mode, the theme
+        reverts to the default.
+      </p>
+
+      <CodeBlock
+        code={`import { ThemeProvider, HIGH_CONTRAST_THEME } from "semiotic"
+
+// Automatic: ThemeProvider detects forced-colors and applies high-contrast
+<ThemeProvider>
+  <LineChart data={data} ... />
+</ThemeProvider>
+
+// Manual: explicitly set high-contrast theme
+<ThemeProvider theme="high-contrast">
+  <LineChart data={data} ... />
+</ThemeProvider>
+
+// Or apply directly via CSS custom properties:
+// --semiotic-bg: #000; --semiotic-text: #fff; etc.`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Validation */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="validation">Accessibility Validation</h2>
+
+      <p>
+        <code>diagnoseConfig</code> includes accessibility-specific checks that
+        warn when charts are missing accessible descriptions or have color
+        contrast issues. Run it in development to catch issues early:
+      </p>
+
+      <DiagnoseDemo />
+
+      <div style={{ marginTop: 16 }}>
+        <CodeBlock
+          code={`import { diagnoseConfig } from "semiotic/utils"
+
+const result = diagnoseConfig("LineChart", {
+  data: myData,
+  xAccessor: "x",
+  yAccessor: "y",
+  // No title or description → MISSING_DESCRIPTION warning
+})
+
+// result.diagnoses includes:
+// { code: "MISSING_DESCRIPTION",
+//   message: "No title, description, or summary provided...",
+//   severity: "warning",
+//   fix: "Add a title=\\"...\\" prop..." }
+
+// Accessibility checks included:
+// - MISSING_DESCRIPTION — no title/description/summary
+// - LOW_COLOR_CONTRAST — colors < 3:1 against background
+// - LOW_ADJACENT_CONTRAST — adjacent categories hard to distinguish`}
+          language="jsx"
+        />
+      </div>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Best Practices */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="best-practices">Best Practices</h2>
 
       <h3 id="text-alternatives">Text Alternatives</h3>
 
       <p>
-        The most effective accessibility strategy for data visualizations is
-        providing a text description or data table alongside the chart. This
-        works regardless of the rendering technology:
+        Use the built-in <code>description</code> and <code>summary</code>{" "}
+        props for programmatic accessibility. For visible text alternatives,
+        wrap the chart in a <code>&lt;figure&gt;</code> with a{" "}
+        <code>&lt;figcaption&gt;</code>:
       </p>
 
       <CodeBlock
@@ -166,98 +334,57 @@ export default function AccessibilityPage() {
     xAccessor="month"
     yAccessor="revenue"
     title="Monthly Revenue Trend"
+    description="Line chart showing revenue growth from $12k to $27k"
+    summary="Revenue grew 125% over 6 months with a brief dip in March"
   />
   <figcaption>
     Revenue grew from $12,000 in January to $27,000 in June,
     with a brief dip in March.
   </figcaption>
-</figure>
-
-// Or provide an expandable data table
-<details>
-  <summary>View data table</summary>
-  <table>
-    <thead><tr><th>Month</th><th>Revenue</th></tr></thead>
-    <tbody>
-      {data.map(d => (
-        <tr key={d.month}>
-          <td>{d.month}</td>
-          <td>\${d.revenue.toLocaleString()}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</details>`}
+</figure>`}
         language="jsx"
       />
 
       <h3 id="color-contrast">Color and Contrast</h3>
 
       <p>
-        Use colors with sufficient contrast ratios. Provide visual cues beyond
-        color alone — labels, patterns, or different shapes. Test with tools like{" "}
-        <a href="https://www.toptal.com/designers/colorfilter/" target="_blank" rel="noopener noreferrer">
-          Toptal Color Blind Filter
-        </a>.
+        Use colors with sufficient contrast ratios. Import the pre-tested
+        color-blind safe palette for reliable accessibility:
       </p>
 
       <CodeBlock
-        code={`// Always show labels alongside color encoding
-<BarChart
-  data={data}
-  categoryAccessor="region"
-  valueAccessor="sales"
-  colorBy="region"
-  // Labels provide a non-color channel for the category
-/>
+        code={`import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"
 
-// Use colorScheme with sufficient contrast
+// 8-color palette based on Wong 2011
 <LineChart
   data={data}
-  xAccessor="x"
-  yAccessor="y"
-  colorScheme={["#1f77b4", "#d62728", "#2ca02c"]}
-/>`}
-        language="jsx"
-      />
+  colorBy="region"
+  colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}
+/>
 
-      <h3 id="animation">Animation</h3>
-
-      <p>
-        Follow WCAG guidelines: nothing should flash more than three times per
-        second. For streaming charts with <code>pulse</code> encoding, keep
-        pulse durations above 333ms. Consider providing a reduced-motion
-        alternative:
-      </p>
-
-      <CodeBlock
-        code={`// Respect prefers-reduced-motion
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-
-<RealtimeLineChart
-  ref={chartRef}
-  timeAccessor="time"
-  valueAccessor="value"
-  // Skip pulse animation for users who prefer reduced motion
-  pulse={prefersReducedMotion ? undefined : { duration: 500 }}
-/>`}
+// diagnoseConfig checks contrast automatically:
+// LOW_COLOR_CONTRAST — color vs background < 3:1
+// LOW_ADJACENT_CONTRAST — similar adjacent category colors`}
         language="jsx"
       />
 
       <h3 id="tooltip-accessibility">Accessible Tooltips</h3>
 
       <p>
-        When writing custom tooltip functions, include ARIA attributes so screen
-        readers announce tooltip content:
+        Semiotic's built-in aria-live region announces tooltip content
+        automatically. When writing custom tooltip functions, you don't need
+        to add your own aria attributes — the aria-live region handles it:
       </p>
 
       <CodeBlock
-        code={`<LineChart
+        code={`// The aria-live region announces data automatically
+// Custom tooltip only needs to handle the visual:
+<LineChart
   data={data}
   xAccessor="month"
   yAccessor="revenue"
   tooltip={(d) => (
-    <div role="tooltip" aria-live="polite">
+    <div>
       <strong>{d.month}</strong>: \${d.revenue.toLocaleString()}
     </div>
   )}
@@ -266,24 +393,51 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
       />
 
       {/* ----------------------------------------------------------------- */}
-      {/* Current Limitations */}
+      {/* Props Reference */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="props">Accessibility Props Reference</h2>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead>
+          <tr style={{ borderBottom: "2px solid var(--surface-3)" }}>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Prop</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Type</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Default</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            ["title", "string | ReactNode", "-", "Visible heading; fallback aria-label when description is not set"],
+            ["description", "string", "-", "Overrides the auto-generated aria-label with a detailed description"],
+            ["summary", "string", "-", "Screen-reader-only note (role=\"note\") for trends or key takeaways"],
+            ["accessibleTable", "boolean", "true", "Render a visually-hidden data table from the scene graph"],
+          ].map(([prop, type, def, desc], i) => (
+            <tr key={i} style={{ borderBottom: "1px solid var(--surface-3)" }}>
+              <td style={{ padding: "8px 12px" }}><code>{prop}</code></td>
+              <td style={{ padding: "8px 12px", fontSize: 12, fontFamily: "var(--font-mono)" }}>{type}</td>
+              <td style={{ padding: "8px 12px" }}><code>{def}</code></td>
+              <td style={{ padding: "8px 12px" }}>{desc}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Limitations */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="limitations">Current Limitations</h2>
-
-      <p>
-        Semiotic's canvas-based architecture means some accessibility features
-        that SVG-based libraries provide are not yet available:
-      </p>
 
       <ul>
         <li>
           <strong>No per-element ARIA</strong> — individual bars, points, and
           line segments in the canvas do not have ARIA labels. The SVG overlay
-          provides labels for text elements only.
+          provides labels for text elements, and the data table provides a
+          complete non-visual alternative.
         </li>
         <li>
           <strong>Brush/selection is mouse-only</strong> — LinkedCharts brush
-          interactions and ScatterplotMatrix crossfilter do not have keyboard
+          interactions and ScatterplotMatrix crossfilter do not yet have keyboard
           equivalents.
         </li>
         <li>
@@ -292,14 +446,6 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
           list refreshes as new data arrives.
         </li>
       </ul>
-
-      <p>
-        For applications that require WCAG AA compliance where charts are the
-        primary content, provide a data table fallback. For charts used as
-        supplementary illustrations, the <code>role="img"</code> +{" "}
-        <code>aria-label</code> baseline is sufficient under WCAG's "decorative
-        image" guidance.
-      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Testing */}
@@ -314,12 +460,17 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
         </li>
         <li>
           <strong>Audit tools</strong>:{" "}
-          <a href="https://chrome.google.com/webstore/detail/axe/lhdoppojpmngadmnindnejefpokejbdd" target="_blank" rel="noopener noreferrer">aXe</a>,{" "}
-          Firefox Accessibility Inspector
+          aXe, Firefox Accessibility Inspector, Lighthouse
+        </li>
+        <li>
+          <strong>Semiotic tools</strong>:{" "}
+          <code>diagnoseConfig()</code> for static analysis,{" "}
+          <code>npx semiotic-ai --doctor</code> for CLI validation
         </li>
         <li>
           <strong>Standards</strong>:{" "}
           <a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank" rel="noopener noreferrer">WCAG 2.1</a>,{" "}
+          <a href="https://chartability.github.io/POUR-CAF/" target="_blank" rel="noopener noreferrer">Chartability</a>,{" "}
           <a href="https://webaim.org/standards/wcag/checklist" target="_blank" rel="noopener noreferrer">WebAIM checklist</a>
         </li>
       </ul>
@@ -335,12 +486,12 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
           rendering with accessible markup
         </li>
         <li>
-          <Link to="/features/theming">Theming</Link> — dark mode support
-          for visual contrast
+          <Link to="/features/theming">Theming</Link> — dark mode, high-contrast,
+          and color-blind safe themes
         </li>
         <li>
           <Link to="/features/realtime-encoding">Realtime Encoding</Link> —
-          pulse and decay animation settings
+          pulse and decay animation settings (respects reduced-motion)
         </li>
       </ul>
     </PageLayout>

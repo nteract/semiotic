@@ -36,7 +36,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
-import { NetworkAccessibleDataTable, AriaLiveTooltip, computeNetworkAriaLabel } from "./AccessibleDataTable"
+import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -249,6 +249,8 @@ const StreamNetworkFrame = forwardRef<
     staleness,
     thresholds,
     accessibleTable = true,
+    description,
+    summary,
     orbitMode,
     orbitSize,
     orbitSpeed,
@@ -871,6 +873,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Keyboard navigation ───────────────────────────────────────────
 
   const kbFocusIndexRef = useRef(-1)
+  const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
@@ -887,6 +890,7 @@ const StreamNetworkFrame = forwardRef<
 
     if (next < 0) {
       kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
       hoverRef.current = null
       setHoverData(null)
       if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
@@ -897,6 +901,7 @@ const StreamNetworkFrame = forwardRef<
     const idx = current < 0 ? 0 : next
     kbFocusIndexRef.current = idx
     const point = navPoints[idx]
+    focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
     const rawDatum = point.datum || {}
     const hover = {
       ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
@@ -913,6 +918,7 @@ const StreamNetworkFrame = forwardRef<
 
   const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
     kbFocusIndexRef.current = -1
+    focusedNavPointRef.current = null
     hoverHandlerRef.current(e)
   }, [])
 
@@ -936,9 +942,10 @@ const StreamNetworkFrame = forwardRef<
       : 0.016
     lastFrameTimeRef.current = now
 
-    // Advance transition animation
-    // When reduced motion is active, skip animation — treat as instant
-    const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
+    // Fast-forward transitions when reduced motion is active so target positions
+    // are applied immediately and transition state is cleared properly
+    const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+    const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
     // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
     const animationTicked = reducedMotionRef.current ? false : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
@@ -1130,13 +1137,14 @@ const StreamNetworkFrame = forwardRef<
       <div
         className={`stream-network-frame${className ? ` ${className}` : ""}`}
         role="img"
-        aria-label={typeof title === "string" ? title : "Network chart"}
+        aria-label={description || (typeof title === "string" ? title : "Network chart")}
         style={{
           position: "relative",
           width: size[0],
           height: size[1],
         }}
       >
+        <ScreenReaderSummary summary={summary} />
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={size[0]}
@@ -1190,7 +1198,7 @@ const StreamNetworkFrame = forwardRef<
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
       role="img"
-      aria-label={typeof title === "string" ? title : "Network chart"}
+      aria-label={description || (typeof title === "string" ? title : "Network chart")}
       tabIndex={0}
       style={{
         position: "relative",
@@ -1203,6 +1211,8 @@ const StreamNetworkFrame = forwardRef<
       onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       onKeyDown={onKeyDown}
     >
+      {accessibleTable && <SkipToTableLink tableId={`semiotic-table-network`} />}
+      <ScreenReaderSummary summary={summary} />
       {backgroundGraphics && (
         <svg
           overflow="visible"
@@ -1232,7 +1242,7 @@ const StreamNetworkFrame = forwardRef<
         }}
       />
       <AriaLiveTooltip hoverPoint={hoverData} />
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" />}
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId="semiotic-table-network" />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}
@@ -1260,6 +1270,9 @@ const StreamNetworkFrame = forwardRef<
         hoverPoint={hoverData}
         margin={margin}
         size={size}
+        shape={focusedNavPointRef.current?.shape as any}
+        width={focusedNavPointRef.current?.w}
+        height={focusedNavPointRef.current?.h}
       />
 
       {tooltipElement}

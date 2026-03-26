@@ -24,6 +24,8 @@ const ThemeNameContext = React.createContext<string | undefined>(undefined)
 
 // ── ThemeInitializer ────────────────────────────────────────────────────────
 // Calls setTheme on mount to sync the store with the prop value.
+// When no explicit theme is provided and forced-colors (high contrast)
+// mode is active, automatically applies HIGH_CONTRAST_THEME.
 
 function ThemeInitializer({
   theme
@@ -33,6 +35,27 @@ function ThemeInitializer({
   const setTheme = useThemeSelector(
     (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void }) => state.setTheme
   )
+
+  // Auto-detect forced-colors / high-contrast mode
+  React.useEffect(() => {
+    if (theme !== undefined) return // explicit theme takes priority
+    if (typeof window === "undefined" || !window.matchMedia) return
+
+    const mql = window.matchMedia("(forced-colors: active)")
+    if (mql.matches) {
+      setTheme(HIGH_CONTRAST_THEME)
+    }
+
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setTheme(HIGH_CONTRAST_THEME)
+      } else {
+        setTheme(LIGHT_THEME) // revert to default when exiting forced-colors
+      }
+    }
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [theme, setTheme])
 
   React.useEffect(() => {
     if (theme === undefined) return

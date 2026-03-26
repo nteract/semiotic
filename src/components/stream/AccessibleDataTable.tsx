@@ -14,6 +14,8 @@ const SR_ONLY_STYLE: React.CSSProperties = {
   border: 0,
 }
 
+// ── Aria-label helpers ──────────────────────────────────────────────────
+
 /**
  * Compute an aria-label describing the chart type and data shape from the scene graph.
  */
@@ -37,10 +39,13 @@ export function computeCanvasAriaLabel(
     heatcell: "cells",
     circle: "nodes",
     candlestick: "candlesticks",
+    wedge: "wedges",
+    arc: "arcs",
+    geoarea: "regions",
   }
 
   // Sort by a fixed type order for stable aria-label output
-  const typeOrder = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick"]
+  const typeOrder = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick", "wedge", "arc", "geoarea"]
   const sortedTypes = Object.keys(typeCounts).sort((a, b) => {
     const ai = typeOrder.indexOf(a)
     const bi = typeOrder.indexOf(b)
@@ -70,60 +75,177 @@ export function computeNetworkAriaLabel(
   return `${chartType}, ${parts.join(", ")}`
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+const fmt = (v: number | undefined | null): string =>
+  String(Math.round((v ?? 0) * 100) / 100)
+
+function extractRow(node: AnySceneNode): { label: string; values: Record<string, string> } | null {
+  switch (node.type) {
+    case "point":
+      return {
+        label: "Point",
+        values: { x: fmt(node.x), y: fmt(node.y) },
+      }
+    case "line": {
+      // Lines produce multiple rows — handled separately
+      return null
+    }
+    case "area":
+      return null // handled separately like line
+    case "rect":
+      return {
+        label: "Bar",
+        values: {
+          category: node.datum?.category || "",
+          value: fmt(node.datum?.value),
+        },
+      }
+    case "heatcell":
+      return {
+        label: "Cell",
+        values: { x: fmt(node.x), y: fmt(node.y), value: fmt(node.value) },
+      }
+    case "wedge":
+      return {
+        label: "Wedge",
+        values: {
+          category: node.datum?.category || node.datum?.label || "",
+          value: fmt(node.datum?.value),
+        },
+      }
+    case "circle":
+      return {
+        label: "Node",
+        values: {
+          id: node.datum?.id || "",
+          x: fmt(node.cx ?? node.x),
+          y: fmt(node.cy ?? node.y),
+        },
+      }
+    case "arc":
+      return {
+        label: "Arc",
+        values: {
+          id: node.datum?.id || "",
+          x: fmt(node.cx ?? node.x),
+          y: fmt(node.cy ?? node.y),
+        },
+      }
+    case "candlestick":
+      return {
+        label: "Candlestick",
+        values: {
+          x: fmt(node.x),
+          open: fmt(node.open),
+          high: fmt(node.high),
+          low: fmt(node.low),
+          close: fmt(node.close),
+        },
+      }
+    case "geoarea":
+      return {
+        label: "Region",
+        values: {
+          name: node.datum?.properties?.name || node.datum?.name || "",
+          value: node.datum?.value != null ? fmt(node.datum.value) : "",
+        },
+      }
+    default:
+      return null
+  }
+}
+
+function extractLineAreaRows(
+  node: AnySceneNode,
+  maxRows: number,
+  currentCount: number
+): Array<{ label: string; values: Record<string, string> }> {
+  const rows: Array<{ label: string; values: Record<string, string> }> = []
+  const isLine = node.type === "line"
+  const path = isLine ? node.path : node.topPath
+  const data = Array.isArray(node.datum) ? node.datum : []
+  const label = isLine ? "Line point" : "Area point"
+
+  if (!path) return rows
+
+  const limit = Math.min(path.length, data.length, maxRows - currentCount)
+  for (let i = 0; i < limit; i++) {
+    rows.push({
+      label,
+      values: {
+        x: fmt(path[i][0]),
+        y: fmt(path[i][1]),
+      },
+    })
+  }
+  return rows
+}
+
+/** Convert rows to CSV string */
+function rowsToCSV(
+  columns: string[],
+  rows: Array<{ values: Record<string, string> }>
+): string {
+  const header = columns.join(",")
+  const body = rows.map(r => columns.map(c => {
+    const val = r.values[c] ?? ""
+    return val.includes(",") ? `"${val}"` : val
+  }).join(","))
+  return [header, ...body].join("\n")
+}
+
+// ── AccessibleDataTable ─────────────────────────────────────────────────
+
 interface AccessibleDataTableProps {
   scene: AnySceneNode[]
   chartType: string
+  /** Unique ID for skip-navigation link targeting */
+  tableId?: string
 }
 
 /**
  * Visually-hidden data table for screen readers, generated from the scene graph.
- * Renders up to 50 rows with a truncation note.
+ * Supports all scene node types. Renders up to 500 rows with a truncation note.
  */
-export function AccessibleDataTable({ scene, chartType }: AccessibleDataTableProps) {
-  const maxRows = 50
+export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDataTableProps) {
+  const maxRows = 500
   const rows: { label: string; values: Record<string, string> }[] = []
 
   for (const node of scene) {
     if (rows.length >= maxRows) break
-    if (node.type === "point") {
-      rows.push({
-        label: "Point",
-        values: {
-          x: String(Math.round(node.x * 100) / 100),
-          y: String(Math.round(node.y * 100) / 100),
-        },
-      })
-    } else if (node.type === "rect") {
-      rows.push({
-        label: "Bar",
-        values: {
-          category: node.datum?.category || "",
-          value: String(Math.round((node.datum?.value ?? 0) * 100) / 100),
-        },
-      })
-    } else if (node.type === "heatcell") {
-      rows.push({
-        label: "Cell",
-        values: {
-          x: String(Math.round(node.x * 100) / 100),
-          y: String(Math.round(node.y * 100) / 100),
-          value: String(Math.round((node.value ?? 0) * 100) / 100),
-        },
-      })
+
+    if (node.type === "line" || node.type === "area") {
+      const lineRows = extractLineAreaRows(node, maxRows, rows.length)
+      rows.push(...lineRows)
+    } else {
+      const row = extractRow(node)
+      if (row) rows.push(row)
     }
   }
 
   if (rows.length === 0) return null
 
-  // Compute union of all keys across rows (not just first row)
+  // Compute union of all keys across rows
   const columnSet = new Set<string>()
   for (const r of rows) {
     for (const k of Object.keys(r.values)) columnSet.add(k)
   }
   const columns = Array.from(columnSet)
 
+  const totalItems = scene.reduce((sum, node) => {
+    if (node.type === "line") return sum + (node.path?.length ?? 0)
+    if (node.type === "area") return sum + (node.topPath?.length ?? 0)
+    return sum + 1
+  }, 0)
+
   return (
-    <table style={SR_ONLY_STYLE} role="table" aria-label={`Data table for ${chartType}`}>
+    <table
+      id={tableId}
+      style={SR_ONLY_STYLE}
+      role="table"
+      aria-label={`Data table for ${chartType}`}
+    >
       <thead>
         <tr>
           {columns.map((c) => (
@@ -139,10 +261,10 @@ export function AccessibleDataTable({ scene, chartType }: AccessibleDataTablePro
             ))}
           </tr>
         ))}
-        {scene.length > maxRows && (
+        {totalItems > maxRows && (
           <tr>
             <td colSpan={columns.length}>
-              ...and {scene.length - maxRows} more items
+              ...and {totalItems - rows.length} more items
             </td>
           </tr>
         )}
@@ -151,17 +273,20 @@ export function AccessibleDataTable({ scene, chartType }: AccessibleDataTablePro
   )
 }
 
+// ── NetworkAccessibleDataTable ──────────────────────────────────────────
+
 interface NetworkAccessibleDataTableProps {
   nodes: Array<{ datum?: any; id?: string; cx?: number; cy?: number; x?: number; y?: number }>
   edges: Array<{ datum?: any; source?: string; target?: string }>
   chartType: string
+  tableId?: string
 }
 
 /**
  * Visually-hidden data table for network charts.
  */
-export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkAccessibleDataTableProps) {
-  const maxRows = 50
+export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }: NetworkAccessibleDataTableProps) {
+  const maxRows = 500
   const rows: { values: Record<string, string> }[] = []
 
   for (const node of nodes) {
@@ -169,8 +294,8 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkA
     rows.push({
       values: {
         id: node.datum?.id || node.id || "",
-        x: String(Math.round((node.cx ?? node.x ?? 0) * 100) / 100),
-        y: String(Math.round((node.cy ?? node.y ?? 0) * 100) / 100),
+        x: fmt(node.cx ?? node.x),
+        y: fmt(node.cy ?? node.y),
       },
     })
   }
@@ -184,7 +309,12 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkA
   const columns = Array.from(columnSet)
 
   return (
-    <table style={SR_ONLY_STYLE} role="table" aria-label={`Data table for ${chartType}`}>
+    <table
+      id={tableId}
+      style={SR_ONLY_STYLE}
+      role="table"
+      aria-label={`Data table for ${chartType}`}
+    >
       <thead>
         <tr>
           {columns.map((c) => (
@@ -211,6 +341,65 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType }: NetworkA
     </table>
   )
 }
+
+// ── ScreenReaderSummary ─────────────────────────────────────────────────
+
+/**
+ * Screen-reader-only summary note for the chart.
+ * Rendered as role="note" so assistive technology can discover it.
+ */
+export function ScreenReaderSummary({ summary }: { summary?: string }) {
+  if (!summary) return null
+  return (
+    <div role="note" style={SR_ONLY_STYLE}>
+      {summary}
+    </div>
+  )
+}
+
+// ── SkipToTableLink ─────────────────────────────────────────────────────
+
+/**
+ * Screen-reader-only skip link to jump past chart canvas to the data table.
+ * Only rendered when accessibleTable is enabled.
+ */
+export function SkipToTableLink({ tableId }: { tableId: string }) {
+  return (
+    <a
+      href={`#${tableId}`}
+      style={SR_ONLY_STYLE}
+      onFocus={(e) => {
+        // Briefly make visible on focus for sighted keyboard users
+        const el = e.currentTarget
+        Object.assign(el.style, {
+          position: "absolute",
+          width: "auto",
+          height: "auto",
+          overflow: "visible",
+          clip: "auto",
+          whiteSpace: "normal",
+          padding: "4px 8px",
+          background: "var(--semiotic-bg, #fff)",
+          color: "var(--semiotic-text, #000)",
+          border: "2px solid var(--semiotic-focus, #005fcc)",
+          borderRadius: "4px",
+          zIndex: "10",
+          fontSize: "12px",
+          top: "4px",
+          left: "4px",
+        })
+      }}
+      onBlur={(e) => {
+        const el = e.currentTarget
+        Object.assign(el.style, SR_ONLY_STYLE)
+      }}
+    >
+      Skip to data table
+    </a>
+  )
+}
+
+// ── AriaLiveTooltip ─────────────────────────────────────────────────────
 
 /**
  * Visually-hidden aria-live region that mirrors tooltip text for screen readers.
@@ -239,3 +428,5 @@ export function AriaLiveTooltip({ hoverPoint }: { hoverPoint: any }) {
     </div>
   )
 }
+
+export { SR_ONLY_STYLE }

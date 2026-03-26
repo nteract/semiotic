@@ -29,7 +29,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
-import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
@@ -263,7 +263,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pulse,
       transition,
       staleness,
-      accessibleTable = true
+      accessibleTable = true,
+      description,
+      summary
     } = props
 
     // ── Reduced motion ────────────────────────────────────────────────────
@@ -528,6 +530,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const kbFocusIndexRef = useRef(-1)
+    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
       const store = storeRef.current
@@ -544,6 +547,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       if (next < 0) {
         kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
         hoverRef.current = null
         setHoverPoint(null)
         if (customHoverBehavior) customHoverBehavior(null)
@@ -554,6 +558,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const idx = current < 0 ? 0 : next
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const hover = {
         ...navPointToHover(point),
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
@@ -568,6 +573,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
       hoverHandlerRef.current(e)
     }, [])
 
@@ -587,7 +593,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const now = typeof performance !== "undefined" ? performance.now() : Date.now()
 
       // Advance transition animation
-      const isTransitioning = reducedMotionRef.current ? false : store.advanceTransition(now)
+      // Fast-forward transitions when reduced motion is active so target positions
+      // are applied immediately and transition state is cleared properly
+      const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+      const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       const wasDirty = dirtyRef.current
       if (wasDirty && !isTransitioning) {
@@ -753,13 +762,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         <div
           className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
           role="img"
-          aria-label={typeof title === "string" ? title : "Ordinal chart"}
+          aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{
             position: "relative",
             width: size[0],
             height: size[1],
           }}
         >
+          <ScreenReaderSummary summary={summary} />
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
@@ -827,12 +837,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Render ───────────────────────────────────────────────────────────
 
+    const tableId = `semiotic-table-${React.useId?.() ?? "ordinal"}`
+
     return (
       <div
         ref={responsiveRef}
         className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
         role="img"
-        aria-label={typeof title === "string" ? title : "Ordinal chart"}
+        aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
         tabIndex={0}
         style={{
           position: "relative",
@@ -844,6 +856,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onKeyDown={onKeyDown}
       >
+        {accessibleTable && <SkipToTableLink tableId={tableId} />}
+        <ScreenReaderSummary summary={summary} />
         {backgroundGraphics && (
           <svg
             style={{
@@ -885,7 +899,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           }}
         />
         <AriaLiveTooltip hoverPoint={hoverPoint} />
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} />}
 
         <OrdinalSVGOverlay
           width={adjustedWidth}
@@ -960,6 +974,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           hoverPoint={hoverPoint}
           margin={margin}
           size={size}
+          shape={focusedNavPointRef.current?.shape as any}
+          width={focusedNavPointRef.current?.w}
+          height={focusedNavPointRef.current?.h}
         />
         {tooltipElement}
       </div>
