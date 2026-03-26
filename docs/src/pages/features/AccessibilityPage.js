@@ -82,10 +82,19 @@ export default function AccessibilityPage() {
       nextPage={{ title: "Linked Charts", path: "/features/small-multiples" }}
     >
       <p>
+        Accessibility features aren't just for people with disabilities — they
+        help everyone. Keyboard navigation lets power users explore data faster
+        than mousing. Data summaries give anyone a quick statistical overview
+        without scanning a chart. Reduced-motion support prevents distraction.
+        High-contrast themes improve readability in bright sunlight. These
+        features make charts more usable for all of us, in all contexts.
+      </p>
+
+      <p>
         Semiotic renders charts on canvas for performance. Canvas-based rendering
-        presents accessibility challenges because the visual output has no DOM
-        structure for screen readers to traverse. This page documents what
-        Semiotic provides and what you should add in your application.
+        presents challenges because the visual output has no DOM structure for
+        assistive technology to traverse. This page documents what Semiotic
+        provides out of the box and what you should add in your application.
       </p>
 
       <p>
@@ -203,30 +212,55 @@ export default function AccessibilityPage() {
         language="jsx"
       />
 
-      <h3 id="data-table">Screen Reader Data Table</h3>
+      <h3 id="data-summary">Data Summary</h3>
 
       <p>
-        Every chart renders a visually-hidden data table (up to 500 rows)
-        derived from the scene graph. This table is accessible to screen
-        readers and provides a non-visual alternative to the chart. The table
-        supports all scene node types: points, lines, areas, bars, wedges
-        (pie/donut), circles (network nodes), arcs, candlesticks, heatmap
-        cells, and geographic regions.
+        Every chart includes a JIT data summary — a statistical overview plus 5
+        sample rows, computed on demand (not on every render). Screen reader users
+        can activate a "View data summary" button inside the chart; sighted users
+        can trigger it from the ChartContainer toolbar. Either way, the summary
+        describes the data shape the way <code>.describe()</code> and{" "}
+        <code>.head()</code> do in pandas: field ranges, means, unique categories,
+        then a small sample table.
       </p>
 
       <p>
-        The data table is on by default (<code>accessibleTable={"{true}"}</code>).
-        When a chart receives keyboard focus, a <strong>"Skip to data table"</strong>{" "}
-        link appears for screen readers and sighted keyboard users, allowing
-        them to bypass navigating through every data point.
+        This is useful for everyone, not just assistive technology users. Product
+        managers get a quick sanity check. Data scientists see if the data loaded
+        correctly. Developers debugging a chart can see what the scene graph
+        actually contains.
       </p>
 
       <CodeBlock
-        code={`// Data table is on by default — disable if needed
-<LineChart data={data} accessibleTable={false} />
+        code={`import { ChartContainer, LineChart } from "semiotic"
 
-// The skip link appears automatically when the chart is focused
-// and accessibleTable is enabled (the default)`}
+// Toolbar button toggles a visible data summary panel
+<ChartContainer
+  title="Revenue Trend"
+  actions={{ dataSummary: true, export: true }}
+>
+  <LineChart data={data} xAccessor="month" yAccessor="revenue" />
+</ChartContainer>
+
+// The summary shows:
+// "72 data points. x: 1 to 12, mean 6.5. y: 12000 to 27000, mean 18500."
+// + a 5-row sample table
+
+// For screen readers, the summary is always available via a hidden button
+// (accessibleTable={true} by default). The ChartContainer action just
+// makes it visible to sighted users too.`}
+        language="jsx"
+      />
+
+      <p>
+        When a chart receives keyboard focus, a <strong>"Skip to data table"</strong>{" "}
+        link appears for screen readers and sighted keyboard users, allowing
+        them to jump directly to the summary.
+      </p>
+
+      <CodeBlock
+        code={`// Data summary is on by default — disable if needed
+<LineChart data={data} accessibleTable={false} />`}
         language="jsx"
       />
 
@@ -435,7 +469,8 @@ const result = diagnoseConfig("LineChart", {
             ["title", "string | ReactNode", "-", "Visible heading; fallback aria-label when description is not set"],
             ["description", "string", "-", "Overrides the auto-generated aria-label with a detailed description"],
             ["summary", "string", "-", "Screen-reader-only note (role=\"note\") for trends or key takeaways"],
-            ["accessibleTable", "boolean", "true", "Render a visually-hidden data table from the scene graph"],
+            ["accessibleTable", "boolean", "true", "Enable JIT data summary (stats + 5 sample rows) for screen readers"],
+            ["actions.dataSummary", "boolean", "false", "ChartContainer: toolbar button to show data summary visibly"],
           ].map(([prop, type, def, desc], i) => (
             <tr key={i} style={{ borderBottom: "1px solid var(--surface-3)" }}>
               <td style={{ padding: "8px 12px" }}><code>{prop}</code></td>

@@ -130,7 +130,7 @@ Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var 
 **CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
-**ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig }), `controls`
+**ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig, dataSummary }), `controls`
 **ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
 **ContextLayout** — `context` (ReactNode), `position`, `contextSize` (250)
 

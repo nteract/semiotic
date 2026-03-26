@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { useDataSummary } from "../DataSummaryContext"
 
 /** Scene node type used by the accessible data table — accepts any frame's scene nodes */
 type AnySceneNode = { type: string; [key: string]: any }
@@ -75,7 +76,7 @@ export function computeNetworkAriaLabel(
   return `${chartType}, ${parts.join(", ")}`
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────
+// ── Formatting ──────────────────────────────────────────────────────────
 
 const fmt = (v: number | undefined | null): string => {
   if (v == null) return ""
@@ -84,127 +85,156 @@ const fmt = (v: number | undefined | null): string => {
   return String(n)
 }
 
-function extractRow(node: AnySceneNode): { label: string; values: Record<string, string> } | null {
-  switch (node.type) {
-    case "point":
-      return {
-        label: "Point",
-        values: { x: fmt(node.x), y: fmt(node.y) },
+// ── Data extraction from scene nodes ────────────────────────────────────
+
+interface DataRow { label: string; values: Record<string, string | number> }
+
+/** Extract a flat list of typed rows from scene nodes, preserving raw numeric values. */
+function extractAllRows(scene: AnySceneNode[]): DataRow[] {
+  const rows: DataRow[] = []
+  for (const node of scene) {
+    switch (node.type) {
+      case "point":
+        rows.push({ label: "Point", values: { x: node.x, y: node.y } })
+        break
+      case "line": {
+        const path = node.path
+        const data = Array.isArray(node.datum) ? node.datum : []
+        if (!path) break
+        for (let i = 0; i < path.length && i < data.length; i++) {
+          rows.push({ label: "Line point", values: { x: path[i][0], y: path[i][1] } })
+        }
+        break
       }
-    case "line": {
-      // Lines produce multiple rows — handled separately
-      return null
+      case "area": {
+        const topPath = node.topPath
+        const data = Array.isArray(node.datum) ? node.datum : []
+        if (!topPath) break
+        for (let i = 0; i < topPath.length && i < data.length; i++) {
+          rows.push({ label: "Area point", values: { x: topPath[i][0], y: topPath[i][1] } })
+        }
+        break
+      }
+      case "rect": {
+        const datum = node.datum ?? {}
+        const category = datum.category ?? node.group ?? ""
+        const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
+        rows.push({ label: "Bar", values: { category, value: rawValue ?? "" } })
+        break
+      }
+      case "heatcell":
+        rows.push({ label: "Cell", values: { x: node.x, y: node.y, value: node.value } })
+        break
+      case "wedge":
+        rows.push({
+          label: "Wedge",
+          values: {
+            category: node.datum?.category || node.datum?.label || "",
+            value: node.datum?.value ?? "",
+          },
+        })
+        break
+      case "circle":
+        rows.push({
+          label: "Node",
+          values: { id: node.datum?.id || "", x: node.cx ?? node.x, y: node.cy ?? node.y },
+        })
+        break
+      case "arc":
+        rows.push({
+          label: "Arc",
+          values: { id: node.datum?.id || "", x: node.cx ?? node.x, y: node.cy ?? node.y },
+        })
+        break
+      case "candlestick":
+        rows.push({
+          label: "Candlestick",
+          values: { x: node.x, open: node.open, high: node.high, low: node.low, close: node.close },
+        })
+        break
+      case "geoarea":
+        rows.push({
+          label: "Region",
+          values: {
+            name: node.datum?.properties?.name || node.datum?.name || "",
+            value: node.datum?.value ?? "",
+          },
+        })
+        break
     }
-    case "area":
-      return null // handled separately like line
-    case "rect": {
-      const datum = node.datum ?? {}
-      const category = datum.category ?? node.group ?? ""
-      const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
-      return {
-        label: "Bar",
-        values: {
-          category,
-          value: rawValue != null ? fmt(rawValue) : "",
-        },
-      }
-    }
-    case "heatcell":
-      return {
-        label: "Cell",
-        values: { x: fmt(node.x), y: fmt(node.y), value: fmt(node.value) },
-      }
-    case "wedge":
-      return {
-        label: "Wedge",
-        values: {
-          category: node.datum?.category || node.datum?.label || "",
-          value: fmt(node.datum?.value),
-        },
-      }
-    case "circle":
-      return {
-        label: "Node",
-        values: {
-          id: node.datum?.id || "",
-          x: fmt(node.cx ?? node.x),
-          y: fmt(node.cy ?? node.y),
-        },
-      }
-    case "arc":
-      return {
-        label: "Arc",
-        values: {
-          id: node.datum?.id || "",
-          x: fmt(node.cx ?? node.x),
-          y: fmt(node.cy ?? node.y),
-        },
-      }
-    case "candlestick":
-      return {
-        label: "Candlestick",
-        values: {
-          x: fmt(node.x),
-          open: fmt(node.open),
-          high: fmt(node.high),
-          low: fmt(node.low),
-          close: fmt(node.close),
-        },
-      }
-    case "geoarea":
-      return {
-        label: "Region",
-        values: {
-          name: node.datum?.properties?.name || node.datum?.name || "",
-          value: node.datum?.value != null ? fmt(node.datum.value) : "",
-        },
-      }
-    default:
-      return null
-  }
-}
-
-function extractLineAreaRows(
-  node: AnySceneNode,
-  maxRows: number,
-  currentCount: number
-): Array<{ label: string; values: Record<string, string> }> {
-  const rows: Array<{ label: string; values: Record<string, string> }> = []
-  const isLine = node.type === "line"
-  const path = isLine ? node.path : node.topPath
-  const data = Array.isArray(node.datum) ? node.datum : []
-  const label = isLine ? "Line point" : "Area point"
-
-  if (!path) return rows
-
-  const limit = Math.min(path.length, data.length, maxRows - currentCount)
-  for (let i = 0; i < limit; i++) {
-    rows.push({
-      label,
-      values: {
-        x: fmt(path[i][0]),
-        y: fmt(path[i][1]),
-      },
-    })
   }
   return rows
 }
 
-/** Count total rows a scene would produce without the maxRows cap */
-function countTotalRows(scene: AnySceneNode[]): number {
-  let total = 0
-  for (const node of scene) {
-    if (node.type === "line") {
-      const data = Array.isArray(node.datum) ? node.datum : []
-      total += Math.min(node.path?.length ?? 0, data.length)
-    } else if (node.type === "area") {
-      const data = Array.isArray(node.datum) ? node.datum : []
-      total += Math.min(node.topPath?.length ?? 0, data.length)
-    } else if (extractRow(node) !== null) {
-      total += 1
+// ── Statistical summary ─────────────────────────────────────────────────
+
+interface FieldStats {
+  name: string
+  count: number
+  numeric: boolean
+  min?: number
+  max?: number
+  mean?: number
+  uniqueValues?: string[]
+}
+
+/** Compute per-field statistics from extracted rows. */
+function computeFieldStats(rows: DataRow[]): FieldStats[] {
+  if (rows.length === 0) return []
+
+  // Collect all field names
+  const fieldNames = new Set<string>()
+  for (const r of rows) {
+    for (const k of Object.keys(r.values)) fieldNames.add(k)
+  }
+
+  const stats: FieldStats[] = []
+  for (const name of fieldNames) {
+    const nums: number[] = []
+    const strs = new Set<string>()
+
+    for (const r of rows) {
+      const v = r.values[name]
+      if (v == null || v === "") continue
+      if (typeof v === "number" && !Number.isNaN(v)) {
+        nums.push(v)
+      } else {
+        strs.add(String(v))
+      }
+    }
+
+    if (nums.length > 0) {
+      let min = nums[0], max = nums[0], sum = 0
+      for (const n of nums) {
+        if (n < min) min = n
+        if (n > max) max = n
+        sum += n
+      }
+      stats.push({ name, count: nums.length, numeric: true, min, max, mean: sum / nums.length })
+    } else if (strs.size > 0) {
+      const unique = Array.from(strs)
+      stats.push({ name, count: unique.length, numeric: false, uniqueValues: unique.slice(0, 5) })
     }
   }
-  return total
+
+  return stats
+}
+
+/** Format a summary string from field stats. */
+function formatSummary(totalRows: number, fieldStats: FieldStats[]): string {
+  const parts: string[] = [`${totalRows} data points.`]
+
+  for (const fs of fieldStats) {
+    if (fs.numeric) {
+      parts.push(`${fs.name}: ${fmt(fs.min)} to ${fmt(fs.max)}, mean ${fmt(fs.mean)}.`)
+    } else {
+      const vals = fs.uniqueValues!
+      const label = vals.length <= 3 ? vals.join(", ") : `${vals.slice(0, 3).join(", ")}… (${fs.count} unique)`
+      parts.push(`${fs.name}: ${label}.`)
+    }
+  }
+
+  return parts.join(" ")
 }
 
 // ── AccessibleDataTable ─────────────────────────────────────────────────
@@ -216,72 +246,121 @@ interface AccessibleDataTableProps {
   tableId?: string
 }
 
+const SAMPLE_SIZE = 5
+
+const VISIBLE_PANEL_STYLE: React.CSSProperties = {
+  padding: "12px 16px",
+  borderTop: "1px solid var(--semiotic-border, #e0e0e0)",
+  fontFamily: "var(--semiotic-font-family, sans-serif)",
+  fontSize: 13,
+  lineHeight: 1.5,
+  color: "var(--semiotic-text, #333)",
+  background: "var(--semiotic-bg, #fff)",
+}
+
+const VISIBLE_TABLE_STYLE: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: 12,
+  marginTop: 8,
+}
+
+const VISIBLE_TH_STYLE: React.CSSProperties = {
+  textAlign: "left",
+  padding: "4px 8px",
+  borderBottom: "2px solid var(--semiotic-border, #e0e0e0)",
+  fontWeight: 600,
+  color: "var(--semiotic-text-secondary, #666)",
+}
+
+const VISIBLE_TD_STYLE: React.CSSProperties = {
+  padding: "4px 8px",
+  borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+}
+
+function fmtCell(v: string | number | undefined | null): string {
+  if (v == null || v === "") return ""
+  if (typeof v === "number") return fmt(v)
+  return String(v)
+}
+
 /**
- * Visually-hidden data table for screen readers, generated from the scene graph.
- * Supports all scene node types. Renders up to 500 rows with a truncation note.
+ * JIT accessible data summary. Renders a lightweight sr-only button by default.
+ * On activation (or when ChartContainer's dataSummary action is toggled),
+ * computes a statistical summary (.describe()-style) and shows 5 sample rows.
  */
 export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDataTableProps) {
-  const maxRows = 500
-  const rows: { label: string; values: Record<string, string> }[] = []
+  const [srExpanded, setSrExpanded] = React.useState(false)
+  const dataSummary = useDataSummary()
+  const visible = dataSummary?.visible ?? false
+  const isExpanded = srExpanded || visible
 
-  for (const node of scene) {
-    if (rows.length >= maxRows) break
-
-    if (node.type === "line" || node.type === "area") {
-      const lineRows = extractLineAreaRows(node, maxRows, rows.length)
-      rows.push(...lineRows)
-    } else {
-      const row = extractRow(node)
-      if (row) rows.push(row)
-    }
-  }
-
-  if (rows.length === 0) {
-    // Render an anchor target so SkipToTableLink doesn't point to a missing id
+  if (!scene || scene.length === 0) {
     return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
   }
 
-  // Compute union of all keys across rows
+  const totalCount = scene.length
+
+  if (!isExpanded) {
+    return (
+      <div id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+        <button type="button" onClick={() => setSrExpanded(true)}>
+          View data summary ({totalCount} elements)
+        </button>
+      </div>
+    )
+  }
+
+  // JIT: only compute stats + sample on activation
+  const allRows = extractAllRows(scene)
+  const fieldStats = computeFieldStats(allRows)
+  const summary = formatSummary(allRows.length, fieldStats)
+  const sampleRows = allRows.slice(0, SAMPLE_SIZE)
+
   const columnSet = new Set<string>()
-  for (const r of rows) {
+  for (const r of sampleRows) {
     for (const k of Object.keys(r.values)) columnSet.add(k)
   }
   const columns = Array.from(columnSet)
 
-  const totalRows = countTotalRows(scene)
+  // When triggered via context (visible panel), render styled; otherwise sr-only
+  const containerStyle = visible ? VISIBLE_PANEL_STYLE : SR_ONLY_STYLE
+  const tableStyle = visible ? VISIBLE_TABLE_STYLE : undefined
+  const thStyle = visible ? VISIBLE_TH_STYLE : undefined
+  const tdStyle = visible ? VISIBLE_TD_STYLE : undefined
 
   return (
-    <table
-      id={tableId}
-      tabIndex={-1}
-      style={SR_ONLY_STYLE}
-      role="table"
-      aria-label={`Data table for ${chartType}`}
-    >
-      <thead>
-        <tr>
-          {columns.map((c) => (
-            <th key={c}>{c}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i}>
+    <div id={tableId} tabIndex={-1} style={containerStyle} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div role="note" style={visible ? { marginBottom: 4, color: "var(--semiotic-text-secondary, #666)" } : undefined}>{summary}</div>
+      <table role="table" aria-label={`Sample data for ${chartType}`} style={tableStyle}>
+        <caption style={visible ? { textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 } : undefined}>
+          First {sampleRows.length} of {allRows.length} data points
+        </caption>
+        <thead>
+          <tr>
+            <th style={thStyle}>type</th>
             {columns.map((c) => (
-              <td key={c}>{r.values[c] ?? ""}</td>
+              <th key={c} style={thStyle}>{c}</th>
             ))}
           </tr>
-        ))}
-        {totalRows > maxRows && (
-          <tr>
-            <td colSpan={columns.length}>
-              ...and {totalRows - rows.length} more items
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sampleRows.map((r, i) => (
+            <tr key={i}>
+              <td style={tdStyle}>{r.label}</td>
+              {columns.map((c) => (
+                <td key={c} style={tdStyle}>{fmtCell(r.values[c])}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!visible && (
+        <button type="button" onClick={() => setSrExpanded(false)}>
+          Collapse data summary
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -295,65 +374,105 @@ interface NetworkAccessibleDataTableProps {
 }
 
 /**
- * Visually-hidden data table for network charts.
+ * JIT accessible data summary for network charts.
  */
 export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId }: NetworkAccessibleDataTableProps) {
-  const maxRows = 500
-  const rows: { values: Record<string, string> }[] = []
+  const [srExpanded, setSrExpanded] = React.useState(false)
+  const dataSummary = useDataSummary()
+  const visible = dataSummary?.visible ?? false
+  const isExpanded = srExpanded || visible
 
-  for (const node of nodes) {
-    if (rows.length >= maxRows) break
-    rows.push({
-      values: {
-        id: node.datum?.id || node.id || "",
-        x: fmt(node.cx ?? node.x),
-        y: fmt(node.cy ?? node.y),
-      },
-    })
-  }
-
-  if (rows.length === 0) {
+  if (!nodes || nodes.length === 0) {
     return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
   }
 
-  const columnSet = new Set<string>()
-  for (const r of rows) {
-    for (const k of Object.keys(r.values)) columnSet.add(k)
+  if (!isExpanded) {
+    return (
+      <div id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} role="region" aria-label={`Data summary for ${chartType}`}>
+        <button type="button" onClick={() => setSrExpanded(true)}>
+          View data summary ({nodes.length} nodes, {edges.length} edges)
+        </button>
+      </div>
+    )
   }
-  const columns = Array.from(columnSet)
+
+  // JIT: compute stats on activation
+  const xVals: number[] = []
+  const yVals: number[] = []
+  for (const n of nodes) {
+    const x = n.cx ?? n.x
+    const y = n.cy ?? n.y
+    if (typeof x === "number" && !Number.isNaN(x)) xVals.push(x)
+    if (typeof y === "number" && !Number.isNaN(y)) yVals.push(y)
+  }
+
+  const rangePart = (name: string, vals: number[]) => {
+    if (vals.length === 0) return ""
+    let min = vals[0], max = vals[0]
+    for (const v of vals) { if (v < min) min = v; if (v > max) max = v }
+    return `${name}: ${fmt(min)} to ${fmt(max)}.`
+  }
+
+  // Degree distribution
+  const degreeMap = new Map<string, number>()
+  for (const e of edges) {
+    const src = typeof e.source === "object" ? (e.source as any)?.id : e.source
+    const tgt = typeof e.target === "object" ? (e.target as any)?.id : e.target
+    if (src) degreeMap.set(src, (degreeMap.get(src) ?? 0) + 1)
+    if (tgt) degreeMap.set(tgt, (degreeMap.get(tgt) ?? 0) + 1)
+  }
+  const degrees = Array.from(degreeMap.values())
+  let avgDegree = 0
+  if (degrees.length > 0) {
+    let sum = 0
+    for (const d of degrees) sum += d
+    avgDegree = sum / degrees.length
+  }
+
+  const summaryParts = [`${nodes.length} nodes, ${edges.length} edges.`]
+  const xRange = rangePart("x", xVals)
+  const yRange = rangePart("y", yVals)
+  if (xRange) summaryParts.push(xRange)
+  if (yRange) summaryParts.push(yRange)
+  if (degrees.length > 0) summaryParts.push(`Mean degree: ${fmt(avgDegree)}.`)
+
+  const sampleNodes = nodes.slice(0, SAMPLE_SIZE)
+
+  const containerStyle = visible ? VISIBLE_PANEL_STYLE : SR_ONLY_STYLE
+  const tableStyle = visible ? VISIBLE_TABLE_STYLE : undefined
+  const thStyle = visible ? VISIBLE_TH_STYLE : undefined
+  const tdStyle = visible ? VISIBLE_TD_STYLE : undefined
 
   return (
-    <table
-      id={tableId}
-      tabIndex={-1}
-      style={SR_ONLY_STYLE}
-      role="table"
-      aria-label={`Data table for ${chartType}`}
-    >
-      <thead>
-        <tr>
-          {columns.map((c) => (
-            <th key={c}>{c}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i}>
-            {columns.map((c) => (
-              <td key={c}>{r.values[c] ?? ""}</td>
-            ))}
-          </tr>
-        ))}
-        {nodes.length > maxRows && (
+    <div id={tableId} tabIndex={-1} style={containerStyle} role="region" aria-label={`Data summary for ${chartType}`}>
+      <div role="note" style={visible ? { marginBottom: 4, color: "var(--semiotic-text-secondary, #666)" } : undefined}>{summaryParts.join(" ")}</div>
+      <table role="table" aria-label={`Sample nodes for ${chartType}`} style={tableStyle}>
+        <caption style={visible ? { textAlign: "left", fontSize: 11, color: "var(--semiotic-text-secondary, #999)", marginBottom: 4 } : undefined}>
+          First {sampleNodes.length} of {nodes.length} nodes
+        </caption>
+        <thead>
           <tr>
-            <td colSpan={columns.length}>
-              ...and {nodes.length - maxRows} more items
-            </td>
+            <th style={thStyle}>id</th>
+            <th style={thStyle}>x</th>
+            <th style={thStyle}>y</th>
           </tr>
-        )}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sampleNodes.map((n, i) => (
+            <tr key={i}>
+              <td style={tdStyle}>{n.datum?.id || n.id || ""}</td>
+              <td style={tdStyle}>{fmt(n.cx ?? n.x)}</td>
+              <td style={tdStyle}>{fmt(n.cy ?? n.y)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!visible && (
+        <button type="button" onClick={() => setSrExpanded(false)}>
+          Collapse data summary
+        </button>
+      )}
+    </div>
   )
 }
 
