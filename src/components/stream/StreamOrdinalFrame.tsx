@@ -599,7 +599,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       const wasDirty = dirtyRef.current
-      if (wasDirty && !isTransitioning) {
+      if (wasDirty && !transitionActive) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         dirtyRef.current = false
       }

@@ -266,6 +266,8 @@ const StreamNetworkFrame = forwardRef<
   const reducedMotionRef = useRef(reducedMotion)
   reducedMotionRef.current = reducedMotion
 
+  const tableId = `semiotic-table-${React.useId?.() ?? "network"}`
+
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
   const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
   const margin = { ...baseMargin, ...marginProp }
@@ -950,7 +952,7 @@ const StreamNetworkFrame = forwardRef<
     // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
     const animationTicked = reducedMotionRef.current ? false : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
-    if (isTransitioning || dirtyRef.current || animationTicked) {
+    if (transitionActive || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
       store.buildScene([adjustedWidth, adjustedHeight])
     }
@@ -1211,7 +1213,7 @@ const StreamNetworkFrame = forwardRef<
       onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       onKeyDown={onKeyDown}
     >
-      {accessibleTable && <SkipToTableLink tableId={`semiotic-table-network`} />}
+      {accessibleTable && <SkipToTableLink tableId={tableId} />}
       <ScreenReaderSummary summary={summary} />
       {backgroundGraphics && (
         <svg
@@ -1242,7 +1244,7 @@ const StreamNetworkFrame = forwardRef<
         }}
       />
       <AriaLiveTooltip hoverPoint={hoverData} />
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId="semiotic-table-network" />}
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}

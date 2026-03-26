@@ -35,6 +35,16 @@ function ThemeInitializer({
   const setTheme = useThemeSelector(
     (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void }) => state.setTheme
   )
+  const currentTheme = useThemeSelector(
+    (state: { theme: SemioticTheme }) => state.theme
+  )
+  // Keep a ref to the latest theme so the forced-colors handler can read it
+  // without re-registering the listener on every theme change.
+  const currentThemeRef = React.useRef(currentTheme)
+  currentThemeRef.current = currentTheme
+
+  // Remember the theme before forced-colors override so we can restore it
+  const themeBeforeForcedColorsRef = React.useRef<Partial<SemioticTheme> | null>(null)
 
   // Auto-detect forced-colors / high-contrast mode
   React.useEffect(() => {
@@ -43,14 +53,19 @@ function ThemeInitializer({
 
     const mql = window.matchMedia("(forced-colors: active)")
     if (mql.matches) {
+      themeBeforeForcedColorsRef.current = currentThemeRef.current
       setTheme(HIGH_CONTRAST_THEME)
     }
 
     const handler = (e: MediaQueryListEvent) => {
       if (e.matches) {
+        // Store current theme before overriding
+        themeBeforeForcedColorsRef.current = currentThemeRef.current
         setTheme(HIGH_CONTRAST_THEME)
       } else {
-        setTheme(LIGHT_THEME) // revert to default when exiting forced-colors
+        // Restore previous theme, falling back to LIGHT_THEME
+        setTheme(themeBeforeForcedColorsRef.current ?? LIGHT_THEME)
+        themeBeforeForcedColorsRef.current = null
       }
     }
     mql.addEventListener("change", handler)

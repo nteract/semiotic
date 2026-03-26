@@ -182,17 +182,21 @@ function extractLineAreaRows(
   return rows
 }
 
-/** Convert rows to CSV string */
-function rowsToCSV(
-  columns: string[],
-  rows: Array<{ values: Record<string, string> }>
-): string {
-  const header = columns.join(",")
-  const body = rows.map(r => columns.map(c => {
-    const val = r.values[c] ?? ""
-    return val.includes(",") ? `"${val}"` : val
-  }).join(","))
-  return [header, ...body].join("\n")
+/** Count total rows a scene would produce without the maxRows cap */
+function countTotalRows(scene: AnySceneNode[]): number {
+  let total = 0
+  for (const node of scene) {
+    if (node.type === "line") {
+      const data = Array.isArray(node.datum) ? node.datum : []
+      total += Math.min(node.path?.length ?? 0, data.length)
+    } else if (node.type === "area") {
+      const data = Array.isArray(node.datum) ? node.datum : []
+      total += Math.min(node.topPath?.length ?? 0, data.length)
+    } else if (extractRow(node) !== null) {
+      total += 1
+    }
+  }
+  return total
 }
 
 // ── AccessibleDataTable ─────────────────────────────────────────────────
@@ -233,11 +237,7 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
   }
   const columns = Array.from(columnSet)
 
-  const totalItems = scene.reduce((sum, node) => {
-    if (node.type === "line") return sum + (node.path?.length ?? 0)
-    if (node.type === "area") return sum + (node.topPath?.length ?? 0)
-    return sum + 1
-  }, 0)
+  const totalRows = countTotalRows(scene)
 
   return (
     <table
@@ -261,10 +261,10 @@ export function AccessibleDataTable({ scene, chartType, tableId }: AccessibleDat
             ))}
           </tr>
         ))}
-        {totalItems > maxRows && (
+        {totalRows > maxRows && (
           <tr>
             <td colSpan={columns.length}>
-              ...and {totalItems - rows.length} more items
+              ...and {totalRows - rows.length} more items
             </td>
           </tr>
         )}

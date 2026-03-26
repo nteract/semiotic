@@ -199,6 +199,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const reducedMotionRef = useRef(reducedMotion)
     reducedMotionRef.current = reducedMotion
 
+    const tableId = `semiotic-table-${React.useId?.() ?? "geo"}`
+
     // ── Sizing ────────────────────────────────────────────────────────
 
     const sizeFromProps: [number, number] = sizeProp || [widthProp || 600, heightProp || 400]
@@ -590,7 +592,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       // Recompute scene when dirty
-      if (dirtyRef.current && !isTransitioning) {
+      if (dirtyRef.current && !transitionActive) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
 
         // In drag-rotate mode, preserve the current rotation across
@@ -1133,7 +1135,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         onClick={customClickBehavior ? onClick : undefined}
         onKeyDown={onKeyDown}
       >
-        {accessibleTable && <SkipToTableLink tableId="semiotic-table-geo" />}
+        {accessibleTable && <SkipToTableLink tableId={tableId} />}
         <ScreenReaderSummary summary={summary} />
         {resolvedBackground && (
           <svg
@@ -1163,7 +1165,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
         <AriaLiveTooltip hoverPoint={hoverPoint} />
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId="semiotic-table-geo" />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}

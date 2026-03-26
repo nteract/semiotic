@@ -853,8 +853,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
-      // Determine if data canvas needs repaint (data/props changed or animating)
-      const needsDataRepaint = dirtyRef.current || isTransitioning
+      // Determine if data canvas needs repaint (data/props changed or animating).
+      // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
+      const needsDataRepaint = dirtyRef.current || transitionActive
 
       // Compute scene graph (scales + scene nodes) — only when data changed
       if (needsDataRepaint && !isTransitioning) {

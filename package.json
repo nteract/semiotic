@@ -141,7 +141,8 @@
   },
   "alias": {
     "semiotic": "./src/components/semiotic.ts",
-    "semiotic/geo": "./src/components/semiotic-geo.ts"
+    "semiotic/geo": "./src/components/semiotic-geo.ts",
+    "semiotic/utils": "./src/components/semiotic-utils.ts"
   },
   "repository": {
     "type": "git",
