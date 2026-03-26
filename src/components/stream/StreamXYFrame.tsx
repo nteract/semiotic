@@ -793,16 +793,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      // Cache NavGraph keyed off scene identity to avoid O(n log n) rebuild per keypress
-      const sceneRef = store.scene
+      // Cache NavGraph keyed off store.version to avoid O(n log n) rebuild per keypress
+      const storeVersion = store.version
       let graph: NavGraph
-      if (navGraphCacheRef.current && navGraphCacheRef.current.version === sceneRef.length) {
+      if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
         graph = navGraphCacheRef.current.graph
       } else {
-        const navPoints = extractXYNavPoints(sceneRef)
+        const navPoints = extractXYNavPoints(store.scene)
         if (navPoints.length === 0) return
         graph = buildNavGraph(navPoints)
-        navGraphCacheRef.current = { version: sceneRef.length, graph }
+        navGraphCacheRef.current = { version: storeVersion, graph }
       }
 
       const current = kbFocusIndexRef.current

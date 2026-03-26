@@ -26,6 +26,8 @@ export interface NavPoint {
   group?: string
   /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
   _flatIndex?: number
+  /** Index within its group — set by buildNavGraph for O(1) resolvePosition */
+  _groupIndex?: number
 }
 
 // ── Navigation Graph ─────────────────────────────────────────────────────
@@ -73,9 +75,12 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
     arr.push(p)
   }
 
-  // Sort within each group by x then y
+  // Sort within each group by x then y, then stamp group indices
   for (const arr of byGroup.values()) {
     arr.sort((a, b) => a.x - b.x || a.y - b.y)
+    for (let i = 0; i < arr.length; i++) {
+      arr[i]._groupIndex = i
+    }
   }
 
   // Sort groups by first point's y position (top-to-bottom ordering)
@@ -110,10 +115,8 @@ export function resolvePosition(graph: NavGraph, flatIndex: number): NavPosition
   const clamped = Math.max(0, Math.min(flatIndex, graph.flat.length - 1))
   const point = graph.flat[clamped]
   const group = point.group ?? "_default"
-  const groupPoints = graph.byGroup.get(group) ?? []
-  // Use _flatIndex equality for O(1) lookup within group
-  const idx = groupPoints.findIndex(p => p._flatIndex === clamped)
-  return { flatIndex: clamped, group, indexInGroup: idx >= 0 ? idx : 0 }
+  // O(1) via stamped _groupIndex
+  return { flatIndex: clamped, group, indexInGroup: point._groupIndex ?? 0 }
 }
 
 /**
@@ -414,9 +417,14 @@ export function nextNetworkIndex(
       return pos.flatIndex
     }
 
-    default:
-      // PageUp/Down, Home/End, Escape handled by generic handler
-      return nextGraphIndex(key, pos, graph)
+    default: {
+      // PageUp/Down, Home/End, Escape move focus away — reset neighbor cycling
+      const result = nextGraphIndex(key, pos, graph)
+      if (result !== null && result !== pos.flatIndex) {
+        neighborIndexRef.current = -1
+      }
+      return result
+    }
   }
 }
 
