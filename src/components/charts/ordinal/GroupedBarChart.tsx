@@ -49,6 +49,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
@@ -79,6 +80,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
@@ -218,6 +220,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

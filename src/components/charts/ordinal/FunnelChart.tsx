@@ -70,6 +70,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
     showCategoryTicks: false,
   })
@@ -117,6 +118,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   // Horizontal funnel has no axes — tight margins.
   // Vertical bar-funnel needs room for axis labels and floating labels above bars.
@@ -247,6 +249,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

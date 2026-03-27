@@ -86,6 +86,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   })
 

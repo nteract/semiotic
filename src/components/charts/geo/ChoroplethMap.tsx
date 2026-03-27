@@ -75,6 +75,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   })
 

@@ -91,6 +91,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   })
 

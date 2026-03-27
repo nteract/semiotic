@@ -263,6 +263,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -495,6 +496,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

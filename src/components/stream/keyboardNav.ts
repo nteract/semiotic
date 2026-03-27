@@ -355,7 +355,7 @@ export function extractNetworkNavPoints(scene: any[]): NavPoint[] {
  * Network-specific navigation: spatial arrow keys + edge following.
  *
  * ArrowRight/Left/Up/Down: move to the nearest node in that direction.
- * Enter: follow an edge — cycles through connected neighbors on repeated presses.
+ * Enter: follow an edge to a connected neighbor of the current node.
  * PageUp/Down, Home/End, Escape: flat navigation.
  *
  * Returns the flat index of the target node, -1 to clear, or null for unhandled keys.

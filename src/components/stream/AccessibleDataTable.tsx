@@ -270,6 +270,7 @@ const SAMPLE_SIZE = 5
 
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
   position: "absolute",
+  top: 0,
   left: 0,
   right: 0,
   zIndex: 5,
@@ -519,9 +520,11 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
 
   type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }
   const nodeRows: NodeDegreeRow[] = []
-  for (const n of safeNodes) {
+  for (let ni = 0; ni < safeNodes.length; ni++) {
+    const n = safeNodes[ni]
     if (!n || typeof n !== "object") continue
-    const id = String(n.datum?.id ?? n.id ?? "")
+    const rawId = n.datum?.id ?? n.id
+    const id = rawId != null ? String(rawId) : `node-${ni}`
     const ind = inDeg.get(id) ?? 0
     const outd = outDeg.get(id) ?? 0
     const wind = wInDeg.get(id) ?? 0

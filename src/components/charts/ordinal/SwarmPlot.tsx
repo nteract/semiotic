@@ -51,6 +51,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
@@ -89,6 +90,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
@@ -180,6 +182,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

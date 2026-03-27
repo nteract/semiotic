@@ -192,6 +192,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -577,6 +578,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

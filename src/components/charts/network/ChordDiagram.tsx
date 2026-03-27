@@ -60,6 +60,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   }, { width: 600, height: 600 })
 
@@ -98,6 +99,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
