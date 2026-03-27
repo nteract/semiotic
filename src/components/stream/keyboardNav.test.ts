@@ -712,28 +712,32 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
     expect(graph.flat[next].datum.id).toBe("A")
   })
 
-  it("Enter cycles through edge-connected neighbors", () => {
+  it("Enter follows edge to connected neighbor and resets cycle", () => {
     const { graph, neighborIdx } = setup()
     const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
 
-    // First Enter from A — connected to B and C
+    // Enter from A — connected to B and C
     const pos1 = resolvePosition(graph, aIdx)
     const next1 = nextNetworkIndex("Enter", pos1, graph, edges, neighborIdx)!
     const id1 = graph.flat[next1].datum.id
     expect(["B", "C"]).toContain(id1)
 
-    // Second Enter from A — cycles to the other neighbor
-    const pos2 = resolvePosition(graph, aIdx)
-    const next2 = nextNetworkIndex("Enter", pos2, graph, edges, neighborIdx)!
-    const id2 = graph.flat[next2].datum.id
-    expect(["B", "C"]).toContain(id2)
-    expect(id2).not.toBe(id1)
+    // neighborIdx resets after Enter so the new node starts fresh
+    expect(neighborIdx.current).toBe(-1)
 
-    // After arrow move to a new node, neighborIdx resets
+    // Now Enter from the new node (simulate real frame handler: recompute pos from returned index)
+    const pos2 = resolvePosition(graph, next1)
+    const next2 = nextNetworkIndex("Enter", pos2, graph, edges, neighborIdx)!
+    // Should follow an edge from the new node
+    expect(next2).not.toBe(next1)
+  })
+
+  it("neighborIdx resets after spatial arrow move", () => {
+    const { graph, neighborIdx } = setup()
+    neighborIdx.current = 5 // simulate stale state from previous node
     const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
     const posB = resolvePosition(graph, bIdx)
     nextNetworkIndex("ArrowDown", posB, graph, edges, neighborIdx)
-    // neighborIdx should have been reset, so Enter from B starts fresh
     expect(neighborIdx.current).toBe(-1)
   })
 

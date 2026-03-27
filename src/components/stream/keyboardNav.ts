@@ -392,7 +392,8 @@ export function nextNetworkIndex(
       const next = (neighborIndexRef.current + 1) % neighborIds.length
       const targetIdx = graph.idToIdx.get(neighborIds[next]) ?? -1
       if (targetIdx >= 0) {
-        neighborIndexRef.current = next
+        // Reset so the new node starts its own neighbor cycle from -1
+        neighborIndexRef.current = -1
         return targetIdx
       }
       return pos.flatIndex

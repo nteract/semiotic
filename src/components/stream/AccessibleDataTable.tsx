@@ -503,7 +503,8 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     const raw = e.datum ?? e
     const srcRaw = typeof raw.source === "object" ? (raw.source as any)?.id : raw.source
     const tgtRaw = typeof raw.target === "object" ? (raw.target as any)?.id : raw.target
-    const val = typeof raw.value === "number" && Number.isFinite(raw.value) ? raw.value : 1
+    const hasVal = typeof raw.value === "number" && Number.isFinite(raw.value)
+    const val = hasVal ? raw.value : 0
     if (srcRaw != null && srcRaw !== "") {
       const src = String(srcRaw)
       outDeg.set(src, (outDeg.get(src) ?? 0) + 1)
@@ -517,14 +518,16 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   }
 
   type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }
-  const nodeRows: NodeDegreeRow[] = safeNodes.map(n => {
+  const nodeRows: NodeDegreeRow[] = []
+  for (const n of safeNodes) {
+    if (!n || typeof n !== "object") continue
     const id = String(n.datum?.id ?? n.id ?? "")
     const ind = inDeg.get(id) ?? 0
     const outd = outDeg.get(id) ?? 0
     const wind = wInDeg.get(id) ?? 0
     const woutd = wOutDeg.get(id) ?? 0
-    return { id, degree: ind + outd, inDeg: ind, outDeg: outd, wDegree: wind + woutd, wInDeg: wind, wOutDeg: woutd }
-  })
+    nodeRows.push({ id, degree: ind + outd, inDeg: ind, outDeg: outd, wDegree: wind + woutd, wInDeg: wind, wOutDeg: woutd })
+  }
 
   // Sort by degree descending for most useful summary
   nodeRows.sort((a, b) => b.degree - a.degree)
