@@ -471,8 +471,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
     }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender])
 
-    const onMouseMove = useCallback((e: React.MouseEvent) => hoverHandlerRef.current(e), [])
-
     const onMouseLeave = useCallback(() => {
       hoverRef.current = null
       hoveredNodeRef.current = null

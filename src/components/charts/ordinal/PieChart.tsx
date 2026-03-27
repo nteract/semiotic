@@ -43,6 +43,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
     showCategoryTicks: props.showCategoryTicks,
   })
@@ -69,6 +70,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   const safeData = data || []
   const actualColorBy = colorBy || categoryAccessor
@@ -203,6 +205,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

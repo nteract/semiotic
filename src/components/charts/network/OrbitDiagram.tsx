@@ -105,6 +105,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   }, { width: 600, height: 600 })
 
@@ -144,6 +145,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -266,6 +268,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         orbitEccentricity={eccentricity}
         orbitShowRings={showRings}
         orbitAnimated={animated}
+        accessibleTable={accessibleTable}
         {...frameProps}
       />
     </SafeRender>

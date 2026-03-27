@@ -176,6 +176,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     showLegend: props.showLegend,
     title: props.title,
     xLabel: props.xLabel,
+    accessibleTable: props.accessibleTable,
   }, { width: 800, height: 400 })
 
   const {
@@ -209,6 +210,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
 
   const isDualAxis = series.length === 2
@@ -452,6 +454,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),

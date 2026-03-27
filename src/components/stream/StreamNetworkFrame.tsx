@@ -29,7 +29,7 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex } from "./keyboardNav"
+import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
@@ -877,15 +877,16 @@ const StreamNetworkFrame = forwardRef<
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
   const neighborIndexRef = useRef(-1)
-
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
     if (!store) return
 
+    // Always rebuild NavGraph from current sceneNodes — positions change during
+    // force simulation ticks and transition interpolation, so caching risks stale coordinates
     const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
     if (navPoints.length === 0) return
+    const graph: NavGraph = buildNavGraph(navPoints)
 
-    const graph = buildNavGraph(navPoints)
     const current = kbFocusIndexRef.current
 
     if (current < 0) {

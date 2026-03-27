@@ -308,6 +308,9 @@ export const LineChart = forwardRef(
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
+    accessibleTable: props.accessibleTable,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
   })
@@ -358,6 +361,7 @@ export const LineChart = forwardRef(
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -909,6 +913,7 @@ export const LineChart = forwardRef(
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

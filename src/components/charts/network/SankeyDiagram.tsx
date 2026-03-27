@@ -63,6 +63,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   }, { width: 800, height: 600 })
 
@@ -103,6 +104,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
@@ -254,6 +256,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

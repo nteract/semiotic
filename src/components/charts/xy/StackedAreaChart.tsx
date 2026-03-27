@@ -229,6 +229,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -456,6 +457,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

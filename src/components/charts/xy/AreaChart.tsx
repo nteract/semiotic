@@ -251,6 +251,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -443,6 +444,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

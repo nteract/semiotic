@@ -63,6 +63,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   }, { width: 600, height: 600 })
 
@@ -104,6 +105,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
@@ -244,6 +246,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

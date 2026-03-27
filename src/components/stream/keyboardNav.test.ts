@@ -651,16 +651,22 @@ describe("nextGraphIndex — single series falls back to within-group", () => {
   })
 })
 
-describe("nextNetworkIndex — neighbor traversal", () => {
-  // Simple graph: A -- B -- C
+describe("nextNetworkIndex — spatial navigation + edge following", () => {
+  // Grid graph — clear spatial directions:
+  //  A (0,0) ---- B (100,0)
+  //    |              |
+  //  C (0,100) -- D (100,100)
   const scene = [
     { type: "circle", cx: 0, cy: 0, r: 5, datum: { id: "A" } },
-    { type: "circle", cx: 50, cy: 0, r: 5, datum: { id: "B" } },
-    { type: "circle", cx: 100, cy: 0, r: 5, datum: { id: "C" } },
+    { type: "circle", cx: 100, cy: 0, r: 5, datum: { id: "B" } },
+    { type: "circle", cx: 0, cy: 100, r: 5, datum: { id: "C" } },
+    { type: "circle", cx: 100, cy: 100, r: 5, datum: { id: "D" } },
   ]
   const edges = [
     { source: "A", target: "B" },
-    { source: "B", target: "C" },
+    { source: "A", target: "C" },
+    { source: "B", target: "D" },
+    { source: "C", target: "D" },
   ]
 
   function setup() {
@@ -670,41 +676,81 @@ describe("nextNetworkIndex — neighbor traversal", () => {
     return { graph, neighborIdx }
   }
 
-  it("ArrowRight cycles through neighbors of current node", () => {
+  it("ArrowRight moves to nearest node to the right", () => {
     const { graph, neighborIdx } = setup()
-    // Start at B (which has neighbors A and C)
-    const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
-    const pos = resolvePosition(graph, bIdx)
-
-    // First ArrowRight → one of B's neighbors
-    const next1 = nextNetworkIndex("ArrowRight", pos, graph, edges, neighborIdx)!
-    const datum1 = graph.flat[next1].datum.id
-    expect(["A", "C"]).toContain(datum1)
-
-    // Update position and press again
-    const pos2 = resolvePosition(graph, bIdx) // still at B for neighbor cycling
-    const next2 = nextNetworkIndex("ArrowRight", pos2, graph, edges, neighborIdx)!
-    const datum2 = graph.flat[next2].datum.id
-    expect(["A", "C"]).toContain(datum2)
-    // Should have cycled to the other neighbor
-    expect(datum2).not.toBe(datum1)
+    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const pos = resolvePosition(graph, aIdx)
+    const next = nextNetworkIndex("ArrowRight", pos, graph, edges, neighborIdx)!
+    // From A (0,0), rightward should find B (100,0) — same y, only candidate
+    expect(graph.flat[next].datum.id).toBe("B")
   })
 
-  it("Enter follows the currently highlighted neighbor", () => {
+  it("ArrowLeft moves to nearest node to the left", () => {
     const { graph, neighborIdx } = setup()
     const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
     const pos = resolvePosition(graph, bIdx)
-
-    // First ArrowRight to highlight a neighbor
-    nextNetworkIndex("ArrowRight", pos, graph, edges, neighborIdx)
-
-    // Enter follows that neighbor
-    const enterIdx = nextNetworkIndex("Enter", pos, graph, edges, neighborIdx)!
-    expect(enterIdx).not.toBe(bIdx)
-    expect(["A", "C"]).toContain(graph.flat[enterIdx].datum.id)
+    const next = nextNetworkIndex("ArrowLeft", pos, graph, edges, neighborIdx)!
+    // From B (100,0), leftward should find A (0,0)
+    expect(graph.flat[next].datum.id).toBe("A")
   })
 
-  it("stays put when node has no neighbors", () => {
+  it("ArrowDown moves to nearest node below", () => {
+    const { graph, neighborIdx } = setup()
+    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const pos = resolvePosition(graph, aIdx)
+    const next = nextNetworkIndex("ArrowDown", pos, graph, edges, neighborIdx)!
+    // From A (0,0), down should find C (0,100) — same x
+    expect(graph.flat[next].datum.id).toBe("C")
+  })
+
+  it("ArrowUp moves to nearest node above", () => {
+    const { graph, neighborIdx } = setup()
+    const cIdx = graph.flat.findIndex(p => p.datum.id === "C")
+    const pos = resolvePosition(graph, cIdx)
+    const next = nextNetworkIndex("ArrowUp", pos, graph, edges, neighborIdx)!
+    // From C (0,100), up should find A (0,0)
+    expect(graph.flat[next].datum.id).toBe("A")
+  })
+
+  it("Enter follows edge to connected neighbor and resets cycle", () => {
+    const { graph, neighborIdx } = setup()
+    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+
+    // Enter from A — connected to B and C
+    const pos1 = resolvePosition(graph, aIdx)
+    const next1 = nextNetworkIndex("Enter", pos1, graph, edges, neighborIdx)!
+    const id1 = graph.flat[next1].datum.id
+    expect(["B", "C"]).toContain(id1)
+
+    // neighborIdx resets after Enter so the new node starts fresh
+    expect(neighborIdx.current).toBe(-1)
+
+    // Now Enter from the new node (simulate real frame handler: recompute pos from returned index)
+    const pos2 = resolvePosition(graph, next1)
+    const next2 = nextNetworkIndex("Enter", pos2, graph, edges, neighborIdx)!
+    // Should follow an edge from the new node
+    expect(next2).not.toBe(next1)
+  })
+
+  it("neighborIdx resets after spatial arrow move", () => {
+    const { graph, neighborIdx } = setup()
+    neighborIdx.current = 5 // simulate stale state from previous node
+    const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
+    const posB = resolvePosition(graph, bIdx)
+    nextNetworkIndex("ArrowDown", posB, graph, edges, neighborIdx)
+    expect(neighborIdx.current).toBe(-1)
+  })
+
+  it("stays put when no node in arrow direction", () => {
+    const { graph, neighborIdx } = setup()
+    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const pos = resolvePosition(graph, aIdx)
+    // A is at (0,0) — nothing to the left or above
+    const next = nextNetworkIndex("ArrowLeft", pos, graph, edges, neighborIdx)!
+    expect(next).toBe(aIdx)
+  })
+
+  it("Enter stays put when node has no edges", () => {
     const isolated = [
       { type: "circle", cx: 0, cy: 0, r: 5, datum: { id: "X" } }
     ]
@@ -712,7 +758,7 @@ describe("nextNetworkIndex — neighbor traversal", () => {
     const graph = buildNavGraph(navPoints)
     const neighborIdx = { current: -1 }
     const pos = resolvePosition(graph, 0)
-    const next = nextNetworkIndex("ArrowRight", pos, graph, [], neighborIdx)!
+    const next = nextNetworkIndex("Enter", pos, graph, [], neighborIdx)!
     expect(next).toBe(0)
   })
 

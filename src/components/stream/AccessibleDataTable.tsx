@@ -269,7 +269,10 @@ interface AccessibleDataTableProps {
 const SAMPLE_SIZE = 5
 
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
-  position: "relative",
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
   zIndex: 5,
   padding: "14px 16px 12px",
   borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
@@ -486,52 +489,75 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     )
   }
 
-  // JIT: compute stats on activation — defensive against weird data shapes
+  // JIT: compute degree stats on activation — defensive against weird data shapes
   const safeNodes = Array.isArray(nodes) ? nodes : []
   const safeEdges = Array.isArray(edges) ? edges : []
 
-  const xVals: number[] = []
-  const yVals: number[] = []
-  for (const n of safeNodes) {
-    if (!n || typeof n !== "object") continue
-    const x = n.cx ?? n.x
-    const y = n.cy ?? n.y
-    if (typeof x === "number" && !Number.isNaN(x) && Number.isFinite(x)) xVals.push(x)
-    if (typeof y === "number" && !Number.isNaN(y) && Number.isFinite(y)) yVals.push(y)
-  }
+  // Compute per-node degree stats: in-degree, out-degree (count and weighted)
+  const inDeg = new Map<string, number>()
+  const outDeg = new Map<string, number>()
+  const wInDeg = new Map<string, number>()
+  const wOutDeg = new Map<string, number>()
 
-  const rangePart = (name: string, vals: number[]) => {
-    if (vals.length === 0) return ""
-    let min = vals[0], max = vals[0]
-    for (const v of vals) { if (v < min) min = v; if (v > max) max = v }
-    return `${name}: ${fmt(min)} to ${fmt(max)}.`
-  }
-
-  // Degree distribution
-  const degreeMap = new Map<string, number>()
   for (const e of safeEdges) {
     if (!e || typeof e !== "object") continue
-    const src = typeof e.source === "object" ? (e.source as any)?.id : e.source
-    const tgt = typeof e.target === "object" ? (e.target as any)?.id : e.target
-    if (src != null && src !== "") degreeMap.set(String(src), (degreeMap.get(String(src)) ?? 0) + 1)
-    if (tgt != null && tgt !== "") degreeMap.set(String(tgt), (degreeMap.get(String(tgt)) ?? 0) + 1)
+    const raw = e.datum ?? e
+    const srcRaw = typeof raw.source === "object" ? (raw.source as any)?.id : raw.source
+    const tgtRaw = typeof raw.target === "object" ? (raw.target as any)?.id : raw.target
+    const hasVal = typeof raw.value === "number" && Number.isFinite(raw.value)
+    const val = hasVal ? raw.value : 0
+    if (srcRaw != null && srcRaw !== "") {
+      const src = String(srcRaw)
+      outDeg.set(src, (outDeg.get(src) ?? 0) + 1)
+      wOutDeg.set(src, (wOutDeg.get(src) ?? 0) + val)
+    }
+    if (tgtRaw != null && tgtRaw !== "") {
+      const tgt = String(tgtRaw)
+      inDeg.set(tgt, (inDeg.get(tgt) ?? 0) + 1)
+      wInDeg.set(tgt, (wInDeg.get(tgt) ?? 0) + val)
+    }
   }
-  const degrees = Array.from(degreeMap.values())
+
+  type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }
+  const nodeRows: NodeDegreeRow[] = []
+  for (let ni = 0; ni < safeNodes.length; ni++) {
+    const n = safeNodes[ni]
+    if (!n || typeof n !== "object") continue
+    const rawId = n.datum?.id ?? n.id
+    const id = rawId != null ? String(rawId) : `node-${ni}`
+    const ind = inDeg.get(id) ?? 0
+    const outd = outDeg.get(id) ?? 0
+    const wind = wInDeg.get(id) ?? 0
+    const woutd = wOutDeg.get(id) ?? 0
+    nodeRows.push({ id, degree: ind + outd, inDeg: ind, outDeg: outd, wDegree: wind + woutd, wInDeg: wind, wOutDeg: woutd })
+  }
+
+  // Sort by degree descending for most useful summary
+  nodeRows.sort((a, b) => b.degree - a.degree)
+
   let avgDegree = 0
-  if (degrees.length > 0) {
+  let maxDegree = 0
+  if (nodeRows.length > 0) {
     let sum = 0
-    for (const d of degrees) sum += d
-    avgDegree = sum / degrees.length
+    for (const r of nodeRows) {
+      sum += r.degree
+      if (r.degree > maxDegree) maxDegree = r.degree
+    }
+    avgDegree = sum / nodeRows.length
   }
 
-  const summaryParts = [`${safeNodes.length} nodes, ${safeEdges.length} edges.`]
-  const xRange = rangePart("x", xVals)
-  const yRange = rangePart("y", yVals)
-  if (xRange) summaryParts.push(xRange)
-  if (yRange) summaryParts.push(yRange)
-  if (degrees.length > 0) summaryParts.push(`Mean degree: ${fmt(avgDegree)}.`)
+  // Show weighted columns when any edge carries a numeric value
+  const hasWeights = safeEdges.some(e => {
+    const raw = e?.datum ?? e
+    return typeof raw?.value === "number" && Number.isFinite(raw.value)
+  })
 
-  const sampleNodes = safeNodes.slice(0, SAMPLE_SIZE)
+  const summaryParts = [`${nodeRows.length} nodes, ${safeEdges.length} edges.`]
+  if (nodeRows.length > 0) {
+    summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
+  }
+
+  const sampleNodes = nodeRows.slice(0, SAMPLE_SIZE)
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
@@ -542,23 +568,31 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
       <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
-      <table role="table" aria-label={`Sample nodes for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+      <table role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
         <caption style={CAPTION_STYLE}>
-          First {sampleNodes.length} of {safeNodes.length} nodes
+          Top {sampleNodes.length} of {nodeRows.length} nodes by degree
         </caption>
         <thead>
           <tr>
             <th style={VISIBLE_TH_STYLE}>id</th>
-            <th style={VISIBLE_TH_STYLE}>x</th>
-            <th style={VISIBLE_TH_STYLE}>y</th>
+            <th style={VISIBLE_TH_STYLE}>degree</th>
+            <th style={VISIBLE_TH_STYLE}>in</th>
+            <th style={VISIBLE_TH_STYLE}>out</th>
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. degree</th>}
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. in</th>}
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. out</th>}
           </tr>
         </thead>
         <tbody>
-          {sampleNodes.map((n, i) => (
+          {sampleNodes.map((row, i) => (
             <tr key={i}>
-              <td style={VISIBLE_TD_STYLE}>{n.datum?.id || n.id || ""}</td>
-              <td style={VISIBLE_TD_STYLE}>{fmt(n.cx ?? n.x)}</td>
-              <td style={VISIBLE_TD_STYLE}>{fmt(n.cy ?? n.y)}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.id}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.degree}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.inDeg}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.outDeg}</td>
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>}
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>}
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>}
             </tr>
           ))}
         </tbody>

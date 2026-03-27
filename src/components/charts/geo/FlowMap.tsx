@@ -94,6 +94,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   })
 
@@ -373,6 +374,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
     ...(resolved.summary && { summary: resolved.summary }),
+    ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
     ...frameProps
   }

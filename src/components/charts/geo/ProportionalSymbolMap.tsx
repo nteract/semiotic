@@ -86,6 +86,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
   })
 
@@ -268,6 +269,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
     ...(resolved.summary && { summary: resolved.summary }),
+    ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
     ...frameProps
   }

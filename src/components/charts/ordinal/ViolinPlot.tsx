@@ -48,6 +48,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     showLegend: props.showLegend,
     title: props.title,
     description: props.description,
+    accessibleTable: props.accessibleTable,
     summary: props.summary,
     categoryLabel: props.categoryLabel,
     valueLabel: props.valueLabel,
@@ -85,6 +86,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
   const title = resolved.title
   const description = resolved.description
   const summary = resolved.summary
+  const accessibleTable = resolved.accessibleTable
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
@@ -197,6 +199,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
