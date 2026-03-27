@@ -29,7 +29,7 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex } from "./keyboardNav"
+import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
@@ -877,15 +877,24 @@ const StreamNetworkFrame = forwardRef<
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
   const neighborIndexRef = useRef(-1)
+  const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
     if (!store) return
 
-    const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
-    if (navPoints.length === 0) return
+    // Cache NavGraph keyed off store.layoutVersion to avoid O(n log n) rebuild per keypress
+    const storeVersion = store.layoutVersion
+    let graph: NavGraph
+    if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
+      graph = navGraphCacheRef.current.graph
+    } else {
+      const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
+      if (navPoints.length === 0) return
+      graph = buildNavGraph(navPoints)
+      navGraphCacheRef.current = { version: storeVersion, graph }
+    }
 
-    const graph = buildNavGraph(navPoints)
     const current = kbFocusIndexRef.current
 
     if (current < 0) {

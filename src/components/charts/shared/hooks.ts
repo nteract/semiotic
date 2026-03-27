@@ -455,6 +455,7 @@ interface ChartModeInput {
   title?: string
   description?: string
   summary?: string
+  accessibleTable?: boolean
   xLabel?: string
   yLabel?: string
   categoryLabel?: string
@@ -474,6 +475,7 @@ interface ChartModeResult {
   title: string | undefined
   description: string | undefined
   summary: string | undefined
+  accessibleTable: boolean | undefined
   xLabel: string | undefined
   yLabel: string | undefined
   categoryLabel: string | undefined
@@ -505,6 +507,7 @@ export function useChartMode(
     title: suppressLabels ? undefined : userProps.title,
     description: userProps.description,
     summary: userProps.summary,
+    accessibleTable: userProps.accessibleTable,
     xLabel: suppressLabels ? undefined : userProps.xLabel,
     yLabel: suppressLabels ? undefined : userProps.yLabel,
     categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,

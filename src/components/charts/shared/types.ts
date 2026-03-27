@@ -89,6 +89,9 @@ export interface BaseChartProps {
    * Use for trend descriptions or key takeaways that supplement the visual. */
   summary?: string
 
+  /** Enable accessible data table below the chart canvas. Default: true (via frame). */
+  accessibleTable?: boolean
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 

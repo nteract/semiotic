@@ -247,6 +247,22 @@ Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas c
 
 `createHatchPattern({ background, stroke, lineWidth, spacing, angle })` from `semiotic` — returns `CanvasPattern | null` for use as `fill` in style functions. Used by FunnelChart vertical mode for dropoff bars.
 
+## Accessibility
+
+Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) and `role="img"` (inner canvas, read by assistive tech). SVG overlays include `<title>` and `<desc>`.
+
+**Keyboard navigation**: Arrow keys navigate data points. In XY/ordinal charts, ArrowRight/Left moves within a series, ArrowUp/Down switches series. In network charts, arrows cycle neighbors, Enter follows an edge. Home/End jump to first/last. PageUp/PageDown skip 10%. Escape clears focus.
+
+**Focus ring**: Shape-adaptive dashed ring (circle for points, rect for bars, arc for wedges). Color: `--semiotic-focus` CSS var.
+
+**Data summary**: `accessibleTable` (default true) renders a sr-only summary. Activate via keyboard focus or `actions.dataSummary` in ChartContainer. JIT-computed — no render cost until activated.
+
+**Reduced motion**: `prefers-reduced-motion` auto-detected. Transitions skip to end state, orbit stops, pulse/decay disabled.
+
+**High contrast**: `forced-colors` / `prefers-contrast: more` auto-detected. ThemeProvider applies `HIGH_CONTRAST_THEME` automatically.
+
+**Hooks** (from `semiotic`): `useReducedMotion()`, `useHighContrast()` — SSR-safe, return `false` on server.
+
 ## Known Pitfalls
 
 - **Tooltip datum shape**: HOC tooltip functions get raw data. Frame `tooltipContent` gets wrapped data — use `d.data`.
@@ -259,6 +275,7 @@ Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas c
 - **Push API**: Omit `data` prop entirely. `data={[]}` clears pushed data every render.
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead. Frame style functions receive `(datum, categoryName)`, not `(datum, index)`.
 - **v2 migration**: `htmlAnnotationRules` → `widget` annotations + `svgAnnotationRules`. v2 `summaryStyle` index-based coloring → v3 category-string-based.
+- **accessibleTable**: Direct prop on HOCs. Set `accessibleTable={false}` to disable the sr-only data summary.
 
 ## Performance
 

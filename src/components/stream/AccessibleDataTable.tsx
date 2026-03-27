@@ -486,52 +486,60 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     )
   }
 
-  // JIT: compute stats on activation — defensive against weird data shapes
+  // JIT: compute degree stats on activation — defensive against weird data shapes
   const safeNodes = Array.isArray(nodes) ? nodes : []
   const safeEdges = Array.isArray(edges) ? edges : []
 
-  const xVals: number[] = []
-  const yVals: number[] = []
-  for (const n of safeNodes) {
-    if (!n || typeof n !== "object") continue
-    const x = n.cx ?? n.x
-    const y = n.cy ?? n.y
-    if (typeof x === "number" && !Number.isNaN(x) && Number.isFinite(x)) xVals.push(x)
-    if (typeof y === "number" && !Number.isNaN(y) && Number.isFinite(y)) yVals.push(y)
-  }
+  // Compute per-node degree stats: in-degree, out-degree (count and weighted)
+  const inDeg = new Map<string, number>()
+  const outDeg = new Map<string, number>()
+  const wInDeg = new Map<string, number>()
+  const wOutDeg = new Map<string, number>()
 
-  const rangePart = (name: string, vals: number[]) => {
-    if (vals.length === 0) return ""
-    let min = vals[0], max = vals[0]
-    for (const v of vals) { if (v < min) min = v; if (v > max) max = v }
-    return `${name}: ${fmt(min)} to ${fmt(max)}.`
-  }
-
-  // Degree distribution
-  const degreeMap = new Map<string, number>()
   for (const e of safeEdges) {
     if (!e || typeof e !== "object") continue
-    const src = typeof e.source === "object" ? (e.source as any)?.id : e.source
-    const tgt = typeof e.target === "object" ? (e.target as any)?.id : e.target
-    if (src != null && src !== "") degreeMap.set(String(src), (degreeMap.get(String(src)) ?? 0) + 1)
-    if (tgt != null && tgt !== "") degreeMap.set(String(tgt), (degreeMap.get(String(tgt)) ?? 0) + 1)
+    const raw = e.datum ?? e
+    const src = String(typeof raw.source === "object" ? (raw.source as any)?.id : raw.source)
+    const tgt = String(typeof raw.target === "object" ? (raw.target as any)?.id : raw.target)
+    const val = typeof raw.value === "number" ? raw.value : 1
+    if (src) { outDeg.set(src, (outDeg.get(src) ?? 0) + 1); wOutDeg.set(src, (wOutDeg.get(src) ?? 0) + val) }
+    if (tgt) { inDeg.set(tgt, (inDeg.get(tgt) ?? 0) + 1); wInDeg.set(tgt, (wInDeg.get(tgt) ?? 0) + val) }
   }
-  const degrees = Array.from(degreeMap.values())
+
+  type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }
+  const nodeRows: NodeDegreeRow[] = safeNodes.map(n => {
+    const id = String(n.datum?.id ?? n.id ?? "")
+    const ind = inDeg.get(id) ?? 0
+    const outd = outDeg.get(id) ?? 0
+    const wind = wInDeg.get(id) ?? 0
+    const woutd = wOutDeg.get(id) ?? 0
+    return { id, degree: ind + outd, inDeg: ind, outDeg: outd, wDegree: wind + woutd, wInDeg: wind, wOutDeg: woutd }
+  })
+
+  // Sort by degree descending for most useful summary
+  nodeRows.sort((a, b) => b.degree - a.degree)
+
+  const totalDegrees = nodeRows.map(r => r.degree)
   let avgDegree = 0
-  if (degrees.length > 0) {
+  if (totalDegrees.length > 0) {
     let sum = 0
-    for (const d of degrees) sum += d
-    avgDegree = sum / degrees.length
+    for (const d of totalDegrees) sum += d
+    avgDegree = sum / totalDegrees.length
   }
+  const maxDegree = totalDegrees.length > 0 ? Math.max(...totalDegrees) : 0
+
+  // Check if edges have meaningful weights (not all 1)
+  const hasWeights = safeEdges.some(e => {
+    const raw = e?.datum ?? e
+    return typeof raw?.value === "number" && raw.value !== 1
+  })
 
   const summaryParts = [`${safeNodes.length} nodes, ${safeEdges.length} edges.`]
-  const xRange = rangePart("x", xVals)
-  const yRange = rangePart("y", yVals)
-  if (xRange) summaryParts.push(xRange)
-  if (yRange) summaryParts.push(yRange)
-  if (degrees.length > 0) summaryParts.push(`Mean degree: ${fmt(avgDegree)}.`)
+  if (totalDegrees.length > 0) {
+    summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
+  }
 
-  const sampleNodes = safeNodes.slice(0, SAMPLE_SIZE)
+  const sampleNodes = nodeRows.slice(0, SAMPLE_SIZE)
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
@@ -542,23 +550,31 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
       <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
       <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
-      <table role="table" aria-label={`Sample nodes for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+      <table role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
         <caption style={CAPTION_STYLE}>
-          First {sampleNodes.length} of {safeNodes.length} nodes
+          Top {sampleNodes.length} of {safeNodes.length} nodes by degree
         </caption>
         <thead>
           <tr>
             <th style={VISIBLE_TH_STYLE}>id</th>
-            <th style={VISIBLE_TH_STYLE}>x</th>
-            <th style={VISIBLE_TH_STYLE}>y</th>
+            <th style={VISIBLE_TH_STYLE}>degree</th>
+            <th style={VISIBLE_TH_STYLE}>in</th>
+            <th style={VISIBLE_TH_STYLE}>out</th>
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. degree</th>}
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. in</th>}
+            {hasWeights && <th style={VISIBLE_TH_STYLE}>w. out</th>}
           </tr>
         </thead>
         <tbody>
-          {sampleNodes.map((n, i) => (
+          {sampleNodes.map((row, i) => (
             <tr key={i}>
-              <td style={VISIBLE_TD_STYLE}>{n.datum?.id || n.id || ""}</td>
-              <td style={VISIBLE_TD_STYLE}>{fmt(n.cx ?? n.x)}</td>
-              <td style={VISIBLE_TD_STYLE}>{fmt(n.cy ?? n.y)}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.id}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.degree}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.inDeg}</td>
+              <td style={VISIBLE_TD_STYLE}>{row.outDeg}</td>
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>}
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>}
+              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>}
             </tr>
           ))}
         </tbody>
@@ -624,7 +640,6 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
       }}
       onBlur={(e) => {
         const el = e.currentTarget
-        el.removeAttribute("style")
         Object.assign(el.style, SR_ONLY_STYLE)
       }}
     >

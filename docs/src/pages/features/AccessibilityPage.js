@@ -114,11 +114,14 @@ export default function AccessibilityPage() {
       <h3 id="aria-labels">ARIA Labels and Descriptions</h3>
 
       <p>
-        Every chart renders its root container with <code>role="img"</code> and
-        an <code>aria-label</code>. Use <code>title</code> for a brief label,{" "}
-        <code>description</code> for a detailed aria-label override, and{" "}
-        <code>summary</code> for a screen-reader-only note with trend information
-        or key takeaways.
+        Every chart renders with a two-level ARIA structure:{" "}
+        <code>role="group"</code> on the outer interactive wrapper (handles keyboard
+        focus and navigation) and <code>role="img"</code> on the inner graphic
+        wrapper (read by assistive technology). SVG overlays include{" "}
+        <code>&lt;title&gt;</code> and <code>&lt;desc&gt;</code>. Use{" "}
+        <code>title</code> for a brief label, <code>description</code> for a
+        detailed aria-label override, and <code>summary</code> for a
+        screen-reader-only note with trend information or key takeaways.
       </p>
 
       <LiveExample

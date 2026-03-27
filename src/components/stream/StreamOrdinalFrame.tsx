@@ -24,7 +24,7 @@ import type {
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
-import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover } from "./keyboardNav"
+import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
@@ -531,15 +531,24 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const kbFocusIndexRef = useRef(-1)
     const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      const navPoints = extractOrdinalNavPoints(store.scene)
-      if (navPoints.length === 0) return
+      // Cache NavGraph keyed off store.version to avoid O(n log n) rebuild per keypress
+      const storeVersion = store.version
+      let graph: NavGraph
+      if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
+        graph = navGraphCacheRef.current.graph
+      } else {
+        const navPoints = extractOrdinalNavPoints(store.scene)
+        if (navPoints.length === 0) return
+        graph = buildNavGraph(navPoints)
+        navGraphCacheRef.current = { version: storeVersion, graph }
+      }
 
-      const graph = buildNavGraph(navPoints)
       const current = kbFocusIndexRef.current
 
       if (current < 0) {

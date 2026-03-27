@@ -46,6 +46,8 @@ export interface NavGraph {
   groups: string[]
   /** Points per group, in position order */
   byGroup: Map<string, NavPoint[]>
+  /** Precomputed node id → flat index lookup (for network navigation) */
+  idToIdx: Map<string, number>
 }
 
 export interface NavPosition {
@@ -96,12 +98,15 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
   const flat = Array.from(byGroup.values()).flat()
   flat.sort((a, b) => a.x - b.x || a.y - b.y)
 
-  // Stamp flat index on each point for O(1) lookup
+  // Stamp flat index on each point for O(1) lookup and build id→index map
+  const idToIdx = new Map<string, number>()
   for (let i = 0; i < flat.length; i++) {
     flat[i]._flatIndex = i
+    const id = flat[i].datum?.id
+    if (id != null) idToIdx.set(id, i)
   }
 
-  return { flat, groups, byGroup }
+  return { flat, groups, byGroup, idToIdx }
 }
 
 /**
@@ -347,8 +352,11 @@ export function extractNetworkNavPoints(scene: any[]): NavPoint[] {
 }
 
 /**
- * Network-specific navigation: ArrowRight/Left cycles through neighbors
- * connected by edges. Enter follows the currently highlighted edge.
+ * Network-specific navigation: spatial arrow keys + edge following.
+ *
+ * ArrowRight/Left/Up/Down: move to the nearest node in that direction.
+ * Enter: follow an edge — cycles through connected neighbors on repeated presses.
+ * PageUp/Down, Home/End, Escape: flat navigation.
  *
  * Returns the flat index of the target node, -1 to clear, or null for unhandled keys.
  */
@@ -360,66 +368,36 @@ export function nextNetworkIndex(
   neighborIndexRef: { current: number }
 ): number | null {
   const currentPoint = graph.flat[pos.flatIndex]
+  if (!currentPoint) return nextGraphIndex(key, pos, graph)
+
   const nodeId = currentPoint.datum?.id
-
-  if (!nodeId) {
-    // Fallback to flat navigation if no id
-    return nextGraphIndex(key, pos, graph)
-  }
-
-  // Build O(1) id → flatIndex lookup
-  const idToIdx = new Map<string, number>()
-  for (let i = 0; i < graph.flat.length; i++) {
-    const id = graph.flat[i].datum?.id
-    if (id != null) idToIdx.set(id, i)
-  }
-
-  // Collect neighbor ids — scene edges store the topology edge as `datum`
-  const neighborIds: string[] = []
-  for (const edge of edges) {
-    const raw = edge.datum ?? edge
-    const srcId = typeof raw.source === "object" ? raw.source.id : raw.source
-    const tgtId = typeof raw.target === "object" ? raw.target.id : raw.target
-    if (srcId === nodeId && tgtId) neighborIds.push(tgtId)
-    else if (tgtId === nodeId && srcId) neighborIds.push(srcId)
-  }
 
   switch (key) {
     case "ArrowRight":
-    case "ArrowDown": {
-      if (neighborIds.length === 0) return pos.flatIndex
-      const next = (neighborIndexRef.current + 1) % neighborIds.length
-      const targetId = neighborIds[next]
-      const targetIdx = idToIdx.get(targetId) ?? -1
-      if (targetIdx >= 0) neighborIndexRef.current = next
-      return targetIdx >= 0 ? targetIdx : pos.flatIndex
-    }
-
+      return findNearestSpatial(graph, currentPoint, "right") ?? pos.flatIndex
     case "ArrowLeft":
-    case "ArrowUp": {
-      if (neighborIds.length === 0) return pos.flatIndex
-      const prev = (neighborIndexRef.current - 1 + neighborIds.length) % neighborIds.length
-      const targetId = neighborIds[prev]
-      const targetIdx = idToIdx.get(targetId) ?? -1
-      if (targetIdx >= 0) neighborIndexRef.current = prev
-      return targetIdx >= 0 ? targetIdx : pos.flatIndex
-    }
+      return findNearestSpatial(graph, currentPoint, "left") ?? pos.flatIndex
+    case "ArrowDown":
+      return findNearestSpatial(graph, currentPoint, "down") ?? pos.flatIndex
+    case "ArrowUp":
+      return findNearestSpatial(graph, currentPoint, "up") ?? pos.flatIndex
 
     case "Enter": {
-      // Follow the currently highlighted neighbor
+      // Follow edges: cycle through connected neighbors
+      if (!nodeId) return pos.flatIndex
+      const neighborIds = collectNeighborIds(nodeId, edges)
       if (neighborIds.length === 0) return pos.flatIndex
-      const idx = Math.max(0, Math.min(neighborIndexRef.current, neighborIds.length - 1))
-      const targetId = neighborIds[idx]
-      const targetIdx = idToIdx.get(targetId) ?? -1
+
+      const next = (neighborIndexRef.current + 1) % neighborIds.length
+      const targetIdx = graph.idToIdx.get(neighborIds[next]) ?? -1
       if (targetIdx >= 0) {
-        neighborIndexRef.current = -1 // reset for new node
+        neighborIndexRef.current = next
         return targetIdx
       }
       return pos.flatIndex
     }
 
     default: {
-      // PageUp/Down, Home/End, Escape move focus away — reset neighbor cycling
       const result = nextGraphIndex(key, pos, graph)
       if (result !== null && result !== pos.flatIndex) {
         neighborIndexRef.current = -1
@@ -427,6 +405,56 @@ export function nextNetworkIndex(
       return result
     }
   }
+}
+
+/** Find the nearest node in a cardinal direction from a reference point. */
+function findNearestSpatial(
+  graph: NavGraph,
+  from: NavPoint,
+  direction: "right" | "left" | "up" | "down"
+): number | null {
+  let bestIdx: number | null = null
+  let bestDist = Infinity
+
+  for (let i = 0; i < graph.flat.length; i++) {
+    const p = graph.flat[i]
+    if (p === from) continue
+
+    const dx = p.x - from.x
+    const dy = p.y - from.y
+
+    // Check if the candidate is in the correct direction
+    // Use a cone: primary axis delta must exceed cross-axis delta
+    let inDirection = false
+    switch (direction) {
+      case "right": inDirection = dx > 0 && Math.abs(dx) >= Math.abs(dy); break
+      case "left":  inDirection = dx < 0 && Math.abs(dx) >= Math.abs(dy); break
+      case "down":  inDirection = dy > 0 && Math.abs(dy) >= Math.abs(dx); break
+      case "up":    inDirection = dy < 0 && Math.abs(dy) >= Math.abs(dx); break
+    }
+
+    if (!inDirection) continue
+
+    const dist = dx * dx + dy * dy
+    if (dist < bestDist) {
+      bestDist = dist
+      bestIdx = i
+    }
+  }
+  return bestIdx
+}
+
+/** Collect neighbor node ids from edge list for a given node. */
+function collectNeighborIds(nodeId: string, edges: any[]): string[] {
+  const ids: string[] = []
+  for (const edge of edges) {
+    const raw = edge.datum ?? edge
+    const srcId = typeof raw.source === "object" ? raw.source.id : raw.source
+    const tgtId = typeof raw.target === "object" ? raw.target.id : raw.target
+    if (srcId === nodeId && tgtId) ids.push(tgtId)
+    else if (tgtId === nodeId && srcId) ids.push(srcId)
+  }
+  return ids
 }
 
 // ── Geo Extraction ───────────────────────────────────────────────────────
