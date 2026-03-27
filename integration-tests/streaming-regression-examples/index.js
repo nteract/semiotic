@@ -16,10 +16,10 @@ const {
   ChordDiagram,
 } = Semiotic
 
-const TestCase = ({ title, children, testId }) =>
+const TestCase = ({ title, children, testId, key }) =>
   React.createElement(
     "div",
-    { className: "test-case", "data-testid": testId },
+    { className: "test-case", "data-testid": testId, key: key || testId },
     React.createElement("h2", null, title),
     children
   )

@@ -7,6 +7,7 @@ describe("diagnoseConfig", () => {
       data: [{ x: 1, y: 2 }, { x: 3, y: 4 }],
       xAccessor: "x",
       yAccessor: "y",
+      title: "Revenue over time",
     })
     expect(result.ok).toBe(true)
     expect(result.diagnoses).toHaveLength(0)
@@ -246,6 +247,60 @@ describe("diagnoseConfig", () => {
     const diag = result.diagnoses.find(d => d.code === "FUNCTION_ACCESSOR")!
     expect(diag.message).toContain("valueAccessor")
     expect(diag.message).not.toContain("categoryAccessor")
+  })
+
+  it("warns when no title, description, or summary is provided", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("MISSING_DESCRIPTION")
+    const diag = result.diagnoses.find(d => d.code === "MISSING_DESCRIPTION")!
+    expect(diag.severity).toBe("warning")
+  })
+
+  it("does not warn when title is provided", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      title: "Revenue",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("MISSING_DESCRIPTION")
+  })
+
+  it("does not warn when description is provided", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      description: "Line chart showing revenue over time",
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("MISSING_DESCRIPTION")
+  })
+
+  it("warns about low adjacent category contrast", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      title: "Test",
+      colorScheme: ["#aaaaaa", "#aaaaab"],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("LOW_ADJACENT_CONTRAST")
+  })
+
+  it("does not warn about adjacent contrast with distinguishable colors", () => {
+    const result = diagnoseConfig("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      title: "Test",
+      colorScheme: ["#000000", "#ffffff"],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).not.toContain("LOW_ADJACENT_CONTRAST")
   })
 
   it("detects string accessor on heatmap", () => {

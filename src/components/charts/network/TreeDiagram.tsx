@@ -49,6 +49,8 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     enableHover: props.enableHover,
     showLabels: props.showLabels,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   }, { width: 600, height: 600 })
 
   const {
@@ -81,6 +83,8 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -190,6 +194,8 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       })}
       className={className}
       title={title}
+      description={description}
+      summary={summary}
       {...frameProps}
     />
   </SafeRender>)

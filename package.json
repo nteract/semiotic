@@ -141,7 +141,8 @@
   },
   "alias": {
     "semiotic": "./src/components/semiotic.ts",
-    "semiotic/geo": "./src/components/semiotic-geo.ts"
+    "semiotic/geo": "./src/components/semiotic-geo.ts",
+    "semiotic/utils": "./src/components/semiotic-utils.ts"
   },
   "repository": {
     "type": "git",
@@ -179,27 +180,27 @@
   "size-limit": [
     {
       "path": "dist/semiotic.module.min.js",
-      "limit": "475 KB"
+      "limit": "230 KB"
     },
     {
       "path": "dist/xy.module.min.js",
-      "limit": "210 KB"
+      "limit": "125 KB"
     },
     {
       "path": "dist/ordinal.module.min.js",
-      "limit": "160 KB"
+      "limit": "95 KB"
     },
     {
       "path": "dist/network.module.min.js",
-      "limit": "160 KB"
+      "limit": "95 KB"
     },
     {
       "path": "dist/geo.module.min.js",
-      "limit": "135 KB"
+      "limit": "90 KB"
     },
     {
       "path": "dist/realtime.module.min.js",
-      "limit": "250 KB"
+      "limit": "130 KB"
     }
   ],
   "devDependencies": {

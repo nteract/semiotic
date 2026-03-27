@@ -59,6 +59,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     enableHover: props.enableHover,
     showLabels: props.showLabels,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   }, { width: 600, height: 600 })
 
   const {
@@ -94,6 +96,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   const enableHover = resolved.enableHover
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
@@ -239,6 +243,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       })}
       className={className}
       title={title}
+      description={description}
+      summary={summary}
       {...frameProps}
     />
   </SafeRender>)

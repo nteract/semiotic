@@ -13,7 +13,7 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array)
+`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true)
 
 `onObservation` receives `{ type: "hover"|"hover-end"|"click"|"brush"|"selection", datum?, x?, y?, timestamp, chartType, chartId }`. The `datum` is your original data object.
 
@@ -130,7 +130,7 @@ Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var 
 **CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
-**ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig }), `controls`
+**ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig, dataSummary }), `controls`
 **ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
 **ContextLayout** — `context` (ReactNode), `position`, `contextSize` (250)
 
@@ -210,7 +210,16 @@ Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`,
 Serialization (`semiotic/themes`): `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
 Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (8-color Wong 2011).
 
-**`semiotic/utils`** — Lightweight entry point for `ThemeProvider`, `useTheme`, `adaptiveTimeTicks`, `smartTickFormat`, `createHatchPattern`, `validateProps`, `diagnoseConfig`, `exportChart`, and chart config serialization (`toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`). Use this instead of the main `semiotic` barrel when you only need utilities without any chart components.
+**`semiotic/utils`** (~137KB, ~10% of full bundle) — Lightweight entry point for utilities without any chart components:
+- **Theme**: `ThemeProvider`, `useTheme`, `LIGHT_THEME`, `DARK_THEME`, `HIGH_CONTRAST_THEME`, `COLOR_BLIND_SAFE_CATEGORICAL`, `themeToCSS`, `themeToTokens`, `resolveThemePreset`, `THEME_PRESETS`
+- **Format**: `adaptiveTimeTicks`, `smartTickFormat`
+- **Color**: `darkenColor`, `lightenColor`
+- **Patterns**: `createHatchPattern`
+- **Validation**: `validateProps`, `diagnoseConfig`
+- **Serialization**: `toConfig`, `fromConfig`, `toURL`, `fromURL`, `copyConfig`, `configToJSX`, `serializeSelections`, `deserializeSelections`, `exportChart`
+- **Vega-Lite**: `fromVegaLite` — convert Vega-Lite specs to Semiotic configs
+- **Data structures**: `RingBuffer`, `IncrementalExtent`
+- **Tooltip**: `normalizeTooltip`
 
 Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas charts read vars via `getComputedStyle`. `exportChart` inlines computed styles.
 

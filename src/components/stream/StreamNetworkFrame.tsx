@@ -29,12 +29,14 @@ import {
   findNearestNetworkNode,
   type NetworkHitResult
 } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex } from "./keyboardNav"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
-import { NetworkAccessibleDataTable, AriaLiveTooltip, computeNetworkAriaLabel } from "./AccessibleDataTable"
+import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -246,7 +248,9 @@ const StreamNetworkFrame = forwardRef<
     pulse,
     staleness,
     thresholds,
-    accessibleTable,
+    accessibleTable = true,
+    description,
+    summary,
     orbitMode,
     orbitSize,
     orbitSpeed,
@@ -256,6 +260,13 @@ const StreamNetworkFrame = forwardRef<
     orbitShowRings,
     orbitAnimated
   } = props
+
+  // ── Reduced motion ────────────────────────────────────────────────────
+  const reducedMotion = useReducedMotion()
+  const reducedMotionRef = useRef(reducedMotion)
+  reducedMotionRef.current = reducedMotion
+
+  const tableId = `semiotic-table-${React.useId()}`
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
   const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
@@ -864,6 +875,8 @@ const StreamNetworkFrame = forwardRef<
   // ── Keyboard navigation ───────────────────────────────────────────
 
   const kbFocusIndexRef = useRef(-1)
+  const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+  const neighborIndexRef = useRef(-1)
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     const store = storeRef.current
@@ -872,14 +885,43 @@ const StreamNetworkFrame = forwardRef<
     const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
     if (navPoints.length === 0) return
 
+    const graph = buildNavGraph(navPoints)
     const current = kbFocusIndexRef.current
-    const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+
+    if (current < 0) {
+      if (e.key === "Escape") return
+      const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Enter"].includes(e.key)
+      if (!isNav) return
+      e.preventDefault()
+      kbFocusIndexRef.current = 0
+      neighborIndexRef.current = -1
+      const point = graph.flat[0]
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+      const rawDatum = point.datum || {}
+      const hover = {
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+        type: "node" as const,
+        data: rawDatum,
+        x: point.x,
+        y: point.y
+      }
+      hoverRef.current = hover
+      setHoverData(hover)
+      if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
+      scheduleRender()
+      return
+    }
+
+    const pos = resolvePosition(graph, current)
+    const next = nextNetworkIndex(e.key, pos, graph, store.sceneEdges ?? [], neighborIndexRef)
     if (next === null) return
 
     e.preventDefault()
 
     if (next < 0) {
       kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      neighborIndexRef.current = -1
       hoverRef.current = null
       setHoverData(null)
       if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
@@ -887,9 +929,9 @@ const StreamNetworkFrame = forwardRef<
       return
     }
 
-    const idx = current < 0 ? 0 : next
-    kbFocusIndexRef.current = idx
-    const point = navPoints[idx]
+    kbFocusIndexRef.current = next
+    const point = graph.flat[next]
+    focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
     const rawDatum = point.datum || {}
     const hover = {
       ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
@@ -906,6 +948,7 @@ const StreamNetworkFrame = forwardRef<
 
   const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
     kbFocusIndexRef.current = -1
+    focusedNavPointRef.current = null
     hoverHandlerRef.current(e)
   }, [])
 
@@ -929,13 +972,15 @@ const StreamNetworkFrame = forwardRef<
       : 0.016
     lastFrameTimeRef.current = now
 
-    // Advance transition animation
-    const isTransitioning = store.advanceTransition(now)
+    // Fast-forward transitions when reduced motion is active so target positions
+    // are applied immediately and transition state is cleared properly
+    const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+    const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
-    // Advance layout animation (e.g. orbit rotation)
-    const animationTicked = store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+    // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
+    const animationTicked = reducedMotionRef.current ? false : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
-    if (isTransitioning || dirtyRef.current || animationTicked) {
+    if (transitionActive || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
       store.buildScene([adjustedWidth, adjustedHeight])
     }
@@ -1122,13 +1167,14 @@ const StreamNetworkFrame = forwardRef<
       <div
         className={`stream-network-frame${className ? ` ${className}` : ""}`}
         role="img"
-        aria-label={typeof title === "string" ? title : "Network chart"}
+        aria-label={description || (typeof title === "string" ? title : "Network chart")}
         style={{
           position: "relative",
           width: size[0],
           height: size[1],
         }}
       >
+        <ScreenReaderSummary summary={summary} />
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={size[0]}
@@ -1181,8 +1227,8 @@ const StreamNetworkFrame = forwardRef<
     <div
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="img"
-      aria-label={typeof title === "string" ? title : "Network chart"}
+      role="group"
+      aria-label={description || (typeof title === "string" ? title : "Network chart")}
       tabIndex={0}
       style={{
         position: "relative",
@@ -1190,11 +1236,19 @@ const StreamNetworkFrame = forwardRef<
         height: responsiveHeight ? "100%" : size[1],
         overflow: "visible",
       }}
-      onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
-      onMouseLeave={enableHover ? onMouseLeave : undefined}
-      onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       onKeyDown={onKeyDown}
     >
+      {accessibleTable && <SkipToTableLink tableId={tableId} />}
+      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
+      <ScreenReaderSummary summary={summary} />
+      <div
+        role="img"
+        aria-label={description || (typeof title === "string" ? title : "Network chart")}
+        style={{ position: "relative", width: "100%", height: "100%" }}
+        onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
+        onMouseLeave={enableHover ? onMouseLeave : undefined}
+        onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
+      >
       {backgroundGraphics && (
         <svg
           overflow="visible"
@@ -1224,7 +1278,6 @@ const StreamNetworkFrame = forwardRef<
         }}
       />
       <AriaLiveTooltip hoverPoint={hoverData} />
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" />}
 
       <NetworkSVGOverlay
         width={adjustedWidth}
@@ -1245,6 +1298,16 @@ const StreamNetworkFrame = forwardRef<
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}
+      />
+
+      <FocusRing
+        active={kbFocusIndexRef.current >= 0}
+        hoverPoint={hoverData}
+        margin={margin}
+        size={size}
+        shape={focusedNavPointRef.current?.shape as any}
+        width={focusedNavPointRef.current?.w}
+        height={focusedNavPointRef.current?.h}
       />
 
       {tooltipElement}
@@ -1275,6 +1338,7 @@ const StreamNetworkFrame = forwardRef<
           {isStale ? "STALE" : "LIVE"}
         </div>
       )}
+      </div>{/* end role="img" */}
     </div>
   )
 })

@@ -23,11 +23,11 @@ test.describe("Geo Charts - ChoroplethMap", () => {
     expect(count).toBeGreaterThan(0)
   })
 
-  test("ChoroplethMap has role=img and aria-label", async ({ page }) => {
+  test("ChoroplethMap has role=group and aria-label", async ({ page }) => {
     await waitForVisualization(page, "geo-choropleth")
     const testCase = page.locator('[data-testid="geo-choropleth"]')
     const frame = testCase.locator(".stream-geo-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     const ariaLabel = await frame.getAttribute("aria-label")
     expect(ariaLabel).toBe("Regional Values")
   })
@@ -61,11 +61,11 @@ test.describe("Geo Charts - ProportionalSymbolMap", () => {
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
-  test("ProportionalSymbolMap has role=img and aria-label", async ({ page }) => {
+  test("ProportionalSymbolMap has role=group and aria-label", async ({ page }) => {
     await waitForVisualization(page, "geo-proportional")
     const testCase = page.locator('[data-testid="geo-proportional"]')
     const frame = testCase.locator(".stream-geo-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     const ariaLabel = await frame.getAttribute("aria-label")
     expect(ariaLabel).toBe("City Magnitudes")
   })
@@ -83,11 +83,11 @@ test.describe("Geo Charts - StreamGeoFrame", () => {
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
-  test("StreamGeoFrame has role=img", async ({ page }) => {
+  test("StreamGeoFrame has role=group", async ({ page }) => {
     await waitForVisualization(page, "geo-stream-frame")
     const testCase = page.locator('[data-testid="geo-stream-frame"]')
     const frame = testCase.locator(".stream-geo-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
   })
 })
 

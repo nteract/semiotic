@@ -90,6 +90,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     height: props.height,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   })
 
   const {
@@ -392,6 +394,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
+    ...(resolved.description && { description: resolved.description }),
+    ...(resolved.summary && { summary: resolved.summary }),
     ...(className && { className }),
     ...frameProps,
     // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)

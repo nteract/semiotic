@@ -480,6 +480,56 @@ const ACCESSOR_PROPS = [
   "childrenAccessor", "costAccessor",
 ]
 
+function checkMissingDescription(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  // Chartability critical: charts should have a title, description, or summary
+  const hasTitle = typeof props.title === "string" && props.title.trim().length > 0
+  const hasDescription = typeof props.description === "string" && props.description.trim().length > 0
+  const hasSummary = typeof props.summary === "string" && props.summary.trim().length > 0
+
+  if (!hasTitle && !hasDescription && !hasSummary) {
+    out.push({
+      severity: "warning",
+      code: "MISSING_DESCRIPTION",
+      message: `No title, description, or summary provided. Screen readers will use a generic label like "XY chart".`,
+      fix: `Add a title="..." prop for a brief label, or description="..." for a detailed aria-label, or summary="..." for a screen-reader-only note describing the chart's purpose.`,
+    })
+  }
+}
+
+function checkAdjacentCategoryContrast(
+  _component: string,
+  props: Record<string, any>,
+  out: Diagnosis[]
+): void {
+  const colors = props.colorScheme
+  if (!colors || !Array.isArray(colors) || colors.length < 2) return
+
+  // Check that adjacent categorical colors are distinguishable from each other
+  const hexColors = colors.filter((c: any) => typeof c === "string" && c.startsWith("#"))
+  if (hexColors.length < 2) return
+
+  const lowDistinguishability: string[] = []
+  for (let i = 0; i < hexColors.length - 1; i++) {
+    const ratio = contrastRatio(hexColors[i], hexColors[i + 1])
+    if (ratio !== null && ratio < 1.5) {
+      lowDistinguishability.push(`${hexColors[i]} / ${hexColors[i + 1]} (${ratio.toFixed(1)}:1)`)
+    }
+  }
+
+  if (lowDistinguishability.length > 0) {
+    out.push({
+      severity: "warning",
+      code: "LOW_ADJACENT_CONTRAST",
+      message: `${lowDistinguishability.length} adjacent color pair(s) in colorScheme have very similar luminance: ${lowDistinguishability.join("; ")}. Categories may be hard to distinguish.`,
+      fix: `Alternate light and dark colors in the scheme, or use COLOR_BLIND_SAFE_CATEGORICAL from "semiotic" for a pre-tested palette.`,
+    })
+  }
+}
+
 function checkFunctionAccessors(
   _component: string,
   props: Record<string, any>,
@@ -550,6 +600,8 @@ export function diagnoseConfig(
   checkLegendMarginTight(componentName, props, diagnoses)
   checkHeatmapStringAccessor(componentName, props, diagnoses)
   checkColorContrast(componentName, props, diagnoses)
+  checkAdjacentCategoryContrast(componentName, props, diagnoses)
+  checkMissingDescription(componentName, props, diagnoses)
   checkFunctionAccessors(componentName, props, diagnoses)
 
   return {

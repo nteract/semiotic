@@ -17,11 +17,11 @@ test.describe("Accessibility - Canvas aria-labels", () => {
     await page.goto("/accessibility-examples/")
   })
 
-  test("XY chart frame has role=img and aria-label from title", async ({ page }) => {
+  test("XY chart frame has role=group and aria-label from title", async ({ page }) => {
     await waitForVisualization(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
     const frame = testCase.locator(".stream-xy-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     await expect(frame).toHaveAttribute("aria-label", "Monthly Revenue Trends")
   })
 
@@ -29,19 +29,19 @@ test.describe("Accessibility - Canvas aria-labels", () => {
     await waitForVisualization(page, "a11y-xy-default")
     const testCase = page.locator('[data-testid="a11y-xy-default"]')
     const frame = testCase.locator(".stream-xy-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     await expect(frame).toHaveAttribute("aria-label", "XY chart")
   })
 
-  test("Ordinal chart frame has role=img and aria-label from title", async ({ page }) => {
+  test("Ordinal chart frame has role=group and aria-label from title", async ({ page }) => {
     await waitForVisualization(page, "a11y-ordinal")
     const testCase = page.locator('[data-testid="a11y-ordinal"]')
     const frame = testCase.locator(".stream-ordinal-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     await expect(frame).toHaveAttribute("aria-label", "Sales by Category")
   })
 
-  test("Network chart frame has role=img and aria-label from title", async ({ page }) => {
+  test("Network chart frame has role=group and aria-label from title", async ({ page }) => {
     const testCase = page.locator('[data-testid="a11y-network"]')
     await expect(testCase).toBeVisible()
     const canvas = testCase.locator("canvas").first()
@@ -49,7 +49,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
     await page.waitForTimeout(2000)
 
     const frame = testCase.locator(".stream-network-frame")
-    await expect(frame).toHaveAttribute("role", "img")
+    await expect(frame).toHaveAttribute("role", "group")
     await expect(frame).toHaveAttribute("aria-label", "Team Connections")
   })
 

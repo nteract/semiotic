@@ -24,7 +24,10 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
-import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
 import { select } from "d3-selection"
@@ -186,8 +189,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       legendHighlightedCategory,
       legendIsolatedCategories,
       showAxes,
-      accessibleTable
+      accessibleTable = true,
+      description,
+      summary
     } = props
+
+    // ── Reduced motion ────────────────────────────────────────────────
+    const reducedMotion = useReducedMotion()
+    const reducedMotionRef = useRef(reducedMotion)
+    reducedMotionRef.current = reducedMotion
+
+    const tableId = `semiotic-table-${React.useId()}`
 
     // ── Sizing ────────────────────────────────────────────────────────
 
@@ -496,6 +508,64 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
     }, [customClickBehavior, margin])
 
+    // ── Keyboard navigation ───────────────────────────────────────────
+
+    const kbFocusIndexRef = useRef(-1)
+    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) return
+
+      const navPoints = extractGeoNavPoints(store.scene)
+      if (navPoints.length === 0) return
+
+      const current = kbFocusIndexRef.current
+      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      if (next === null) return
+
+      e.preventDefault()
+
+      if (next < 0) {
+        kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
+        hoverRef.current = null
+        hoveredNodeRef.current = null
+        setHoverPoint(null)
+        customHoverBehavior?.(null)
+        scheduleRender()
+        return
+      }
+
+      const idx = current < 0 ? 0 : next
+      kbFocusIndexRef.current = idx
+      const point = navPoints[idx]
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+      const hover = navPointToHover(point)
+      hoverRef.current = hover
+      setHoverPoint(hover)
+
+      // Detect geoarea vs point and flatten GeoJSON properties for consistent hover shape
+      const rawDatum: any = point.datum
+      let hoverType: "point" | "geoarea" = "point"
+      let data: any = rawDatum
+      if (rawDatum && typeof rawDatum === "object" && "geometry" in rawDatum) {
+        hoverType = "geoarea"
+        if (rawDatum.properties && typeof rawDatum.properties === "object") {
+          data = { ...rawDatum, ...rawDatum.properties }
+        }
+      }
+      customHoverBehavior?.({ type: hoverType, data, x: point.x, y: point.y })
+      scheduleRender()
+    }, [customHoverBehavior, scheduleRender])
+
+    // Clear keyboard focus on mouse interaction
+    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+      kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      hoverHandlerRef.current(e)
+    }, [])
+
     // ── Main render function ──────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -515,11 +585,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         store.applyRotation(pendingRot, rotLayout)
       }
 
-      // Advance transition
-      const isTransitioning = store.advanceTransition(now)
+      // Advance transition — skip when reduced motion
+      // Fast-forward transitions when reduced motion is active so target positions
+      // are applied immediately and transition state is cleared properly
+      const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+      const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       // Recompute scene when dirty
-      if (dirtyRef.current && !isTransitioning) {
+      if (dirtyRef.current && !transitionActive) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
 
         // In drag-rotate mode, preserve the current rotation across
@@ -986,9 +1059,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         <div
           className={`stream-geo-frame${className ? ` ${className}` : ""}`}
           role="img"
-          aria-label={typeof title === "string" ? title : "Geographic chart"}
+          aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{ position: "relative", width: size[0], height: size[1] }}
         >
+          <ScreenReaderSummary summary={summary} />
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
@@ -1046,8 +1120,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       <div
         ref={combinedRef}
         className={`stream-geo-frame${className ? ` ${className}` : ""}`}
-        role="img"
-        aria-label={typeof title === "string" ? title : "Geographic chart"}
+        role="group"
+        aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
         tabIndex={0}
         style={{
           position: "relative",
@@ -1056,10 +1130,19 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           overflow: "hidden",
           ...(zoomable ? { touchAction: "none" } : {})
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
-        onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
-        onClick={customClickBehavior ? onClick : undefined}
+        onKeyDown={onKeyDown}
       >
+        {accessibleTable && <SkipToTableLink tableId={tableId} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
+        <ScreenReaderSummary summary={summary} />
+        <div
+          role="img"
+          aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onClick={customClickBehavior ? onClick : undefined}
+        >
         {resolvedBackground && (
           <svg
             style={{
@@ -1088,7 +1171,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
         <AriaLiveTooltip hoverPoint={hoverPoint} />
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}
@@ -1198,7 +1280,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             {tileAttribution}
           </div>
         )}
+        <FocusRing
+          active={kbFocusIndexRef.current >= 0}
+          hoverPoint={hoverPoint}
+          margin={margin}
+          size={size}
+          shape={focusedNavPointRef.current?.shape as any}
+          width={focusedNavPointRef.current?.w}
+          height={focusedNavPointRef.current?.h}
+        />
         {tooltipElement}
+        </div>{/* end role="img" */}
       </div>
     )
   }

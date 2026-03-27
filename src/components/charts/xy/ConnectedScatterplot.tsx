@@ -124,6 +124,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   const enableHover = resolved.enableHover
   const showGrid = resolved.showGrid
   const title = resolved.title
+  const description = resolved.description
+  const summary = resolved.summary
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
@@ -348,6 +350,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     enableHover,
     showGrid,
     ...(title && { title }),
+    ...(description && { description }),
+    ...(summary && { summary }),
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null

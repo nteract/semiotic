@@ -4,6 +4,7 @@ import { exportChart } from "./export/exportChart"
 import { copyConfig as copyConfigFn } from "./export/chartConfig"
 import type { ChartConfig, CopyFormat } from "./export/chartConfig"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
+import { DataSummaryProvider, useDataSummaryToggle } from "./DataSummaryContext"
 
 export interface ChartContainerProps {
   /** Chart title */
@@ -26,6 +27,8 @@ export interface ChartContainerProps {
     fullscreen?: boolean
     /** Enable "Copy Config" action button. Requires chartConfig prop. */
     copyConfig?: boolean | { format?: CopyFormat }
+    /** Enable "Data Summary" action button — shows statistical summary + sample rows */
+    dataSummary?: boolean
   }
   /** Chart configuration for serialization. Enables the "Copy Config" toolbar action. */
   chartConfig?: ChartConfig
@@ -64,6 +67,36 @@ export interface ChartContainerHandle {
   copyConfig: (format?: CopyFormat) => Promise<void>
   /** The chart container DOM element */
   element: HTMLDivElement | null
+}
+
+/** Toolbar button that toggles the data summary panel via context. */
+function DataSummaryButton() {
+  const toggle = useDataSummaryToggle()
+  if (!toggle) return null
+  return (
+    <button
+      className="semiotic-chart-action"
+      onClick={toggle}
+      title="Data summary"
+      aria-label="Toggle data summary"
+      style={actionButtonStyle}
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="1" y="1" width="12" height="3" rx="0.5" />
+        <rect x="1" y="6" width="8" height="3" rx="0.5" />
+        <rect x="1" y="11" width="5" height="2" rx="0.5" />
+      </svg>
+    </button>
+  )
 }
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -155,6 +188,7 @@ export const ChartContainer = React.forwardRef<
     actions?.fullscreen !== false && actions?.fullscreen !== undefined
   const showCopyConfig =
     actions?.copyConfig !== false && actions?.copyConfig !== undefined && chartConfig
+  const showDataSummary = actions?.dataSummary === true
 
   const exportConfig =
     typeof actions?.export === "object" ? actions.export : {}
@@ -206,9 +240,9 @@ export const ChartContainer = React.forwardRef<
     [handleExport, toggleFullscreen, handleCopyConfig]
   )
 
-  const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || status
+  const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || showDataSummary || status
 
-  const chartContent = loading ? (
+  const innerContent = loading ? (
     <Skeleton height={height} />
   ) : error ? (
     <ErrorDisplay error={error} />
@@ -218,7 +252,10 @@ export const ChartContainer = React.forwardRef<
     children
   )
 
-  return (
+  const wrapper = (node: React.ReactNode) =>
+    showDataSummary ? <DataSummaryProvider>{node}</DataSummaryProvider> : node
+
+  return wrapper(
     <>
       <style
         dangerouslySetInnerHTML={{
@@ -317,6 +354,7 @@ export const ChartContainer = React.forwardRef<
                   </svg>
                 </button>
               )}
+              {showDataSummary && <DataSummaryButton />}
               {showFullscreen && (
                 <button
                   className="semiotic-chart-action"
@@ -412,7 +450,7 @@ export const ChartContainer = React.forwardRef<
             ...(isFullscreen ? { flex: 1 } : { height }),
           }}
         >
-          {chartContent}
+          {innerContent}
           {detailsPanel}
         </div>
 

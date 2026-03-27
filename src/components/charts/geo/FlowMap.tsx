@@ -93,6 +93,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     height: props.height,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
   })
 
   const {
@@ -369,6 +371,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
+    ...(resolved.description && { description: resolved.description }),
+    ...(resolved.summary && { summary: resolved.summary }),
     ...(className && { className }),
     ...frameProps
   }

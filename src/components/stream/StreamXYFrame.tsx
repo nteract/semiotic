@@ -25,12 +25,14 @@ import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
-import { extractXYNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
-import { AccessibleDataTable, AriaLiveTooltip, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { FocusRing } from "./FocusRing"
+import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
 
@@ -473,8 +475,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointIdAccessor,
       xScaleType,
       yScaleType,
-      accessibleTable
+      accessibleTable = true,
+      description,
+      summary
     } = props
+
+    // ── Reduced motion ────────────────────────────────────────────────────
+    const reducedMotion = useReducedMotion()
+    const reducedMotionRef = useRef(reducedMotion)
+    reducedMotionRef.current = reducedMotion
 
     // ── Responsive sizing ──────────────────────────────────────────────────
     const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
@@ -777,16 +786,46 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const kbFocusIndexRef = useRef(-1)
+    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
       const store = storeRef.current
       if (!store || store.scene.length === 0) return
 
-      const navPoints = extractXYNavPoints(store.scene)
-      if (navPoints.length === 0) return
+      // Cache NavGraph keyed off store.version to avoid O(n log n) rebuild per keypress
+      const storeVersion = store.version
+      let graph: NavGraph
+      if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
+        graph = navGraphCacheRef.current.graph
+      } else {
+        const navPoints = extractXYNavPoints(store.scene)
+        if (navPoints.length === 0) return
+        graph = buildNavGraph(navPoints)
+        navGraphCacheRef.current = { version: storeVersion, graph }
+      }
 
-      const current = kbFocusIndexRef.current < 0 ? -1 : kbFocusIndexRef.current
-      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
+      const current = kbFocusIndexRef.current
+
+      // First arrow press when unfocused: start at 0
+      if (current < 0) {
+        if (e.key === "Escape") return
+        const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)
+        if (!isNav) return
+        e.preventDefault()
+        kbFocusIndexRef.current = 0
+        const point = graph.flat[0]
+        focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+        const hover = navPointToHover(point)
+        hoverRef.current = hover
+        setHoverPoint(hover)
+        if (customHoverBehavior) customHoverBehavior(hover)
+        scheduleRender()
+        return
+      }
+
+      const pos = resolvePosition(graph, current)
+      const next = nextGraphIndex(e.key, pos, graph)
       if (next === null) return // unhandled key
 
       e.preventDefault()
@@ -794,6 +833,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (next < 0) {
         // Escape — clear focus
         kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
         hoverRef.current = null
         hoveredNodeRef.current = null
         setHoverPoint(null)
@@ -802,11 +842,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         return
       }
 
-      // First arrow press when unfocused: start at 0
-      const idx = current < 0 ? 0 : next
-      kbFocusIndexRef.current = idx
-
-      const point = navPoints[idx]
+      kbFocusIndexRef.current = next
+      const point = graph.flat[next]
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const hover = navPointToHover(point)
       hoverRef.current = hover
       setHoverPoint(hover)
@@ -817,6 +855,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Clear keyboard focus on mouse interaction
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
       hoverHandlerRef.current(e)
     }, [])
 
@@ -834,10 +873,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const now = typeof performance !== "undefined" ? performance.now() : Date.now()
 
       // Advance transition animation (before scene rebuild)
-      const isTransitioning = store.advanceTransition(now)
+      // When reduced motion is active, skip animation — treat as instant
+      // Fast-forward transitions when reduced motion is active so target positions
+      // are applied immediately and transition state is cleared properly
+      const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+      const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
-      // Determine if data canvas needs repaint (data/props changed or animating)
-      const needsDataRepaint = dirtyRef.current || isTransitioning
+      // Determine if data canvas needs repaint (data/props changed or animating).
+      // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
+      const needsDataRepaint = dirtyRef.current || transitionActive
 
       // Compute scene graph (scales + scene nodes) — only when data changed
       if (needsDataRepaint && !isTransitioning) {
@@ -1054,29 +1098,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Keyboard focus ring ──────────────────────────────────────────────
 
-    const focusRing = kbFocusIndexRef.current >= 0 && hoverPoint ? (
-      <svg
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: size[0],
-          height: size[1],
-          pointerEvents: "none",
-          zIndex: 2,
-        }}
-      >
-        <circle
-          cx={hoverPoint.x + margin.left}
-          cy={hoverPoint.y + margin.top}
-          r={8}
-          fill="none"
-          stroke="var(--accent, #6366f1)"
-          strokeWidth={2}
-          strokeDasharray="4,2"
-        />
-      </svg>
-    ) : null
+    const fnp = focusedNavPointRef.current
+    const focusRing = (
+      <FocusRing
+        active={kbFocusIndexRef.current >= 0}
+        hoverPoint={hoverPoint}
+        margin={margin}
+        size={size}
+        shape={fnp?.shape as any}
+        width={fnp?.w}
+        height={fnp?.h}
+      />
+    )
 
     // ── Annotation accessor resolution ─────────────────────────────────
     // SVGOverlay needs string keys to look up coordinates in annotationData.
@@ -1137,17 +1170,20 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         return undefined
       })()
 
+      const chartAriaLabel = description || (typeof title === "string" ? title : "XY chart")
+
       return (
         <div
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
           role="img"
-          aria-label={typeof title === "string" ? title : "XY chart"}
+          aria-label={chartAriaLabel}
           style={{
             position: "relative",
             width: size[0],
             height: size[1],
           }}
         >
+          <ScreenReaderSummary summary={summary} />
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
@@ -1208,12 +1244,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Render ───────────────────────────────────────────────────────────
 
+    const tableId = `semiotic-table-${React.useId()}`
+
     return (
       <div
         ref={responsiveRef}
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
-        role="img"
-        aria-label={typeof title === "string" ? title : "XY chart"}
+        role="group"
+        aria-label={description || (typeof title === "string" ? title : "XY chart")}
         tabIndex={0}
         style={{
           position: "relative",
@@ -1221,10 +1259,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",
         }}
-        onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-        onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
         onKeyDown={onKeyDown}
       >
+        {accessibleTable && <SkipToTableLink tableId={tableId} />}
+        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
+        <ScreenReaderSummary summary={summary} />
+        {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
+        <div
+          role="img"
+          aria-label={description || (typeof title === "string" ? title : "XY chart")}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+        >
         {resolvedBackground && (
           <svg
             style={{
@@ -1271,7 +1318,6 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           }}
         />
         <AriaLiveTooltip hoverPoint={hoverPoint} />
-        {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} />}
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}
@@ -1345,6 +1391,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         )}
         {focusRing}
         {tooltipElement}
+        </div>{/* end role="img" */}
       </div>
     )
   }
