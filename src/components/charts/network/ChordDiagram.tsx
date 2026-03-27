@@ -247,6 +247,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

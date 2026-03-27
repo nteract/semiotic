@@ -188,6 +188,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

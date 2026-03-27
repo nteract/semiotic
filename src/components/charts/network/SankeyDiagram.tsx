@@ -256,6 +256,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

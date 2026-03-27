@@ -268,6 +268,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         orbitEccentricity={eccentricity}
         orbitShowRings={showRings}
         orbitAnimated={animated}
+        accessibleTable={accessibleTable}
         {...frameProps}
       />
     </SafeRender>

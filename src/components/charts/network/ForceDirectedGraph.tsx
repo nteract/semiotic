@@ -246,6 +246,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

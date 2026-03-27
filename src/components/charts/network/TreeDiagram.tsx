@@ -198,6 +198,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)

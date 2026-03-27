@@ -552,7 +552,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     return typeof raw?.value === "number" && Number.isFinite(raw.value)
   })
 
-  const summaryParts = [`${safeNodes.length} nodes, ${safeEdges.length} edges.`]
+  const summaryParts = [`${nodeRows.length} nodes, ${safeEdges.length} edges.`]
   if (nodeRows.length > 0) {
     summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
   }
@@ -570,7 +570,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
       <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
       <table role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
         <caption style={CAPTION_STYLE}>
-          Top {sampleNodes.length} of {safeNodes.length} nodes by degree
+          Top {sampleNodes.length} of {nodeRows.length} nodes by degree
         </caption>
         <thead>
           <tr>

@@ -227,6 +227,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       title={title}
       description={description}
       summary={summary}
+      accessibleTable={accessibleTable}
       {...frameProps}
     />
   </SafeRender>)
