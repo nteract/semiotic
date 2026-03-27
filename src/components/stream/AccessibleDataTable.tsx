@@ -499,11 +499,19 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   for (const e of safeEdges) {
     if (!e || typeof e !== "object") continue
     const raw = e.datum ?? e
-    const src = String(typeof raw.source === "object" ? (raw.source as any)?.id : raw.source)
-    const tgt = String(typeof raw.target === "object" ? (raw.target as any)?.id : raw.target)
-    const val = typeof raw.value === "number" ? raw.value : 1
-    if (src) { outDeg.set(src, (outDeg.get(src) ?? 0) + 1); wOutDeg.set(src, (wOutDeg.get(src) ?? 0) + val) }
-    if (tgt) { inDeg.set(tgt, (inDeg.get(tgt) ?? 0) + 1); wInDeg.set(tgt, (wInDeg.get(tgt) ?? 0) + val) }
+    const srcRaw = typeof raw.source === "object" ? (raw.source as any)?.id : raw.source
+    const tgtRaw = typeof raw.target === "object" ? (raw.target as any)?.id : raw.target
+    const val = typeof raw.value === "number" && Number.isFinite(raw.value) ? raw.value : 1
+    if (srcRaw != null && srcRaw !== "") {
+      const src = String(srcRaw)
+      outDeg.set(src, (outDeg.get(src) ?? 0) + 1)
+      wOutDeg.set(src, (wOutDeg.get(src) ?? 0) + val)
+    }
+    if (tgtRaw != null && tgtRaw !== "") {
+      const tgt = String(tgtRaw)
+      inDeg.set(tgt, (inDeg.get(tgt) ?? 0) + 1)
+      wInDeg.set(tgt, (wInDeg.get(tgt) ?? 0) + val)
+    }
   }
 
   type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }

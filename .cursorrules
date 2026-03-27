@@ -251,7 +251,7 @@ Key: `ThemeProvider` sets CSS vars on a wrapper div (no React context). Canvas c
 
 Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) and `role="img"` (inner canvas, read by assistive tech). SVG overlays include `<title>` and `<desc>`.
 
-**Keyboard navigation**: Arrow keys navigate data points. In XY/ordinal charts, ArrowRight/Left moves within a series, ArrowUp/Down switches series. In network charts, arrows cycle neighbors, Enter follows an edge. Home/End jump to first/last. PageUp/PageDown skip 10%. Escape clears focus.
+**Keyboard navigation**: Arrow keys navigate data points. In XY/ordinal charts, ArrowRight/Left moves within a series, ArrowUp/Down switches series. In network charts, arrows move to the spatially nearest node in the pressed direction; Enter cycles edge-connected neighbors. Home/End jump to first/last. PageUp/PageDown skip 10%. Escape clears focus.
 
 **Focus ring**: Shape-adaptive dashed ring (circle for points, rect for bars, arc for wedges). Color: `--semiotic-focus` CSS var.
 

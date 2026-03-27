@@ -374,17 +374,18 @@ export function nextNetworkIndex(
 
   switch (key) {
     case "ArrowRight":
-      return findNearestSpatial(graph, currentPoint, "right") ?? pos.flatIndex
     case "ArrowLeft":
-      return findNearestSpatial(graph, currentPoint, "left") ?? pos.flatIndex
     case "ArrowDown":
-      return findNearestSpatial(graph, currentPoint, "down") ?? pos.flatIndex
-    case "ArrowUp":
-      return findNearestSpatial(graph, currentPoint, "up") ?? pos.flatIndex
+    case "ArrowUp": {
+      const dir = key === "ArrowRight" ? "right" : key === "ArrowLeft" ? "left" : key === "ArrowDown" ? "down" : "up"
+      const target = findNearestSpatial(graph, currentPoint, dir) ?? pos.flatIndex
+      if (target !== pos.flatIndex) neighborIndexRef.current = -1
+      return target
+    }
 
     case "Enter": {
       // Follow edges: cycle through connected neighbors
-      if (!nodeId) return pos.flatIndex
+      if (nodeId == null) return pos.flatIndex
       const neighborIds = collectNeighborIds(nodeId, edges)
       if (neighborIds.length === 0) return pos.flatIndex
 
@@ -446,13 +447,16 @@ function findNearestSpatial(
 
 /** Collect neighbor node ids from edge list for a given node. */
 function collectNeighborIds(nodeId: string, edges: any[]): string[] {
+  const nid = String(nodeId)
   const ids: string[] = []
   for (const edge of edges) {
     const raw = edge.datum ?? edge
-    const srcId = typeof raw.source === "object" ? raw.source.id : raw.source
-    const tgtId = typeof raw.target === "object" ? raw.target.id : raw.target
-    if (srcId === nodeId && tgtId) ids.push(tgtId)
-    else if (tgtId === nodeId && srcId) ids.push(srcId)
+    const srcRaw = typeof raw.source === "object" ? raw.source?.id : raw.source
+    const tgtRaw = typeof raw.target === "object" ? raw.target?.id : raw.target
+    const hasSrc = srcRaw != null
+    const hasTgt = tgtRaw != null
+    if (hasSrc && String(srcRaw) === nid && hasTgt) ids.push(String(tgtRaw))
+    else if (hasTgt && String(tgtRaw) === nid && hasSrc) ids.push(String(srcRaw))
   }
   return ids
 }
