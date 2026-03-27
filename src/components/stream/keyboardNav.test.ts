@@ -715,18 +715,26 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
   it("Enter cycles through edge-connected neighbors", () => {
     const { graph, neighborIdx } = setup()
     const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
-    const pos = resolvePosition(graph, aIdx)
 
-    // A is connected to B and C
-    const next1 = nextNetworkIndex("Enter", pos, graph, edges, neighborIdx)!
+    // First Enter from A — connected to B and C
+    const pos1 = resolvePosition(graph, aIdx)
+    const next1 = nextNetworkIndex("Enter", pos1, graph, edges, neighborIdx)!
     const id1 = graph.flat[next1].datum.id
     expect(["B", "C"]).toContain(id1)
 
-    // Press Enter again from A to get the other neighbor
-    const next2 = nextNetworkIndex("Enter", pos, graph, edges, neighborIdx)!
+    // Second Enter from A — cycles to the other neighbor
+    const pos2 = resolvePosition(graph, aIdx)
+    const next2 = nextNetworkIndex("Enter", pos2, graph, edges, neighborIdx)!
     const id2 = graph.flat[next2].datum.id
     expect(["B", "C"]).toContain(id2)
     expect(id2).not.toBe(id1)
+
+    // After arrow move to a new node, neighborIdx resets
+    const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
+    const posB = resolvePosition(graph, bIdx)
+    nextNetworkIndex("ArrowDown", posB, graph, edges, neighborIdx)
+    // neighborIdx should have been reset, so Enter from B starts fresh
+    expect(neighborIdx.current).toBe(-1)
   })
 
   it("stays put when no node in arrow direction", () => {

@@ -269,7 +269,9 @@ interface AccessibleDataTableProps {
 const SAMPLE_SIZE = 5
 
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
-  position: "relative",
+  position: "absolute",
+  left: 0,
+  right: 0,
   zIndex: 5,
   padding: "14px 16px 12px",
   borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
@@ -527,23 +529,25 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   // Sort by degree descending for most useful summary
   nodeRows.sort((a, b) => b.degree - a.degree)
 
-  const totalDegrees = nodeRows.map(r => r.degree)
   let avgDegree = 0
-  if (totalDegrees.length > 0) {
+  let maxDegree = 0
+  if (nodeRows.length > 0) {
     let sum = 0
-    for (const d of totalDegrees) sum += d
-    avgDegree = sum / totalDegrees.length
+    for (const r of nodeRows) {
+      sum += r.degree
+      if (r.degree > maxDegree) maxDegree = r.degree
+    }
+    avgDegree = sum / nodeRows.length
   }
-  const maxDegree = totalDegrees.length > 0 ? Math.max(...totalDegrees) : 0
 
-  // Check if edges have meaningful weights (not all 1)
+  // Show weighted columns when any edge carries a numeric value
   const hasWeights = safeEdges.some(e => {
     const raw = e?.datum ?? e
-    return typeof raw?.value === "number" && raw.value !== 1
+    return typeof raw?.value === "number" && Number.isFinite(raw.value)
   })
 
   const summaryParts = [`${safeNodes.length} nodes, ${safeEdges.length} edges.`]
-  if (totalDegrees.length > 0) {
+  if (nodeRows.length > 0) {
     summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
   }
 
@@ -648,6 +652,7 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
       }}
       onBlur={(e) => {
         const el = e.currentTarget
+        el.removeAttribute("style")
         Object.assign(el.style, SR_ONLY_STYLE)
       }}
     >

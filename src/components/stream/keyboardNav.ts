@@ -103,7 +103,7 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
   for (let i = 0; i < flat.length; i++) {
     flat[i]._flatIndex = i
     const id = flat[i].datum?.id
-    if (id != null) idToIdx.set(id, i)
+    if (id != null) idToIdx.set(String(id), i)
   }
 
   return { flat, groups, byGroup, idToIdx }
