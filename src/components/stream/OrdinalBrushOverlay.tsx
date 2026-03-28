@@ -1,3 +1,20 @@
+/**
+ * OrdinalBrushOverlay — d3-brush SVG overlay for ordinal frames.
+ *
+ * Renders a transparent SVG positioned above the canvas. Brushes along the
+ * r-axis (value axis) only: horizontal projection → brushX, vertical → brushY.
+ *
+ * Key design decisions:
+ *   - Outer SVG has pointerEvents:"none", inner brush-g has "all", so
+ *     axes/legends rendered underneath remain clickable.
+ *   - d3-brush lifecycle (useEffect) depends on [width, height, isHorizontal]
+ *     only — NOT scales. Scales are read from a ref to avoid brush teardown
+ *     mid-drag (scales change every render due to new object identity).
+ *   - A separate useEffect repositions the brush when scales change (streaming).
+ *
+ * Consumed by: StreamOrdinalFrame (rendered when brush prop is set).
+ * Wired by: useOrdinalBrush hook in HOC charts.
+ */
 import * as React from "react"
 import { useRef, useEffect } from "react"
 import { select as d3Select } from "d3-selection"

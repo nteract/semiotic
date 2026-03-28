@@ -1,3 +1,20 @@
+/**
+ * useChartSetup — shared setup pipeline for all HOC charts.
+ *
+ * Consolidates: color scale creation, category extraction, legend interaction,
+ * selection merging (linkedHover + selection), margin computation (with legend
+ * space), loading/empty guards, and observation wiring.
+ *
+ * Every HOC calls this after useChartMode and before chart-specific logic.
+ * Returns earlyReturn (loading/empty state) or the full setup result.
+ *
+ * Dependencies:
+ *   hooks.ts          — useColorScale, useChartSelection, useChartLegendAndMargin
+ *   selectionUtils.ts — SelectionHookResult type
+ *   withChartWrapper   — renderEmptyState, renderLoadingState
+ *
+ * Consumed by: all HOC charts (BarChart, LineChart, Scatterplot, etc.)
+ */
 "use client"
 
 import { useMemo } from "react"

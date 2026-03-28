@@ -1,3 +1,19 @@
+/**
+ * OrdinalPipelineStore — stateful pipeline for ordinal chart data.
+ *
+ * Owns: data ingestion (RingBuffer), scale computation (o-band + r-linear),
+ * value domain logic (per-lane sums for swimlane, zero-inclusion for bars),
+ * and scene layout delegation to ordinalSceneBuilders/*.
+ *
+ * Key design decisions:
+ *   - Swimlane domain uses per-lane sums, not individual values, because
+ *     stacked bars within a lane must fit within the lane's total range.
+ *   - Zero-inclusion for bar/swimlane is skipped when explicit rExtent is
+ *     set (either end non-null), enabling zoom/brush without domain override.
+ *   - Scene builders are pure functions; this store coordinates them.
+ *
+ * Consumed by: StreamOrdinalFrame (sole consumer).
+ */
 import { scaleBand, scaleLinear, type ScaleBand, type ScaleLinear } from "d3-scale"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
