@@ -74,7 +74,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
     for (let yi = 0; yi < yValues.length; yi++) {
       const key = `${xValues[xi]}\0${yValues[yi]}`
       const entry = valueMap.get(key)
-      if (!entry) continue
+      if (!entry || !isFinite(entry.val)) continue
 
       const fill = heatColor(entry.val)
       const labelOpts = ctx.config.showValues
@@ -93,8 +93,8 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
 
 function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
   const nodes: SceneNode[] = []
-  const xBins = ctx.config.heatmapXBins ?? 20
-  const yBins = ctx.config.heatmapYBins ?? 20
+  const xBins = Math.max(1, Math.floor(ctx.config.heatmapXBins ?? 20))
+  const yBins = Math.max(1, Math.floor(ctx.config.heatmapYBins ?? 20))
   const agg = ctx.config.heatmapAggregation ?? "count"
   const getVal = resolveAccessor(ctx.config.valueAccessor, "value")
 

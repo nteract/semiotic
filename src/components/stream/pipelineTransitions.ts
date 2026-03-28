@@ -45,13 +45,12 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
     case "point": {
       if (node.pointId) return `p:${node.pointId}`
       if (ctx.runtimeMode === "streaming" && node.datum) {
-        if (ctx.getCategory) {
-          const cat = ctx.getCategory(node.datum)
-          const val = ctx.getY(node.datum)
-          return `p:${cat}:${val}`
-        }
         const xVal = ctx.getX(node.datum)
         const yVal = ctx.getY(node.datum)
+        if (ctx.getCategory) {
+          const cat = ctx.getCategory(node.datum)
+          return `p:${cat}:${xVal}:${yVal}`
+        }
         if (xVal != null && yVal != null) return `p:${xVal}:${yVal}`
       }
       return `p:${index}`
