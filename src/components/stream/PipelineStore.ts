@@ -726,6 +726,7 @@ export class PipelineStore {
       resolveColorMap: (d) => this.resolveColorMap(d),
       resolveGroupColor: (g) => this.resolveGroupColor(g),
       groupData: (d) => this.groupData(d),
+      barCategoryCache: this._barCategoryCache,
     }
 
     switch (config.chartType) {
@@ -740,8 +741,11 @@ export class PipelineStore {
         return buildPointScene(ctx, data)
       case "heatmap":
         return buildHeatmapScene(ctx, data, layout)
-      case "bar":
-        return buildBarScene(ctx, data)
+      case "bar": {
+        const result = buildBarScene(ctx, data)
+        this._barCategoryCache = ctx.barCategoryCache ?? null
+        return result
+      }
       case "swarm":
         return buildSwarmScene(ctx, data)
       case "waterfall":

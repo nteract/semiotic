@@ -140,6 +140,8 @@ export interface LineSceneNode {
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
+  /** Captured start opacity for linear interpolation (avoids compounding from per-tick mutation) */
+  _startOpacity?: number
   /** Stable identity key for transition tracking */
   _transitionKey?: string
   /** Previous path coordinates for interpolation during transitions */
@@ -169,6 +171,8 @@ export interface AreaSceneNode {
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
   _targetOpacity?: number
+  /** Captured start opacity for linear interpolation (avoids compounding from per-tick mutation) */
+  _startOpacity?: number
   /** Stable identity key for transition tracking */
   _transitionKey?: string
   /** Previous top path coordinates for interpolation during transitions */

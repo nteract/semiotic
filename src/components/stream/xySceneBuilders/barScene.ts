@@ -13,16 +13,13 @@ import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
-/** Cached category ordering to prevent flicker */
-let _barCategoryCache: { key: string; order: string[] } | null = null
-
 export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
   if (!ctx.config.binSize) return []
 
   const bins = computeBins(data, ctx.getX, ctx.getY, ctx.config.binSize, ctx.getCategory)
   if (bins.size === 0) return []
 
-  // Establish stable category order
+  // Establish stable category order (instance-scoped cache on ctx)
   let categoryOrder: string[] | null = null
   if (ctx.getCategory) {
     const allCategories = new Set<string>()
@@ -36,11 +33,11 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
     const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
     const activeKeys = colorKeys.filter(k => allCategories.has(k))
     const cacheKey = activeKeys.join('\0') + '\x01' + unlisted.join('\0')
-    if (_barCategoryCache && _barCategoryCache.key === cacheKey) {
-      categoryOrder = _barCategoryCache.order
+    if (ctx.barCategoryCache && ctx.barCategoryCache.key === cacheKey) {
+      categoryOrder = ctx.barCategoryCache.order
     } else {
       categoryOrder = [...activeKeys, ...unlisted]
-      _barCategoryCache = { key: cacheKey, order: categoryOrder }
+      ctx.barCategoryCache = { key: cacheKey, order: categoryOrder }
     }
   }
 

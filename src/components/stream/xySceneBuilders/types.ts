@@ -33,6 +33,9 @@ export interface XYSceneContext {
 
   /** Group data by lineBy/colorBy accessor */
   groupData: (data: Record<string, any>[]) => { key: string; data: Record<string, any>[] }[]
+
+  /** Instance-scoped mutable cache for bar category ordering (prevents cross-instance leaks) */
+  barCategoryCache?: { key: string; order: string[] } | null
 }
 
 /** Subset of PipelineConfig fields that scene builders need */
@@ -45,7 +48,7 @@ export interface XYSceneConfig {
   annotations?: Record<string, any>[]
 
   // Point/bubble
-  pointStyle?: (d: any) => Style
+  pointStyle?: (d: any) => Style & { r?: number }
   sizeRange?: [number, number]
 
   // Heatmap

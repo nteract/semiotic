@@ -60,9 +60,11 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   let minVal = Infinity
   let maxVal = -Infinity
   for (const { val } of valueMap.values()) {
+    if (!isFinite(val)) continue
     if (val < minVal) minVal = val
     if (val > maxVal) maxVal = val
   }
+  if (!isFinite(minVal) || !isFinite(maxVal)) return nodes
 
   const schemeName = typeof ctx.config.colorScheme === "string" ? ctx.config.colorScheme : "blues"
   const interpolator = HEAT_INTERPOLATORS[schemeName] || interpolateBlues

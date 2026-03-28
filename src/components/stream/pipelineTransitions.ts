@@ -177,9 +177,11 @@ export function startTransition(
           hasChanges = true
         }
         node._targetOpacity = node.style.opacity ?? 1
+        node._startOpacity = prevPath.opacity ?? node.style.opacity ?? 1
       } else {
         // Entering line/area — fade in from 0
         node._targetOpacity = node.style.opacity ?? 1
+        node._startOpacity = 0
         node.style = { ...node.style, opacity: 0 }
         hasChanges = true
       }
@@ -385,8 +387,7 @@ export function advanceTransition(
       if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
     } else if (node.type === "line") {
       if (node._targetOpacity !== undefined) {
-        const isEntering = node._prevPath === undefined && node._targetOpacity > 0
-        const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
+        const startOpacity = node._startOpacity ?? 0
         node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
       }
       const prevPath = node._prevPath
@@ -399,8 +400,7 @@ export function advanceTransition(
       }
     } else if (node.type === "area") {
       if (node._targetOpacity !== undefined) {
-        const isEntering = node._prevTopPath === undefined && node._targetOpacity > 0
-        const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
+        const startOpacity = node._startOpacity ?? 0
         node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
       }
       const prevTop = node._prevTopPath

@@ -42,7 +42,7 @@ export function buildPointScene(ctx: XYSceneContext, data: Record<string, any>[]
   for (const d of data) {
     let style = ctx.config.pointStyle ? ctx.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
 
-    let r = (style as any).r || defaultR
+    let r = style.r || defaultR
     if (sizeScale && ctx.getSize) {
       const sizeVal = ctx.getSize(d)
       if (sizeVal != null && !Number.isNaN(sizeVal)) {
