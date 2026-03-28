@@ -1,9 +1,26 @@
-import { scaleLinear, scaleLog, scaleSequential, type ScaleLinear } from "d3-scale"
-import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+/**
+ * PipelineStore — stateful pipeline for XY/streaming chart data.
+ *
+ * Owns: data ingestion (RingBuffer), extent tracking, scale computation,
+ * scene layout delegation (via xySceneBuilders/), transition animation,
+ * decay/pulse/staleness encoding, and quadtree spatial indexing.
+ *
+ * Scene building was extracted to xySceneBuilders/ — this store constructs
+ * an XYSceneContext and dispatches to the appropriate builder function.
+ *
+ * Key dependencies:
+ *   xySceneBuilders/ — per-chartType scene layout (line, area, point, etc.)
+ *   SceneGraph        — node constructors (buildLineNode, buildPointNode, etc.)
+ *   RingBuffer         — sliding window data storage
+ *   IncrementalExtent  — O(1) min/max tracking
+ *
+ * Consumed by: StreamXYFrame (sole consumer).
+ */
+import { scaleLinear, scaleLog, type ScaleLinear } from "d3-scale"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
-import { computeBins, computeBinExtent } from "../realtime/BinAccumulator"
+import { computeBinExtent } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
 import type {
   Changeset,
@@ -11,12 +28,7 @@ import type {
   StreamScales,
   StreamLayout,
   SceneNode,
-  LineSceneNode,
-  AreaSceneNode,
   PointSceneNode,
-  RectSceneNode,
-  HeatcellSceneNode,
-  CandlestickSceneNode,
   CandlestickStyle,
   Style,
   ArrowOfTime,
@@ -27,18 +39,28 @@ import type {
   StalenessConfig,
   CurveType
 } from "./types"
-import {
-  buildLineNode,
-  buildAreaNode,
-  buildStackedAreaNodes,
-  buildPointNode,
-  buildRectNode,
-  buildHeatcellNode
-} from "./SceneGraph"
-import { resolveAccessor, resolveRawAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
-import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
+import { computeDecayOpacity as computeDecayOpacityFn, applyDecay as applyDecayFn } from "./pipelineDecay"
+import { applyPulse as applyPulseFn, hasActivePulses as hasActivePulsesFn } from "./pipelinePulse"
+import {
+  snapshotPositions as snapshotPositionsFn,
+  startTransition as startTransitionFn,
+  advanceTransition as advanceTransitionFn,
+  type PrevPosition,
+  type PrevPath,
+  type TransitionContext
+} from "./pipelineTransitions"
+import type { XYSceneContext } from "./xySceneBuilders/types"
+import { buildLineScene } from "./xySceneBuilders/lineScene"
+import { buildAreaScene, buildStackedAreaScene } from "./xySceneBuilders/areaScene"
+import { buildPointScene } from "./xySceneBuilders/pointScene"
+import { buildHeatmapScene } from "./xySceneBuilders/heatmapScene"
+import { buildBarScene } from "./xySceneBuilders/barScene"
+import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
+import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
+import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -160,9 +182,9 @@ export class PipelineStore {
 
   // ── Transition animation ────────────────────────────────────────────
   activeTransition: ActiveTransition | null = null
-  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }>()
+  private prevPositionMap = new Map<string, PrevPosition>()
   /** Previous line/area path arrays for path interpolation */
-  private prevPathMap = new Map<string, { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }>()
+  private prevPathMap = new Map<string, PrevPath>()
   /** Exit nodes awaiting fade-out removal */
   exitNodes: SceneNode[] = []
 
@@ -682,628 +704,56 @@ export class PipelineStore {
     const { config, scales } = this
     if (!scales || data.length === 0) return []
 
+    const ctx: XYSceneContext = {
+      scales,
+      config,
+      getX: this.getX,
+      getY: this.getY,
+      getY0: this.getY0,
+      getSize: this.getSize,
+      getColor: this.getColor,
+      getGroup: this.getGroup,
+      getCategory: this.getCategory,
+      getPointId: this.getPointId,
+      getBounds: this.getBounds,
+      getOpen: this.getOpen,
+      getHigh: this.getHigh,
+      getLow: this.getLow,
+      getClose: this.getClose,
+      resolveLineStyle: (g, d) => this.resolveLineStyle(g, d),
+      resolveAreaStyle: (g, d) => this.resolveAreaStyle(g, d),
+      resolveBoundsStyle: (g, d) => this.resolveBoundsStyle(g, d),
+      resolveColorMap: (d) => this.resolveColorMap(d),
+      resolveGroupColor: (g) => this.resolveGroupColor(g),
+      groupData: (d) => this.groupData(d),
+      barCategoryCache: this._barCategoryCache,
+    }
+
     switch (config.chartType) {
       case "line":
-        return this.buildLineScene(data)
+        return buildLineScene(ctx, data)
       case "area":
-        return this.buildAreaScene(data)
+        return buildAreaScene(ctx, data)
       case "stackedarea":
-        return this.buildStackedAreaScene(data)
+        return buildStackedAreaScene(ctx, data)
       case "scatter":
       case "bubble":
-        return this.buildPointScene(data)
+        return buildPointScene(ctx, data)
       case "heatmap":
-        return this.buildHeatmapScene(data, layout)
-      case "bar":
-        return this.buildBarScene(data)
+        return buildHeatmapScene(ctx, data, layout)
+      case "bar": {
+        const result = buildBarScene(ctx, data)
+        this._barCategoryCache = ctx.barCategoryCache ?? null
+        return result
+      }
       case "swarm":
-        return this.buildSwarmScene(data)
+        return buildSwarmScene(ctx, data)
       case "waterfall":
-        return this.buildWaterfallScene(data, layout)
+        return buildWaterfallScene(ctx, data, layout)
       case "candlestick":
-        return this.buildCandlestickScene(data, layout)
+        return buildCandlestickScene(ctx, data, layout)
       default:
         return []
-    }
-  }
-
-  private buildLineScene(data: Record<string, any>[]): SceneNode[] {
-    const groups = this.groupData(data)
-    const nodes: SceneNode[] = []
-
-    // Extract color thresholds from annotations (if any)
-    const colorThresholds = this.config.annotations
-      ?.filter((a: any) => a.type === "threshold" && a.color)
-      .map((a: any) => ({
-        value: a.value as number,
-        color: a.color as string,
-        thresholdType: (a.thresholdType || "greater") as "greater" | "lesser"
-      }))
-
-    // Build bounds areas first so they render behind lines
-    if (this.getBounds) {
-      for (const g of groups) {
-        const boundsNode = this.buildBoundsForGroup(g.data, g.key)
-        if (boundsNode) nodes.push(boundsNode)
-      }
-    }
-
-    for (const g of groups) {
-      const style = this.resolveLineStyle(g.key, g.data[0])
-      const lineNode = buildLineNode(g.data, this.scales!, this.getX, this.getY, style, g.key)
-      // Attach threshold info for the renderer
-      if (colorThresholds && colorThresholds.length > 0) {
-        lineNode.colorThresholds = colorThresholds
-      }
-      // Attach curve type for canvas renderer interpolation
-      if (this.config.curve && this.config.curve !== "linear") {
-        lineNode.curve = this.config.curve
-      }
-      nodes.push(lineNode)
-    }
-
-    return nodes
-  }
-
-  private buildAreaScene(data: Record<string, any>[]): SceneNode[] {
-    const groups = this.groupData(data)
-    const nodes: SceneNode[] = []
-
-    // Use the bottom of the y domain as the baseline so areas fill to the chart edge
-    const yDomain = this.scales!.y.domain() as [number, number]
-    const baseline = yDomain[0]
-
-    for (const g of groups) {
-      const style = this.resolveAreaStyle(g.key, g.data[0])
-      const node = buildAreaNode(g.data, this.scales!, this.getX, this.getY, baseline, style, g.key, this.getY0)
-      if (this.config.gradientFill) {
-        node.fillGradient = this.config.gradientFill
-      }
-      // Attach curve type for canvas renderer interpolation
-      if (this.config.curve && this.config.curve !== "linear") {
-        node.curve = this.config.curve
-      }
-      nodes.push(node)
-    }
-
-    return nodes
-  }
-
-  private buildStackedAreaScene(data: Record<string, any>[]): SceneNode[] {
-    const groups = this.groupData(data)
-    // Sort groups by key to ensure a stable stacking order. Without this,
-    // a sliding window can reorder groups when eviction changes which group
-    // appears first in the buffer, causing layers to swap and flicker.
-    groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
-    const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
-      this.resolveAreaStyle(group, sampleDatum)
-    const curveType = (this.config.curve && this.config.curve !== "linear") ? this.config.curve : undefined
-    return buildStackedAreaNodes(
-      groups,
-      this.scales!,
-      this.getX,
-      this.getY,
-      styleFn,
-      this.config.normalize,
-      curveType
-    )
-  }
-
-  private buildPointScene(data: Record<string, any>[]): SceneNode[] {
-    const nodes: SceneNode[] = []
-    const defaultR = this.config.chartType === "bubble" ? 10 : 5
-    const sizeRange = this.config.sizeRange || [3, 15]
-
-    // Compute size scale if sizeAccessor is set and no pointStyle handles it
-    let sizeScale: ((v: number) => number) | null = null
-    if (this.getSize && !this.config.pointStyle) {
-      const sizes = data.map(d => this.getSize!(d)).filter(s => s != null && !Number.isNaN(s))
-      if (sizes.length > 0) {
-        let minSize = Infinity
-        let maxSize = -Infinity
-        for (const s of sizes) {
-          if (s < minSize) minSize = s
-          if (s > maxSize) maxSize = s
-        }
-        sizeScale = (s: number) => {
-          if (minSize === maxSize) return (sizeRange[0] + sizeRange[1]) / 2
-          return sizeRange[0] + ((s - minSize) / (maxSize - minSize)) * (sizeRange[1] - sizeRange[0])
-        }
-      }
-    }
-
-    // Build color map from colorAccessor — always build when colorAccessor exists
-    // so push API can fall back to frame colors when HOC colorScale is unavailable
-    const colorMap = this.getColor
-      ? this.resolveColorMap(data)
-      : null
-
-    for (const d of data) {
-      let style = this.config.pointStyle ? this.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
-
-      // Apply size from accessor if pointStyle doesn't provide it
-      let r = style.r || defaultR
-      if (sizeScale && this.getSize) {
-        const sizeVal = this.getSize(d)
-        if (sizeVal != null && !Number.isNaN(sizeVal)) {
-          r = sizeScale(sizeVal)
-        }
-      }
-
-      // Apply color from accessor if pointStyle doesn't provide a fill
-      if (colorMap && this.getColor && !style.fill) {
-        const colorVal = this.getColor(d)
-        if (colorVal && colorMap.has(colorVal)) {
-          style = { ...style, fill: colorMap.get(colorVal)! }
-        }
-      }
-
-      const pointId = this.getPointId ? String(this.getPointId(d)) : undefined
-      const node = buildPointNode(d, this.scales!, this.getX, this.getY, r, style, pointId)
-      if (node) nodes.push(node)
-    }
-
-    return nodes
-  }
-
-  private buildHeatmapScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
-    const nodes: SceneNode[] = []
-
-    // Streaming heatmap: 2D grid binning with aggregation
-    if (this.config.heatmapAggregation) {
-      return this.buildStreamingHeatmapScene(data, layout)
-    }
-
-    const getVal = resolveAccessor(this.config.valueAccessor, "value")
-
-    const getRawX = resolveRawAccessor(this.config.xAccessor, "x")
-    const getRawY = resolveRawAccessor(this.config.yAccessor, "y")
-
-    // Determine grid dimensions from unique x/y values (supports numeric or string categories)
-    const xSet = new Set<any>()
-    const ySet = new Set<any>()
-    for (const d of data) {
-      xSet.add(getRawX(d))
-      ySet.add(getRawY(d))
-    }
-
-    const xRaw = Array.from(xSet)
-    const yRaw = Array.from(ySet)
-    const xNumeric = xRaw.every(v => typeof v === "number" && !isNaN(v))
-    const yNumeric = yRaw.every(v => typeof v === "number" && !isNaN(v))
-    const xValues = xNumeric ? xRaw.sort((a, b) => a - b) : xRaw
-    const yValues = yNumeric ? yRaw.sort((a, b) => a - b) : yRaw
-    if (xValues.length === 0 || yValues.length === 0) return nodes
-
-    const cellW = layout.width / xValues.length
-    const cellH = layout.height / yValues.length
-
-    // Build value lookup
-    const valueMap = new Map<string, { val: number; datum: any }>()
-    for (const d of data) {
-      const key = `${getRawX(d)}\0${getRawY(d)}`
-      valueMap.set(key, { val: getVal(d), datum: d })
-    }
-
-    // Compute value range for color
-    let minVal = Infinity
-    let maxVal = -Infinity
-    for (const { val } of valueMap.values()) {
-      if (val < minVal) minVal = val
-      if (val > maxVal) maxVal = val
-    }
-    const valRange = maxVal - minVal || 1
-
-    // Resolve color interpolator from config
-    const HEAT_INTERPOLATORS: Record<string, (t: number) => string> = {
-      blues: interpolateBlues,
-      reds: interpolateReds,
-      greens: interpolateGreens,
-      viridis: interpolateViridis,
-    }
-    const schemeName = typeof this.config.colorScheme === "string" ? this.config.colorScheme : "blues"
-    const interpolator = HEAT_INTERPOLATORS[schemeName] || interpolateBlues
-    const heatColor = scaleSequential(interpolator).domain([minVal, maxVal])
-
-    for (let xi = 0; xi < xValues.length; xi++) {
-      for (let yi = 0; yi < yValues.length; yi++) {
-        const key = `${xValues[xi]}\0${yValues[yi]}`
-        const entry = valueMap.get(key)
-        if (!entry) continue
-
-        const fill = heatColor(entry.val)
-
-        const labelOpts = this.config.showValues
-          ? { value: entry.val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
-          : undefined
-        nodes.push(buildHeatcellNode(
-          xi * cellW,
-          (yValues.length - 1 - yi) * cellH,
-          cellW,
-          cellH,
-          fill,
-          entry.datum,
-          labelOpts
-        ))
-      }
-    }
-
-    return nodes
-  }
-
-  /**
-   * Streaming heatmap: discretize continuous x/y into a grid and aggregate.
-   */
-  private buildStreamingHeatmapScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
-    const nodes: SceneNode[] = []
-    const xBins = this.config.heatmapXBins ?? 20
-    const yBins = this.config.heatmapYBins ?? 20
-    const agg = this.config.heatmapAggregation ?? "count"
-    const getVal = resolveAccessor(this.config.valueAccessor, "value")
-
-    if (!this.scales || data.length === 0) return nodes
-
-    const [xMin, xMax] = this.scales.x.domain() as [number, number]
-    const [yMin, yMax] = this.scales.y.domain() as [number, number]
-    const xRange = xMax - xMin || 1
-    const yRange = yMax - yMin || 1
-    const xBinSize = xRange / xBins
-    const yBinSize = yRange / yBins
-
-    // Grid cells: [xi][yi] → { sum, count }
-    const grid = new Map<string, { sum: number; count: number; data: any[] }>()
-
-    for (const d of data) {
-      const xVal = this.getX(d)
-      const yVal = this.getY(d)
-      const xi = Math.min(Math.floor((xVal - xMin) / xBinSize), xBins - 1)
-      const yi = Math.min(Math.floor((yVal - yMin) / yBinSize), yBins - 1)
-      if (xi < 0 || yi < 0) continue
-
-      const key = `${xi}_${yi}`
-      let cell = grid.get(key)
-      if (!cell) {
-        cell = { sum: 0, count: 0, data: [] }
-        grid.set(key, cell)
-      }
-      cell.count++
-      cell.sum += getVal(d)
-      cell.data.push(d)
-    }
-
-    // Compute aggregated values and find range
-    let minVal = Infinity
-    let maxVal = -Infinity
-    const cellValues = new Map<string, number>()
-    for (const [key, cell] of grid) {
-      let val: number
-      switch (agg) {
-        case "sum": val = cell.sum; break
-        case "mean": val = cell.count > 0 ? cell.sum / cell.count : 0; break
-        default: val = cell.count; break
-      }
-      cellValues.set(key, val)
-      if (val < minVal) minVal = val
-      if (val > maxVal) maxVal = val
-    }
-    const valRange = maxVal - minVal || 1
-
-    const cellW = layout.width / xBins
-    const cellH = layout.height / yBins
-
-    for (const [key, val] of cellValues) {
-      const [xiStr, yiStr] = key.split("_")
-      const xi = +xiStr
-      const yi = +yiStr
-
-      const t = (val - minVal) / valRange
-      const r = Math.round(220 - 180 * t)
-      const g = Math.round(220 - 100 * t)
-      const b = Math.round(255 - 50 * t)
-      const fill = `rgb(${r},${g},${b})`
-
-      const cell = grid.get(key)!
-      const streamLabelOpts = this.config.showValues
-        ? { value: val, showValues: true as const, valueFormat: this.config.heatmapValueFormat }
-        : undefined
-      nodes.push(buildHeatcellNode(
-        xi * cellW,
-        (yBins - 1 - yi) * cellH,
-        cellW,
-        cellH,
-        fill,
-        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data },
-        streamLabelOpts
-      ))
-    }
-
-    return nodes
-  }
-
-  private buildBarScene(data: Record<string, any>[]): SceneNode[] {
-    if (!this.config.binSize) return []
-
-    const bins = computeBins(data, this.getX, this.getY, this.config.binSize, this.getCategory)
-    if (bins.size === 0) return []
-
-    // Establish a global category order that is stable across frames.
-    // Use barColors keys first (preserves user-specified order), then any
-    // additional categories sorted alphabetically.  This prevents flicker
-    // when bins partially exit the sliding window and their per-category
-    // values shrink/disappear — without a fixed order the Map iteration
-    // order shifts and stacked segments jump around.
-    let categoryOrder: string[] | null = null
-    if (this.getCategory) {
-      const allCategories = new Set<string>()
-      for (const bin of bins.values()) {
-        for (const cat of bin.categories.keys()) {
-          allCategories.add(cat)
-        }
-      }
-      const colorKeys = this.config.barColors ? Object.keys(this.config.barColors) : []
-      const listed = new Set(colorKeys)
-      const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
-      const activeKeys = colorKeys.filter(k => allCategories.has(k))
-      const cacheKey = activeKeys.join('\0') + '\x01' + unlisted.join('\0')
-      if (this._barCategoryCache && this._barCategoryCache.key === cacheKey) {
-        categoryOrder = this._barCategoryCache.order
-      } else {
-        categoryOrder = [...activeKeys, ...unlisted]
-        this._barCategoryCache = { key: cacheKey, order: categoryOrder }
-      }
-    }
-
-    const nodes: SceneNode[] = []
-    const scales = this.scales!
-    const [domainMin, domainMax] = scales.x.domain() as [number, number]
-    const gap = this.config.barColors ? 1 : 1
-
-    for (const bin of bins.values()) {
-      const clampedStart = Math.max(bin.start, domainMin)
-      const clampedEnd = Math.min(bin.end, domainMax)
-      if (clampedStart >= clampedEnd) continue
-
-      const rawX0 = scales.x(clampedStart)
-      const rawX1 = scales.x(clampedEnd)
-      const rawWidth = Math.abs(rawX1 - rawX0)
-      // When bins are narrow, reduce gap to preserve visibility (min 1px bar)
-      const effectiveGap = rawWidth > gap + 1 ? gap : 0
-      const x0 = Math.min(rawX0, rawX1) + effectiveGap / 2
-      const barWidth = Math.max(rawWidth - effectiveGap, 1)
-      if (barWidth <= 0) continue
-
-      if (categoryOrder && bin.categories.size > 0) {
-        let cumulativeBase = 0
-        for (const cat of categoryOrder) {
-          const catVal = bin.categories.get(cat) || 0
-          if (catVal === 0) continue
-          const yBottom = scales.y(cumulativeBase)
-          const yTop = scales.y(cumulativeBase + catVal)
-          const rectY = Math.min(yBottom, yTop)
-          const rectH = Math.abs(yBottom - yTop)
-
-          nodes.push(buildRectNode(
-            x0, rectY, barWidth, rectH,
-            { fill: this.config.barColors?.[cat] || "#4e79a7" },
-            { binStart: bin.start, binEnd: bin.end, total: bin.total, category: cat, categoryValue: catVal },
-            cat
-          ))
-          cumulativeBase += catVal
-        }
-      } else {
-        const yZero = scales.y(0)
-        const yTop = scales.y(bin.total)
-        const rectY = Math.min(yZero, yTop)
-        const rectH = Math.abs(yZero - yTop)
-
-        nodes.push(buildRectNode(
-          x0, rectY, barWidth, rectH,
-          { fill: "#007bff" },
-          { binStart: bin.start, binEnd: bin.end, total: bin.total }
-        ))
-      }
-    }
-
-    return nodes
-  }
-
-  private buildSwarmScene(data: Record<string, any>[]): SceneNode[] {
-    const nodes: SceneNode[] = []
-    const swarm = this.config.swarmStyle || {}
-    const radius = swarm.radius ?? 3
-    const defaultFill = swarm.fill ?? "#007bff"
-    const opacity = swarm.opacity ?? 0.7
-    const stroke = swarm.stroke
-    const strokeWidth = swarm.strokeWidth
-
-    for (const d of data) {
-      const xVal = this.getX(d)
-      const yVal = this.getY(d)
-      if (yVal == null || Number.isNaN(yVal)) continue
-
-      const x = this.scales!.x(xVal)
-      const y = this.scales!.y(yVal)
-
-      let fill = defaultFill
-      if (this.getCategory) {
-        const cat = this.getCategory(d)
-        fill = this.config.barColors?.[cat] || fill
-      }
-
-      const node: PointSceneNode = {
-        type: "point",
-        x, y, r: radius,
-        style: { fill, opacity, stroke, strokeWidth },
-        datum: d
-      }
-      if (this.getPointId) node.pointId = String(this.getPointId(d))
-      nodes.push(node)
-    }
-
-    return nodes
-  }
-
-  private buildWaterfallScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
-    const nodes: SceneNode[] = []
-    const scales = this.scales!
-    const ws = this.config.waterfallStyle
-
-    // Filter valid data
-    const arr = data.filter(d => {
-      const v = this.getY(d)
-      return v != null && !Number.isNaN(v)
-    })
-    if (arr.length === 0) return nodes
-
-    const positiveColor = ws?.positiveColor ?? "#28a745"
-    const negativeColor = ws?.negativeColor ?? "#dc3545"
-    const gap = ws?.gap ?? 1
-    const barStroke = ws?.stroke
-    const barStrokeWidth = ws?.strokeWidth
-    let baseline = 0
-
-    for (let i = 0; i < arr.length; i++) {
-      const d = arr[i]
-      const t = this.getX(d)
-      const delta = this.getY(d)
-      const cumEnd = baseline + delta
-
-      // Compute bar width from time gap
-      let barWidthTime: number
-      if (i < arr.length - 1) {
-        barWidthTime = this.getX(arr[i + 1]) - t
-      } else if (i > 0) {
-        barWidthTime = t - this.getX(arr[i - 1])
-      } else {
-        barWidthTime = 0
-      }
-
-      const rawX0 = scales.x(t)
-      const rawX1 = barWidthTime !== 0 ? scales.x(t + barWidthTime) : rawX0 + layout.width / 10
-      const x0 = Math.min(rawX0, rawX1) + gap / 2
-      const x1 = Math.max(rawX0, rawX1) - gap / 2
-      const barWidth = x1 - x0
-      if (barWidth <= 0) {
-        baseline = cumEnd
-        continue
-      }
-
-      const yBaseline = scales.y(baseline)
-      const yTop = scales.y(cumEnd)
-      const rectY = Math.min(yBaseline, yTop)
-      const rectH = Math.abs(yBaseline - yTop)
-
-      const fill = delta >= 0 ? positiveColor : negativeColor
-      nodes.push(buildRectNode(
-        x0, rectY, barWidth, rectH,
-        { fill, stroke: barStroke, strokeWidth: barStrokeWidth },
-        { ...d, baseline, cumEnd, delta, _connectorStroke: ws?.connectorStroke, _connectorWidth: ws?.connectorWidth }
-      ))
-
-      baseline = cumEnd
-    }
-
-    return nodes
-  }
-
-  private buildCandlestickScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
-    if (!this.getOpen || !this.getHigh || !this.getLow || !this.getClose || !this.scales) return []
-
-    const nodes: SceneNode[] = []
-    const cs = this.config.candlestickStyle || {}
-    const upColor = cs.upColor || "#28a745"
-    const downColor = cs.downColor || "#dc3545"
-    const wickColor = cs.wickColor || "#333"
-    const wickWidth = cs.wickWidth || 1
-
-    // Compute body width from data spacing
-    const sortedX = data
-      .map(d => this.getX(d))
-      .filter(x => x != null && !Number.isNaN(x))
-      .sort((a, b) => a - b)
-
-    let bodyWidth = cs.bodyWidth || 6
-    if (!cs.bodyWidth && sortedX.length > 1) {
-      // Auto-size: 60% of the minimum gap between adjacent x values
-      let minGap = Infinity
-      for (let i = 1; i < sortedX.length; i++) {
-        const gap = Math.abs(this.scales!.x(sortedX[i]) - this.scales!.x(sortedX[i - 1]))
-        if (gap > 0 && gap < minGap) minGap = gap
-      }
-      if (minGap !== Infinity) {
-        bodyWidth = Math.max(2, Math.min(minGap * 0.6, 20))
-      }
-    }
-
-    for (const d of data) {
-      const xVal = this.getX(d)
-      if (xVal == null || Number.isNaN(xVal)) continue
-
-      const open = this.getOpen(d)
-      const high = this.getHigh(d)
-      const low = this.getLow(d)
-      const close = this.getClose(d)
-      if ([open, high, low, close].some(v => v == null || Number.isNaN(v))) continue
-
-      const isUp = close >= open
-
-      nodes.push({
-        type: "candlestick",
-        x: this.scales!.x(xVal),
-        openY: this.scales!.y(open),
-        closeY: this.scales!.y(close),
-        highY: this.scales!.y(high),
-        lowY: this.scales!.y(low),
-        bodyWidth,
-        upColor,
-        downColor,
-        wickColor,
-        wickWidth,
-        isUp,
-        datum: d
-      } as CandlestickSceneNode)
-    }
-
-    return nodes
-  }
-
-  // ── Bounds helpers ───────────────────────────────────────────────────
-
-  private buildBoundsForGroup(data: Record<string, any>[], group: string): AreaSceneNode | null {
-    if (!this.getBounds || !this.scales) return null
-
-    const topPath: [number, number][] = []
-    const bottomPath: [number, number][] = []
-
-    for (const d of data) {
-      const x = this.getX(d)
-      const y = this.getY(d)
-      if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
-
-      const offset = this.getBounds(d)
-      const px = this.scales!.x(x)
-
-      if (!offset || offset === 0) {
-        // No bounds at this point — collapse to the line
-        const py = this.scales!.y(y)
-        topPath.push([px, py])
-        bottomPath.push([px, py])
-      } else {
-        topPath.push([px, this.scales!.y(y + offset)])
-        bottomPath.push([px, this.scales!.y(y - offset)])
-      }
-    }
-
-    if (topPath.length < 2) return null
-
-    return {
-      type: "area",
-      topPath,
-      bottomPath,
-      style: this.resolveBoundsStyle(group, data[0]),
-      datum: data,
-      group,
-      interactive: false
     }
   }
 
@@ -1324,659 +774,66 @@ export class PipelineStore {
     }
   }
 
-  // ── Decay ────────────────────────────────────────────────────────────
+  // ── Decay (delegated to pipelineDecay.ts) ───────────────────────────
 
-  /**
-   * Compute decay opacity for a datum at `bufferIndex` out of `bufferSize` items.
-   * Index 0 = oldest, bufferSize-1 = newest. Returns 0–1.
-   */
   computeDecayOpacity(bufferIndex: number, bufferSize: number): number {
     const decay = this.config.decay
     if (!decay || bufferSize <= 1) return 1
-
-    const minOpacity = decay.minOpacity ?? 0.1
-    // age: 0 = newest, bufferSize-1 = oldest
-    const age = bufferSize - 1 - bufferIndex
-
-    switch (decay.type) {
-      case "linear": {
-        const t = 1 - age / (bufferSize - 1)
-        return minOpacity + t * (1 - minOpacity)
-      }
-      case "exponential": {
-        const halfLife = decay.halfLife ?? bufferSize / 2
-        const t = Math.pow(0.5, age / halfLife)
-        return minOpacity + t * (1 - minOpacity)
-      }
-      case "step": {
-        const threshold = decay.stepThreshold ?? bufferSize * 0.5
-        return age < threshold ? 1 : minOpacity
-      }
-      default:
-        return 1
-    }
+    return computeDecayOpacityFn(decay, bufferIndex, bufferSize)
   }
 
-  /**
-   * Apply decay opacity to a list of discrete scene nodes.
-   * Uses the datum's index in the buffer data array.
-   */
   private applyDecay(nodes: SceneNode[], data: Record<string, any>[]): void {
     if (!this.config.decay) return
-    const bufferSize = data.length
-    if (bufferSize <= 1) return
-
-    // Build datum→index lookup
-    const indexMap = new Map<any, number>()
-    for (let i = 0; i < data.length; i++) {
-      indexMap.set(data[i], i)
-    }
-
-    for (const node of nodes) {
-      // Per-vertex decay for line nodes
-      if (node.type === "line") {
-        const datumArr = Array.isArray(node.datum) ? node.datum : []
-        if (datumArr.length < 2) continue
-        const opacities = new Array<number>(datumArr.length)
-        let hasDecay = false
-        for (let i = 0; i < datumArr.length; i++) {
-          const idx = indexMap.get(datumArr[i])
-          if (idx != null) {
-            opacities[i] = this.computeDecayOpacity(idx, bufferSize)
-            if (opacities[i] < 1) hasDecay = true
-          } else {
-            opacities[i] = 1
-          }
-        }
-        if (hasDecay) {
-          node._decayOpacities = opacities
-        }
-        continue
-      }
-
-      // Per-vertex decay for area nodes
-      if (node.type === "area") {
-        const datumArr = Array.isArray(node.datum) ? node.datum : []
-        const vertexCount = node.topPath ? node.topPath.length : datumArr.length
-        if (vertexCount < 2) continue
-
-        if (datumArr.length === vertexCount) {
-          // Datum array aligns with path vertices — per-vertex decay
-          const opacities = new Array<number>(vertexCount)
-          let hasDecay = false
-          for (let i = 0; i < datumArr.length; i++) {
-            const idx = indexMap.get(datumArr[i])
-            if (idx != null) {
-              opacities[i] = this.computeDecayOpacity(idx, bufferSize)
-              if (opacities[i] < 1) hasDecay = true
-            } else {
-              opacities[i] = 1
-            }
-          }
-          if (hasDecay) {
-            node._decayOpacities = opacities
-          }
-        } else {
-          // Datum/path length mismatch (e.g. stacked areas) — use uniform decay
-          // based on the newest mappable datum
-          let minOpacity = 1
-          for (const d of datumArr) {
-            const idx = indexMap.get(d)
-            if (idx != null) {
-              const op = this.computeDecayOpacity(idx, bufferSize)
-              if (op < minOpacity) minOpacity = op
-            }
-          }
-          if (minOpacity < 1) {
-            const opacities = new Array<number>(vertexCount)
-            opacities.fill(minOpacity)
-            node._decayOpacities = opacities
-          }
-        }
-        continue
-      }
-
-      const idx = indexMap.get(node.datum)
-      if (idx == null) continue
-      const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
-      if (node.type === "heatcell") {
-        node.style = { opacity: decayOpacity }
-      } else if (node.type === "candlestick") {
-        // Candlestick doesn't have a style object — store opacity for renderer
-        node._decayOpacity = decayOpacity
-      } else {
-        const baseOpacity = node.style?.opacity ?? 1
-        node.style = { ...node.style, opacity: baseOpacity * decayOpacity }
-      }
-    }
+    applyDecayFn(this.config.decay, nodes, data)
   }
 
-  // ── Pulse ───────────────────────────────────────────────────────────
+  // ── Pulse (delegated to pipelinePulse.ts) ──────────────────────────
 
-  /**
-   * Compute pulse intensity for a datum inserted at `insertTime`.
-   * Returns 0–1 (1 = just inserted, 0 = pulse expired).
-   */
-  private computePulseIntensity(insertTime: number, now: number): number {
-    const pulse = this.config.pulse
-    if (!pulse) return 0
-    const duration = pulse.duration ?? 500
-    const age = now - insertTime
-    if (age >= duration) return 0
-    return 1 - age / duration
-  }
-
-  /**
-   * Apply pulse glow to discrete scene nodes.
-   */
   private applyPulse(nodes: SceneNode[], data: Record<string, any>[]): void {
     if (!this.config.pulse || !this.timestampBuffer) return
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
-    const glowRadius = this.config.pulse.glowRadius ?? 4
-
-    // Build datum→index lookup
-    const indexMap = new Map<any, number>()
-    for (let i = 0; i < data.length; i++) {
-      indexMap.set(data[i], i)
-    }
-
-    for (const node of nodes) {
-      if (node.type === "line") continue
-
-      // Area nodes: datum is an array of data points for the group.
-      // Pulse the area when any constituent point was recently inserted.
-      if (node.type === "area") {
-        const datumArr = Array.isArray(node.datum) ? node.datum : [node.datum]
-        let bestIntensity = 0
-        for (const d of datumArr) {
-          const idx = indexMap.get(d)
-          if (idx == null) continue
-          const insertTime = this.timestampBuffer.get(idx)
-          if (insertTime == null) continue
-          const intensity = this.computePulseIntensity(insertTime, now)
-          if (intensity > bestIntensity) bestIntensity = intensity
-        }
-        if (bestIntensity > 0) {
-          node._pulseIntensity = bestIntensity
-          node._pulseColor = pulseColor
-        }
-        continue
-      }
-
-      const idx = indexMap.get(node.datum)
-      if (idx == null) continue
-      const insertTime = this.timestampBuffer.get(idx)
-      if (insertTime == null) continue
-      const intensity = this.computePulseIntensity(insertTime, now)
-      if (intensity > 0) {
-        node._pulseIntensity = intensity
-        node._pulseColor = pulseColor
-        node._pulseGlowRadius = glowRadius
-      }
-    }
+    applyPulseFn(this.config.pulse, nodes, data, this.timestampBuffer)
   }
 
-  /**
-   * Returns true if there are active pulse animations that need continuous rendering.
-   */
   get hasActivePulses(): boolean {
-    if (!this.config.pulse || !this.timestampBuffer || this.timestampBuffer.size === 0) return false
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    const duration = this.config.pulse.duration ?? 500
-    const newest = this.timestampBuffer.peek()
-    return newest != null && (now - newest) < duration
+    if (!this.config.pulse) return false
+    return hasActivePulsesFn(this.config.pulse, this.timestampBuffer)
   }
 
-  // ── Transitions ─────────────────────────────────────────────────────
+  // ── Transitions (delegated to pipelineTransitions.ts) ──────────────
 
-  /**
-   * Snapshot current scene node positions before rebuild.
-   */
+  private get transitionContext(): TransitionContext {
+    return {
+      runtimeMode: this.config.runtimeMode,
+      getX: this.getX,
+      getY: this.getY,
+      getCategory: this.getCategory
+    }
+  }
+
   private snapshotPositions(): void {
-    this.prevPositionMap.clear()
-    this.prevPathMap.clear()
-    for (let i = 0; i < this.scene.length; i++) {
-      const node = this.scene[i]
-      const key = this.getNodeIdentity(node, i)
-      if (!key) continue
-      if (node.type === "point") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
-      } else if (node.type === "rect") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
-      } else if (node.type === "heatcell") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
-      } else if (node.type === "candlestick") {
-        this.prevPositionMap.set(key, { x: node.x, y: node.openY })
-      } else if (node.type === "line") {
-        this.prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
-      } else if (node.type === "area") {
-        this.prevPathMap.set(key, {
-          topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
-          bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
-          opacity: node.style?.opacity
-        })
-      }
-    }
+    snapshotPositionsFn(this.transitionContext, this.scene, this.prevPositionMap, this.prevPathMap)
   }
 
-  /**
-   * Get a stable identity key for a scene node.
-   */
-  private getNodeIdentity(node: SceneNode, index: number): string | null {
-    switch (node.type) {
-      case "point": {
-        // Use explicit pointId (from pointIdAccessor) if available
-        if (node.pointId) return `p:${node.pointId}`
-        // In streaming mode, derive stable key from datum values so
-        // ring-buffer index shifts don't cause transitions to interpolate
-        // between unrelated data points. In bounded mode, index-based keys
-        // are correct because full data replacement preserves position order.
-        if (this.config.runtimeMode === "streaming" && node.datum) {
-          if (this.getCategory) {
-            const cat = this.getCategory(node.datum)
-            const val = this.getY(node.datum)
-            return `p:${cat}:${val}`
-          }
-          const xVal = this.getX(node.datum)
-          const yVal = this.getY(node.datum)
-          if (xVal != null && yVal != null) return `p:${xVal}:${yVal}`
-        }
-        return `p:${index}`
-      }
-      case "rect":
-        return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
-      case "heatcell":
-        return `h:${node.x}_${node.y}`
-      case "candlestick":
-        return node.datum == null ? `c:${index}` : `c:${this.getX(node.datum)}`
-      case "line":
-        return `l:${node.group || "_default"}`
-      case "area":
-        return `a:${node.group || "_default"}`
-      default:
-        return null
-    }
-  }
-
-  /**
-   * After scene rebuild, set up transition from old to new positions.
-   * Detects entering nodes (new, no prev match) and exiting nodes (prev, no new match).
-   */
   private startTransition(): void {
-    if (!this.config.transition || (this.prevPositionMap.size === 0 && this.prevPathMap.size === 0)) return
-    const duration = this.config.transition.duration ?? 300
-
-    // Clear any previously-appended exit nodes from the scene before processing
-    if (this.exitNodes.length > 0) {
-      const exitSet = new Set(this.exitNodes)
-      this.scene = this.scene.filter(n => !exitSet.has(n))
-      this.exitNodes = []
-    }
-
-    let hasChanges = false
-    const matchedPrevKeys = new Set<string>()
-    const matchedPrevPathKeys = new Set<string>()
-
-    for (let i = 0; i < this.scene.length; i++) {
-      const node = this.scene[i]
-      const key = this.getNodeIdentity(node, i)
-      if (!key) continue
-
-      // Store stable key on the node so advanceTransition can use it
-      // even after exit nodes are prepended to the scene
-      node._transitionKey = key
-
-      // Handle line/area path interpolation setup
-      if (node.type === "line" || node.type === "area") {
-        const prevPath = this.prevPathMap.get(key)
-        if (prevPath) {
-          matchedPrevPathKeys.add(key)
-          if (node.type === "line" && prevPath.path && prevPath.path.length === node.path.length) {
-            // Store target path and set current to prev for interpolation
-            node._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
-            node._prevPath = prevPath.path
-            // Start from prev positions
-            for (let j = 0; j < node.path.length; j++) {
-              node.path[j] = [prevPath.path[j][0], prevPath.path[j][1]]
-            }
-            hasChanges = true
-          } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath
-            && prevPath.topPath.length === node.topPath.length
-            && prevPath.bottomPath.length === node.bottomPath.length) {
-            node._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
-            node._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
-            node._prevTopPath = prevPath.topPath
-            node._prevBottomPath = prevPath.bottomPath
-            for (let j = 0; j < node.topPath.length; j++) {
-              node.topPath[j] = [prevPath.topPath[j][0], prevPath.topPath[j][1]]
-            }
-            for (let j = 0; j < node.bottomPath.length; j++) {
-              node.bottomPath[j] = [prevPath.bottomPath[j][0], prevPath.bottomPath[j][1]]
-            }
-            hasChanges = true
-          }
-          node._targetOpacity = node.style.opacity ?? 1
-        } else {
-          // Entering line/area — fade in from 0
-          node._targetOpacity = node.style.opacity ?? 1
-          node.style = { ...node.style, opacity: 0 }
-          hasChanges = true
-        }
-        continue
-      }
-
-      const prev = this.prevPositionMap.get(key)
-
-      if (node.type === "point") {
-        if (prev) {
-          matchedPrevKeys.add(key)
-          const target = { x: node.x, y: node.y, r: node.r }
-          node._targetOpacity = node.style.opacity ?? 1
-          if (prev.x !== target.x || prev.y !== target.y) {
-            node._targetX = target.x
-            node._targetY = target.y
-            node._targetR = target.r
-            node.x = prev.x
-            node.y = prev.y
-            node.r = prev.r ?? node.r
-            hasChanges = true
-          }
-        } else {
-          // Entering node — start at opacity 0
-          node._targetOpacity = node.style.opacity ?? 1
-          node.style = { ...node.style, opacity: 0 }
-          hasChanges = true
-        }
-      } else if (node.type === "rect") {
-        if (prev) {
-          matchedPrevKeys.add(key)
-          const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-          node._targetOpacity = node.style.opacity ?? 1
-          if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
-            node._targetX = target.x
-            node._targetY = target.y
-            node._targetW = target.w
-            node._targetH = target.h
-            node.x = prev.x
-            node.y = prev.y
-            node.w = prev.w ?? node.w
-            node.h = prev.h ?? node.h
-            hasChanges = true
-          }
-        } else {
-          node._targetOpacity = node.style.opacity ?? 1
-          node.style = { ...node.style, opacity: 0 }
-          hasChanges = true
-        }
-      } else if (node.type === "heatcell") {
-        if (prev) {
-          matchedPrevKeys.add(key)
-          const target = { x: node.x, y: node.y, w: node.w, h: node.h }
-          node._targetOpacity = node.style?.opacity ?? 1
-          if (prev.x !== target.x || prev.y !== target.y) {
-            node._targetX = target.x
-            node._targetY = target.y
-            node._targetW = target.w
-            node._targetH = target.h
-            node.x = prev.x
-            node.y = prev.y
-            node.w = prev.w ?? node.w
-            node.h = prev.h ?? node.h
-            hasChanges = true
-          }
-        } else {
-          node._targetOpacity = node.style?.opacity ?? 1
-          node.style = { ...(node.style || {}), opacity: 0 }
-          hasChanges = true
-        }
-      }
-    }
-
-    // Detect exit line/area nodes: keys in prevPathMap not matched in new scene
-    for (const [key, prevPath] of this.prevPathMap) {
-      if (matchedPrevPathKeys.has(key)) continue
-      // Exiting line/area — keep in scene with fade-out
-      if (key.startsWith("l:") && prevPath.path) {
-        const exitNode: LineSceneNode = {
-          type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
-          group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key, datum: null
-        }
-        this.exitNodes.push(exitNode)
-        hasChanges = true
-      } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
-        const exitNode: AreaSceneNode = {
-          type: "area",
-          topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
-          bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
-          group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key, datum: null
-        }
-        this.exitNodes.push(exitNode)
-        hasChanges = true
-      }
-    }
-
-    // Detect exit nodes: keys in prevPositionMap not matched in new scene
-    for (const [key, prev] of this.prevPositionMap) {
-      if (matchedPrevKeys.has(key)) continue
-      if (key.startsWith("p:")) {
-        const exitNode = {
-          type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
-          style: { opacity: prev.opacity ?? 1 }, datum: null,
-          _targetOpacity: 0, _transitionKey: key
-        } as unknown as PointSceneNode
-        this.exitNodes.push(exitNode)
-      } else if (key.startsWith("r:")) {
-        const exitNode = {
-          type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
-          style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
-          _targetOpacity: 0, _transitionKey: key
-        } as unknown as RectSceneNode
-        this.exitNodes.push(exitNode)
-      } else if (key.startsWith("h:")) {
-        const exitNode = {
-          type: "heatcell", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
-          fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
-          _targetOpacity: 0, _transitionKey: key
-        } as unknown as HeatcellSceneNode
-        this.exitNodes.push(exitNode)
-      }
-      hasChanges = true
-    }
-
-    // Append exit nodes (at end to avoid shifting indices, though we use _transitionKey now)
-    if (this.exitNodes.length > 0) {
-      this.scene = [...this.scene, ...this.exitNodes]
-    }
-
-    if (hasChanges) {
-      this.activeTransition = {
-        startTime: getTimestamp(),
-        duration
-      }
-    }
+    if (!this.config.transition) return
+    const state = startTransitionFn(
+      this.transitionContext, this.config.transition,
+      { scene: this.scene, exitNodes: this.exitNodes, activeTransition: this.activeTransition },
+      this.prevPositionMap, this.prevPathMap
+    )
+    this.scene = state.scene
+    this.exitNodes = state.exitNodes
+    this.activeTransition = state.activeTransition
   }
 
-  /**
-   * Advance the transition animation. Returns true if still animating.
-   */
   advanceTransition(now: number): boolean {
-    if (!this.activeTransition) return false
-
-    const rawT = computeRawProgress(now, this.activeTransition)
-    const easing = this.config.transition?.easing === "linear" ? "linear" : "ease-out-cubic"
-    const t = computeEasing(rawT, easing)
-
-    for (const node of this.scene) {
-      // Use stable key stored during startTransition (immune to index shifts from exit nodes)
-      const key = node._transitionKey
-      if (node.type === "point") {
-        // Interpolate opacity for enter/exit
-        if (node._targetOpacity !== undefined) {
-          const prev = key ? this.prevPositionMap.get(key) : undefined
-          const startOpacity = prev ? (prev.opacity ?? 1) : 0
-          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
-        }
-        if (node._targetX === undefined) continue
-        if (!key) continue
-        const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
-        node.x = lerp(prev.x, node._targetX, t)
-        node.y = lerp(prev.y, node._targetY!, t)
-        if (node._targetR !== undefined && prev.r !== undefined) {
-          node.r = lerp(prev.r, node._targetR, t)
-        }
-      } else if (node.type === "rect") {
-        if (node._targetOpacity !== undefined) {
-          const prev = key ? this.prevPositionMap.get(key) : undefined
-          const startOpacity = prev ? (prev.opacity ?? 1) : 0
-          node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
-        }
-        if (node._targetX === undefined) continue
-        if (!key) continue
-        const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
-        node.x = lerp(prev.x, node._targetX, t)
-        node.y = lerp(prev.y, node._targetY!, t)
-        if (prev.w !== undefined) node.w = lerp(prev.w, node._targetW!, t)
-        if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
-      } else if (node.type === "heatcell") {
-        if (node._targetOpacity !== undefined) {
-          const prev = key ? this.prevPositionMap.get(key) : undefined
-          const startOpacity = prev ? (prev.opacity ?? 1) : 0
-          node.style = { ...(node.style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
-        }
-        if (node._targetX === undefined) continue
-        if (!key) continue
-        const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
-        node.x = lerp(prev.x, node._targetX, t)
-        node.y = lerp(prev.y, node._targetY!, t)
-        if (prev.w !== undefined) node.w = lerp(prev.w, node._targetW!, t)
-        if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
-      } else if (node.type === "line") {
-        // Interpolate opacity for enter/exit
-        if (node._targetOpacity !== undefined) {
-          const isEntering = node._prevPath === undefined && node._targetOpacity > 0
-          const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
-          node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
-        }
-        // Interpolate path coordinates
-        const prevPath = node._prevPath
-        const targetPath = node._targetPath
-        if (prevPath && targetPath && prevPath.length === node.path.length) {
-          for (let j = 0; j < node.path.length; j++) {
-            node.path[j][0] = lerp(prevPath[j][0], targetPath[j][0], t)
-            node.path[j][1] = lerp(prevPath[j][1], targetPath[j][1], t)
-          }
-        }
-      } else if (node.type === "area") {
-        if (node._targetOpacity !== undefined) {
-          const isEntering = node._prevTopPath === undefined && node._targetOpacity > 0
-          const startOpacity = isEntering ? 0 : (node.style.opacity ?? 1)
-          node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
-        }
-        const prevTop = node._prevTopPath
-        const prevBottom = node._prevBottomPath
-        const targetTop = node._targetTopPath
-        const targetBottom = node._targetBottomPath
-        if (prevTop && targetTop && prevTop.length === node.topPath.length) {
-          for (let j = 0; j < node.topPath.length; j++) {
-            node.topPath[j][0] = lerp(prevTop[j][0], targetTop[j][0], t)
-            node.topPath[j][1] = lerp(prevTop[j][1], targetTop[j][1], t)
-          }
-        }
-        if (prevBottom && targetBottom && prevBottom.length === node.bottomPath.length) {
-          for (let j = 0; j < node.bottomPath.length; j++) {
-            node.bottomPath[j][0] = lerp(prevBottom[j][0], targetBottom[j][0], t)
-            node.bottomPath[j][1] = lerp(prevBottom[j][1], targetBottom[j][1], t)
-          }
-        }
-      }
-    }
-
-    if (rawT >= 1) {
-      // Snap to targets and clear transition fields
-      for (const node of this.scene) {
-        if (node._targetOpacity !== undefined) {
-          const finalOpacity = node._targetOpacity
-          if (node.type === "line" || node.type === "area") {
-            node.style = { ...node.style, opacity: finalOpacity === 0 ? 0 : finalOpacity }
-          } else {
-            node.style = { ...(node.style || {}), opacity: finalOpacity === 0 ? 0 : finalOpacity }
-          }
-          node._targetOpacity = undefined
-        }
-        if (node.type === "point") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
-          if (node._targetR !== undefined) node.r = node._targetR
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetR = undefined
-        } else if (node.type === "rect") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
-          node.w = node._targetW!
-          node.h = node._targetH!
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetW = undefined
-          node._targetH = undefined
-        } else if (node.type === "heatcell") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
-          node.w = node._targetW!
-          node.h = node._targetH!
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetW = undefined
-          node._targetH = undefined
-        } else if (node.type === "line") {
-          const targetPath = node._targetPath
-          if (targetPath) {
-            for (let j = 0; j < node.path.length; j++) {
-              node.path[j] = targetPath[j]
-            }
-          }
-          node._prevPath = undefined
-          node._targetPath = undefined
-        } else if (node.type === "area") {
-          const targetTop = node._targetTopPath
-          const targetBottom = node._targetBottomPath
-          if (targetTop) {
-            for (let j = 0; j < node.topPath.length; j++) {
-              node.topPath[j] = targetTop[j]
-            }
-          }
-          if (targetBottom) {
-            for (let j = 0; j < node.bottomPath.length; j++) {
-              node.bottomPath[j] = targetBottom[j]
-            }
-          }
-          node._prevTopPath = undefined
-          node._prevBottomPath = undefined
-          node._targetTopPath = undefined
-          node._targetBottomPath = undefined
-        }
-      }
-
-      // Remove exit nodes from scene
-      if (this.exitNodes.length > 0) {
-        const exitSet = new Set(this.exitNodes)
-        this.scene = this.scene.filter(n => !exitSet.has(n))
-        this.exitNodes = []
-      }
-      this.activeTransition = null
-      return false
-    }
-
-    return true
+    if (!this.activeTransition || !this.config.transition) return false
+    const state = { scene: this.scene, exitNodes: this.exitNodes, activeTransition: this.activeTransition }
+    const animating = advanceTransitionFn(now, this.config.transition, state, this.prevPositionMap, this.prevPathMap)
+    this.scene = state.scene
+    this.exitNodes = state.exitNodes
+    this.activeTransition = state.activeTransition
+    return animating
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

@@ -48,8 +48,8 @@ try {
 // ---------------------------------------------------------------------------
 // 2. Load VALIDATION_MAP components from validateProps.ts source
 // ---------------------------------------------------------------------------
-console.log("\n[2/3] Parsing validateProps.ts VALIDATION_MAP...")
-const validatePath = path.join(ROOT, "src", "components", "charts", "shared", "validateProps.ts")
+console.log("\n[2/3] Parsing validationMap.ts VALIDATION_MAP...")
+const validatePath = path.join(ROOT, "src", "components", "charts", "shared", "validationMap.ts")
 let validationComponents = new Map() // name → Set<propName>
 
 try {
@@ -98,7 +98,7 @@ try {
 
   info(`${validationComponents.size} components found in VALIDATION_MAP`)
 } catch (e) {
-  warn(`Could not parse validateProps.ts: ${e.message}`)
+  warn(`Could not parse validationMap.ts: ${e.message}`)
 }
 
 // ---------------------------------------------------------------------------
