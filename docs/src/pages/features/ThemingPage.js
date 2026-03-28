@@ -4,9 +4,12 @@ import {
   LineChart,
   Scatterplot,
   DonutChart,
+  Heatmap,
   ThemeProvider,
   LIGHT_THEME,
   THEME_PRESETS,
+  CARBON_CATEGORICAL_14,
+  CARBON_ALERT,
 } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
@@ -76,6 +79,7 @@ const PRESET_GROUPS = {
   Italian: ["italian", "italian-dark"],
   Journalist: ["journalist", "journalist-dark"],
   Playful: ["playful", "playful-dark"],
+  Carbon: ["carbon", "carbon-dark"],
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +93,7 @@ const themeProviderProps = [
     required: false,
     default: '"light"',
     description:
-      'A named preset string or a partial theme object. Named presets: "light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark". Partial objects are deep-merged with the active theme.',
+      'A named preset string or a partial theme object. Named presets: "light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark", "carbon", "carbon-dark". Partial objects are deep-merged with the active theme.',
   },
   {
     name: "children",
@@ -395,7 +399,7 @@ export default function ThemingPage() {
       <p>
         <code>ThemeProvider</code> applies consistent colors, typography,
         tooltips, and borders to every Semiotic chart it wraps. It ships with{" "}
-        <strong>15 named presets</strong> covering light/dark variants of six
+        <strong>17 named presets</strong> covering light/dark variants of six
         distinct design vocabularies, plus a high-contrast accessibility preset.
         You can also pass a custom theme object.
       </p>
@@ -449,6 +453,7 @@ export default function ThemingPage() {
 // "italian"         "italian-dark"
 // "journalist"      "journalist-dark"
 // "playful"         "playful-dark"
+// "carbon"          "carbon-dark"
 
 // Import theme objects directly for inspection or extension
 import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
@@ -792,6 +797,183 @@ const ssrCSS = Object.entries(THEME_PRESETS)
         The <code>diagnoseConfig</code> utility also checks contrast ratios —
         run <code>npx semiotic-ai --doctor</code> to audit your chart configs.
       </p>
+
+      {/* ================================================================= */}
+      {/* IBM Carbon Palettes */}
+      {/* ================================================================= */}
+      <h2 id="carbon-palettes">IBM Carbon Palettes</h2>
+
+      <p>
+        The <code>"carbon"</code> / <code>"carbon-dark"</code> presets use
+        IBM's Carbon Design System color language. In addition to the 4-color
+        categorical palette built into the theme, Semiotic exports the full
+        14-color categorical palette, diverging scheme, and alert colors for
+        specialized use.
+      </p>
+
+      <h3 id="carbon-categorical">Full 14-color categorical palette</h3>
+
+      <p>
+        Use <code>CARBON_CATEGORICAL_14</code> when you need more than 4
+        categories:
+      </p>
+
+      <div style={{ display: "flex", gap: 2, flexWrap: "wrap", marginBottom: 12 }}>
+        {CARBON_CATEGORICAL_14.map((c, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <span
+              style={{
+                display: "block",
+                width: 36,
+                height: 22,
+                background: c,
+                borderRadius: 3,
+                border: "1px solid rgba(128,128,128,0.2)",
+              }}
+            />
+            <span style={{ fontSize: 9, fontFamily: "monospace", color: "var(--text-secondary)" }}>
+              {c}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <ThemeProvider theme="carbon">
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 4,
+            background: "#ffffff",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <Scatterplot
+            key="carbon-14-scatter"
+            data={Array.from({ length: 42 }, (_, i) => ({
+              x: 10 + (i % 7) * 12 + Math.round(Math.random() * 8),
+              y: 10 + Math.floor(i / 7) * 15 + Math.round(Math.random() * 10),
+              group: `Cat ${(i % 14) + 1}`,
+            }))}
+            xAccessor="x"
+            yAccessor="y"
+            colorBy="group"
+            colorScheme={CARBON_CATEGORICAL_14}
+            title="14-Category Scatterplot (Carbon)"
+            height={260}
+            width={600}
+            pointRadius={6}
+          />
+        </div>
+      </ThemeProvider>
+
+      <CodeBlock
+        code={`import { CARBON_CATEGORICAL_14 } from "semiotic"
+
+<ThemeProvider theme="carbon">
+  <Scatterplot
+    data={data}
+    colorBy="category"
+    colorScheme={CARBON_CATEGORICAL_14}
+  />
+</ThemeProvider>`}
+        language="jsx"
+      />
+
+      <h3 id="carbon-sequential-diverging">Sequential and diverging schemes</h3>
+
+      <p>
+        The Carbon theme sets <code>sequential: "blues"</code> and{" "}
+        <code>diverging: "RdBu"</code>. Heatmaps automatically use the
+        sequential scheme:
+      </p>
+
+      <ThemeProvider theme="carbon">
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 4,
+            background: "#ffffff",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <Heatmap
+            key="carbon-heatmap"
+            data={Array.from({ length: 25 }, (_, i) => ({
+              x: String.fromCharCode(65 + (i % 5)),
+              y: `Row ${Math.floor(i / 5) + 1}`,
+              value: Math.round(10 + Math.random() * 90),
+            }))}
+            xAccessor="x"
+            yAccessor="y"
+            valueAccessor="value"
+            colorScheme="blues"
+            showValues
+            title="Sequential Heatmap (Carbon blues)"
+            height={240}
+            width={400}
+          />
+        </div>
+      </ThemeProvider>
+
+      <CodeBlock
+        code={`// Sequential — set via theme or colorScheme prop
+<ThemeProvider theme="carbon">
+  <Heatmap colorScheme="blues" ... />
+</ThemeProvider>
+
+// Diverging — use the theme's diverging field
+<ThemeProvider theme={{
+  ...CARBON_LIGHT,
+  colors: { ...CARBON_LIGHT.colors, sequential: "RdBu" },
+}}>
+  <Heatmap ... />  {/* Now uses diverging red-blue scale */}
+</ThemeProvider>`}
+        language="jsx"
+      />
+
+      <h3 id="carbon-alert">Alert palette</h3>
+
+      <p>
+        <code>CARBON_ALERT</code> provides danger, warning, success, and info
+        colors for status indicators and threshold annotations:
+      </p>
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+        {Object.entries(CARBON_ALERT).map(([name, color]) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: 24,
+                height: 24,
+                background: color,
+                borderRadius: 4,
+                border: "1px solid rgba(128,128,128,0.2)",
+              }}
+            />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600 }}>{name}</div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "var(--text-secondary)" }}>{color}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <CodeBlock
+        code={`import { CARBON_ALERT } from "semiotic"
+
+<LineChart
+  data={data}
+  xAccessor="time"
+  yAccessor="latency"
+  annotations={[
+    { type: "y-threshold", value: 200, label: "Warning", color: CARBON_ALERT.warning },
+    { type: "y-threshold", value: 500, label: "Danger", color: CARBON_ALERT.danger },
+    { type: "band", y0: 0, y1: 100, label: "Healthy", fill: CARBON_ALERT.success },
+  ]}
+/>`}
+        language="jsx"
+      />
 
       {/* ================================================================= */}
       {/* Props */}

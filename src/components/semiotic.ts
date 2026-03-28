@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -64,6 +64,7 @@ export {
   BubbleChart,
   BarChart,
   StackedBarChart,
+  LikertChart,
   SwarmPlot,
   BoxPlot,
   Histogram,
@@ -144,6 +145,7 @@ export {
   BubbleChartProps,
   BarChartProps,
   StackedBarChartProps,
+  LikertChartProps,
   SwarmPlotProps,
   BoxPlotProps,
   HistogramProps,
@@ -269,7 +271,7 @@ export type {
 export type { SemioticTheme } from "./ThemeProvider"
 export { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "./ThemeProvider"
 export { COLOR_BLIND_SAFE_CATEGORICAL } from "./store/ThemeStore"
-export { themeToCSS, themeToTokens, resolveThemePreset, THEME_PRESETS } from "./semiotic-themes"
+export { themeToCSS, themeToTokens, resolveThemePreset, THEME_PRESETS, CARBON_CATEGORICAL_14, CARBON_ALERT } from "./semiotic-themes"
 export type { ThemePresetName } from "./semiotic-themes"
 
 // ── Error boundary types ───────────────────────────────────────────────

@@ -21,6 +21,8 @@ export {
   themeToTokens,
   resolveThemePreset,
   THEME_PRESETS,
+  CARBON_CATEGORICAL_14,
+  CARBON_ALERT,
 } from "./semiotic-themes"
 export type { ThemePresetName } from "./semiotic-themes"
 

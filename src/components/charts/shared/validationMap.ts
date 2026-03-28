@@ -265,6 +265,24 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  LikertChart: {
+    required: ["data", "levels"],
+    dataShape: "array",
+    dataAccessors: ["categoryAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      categoryAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      levelAccessor: { type: ["string", "function"] },
+      countAccessor: { type: ["string", "function"] },
+      levels: { type: "array" },
+      orientation: { type: "string", enum: orientationEnum as unknown as string[] },
+      barPadding: { type: "number" },
+    },
+  },
+
   GroupedBarChart: {
     required: ["data", "groupBy"],
     dataShape: "array",

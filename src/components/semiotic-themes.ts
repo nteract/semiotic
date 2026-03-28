@@ -370,6 +370,87 @@ export const PLAYFUL_DARK: SemioticTheme = {
   borderRadius: "12px",
 }
 
+// ── IBM Carbon ──────────────────────────────────────────────────────────
+
+/**
+ * IBM Carbon Design System categorical palette (14 colors).
+ * Full palette for data-dense visualizations; themes use the first 4.
+ */
+export const CARBON_CATEGORICAL_14: string[] = [
+  "#6929c4", "#1192e8", "#005d5d", "#9f1853",
+  "#fa4d56", "#570408", "#198038", "#002d9c",
+  "#ee538b", "#b28600", "#009d9a", "#012749",
+  "#8a3800", "#a56eff",
+]
+
+/**
+ * IBM Carbon alert palette — danger, warning, success, info.
+ */
+export const CARBON_ALERT = {
+  danger: "#da1e28",
+  warning: "#f1c21b",
+  success: "#24a148",
+  info: "#0043ce",
+} as const
+
+export const CARBON_LIGHT: SemioticTheme = {
+  mode: "light",
+  colors: {
+    primary: "#0f62fe",
+    categorical: ["#6929c4", "#1192e8", "#005d5d", "#9f1853"],
+    sequential: "blues",
+    diverging: "RdBu",
+    background: "#ffffff",
+    text: "#161616",
+    textSecondary: "#525252",
+    grid: "#e0e0e0",
+    border: "#e0e0e0",
+    focus: "#0f62fe",
+  },
+  typography: {
+    fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
+    titleSize: 16,
+    labelSize: 12,
+    tickSize: 10,
+  },
+  tooltip: {
+    background: "#ffffff",
+    text: "#161616",
+    borderRadius: "2px",
+    shadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+  },
+  borderRadius: "0px",
+}
+
+export const CARBON_DARK: SemioticTheme = {
+  mode: "dark",
+  colors: {
+    primary: "#4589ff",
+    categorical: ["#a56eff", "#33b1ff", "#08bdba", "#ff7eb6"],
+    sequential: "blues",
+    diverging: "RdBu",
+    background: "#161616",
+    text: "#f4f4f4",
+    textSecondary: "#a8a8a8",
+    grid: "#393939",
+    border: "#393939",
+    focus: "#4589ff",
+  },
+  typography: {
+    fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
+    titleSize: 16,
+    labelSize: 12,
+    tickSize: 10,
+  },
+  tooltip: {
+    background: "#262626",
+    text: "#f4f4f4",
+    borderRadius: "2px",
+    shadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
+  },
+  borderRadius: "0px",
+}
+
 // ── Named theme registry ──────────────────────────────────────────────────
 
 /** All named theme presets, keyed by slug. */
@@ -389,6 +470,8 @@ export const THEME_PRESETS: Record<string, SemioticTheme> = {
   "journalist-dark": JOURNALIST_DARK,
   playful: PLAYFUL_LIGHT,
   "playful-dark": PLAYFUL_DARK,
+  carbon: CARBON_LIGHT,
+  "carbon-dark": CARBON_DARK,
 }
 
 /** All valid named theme strings for ThemeProvider. */

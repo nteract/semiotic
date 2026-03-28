@@ -45,6 +45,8 @@
 **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"), `categoryAccessor` (optional), `colorBy`, `connectorOpacity` (0.3), `orientation` ("horizontal"|"vertical"). Horizontal: centered bars with trapezoid connectors. Vertical: bars with diagonal hatch for dropoff. Multi-category: `categoryAccessor="channel"` mirrors (horizontal) or groups (vertical).
 **SwimlaneChart** — `data`, `categoryAccessor` ("category"), `subcategoryAccessor` (required), `valueAccessor` ("value"), `colorBy` (defaults to subcategoryAccessor), `colorScheme`, `orientation` ("horizontal"|"vertical"), `barPadding` (40). Renders categorical lanes with items stacked sequentially — unlike StackedBarChart, the same subcategory can appear multiple times in the same lane. Items stack left-to-right (horizontal) or bottom-to-top (vertical) in data order. Wraps StreamOrdinalFrame with `chartType="swimlane"`. Supports push API for streaming.
 
+**LikertChart** — `data`, `categoryAccessor` ("question"), `valueAccessor` ("score", raw mode) or `levelAccessor`+`countAccessor` ("count", pre-aggregated mode), `levels` (required, ordered negative→positive), `orientation` ("horizontal"|"vertical"), `colorScheme`. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports any scale size (3-point to 7-point+). Raw mode aggregates integer scores automatically (1-based: score 1 → levels[0]). The `levels` array order defines polarity — first half negative, second half positive, center neutral if odd. Supports push API for streaming — accumulates raw data internally and re-aggregates percentages on each push.
+
 All ordinal HOCs support `colorBy` and `colorScheme`. `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
 ## Network Charts (`semiotic/network`)
@@ -208,13 +210,14 @@ import { ThemeProvider } from "semiotic"
 <ThemeProvider theme={{ colors: { primary: "#ff6b6b", categorical: [...] } }}> {/* Custom */}
 ```
 
-Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`, `bi-tool-dark`, `italian`, `italian-dark`, `tufte`, `tufte-dark`, `journalist`, `journalist-dark`, `playful`, `playful-dark`.
+Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`, `bi-tool-dark`, `italian`, `italian-dark`, `tufte`, `tufte-dark`, `journalist`, `journalist-dark`, `playful`, `playful-dark`, `carbon`, `carbon-dark`.
 
 Serialization (`semiotic/themes`): `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
 Color-blind palette: `import { COLOR_BLIND_SAFE_CATEGORICAL } from "semiotic"` (8-color Wong 2011).
+IBM Carbon palette: `import { CARBON_CATEGORICAL_14, CARBON_ALERT } from "semiotic"` (14-color categorical + 4 alert colors).
 
 **`semiotic/utils`** (~137KB, ~10% of full bundle) — Lightweight entry point for utilities without any chart components:
-- **Theme**: `ThemeProvider`, `useTheme`, `LIGHT_THEME`, `DARK_THEME`, `HIGH_CONTRAST_THEME`, `COLOR_BLIND_SAFE_CATEGORICAL`, `themeToCSS`, `themeToTokens`, `resolveThemePreset`, `THEME_PRESETS`
+- **Theme**: `ThemeProvider`, `useTheme`, `LIGHT_THEME`, `DARK_THEME`, `HIGH_CONTRAST_THEME`, `COLOR_BLIND_SAFE_CATEGORICAL`, `CARBON_CATEGORICAL_14`, `CARBON_ALERT`, `themeToCSS`, `themeToTokens`, `resolveThemePreset`, `THEME_PRESETS`
 - **Format**: `adaptiveTimeTicks`, `smartTickFormat`
 - **Color**: `darkenColor`, `lightenColor`
 - **Patterns**: `createHatchPattern`
