@@ -483,7 +483,7 @@ export class OrdinalPipelineStore {
 
     // Bars should include zero (unless user explicitly set rExtent)
     if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane") {
-      if (!this.config.rExtent) {
+      if (!(this.config.rExtent?.[0] != null || this.config.rExtent?.[1] != null)) {
         if (min > 0) min = 0
         if (max < 0) max = 0
       }

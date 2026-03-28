@@ -407,6 +407,8 @@ function BrushOverlay({
   useEffect(() => {
     if (!streaming || !scales || !brushRef.current || !activeBrushExtentRef.current) return
     if (!svgRef.current) return
+    // Streaming tracking only applies when we have an x-brush (x or xy dimension)
+    if (dimension === "y") return
 
     const ext = activeBrushExtentRef.current
     const domain = scales.x.domain() as [number, number]

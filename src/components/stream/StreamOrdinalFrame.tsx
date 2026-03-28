@@ -982,8 +982,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           underlayRendered
         />
 
-        {/* Brush overlay */}
-        {(brush || onBrushProp) && (
+        {/* Brush overlay — not supported for radial projection (pie/donut) */}
+        {(brush || onBrushProp) && projection !== "radial" && (
           <OrdinalBrushOverlay
             width={adjustedWidth}
             height={adjustedHeight}

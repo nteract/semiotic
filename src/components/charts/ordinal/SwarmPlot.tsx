@@ -128,16 +128,21 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     height,
   })
 
-  const brushConfig = normalizeLinkedBrush(linkedBrush)
+  const normalizedLinkedBrush = typeof linkedBrush === "string"
+    ? linkedBrush
+    : linkedBrush ? { name: linkedBrush.name, xField: linkedBrush.rField } : undefined
+  const brushConfig = normalizeLinkedBrush(normalizedLinkedBrush)
   const rFieldStr = typeof valueAccessor === "string" ? valueAccessor : "value"
-  const brushHook = useBrushSelection({ name: brushConfig?.name || "__unused_swarm_brush__", xField: rFieldStr })
+  const brushHook = useBrushSelection({ name: brushConfig?.name || "__unused_swarm_brush__", xField: brushConfig?.xField || rFieldStr })
   const brushInteractionRef = useRef(brushHook.brushInteraction)
   brushInteractionRef.current = brushHook.brushInteraction
   const handleBrush = useCallback((extent: { r: [number, number] } | null) => {
-    const bi = brushInteractionRef.current
-    if (!extent) { bi.end(null) } else { bi.end(extent.r) }
+    if (brushConfig) {
+      const bi = brushInteractionRef.current
+      if (!extent) { bi.end(null) } else { bi.end(extent.r) }
+    }
     onBrushProp?.(extent)
-  }, [onBrushProp])
+  }, [onBrushProp, brushConfig])
   const hasBrush = !!(brushProp || linkedBrush || onBrushProp)
 
   if (setup.earlyReturn) return setup.earlyReturn
