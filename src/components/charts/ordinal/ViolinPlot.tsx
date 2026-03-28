@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -11,10 +11,10 @@ import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../T
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection, normalizeLinkedBrush } from "../shared/selectionUtils"
-import { useBrushSelection } from "../../store/useSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 
 export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -124,22 +124,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     height,
   })
 
-  const normalizedLinkedBrush = typeof linkedBrush === "string"
-    ? linkedBrush
-    : linkedBrush ? { name: linkedBrush.name, xField: linkedBrush.rField } : undefined
-  const brushConfig = normalizeLinkedBrush(normalizedLinkedBrush)
-  const rFieldStr = typeof valueAccessor === "string" ? valueAccessor : "value"
-  const brushHook = useBrushSelection({ name: brushConfig?.name || "__unused_violin_brush__", xField: brushConfig?.xField || rFieldStr })
-  const brushInteractionRef = useRef(brushHook.brushInteraction)
-  brushInteractionRef.current = brushHook.brushInteraction
-  const handleBrush = useCallback((extent: { r: [number, number] } | null) => {
-    if (brushConfig) {
-      const bi = brushInteractionRef.current
-      if (!extent) { bi.end(null) } else { bi.end(extent.r) }
-    }
-    onBrushProp?.(extent)
-  }, [onBrushProp, brushConfig])
-  const hasBrush = !!(brushProp || linkedBrush || onBrushProp)
+  const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
   if (setup.earlyReturn) return setup.earlyReturn
 
@@ -232,7 +217,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...(hasBrush && { brush: { dimension: "r" as const }, onBrush: handleBrush }),
+    ...ordinalBrush.brushStreamProps,
     ...frameProps
   }
 

@@ -1,3 +1,22 @@
+/**
+ * StreamOrdinalFrame — canvas-based ordinal chart renderer.
+ *
+ * Renders bar, stacked bar, grouped bar, pie/donut, swarm, box, violin,
+ * histogram, ridgeline, dot, funnel, and swimlane charts via a streaming
+ * pipeline backed by OrdinalPipelineStore.
+ *
+ * Key dependencies:
+ *   OrdinalPipelineStore  — data ingestion, scale computation, scene layout
+ *   DataSourceAdapter     — static vs streaming data source abstraction
+ *   OrdinalSVGOverlay     — annotations, axes, legends (SVG layer above canvas)
+ *   OrdinalBrushOverlay   — d3-brush SVG overlay for value-axis brushing
+ *   ordinalSceneBuilders/ — per-chartType layout algorithms
+ *   SceneToSVG            — SSR fallback (scene nodes → SVG elements)
+ *
+ * Consumed by: all ordinal HOC charts (BarChart, SwarmPlot, Histogram, etc.)
+ * via StreamOrdinalFrameProps. HOCs set chartType + style functions; the
+ * frame owns rendering, interaction, and accessibility.
+ */
 "use client"
 import * as React from "react"
 import {
