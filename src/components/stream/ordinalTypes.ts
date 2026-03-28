@@ -33,6 +33,7 @@ export type OrdinalChartType =
   | "timeline"
   | "funnel"
   | "bar-funnel"
+  | "swimlane"
 
 // ── Scales ─────────────────────────────────────────────────────────────
 
@@ -338,6 +339,14 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
   // Donut center content
   centerContent?: ReactNode
+
+  // ── Brush ─────────────────────────────────────
+  /** Brush configuration. "r" brushes the value axis. */
+  brush?: boolean | "r" | {
+    dimension?: "r"
+  }
+  /** Callback when brush selection changes. Extent is in data coordinates, or null when cleared. */
+  onBrush?: (extent: { r: [number, number] } | null) => void
 
   // Realtime encoding
   decay?: DecayConfig

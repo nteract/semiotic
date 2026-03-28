@@ -563,4 +563,55 @@ describe("StreamOrdinalFrame", () => {
       expect(frame.style.height).toBe("100%")
     })
   })
+
+  // ── Brush overlay ─────────────────────────────────────────────────────
+
+  describe("brush overlay", () => {
+    it("renders OrdinalBrushOverlay when brush prop is set", async () => {
+      const onBrush = vi.fn()
+      const { container } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={[{ cat: "A", val: 10 }, { cat: "B", val: 20 }]}
+          oAccessor="cat"
+          rAccessor="val"
+          brush={{ dimension: "r" }}
+          onBrush={onBrush}
+        />
+      )
+      // The brush overlay renders an SVG containing a g.brush-g element
+      const brushG = container.querySelector(".brush-g")
+      expect(brushG).toBeTruthy()
+    })
+
+    it("does not render brush overlay when brush is not set", () => {
+      const { container } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={[{ cat: "A", val: 10 }]}
+          oAccessor="cat"
+          rAccessor="val"
+        />
+      )
+      const brushG = container.querySelector(".brush-g")
+      expect(brushG).toBeFalsy()
+    })
+
+    it("does not render brush overlay for radial projection", () => {
+      const onBrush = vi.fn()
+      const { container } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={[{ cat: "A", val: 10 }]}
+          oAccessor="cat"
+          rAccessor="val"
+          projection="radial"
+          brush={{ dimension: "r" }}
+          onBrush={onBrush}
+        />
+      )
+      const brushG = container.querySelector(".brush-g")
+      expect(brushG).toBeFalsy()
+    })
+  })
 })

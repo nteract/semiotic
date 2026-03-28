@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
@@ -12,7 +12,8 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { wrapStyleWithSelection, normalizeLinkedBrush } from "../shared/selectionUtils"
+import { useBrushSelection } from "../../store/useSelection"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 
@@ -39,6 +40,12 @@ export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<stri
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Enable brush on the value axis */
+  brush?: boolean
+  /** Callback when brush selection changes */
+  onBrush?: (extent: { r: [number, number] } | null) => void
+  /** LinkedCharts brush integration */
+  linkedBrush?: string | { name: string; rField?: string }
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -73,7 +80,9 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10",
     sizeBy, sizeRange = [3, 8], pointRadius = 4, pointOpacity = 0.7,
-    categoryPadding = 20, tooltip, annotations, frameProps = {}, selection, linkedHover,
+    categoryPadding = 20, tooltip, annotations,
+    brush: brushProp, onBrush: onBrushProp, linkedBrush,
+    frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
     legendInteraction,
@@ -118,6 +127,23 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     width,
     height,
   })
+
+  const normalizedLinkedBrush = typeof linkedBrush === "string"
+    ? linkedBrush
+    : linkedBrush ? { name: linkedBrush.name, xField: linkedBrush.rField } : undefined
+  const brushConfig = normalizeLinkedBrush(normalizedLinkedBrush)
+  const rFieldStr = typeof valueAccessor === "string" ? valueAccessor : "value"
+  const brushHook = useBrushSelection({ name: brushConfig?.name || "__unused_swarm_brush__", xField: brushConfig?.xField || rFieldStr })
+  const brushInteractionRef = useRef(brushHook.brushInteraction)
+  brushInteractionRef.current = brushHook.brushInteraction
+  const handleBrush = useCallback((extent: { r: [number, number] } | null) => {
+    if (brushConfig) {
+      const bi = brushInteractionRef.current
+      if (!extent) { bi.end(null) } else { bi.end(extent.r) }
+    }
+    onBrushProp?.(extent)
+  }, [onBrushProp, brushConfig])
+  const hasBrush = !!(brushProp || linkedBrush || onBrushProp)
 
   if (setup.earlyReturn) return setup.earlyReturn
 
@@ -189,6 +215,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(hasBrush && { brush: { dimension: "r" as const }, onBrush: handleBrush }),
     ...frameProps
   }
 

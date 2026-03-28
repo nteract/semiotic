@@ -44,6 +44,7 @@ import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
 import FunnelChartPage from "./pages/charts/FunnelChartPage"
+import SwimlaneChartPage from "./pages/charts/SwimlaneChartPage"
 import TreemapPage from "./pages/charts/TreemapPage"
 import CirclePackPage from "./pages/charts/CirclePackPage"
 import ChoroplethMapPage from "./pages/charts/ChoroplethMapPage"
@@ -420,6 +421,7 @@ export default function DocsApp() {
               <Route path="donut-chart" element={<DonutChartPage />} />
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
               <Route path="funnel-chart" element={<FunnelChartPage />} />
+              <Route path="swimlane-chart" element={<SwimlaneChartPage />} />
               <Route path="realtime-bar-chart" element={<RealtimeHistogramPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />

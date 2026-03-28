@@ -83,6 +83,9 @@ export type { DonutChartProps } from "./ordinal/DonutChart"
 export { GroupedBarChart } from "./ordinal/GroupedBarChart"
 export type { GroupedBarChartProps } from "./ordinal/GroupedBarChart"
 
+export { SwimlaneChart } from "./ordinal/SwimlaneChart"
+export type { SwimlaneChartProps } from "./ordinal/SwimlaneChart"
+
 // ============================================================================
 // Network Charts (based on NetworkFrame)
 // ============================================================================

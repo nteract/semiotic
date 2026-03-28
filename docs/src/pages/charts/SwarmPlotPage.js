@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect, useState, useCallback } from "react"
 import { SwarmPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -141,6 +141,47 @@ function StreamingSwarmDemo({ width }) {
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Brush + Zoom demo
+// ---------------------------------------------------------------------------
+
+// Denser data for the brush demo
+const brushSwarmData = [
+  ...Array.from({ length: 40 }, () => ({ category: "Control", value: 20 + Math.random() * 20, trial: Math.random() > 0.5 ? "A" : "B" })),
+  ...Array.from({ length: 40 }, () => ({ category: "Treatment", value: 28 + Math.random() * 25, trial: Math.random() > 0.5 ? "A" : "B" })),
+  ...Array.from({ length: 40 }, () => ({ category: "Placebo", value: 18 + Math.random() * 22, trial: Math.random() > 0.5 ? "A" : "B" })),
+]
+
+function SwarmBrushDemo() {
+  const [brushExtent, setBrushExtent] = useState(null)
+  const handleBrush = useCallback((extent) => setBrushExtent(extent), [])
+
+  const sharedProps = {
+    data: brushSwarmData,
+    categoryAccessor: "category",
+    valueAccessor: "value",
+    colorBy: "trial",
+    colorScheme: ["#007bff", "#fd7e14"],
+    pointRadius: 3,
+    showGrid: true,
+  }
+
+  return (
+    <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)" }}>
+      <div style={{ marginBottom: 4, fontSize: 12, color: "var(--text-2)" }}>
+        Drag to select a value range {brushExtent && `\u2014 ${brushExtent.r[0].toFixed(1)}\u2013${brushExtent.r[1].toFixed(1)}`}
+      </div>
+      <SwarmPlot {...sharedProps} brush onBrush={handleBrush} height={160} showLegend />
+      <div style={{ marginTop: 8, marginBottom: 4, fontSize: 12, color: "var(--text-2)" }}>
+        {brushExtent ? "Detail view" : "Detail view (brush above to zoom)"}
+      </div>
+      <SwarmPlot {...sharedProps} height={250} showLegend={false}
+        frameProps={brushExtent ? { rExtent: [brushExtent.r[0], brushExtent.r[1]] } : undefined}
+      />
+    </div>
+  )
+}
+
 const swarmPlotProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with category and value fields." },
   { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Field name or function to access category values." },
@@ -164,6 +205,9 @@ const swarmPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
+  { name: "brush", type: "boolean", required: false, default: null, description: "Enable value-axis brush selection." },
+  { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { r: [min, max] } or null when brush clears." },
+  { name: "linkedBrush", type: "string | object", required: false, default: null, description: "LinkedCharts brush integration name." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
@@ -329,6 +373,30 @@ export default function SwarmPlotPage() {
         }}
         hiddenProps={{}}
       />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Brush + Zoom */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="brush-zoom">Brush + Zoom</h2>
+
+      <p>
+        Enable <code>brush</code> on an overview to select a value range, then
+        pass it as <code>frameProps.rExtent</code> to a detail chart to zoom in.
+      </p>
+
+      <SwarmBrushDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`const [extent, setExtent] = useState(null)
+
+<SwarmPlot data={data} brush onBrush={setExtent} height={160} />
+<SwarmPlot data={data}
+  frameProps={extent ? { rExtent: extent.r } : undefined}
+  height={250}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

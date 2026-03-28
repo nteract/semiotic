@@ -21,6 +21,7 @@ import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelin
 import { buildTimelineScene } from "./ordinalSceneBuilders/timelineScene"
 import { buildFunnelScene } from "./ordinalSceneBuilders/funnelScene"
 import { buildBarFunnelScene } from "./ordinalSceneBuilders/barFunnelScene"
+import { buildSwimlaneScene } from "./ordinalSceneBuilders/swimlaneScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
 
@@ -38,6 +39,7 @@ const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
   timeline: buildTimelineScene,
   funnel: buildFunnelScene,
   "bar-funnel": buildBarFunnelScene,
+  swimlane: buildSwimlaneScene,
 }
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
@@ -439,6 +441,17 @@ export class OrdinalPipelineStore {
         if (s > max) max = s
         if (s < min) min = s
       }
+    } else if (chartType === "swimlane") {
+      // Swimlane: items stack sequentially per lane — domain covers max lane sum
+      const laneSums = new Map<string, number>()
+      for (const d of data) {
+        const cat = this.getO(d)
+        const val = Math.abs(this.getR(d))
+        laneSums.set(cat, (laneSums.get(cat) || 0) + val)
+      }
+      for (const s of laneSums.values()) {
+        if (s > max) max = s
+      }
     } else if (chartType === "clusterbar" || chartType === "bar-funnel") {
       // Cluster bars / bar-funnel: individual values (side-by-side grouping)
       for (const d of data) {
@@ -468,10 +481,12 @@ export class OrdinalPipelineStore {
       if (this.config.rExtent?.[1] == null) max += padAmount
     }
 
-    // Bars should include zero
-    if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel") {
-      if (min > 0) min = 0
-      if (max < 0) max = 0
+    // Bars should include zero (unless user explicitly set rExtent)
+    if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane") {
+      if (!(this.config.rExtent?.[0] != null || this.config.rExtent?.[1] != null)) {
+        if (min > 0) min = 0
+        if (max < 0) max = 0
+      }
     }
 
     return [min, max]

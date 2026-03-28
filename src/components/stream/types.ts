@@ -465,6 +465,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   brush?: {
     /** Which dimension(s) to brush: "x", "y", or "xy" (default "xy") */
     dimension?: "x" | "y" | "xy"
+    /** Snap mode: "continuous" (default) for pixel-precise, "bin" to snap to bin boundaries */
+    snap?: "continuous" | "bin"
   }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
