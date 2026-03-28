@@ -16,7 +16,7 @@ import type {
   RealtimeNode,
   RealtimeEdge
 } from "../networkTypes"
-import { resolveChildrenAccessor, resolveNodeId, resolveDefaultNodeSize } from "./hierarchyUtils"
+import { resolveChildrenAccessor, resolveNodeId } from "./hierarchyUtils"
 import {
   buildTreeScene,
   buildRectScene,

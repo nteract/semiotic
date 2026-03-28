@@ -18,7 +18,8 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Record<string, an
 
   const arr = data.filter(d => {
     const v = ctx.getY(d)
-    return v != null && !Number.isNaN(v)
+    const t = ctx.getX(d)
+    return v != null && !Number.isNaN(v) && t != null && isFinite(t as number)
   })
   if (arr.length === 0) return nodes
 

@@ -18,9 +18,16 @@ export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[])
   const yDomain = ctx.scales.y.domain() as [number, number]
   const baseline = yDomain[0]
 
+  const y0Get = ctx.getY0
+    ? (d: Record<string, any>): number => {
+        const value = ctx.getY0!(d)
+        return value == null ? baseline : value
+      }
+    : undefined
+
   for (const g of groups) {
     const style = ctx.resolveAreaStyle(g.key, g.data[0])
-    const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, ctx.getY0 as ((d: Record<string, any>) => number) | undefined)
+    const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
     if (ctx.config.gradientFill) {
       node.fillGradient = ctx.config.gradientFill as any
     }

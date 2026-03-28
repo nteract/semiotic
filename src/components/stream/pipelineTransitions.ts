@@ -193,7 +193,7 @@ export function startTransition(
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, r: node.r }
         node._targetOpacity = node.style.opacity ?? 1
-        if (prev.x !== target.x || prev.y !== target.y) {
+        if (prev.x !== target.x || prev.y !== target.y || prev.r !== target.r) {
           node._targetX = target.x
           node._targetY = target.y
           node._targetR = target.r
@@ -233,7 +233,7 @@ export function startTransition(
         matchedPrevKeys.add(key)
         const target = { x: node.x, y: node.y, w: node.w, h: node.h }
         node._targetOpacity = node.style?.opacity ?? 1
-        if (prev.x !== target.x || prev.y !== target.y) {
+        if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
           node._targetX = target.x
           node._targetY = target.y
           node._targetW = target.w

@@ -110,10 +110,12 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
   for (const d of data) {
     const xVal = ctx.getX(d)
     const yVal = ctx.getY(d)
+    if (!isFinite(xVal) || !isFinite(yVal)) continue
     const xi = Math.min(Math.floor((xVal - xMin) / xBinSize), xBins - 1)
     const yi = Math.min(Math.floor((yVal - yMin) / yBinSize), yBins - 1)
     if (xi < 0 || yi < 0) continue
 
+    const val = getVal(d)
     const key = `${xi}_${yi}`
     let cell = grid.get(key)
     if (!cell) {
@@ -121,7 +123,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
       grid.set(key, cell)
     }
     cell.count++
-    cell.sum += getVal(d)
+    cell.sum += isFinite(val) ? val : 0
     cell.data.push(d)
   }
 
