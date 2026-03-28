@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from "react"
+import React, { useRef, useEffect, useState, useCallback } from "react"
 import { SwimlaneChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"

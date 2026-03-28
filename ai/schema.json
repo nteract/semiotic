@@ -4504,6 +4504,134 @@
           ]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "SwimlaneChart",
+        "description": "Categorical lanes with sequentially stacked items colored by subcategory. Unlike StackedBarChart, the same subcategory can appear multiple times in the same lane — items stack left-to-right (horizontal) or bottom-to-top (vertical) in data order. Supports brush for value-axis selection and push API for streaming.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of data objects. Omit for push API mode."
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Key for lane categories (swim lanes)",
+              "default": "category"
+            },
+            "subcategoryAccessor": {
+              "type": "string",
+              "description": "Key for item subcategory (color grouping within lanes). Required. Duplicate subcategories in the same lane stack sequentially."
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for item size/duration along the value axis",
+              "default": "value"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding. Defaults to subcategoryAccessor."
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "Named d3 color scheme or array of color strings"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["horizontal", "vertical"],
+              "description": "Horizontal renders lanes as rows; vertical as columns.",
+              "default": "horizontal"
+            },
+            "barPadding": {
+              "type": "number",
+              "description": "Padding between lanes in pixels",
+              "default": 40
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable value-axis brush selection"
+            },
+            "onBrush": {
+              "type": "function",
+              "description": "Callback with { r: [min, max] } or null when brush clears"
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush integration name"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show lane labels on the category axis"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart.",
+              "items": {
+                "type": "object"
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Chart margins: { top, right, bottom, left }"
+            },
+            "responsiveWidth": {
+              "type": "boolean",
+              "description": "Auto-resize to container width"
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config."
+            },
+            "showLegend": {
+              "type": "boolean",
+              "description": "Show legend (auto-enabled with colorBy)"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "default": "right"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "subcategoryAccessor"
+          ]
+        }
+      }
     }
   ]
 }

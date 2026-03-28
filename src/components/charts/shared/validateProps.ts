@@ -462,6 +462,28 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  SwimlaneChart: {
+    required: ["subcategoryAccessor"],
+    dataShape: "array",
+    dataAccessors: ["categoryAccessor", "subcategoryAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      categoryAccessor: { type: ["string", "function"] },
+      subcategoryAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      orientation: { type: "string", enum: ["horizontal", "vertical"] as unknown as string[] },
+      barPadding: { type: "number" },
+      showCategoryTicks: { type: "boolean" },
+      brush: { type: "boolean" },
+      onBrush: { type: "function" },
+      linkedBrush: { type: ["string", "object"] },
+      responsiveWidth: { type: "boolean" },
+      legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as unknown as string[] },
+    },
+  },
+
   // -- Network Charts --
   ForceDirectedGraph: {
     required: ["nodes", "edges"],

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from "react"
+import React, { useRef, useEffect, useState, useMemo } from "react"
 import { RealtimeTemporalHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
