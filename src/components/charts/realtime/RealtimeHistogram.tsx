@@ -363,7 +363,7 @@ export const RealtimeTemporalHistogram = forwardRef(
         staleness={staleness}
         transition={transition}
         legendPosition={legendPositionProp}
-        brush={normalizedBrush}
+        brush={normalizedBrush || (linkedBrush ? { dimension: "x" as const } : undefined)}
         onBrush={(normalizedBrush || linkedBrush) ? combinedOnBrush : undefined}
       />
     )

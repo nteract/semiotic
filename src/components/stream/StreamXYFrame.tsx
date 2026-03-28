@@ -364,7 +364,7 @@ function BrushOverlay({
       }
 
       // Snap to bin boundaries on "end" event only (avoids jitter during drag)
-      if (event.type === "end" && snap === "bin" && binSize && binSize > 0) {
+      if (event.type === "end" && snap === "bin" && binSize && binSize > 0 && dimension !== "y") {
         xRange = [
           Math.floor(xRange[0] / binSize) * binSize,
           Math.ceil(xRange[1] / binSize) * binSize

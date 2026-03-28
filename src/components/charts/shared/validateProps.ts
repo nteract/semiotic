@@ -326,6 +326,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       pointRadius: { type: "number" },
       pointOpacity: { type: "number" },
       categoryPadding: { type: "number" },
+      brush: { type: "boolean" },
+      onBrush: { type: "function" },
+      linkedBrush: { type: ["string", "object"] },
     },
   },
 
@@ -359,6 +362,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       bins: { type: "number" },
       relative: { type: "boolean" },
       categoryPadding: { type: "number" },
+      brush: { type: "boolean" },
+      onBrush: { type: "function" },
+      linkedBrush: { type: ["string", "object"] },
     },
   },
 
@@ -377,6 +383,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       curve: { type: "string" },
       showIQR: { type: "boolean" },
       categoryPadding: { type: "number" },
+      brush: { type: "boolean" },
+      onBrush: { type: "function" },
+      linkedBrush: { type: ["string", "object"] },
     },
   },
 
