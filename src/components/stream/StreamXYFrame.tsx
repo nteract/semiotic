@@ -282,6 +282,12 @@ interface BrushOverlayProps {
   dimension: "x" | "y" | "xy"
   scales: StreamScales | null
   onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  /** Bin size for snap="bin" mode */
+  binSize?: number
+  /** Snap mode: "continuous" (default) or "bin" to snap to bin boundaries */
+  snap?: "continuous" | "bin"
+  /** Whether the chart is in streaming mode — enables brush tracking as data scrolls */
+  streaming?: boolean
 }
 
 function BrushOverlay({
@@ -292,7 +298,10 @@ function BrushOverlay({
   margin,
   dimension,
   scales,
-  onBrush
+  onBrush,
+  binSize,
+  snap,
+  streaming
 }: BrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const brushRef = useRef<any>(null)
@@ -303,6 +312,12 @@ function BrushOverlay({
   onBrushRef.current = onBrush
   const scalesRef = useRef(scales)
   scalesRef.current = scales
+
+  // Guard against re-entrant brush events from programmatic .move() calls
+  const isProgrammaticMoveRef = useRef(false)
+
+  // Track active brush extent in data coordinates for streaming tracking
+  const activeBrushExtentRef = useRef<{ x: [number, number]; y: [number, number] } | null>(null)
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -319,10 +334,14 @@ function BrushOverlay({
     brushFn.extent([[0, 0], [width, height]])
 
     brushFn.on("brush end", (event: any) => {
+      // Skip events triggered by our own programmatic .move() calls
+      if (isProgrammaticMoveRef.current) return
+
       const s = scalesRef.current
       if (!s) return
 
       if (!event.selection) {
+        activeBrushExtentRef.current = null
         onBrushRef.current(null)
         return
       }
@@ -344,7 +363,28 @@ function BrushOverlay({
         yRange = [s.y.invert(py1), s.y.invert(py0)]
       }
 
-      onBrushRef.current({ x: xRange, y: yRange })
+      // Snap to bin boundaries on "end" event only (avoids jitter during drag)
+      if (event.type === "end" && snap === "bin" && binSize && binSize > 0) {
+        xRange = [
+          Math.floor(xRange[0] / binSize) * binSize,
+          Math.ceil(xRange[1] / binSize) * binSize
+        ]
+        // Programmatically move the d3 brush to snapped pixel positions
+        const snappedPx0 = s.x(xRange[0])
+        const snappedPx1 = s.x(xRange[1])
+        isProgrammaticMoveRef.current = true
+        if (dimension === "x") {
+          g.call(brushFn.move as any, [snappedPx0, snappedPx1])
+        } else if (dimension === "xy") {
+          const sel = event.selection as [[number, number], [number, number]]
+          g.call(brushFn.move as any, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
+        }
+        isProgrammaticMoveRef.current = false
+      }
+
+      const extent = { x: xRange, y: yRange }
+      activeBrushExtentRef.current = extent
+      onBrushRef.current(extent)
     })
 
     g.call(brushFn as any)
@@ -361,7 +401,70 @@ function BrushOverlay({
       brushFn.on("brush end", null)
       brushRef.current = null
     }
-  }, [width, height, dimension])
+  }, [width, height, dimension, snap, binSize])
+
+  // Streaming brush tracking: reposition brush as scale domain shifts
+  useEffect(() => {
+    if (!streaming || !scales || !brushRef.current || !activeBrushExtentRef.current) return
+    if (!svgRef.current) return
+
+    const ext = activeBrushExtentRef.current
+    const domain = scales.x.domain() as [number, number]
+    const visibleMin = domain[0]
+
+    const g = d3Select(svgRef.current).select(".brush-g")
+
+    // Brush fully off-screen (scrolled away)
+    if (ext.x[1] <= visibleMin) {
+      isProgrammaticMoveRef.current = true
+      g.call(brushRef.current.move as any, null)
+      isProgrammaticMoveRef.current = false
+      activeBrushExtentRef.current = null
+      onBrushRef.current(null)
+      return
+    }
+
+    // Determine effective left edge (shrink if partially off-screen)
+    let effectiveMin = ext.x[0]
+    let extentChanged = false
+
+    if (ext.x[0] < visibleMin) {
+      effectiveMin = visibleMin
+      if (snap === "bin" && binSize && binSize > 0) {
+        effectiveMin = Math.ceil(visibleMin / binSize) * binSize
+      }
+      // If shrunk to nothing, clear
+      if (effectiveMin >= ext.x[1]) {
+        isProgrammaticMoveRef.current = true
+        g.call(brushRef.current.move as any, null)
+        isProgrammaticMoveRef.current = false
+        activeBrushExtentRef.current = null
+        onBrushRef.current(null)
+        return
+      }
+      extentChanged = true
+    }
+
+    // Always reposition the d3 brush to match data coordinates under the new scale
+    const px0 = scales.x(effectiveMin)
+    const px1 = scales.x(ext.x[1])
+
+    isProgrammaticMoveRef.current = true
+    if (dimension === "x") {
+      g.call(brushRef.current.move as any, [px0, px1])
+    } else {
+      const py0 = scales.y(ext.y[1])
+      const py1 = scales.y(ext.y[0])
+      g.call(brushRef.current.move as any, [[px0, py0], [px1, py1]])
+    }
+    isProgrammaticMoveRef.current = false
+
+    if (extentChanged) {
+      const newExtent = { x: [effectiveMin, ext.x[1]] as [number, number], y: ext.y }
+      activeBrushExtentRef.current = newExtent
+      onBrushRef.current(newExtent)
+    }
+  }, [scales, streaming, dimension, snap, binSize])
 
   return (
     <svg
@@ -1366,6 +1469,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             dimension={brush?.dimension ?? "xy"}
             scales={currentScales}
             onBrush={onBrush ?? (() => {})}
+            binSize={binSize}
+            snap={brush?.snap}
+            streaming={runtimeMode === "streaming"}
           />
         )}
         {staleness?.showBadge && (

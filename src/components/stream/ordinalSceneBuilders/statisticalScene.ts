@@ -229,6 +229,8 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, layout: OrdinalLay
 
     const counts = new Array(numBins).fill(0)
     for (const v of values) {
+      // Skip values outside the visible domain (avoids piling into edge bins when rExtent is set)
+      if (v < vMin || v > vMax) continue
       const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
       counts[idx]++
     }
@@ -290,6 +292,8 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, layout: OrdinalLay
     // Build histogram bins
     const counts = new Array(numBins).fill(0)
     for (const v of values) {
+      // Skip values outside the visible domain (avoids piling into edge bins when rExtent is set)
+      if (v < vMin || v > vMax) continue
       const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
       counts[idx]++
     }

@@ -3,9 +3,9 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor, getSize } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -16,29 +16,46 @@ import { wrapStyleWithSelection, normalizeLinkedBrush } from "../shared/selectio
 import { useBrushSelection } from "../../store/useSelection"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 
-export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+  /** Data array. Omit for push API mode. */
   data?: TDatum[]
+  /** Accessor for lane categories (swim lanes). Default "category". */
   categoryAccessor?: ChartAccessor<TDatum, string>
+  /** Accessor for item subcategory (color grouping within lanes). Required. */
+  subcategoryAccessor: ChartAccessor<TDatum, string>
+  /** Accessor for item size/duration. Default "value". */
   valueAccessor?: ChartAccessor<TDatum, number>
+  /** Orientation: "horizontal" renders lanes as rows (default), "vertical" as columns. */
   orientation?: "vertical" | "horizontal"
+  /** Label for the category axis */
   categoryLabel?: string
+  /** Label for the value axis */
   valueLabel?: string
+  /** Format function for value axis ticks */
   valueFormat?: (d: number | string) => string
+  /** Color accessor — defaults to subcategoryAccessor */
   colorBy?: ChartAccessor<TDatum, string>
+  /** Color scheme for subcategories */
   colorScheme?: string | string[]
-  sizeBy?: ChartAccessor<TDatum, number>
-  sizeRange?: [number, number]
-  pointRadius?: number
-  pointOpacity?: number
-  categoryPadding?: number
+  /** Padding between lanes in pixels */
+  barPadding?: number
+  /** Enable hover annotations */
   enableHover?: boolean
+  /** Show grid lines */
   showGrid?: boolean
+  /** Show category axis tick labels */
   showCategoryTicks?: boolean
+  /** Show legend */
   showLegend?: boolean
+  /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
-  legendPosition?: LegendPosition
+  /** Legend position */
+  legendPosition?: "right" | "left" | "top" | "bottom"
+  /** Tooltip configuration */
   tooltip?: TooltipProp
+  /** Annotation objects */
   annotations?: Record<string, any>[]
   /** Enable brush on the value axis */
   brush?: boolean
@@ -46,10 +63,11 @@ export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<stri
   onBrush?: (extent: { r: [number, number] } | null) => void
   /** LinkedCharts brush integration */
   linkedBrush?: string | { name: string; rField?: string }
+  /** Pass-through props to StreamOrdinalFrame */
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Record<string, any> = Record<string, any>>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -67,28 +85,28 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
 
   const {
     data, margin: userMargin, className,
-    categoryAccessor = "category", valueAccessor = "value",
-    orientation = "vertical", valueFormat,
-    colorBy, colorScheme = "category10",
-    sizeBy, sizeRange = [3, 8], pointRadius = 4, pointOpacity = 0.7,
-    categoryPadding = 20, tooltip, annotations,
-    brush: brushProp, onBrush: onBrushProp, linkedBrush,
-    frameProps = {}, selection, linkedHover,
+    categoryAccessor = "category",
+    subcategoryAccessor,
+    valueAccessor = "value",
+    orientation = "horizontal",
+    valueFormat,
+    colorBy,
+    colorScheme = "category10",
+    barPadding = 40,
+    tooltip, annotations,
+    brush: brushProp,
+    onBrush: onBrushProp,
+    linkedBrush,
+    frameProps = {},
+    selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
-    showCategoryTicks
   } = props
 
   const width = resolved.width
@@ -104,20 +122,49 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   const valueLabel = resolved.valueLabel
 
   const safeData = data || []
+  const actualColorBy = colorBy || subcategoryAccessor
+  const isPushMode = data === undefined
+
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy: actualColorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+  })
+
+  const wrappedPush = useCallback(
+    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    [streaming.wrapPush]
+  )
+  const wrappedPushMany = useCallback(
+    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
+    [streaming.wrapPushMany]
+  )
+
+  useImperativeHandle(ref, () => ({
+    push: wrappedPush,
+    pushMany: wrappedPushMany,
+    clear: () => {
+      streaming.resetCategories()
+      frameRef.current?.clear()
+    },
+    getData: () => frameRef.current?.getData() ?? []
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   const setup = useChartSetup({
     data: safeData,
     rawData: data,
-    colorBy,
+    colorBy: actualColorBy,
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
+    fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
     unwrapData: true,
     onObservation,
-    chartType: "SwarmPlot",
+    chartType: "SwimlaneChart",
     chartId,
     showLegend,
     userMargin,
@@ -128,37 +175,47 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     height,
   })
 
+  // ── Brush wiring ──────────────────────────────────────────────────────
   const brushConfig = normalizeLinkedBrush(linkedBrush)
   const rFieldStr = typeof valueAccessor === "string" ? valueAccessor : "value"
-  const brushHook = useBrushSelection({ name: brushConfig?.name || "__unused_swarm_brush__", xField: rFieldStr })
+
+  const brushHook = useBrushSelection({
+    name: brushConfig?.name || "__unused_ordinal_brush__",
+    xField: rFieldStr,
+  })
+
   const brushInteractionRef = useRef(brushHook.brushInteraction)
   brushInteractionRef.current = brushHook.brushInteraction
-  const handleBrush = useCallback((extent: { r: [number, number] } | null) => {
-    const bi = brushInteractionRef.current
-    if (!extent) { bi.end(null) } else { bi.end(extent.r) }
-    onBrushProp?.(extent)
-  }, [onBrushProp])
+
+  const handleBrush = useCallback(
+    (extent: { r: [number, number] } | null) => {
+      const bi = brushInteractionRef.current
+      if (!extent) {
+        bi.end(null)
+      } else {
+        bi.end(extent.r)
+      }
+      onBrushProp?.(extent)
+    },
+    [onBrushProp]
+  )
+
   const hasBrush = !!(brushProp || linkedBrush || onBrushProp)
 
   if (setup.earlyReturn) return setup.earlyReturn
-
-  const sizeDomain = useMemo(() => {
-    if (!sizeBy) return undefined
-    const sizes = safeData.map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [safeData, sizeBy])
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      baseStyle.r = sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius
-      return baseStyle
+      if (actualColorBy) {
+        if (setup.colorScale) return { fill: getColor(d, actualColorBy, setup.colorScale) }
+        return {}
+      }
+      return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
     }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [actualColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -167,39 +224,62 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({
-      categoryAccessor,
+      categoryAccessor: subcategoryAccessor,
       valueAccessor,
-      groupAccessor: colorBy ? colorBy : undefined,
+      groupAccessor: categoryAccessor,
     }),
-    [categoryAccessor, valueAccessor, colorBy]
+    [subcategoryAccessor, categoryAccessor, valueAccessor]
   )
 
-  const error = validateArrayData({
-    componentName: "SwarmPlot", data: data,
+  const validationError = validateArrayData({
+    componentName: "SwimlaneChart", data: data,
     accessors: { categoryAccessor, valueAccessor },
+    requiredProps: { subcategoryAccessor },
   })
-  if (error) return <ChartError componentName="SwarmPlot" message={error} width={width} height={height} />
+
+  const effectiveLegendProps = useMemo(() => {
+    if (streaming.streamingLegend) {
+      return {
+        ...setup.legendBehaviorProps,
+        legend: streaming.streamingLegend,
+        legendPosition: legendPositionProp || setup.legendPosition,
+      }
+    }
+    return setup.legendBehaviorProps
+  }, [setup.legendBehaviorProps, setup.legendPosition, streaming.streamingLegend, legendPositionProp])
+
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...setup.margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return setup.margin
+  }, [setup.margin, streaming.streamingMarginAdjust])
 
   const streamProps: StreamOrdinalFrameProps = {
-    chartType: "swarm",
+    chartType: "swimlane",
     ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
+    stackBy: subcategoryAccessor,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     pieceStyle,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: setup.margin,
-    barPadding: categoryPadding,
+    margin: effectiveMargin,
+    barPadding,
     enableHover,
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
     showGrid,
-    showCategoryTicks,
-    ...setup.legendBehaviorProps,
+    ...effectiveLegendProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
@@ -214,9 +294,11 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     ...frameProps
   }
 
-  return <SafeRender componentName="SwarmPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  if (validationError) return <ChartError componentName="SwimlaneChart" message={validationError} width={width} height={height} />
+
+  return <SafeRender componentName="SwimlaneChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Record<string, any> = Record<string, any>>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-SwarmPlot.displayName = "SwarmPlot"
+SwimlaneChart.displayName = "SwimlaneChart"

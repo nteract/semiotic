@@ -11,6 +11,7 @@ export { StreamOrdinalFrame }
 export { BarChart } from "./charts/ordinal/BarChart"
 export { StackedBarChart } from "./charts/ordinal/StackedBarChart"
 export { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
+export { SwimlaneChart } from "./charts/ordinal/SwimlaneChart"
 export { SwarmPlot } from "./charts/ordinal/SwarmPlot"
 export { BoxPlot } from "./charts/ordinal/BoxPlot"
 export { Histogram } from "./charts/ordinal/Histogram"

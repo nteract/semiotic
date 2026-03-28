@@ -43,6 +43,7 @@
 **PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode)
 **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"), `categoryAccessor` (optional), `colorBy`, `connectorOpacity` (0.3), `orientation` ("horizontal"|"vertical"). Horizontal: centered bars with trapezoid connectors. Vertical: bars with diagonal hatch for dropoff. Multi-category: `categoryAccessor="channel"` mirrors (horizontal) or groups (vertical).
+**SwimlaneChart** — `data`, `categoryAccessor` ("category"), `subcategoryAccessor` (required), `valueAccessor` ("value"), `colorBy` (defaults to subcategoryAccessor), `colorScheme`, `orientation` ("horizontal"|"vertical"), `barPadding` (40). Renders categorical lanes with items stacked sequentially — unlike StackedBarChart, the same subcategory can appear multiple times in the same lane. Items stack left-to-right (horizontal) or bottom-to-top (vertical) in data order. Wraps StreamOrdinalFrame with `chartType="swimlane"`. Supports push API for streaming.
 
 All ordinal HOCs support `colorBy` and `colorScheme`. `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
@@ -89,13 +90,15 @@ Push API: `chartRef.current.push({ time, value })`
 **IMPORTANT**: All pushed data must include a time field (default: `"time"`). Set `timeAccessor` if your field differs. Without valid time field, charts render blank.
 
 **RealtimeLineChart** — `timeAccessor` ("time"), `valueAccessor` ("value"), `windowSize` (200), `windowMode`, `stroke`, `strokeWidth`
-**RealtimeHistogram** — `binSize` (required), `timeAccessor`, `valueAccessor`, `categoryAccessor`, `colors`
+**RealtimeHistogram** — `binSize` (required), `timeAccessor`, `valueAccessor`, `categoryAccessor`, `colors`, `brush` (boolean|"x"|object, defaults to `{ dimension: "x", snap: "bin" }` when `true`), `onBrush`, `linkedBrush` (cross-chart coordination)
 **RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`, `radius`, `opacity`
 **RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
 **RealtimeHeatmap** — `timeAccessor`, `valueAccessor`, `heatmapXBins`, `heatmapYBins`, `aggregation`
 **Streaming Sankey** — `StreamNetworkFrame` with `chartType="sankey"`, `showParticles`, `particleStyle`. Push individual edges: `ref.current.push({ source, target, value })`.
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
+
+All Realtime* charts accept `data` props for static mode (no push API needed). RealtimeHistogram brush supports bin-snapping (`snap: "bin"`) and streaming tracking — the brush shrinks as selected bins scroll off and auto-clears when fully evicted.
 
 ### Push API on HOC charts
 Most HOC charts support push via `forwardRef`. **Omit** `data`/`nodes`/`edges` — do NOT pass `data={[]}`.

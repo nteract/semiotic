@@ -47,7 +47,8 @@ const navData = [
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
           { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
-          { title: "Funnel Chart", path: "/charts/funnel-chart" }
+          { title: "Funnel Chart", path: "/charts/funnel-chart" },
+          { title: "Swimlane Chart", path: "/charts/swimlane-chart" }
         ]
       },
       {

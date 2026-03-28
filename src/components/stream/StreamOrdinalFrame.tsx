@@ -28,6 +28,7 @@ import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
+import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
@@ -66,7 +67,8 @@ const RENDERERS: Record<OrdinalChartType, OrdinalRendererFn[]> = {
   ridgeline: withConnectors([violinCanvasRenderer as any]),
   timeline: withConnectors([barCanvasRenderer as any]),
   funnel: [barCanvasRenderer as any, trapezoidCanvasRenderer as any, funnelLabelRenderer as any],
-  "bar-funnel": [barCanvasRenderer as any, barFunnelHatchRenderer as any, barFunnelLabelRenderer as any]
+  "bar-funnel": [barCanvasRenderer as any, barFunnelHatchRenderer as any, barFunnelLabelRenderer as any],
+  swimlane: withConnectors([barCanvasRenderer as any])
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -263,6 +265,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pulse,
       transition,
       staleness,
+      brush,
+      onBrush: onBrushProp,
       accessibleTable = true,
       description,
       summary
@@ -679,6 +683,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       const isRadial = projection === "radial"
 
+      // Clip to chart area so items outside rExtent don't overflow
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(margin.left, margin.top, adjustedWidth, adjustedHeight)
+      ctx.clip()
+
       if (isRadial) {
         // Radial: translate to center of chart area
         ctx.save()
@@ -698,6 +708,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (isRadial) {
         ctx.restore()
       }
+
+      // Restore clip
+      ctx.restore()
 
       // Reset alpha after staleness dimming
       if (currentlyStale) {
@@ -968,6 +981,19 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           annotationData={storeRef.current?.getData()}
           underlayRendered
         />
+
+        {/* Brush overlay */}
+        {(brush || onBrushProp) && (
+          <OrdinalBrushOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            scales={currentScales}
+            onBrush={onBrushProp || (() => {})}
+          />
+        )}
 
         {/* Donut center content */}
         {centerContent && projection === "radial" && (

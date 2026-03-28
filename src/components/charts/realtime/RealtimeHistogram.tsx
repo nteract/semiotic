@@ -21,6 +21,8 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import { normalizeLinkedBrush } from "../shared/selectionUtils"
+import { useBrushSelection } from "../../store/useSelection"
 
 export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, any> = Record<string, any>> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -111,6 +113,12 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   loading?: boolean
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
+  /** Brush configuration. `true` defaults to `{ dimension: "x", snap: "bin" }`. */
+  brush?: boolean | "x" | { dimension?: "x" | "y" | "xy"; snap?: "continuous" | "bin" }
+  /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  /** Linked brush for cross-chart coordination via LinkedCharts */
+  linkedBrush?: string | { name: string; xField?: string; yField?: string }
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
   /** Show a legend */
@@ -201,6 +209,9 @@ export const RealtimeTemporalHistogram = forwardRef(
       emptyContent,
       emphasis,
       legendPosition: legendPositionProp,
+      brush: brushProp,
+      onBrush: userOnBrush,
+      linkedBrush,
     } = props
 
     const showAxes = resolved.showAxes
@@ -223,6 +234,73 @@ export const RealtimeTemporalHistogram = forwardRef(
         linkedHoverBehavior(d)
       },
       [onHover, linkedHoverBehavior]
+    )
+
+    // ── Brush wiring ──
+    // Normalize brush prop: true defaults to x-dimension with bin snapping
+    const normalizedBrush = brushProp === true
+      ? { dimension: "x" as const, snap: "bin" as const }
+      : brushProp === "x"
+        ? { dimension: "x" as const }
+        : typeof brushProp === "object"
+          ? brushProp
+          : undefined
+
+    // LinkedBrush integration via selection store
+    const brushConfig = normalizeLinkedBrush(linkedBrush)
+    const timeField = typeof timeAccessor === "string" ? timeAccessor : "time"
+    const valueField = typeof valueAccessor === "string" ? valueAccessor : "value"
+
+    const brushHook = useBrushSelection({
+      name: brushConfig?.name || "__unused_hist_brush__",
+      xField: brushConfig?.xField || timeField,
+      yField: brushConfig?.yField || valueField
+    })
+
+    // Stabilize with ref to avoid BrushOverlay re-creation
+    const brushInteractionRef = useRef(brushHook.brushInteraction)
+    brushInteractionRef.current = brushHook.brushInteraction
+
+    const combinedOnBrush = useCallback(
+      (extent: { x: [number, number]; y: [number, number] } | null) => {
+        // Fire user callback
+        if (userOnBrush) userOnBrush(extent)
+
+        // Fire observation event
+        if (onObservation) {
+          if (extent) {
+            onObservation({
+              type: "brush",
+              extent,
+              timestamp: Date.now(),
+              chartType: "RealtimeTemporalHistogram",
+              chartId
+            })
+          } else {
+            onObservation({
+              type: "brush-end",
+              timestamp: Date.now(),
+              chartType: "RealtimeTemporalHistogram",
+              chartId
+            })
+          }
+        }
+
+        // Update selection store for linkedBrush
+        if (brushConfig) {
+          const bi = brushInteractionRef.current
+          if (!extent) {
+            bi.end(null)
+          } else if (bi.brush === "xBrush") {
+            bi.end(extent.x)
+          } else if (bi.brush === "yBrush") {
+            bi.end(extent.y)
+          } else {
+            bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
+          }
+        }
+      },
+      [userOnBrush, onObservation, chartId, brushConfig]
     )
 
     useImperativeHandle(ref, () => ({
@@ -285,6 +363,8 @@ export const RealtimeTemporalHistogram = forwardRef(
         staleness={staleness}
         transition={transition}
         legendPosition={legendPositionProp}
+        brush={normalizedBrush}
+        onBrush={(normalizedBrush || linkedBrush) ? combinedOnBrush : undefined}
       />
     )
   }
