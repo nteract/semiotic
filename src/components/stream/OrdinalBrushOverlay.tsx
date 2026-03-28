@@ -126,10 +126,10 @@ export function OrdinalBrushOverlay({
         position: "absolute",
         top: 0,
         left: 0,
-        pointerEvents: "all"
+        pointerEvents: "none"
       }}
     >
-      <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} />
+      <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} style={{ pointerEvents: "all" }} />
     </svg>
   )
 }

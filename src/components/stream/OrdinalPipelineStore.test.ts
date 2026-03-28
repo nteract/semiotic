@@ -589,4 +589,73 @@ describe("OrdinalPipelineStore", () => {
       expect(uniqueWidths.size).toBe(1)
     })
   })
+
+  // ── Swimlane domain computation ──────────────────────────────────────
+
+  describe("swimlane value domain", () => {
+    it("uses per-lane sums (not individual values) for rScale domain", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swimlane",
+        projection: "horizontal",
+      }))
+      // Lane A: 3 + 5 = 8, Lane B: 2 + 4 = 6 → max should be 8
+      store.ingest({
+        inserts: [
+          { category: "A", value: 3 },
+          { category: "A", value: 5 },
+          { category: "B", value: 2 },
+          { category: "B", value: 4 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      const scales = store.scales!
+      // Domain max should be at least 8 (the largest lane sum), not 5 (the largest individual value)
+      const domain = scales.r.domain()
+      expect(domain[1]).toBeGreaterThanOrEqual(8)
+    })
+
+    it("explicit rExtent suppresses forced zero inclusion for swimlane", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swimlane",
+        projection: "horizontal",
+        rExtent: [5, 20],
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 10 },
+          { category: "B", value: 8 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      const scales = store.scales!
+      const domain = scales.r.domain()
+      // Domain min should be 5 (from rExtent), NOT forced to 0
+      expect(domain[0]).toBe(5)
+      expect(domain[1]).toBe(20)
+    })
+
+    it("includes zero when no rExtent is set on swimlane", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swimlane",
+        projection: "horizontal",
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 10 },
+          { category: "B", value: 8 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+
+      const scales = store.scales!
+      const domain = scales.r.domain()
+      // Zero-inclusion should still apply when no explicit rExtent
+      expect(domain[0]).toBeLessThanOrEqual(0)
+    })
+  })
 })

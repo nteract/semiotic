@@ -254,7 +254,7 @@ export const RealtimeTemporalHistogram = forwardRef(
     const brushHook = useBrushSelection({
       name: brushConfig?.name || "__unused_hist_brush__",
       xField: brushConfig?.xField || timeField,
-      yField: brushConfig?.yField || valueField
+      ...(brushConfig?.yField ? { yField: brushConfig.yField } : {})
     })
 
     // Stabilize with ref to avoid BrushOverlay re-creation

@@ -238,7 +238,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
 
   const validationError = validateArrayData({
     componentName: "SwimlaneChart", data: data,
-    accessors: { categoryAccessor, valueAccessor },
+    accessors: { categoryAccessor, valueAccessor, subcategoryAccessor },
     requiredProps: { subcategoryAccessor },
   })
 
