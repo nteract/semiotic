@@ -358,7 +358,16 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
 
   const effectiveMargin = useMemo(() => {
     const m = { ...setup.margin }
-    if (streaming.streamingMarginAdjust) {
+    // In push mode, streaming legend can't discover categories from raw data
+    // (it looks for __likertLevelLabel which isn't on raw inputs). Apply fixed
+    // legend margin based on position since legend is deterministic from levels.
+    if (isPushMode && showLegend !== false) {
+      const pos = legendPositionProp || "bottom"
+      if (pos === "bottom" && m.bottom < 80) m.bottom = 80
+      else if (pos === "top" && m.top < 50) m.top = 50
+      else if (pos === "right" && m.right < 110) m.right = 110
+      else if (pos === "left" && m.left < 110) m.left = 110
+    } else if (streaming.streamingMarginAdjust) {
       for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
         const k = key as keyof typeof m
         if (m[k] < val) m[k] = val
@@ -366,7 +375,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     }
     if (isDiverging && m.left < 100) m.left = 100
     return m
-  }, [setup.margin, streaming.streamingMarginAdjust, isDiverging])
+  }, [setup.margin, streaming.streamingMarginAdjust, isDiverging, isPushMode, showLegend, legendPositionProp])
 
   // ── Axis format ────────────────────────────────────────────────────
   const rFormat = useMemo(() => {

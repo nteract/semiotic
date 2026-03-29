@@ -52,10 +52,14 @@ export function buildStatsTooltip(options?: {
       const va = options.valueAccessor
       const values = pieces
         .map((p: any) => Number(typeof va === "function" ? va(p) : p[va]))
-        .filter((v: number) => !isNaN(v))
+        .filter((v: number) => Number.isFinite(v))
         .sort((a: number, b: number) => a - b)
       const n = values.length
-      const median = n > 0 ? values[Math.floor(n / 2)] : null
+      const median = n > 0
+        ? n % 2 !== 0
+          ? values[Math.floor(n / 2)]
+          : (values[n / 2 - 1] + values[n / 2]) / 2
+        : null
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
