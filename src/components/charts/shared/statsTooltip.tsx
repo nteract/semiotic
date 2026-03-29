@@ -32,11 +32,11 @@ export function buildStatsTooltip(options?: {
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
           {stats.n != null && <div>n = {stats.n}</div>}
-          <div>Min: {stats.min!.toLocaleString()}</div>
-          <div>Q1: {stats.q1!.toLocaleString()}</div>
+          {stats.min != null && <div>Min: {stats.min.toLocaleString()}</div>}
+          {stats.q1 != null && <div>Q1: {stats.q1.toLocaleString()}</div>}
           <div>Median: {stats.median.toLocaleString()}</div>
-          <div>Q3: {stats.q3!.toLocaleString()}</div>
-          <div>Max: {stats.max!.toLocaleString()}</div>
+          {stats.q3 != null && <div>Q3: {stats.q3.toLocaleString()}</div>}
+          {stats.max != null && <div>Max: {stats.max.toLocaleString()}</div>}
           {stats.mean != null && (
             <div style={{ opacity: 0.8 }}>
               Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}

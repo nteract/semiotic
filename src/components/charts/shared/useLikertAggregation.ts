@@ -1,5 +1,6 @@
 "use client"
 
+import type { RefObject, MutableRefObject } from "react"
 import { useMemo, useCallback, useRef } from "react"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 
@@ -71,6 +72,7 @@ export function aggregateData(
   getCount: ((d: any) => number) | null,
 ): AggregatedRow[] {
   const counts = new Map<string, Map<string, number>>()
+  const levelSet = new Set(levels)
 
   for (const d of data) {
     const cat = getCat(d)
@@ -93,7 +95,7 @@ export function aggregateData(
     } else if (getLevel && getCount) {
       const level = getLevel(d)
       const count = getCount(d)
-      if (!levels.includes(level)) continue
+      if (!levelSet.has(level)) continue
       catMap.set(level, (catMap.get(level) || 0) + (Number.isFinite(count) ? count : 0))
     }
   }
@@ -193,7 +195,7 @@ interface UseLikertAggregationConfig {
   levelAccessor?: string | ((d: any) => string)
   countAccessor?: string | ((d: any) => number)
   isDiverging: boolean
-  frameRef: React.RefObject<StreamOrdinalFrameHandle | null>
+  frameRef: RefObject<StreamOrdinalFrameHandle | null>
 }
 
 interface UseLikertAggregationResult {
@@ -202,7 +204,7 @@ interface UseLikertAggregationResult {
   /** Re-aggregate all accumulated data (call from push handlers) */
   reAggregate: (rawData: any[]) => void
   /** Ref holding accumulated raw data for push mode */
-  accumulatorRef: React.MutableRefObject<any[]>
+  accumulatorRef: MutableRefObject<any[]>
 }
 
 /**

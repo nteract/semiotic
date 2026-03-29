@@ -1,5 +1,6 @@
 "use client"
 
+import type { Ref, RefObject } from "react"
 import { useCallback, useImperativeHandle, useMemo } from "react"
 import { useStreamingLegend } from "./useStreamingLegend"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
@@ -9,9 +10,9 @@ import type { LegendPosition } from "./hooks"
 
 interface UseOrdinalStreamingConfig {
   /** External ref for push API */
-  ref: React.Ref<RealtimeFrameHandle>
+  ref: Ref<RealtimeFrameHandle>
   /** Internal frame ref */
-  frameRef: React.RefObject<StreamOrdinalFrameHandle | null>
+  frameRef: RefObject<StreamOrdinalFrameHandle | null>
   /** True when data prop is undefined (push API mode) */
   isPushMode: boolean
   /** Color-by accessor (may be derived from stackBy/groupBy/etc.) */
@@ -25,7 +26,7 @@ interface UseOrdinalStreamingConfig {
   /** Results from useChartSetup — needed for legend/margin merge */
   setup: {
     legendBehaviorProps: Record<string, any>
-    legendPosition: string
+    legendPosition: LegendPosition
     margin: { top: number; right: number; bottom: number; left: number }
   }
 }
