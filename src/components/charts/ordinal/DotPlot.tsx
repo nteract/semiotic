@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
@@ -37,6 +37,8 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -69,13 +71,14 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
-    colorBy, colorScheme = "category10", sort = true, dotRadius = 5,
+    colorBy, colorScheme, sort = true, dotRadius = 5,
     categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    categoryFormat
   } = props
 
   const width = resolved.width
@@ -104,6 +107,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "DotPlot",
     chartId,
     showLegend,
@@ -163,6 +167,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     oSort: sort,
     ...setup.legendBehaviorProps,
@@ -174,7 +179,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

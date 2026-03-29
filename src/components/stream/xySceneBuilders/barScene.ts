@@ -13,11 +13,17 @@ import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
-export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
-  if (!ctx.config.binSize) return []
+export interface BarSceneResult {
+  nodes: SceneNode[]
+  /** Sorted bin boundary values (edges of all bins) for data-driven brush snapping */
+  binBoundaries: number[]
+}
+
+export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]): BarSceneResult {
+  if (!ctx.config.binSize) return { nodes: [], binBoundaries: [] }
 
   const bins = computeBins(data, ctx.getX, ctx.getY, ctx.config.binSize, ctx.getCategory)
-  if (bins.size === 0) return []
+  if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 
   // Establish stable category order (instance-scoped cache on ctx)
   let categoryOrder: string[] | null = null
@@ -91,5 +97,13 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
     }
   }
 
-  return nodes
+  // Extract sorted bin boundaries (unique edges) for data-driven brush snapping
+  const boundarySet = new Set<number>()
+  for (const bin of bins.values()) {
+    boundarySet.add(bin.start)
+    boundarySet.add(bin.end)
+  }
+  const binBoundaries = Array.from(boundarySet).sort((a, b) => a - b)
+
+  return { nodes, binBoundaries }
 }

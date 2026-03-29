@@ -41,8 +41,8 @@ export interface ChartSetupInput {
   rawData: unknown[] | undefined
   /** The color-by accessor (may be an "actual" colorBy derived from stackBy/groupBy/categoryAccessor) */
   colorBy: Accessor<string> | undefined
-  /** Color scheme name or custom array */
-  colorScheme: string | string[]
+  /** Color scheme name or custom array — undefined lets useColorScale consult the theme */
+  colorScheme: string | string[] | undefined
   /** Legend interaction mode */
   legendInteraction: LegendInteractionMode | undefined
   /** Legend position override */
@@ -67,6 +67,8 @@ export interface ChartSetupInput {
   userMargin: MarginType | undefined
   /** Mode-resolved margin defaults */
   marginDefaults: { top: number; bottom: number; left: number; right: number }
+  /** onClick callback */
+  onClick?: (datum: any, event: { x: number; y: number }) => void
   /** Loading state */
   loading: boolean | undefined
   /** Empty content override */
@@ -140,6 +142,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     showLegend,
     userMargin,
     marginDefaults,
+    onClick,
     loading,
     emptyContent,
     width,
@@ -155,6 +158,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     onObservation,
     chartType,
     chartId,
+    onClick,
   })
 
   // ── Color scale ────────────────────────────────────────────────────────

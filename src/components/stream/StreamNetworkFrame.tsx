@@ -31,6 +31,7 @@ import {
 } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
+import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -1111,32 +1112,21 @@ const StreamNetworkFrame = forwardRef<
 
   const tooltipElement =
     enableHover && hoverData ? (
-      <div
+      <FlippingTooltip
+        x={hoverData.x}
+        y={hoverData.y}
+        containerWidth={adjustedWidth}
+        containerHeight={adjustedHeight}
+        margin={margin}
         className="stream-network-tooltip"
-        style={{
-          position: "absolute",
-          left: margin.left + hoverData.x,
-          top: margin.top + hoverData.y,
-          transform: `translate(${
-            hoverData.x > adjustedWidth * 0.6
-              ? "calc(-100% - 12px)"
-              : "12px"
-          }, ${
-            hoverData.y < adjustedHeight * 0.3
-              ? "4px"
-              : "calc(-100% - 4px)"
-          })`,
-          pointerEvents: "none",
-          zIndex: 2,
-          width: "max-content"
-        }}
+        zIndex={2}
       >
         {tooltipContent ? (
           tooltipContent(hoverData)
         ) : (
           <DefaultNetworkTooltip data={hoverData} />
         )}
-      </div>
+      </FlippingTooltip>
     ) : null
 
   // ── SSR path: render SVG instead of canvas ──────────────────────────

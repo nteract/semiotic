@@ -31,6 +31,7 @@ import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
+import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -366,7 +367,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yScaleType,
       accessibleTable = true,
       description,
-      summary
+      summary,
+      linkedCrosshairName,
+      linkedCrosshairSourceId
     } = props
 
     // ── Reduced motion ────────────────────────────────────────────────────
@@ -965,24 +968,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       : null
 
     const tooltipElement = tooltipRendered ? (
-      <div
+      <FlippingTooltip
+        x={hoverPoint!.x}
+        y={hoverPoint!.y}
+        containerWidth={adjustedWidth}
+        containerHeight={adjustedHeight}
+        margin={margin}
         className="stream-frame-tooltip"
-        style={{
-          position: "absolute",
-          left: margin.left + hoverPoint!.x,
-          top: margin.top + hoverPoint!.y,
-          transform: `translate(${
-            hoverPoint!.x > adjustedWidth * 0.7 ? "calc(-100% - 12px)" : "12px"
-          }, ${
-            hoverPoint!.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
-          })`,
-          pointerEvents: "none",
-          zIndex: 1,
-          width: "max-content"
-        }}
       >
         {tooltipRendered}
-      </div>
+      </FlippingTooltip>
     ) : null
 
     // ── Keyboard focus ring ──────────────────────────────────────────────
@@ -1126,6 +1121,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               (n): n is PointSceneNode => n.type === "point"
             )}
             curve={typeof curve === "string" ? curve : undefined}
+            linkedCrosshairName={linkedCrosshairName}
+            linkedCrosshairSourceId={linkedCrosshairSourceId}
           />
         </div>
       )
@@ -1244,6 +1241,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           )}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
+          linkedCrosshairName={linkedCrosshairName}
+          linkedCrosshairSourceId={linkedCrosshairSourceId}
         />
         {(brush || onBrush) && (
           <XYBrushOverlay
@@ -1257,6 +1256,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             onBrush={onBrush ?? (() => {})}
             binSize={binSize}
             snap={brush?.snap}
+            binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
+            snapDuring={brush?.snapDuring}
             streaming={runtimeMode === "streaming"}
           />
         )}

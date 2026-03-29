@@ -326,7 +326,7 @@ export const LineChart = forwardRef(
     lineBy,
     lineDataAccessor = "coordinates",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     curve = "linear",
     showPoints = false,
     pointRadius = 3,
@@ -344,6 +344,7 @@ export const LineChart = forwardRef(
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -510,12 +511,18 @@ export const LineChart = forwardRef(
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "LineChart", chartId
+    onObservation, onClick, chartType: "LineChart", chartId
   })
+
+  // Linked crosshair config (x-position mode)
+  const linkedHoverConfig = (typeof linkedHover === "object" && linkedHover !== null)
+    ? linkedHover as { name?: string; mode?: string; xField?: string }
+    : undefined
+  const isXPositionMode = linkedHoverConfig?.mode === "x-position"
 
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Record<string, any>) => {
@@ -918,10 +925,15 @@ export const LineChart = forwardRef(
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
+    }),
+    ...(isXPositionMode && {
+      linkedCrosshairName: linkedHoverConfig?.name || "hover",
+      linkedCrosshairSourceId: crosshairSourceId,
     }),
     ...frameProps
   }

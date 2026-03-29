@@ -995,3 +995,94 @@ import { ThemeProvider, DARK_THEME, COLOR_BLIND_SAFE_CATEGORICAL } from "semioti
   showGrid
 />
 ```
+
+---
+
+## Click Handlers
+
+### onClick on BarChart
+
+```jsx
+import { BarChart } from "semiotic/ai"
+
+<BarChart
+  data={salesData}
+  categoryAccessor="region"
+  valueAccessor="revenue"
+  onClick={(datum, { x, y }) => {
+    console.log(`Clicked ${datum.region}: $${datum.revenue}`)
+    setSelectedRegion(datum.region)
+  }}
+/>
+```
+
+Key props: `onClick` receives the original datum and pixel coordinates. Works on all chart types.
+
+---
+
+## Linked Crosshair (Multi-chart Hover Sync)
+
+### Synced crosshair across time-series charts
+
+```jsx
+import { LineChart, LinkedCharts } from "semiotic/ai"
+
+<LinkedCharts>
+  <LineChart
+    data={cpuData}
+    xAccessor="time" yAccessor="cpu"
+    linkedHover={{ name: "metrics", mode: "x-position", xField: "time" }}
+    selection={{ name: "metrics" }}
+  />
+  <LineChart
+    data={memoryData}
+    xAccessor="time" yAccessor="memory"
+    linkedHover={{ name: "metrics", mode: "x-position", xField: "time" }}
+    selection={{ name: "metrics" }}
+  />
+</LinkedCharts>
+```
+
+Key props: `linkedHover` with `mode: "x-position"` broadcasts the hovered X value. Each chart shows its own tooltip with its own Y values. Use for multi-metric dashboards.
+
+---
+
+## Category Format (Custom Tick Labels)
+
+### Truncated category labels
+
+```jsx
+import { BarChart } from "semiotic/ai"
+
+<BarChart
+  data={data}
+  categoryAccessor="department"
+  valueAccessor="headcount"
+  orientation="horizontal"
+  categoryFormat={(label) => label.length > 12 ? label.slice(0, 12) + "…" : label}
+/>
+```
+
+Key props: `categoryFormat` receives each tick label and returns a formatted string. Available on all ordinal HOCs except Pie/Donut.
+
+---
+
+## Ordinal Annotations
+
+### Threshold + category highlight on BarChart
+
+```jsx
+import { BarChart } from "semiotic/ai"
+
+<BarChart
+  data={quarterlyData}
+  categoryAccessor="quarter"
+  valueAccessor="revenue"
+  annotations={[
+    { type: "y-threshold", value: 50000, label: "Target", color: "#e45050", labelPosition: "left" },
+    { type: "category-highlight", category: "Q3 2024", color: "#4589ff", opacity: 0.15, label: "Current" },
+  ]}
+/>
+```
+
+Key props: `y-threshold` works on vertical ordinal charts. `category-highlight` highlights a category column. `labelPosition` controls label placement.

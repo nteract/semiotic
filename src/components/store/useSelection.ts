@@ -7,6 +7,9 @@ import {
   type FieldSelection
 } from "./SelectionStore"
 
+// Re-export crosshair store for convenience
+export { useCrosshairPosition, setCrosshairPosition, clearCrosshairPosition } from "./LinkedCrosshairStore"
+
 // ── useSelection ───────────────────────────────────────────────────────────
 
 export interface UseSelectionOptions {

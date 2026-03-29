@@ -235,7 +235,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     sizeBy,
     sizeRange = [5, 40],
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     bubbleOpacity = 0.6,
     bubbleStrokeWidth = 1,
     bubbleStrokeColor = "white",
@@ -248,6 +248,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     linkedHover,
     linkedBrush,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -332,11 +333,11 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "BubbleChart", chartId
+    onObservation, onClick, chartType: "BubbleChart", chartId
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -501,7 +502,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

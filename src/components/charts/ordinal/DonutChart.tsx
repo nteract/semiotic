@@ -57,10 +57,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius = 60, centerContent,
-    colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
+    colorBy, colorScheme, startAngle = 0, slicePadding = 2,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -92,6 +92,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "DonutChart",
     chartId,
     showLegend,
@@ -172,7 +173,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

@@ -64,7 +64,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     valueAccessor = "value",
     nodeIdAccessor = "name",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     colorByDepth = false,
     edgeStyle = "curve",
     nodeLabel,
@@ -72,6 +72,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     tooltip,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -151,10 +152,10 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const { customHoverBehavior } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true, onObservation, chartType: "TreeDiagram", chartId,
+    unwrapData: true, onObservation, onClick, chartType: "TreeDiagram", chartId,
   })
 
   // Validate
@@ -187,7 +188,8 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

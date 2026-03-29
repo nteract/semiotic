@@ -62,7 +62,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     valueAccessor = "value",
     nodeIdAccessor = "name",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     colorByDepth = false,
     labelMode = "leaf",
     nodeLabel,
@@ -73,6 +73,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     legendInteraction,
@@ -90,11 +91,11 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)
 
-  const { activeSelectionHook, customHoverBehavior: baseHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior: baseHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "Treemap", chartId
+    onObservation, onClick, chartType: "Treemap", chartId
   })
 
   // Network frame hover: { type, data: sceneNode, x, y }
@@ -216,7 +217,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       labelMode={labelMode}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      {...((linkedHover || onObservation) && { customHoverBehavior })}
+      {...((linkedHover || onObservation || onClick) && { customHoverBehavior })}
+      {...((onObservation || onClick) && { customClickBehavior })}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

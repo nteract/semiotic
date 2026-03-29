@@ -28,6 +28,7 @@ const commonProps: Record<string, PropDef> = {
   tooltip: { type: ["boolean", "function", "object"] },
   annotations: { type: "array" },
   frameProps: { type: "object" },
+  onClick: { type: "function" },
 }
 
 const xyAxisProps: Record<string, PropDef> = {
@@ -41,6 +42,7 @@ const ordinalAxisProps: Record<string, PropDef> = {
   categoryLabel: { type: "string" },
   valueLabel: { type: "string" },
   valueFormat: { type: "function" },
+  categoryFormat: { type: "function" },
 }
 
 const curveEnum = [

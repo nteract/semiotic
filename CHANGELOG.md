@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-03-29
+
+### Added
+
+- **`onClick` prop on all HOCs** — Direct click handler receiving `(datum, { x, y })` with the original unwrapped datum. Works on lines, bars, areas, pie slices, nodes, and geo features. No more `onObservation` filtering or `frameProps.customClickBehavior` escape hatch for simple click handling.
+- **`categoryFormat` prop on ordinal HOCs** — Custom formatting function for individual category tick labels. Receives `(label, index?)` and returns a formatted string. Covers truncation, abbreviation, and custom labeling without dropping to `frameProps.oLabel`.
+- **`category-highlight` annotation type** — Highlights a specific category column/row in ordinal charts with a semi-transparent band. Usage: `{ type: "category-highlight", category: "Q3", color: "#4589ff", opacity: 0.15 }`.
+- **`labelPosition` on threshold annotations** — `y-threshold` supports `"left"` | `"center"` | `"right"` (default). `x-threshold` supports `"top"` (default) | `"center"` | `"bottom"`. Previously labels were fixed at right/top.
+- **Coordinate-based linked crosshair** — `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value across charts. Consuming charts render a synced vertical crosshair at that X position with independent Y values. Designed for multi-metric dashboards (e.g., consumer-lag monitoring).
+- **Tooltip viewport-aware flip** — Tooltips auto-flip horizontally and vertically when near container edges. Uses `useLayoutEffect` measurement for precise flip decisions. Applied to all four stream frames (XY, ordinal, network, geo).
+- **Data-driven histogram bin snapping** — RealtimeTemporalHistogram brush now snaps to actual computed bin boundaries (binary search) instead of uniform grid math. Works with irregular bin widths. `snapDuring: true` enables continuous snap feedback during drag. Auto-populated from pipeline store — zero config change for existing usage.
+
+### Changed
+
+- **ThemeProvider categorical colors flow to all HOCs** — When `colorBy` is set but `colorScheme` is not explicitly provided, charts now use the ThemeProvider's `colors.categorical` palette instead of falling back to d3 `category10`. Priority: explicit `colorScheme` > theme categorical > `"category10"`. Previously, ordinal and XY charts always defaulted to `category10` regardless of theme.
+
+### Fixed
+
+- **Legend `styleFn` contract** — LikertChart (and any chart using custom `legendGroups`) now passes `(item: LegendItem, index)` to `styleFn` correctly, fixing grey legend swatches.
+- **LikertChart tooltip** — shows category name (bold) and level name with percentage/count instead of raw internal field values. Uses standard tooltip chrome (dark background, rounded corners) matching all other charts.
+
 ## [3.3.0] - 2026-03-28
 
 ### Added
@@ -12,11 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LikertChart** — new ordinal HOC for Likert scale survey data. Horizontal (default): diverging bar chart centered at 0% with negative levels extending left, positive right, and neutral (odd count) split 50/50 across the centerline. Vertical: stacked 100% bar chart. Supports raw integer scores (1-based, auto-aggregated) and pre-aggregated (question, level, count) data. Works with any scale size (3-point to 7-point+). Push API for streaming — the chart accumulates raw data and re-aggregates percentages on each push.
 - **IBM Carbon color palettes** — `CARBON_CATEGORICAL_14` (14-color), `CARBON_ALERT` (danger/warning/success/info), and `"carbon"`/`"carbon-dark"` theme presets. Exported from `semiotic` and `semiotic/utils`. Integrated into Theme Explorer and Theme Provider docs.
 - **Legend line wrapping** — horizontal legends now wrap to multiple rows when items exceed the available chart width, preventing overflow. Applies to all charts with `legendPosition="bottom"` or `"top"`.
-
-### Fixed
-
-- **Legend `styleFn` contract** — LikertChart (and any chart using custom `legendGroups`) now passes `(item: LegendItem, index)` to `styleFn` correctly, fixing grey legend swatches.
-- **LikertChart tooltip** — shows category name (bold) and level name with percentage/count instead of raw internal field values. Uses standard tooltip chrome (dark background, rounded corners) matching all other charts.
 
 ## [3.2.0] - 2026-03-25
 

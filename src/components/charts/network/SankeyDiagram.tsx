@@ -77,7 +77,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     valueAccessor = "value",
     nodeIdAccessor = "id",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     edgeColorBy = "source",
     orientation = "horizontal",
     nodeAlign = "justify",
@@ -89,6 +89,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     tooltip,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -198,6 +199,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "SankeyDiagram",
     chartId,
   })
@@ -244,8 +246,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
-      customClickBehavior={onObservation ? customClickBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

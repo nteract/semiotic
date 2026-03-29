@@ -13,7 +13,9 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true)
+`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true)
+
+`onClick` receives `(datum, { x, y })` — the original datum and pixel coordinates. Works on lines, bars, areas, pie slices, nodes, and geo features.
 
 `onObservation` receives `{ type: "hover"|"hover-end"|"click"|"brush"|"selection", datum?, x?, y?, timestamp, chartType, chartId }`. The `datum` is your original data object.
 
@@ -47,7 +49,7 @@
 
 **LikertChart** — `data`, `categoryAccessor` ("question"), `valueAccessor` ("score", raw mode) or `levelAccessor`+`countAccessor` ("count", pre-aggregated mode), `levels` (required, ordered negative→positive), `orientation` ("horizontal"|"vertical"), `colorScheme`. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports any scale size (3-point to 7-point+). Raw mode aggregates integer scores automatically (1-based: score 1 → levels[0]). The `levels` array order defines polarity — first half negative, second half positive, center neutral if odd. Supports push API for streaming — accumulates raw data internally and re-aggregates percentages on each push.
 
-All ordinal HOCs support `colorBy` and `colorScheme`. `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
+All ordinal HOCs support `colorBy` and `colorScheme`. `categoryFormat` (`(label: string, index?: number) => string`) customizes individual tick labels (truncation, formatting). `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
 ## Network Charts (`semiotic/network`)
 
@@ -100,7 +102,7 @@ Push API: `chartRef.current.push({ time, value })`
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely on all streaming charts.
 
-All Realtime* charts accept `data` props for static mode (no push API needed). RealtimeHistogram brush supports bin-snapping (`snap: "bin"`) and streaming tracking — the brush shrinks as selected bins scroll off and auto-clears when fully evicted.
+All Realtime* charts accept `data` props for static mode (no push API needed). RealtimeHistogram brush supports bin-snapping (`snap: "bin"`) and streaming tracking — the brush shrinks as selected bins scroll off and auto-clears when fully evicted. Bin snapping uses actual computed bin boundaries (data-driven), not a uniform grid — works with irregular bin widths. `snapDuring: true` enables continuous snap feedback during drag (not just on release).
 
 ### Push API on HOC charts
 Most HOC charts support push via `forwardRef`. **Omit** `data`/`nodes`/`edges` — do NOT pass `data={[]}`.
@@ -134,6 +136,8 @@ Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var 
 **LinkedCharts** — `selections` (resolution: "union"|"intersect"|"crossfilter"), `showLegend`, `legendPosition`, `legendInteraction`, `legendSelectionName`, `legendField`
 **CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
+
+**Linked crosshair** (coordinate-based hover sync): `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value. Other charts with the same `linkedHover` name render a synced vertical crosshair at that X position. Each chart shows its own Y values independently. Use for dashboards with multiple time-series at different scales.
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
 **ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig, dataSummary }), `controls`
 **ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
@@ -185,7 +189,8 @@ const svg = renderOrdinalToStaticSVG({ data, categoryAccessor: "cat", valueAcces
 All HOCs accept `annotations` (array). Coordinates use your data field names. Network/orbit use `nodeId`.
 
 **Positioning**: `widget` (React content at data coords — v3 replacement for v2 `htmlAnnotationRules`; props: `content`, `dx`, `dy`, `width`, `height`, `anchor`), `label` (callout with connector), `callout` (circle + label), `text` (plain text), `bracket`
-**Reference lines**: `y-threshold` (`value`, `label`, `color`), `x-threshold`, `band` (`y0`, `y1`, `label`, `fill`)
+**Reference lines**: `y-threshold` (`value`, `label`, `color`, `labelPosition`: "left"|"center"|"right", `strokeDasharray`), `x-threshold` (`labelPosition`: "top"|"center"|"bottom"), `band` (`y0`, `y1`, `label`, `fill`)
+**Ordinal**: `category-highlight` (`category`, `color`, `opacity`, `label`) — highlights a category column/row. Works on BarChart, StackedBarChart, etc. `y-threshold` also works on vertical ordinal charts.
 **Enclosures**: `enclose` (circle around `coordinates`), `rect-enclose`, `highlight` (`filter` fn or `field`+`value`)
 **Statistical** (XY): `trend` (`method`: linear/polynomial/loess), `envelope`, `anomaly-band`, `forecast`
 **Streaming anchors**: `"fixed"` (default), `"latest"` (tracks newest datum), `"sticky"` (freezes when evicted)
@@ -209,6 +214,8 @@ import { ThemeProvider } from "semiotic"
 <ThemeProvider theme="tufte">       {/* Named preset */}
 <ThemeProvider theme={{ colors: { primary: "#ff6b6b", categorical: [...] } }}> {/* Custom */}
 ```
+
+**Color resolution priority** (when `colorBy` is set): explicit `colorScheme` prop > ThemeProvider `colors.categorical` > `"category10"` fallback. This means ThemeProvider categorical colors automatically apply to all charts — no need to pass `colorScheme` on every component.
 
 Presets: `light`, `dark`, `high-contrast`, `pastels`, `pastels-dark`, `bi-tool`, `bi-tool-dark`, `italian`, `italian-dark`, `tufte`, `tufte-dark`, `journalist`, `journalist-dark`, `playful`, `playful-dark`, `carbon`, `carbon-dark`.
 
@@ -272,6 +279,7 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 ## Known Pitfalls
 
 - **Tooltip datum shape**: HOC tooltip functions get raw data. Frame `tooltipContent` gets wrapped data — use `d.data`.
+- **Tooltip positioning**: Tooltips auto-flip when near container edges (right→left, bottom→top). Custom `tooltip` content should not add its own background — the wrapper provides `--semiotic-tooltip-bg`, `--semiotic-tooltip-text`, etc. Override wrapper styles via CSS custom properties, not inline styles.
 - **Legend positioning**: "bottom" auto-expands margin ~80px. For narrow charts (<400px), prefer "bottom" or "top".
 - **MultiAxisLineChart legend**: Always use `legendPosition="bottom"` (or `"top"`) — the right-hand axis occupies the space where a right-side legend would go.
 - **Log scale**: Clamps domain min to 1e-6 (log(0) undefined).

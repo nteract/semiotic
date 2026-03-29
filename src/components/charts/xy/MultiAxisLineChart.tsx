@@ -186,7 +186,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     xFormat,
     xAccessor = "x",
     series,
-    colorScheme = "category10",
+    colorScheme,
     curve = "monotoneX",
     lineWidth = 2,
     tooltip,
@@ -195,6 +195,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -344,6 +345,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     fallbackFields: [SERIES_FIELD],
     unwrapData: false,
     onObservation,
+    onClick,
     chartType: "MultiAxisLineChart",
     chartId,
     showLegend,
@@ -458,8 +460,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(className && { className }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...(onObservation && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...frameProps
   }
 

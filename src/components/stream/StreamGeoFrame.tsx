@@ -27,6 +27,7 @@ import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
+import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useReducedMotion } from "./useMediaPreferences"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
@@ -1020,24 +1021,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       : null
 
     const tooltipElement = tooltipRendered ? (
-      <div
+      <FlippingTooltip
+        x={hoverPoint!.x}
+        y={hoverPoint!.y}
+        containerWidth={adjustedWidth}
+        containerHeight={adjustedHeight}
+        margin={margin}
         className="stream-frame-tooltip"
-        style={{
-          position: "absolute",
-          left: margin.left + hoverPoint!.x,
-          top: margin.top + hoverPoint!.y,
-          transform: `translate(${
-            hoverPoint!.x > adjustedWidth * 0.7 ? "calc(-100% - 12px)" : "12px"
-          }, ${
-            hoverPoint!.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
-          })`,
-          pointerEvents: "none",
-          zIndex: 10,
-          width: "max-content"
-        }}
+        zIndex={10}
       >
         {tooltipRendered}
-      </div>
+      </FlippingTooltip>
     ) : null
 
     // ── SSR path ──────────────────────────────────────────────────────

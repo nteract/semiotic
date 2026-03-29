@@ -249,6 +249,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -285,11 +286,11 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: [],
-    onObservation, chartType: "Heatmap", chartId
+    onObservation, onClick, chartType: "Heatmap", chartId
   })
 
   // Legend interaction (no-op for Heatmap since no colorBy categories)
@@ -429,7 +430,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

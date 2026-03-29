@@ -59,8 +59,8 @@ ref-based push API. Built-in decay, pulse, and staleness encoding for
 monitoring dashboards.
 
 **Coordinated views.** `LinkedCharts` provides hover cross-highlighting,
-brush cross-filtering, and selection synchronization across any combination
-of chart types — zero wiring.
+brush cross-filtering, coordinate-based linked crosshairs, and selection
+synchronization across any combination of chart types — zero wiring.
 
 **Geographic visualization.** Choropleth maps, proportional symbol maps, flow
 maps with animated particles, and distance cartograms — all canvas-rendered
@@ -239,8 +239,8 @@ import { LineChart, BarChart } from "semiotic"
 
 | Category | Components |
 |---|---|
-| **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` `QuadrantChart` `MinimapChart` |
-| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `LikertChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` |
+| **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` `QuadrantChart` `MultiAxisLineChart` `MinimapChart` |
+| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `LikertChart` `SwimlaneChart` `FunnelChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
 | **Geo** | `ChoroplethMap` `ProportionalSymbolMap` `FlowMap` `DistanceCartogram` |
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |

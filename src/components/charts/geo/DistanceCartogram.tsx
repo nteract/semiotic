@@ -117,7 +117,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     tileCacheSize,
     transition: transitionDuration,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     pointRadius = 5,
     tooltip,
     showRings = true,
@@ -130,6 +130,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -144,11 +145,12 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     onObservation,
+    onClick,
     chartType: "DistanceCartogram",
     chartId
   })
@@ -392,7 +394,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...(legend && { legend, legendPosition }),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),

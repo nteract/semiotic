@@ -6,9 +6,12 @@
  * clears the brush as data scrolls past the selected range).
  *
  * Key design decisions:
- *   - d3-brush lifecycle depends on [width, height, dimension, snap, binSize]
- *     only — scales are read from a ref to avoid teardown mid-drag.
- *   - Bin snapping only applies on "end" events (not during drag) to avoid jitter.
+ *   - d3-brush lifecycle depends on [width, height, dimension, snap, binSize, snapDuring]
+ *     only — scales and binBoundaries are read from refs to avoid teardown mid-drag.
+ *   - Data-driven snapping (binBoundaries) uses binary search to snap to actual bin
+ *     edges. Falls back to uniform grid math (binSize) when no boundaries are provided.
+ *   - Bin snapping applies on "end" events by default. Set snapDuring=true to also
+ *     snap during drag (the "brush" event).
  *   - Streaming tracking guards against y-only dimension (no x-domain to track).
  *   - isProgrammaticMoveRef prevents re-entrant brush events from .move() calls.
  *
@@ -31,7 +34,49 @@ export interface XYBrushOverlayProps {
   onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
   binSize?: number
   snap?: "continuous" | "bin"
+  /** Actual bin boundary values for data-driven snapping (overrides uniform grid math when snap="bin") */
+  binBoundaries?: number[]
+  /** When true, snap during drag (not just on release). Default false. */
+  snapDuring?: boolean
   streaming?: boolean
+}
+
+/**
+ * Binary-search the sorted boundaries array for the nearest value.
+ * Falls back to returning the input if boundaries is empty.
+ */
+function snapToBinBoundary(value: number, boundaries: number[]): number {
+  if (boundaries.length === 0) return value
+  let lo = 0, hi = boundaries.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (boundaries[mid] < value) lo = mid + 1
+    else hi = mid
+  }
+  if (lo === 0) return boundaries[0]
+  const prev = boundaries[lo - 1]
+  const curr = boundaries[lo]
+  return Math.abs(value - prev) <= Math.abs(value - curr) ? prev : curr
+}
+
+/**
+ * Snap a range [lo, hi] to the nearest bin boundaries using floor/ceil semantics:
+ * the low end snaps down, the high end snaps up (ensuring the selection never
+ * shrinks below what the user dragged).
+ */
+function snapRangeToBinBoundaries(range: [number, number], boundaries: number[]): [number, number] {
+  if (boundaries.length === 0) return range
+  // For the low end, find the largest boundary <= range[0]
+  let loIdx = 0
+  for (let i = boundaries.length - 1; i >= 0; i--) {
+    if (boundaries[i] <= range[0]) { loIdx = i; break }
+  }
+  // For the high end, find the smallest boundary >= range[1]
+  let hiIdx = boundaries.length - 1
+  for (let i = 0; i < boundaries.length; i++) {
+    if (boundaries[i] >= range[1]) { hiIdx = i; break }
+  }
+  return [boundaries[loIdx], boundaries[hiIdx]]
 }
 
 export function XYBrushOverlay({
@@ -45,6 +90,8 @@ export function XYBrushOverlay({
   onBrush,
   binSize,
   snap,
+  binBoundaries,
+  snapDuring,
   streaming
 }: XYBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -54,6 +101,8 @@ export function XYBrushOverlay({
   onBrushRef.current = onBrush
   const scalesRef = useRef(scales)
   scalesRef.current = scales
+  const binBoundariesRef = useRef(binBoundaries)
+  binBoundariesRef.current = binBoundaries
 
   const isProgrammaticMoveRef = useRef(false)
   const activeBrushExtentRef = useRef<{ x: [number, number]; y: [number, number] } | null>(null)
@@ -101,12 +150,21 @@ export function XYBrushOverlay({
         yRange = [s.y.invert(py1), s.y.invert(py0)]
       }
 
-      // Snap to bin boundaries on "end" event only (avoids jitter during drag)
-      if (event.type === "end" && snap === "bin" && binSize && binSize > 0 && dimension !== "y") {
-        xRange = [
-          Math.floor(xRange[0] / binSize) * binSize,
-          Math.ceil(xRange[1] / binSize) * binSize
-        ]
+      // Snap to bin boundaries: on "end" always, on "brush" only when snapDuring is true
+      const shouldSnap = snap === "bin" && dimension !== "y" &&
+        (event.type === "end" || (event.type === "brush" && snapDuring))
+      if (shouldSnap) {
+        const boundaries = binBoundariesRef.current
+        if (boundaries && boundaries.length > 0) {
+          // Data-driven snapping: snap to actual bin edges
+          xRange = snapRangeToBinBoundaries(xRange, boundaries)
+        } else if (binSize && binSize > 0) {
+          // Fallback: uniform grid math (backward compatible)
+          xRange = [
+            Math.floor(xRange[0] / binSize) * binSize,
+            Math.ceil(xRange[1] / binSize) * binSize
+          ]
+        }
         const snappedPx0 = s.x(xRange[0])
         const snappedPx1 = s.x(xRange[1])
         isProgrammaticMoveRef.current = true
@@ -137,7 +195,7 @@ export function XYBrushOverlay({
       brushFn.on("brush end", null)
       brushRef.current = null
     }
-  }, [width, height, dimension, snap, binSize])
+  }, [width, height, dimension, snap, binSize, snapDuring])
 
   // Streaming brush tracking: reposition brush as scale domain shifts
   useEffect(() => {
@@ -168,8 +226,21 @@ export function XYBrushOverlay({
 
     if (ext.x[0] < visibleMin) {
       effectiveMin = visibleMin
-      if (snap === "bin" && binSize && binSize > 0) {
-        effectiveMin = Math.ceil(visibleMin / binSize) * binSize
+      if (snap === "bin") {
+        const boundaries = binBoundariesRef.current
+        if (boundaries && boundaries.length > 0) {
+          // Snap up to the nearest bin boundary at or above visibleMin
+          effectiveMin = snapToBinBoundary(visibleMin, boundaries)
+          if (effectiveMin < visibleMin && boundaries.length > 1) {
+            // snapToBinBoundary finds nearest — we need ceil behavior
+            const idx = boundaries.indexOf(effectiveMin)
+            if (idx >= 0 && idx + 1 < boundaries.length) {
+              effectiveMin = boundaries[idx + 1]
+            }
+          }
+        } else if (binSize && binSize > 0) {
+          effectiveMin = Math.ceil(visibleMin / binSize) * binSize
+        }
       }
       if (effectiveMin >= ext.x[1]) {
         isProgrammaticMoveRef.current = true

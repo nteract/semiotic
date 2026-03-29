@@ -165,7 +165,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     showQuadrantLabels = true,
     quadrantLabelSize = 12,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     sizeBy,
     sizeRange = [3, 15],
     pointRadius = 5,
@@ -177,6 +177,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -207,11 +208,11 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   warnMissingField("QuadrantChart", safeData, "yAccessor", yAccessor)
 
   // ── Selection hooks ───────────────────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
-    onObservation, chartType: "QuadrantChart", chartId
+    onObservation, onClick, chartType: "QuadrantChart", chartId
   })
 
   // ── Core chart logic ──────────────────────────────────────────────────
@@ -585,7 +586,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,

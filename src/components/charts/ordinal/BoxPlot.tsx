@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -37,6 +37,8 @@ export interface BoxPlotProps<TDatum extends Record<string, any> = Record<string
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -69,15 +71,16 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme = "category10",
+    colorBy, colorScheme,
     showOutliers = true, outlierRadius = 3, categoryPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
-    showCategoryTicks
+    showCategoryTicks,
+    categoryFormat
   } = props
 
   const width = resolved.width
@@ -106,6 +109,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "BoxPlot",
     chartId,
     showLegend,
@@ -160,6 +164,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     showCategoryTicks,
     ...setup.legendBehaviorProps,
@@ -171,7 +176,8 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

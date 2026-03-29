@@ -225,7 +225,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     gradientFill = false,
     lineDataAccessor = "coordinates",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     curve = "monotoneX",
     areaOpacity = 0.7,
     showLine = true,
@@ -236,6 +236,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -267,11 +268,11 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "AreaChart", chartId
+    onObservation, onClick, chartType: "AreaChart", chartId
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -449,7 +450,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

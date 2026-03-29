@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
@@ -38,6 +38,8 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -64,13 +66,14 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme = "category10", normalize = false, barPadding = 40,
+    colorBy, colorScheme, normalize = false, barPadding = 40,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    categoryFormat
   } = props
 
   const width = resolved.width
@@ -101,6 +104,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "StackedBarChart",
     chartId,
     showLegend,
@@ -173,6 +177,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     ...effectiveLegendProps,
     ...(title && { title }),
@@ -183,7 +188,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

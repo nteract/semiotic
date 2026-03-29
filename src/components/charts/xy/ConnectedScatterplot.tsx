@@ -113,6 +113,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -173,10 +174,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Selection hooks ───────────────────────────────────────────────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: [],
-    onObservation, chartType: "ConnectedScatterplot", chartId
+    onObservation, onClick, chartType: "ConnectedScatterplot", chartId
   })
 
   // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
@@ -358,7 +359,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
     svgPreRenderers,

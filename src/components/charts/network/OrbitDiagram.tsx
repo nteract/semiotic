@@ -116,7 +116,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     childrenAccessor = "children",
     nodeIdAccessor = "name",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     colorByDepth = false,
     orbitMode = "flat",
     orbitSize = 2.95,
@@ -133,6 +133,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     annotations,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -205,11 +206,11 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   const margin = { top: 10, right: 10, bottom: 10, left: 10, ...userMargin }
 
   // Selection
-  const { customHoverBehavior } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     unwrapData: true,
-    onObservation, chartType: "OrbitDiagram", chartId,
+    onObservation, onClick, chartType: "OrbitDiagram", chartId,
   })
 
   // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
@@ -224,6 +225,17 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
       }
     }
   }, [customHoverBehavior])
+
+  const wrappedClickBehavior = useMemo(() => {
+    if (!customClickBehavior) return undefined
+    return (click: any) => {
+      if (click && click.data && click.data.data !== undefined) {
+        customClickBehavior({ ...click, data: click.data.data })
+      } else {
+        customClickBehavior(click)
+      }
+    }
+  }, [customClickBehavior])
 
   // Validate
   const error = validateObjectData({ componentName: "OrbitDiagram", data })
@@ -253,7 +265,8 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         showLabels={showLabels}
         enableHover={animated ? false : enableHover}
         tooltipContent={!animated ? (tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)) : undefined}
-        customHoverBehavior={(linkedHover || onObservation) ? wrappedHoverBehavior : undefined}
+        customHoverBehavior={(linkedHover || onObservation || onClick) ? wrappedHoverBehavior : undefined}
+        customClickBehavior={(onObservation || onClick) ? wrappedClickBehavior : undefined}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
         className={className}
