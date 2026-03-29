@@ -95,7 +95,6 @@ export interface LikertChartProps<TDatum extends Record<string, any> = Record<st
   categoryLabel?: string
   valueLabel?: string
   valueFormat?: (d: number | string) => string
-  colorBy?: ChartAccessor<TDatum, string>
   barPadding?: number
   enableHover?: boolean
   showGrid?: boolean
@@ -512,7 +511,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
         ? neutralLevelName
         : rawLevel
       const category = row.__likertCategory || ""
-      const pct = Math.abs(row.__likertPct || 0)
+      // Sentinel halves have half the original neutral percentage — double it
+      const rawPct = Math.abs(row.__likertPct || 0)
+      const pct = (rawLevel === NEUTRAL_NEG || rawLevel === NEUTRAL_POS) ? rawPct * 2 : rawPct
       const count = row.__likertCount || 0
       return React.createElement("div", { className: "semiotic-tooltip", style: defaultTooltipStyle },
         React.createElement("div", { style: { fontWeight: "bold" } }, category),
@@ -548,13 +549,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levels, levelColorMap])
 
   const effectiveLegendProps = useMemo(() => {
-    if (streaming.streamingLegend) {
-      return {
-        ...setup.legendBehaviorProps,
-        legend: streaming.streamingLegend,
-        legendPosition: legendPositionProp || setup.legendPosition,
-      }
-    }
+    // Always use deterministic legend from levels array — never streaming legend discovery
+    // (streaming discovery would surface sentinel keys like __likert_neutral_neg)
     if (showLegend !== false) {
       return {
         ...setup.legendBehaviorProps,
@@ -563,7 +559,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       }
     }
     return setup.legendBehaviorProps
-  }, [setup.legendBehaviorProps, setup.legendPosition, streaming.streamingLegend, legendPositionProp, showLegend, legendGroups])
+  }, [setup.legendBehaviorProps, setup.legendPosition, legendPositionProp, showLegend, legendGroups])
 
   const effectiveMargin = useMemo(() => {
     const m = { ...setup.margin }
@@ -595,7 +591,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     oAccessor: "__likertCategory",
     rAccessor: "__likertPct",
     stackBy: "__likertLevel",
-    normalize: !isDiverging, // Vertical mode normalizes to 100%
+    // Data is pre-computed to percentages by aggregateData — do NOT double-normalize
+    normalize: false,
     projection: isDiverging ? "horizontal" : "vertical",
     pieceStyle,
     size: [width, height],

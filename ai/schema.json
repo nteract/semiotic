@@ -1667,7 +1667,6 @@
             }
           },
           "required": [
-            "data",
             "levels"
           ]
         }

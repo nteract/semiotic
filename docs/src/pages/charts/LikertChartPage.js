@@ -193,7 +193,7 @@ function StreamingLikertDemo({ width }) {
 // ── Props ───────────────────────────────────────────────────────────────
 
 const likertProps = [
-  { name: "data", type: "object[]", required: true, default: null, description: "Array of raw response or pre-aggregated data objects." },
+  { name: "data", type: "object[]", required: false, default: null, description: "Array of raw response or pre-aggregated data objects. Omit when using push API for streaming." },
   { name: "categoryAccessor", type: "string | function", required: false, default: '"question"', description: "Question/item field. The ordinal axis." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"score"', description: "Integer score field (raw response mode). Scores are 1-based: 1 → levels[0], 2 → levels[1], etc." },
   { name: "levelAccessor", type: "string | function", required: false, default: null, description: "Level name field (pre-aggregated mode). Each value must match an entry in levels." },
