@@ -3,12 +3,10 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
-import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -138,7 +136,6 @@ function defaultDivergingScheme(n: number): string[] {
 
   // Negative side
   for (let i = 0; i < halfSize; i++) {
-    const idx = Math.min(i, negColors.length - 1)
     result.push(negColors[Math.min(Math.floor(i * negColors.length / halfSize), negColors.length - 1)])
   }
 
@@ -339,7 +336,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color, colorBy,
   } = props
 
   const width = resolved.width
@@ -472,8 +468,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   })
 
   if (setup.earlyReturn) return setup.earlyReturn
-
-  const themeCategorical = useThemeCategorical()
 
   // ── Neutral color (for split halves) ────────────────────────────────
   const neutralColor = useMemo(() => {

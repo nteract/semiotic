@@ -807,8 +807,9 @@ const ssrCSS = Object.entries(THEME_PRESETS)
         The <code>"carbon"</code> / <code>"carbon-dark"</code> presets use
         IBM's Carbon Design System color language. In addition to the 4-color
         categorical palette built into the theme, Semiotic exports the full
-        14-color categorical palette, diverging scheme, and alert colors for
-        specialized use.
+        14-color categorical palette and alert colors for specialized use. The
+        Carbon diverging palettes are available via the theme (e.g.,{" "}
+        <code>colors.diverging</code>).
       </p>
 
       <h3 id="carbon-categorical">Full 14-color categorical palette</h3>
@@ -924,7 +925,7 @@ const ssrCSS = Object.entries(THEME_PRESETS)
 // Diverging — use the theme's diverging field
 <ThemeProvider theme={{
   ...CARBON_LIGHT,
-  colors: { ...CARBON_LIGHT.colors, sequential: "RdBu" },
+  colors: { ...CARBON_LIGHT.colors, diverging: "RdBu" },
 }}>
   <Heatmap ... />  {/* Now uses diverging red-blue scale */}
 </ThemeProvider>`}
