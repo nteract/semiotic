@@ -356,6 +356,20 @@ const chartCategories = [
         keyProps: stackedBarChartKeyProps,
       },
       {
+        name: "LikertChart",
+        slug: "likert-chart",
+        importStatement: 'import { LikertChart } from "semiotic"',
+        description: "Likert scale survey responses as diverging bars (horizontal) or stacked 100% bars (vertical).",
+        keyProps: [
+          { name: "levels", type: "string[]", description: "Ordered labels, negative → positive (required)" },
+          { name: "categoryAccessor", type: "string", description: 'Question/item field (default: "question")' },
+          { name: "valueAccessor", type: "string", description: 'Integer score field for raw mode (default: "score")' },
+          { name: "levelAccessor", type: "string", description: "Level name field for pre-aggregated mode" },
+          { name: "countAccessor", type: "string", description: 'Count field for pre-aggregated mode (default: "count")' },
+          { name: "orientation", type: "string", description: '"horizontal" (diverging, default) or "vertical" (stacked 100%)' },
+        ],
+      },
+      {
         name: "SwarmPlot",
         slug: "swarm-plot",
         importStatement: 'import { SwarmPlot } from "semiotic"',

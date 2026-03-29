@@ -32,6 +32,7 @@ export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
+export { LikertChart } from "./charts/ordinal/LikertChart"
 
 // Network Charts
 export { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"

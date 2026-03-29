@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-03-28
+
+### Added
+
+- **LikertChart** — new ordinal HOC for Likert scale survey data. Horizontal (default): diverging bar chart centered at 0% with negative levels extending left, positive right, and neutral (odd count) split 50/50 across the centerline. Vertical: stacked 100% bar chart. Supports raw integer scores (1-based, auto-aggregated) and pre-aggregated (question, level, count) data. Works with any scale size (3-point to 7-point+). Push API for streaming — the chart accumulates raw data and re-aggregates percentages on each push.
+- **IBM Carbon color palettes** — `CARBON_CATEGORICAL_14` (14-color), `CARBON_ALERT` (danger/warning/success/info), and `"carbon"`/`"carbon-dark"` theme presets. Exported from `semiotic` and `semiotic/utils`. Integrated into Theme Explorer and Theme Provider docs.
+- **Legend line wrapping** — horizontal legends now wrap to multiple rows when items exceed the available chart width, preventing overflow. Applies to all charts with `legendPosition="bottom"` or `"top"`.
+
+### Fixed
+
+- **Legend `styleFn` contract** — LikertChart (and any chart using custom `legendGroups`) now passes `(item: LegendItem, index)` to `styleFn` correctly, fixing grey legend swatches.
+- **LikertChart tooltip** — shows category name (bold) and level name with percentage/count instead of raw internal field values. Uses standard tooltip chrome (dark background, rounded corners) matching all other charts.
+
 ## [3.2.0] - 2026-03-25
 
 ### Added
@@ -250,7 +263,7 @@ Components compatibility.
 
 #### Chart Components (HOCs)
 
-37 higher-order chart components that wrap the core Frames with curated,
+38 higher-order chart components that wrap the core Frames with curated,
 simple prop APIs.
 
 **XY Charts** (wrap StreamXYFrame):

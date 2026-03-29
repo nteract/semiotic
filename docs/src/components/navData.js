@@ -39,6 +39,7 @@ const navData = [
         children: [
           { title: "Bar Chart", path: "/charts/bar-chart" },
           { title: "Stacked Bar Chart", path: "/charts/stacked-bar-chart" },
+          { title: "Likert Chart", path: "/charts/likert-chart" },
           { title: "Swarm Plot", path: "/charts/swarm-plot" },
           { title: "Box Plot", path: "/charts/box-plot" },
           { title: "Histogram", path: "/charts/histogram" },

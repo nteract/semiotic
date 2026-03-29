@@ -34,7 +34,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with all 37 chart components, optimized for LLM code generation
+- **`semiotic/ai`** — a single import with all 38 chart components, optimized for LLM code generation
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -240,7 +240,7 @@ import { LineChart, BarChart } from "semiotic"
 | Category | Components |
 |---|---|
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` `QuadrantChart` `MinimapChart` |
-| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` |
+| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `LikertChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
 | **Geo** | `ChoroplethMap` `ProportionalSymbolMap` `FlowMap` `DistanceCartogram` |
 | **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
@@ -443,7 +443,7 @@ npx semiotic-ai --compact      # compact schema (fewer tokens)
 [Interactive docs and examples](https://semiotic.nteract.io)
 
 - [Getting Started](https://semiotic.nteract.io/getting-started)
-- [Charts](https://semiotic.nteract.io/charts) — all 37 chart types with live examples
+- [Charts](https://semiotic.nteract.io/charts) — all 38 chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
 - [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes
