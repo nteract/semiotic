@@ -53,12 +53,23 @@ function subscribe(listener: Listener): () => void {
   return () => listeners.delete(listener)
 }
 
+// No-op subscribe/snapshot for components that don't need crosshair updates.
+// Avoids re-renders on every crosshair change for non-crosshair charts.
+const EMPTY_STATE: CrosshairState = { positions: new Map() }
+function subscribeNoop(): () => void { return () => {} }
+function getSnapshotNoop(): CrosshairState { return EMPTY_STATE }
+
 /**
  * Hook to read a specific crosshair position by name.
  * Returns the X value and sourceId, or null if no crosshair is active.
+ * When name is undefined, uses a no-op subscription to avoid unnecessary re-renders.
  */
 export function useCrosshairPosition(name: string | undefined): { xValue: number; sourceId: string } | null {
-  const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  const snap = useSyncExternalStore(
+    name ? subscribe : subscribeNoop,
+    name ? getSnapshot : getSnapshotNoop,
+    name ? getSnapshot : getSnapshotNoop
+  )
   if (!name) return null
   return snap.positions.get(name) ?? null
 }

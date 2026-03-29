@@ -59,6 +59,28 @@ function snapToBinBoundary(value: number, boundaries: number[]): number {
   return Math.abs(value - prev) <= Math.abs(value - curr) ? prev : curr
 }
 
+/** Binary search for the largest boundary <= value (floor). */
+function floorBinBoundary(value: number, boundaries: number[]): number {
+  let lo = 0, hi = boundaries.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1
+    if (boundaries[mid] <= value) lo = mid
+    else hi = mid - 1
+  }
+  return boundaries[lo]
+}
+
+/** Binary search for the smallest boundary >= value (ceil). */
+function ceilBinBoundary(value: number, boundaries: number[]): number {
+  let lo = 0, hi = boundaries.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (boundaries[mid] >= value) hi = mid
+    else lo = mid + 1
+  }
+  return boundaries[lo]
+}
+
 /**
  * Snap a range [lo, hi] to the nearest bin boundaries using floor/ceil semantics:
  * the low end snaps down, the high end snaps up (ensuring the selection never
@@ -66,23 +88,7 @@ function snapToBinBoundary(value: number, boundaries: number[]): number {
  */
 function snapRangeToBinBoundaries(range: [number, number], boundaries: number[]): [number, number] {
   if (boundaries.length === 0) return range
-  // Binary search for the low end: largest boundary <= range[0] (floor)
-  let lo = 0, hi = boundaries.length - 1
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1 // ceil to converge on upper bound
-    if (boundaries[mid] <= range[0]) lo = mid
-    else hi = mid - 1
-  }
-  const loIdx = lo
-  // Binary search for the high end: smallest boundary >= range[1] (ceil)
-  lo = 0; hi = boundaries.length - 1
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1
-    if (boundaries[mid] >= range[1]) hi = mid
-    else lo = mid + 1
-  }
-  const hiIdx = lo
-  return [boundaries[loIdx], boundaries[hiIdx]]
+  return [floorBinBoundary(range[0], boundaries), ceilBinBoundary(range[1], boundaries)]
 }
 
 export function XYBrushOverlay({
@@ -235,15 +241,8 @@ export function XYBrushOverlay({
       if (snap === "bin") {
         const boundaries = binBoundariesRef.current
         if (boundaries && boundaries.length > 0) {
-          // Snap up to the nearest bin boundary at or above visibleMin
-          effectiveMin = snapToBinBoundary(visibleMin, boundaries)
-          if (effectiveMin < visibleMin && boundaries.length > 1) {
-            // snapToBinBoundary finds nearest — we need ceil behavior
-            const idx = boundaries.indexOf(effectiveMin)
-            if (idx >= 0 && idx + 1 < boundaries.length) {
-              effectiveMin = boundaries[idx + 1]
-            }
-          }
+          // Snap up to the smallest bin boundary >= visibleMin (ceil)
+          effectiveMin = ceilBinBoundary(visibleMin, boundaries)
         } else if (binSize && binSize > 0) {
           effectiveMin = Math.ceil(visibleMin / binSize) * binSize
         }
