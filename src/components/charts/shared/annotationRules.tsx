@@ -762,22 +762,29 @@ export function createDefaultAnnotationRules(
 
       // ── Category Highlight (ordinal band behind a category) ──────────
       case "category-highlight": {
-        // Only works when an ordinal (band) scale is available
-        const oScale = context.scales?.x
-        const altScale = context.scales?.y
-        if (!oScale && !altScale) return null
-
         const catValue = ann.category
         if (catValue == null) return null
 
-        // The ordinal scale is the one that's a band scale (has .bandwidth)
-        const scale = (oScale as any)?.bandwidth ? oScale : (altScale as any)?.bandwidth ? altScale : null
+        // Prefer the raw ordinal band scale (available in ordinal frames via context.scales.o).
+        // Fall back to checking x/y for band scales (XY frames with band axes).
+        const rawO = (context.scales as any)?.o
+        const oScale = context.scales?.x
+        const altScale = context.scales?.y
+        const scale = rawO?.bandwidth
+          ? rawO
+          : (oScale as any)?.bandwidth ? oScale
+          : (altScale as any)?.bandwidth ? altScale
+          : null
         if (!scale) return null
 
         const pos = scale(catValue)
         if (pos == null) return null
         const bandwidth = (scale as any).bandwidth()
-        const isVertical = scale === oScale  // x = ordinal → vertical bars
+        // Determine orientation: use projection from context (ordinal frames),
+        // or fall back to checking which axis has the band scale (XY frames)
+        const isVertical = context.projection
+          ? context.projection === "vertical"
+          : scale === oScale
 
         const color = ann.color || "var(--semiotic-primary, #4589ff)"
         const opacity = ann.opacity ?? 0.15

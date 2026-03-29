@@ -41,24 +41,6 @@ export interface XYBrushOverlayProps {
   streaming?: boolean
 }
 
-/**
- * Binary-search the sorted boundaries array for the nearest value.
- * Falls back to returning the input if boundaries is empty.
- */
-function snapToBinBoundary(value: number, boundaries: number[]): number {
-  if (boundaries.length === 0) return value
-  let lo = 0, hi = boundaries.length - 1
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1
-    if (boundaries[mid] < value) lo = mid + 1
-    else hi = mid
-  }
-  if (lo === 0) return boundaries[0]
-  const prev = boundaries[lo - 1]
-  const curr = boundaries[lo]
-  return Math.abs(value - prev) <= Math.abs(value - curr) ? prev : curr
-}
-
 /** Binary search for the largest boundary <= value (floor). */
 function floorBinBoundary(value: number, boundaries: number[]): number {
   let lo = 0, hi = boundaries.length - 1

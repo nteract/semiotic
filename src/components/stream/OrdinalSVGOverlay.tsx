@@ -258,6 +258,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             y: isHoriz ? (oCentered || scales.r) : scales.r,
             time: scales.r,
             value: scales.r,
+            o: scales.o,
           }
         : null,
       timeAxis: "x",
@@ -267,6 +268,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       height,
       data: annotationData,
       frameType: "ordinal",
+      projection: isHoriz ? "horizontal" : "vertical",
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
