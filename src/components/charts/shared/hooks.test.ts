@@ -15,7 +15,7 @@ import {
 import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
-import { setCrosshairPosition, clearCrosshairPosition } from "../../store/LinkedCrosshairStore"
+import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition } from "../../store/LinkedCrosshairStore"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -748,32 +748,68 @@ describe("useChartSelection onClick", () => {
 // ── useChartSelection: crosshair (x-position mode) ─────────────────────
 
 describe("useChartSelection crosshair x-position mode", () => {
-  it("sets crosshair position on hover with valid xField value", () => {
-    const spy = vi.spyOn(
-      { setCrosshairPosition },
-      "setCrosshairPosition"
-    )
-    // We can't easily spy on the module import, so test via the store directly
-    // Clear any prior state
-    clearCrosshairPosition("testCrosshair", "any")
-
+  it("sets crosshair position on hover and clears on hover-end", () => {
+    // Render both the selection hook and a crosshair reader in the same tree
     const { result } = renderHook(
-      () => useChartSelection({
-        linkedHover: { name: "testCrosshair", mode: "x-position", xField: "time" },
-        chartType: "LineChart",
-      }),
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "testCH", mode: "x-position", xField: "time" },
+          chartType: "LineChart",
+        })
+        const crosshair = useCrosshairPosition("testCH")
+        return { selection, crosshair }
+      },
       { wrapper: createWrapper() }
     )
 
+    // Initially no crosshair
+    expect(result.current.crosshair).toBeNull()
+
+    // Hover with valid xField value
     act(() => {
-      result.current.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+      result.current.selection.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
     })
 
-    // Verify via the store — since we can't easily mock the import, test the behavior
-    // The crosshairSourceId should be set, and the position should be broadcast
-    // We verify this indirectly: the hook returned a crosshairSourceId
-    expect(result.current.crosshairSourceId).toBeTruthy()
-    spy.mockRestore()
+    // Crosshair should be set with the xField value
+    expect(result.current.crosshair).not.toBeNull()
+    expect(result.current.crosshair!.xValue).toBe(42)
+    expect(result.current.crosshair!.sourceId).toBe(result.current.selection.crosshairSourceId)
+
+    // Hover-end clears the crosshair
+    act(() => {
+      result.current.selection.customHoverBehavior(null)
+    })
+
+    expect(result.current.crosshair).toBeNull()
+  })
+
+  it("clears crosshair on unmount", () => {
+    const { result, unmount } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "unmountCH", mode: "x-position", xField: "time" },
+        })
+        const crosshair = useCrosshairPosition("unmountCH")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Set a crosshair position
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { time: 99 } })
+    })
+    expect(result.current.crosshair).not.toBeNull()
+
+    // Unmount should clear it via cleanup effect
+    unmount()
+
+    // Read from store directly after unmount
+    const { result: readerResult } = renderHook(
+      () => useCrosshairPosition("unmountCH"),
+      { wrapper: createWrapper() }
+    )
+    expect(readerResult.current).toBeNull()
   })
 
   it("returns a stable crosshairSourceId", () => {
@@ -790,20 +826,26 @@ describe("useChartSelection crosshair x-position mode", () => {
 
   it("does not broadcast crosshair for field-based mode", () => {
     const { result } = renderHook(
-      () => useChartSelection({
-        linkedHover: { name: "hl", fields: ["region"] },
-      }),
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "fieldMode", fields: ["region"] },
+        })
+        const crosshair = useCrosshairPosition("fieldMode")
+        return { selection, crosshair }
+      },
       { wrapper: createWrapper() }
     )
 
-    // Field-based mode should not trigger crosshair store
-    // Just verify it works without errors
+    // Hover should not set crosshair in field-based mode
     act(() => {
-      result.current.customHoverBehavior({ x: 1, y: 2, data: { region: "North" } })
+      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { region: "North" } })
     })
+    expect(result.current.crosshair).toBeNull()
+
     act(() => {
-      result.current.customHoverBehavior(null)
+      result.current.selection.customHoverBehavior(null)
     })
+    expect(result.current.crosshair).toBeNull()
   })
 })
 

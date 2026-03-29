@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useId } from "react"
+import { useMemo, useCallback, useState, useId, useEffect } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
@@ -300,6 +300,16 @@ export function useChartSelection({
     },
     [onClick, onObservation, pushObservation, chartType, chartId]
   )
+
+  // Clean up crosshair on unmount or config change to prevent stale entries
+  // when the source chart is conditionally rendered or navigated away from
+  useEffect(() => {
+    if (hoverConfig?.mode !== "x-position") return
+    const name = hoverConfig.name || "hover"
+    return () => {
+      clearCrosshairPosition(name, crosshairSourceId)
+    }
+  }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])
 
   return { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
 }

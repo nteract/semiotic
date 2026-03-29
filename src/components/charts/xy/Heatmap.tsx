@@ -6,7 +6,7 @@ import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridi
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
+import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
