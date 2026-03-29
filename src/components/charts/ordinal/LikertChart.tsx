@@ -14,6 +14,12 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
+import {
+  useLikertAggregation,
+  defaultDivergingScheme,
+  NEUTRAL_NEG,
+  NEUTRAL_POS,
+} from "../shared/useLikertAggregation"
 
 /**
  * LikertChart — visualize Likert scale survey responses.
@@ -107,210 +113,6 @@ export interface LikertChartProps<TDatum extends Record<string, any> = Record<st
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function resolveAccessorFn<T>(accessor: string | ((d: any) => T) | undefined, fallback: string): (d: any) => T {
-  if (typeof accessor === "function") return accessor
-  const key = (accessor as string) || fallback
-  return (d: any) => d[key]
-}
-
-/**
- * Generate a diverging color scheme for N levels.
- * Interpolates from red → gray → blue for odd, red → blue for even.
- */
-function defaultDivergingScheme(n: number): string[] {
-  // Carbon-inspired diverging: red → neutral gray → blue
-  const negColors = ["#da1e28", "#ff8389", "#ffb3b8"]
-  const posColors = ["#a6c8ff", "#4589ff", "#0043ce"]
-  const neutral = "#a8a8a8"
-
-  if (n <= 0) return []
-  if (n === 1) return [neutral]
-
-  const isOdd = n % 2 !== 0
-  const halfSize = Math.floor(n / 2)
-
-  const result: string[] = []
-
-  // Negative side
-  for (let i = 0; i < halfSize; i++) {
-    result.push(negColors[Math.min(Math.floor(i * negColors.length / halfSize), negColors.length - 1)])
-  }
-
-  // Neutral center (if odd)
-  if (isOdd) result.push(neutral)
-
-  // Positive side
-  for (let i = 0; i < halfSize; i++) {
-    result.push(posColors[Math.min(Math.floor(i * posColors.length / halfSize), posColors.length - 1)])
-  }
-
-  return result
-}
-
-interface AggregatedRow {
-  __likertCategory: string
-  /** Stacking key — may be sentinel value for neutral halves */
-  __likertLevel: string
-  /** Human-readable level label — always the original level name (for legend/selection) */
-  __likertLevelLabel: string
-  __likertCount: number
-  __likertPct: number
-  __likertLevelIndex: number
-}
-
-function aggregateData(
-  data: any[],
-  levels: string[],
-  getCat: (d: any) => string,
-  getScore: ((d: any) => number) | null,
-  getLevel: ((d: any) => string) | null,
-  getCount: ((d: any) => number) | null,
-): AggregatedRow[] {
-  // Build counts per category per level
-  const counts = new Map<string, Map<string, number>>()
-
-  for (const d of data) {
-    const cat = getCat(d)
-    if (!counts.has(cat)) counts.set(cat, new Map<string, number>())
-    const catMap = counts.get(cat)!
-
-    if (getScore) {
-      // Raw response mode: score → level
-      const score = getScore(d)
-      if (score == null || !Number.isFinite(score)) continue
-      if (!Number.isInteger(score)) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[LikertChart] Ignoring non-integer Likert score:", score)
-        }
-        continue
-      }
-      const idx = score - 1 // 1-based → 0-based
-      if (idx < 0 || idx >= levels.length) continue
-      const level = levels[idx]
-      catMap.set(level, (catMap.get(level) || 0) + 1)
-    } else if (getLevel && getCount) {
-      // Pre-aggregated mode
-      const level = getLevel(d)
-      const count = getCount(d)
-      if (!levels.includes(level)) continue
-      catMap.set(level, (catMap.get(level) || 0) + (Number.isFinite(count) ? count : 0))
-    }
-  }
-
-  // Compute percentages and build output
-  const rows: AggregatedRow[] = []
-  for (const [cat, catMap] of counts) {
-    let total = 0
-    for (const level of levels) total += catMap.get(level) || 0
-    if (total === 0) continue
-
-    for (let li = 0; li < levels.length; li++) {
-      const level = levels[li]
-      const count = catMap.get(level) || 0
-      rows.push({
-        __likertCategory: cat,
-        __likertLevel: level,
-        __likertLevelLabel: level,
-        __likertCount: count,
-        __likertPct: (count / total) * 100,
-        __likertLevelIndex: li,
-      })
-    }
-  }
-
-  return rows
-}
-
-/** Sentinel level names for the neutral split halves */
-const NEUTRAL_NEG = "__likert_neutral_neg"
-const NEUTRAL_POS = "__likert_neutral_pos"
-
-/**
- * Transform percentages into diverging values.
- * Negative levels get negative %, positive get positive %.
- * Neutral (if odd) is split into two halves that straddle zero.
- */
-function toDivergingValues(rows: AggregatedRow[], levels: string[]): AggregatedRow[] {
-  const n = levels.length
-  const isOdd = n % 2 !== 0
-  const midIdx = Math.floor(n / 2)
-
-  const result: AggregatedRow[] = []
-  for (const r of rows) {
-    const li = r.__likertLevelIndex
-
-    if (isOdd && li === midIdx) {
-      // Neutral: split into two halves centered on zero
-      const half = r.__likertPct / 2
-      result.push({ ...r, __likertLevel: NEUTRAL_NEG, __likertPct: -half })
-      result.push({ ...r, __likertLevel: NEUTRAL_POS, __likertPct: half })
-    } else if (li < midIdx) {
-      result.push({ ...r, __likertPct: -r.__likertPct })
-    } else {
-      result.push(r)
-    }
-  }
-  return result
-}
-
-/**
- * For diverging mode, reorder levels so that:
- * 1. Negative levels stack in reverse order (most negative first, touching center last)
- * 2. Neutral halves straddle the center (neg half last on left, pos half first on right)
- * 3. Positive levels stack outward from center
- *
- * The bar scene builder stacks in discovery order, so we control the visual
- * layout by controlling the data order.
- */
-function orderForDiverging(rows: AggregatedRow[], levels: string[]): AggregatedRow[] {
-  const n = levels.length
-  const isOdd = n % 2 !== 0
-  const midIdx = Math.floor(n / 2)
-
-  // Group by category, then reorder within each
-  const byCategory = new Map<string, AggregatedRow[]>()
-  for (const r of rows) {
-    const arr = byCategory.get(r.__likertCategory) || []
-    arr.push(r)
-    byCategory.set(r.__likertCategory, arr)
-  }
-
-  const result: AggregatedRow[] = []
-  for (const [, catRows] of byCategory) {
-    // Index by level index for standard levels, and by sentinel name for neutral halves
-    const byIdx = new Map<number, AggregatedRow>()
-    let neutralNeg: AggregatedRow | undefined
-    let neutralPos: AggregatedRow | undefined
-    for (const r of catRows) {
-      if (r.__likertLevel === NEUTRAL_NEG) neutralNeg = r
-      else if (r.__likertLevel === NEUTRAL_POS) neutralPos = r
-      else byIdx.set(r.__likertLevelIndex, r)
-    }
-
-    // Bar scene builder stacks in discovery order: first negative item = closest to 0.
-    // We want: neutralNeg at center (closest to 0), then less-negative, then most-negative (leftmost).
-    // So: neutralNeg first, then reversed negatives (midIdx-1 down to 0).
-    if (isOdd && neutralNeg) result.push(neutralNeg)
-    // Negative levels: reversed so less-extreme is closer to center
-    for (let i = midIdx - 1; i >= 0; i--) {
-      const r = byIdx.get(i)
-      if (r) result.push(r)
-    }
-    // Neutral positive half (closest to center on right)
-    if (isOdd && neutralPos) result.push(neutralPos)
-    // Positive levels: in order (closest to center first)
-    const posStart = isOdd ? midIdx + 1 : midIdx
-    for (let i = posStart; i < n; i++) {
-      const r = byIdx.get(i)
-      if (r) result.push(r)
-    }
-  }
-
-  return result
-}
-
 // ── Component ────────────────────────────────────────────────────────────
 
 export const LikertChart = forwardRef(function LikertChart<TDatum extends Record<string, any> = Record<string, any>>(
@@ -359,18 +161,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  // ── Resolve data format ──────────────────────────────────────────────
-  const isRawMode = !levelAccessor
-  const getCat = useMemo(() => resolveAccessorFn<string>(categoryAccessor, "question"), [categoryAccessor])
-  const getScore = useMemo(() => isRawMode ? resolveAccessorFn<number>(valueAccessor, "score") : null, [isRawMode, valueAccessor])
-  const getLevel = useMemo(() => !isRawMode ? resolveAccessorFn<string>(levelAccessor, "level") : null, [isRawMode, levelAccessor])
-  const getCount = useMemo(() => !isRawMode ? resolveAccessorFn<number>(countAccessor, "count") : null, [isRawMode, countAccessor])
-
-  const safeData = data || []
   const isDiverging = orientation === "horizontal"
   const isPushMode = data === undefined
-  // Accumulator for push mode — stores raw pushed data for re-aggregation
-  const accumulatorRef = useRef<any[]>([])
+  const isRawMode = !levelAccessor
 
   // ── Color scheme ─────────────────────────────────────────────────────
   const colorScheme = useMemo(() => {
@@ -380,7 +173,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     return defaultDivergingScheme(levels.length)
   }, [colorSchemeProp, levels.length])
 
-  // Map level names to colors
   const levelColorMap = useMemo(() => {
     const m = new Map<string, string>()
     for (let i = 0; i < levels.length; i++) {
@@ -389,57 +181,41 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     return m
   }, [levels, colorScheme])
 
-  // ── Aggregate and transform ──────────────────────────────────────────
-  const processedData = useMemo(() => {
-    if (safeData.length === 0) return []
+  // ── Aggregation (extracted hook) ───────────────────────────────────
+  const { processedData, reAggregate, accumulatorRef } = useLikertAggregation({
+    data,
+    levels,
+    categoryAccessor,
+    valueAccessor,
+    levelAccessor,
+    countAccessor,
+    isDiverging,
+    frameRef,
+  })
 
-    let agg = aggregateData(safeData, levels, getCat, getScore, getLevel, getCount)
-    if (isDiverging) {
-      agg = toDivergingValues(agg, levels)
-      agg = orderForDiverging(agg, levels)
-    }
-    return agg
-  }, [safeData, levels, getCat, getScore, getLevel, getCount, isDiverging])
-
-  // ── Streaming legend ─────────────────────────────────────────────────
-  // Use label field for colorBy/legend/selection — sentinels in __likertLevel would break matching
-  const actualColorBy = "__likertLevelLabel"
+  // ── Streaming legend (for margin adjustment only — legend is deterministic) ──
+  const effectiveColorBy = "__likertLevelLabel"
   const streaming = useStreamingLegend({
     isPushMode,
-    colorBy: actualColorBy,
+    colorBy: effectiveColorBy,
     colorScheme,
     showLegend,
     legendPosition: legendPositionProp,
   })
-
-  // For push mode, we need to accumulate raw data and re-aggregate on each push,
-  // because likert charts require full re-aggregation (percentages change with every new datum).
-  const reAggregate = useCallback((rawData: any[]) => {
-    let agg = aggregateData(rawData, levels, getCat, getScore, getLevel, getCount)
-    if (isDiverging) {
-      agg = toDivergingValues(agg, levels)
-      agg = orderForDiverging(agg, levels)
-    }
-    // Replace all frame data with newly aggregated data
-    frameRef.current?.clear()
-    if (agg.length > 0) {
-      frameRef.current?.pushMany(agg)
-    }
-  }, [levels, getCat, getScore, getLevel, getCount, isDiverging])
 
   const wrappedPush = useCallback(
     streaming.wrapPush((d: any) => {
       accumulatorRef.current.push(d)
       reAggregate(accumulatorRef.current)
     }),
-    [streaming.wrapPush, reAggregate]
+    [streaming.wrapPush, reAggregate, accumulatorRef]
   )
   const wrappedPushMany = useCallback(
     streaming.wrapPushMany((d: any[]) => {
       accumulatorRef.current.push(...d)
       reAggregate(accumulatorRef.current)
     }),
-    [streaming.wrapPushMany, reAggregate]
+    [streaming.wrapPushMany, reAggregate, accumulatorRef]
   )
 
   useImperativeHandle(ref, () => ({
@@ -451,13 +227,13 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       frameRef.current?.clear()
     },
     getData: () => frameRef.current?.getData() ?? []
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
+  }), [wrappedPush, wrappedPushMany, streaming.resetCategories, accumulatorRef])
 
   // ── Chart setup ──────────────────────────────────────────────────────
   const setup = useChartSetup({
     data: processedData,
     rawData: data,
-    colorBy: actualColorBy,
+    colorBy: effectiveColorBy,
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -489,10 +265,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   // ── Piece style ──────────────────────────────────────────────────────
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      // Prefer label field (always human-readable), fall back to level (for non-diverging)
       const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel
-      // Map neutral split sentinel names back to the neutral color
       if (level === NEUTRAL_NEG || level === NEUTRAL_POS) {
         return { fill: neutralColor }
       }
@@ -510,7 +284,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   )
 
   // ── Tooltip ──────────────────────────────────────────────────────────
-  // Map sentinel level names back to the original neutral level name
   const neutralLevelName = useMemo(() => {
     const n = levels.length
     return n % 2 !== 0 ? levels[Math.floor(n / 2)] : ""
@@ -520,12 +293,10 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     return (d: any) => {
       const row = d.data || d
       const rawLevel = row.__likertLevel || "Unknown"
-      // Map sentinel names back to readable level name
       const level = (rawLevel === NEUTRAL_NEG || rawLevel === NEUTRAL_POS)
         ? neutralLevelName
         : rawLevel
       const category = row.__likertCategory || ""
-      // Sentinel halves have half the original neutral percentage — double it
       const rawPct = Math.abs(row.__likertPct || 0)
       const pct = (rawLevel === NEUTRAL_NEG || rawLevel === NEUTRAL_POS) ? rawPct * 2 : rawPct
       const count = row.__likertCount || 0
@@ -543,7 +314,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     if (!levels || levels.length < 2) {
       return "LikertChart requires `levels` with at least 2 entries."
     }
-    // Enforce mutually exclusive modes
     if (valueAccessor && levelAccessor) {
       return "LikertChart: provide either `valueAccessor` (raw responses) or `levelAccessor` + `countAccessor` (pre-aggregated), not both."
     }
@@ -567,7 +337,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [data, categoryAccessor, valueAccessor, levelAccessor, countAccessor, levels, isRawMode])
 
   // ── Legend ────────────────────────────────────────────────────────────
-  // Build a custom legend that shows levels in correct order with their colors
   const legendGroups = useMemo(() => {
     return [{
       styleFn: (item: { label: string }) => ({ fill: levelColorMap.get(item.label) || "#888" }),
@@ -577,8 +346,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levels, levelColorMap])
 
   const effectiveLegendProps = useMemo(() => {
-    // Always use deterministic legend from levels array — never streaming legend discovery
-    // (streaming discovery would surface sentinel keys like __likert_neutral_neg)
     if (showLegend !== false) {
       return {
         ...setup.legendBehaviorProps,
@@ -597,16 +364,14 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
         if (m[k] < val) m[k] = val
       }
     }
-    // Diverging horizontal needs wider left margin for category labels
     if (isDiverging && m.left < 100) m.left = 100
     return m
   }, [setup.margin, streaming.streamingMarginAdjust, isDiverging])
 
-  // ── Axis format for diverging ────────────────────────────────────────
+  // ── Axis format ────────────────────────────────────────────────────
   const rFormat = useMemo(() => {
     if (valueFormat) return valueFormat
     if (isDiverging) {
-      // Show absolute percentage values on the diverging axis
       return (v: number | string) => `${Math.abs(Number(v)).toFixed(0)}%`
     }
     return (v: number | string) => `${Number(v).toFixed(0)}%`
@@ -619,7 +384,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     oAccessor: "__likertCategory",
     rAccessor: "__likertPct",
     stackBy: "__likertLevel",
-    // Data is pre-computed to percentages by aggregateData — do NOT double-normalize
     normalize: false,
     projection: isDiverging ? "horizontal" : "vertical",
     pieceStyle,

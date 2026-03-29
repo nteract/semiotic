@@ -5,7 +5,7 @@ import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
-import type { LegendPosition } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -32,6 +32,7 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   showGrid?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
@@ -80,6 +81,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
+    legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
     showCategoryTicks
@@ -104,7 +106,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     rawData: data,
     colorBy,
     colorScheme,
-    legendInteraction: undefined,
+    legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
@@ -153,8 +155,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
-    [baseSummaryStyle, setup.activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, selection),
+    [baseSummaryStyle, setup.effectiveSelectionHook, selection]
   )
 
   const defaultTooltipContent = useMemo(() => {

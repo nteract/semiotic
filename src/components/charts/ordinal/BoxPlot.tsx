@@ -7,13 +7,14 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildStatsTooltip } from "../shared/statsTooltip"
 
 export interface BoxPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -133,27 +134,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     [baseSummaryStyle, setup.effectiveSelectionHook, selection]
   )
 
-  const defaultTooltipContent = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const stats = d.stats || (d.data || d).stats || {}
-      const category = d.category || (d.data || d).category || ""
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{String(category)}</div>
-          {stats.median != null && (
-            <>
-              {stats.n != null && <div>n = {stats.n}</div>}
-              <div>Median: {stats.median.toLocaleString()}</div>
-              <div>Q1: {stats.q1.toLocaleString()}</div>
-              <div>Q3: {stats.q3.toLocaleString()}</div>
-              <div>Min: {stats.min.toLocaleString()}</div>
-              <div>Max: {stats.max.toLocaleString()}</div>
-            </>
-          )}
-        </div>
-      )
-    }
-  }, [])
+  const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])
 
   const error = validateArrayData({
     componentName: "BoxPlot", data: data,
