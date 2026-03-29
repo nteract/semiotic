@@ -26,7 +26,6 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   startAngle?: number
-  slicePadding?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean

@@ -423,7 +423,6 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       categoryAccessor: { type: ["string", "function"] },
       valueAccessor: { type: ["string", "function"] },
       startAngle: { type: "number" },
-      slicePadding: { type: "number" },
     },
   },
 
@@ -439,7 +438,6 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       innerRadius: { type: "number" },
       centerContent: { type: ["object", "string", "number"] },
       startAngle: { type: "number" },
-      slicePadding: { type: "number" },
     },
   },
 

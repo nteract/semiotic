@@ -24,7 +24,6 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   startAngle?: number
-  slicePadding?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean

@@ -107,7 +107,9 @@ export function useColorScale(
     if (data.length === 0) {
       // Still use CategoryColorProvider if available — it has stable colors
       if (categoryColors && Object.keys(categoryColors).length > 0) {
-        return (v: string) => categoryColors[v] || "#999"
+        // Use effectiveScheme as fallback for categories not in the provider
+        const fallbackScale = createColorScale([{ _: "a" }], "_", effectiveScheme)
+        return (v: string) => categoryColors[v] || fallbackScale(v)
       }
       return undefined
     }
@@ -115,7 +117,10 @@ export function useColorScale(
     if (typeof colorBy === "function") {
       const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
       if (categoryColors && Object.keys(categoryColors).length > 0) {
-        return (v: string) => categoryColors[v] || "#999"
+        // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
+        const syntheticData = categories.map(c => ({ _cat: c }))
+        const fallbackScale = createColorScale(syntheticData, "_cat", effectiveScheme)
+        return (v: string) => categoryColors[v] || fallbackScale(v)
       }
       // Build a synthetic data array so createColorScale can derive unique values
       const syntheticData = categories.map(c => ({ _cat: c }))

@@ -18,7 +18,7 @@
  * Consumed by: StreamXYFrame (rendered when brush prop is set).
  */
 import * as React from "react"
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useMemo } from "react"
 import { select as d3Select } from "d3-selection"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
 import type { StreamScales } from "./types"
@@ -34,7 +34,7 @@ export interface XYBrushOverlayProps {
   onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
   binSize?: number
   snap?: "continuous" | "bin"
-  /** Actual bin boundary values for data-driven snapping (overrides uniform grid math when snap="bin") */
+  /** Sorted bin boundary values for data-driven snapping (overrides uniform grid math when snap="bin"). Defensively sorted internally. */
   binBoundaries?: number[]
   /** When true, snap during drag (not just on release). Default false. */
   snapDuring?: boolean
@@ -95,8 +95,13 @@ export function XYBrushOverlay({
   onBrushRef.current = onBrush
   const scalesRef = useRef(scales)
   scalesRef.current = scales
-  const binBoundariesRef = useRef(binBoundaries)
-  binBoundariesRef.current = binBoundaries
+  // Defensively sort binBoundaries — binary search requires ascending order
+  const sortedBoundaries = useMemo(
+    () => binBoundaries ? [...binBoundaries].sort((a, b) => a - b) : undefined,
+    [binBoundaries]
+  )
+  const binBoundariesRef = useRef(sortedBoundaries)
+  binBoundariesRef.current = sortedBoundaries
 
   const isProgrammaticMoveRef = useRef(false)
   const activeBrushExtentRef = useRef<{ x: [number, number]; y: [number, number] } | null>(null)
