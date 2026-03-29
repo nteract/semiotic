@@ -293,6 +293,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),
+    ...setup.crosshairProps,
     ...frameProps
   }
 

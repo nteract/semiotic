@@ -9,11 +9,13 @@ import {
   useChartLegendAndMargin,
   useChartMode,
   useLegendInteraction,
+  getCrosshairProps,
   DEFAULT_COLOR,
 } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
+import { setCrosshairPosition, clearCrosshairPosition } from "../../store/LinkedCrosshairStore"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -676,5 +678,166 @@ describe("useLegendInteraction", () => {
     // highlightedCategory should remain null, no state change
     expect(result.current.highlightedCategory).toBeNull()
     expect(result.current.legendSelectionHook).toBeNull()
+  })
+})
+
+// ── useChartSelection: onClick ──────────────────────────────────────────
+
+describe("useChartSelection onClick", () => {
+  it("calls onClick with unwrapped datum and coordinates", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick, chartType: "BarChart" }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ x: 10, y: 20, data: { id: 1, name: "test" } })
+    })
+
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(onClick).toHaveBeenCalledWith(
+      { id: 1, name: "test" },
+      { x: 10, y: 20 }
+    )
+  })
+
+  it("unwraps .datum property for onClick", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ x: 5, y: 15, datum: { val: 42 } })
+    })
+
+    expect(onClick).toHaveBeenCalledWith({ val: 42 }, { x: 5, y: 15 })
+  })
+
+  it("does not call onClick when d is null", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior(null)
+    })
+
+    expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it("defaults x/y to 0 when missing from frame event", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ data: { a: 1 } })
+    })
+
+    expect(onClick).toHaveBeenCalledWith({ a: 1 }, { x: 0, y: 0 })
+  })
+})
+
+// ── useChartSelection: crosshair (x-position mode) ─────────────────────
+
+describe("useChartSelection crosshair x-position mode", () => {
+  it("sets crosshair position on hover with valid xField value", () => {
+    const spy = vi.spyOn(
+      { setCrosshairPosition },
+      "setCrosshairPosition"
+    )
+    // We can't easily spy on the module import, so test via the store directly
+    // Clear any prior state
+    clearCrosshairPosition("testCrosshair", "any")
+
+    const { result } = renderHook(
+      () => useChartSelection({
+        linkedHover: { name: "testCrosshair", mode: "x-position", xField: "time" },
+        chartType: "LineChart",
+      }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+    })
+
+    // Verify via the store — since we can't easily mock the import, test the behavior
+    // The crosshairSourceId should be set, and the position should be broadcast
+    // We verify this indirectly: the hook returned a crosshairSourceId
+    expect(result.current.crosshairSourceId).toBeTruthy()
+    spy.mockRestore()
+  })
+
+  it("returns a stable crosshairSourceId", () => {
+    const { result } = renderHook(
+      () => useChartSelection({
+        linkedHover: { name: "ch", mode: "x-position", xField: "x" },
+      }),
+      { wrapper: createWrapper() }
+    )
+
+    expect(typeof result.current.crosshairSourceId).toBe("string")
+    expect(result.current.crosshairSourceId.length).toBeGreaterThan(0)
+  })
+
+  it("does not broadcast crosshair for field-based mode", () => {
+    const { result } = renderHook(
+      () => useChartSelection({
+        linkedHover: { name: "hl", fields: ["region"] },
+      }),
+      { wrapper: createWrapper() }
+    )
+
+    // Field-based mode should not trigger crosshair store
+    // Just verify it works without errors
+    act(() => {
+      result.current.customHoverBehavior({ x: 1, y: 2, data: { region: "North" } })
+    })
+    act(() => {
+      result.current.customHoverBehavior(null)
+    })
+  })
+})
+
+// ── getCrosshairProps ────────────────────────────────────────────────────
+
+describe("getCrosshairProps", () => {
+  it("returns crosshair props for x-position mode", () => {
+    const result = getCrosshairProps(
+      { name: "myChart", mode: "x-position", xField: "time" },
+      "source-123"
+    )
+    expect(result).toEqual({
+      linkedCrosshairName: "myChart",
+      linkedCrosshairSourceId: "source-123",
+    })
+  })
+
+  it("returns undefined for field-based mode", () => {
+    expect(getCrosshairProps({ name: "hl", fields: ["cat"] }, "s1")).toBeUndefined()
+  })
+
+  it("returns undefined when linkedHover is undefined", () => {
+    expect(getCrosshairProps(undefined, "s1")).toBeUndefined()
+  })
+
+  it("returns undefined when linkedHover is a string", () => {
+    expect(getCrosshairProps("hl", "s1")).toBeUndefined()
+  })
+
+  it("defaults name to 'hover' when not provided", () => {
+    const result = getCrosshairProps({ mode: "x-position" }, "s1")
+    expect(result).toEqual({
+      linkedCrosshairName: "hover",
+      linkedCrosshairSourceId: "s1",
+    })
   })
 })

@@ -8,7 +8,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -208,12 +208,14 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   warnMissingField("QuadrantChart", safeData, "yAccessor", yAccessor)
 
   // ── Selection hooks ───────────────────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
     onObservation, onClick, chartType: "QuadrantChart", chartId
   })
+
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ──────────────────────────────────────────────────
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -591,6 +593,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,
+    ...crosshairFrameProps,
     ...frameProps,
     // Override pre-renderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),

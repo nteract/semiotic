@@ -986,7 +986,7 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
-  /** Returns sorted bin boundary values from the current bar scene (empty for non-bar chart types) */
+  /** Returns sorted bin boundary values from the last bar scene build. Persists until clear() or the next bar scene build. */
   getBinBoundaries(): number[] {
     return this._binBoundaries
   }

@@ -43,7 +43,7 @@ export function FlippingTooltip({
     height: number
   } | null>(null)
 
-  // Measure the tooltip after render
+  // Measure the tooltip when content or container changes
   React.useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
@@ -55,7 +55,7 @@ export function FlippingTooltip({
       }
       return { width: rect.width, height: rect.height }
     })
-  })
+  }, [children, className, containerWidth, containerHeight])
 
   const offset = 12
 

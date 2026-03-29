@@ -84,7 +84,8 @@ export function resolveAccessor<T = any>(
 
 /**
  * Hook to create a color scale from data and colorBy configuration.
- * Returns undefined when colorBy is absent or is a function accessor.
+ * Returns undefined when colorBy is absent or data is empty (push API mode).
+ * Supports both string and function accessors for colorBy.
  */
 export function useColorScale(
   data: Array<Record<string, any>>,
@@ -301,6 +302,24 @@ export function useChartSelection({
   )
 
   return { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
+}
+
+/**
+ * Compute crosshair props for StreamXYFrame from linkedHover config.
+ * Returns undefined when linkedHover is not in x-position mode.
+ */
+export function getCrosshairProps(
+  linkedHover: unknown,
+  crosshairSourceId: string
+): { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined {
+  const config = (typeof linkedHover === "object" && linkedHover !== null)
+    ? linkedHover as { name?: string; mode?: string }
+    : undefined
+  if (config?.mode !== "x-position") return undefined
+  return {
+    linkedCrosshairName: config.name || "hover",
+    linkedCrosshairSourceId: crosshairSourceId,
+  }
 }
 
 /**

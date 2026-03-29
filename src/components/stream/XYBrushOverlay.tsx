@@ -66,16 +66,22 @@ function snapToBinBoundary(value: number, boundaries: number[]): number {
  */
 function snapRangeToBinBoundaries(range: [number, number], boundaries: number[]): [number, number] {
   if (boundaries.length === 0) return range
-  // For the low end, find the largest boundary <= range[0]
-  let loIdx = 0
-  for (let i = boundaries.length - 1; i >= 0; i--) {
-    if (boundaries[i] <= range[0]) { loIdx = i; break }
+  // Binary search for the low end: largest boundary <= range[0] (floor)
+  let lo = 0, hi = boundaries.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1 // ceil to converge on upper bound
+    if (boundaries[mid] <= range[0]) lo = mid
+    else hi = mid - 1
   }
-  // For the high end, find the smallest boundary >= range[1]
-  let hiIdx = boundaries.length - 1
-  for (let i = 0; i < boundaries.length; i++) {
-    if (boundaries[i] >= range[1]) { hiIdx = i; break }
+  const loIdx = lo
+  // Binary search for the high end: smallest boundary >= range[1] (ceil)
+  lo = 0; hi = boundaries.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (boundaries[mid] >= range[1]) hi = mid
+    else lo = mid + 1
   }
+  const hiIdx = lo
   return [boundaries[loIdx], boundaries[hiIdx]]
 }
 

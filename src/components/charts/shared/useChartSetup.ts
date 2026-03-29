@@ -18,7 +18,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, DEFAULT_COLOR } from "./hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -107,6 +107,8 @@ export interface ChartSetupResult {
   earlyReturn: ReactElement | null
   /** Props to spread into the stream frame for legend behavior */
   legendBehaviorProps: Record<string, any>
+  /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
+  crosshairProps: { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
 }
 
 /**
@@ -150,7 +152,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   } = input
 
   // ── Selection hooks (always called) ────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields,
@@ -160,6 +162,9 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartId,
     onClick,
   })
+
+  // ── Linked crosshair (x-position mode) ────────────────────────────────
+  const crosshairProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Color scale ────────────────────────────────────────────────────────
   const colorScale = useColorScale(data, colorBy, colorScheme)
@@ -229,6 +234,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     legendPosition,
     earlyReturn,
     legendBehaviorProps,
+    crosshairProps,
   }
 }
 

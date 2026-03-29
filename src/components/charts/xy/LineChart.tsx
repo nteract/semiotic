@@ -5,7 +5,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -519,10 +519,7 @@ export const LineChart = forwardRef(
   })
 
   // Linked crosshair config (x-position mode)
-  const linkedHoverConfig = (typeof linkedHover === "object" && linkedHover !== null)
-    ? linkedHover as { name?: string; mode?: string; xField?: string }
-    : undefined
-  const isXPositionMode = linkedHoverConfig?.mode === "x-position"
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Record<string, any>) => {
@@ -931,10 +928,7 @@ export const LineChart = forwardRef(
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
     }),
-    ...(isXPositionMode && {
-      linkedCrosshairName: linkedHoverConfig?.name || "hover",
-      linkedCrosshairSourceId: crosshairSourceId,
-    }),
+    ...crosshairFrameProps,
     ...frameProps
   }
 

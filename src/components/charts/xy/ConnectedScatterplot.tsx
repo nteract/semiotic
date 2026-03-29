@@ -7,7 +7,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useChartSelection, useChartMode, useLegendInteraction } from "../shared/hooks"
+import { useChartSelection, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -174,11 +174,13 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Selection hooks ───────────────────────────────────────────────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection, linkedHover,
     fallbackFields: [],
     onObservation, onClick, chartType: "ConnectedScatterplot", chartId
   })
+
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
   const legendState = useLegendInteraction(legendInteraction, undefined, [])
@@ -365,6 +367,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     canvasPreRenderers,
     svgPreRenderers,
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...crosshairFrameProps,
     ...frameProps
   }
 

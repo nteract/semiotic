@@ -462,6 +462,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(annotations && { annotations }),
     ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
     ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...setup.crosshairProps,
     ...frameProps
   }
 
