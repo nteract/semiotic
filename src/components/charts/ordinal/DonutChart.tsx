@@ -57,7 +57,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius = 60, centerContent,
-    colorBy, colorScheme, startAngle = 0, slicePadding = 2,
+    colorBy, colorScheme, startAngle = 0,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, chartId,

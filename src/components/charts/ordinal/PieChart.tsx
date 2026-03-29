@@ -53,7 +53,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    colorBy, colorScheme, startAngle = 0, slicePadding = 2,
+    colorBy, colorScheme, startAngle = 0,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, chartId,
