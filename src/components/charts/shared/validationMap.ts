@@ -266,9 +266,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   },
 
   LikertChart: {
-    required: ["data", "levels"],
+    required: ["levels"],
     dataShape: "array",
-    dataAccessors: ["categoryAccessor", "valueAccessor"],
+    dataAccessors: ["categoryAccessor", "valueAccessor", "levelAccessor", "countAccessor"],
     props: {
       ...commonProps,
       ...ordinalAxisProps,

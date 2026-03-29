@@ -151,7 +151,10 @@ function defaultDivergingScheme(n: number): string[] {
 
 interface AggregatedRow {
   __likertCategory: string
+  /** Stacking key — may be sentinel value for neutral halves */
   __likertLevel: string
+  /** Human-readable level label — always the original level name (for legend/selection) */
+  __likertLevelLabel: string
   __likertCount: number
   __likertPct: number
   __likertLevelIndex: number
@@ -177,7 +180,13 @@ function aggregateData(
       // Raw response mode: score → level
       const score = getScore(d)
       if (score == null || !Number.isFinite(score)) continue
-      const idx = Math.round(score) - 1 // 1-based → 0-based
+      if (!Number.isInteger(score)) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[LikertChart] Ignoring non-integer Likert score:", score)
+        }
+        continue
+      }
+      const idx = score - 1 // 1-based → 0-based
       if (idx < 0 || idx >= levels.length) continue
       const level = levels[idx]
       catMap.set(level, (catMap.get(level) || 0) + 1)
@@ -203,6 +212,7 @@ function aggregateData(
       rows.push({
         __likertCategory: cat,
         __likertLevel: level,
+        __likertLevelLabel: level,
         __likertCount: count,
         __likertPct: (count / total) * 100,
         __likertLevelIndex: li,
@@ -392,7 +402,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [safeData, levels, getCat, getScore, getLevel, getCount, isDiverging])
 
   // ── Streaming legend ─────────────────────────────────────────────────
-  const actualColorBy = "__likertLevel"
+  // Use label field for colorBy/legend/selection — sentinels in __likertLevel would break matching
+  const actualColorBy = "__likertLevelLabel"
   const streaming = useStreamingLegend({
     isPushMode,
     colorBy: actualColorBy,
@@ -452,7 +463,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
-    fallbackFields: ["__likertLevel"],
+    fallbackFields: ["__likertLevelLabel"],
     unwrapData: true,
     onObservation,
     chartType: "LikertChart",
@@ -478,13 +489,16 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   // ── Piece style ──────────────────────────────────────────────────────
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
+      // Prefer label field (always human-readable), fall back to level (for non-diverging)
+      const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel
       // Map neutral split sentinel names back to the neutral color
       if (level === NEUTRAL_NEG || level === NEUTRAL_POS) {
         return { fill: neutralColor }
       }
-      if (level && levelColorMap.has(level)) {
-        return { fill: levelColorMap.get(level)! }
+      const key = label || level
+      if (key && levelColorMap.has(key)) {
+        return { fill: levelColorMap.get(key)! }
       }
       return { fill: "#888" }
     }
@@ -529,14 +543,28 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     if (!levels || levels.length < 2) {
       return "LikertChart requires `levels` with at least 2 entries."
     }
+    // Enforce mutually exclusive modes
+    if (valueAccessor && levelAccessor) {
+      return "LikertChart: provide either `valueAccessor` (raw responses) or `levelAccessor` + `countAccessor` (pre-aggregated), not both."
+    }
+    if (levelAccessor && !countAccessor) {
+      return "LikertChart: pre-aggregated mode requires both `levelAccessor` and `countAccessor`."
+    }
     if (data !== undefined && data.length === 0) return null
+    const accessors: Record<string, any> = { categoryAccessor }
+    if (isRawMode) {
+      if (valueAccessor) accessors.valueAccessor = valueAccessor
+    } else {
+      if (levelAccessor) accessors.levelAccessor = levelAccessor
+      if (countAccessor) accessors.countAccessor = countAccessor
+    }
     return validateArrayData({
       componentName: "LikertChart",
       data,
-      accessors: { categoryAccessor },
+      accessors,
       requiredProps: { levels },
     })
-  }, [data, categoryAccessor, levels])
+  }, [data, categoryAccessor, valueAccessor, levelAccessor, countAccessor, levels, isRawMode])
 
   // ── Legend ────────────────────────────────────────────────────────────
   // Build a custom legend that shows levels in correct order with their colors
