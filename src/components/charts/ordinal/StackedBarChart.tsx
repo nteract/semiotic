@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -15,7 +15,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
+import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
 export interface StackedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -86,46 +86,19 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   const valueLabel = resolved.valueLabel
 
   const safeData = data || []
-  const actualColorBy = colorBy || stackBy
+  const effectiveColorBy = colorBy || stackBy
   const isPushMode = data === undefined
-
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy: actualColorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
-  })
-
-  const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
-    [streaming.wrapPush]
-  )
-  const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
-    [streaming.wrapPushMany]
-  )
-
-  useImperativeHandle(ref, () => ({
-    push: wrappedPush,
-    pushMany: wrappedPushMany,
-    clear: () => {
-      streaming.resetCategories()
-      frameRef.current?.clear()
-    },
-    getData: () => frameRef.current?.getData() ?? []
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   const setup = useChartSetup({
     data: safeData,
     rawData: data,
-    colorBy: actualColorBy,
+    colorBy: effectiveColorBy,
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
-    fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
+    fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
     chartType: "StackedBarChart",
@@ -146,13 +119,13 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
 
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      if (actualColorBy) {
-        if (setup.colorScale) return { fill: getColor(d, actualColorBy, setup.colorScale) }
+      if (effectiveColorBy) {
+        if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
         return {} // Let frame use its own color scheme (push API)
       }
       return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
     }
-  }, [actualColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -173,30 +146,13 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     accessors: { categoryAccessor, valueAccessor }, requiredProps: { stackBy },
   })
 
-  // Merge streaming legend into legendBehaviorProps when in push API mode
-  const effectiveLegendProps = useMemo(() => {
-    if (streaming.streamingLegend) {
-      return {
-        ...setup.legendBehaviorProps,
-        legend: streaming.streamingLegend,
-        legendPosition: legendPositionProp || setup.legendPosition,
-      }
-    }
-    return setup.legendBehaviorProps
-  }, [setup.legendBehaviorProps, setup.legendPosition, streaming.streamingLegend, legendPositionProp])
-
-  // Adjust margin for streaming legend
-  const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...setup.margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
-    }
-    return setup.margin
-  }, [setup.margin, streaming.streamingMarginAdjust])
+  const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
+    ref, frameRef, isPushMode,
+    colorBy: effectiveColorBy,
+    colorScheme, showLegend,
+    legendPosition: legendPositionProp,
+    setup,
+  })
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "bar",

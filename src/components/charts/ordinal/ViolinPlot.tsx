@@ -5,9 +5,9 @@ import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
-import type { LegendPosition } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -15,6 +15,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
+import { buildStatsTooltip } from "../shared/statsTooltip"
 
 export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data?: TDatum[]
@@ -34,6 +35,7 @@ export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<str
   showGrid?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
@@ -82,6 +84,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
+    legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
     showCategoryTicks
@@ -106,7 +109,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     rawData: data,
     colorBy,
     colorScheme,
-    legendInteraction: undefined,
+    legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
@@ -139,45 +142,11 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
-    [baseSummaryStyle, setup.activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, selection),
+    [baseSummaryStyle, setup.effectiveSelectionHook, selection]
   )
 
-  const defaultTooltipContent = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const category = d.category || (d.data && d.data[0]?.category) || ""
-      const stats = d.stats
-      if (stats) {
-        return (
-          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-            {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-            <div>n = {stats.n}</div>
-            <div>Min: {stats.min.toLocaleString()}</div>
-            <div>Q1: {stats.q1.toLocaleString()}</div>
-            <div>Median: {stats.median.toLocaleString()}</div>
-            <div>Q3: {stats.q3.toLocaleString()}</div>
-            <div>Max: {stats.max.toLocaleString()}</div>
-            <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-          </div>
-        )
-      }
-      // Fallback: compute from raw data
-      const pieces = Array.isArray(d.data) ? d.data : []
-      const values = pieces.map((p: any) => {
-        const v = typeof valueAccessor === "function" ? (valueAccessor as Function)(p) : p[valueAccessor as string]
-        return Number(v)
-      }).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
-      const n = values.length
-      const median = n > 0 ? values[Math.floor(n / 2)] : null
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-          {n > 0 && <div>n = {n}</div>}
-          {median != null && <div>Median: {median.toLocaleString()}</div>}
-        </div>
-      )
-    }
-  }, [valueAccessor])
+  const defaultTooltipContent = useMemo(() => buildStatsTooltip({ valueAccessor }), [valueAccessor])
 
   const error = validateArrayData({
     componentName: "ViolinPlot", data: data,

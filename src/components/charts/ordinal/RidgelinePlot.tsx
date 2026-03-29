@@ -1,21 +1,23 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
-import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
+import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
-import type { LegendPosition } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useChartSetup } from "../shared/useChartSetup"
+import type { RealtimeFrameHandle } from "../../realtime/types"
+import { buildStatsTooltip } from "../shared/statsTooltip"
 
 export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  data: TDatum[]
+  data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
   orientation?: "vertical" | "horizontal"
@@ -32,6 +34,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
   showGrid?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
+  legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
@@ -44,7 +47,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
  * Each category shows its value distribution as a filled area extending from a
  * baseline. The amplitude prop controls overlap between rows.
  */
-export function RidgelinePlot<TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum>) {
+export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -61,6 +64,14 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     orientation: props.orientation,
   })
 
+  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+  useImperativeHandle(ref, () => ({
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? []
+  }))
+
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
@@ -70,6 +81,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, chartId,
     loading, emptyContent,
+    legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
     showCategoryTicks
@@ -94,7 +106,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     rawData: data,
     colorBy,
     colorScheme,
-    legendInteraction: undefined,
+    legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
@@ -125,35 +137,11 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.activeSelectionHook, selection),
-    [baseSummaryStyle, setup.activeSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, selection),
+    [baseSummaryStyle, setup.effectiveSelectionHook, selection]
   )
 
-  const defaultTooltipContent = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const category = d.category || (d.data && d.data[0]?.category) || ""
-      const stats = d.stats
-      if (stats) {
-        return (
-          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-            {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-            <div>n = {stats.n}</div>
-            <div>Min: {stats.min.toLocaleString()}</div>
-            <div>Q1: {stats.q1.toLocaleString()}</div>
-            <div>Median: {stats.median.toLocaleString()}</div>
-            <div>Q3: {stats.q3.toLocaleString()}</div>
-            <div>Max: {stats.max.toLocaleString()}</div>
-            <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-          </div>
-        )
-      }
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(category)}</div>
-        </div>
-      )
-    }
-  }, [])
+  const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])
 
   const error = validateArrayData({
     componentName: "RidgelinePlot", data: data,
@@ -197,6 +185,9 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     ...frameProps
   }
 
-  return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame {...streamProps} /></SafeRender>
+  return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+}) as unknown as {
+  <TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  displayName?: string
 }
 RidgelinePlot.displayName = "RidgelinePlot"
