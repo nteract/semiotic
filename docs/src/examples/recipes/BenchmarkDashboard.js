@@ -81,6 +81,19 @@ const THEMES = {
     },
     categorical: ["#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"],
   },
+  carbon: {
+    label: "Carbon",
+    fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
+    light: {
+      bg: "#ffffff", card: "#f4f4f4", border: "#e0e0e0", text: "#161616",
+      muted: "#525252", dim: "#8d8d8d", accent: "#0f62fe", green: "#24a148", red: "#da1e28",
+    },
+    dark: {
+      bg: "#161616", card: "#262626", border: "#393939", text: "#f4f4f4",
+      muted: "#a8a8a8", dim: "#6f6f6f", accent: "#4589ff", green: "#42be65", red: "#ff8389",
+    },
+    categorical: ["#6929c4", "#1192e8", "#005d5d", "#9f1853"],
+  },
 }
 
 // ── Library names ────────────────────────────────────────────────────────

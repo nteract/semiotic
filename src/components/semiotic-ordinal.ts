@@ -21,6 +21,7 @@ export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
 export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
+export { LikertChart } from "./charts/ordinal/LikertChart"
 
 // Utilities
 export { createHatchPattern } from "./charts/shared/hatchPattern"

@@ -25,6 +25,7 @@ import HeatmapPage from "./pages/charts/HeatmapPage"
 import ScatterplotMatrixPage from "./pages/charts/ScatterplotMatrixPage"
 import BarChartPage from "./pages/charts/BarChartPage"
 import StackedBarChartPage from "./pages/charts/StackedBarChartPage"
+import LikertChartPage from "./pages/charts/LikertChartPage"
 import SwarmPlotPage from "./pages/charts/SwarmPlotPage"
 import BoxPlotPage from "./pages/charts/BoxPlotPage"
 import HistogramPage from "./pages/charts/HistogramPage"
@@ -412,6 +413,7 @@ export default function DocsApp() {
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
+              <Route path="likert-chart" element={<LikertChartPage />} />
               <Route path="swarm-plot" element={<SwarmPlotPage />} />
               <Route path="box-plot" element={<BoxPlotPage />} />
               <Route path="histogram" element={<HistogramPage />} />

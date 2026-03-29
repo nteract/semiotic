@@ -53,6 +53,9 @@ export type { BarChartProps } from "./ordinal/BarChart"
 export { StackedBarChart } from "./ordinal/StackedBarChart"
 export type { StackedBarChartProps } from "./ordinal/StackedBarChart"
 
+export { LikertChart } from "./ordinal/LikertChart"
+export type { LikertChartProps } from "./ordinal/LikertChart"
+
 export { SwarmPlot } from "./ordinal/SwarmPlot"
 export type { SwarmPlotProps } from "./ordinal/SwarmPlot"
 

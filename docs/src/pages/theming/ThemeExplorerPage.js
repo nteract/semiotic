@@ -109,6 +109,10 @@ const PRESET_GROUPS = [
     label: "Playful",
     presets: ["playful", "playful-dark"],
   },
+  {
+    label: "Carbon",
+    presets: ["carbon", "carbon-dark"],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -424,7 +428,7 @@ ${overrideLines.join("\n")}
       nextPage={{ title: "Cookbook", path: "/cookbook" }}
     >
       <p>
-        Interactively explore all 15 named theme presets, customize colors and
+        Interactively explore all 17 named theme presets, customize colors and
         typography, and export the result as CSS custom properties, design
         tokens, or JSX code.
       </p>
@@ -669,7 +673,7 @@ ${overrideLines.join("\n")}
       <h2 id="gallery">Preset Gallery</h2>
 
       <p>
-        Visual comparison of all 15 presets. Each card shows the theme's
+        Visual comparison of all 17 presets. Each card shows the theme's
         categorical palette, font stack, and key colors.
       </p>
 

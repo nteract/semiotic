@@ -156,6 +156,8 @@ const renderLegendGroupVertical = (
   return renderedItems
 }
 
+const ROW_HEIGHT_H = 22
+
 const renderLegendGroupHorizontal = (
   legendGroup: LegendGroup,
   customClickBehavior: ((item: LegendItem) => void) | undefined,
@@ -166,11 +168,13 @@ const renderLegendGroupHorizontal = (
   focusedItemIndex: number,
   groupIndex: number,
   onFocusedIndexChange: (groupIndex: number, itemIndex: number) => void,
-  legendInteraction?: string
+  legendInteraction?: string,
+  maxWidth?: number
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
+  let rowIndex = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
   const useIsolateAria = legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)
   items.forEach((item, i) => {
@@ -178,10 +182,20 @@ const renderLegendGroupHorizontal = (
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
     const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
     const isHighlighted = highlightedCategory != null && item.label === highlightedCategory
+    const itemWidth = SWATCH + 10 + item.label.length * 7
+
+    // Wrap to next row if this item would exceed maxWidth
+    if (maxWidth && maxWidth > 0 && itemOffset > 0 && itemOffset + itemWidth > maxWidth) {
+      rowIndex++
+      itemOffset = 0
+    }
+
+    const yOffset = rowIndex * ROW_HEIGHT_H
+
     renderedItems.push(
       <g
         key={`legend-item-${i}`}
-        transform={`translate(${itemOffset},0)`}
+        transform={`translate(${itemOffset},${yOffset})`}
         onClick={
           customClickBehavior ? () => customClickBehavior(item) : undefined
         }
@@ -249,9 +263,26 @@ const renderLegendGroupHorizontal = (
         </text>
       </g>
     )
-    itemOffset += SWATCH + 10 + item.label.length * 7
+    itemOffset += itemWidth
   })
-  return { items: renderedItems, offset: itemOffset }
+
+  // Compute total width (max row width) for centering
+  let totalWidth = 0
+  let currentRowWidth = 0
+  for (const item of items) {
+    const w = SWATCH + 10 + item.label.length * 7
+    if (maxWidth && maxWidth > 0 && currentRowWidth > 0 && currentRowWidth + w > maxWidth) {
+      totalWidth = Math.max(totalWidth, currentRowWidth)
+      currentRowWidth = w
+    } else {
+      currentRowWidth += w
+    }
+  }
+  totalWidth = Math.max(totalWidth, currentRowWidth)
+
+  const totalRows = rowIndex + 1
+  const totalHeight = totalRows * ROW_HEIGHT_H
+  return { items: renderedItems, offset: totalWidth, totalRows, totalHeight }
 }
 
 const renderVerticalGroup = ({
@@ -354,19 +385,19 @@ const renderHorizontalGroup = ({
 }) => {
   // First pass: compute total width of all items
   let totalItemsWidth = 0
-  const groupResults: { label?: string; items: React.ReactElement[]; offset: number }[] = []
+  const groupResults: { label?: string; items: React.ReactElement[]; offset: number; totalRows?: number; totalHeight?: number }[] = []
 
   legendGroups.forEach((l, i) => {
     let groupWidth = 0
     if (l.label) groupWidth += 16
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction)
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction, width)
     groupWidth += renderedItems.offset + 5
-    groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth })
+    groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth, totalRows: renderedItems.totalRows, totalHeight: renderedItems.totalHeight })
     totalItemsWidth += groupWidth + 12
   })
 
-  // Center horizontally
-  const startOffset = Math.max(0, (width - totalItemsWidth) / 2)
+  // Center horizontally — use actual width if items fit, otherwise start at 0
+  const startOffset = totalItemsWidth <= width ? Math.max(0, (width - totalItemsWidth) / 2) : 0
   let offset = startOffset
 
   const renderedGroups: React.ReactElement[] = []
@@ -402,6 +433,7 @@ const renderHorizontalGroup = ({
     offset += result.offset + 5
 
     if (legendGroups[i + 1]) {
+      const separatorHeight = result.totalHeight || height
       renderedGroups.push(
         <line
           key={`legend-top-line legend-symbol-${i}`}
@@ -409,7 +441,7 @@ const renderHorizontalGroup = ({
           x1={offset}
           y1={verticalOffset - 8}
           x2={offset}
-          y2={height + verticalOffset + 8}
+          y2={separatorHeight + verticalOffset + 8}
         />
       )
     }

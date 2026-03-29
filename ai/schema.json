@@ -1581,6 +1581,100 @@
     {
       "type": "function",
       "function": {
+        "name": "LikertChart",
+        "description": "Visualize Likert scale survey responses. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (if odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports raw integer scores (1-based, aggregated automatically) or pre-aggregated (question, level, count) data. The levels array defines polarity: first half = negative, second half = positive, center = neutral (if odd). Works with any scale size (3-point to 7-point+). Supports push API for streaming — accumulates raw data and re-aggregates on each push.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Array of raw response or pre-aggregated data objects"
+            },
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Ordered response labels, most negative to most positive (required). Odd count = center is neutral."
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Question/item field (ordinal axis)",
+              "default": "question"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Integer score field for raw response mode (1-based: score 1 → levels[0])",
+              "default": "score"
+            },
+            "levelAccessor": {
+              "type": "string",
+              "description": "Level name field for pre-aggregated mode. Each value must match an entry in levels."
+            },
+            "countAccessor": {
+              "type": "string",
+              "description": "Count/frequency field for pre-aggregated mode",
+              "default": "count"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": [
+                "horizontal",
+                "vertical"
+              ],
+              "default": "horizontal"
+            },
+            "colorScheme": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "One color per level. Use a diverging palette (red → gray → blue). Defaults to Carbon-inspired diverging."
+            },
+            "barPadding": {
+              "type": "number",
+              "default": 20
+            },
+            "title": {
+              "type": "string"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "tooltip": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "levels"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "GroupedBarChart",
         "description": "Side-by-side bars for comparing sub-categories within categories. Requires groupBy to define grouping.",
         "parameters": {
