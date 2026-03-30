@@ -8,6 +8,7 @@ import {
 import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "d3-scale-chromatic"
 import { areaLink, circularAreaLink } from "../../geometry/sankeyLinks"
+import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -280,7 +281,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const h = node.y1 - node.y0
       if (w <= 0 || h <= 0) continue
 
-      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
+      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
         fill: userStyle.fill || nodeColorMap.get(node.id) || "#4d430c",
         stroke: userStyle.stroke,
@@ -344,7 +345,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         fill = resolvedNodeFills.get(sourceNode.id) || nodeColorMap.get(sourceNode.id) || fill
       }
 
-      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
+      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
 
       // Stub circular edges: two separate fading rectangles
       if ((edge as any)._circularStub && edge.circular && edge.circularPathData) {

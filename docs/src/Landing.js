@@ -41,61 +41,33 @@ const quickStartSteps = [
   },
   {
     number: 2,
-    title: "Import",
-    code: 'import { LineChart } from "semiotic"',
+    title: "Static data — just pass an array",
+    code: `<LineChart
+  data={salesData}
+  xAccessor="month"
+  yAccessor="revenue"
+/>`,
   },
   {
     number: 3,
-    title: "Render",
-    code: `<LineChart
-  data={[
-    { month: "Jan", value: 100 },
-    { month: "Feb", value: 200 },
-    { month: "Mar", value: 150 }
-  ]}
-  xAccessor="month"
-  yAccessor="value"
+    title: "Streaming data — push via refs",
+    code: `const ref = useRef()
+
+// Push data at any rate — Semiotic handles the rest
+ref.current.push({ time: Date.now(), value: 42 })
+
+<RealtimeLineChart ref={ref}
+  timeAccessor="time" valueAccessor="value"
+  decay={{ type: "exponential", halfLife: 100 }}
 />`,
   },
 ]
 
 const features = [
   {
-    title: "AI-Ready",
+    title: "Streaming Engine",
     description:
-      "Machine-readable schemas, an MCP server, and instruction files for every major AI coding assistant. LLMs generate correct Semiotic code without examples.",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M9 10h10M9 14h7M9 18h10"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <circle cx="20" cy="14" r="2" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    title: "Network Visualization",
-    description:
-      "Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, circle packing, and tree layouts — as React components with the same API as LineChart.",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="7" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="21" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="14" y1="10" x2="7" y2="18" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="14" y1="10" x2="21" y2="18" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="10" y1="21" x2="18" y2="21" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
-  },
-  {
-    title: "Streaming Data",
-    description:
-      "Canvas-rendered realtime charts at 60fps. Push data via refs, with built-in decay, pulse, and staleness encoding for live monitoring dashboards.",
+      "Canvas-rendered push API at 60fps with a two-canvas architecture, ring buffer windowing, and microtask-batched ingestion. Decay, pulse, staleness, and identity-based transitions are built into the rendering pipeline — not bolted on.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <polyline
@@ -114,7 +86,7 @@ const features = [
   {
     title: "Coordinated Views",
     description:
-      "Hover one chart, highlight matching data in others. Brush a scatterplot, filter a bar chart. Cross-chart coordination without custom state management.",
+      "Hover one chart, highlight matching data in others. Brush a scatterplot, filter a bar chart. Union, intersect, and crossfilter resolution modes — no custom state management.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -143,6 +115,21 @@ const features = [
     ),
   },
   {
+    title: "Network Visualization",
+    description:
+      "Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, circle packing, and tree layouts — as React components with the same API as LineChart.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="7" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="21" cy="21" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="14" y1="10" x2="7" y2="18" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="14" y1="10" x2="21" y2="18" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="10" y1="21" x2="18" y2="21" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    ),
+  },
+  {
     title: "Statistical Overlays",
     description:
       "Forecast with confidence envelopes, anomaly detection, LOESS smoothing, and trend lines. Auto-computed or pre-computed from your ML model.",
@@ -163,6 +150,23 @@ const features = [
           fillOpacity="0.1"
         />
         <circle cx="8" cy="16" r="2" fill="currentColor" opacity="0.5" />
+      </svg>
+    ),
+  },
+  {
+    title: "AI-Ready",
+    description:
+      "MCP server, machine-readable schemas, and instruction files for every major AI coding assistant. LLMs generate correct Semiotic code without examples.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M9 10h10M9 14h7M9 18h10"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <circle cx="20" cy="14" r="2" fill="currentColor" />
       </svg>
     ),
   },
@@ -914,10 +918,9 @@ export default function Landing() {
           ================================================================ */}
       <section style={styles.hero}>
         <div style={styles.heroInner}>
-          <h1 style={styles.heroHeadline}>Data Visualization for React</h1>
+          <h1 style={styles.heroHeadline}>Streaming-First Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            Charts, network graphs, streaming data, and coordinated dashboards — with built-in AI
-            tooling so coding assistants generate correct code on the first try.
+            Push data at 60fps with decay, pulse, and staleness encoding. Or just pass an array — static data is the simple case. 40+ chart types, network graphs, coordinated dashboards, and AI tooling built in.
           </p>
 
           <div style={styles.heroButtons}>
@@ -1053,8 +1056,8 @@ export default function Landing() {
           borderBottom: "1px solid var(--surface-3)",
         }}
       >
-        <h2 style={styles.sectionTitle}>Get Up and Running in Minutes</h2>
-        <p style={styles.sectionSubtitle}>Three steps to your first chart.</p>
+        <h2 style={styles.sectionTitle}>Static or Streaming in Minutes</h2>
+        <p style={styles.sectionSubtitle}>Pass an array for static charts. Push via refs for live data. Same components, same API.</p>
 
         <div style={styles.stepsContainer}>
           {quickStartSteps.map((step) => (

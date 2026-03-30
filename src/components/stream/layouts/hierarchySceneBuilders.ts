@@ -25,6 +25,7 @@ import type {
 } from "../networkTypes"
 import type { Style } from "../types"
 import { DEPTH_PALETTE, contrastTextColor, resolveLabelFn, resolveDefaultNodeSize } from "./hierarchyUtils"
+import { wrapWithDataHint } from "../devDataAccessWarning"
 
 // ── Tree/Cluster scene ────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export function buildTreeScene(
       ny += cy
     }
 
-    const userStyle = nodeStyleFn(node)
+    const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
     let fill = userStyle.fill || "#4d430c"
 
     if (config.colorByDepth && node.depth !== undefined) {
@@ -108,7 +109,7 @@ export function buildTreeScene(
 
     const pathD = generateTreeEdgePath(sx, sy, tx, ty, orientation)
 
-    const userStyle = edgeStyleFn(edge)
+    const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
     const style: Style = {
       fill: "none",
       stroke: userStyle.stroke || "#999",
@@ -207,7 +208,7 @@ export function buildRectScene(
     const h = node.y1 - node.y0
     if (w <= 0 || h <= 0) continue
 
-    const userStyle = nodeStyleFn(node)
+    const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
     let fill = userStyle.fill || "#4d430c"
 
     if (config.colorByDepth && node.depth !== undefined) {
@@ -260,7 +261,7 @@ export function buildRectScene(
       const minHeight = isLeaf ? 16 : 14
       if (w < minWidth || h < minHeight) continue
 
-      const userStyle = nodeStyleFn(node)
+      const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
       let fill = userStyle.fill || "#4d430c"
       if (config.colorByDepth && node.depth !== undefined) {
         fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
@@ -315,7 +316,7 @@ export function buildCircleScene(
     const r = (node as any).__radius ?? 5
     if (r <= 0) continue
 
-    const userStyle = nodeStyleFn(node)
+    const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
     let fill = userStyle.fill || "#4d430c"
 
     if (config.colorByDepth && node.depth !== undefined) {
@@ -356,7 +357,7 @@ export function buildCircleScene(
 
       const isLeaf = !(node.data?.children && node.data.children.length > 0)
 
-      const userStyle = nodeStyleFn(node)
+      const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
       let fill = userStyle.fill || "#4d430c"
       if (config.colorByDepth && node.depth !== undefined) {
         fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]

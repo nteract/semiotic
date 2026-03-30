@@ -33,6 +33,40 @@ function App() {
   )
 }`
 
+const streamingSnippet = `import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic/realtime"
+
+function LiveMetrics() {
+  const ref = useRef()
+
+  useEffect(() => {
+    const ws = new WebSocket("wss://metrics.example.com")
+    ws.onmessage = (e) => {
+      ref.current.push(JSON.parse(e.data))
+    }
+    return () => ws.close()
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={ref}
+      timeAccessor="time"
+      valueAccessor="latency"
+      windowSize={500}
+      decay={{ type: "exponential", halfLife: 200 }}
+      pulse={{ duration: 300, color: "#22c55e" }}
+    />
+  )
+}`
+
+const pushApiSnippet = `// Any HOC chart supports push via refs — just omit the data prop
+const ref = useRef()
+ref.current.push({ x: 1, y: 42 })       // single point
+ref.current.pushMany([...points])         // batch
+ref.current.clear()                       // reset
+
+<Scatterplot ref={ref} xAccessor="x" yAccessor="y" />`
+
 const framePropsSnippet = `// Every Chart accepts a frameProps escape hatch
 <LineChart
   data={salesData}
@@ -158,9 +192,10 @@ export default function GettingStartedPage() {
       nextPage={{ title: "LineChart", path: "/charts/line-chart" }}
     >
       <p style={styles.sectionIntro}>
-        Semiotic is a React data visualization library that provides both high-level chart
-        components for common use cases and low-level frame primitives for full creative control.
-        This guide will get you from zero to your first chart in minutes.
+        Semiotic is a streaming-first visualization library for React. Every chart is backed by a
+        canvas rendering engine with a push API, ring buffer windowing, and visual encodings for
+        live data (decay, pulse, staleness). But you don't need streaming to use it — pass an array
+        and you get a beautiful static chart with sensible defaults. This guide covers both paths.
       </p>
 
       {/* --------------------------------------------------------------- */}
@@ -196,9 +231,67 @@ export default function GettingStartedPage() {
       <CodeBlock code={firstChartSnippet} language="jsx" />
 
       <p>
-        That is it -- Semiotic handles axes, scales, hover interactions, and responsive sizing with
+        That is it — Semiotic handles axes, scales, hover interactions, and responsive sizing with
         sensible defaults. When you need to customize, every aspect can be controlled through props.
       </p>
+
+      {/* --------------------------------------------------------------- */}
+      {/* Streaming Data */}
+      {/* --------------------------------------------------------------- */}
+      <h2 id="streaming-data">Streaming Data</h2>
+
+      <p>
+        Under the hood, every Semiotic chart is a canvas-rendered streaming pipeline. When you pass
+        a <code>data</code> array, Semiotic ingests it through the same pipeline that handles live
+        push data — chunking large datasets automatically and rendering progressively to keep the UI
+        responsive.
+      </p>
+
+      <p>
+        For live data, use a ref-based push API. Data is microtask-batched (thousands of pushes per
+        second coalesce into single render frames) and rendered at 60fps with optional visual
+        encodings:
+      </p>
+
+      <CodeBlock code={streamingSnippet} language="jsx" />
+
+      <div style={styles.cardGrid}>
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Decay</h3>
+          <p style={styles.cardDescription}>
+            Older data fades out. Linear, exponential, or step modes. Per-vertex opacity on lines
+            and areas — not just uniform dimming.
+          </p>
+        </div>
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Pulse</h3>
+          <p style={styles.cardDescription}>
+            New data glows briefly. Configurable duration and color. Three visual modes: circle
+            glow, rect overlay, and path fill.
+          </p>
+        </div>
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Staleness</h3>
+          <p style={styles.cardDescription}>
+            Charts dim when the feed pauses. Configurable threshold and badge position. Automatic
+            recovery when data resumes.
+          </p>
+        </div>
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Transitions</h3>
+          <p style={styles.cardDescription}>
+            Identity-based animation. Nodes matched by stable keys across rebuilds — not array
+            index. Respects <code>prefers-reduced-motion</code>.
+          </p>
+        </div>
+      </div>
+
+      <p>
+        The push API works on most HOC charts too — not just Realtime* charts. Omit the{" "}
+        <code>data</code> prop and push via refs:
+      </p>
+
+      <CodeBlock code={pushApiSnippet} language="jsx" />
 
       {/* --------------------------------------------------------------- */}
       {/* Core Concepts */}
@@ -469,18 +562,26 @@ export default function GettingStartedPage() {
           </Link>
         </li>
         <li>
-          <Link to="/charts/bar-chart" style={styles.nextStepLink}>
-            BarChart
+          <Link to="/charts/realtime-line-chart" style={styles.nextStepLink}>
+            RealtimeLineChart
             <span style={styles.nextStepDescription}>
-              Categorical comparisons, grouped and stacked bars
+              Live streaming data with decay and pulse encoding
             </span>
           </Link>
         </li>
         <li>
-          <Link to="/frames/xy-frame" style={styles.nextStepLink}>
-            StreamXYFrame
+          <Link to="/features/realtime-encoding" style={styles.nextStepLink}>
+            Streaming Encodings
             <span style={styles.nextStepDescription}>
-              Full control over XY-based visualizations
+              Decay, pulse, staleness, and transitions in depth
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/charts/bar-chart" style={styles.nextStepLink}>
+            BarChart
+            <span style={styles.nextStepDescription}>
+              Categorical comparisons, grouped and stacked bars
             </span>
           </Link>
         </li>
