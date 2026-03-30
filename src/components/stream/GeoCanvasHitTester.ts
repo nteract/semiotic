@@ -52,7 +52,7 @@ export function findNearestGeoNode(
     const dx = node.x - mouseX
     const dy = node.y - mouseY
     const dist = Math.sqrt(dx * dx + dy * dy)
-    const hitRadius = (node.r || 4) + 4
+    const hitRadius = Math.max((node.r || 4) + 5, 12) // minimum 12px hit target (Fitts's law)
     if (dist <= hitRadius && dist < bestPointDist) {
       bestPoint = node
       bestPointDist = dist

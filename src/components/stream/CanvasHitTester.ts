@@ -87,8 +87,9 @@ function hitTestPoint(node: PointSceneNode, px: number, py: number): HitResult |
   const dx = px - node.x
   const dy = py - node.y
   const dist = Math.sqrt(dx * dx + dy * dy)
-  // Hit radius includes the point's visual radius plus a tolerance
-  if (dist > node.r + 5) return null
+  // Minimum 12px hit radius for Fitts's law compliance, otherwise visual radius + tolerance
+  const hitR = Math.max(node.r + 5, 12)
+  if (dist > hitR) return null
   return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
 }
 

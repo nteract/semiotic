@@ -313,6 +313,7 @@ export default function LineChartPage() {
           xAccessor: "month",
           yAccessor: "revenue",
           showPoints: true,
+          pointRadius: 5,
           curve: "monotoneX",
           xLabel: "Month",
           yLabel: "Revenue ($)",
@@ -320,6 +321,8 @@ export default function LineChartPage() {
         type={LineChart}
         overrideProps={{
           data: "salesData",
+          showPoints: "true",
+          pointRadius: "5",
         }}
         hiddenProps={{}}
       />

@@ -86,9 +86,9 @@ function makeDateTickFormatter(domain: [number, number]): (v: number) => string 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
 const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
-  line: [areaCanvasRenderer, lineCanvasRenderer],
-  area: [areaCanvasRenderer],
-  stackedarea: [areaCanvasRenderer],
+  line: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer],
+  area: [areaCanvasRenderer, pointCanvasRenderer],
+  stackedarea: [areaCanvasRenderer, pointCanvasRenderer],
   scatter: [pointCanvasRenderer],
   bubble: [pointCanvasRenderer],
   heatmap: [heatmapCanvasRenderer],

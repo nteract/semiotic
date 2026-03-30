@@ -49,6 +49,8 @@ const stackedAreaChartProps = [
   { name: "areaOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the filled areas." },
   { name: "showLine", type: "boolean", required: false, default: "true", description: "Show a line on top of each stacked area." },
   { name: "lineWidth", type: "number", required: false, default: "2", description: "Stroke width of the line when showLine is true." },
+  { name: "showPoints", type: "boolean", required: false, default: "false", description: "Show data points on area lines. Useful for sparse data or single-point series." },
+  { name: "pointRadius", type: "number", required: false, default: "3", description: "Point radius when showPoints is true." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% stacked (proportional) areas." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },

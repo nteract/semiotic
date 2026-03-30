@@ -8,7 +8,7 @@
  * Consumed by: PipelineStore.buildSceneNodes (chartType "line")
  */
 import type { SceneNode } from "../types"
-import { buildLineNode } from "../SceneGraph"
+import { buildLineNode, buildPointNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { buildBoundsForGroup } from "./boundsScene"
 
@@ -43,6 +43,18 @@ export function buildLineScene(ctx: XYSceneContext, data: Record<string, any>[])
       lineNode.curve = ctx.config.curve
     }
     nodes.push(lineNode)
+  }
+
+  // Emit point nodes when pointStyle is configured (showPoints on HOC)
+  if (ctx.config.pointStyle) {
+    for (const g of groups) {
+      for (const d of g.data) {
+        const style = ctx.config.pointStyle(d)
+        const r = style.r || 3
+        const node = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style)
+        if (node) nodes.push(node)
+      }
+    }
   }
 
   return nodes
