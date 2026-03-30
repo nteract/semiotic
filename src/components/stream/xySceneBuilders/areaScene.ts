@@ -62,7 +62,48 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
     curveType
   )
 
-  emitPointNodes(ctx, groups, nodes)
+  // Emit points at stacked (cumulative) Y positions, not raw values.
+  // Replay the stacking logic to build a datum→stackedY lookup.
+  if (ctx.config.pointStyle) {
+    const stackedYMap = new WeakMap<Record<string, any>, number>()
+    const xBaselines = new Map<number, number>()
+
+    // Compute totals per x for normalization (mirrors buildStackedAreaNodes)
+    let totals: Map<number, number> | undefined
+    if (ctx.config.normalize) {
+      totals = new Map()
+      for (const g of groups) {
+        for (const d of g.data) {
+          const x = ctx.getX(d)
+          const y = ctx.getY(d)
+          if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+            totals.set(x, (totals.get(x) || 0) + y)
+          }
+        }
+      }
+      // Avoid division by zero
+      for (const [x, v] of totals) {
+        if (v === 0) totals.set(x, 1)
+      }
+    }
+
+    for (const g of groups) {
+      for (const d of g.data) {
+        const x = ctx.getX(d)
+        let y = ctx.getY(d)
+        if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+        if (ctx.config.normalize && totals) {
+          y = y / totals.get(x)!
+        }
+        const base = xBaselines.get(x) || 0
+        stackedYMap.set(d, base + y)
+        xBaselines.set(x, base + y)
+      }
+    }
+
+    const stackedYGet = (d: Record<string, any>): number => stackedYMap.get(d) ?? ctx.getY(d)
+    emitPointNodes(ctx, groups, nodes, stackedYGet)
+  }
 
   return nodes
 }

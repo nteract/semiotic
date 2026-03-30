@@ -406,12 +406,23 @@ export const LineChart = forwardRef(
     })
   }, [safeData, forecast, anomaly, xAccessor, yAccessor])
 
+  // Track config identity to clear results only when config changes, not on every data update
+  const prevForecastRef = useRef(forecast)
+  const prevAnomalyRef = useRef(anomaly)
+
   useEffect(() => {
     if (!forecast && !anomaly) return
     let cancelled = false
-    // Clear stale overlays immediately so the chart doesn't show old data while loading
-    setStatisticalResult(null)
-    setStatisticalAnnotations([])
+    // Only clear previous results when the forecast/anomaly CONFIG changes.
+    // Data-only changes keep the previous result visible to avoid flicker
+    // (e.g., streaming forecast sparklines updating every 150ms).
+    const configChanged = forecast !== prevForecastRef.current || anomaly !== prevAnomalyRef.current
+    prevForecastRef.current = forecast
+    prevAnomalyRef.current = anomaly
+    if (configChanged) {
+      setStatisticalResult(null)
+      setStatisticalAnnotations([])
+    }
     if (forecast) {
       // When lineBy is a string, tell buildPrecomputed to do group-aware
       // boundary duplication so multi-metric data doesn't create stray lines

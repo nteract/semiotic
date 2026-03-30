@@ -1074,7 +1074,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {resolvedBackground}
+            <g transform={`translate(${margin.left},${margin.top})`}>
+              {resolvedBackground}
+            </g>
             <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
@@ -1169,7 +1171,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               pointerEvents: "none"
             }}
           >
-            {resolvedBackground}
+            <g transform={`translate(${margin.left},${margin.top})`}>
+              {resolvedBackground}
+            </g>
           </svg>
         )}
         <SVGUnderlay

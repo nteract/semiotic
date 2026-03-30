@@ -117,7 +117,7 @@ function ForecastKpiCard({ label, value, previousValue, unit, actual, forecast }
         </span>
         <StreamXYFrame
           chartType="line"
-          size={[160, 50]}
+          size={[120, 40]}
           data={flatData}
           groupAccessor="lineGroup"
           xAccessor="day"
@@ -135,7 +135,7 @@ function ForecastKpiCard({ label, value, previousValue, unit, actual, forecast }
             stroke: "none",
           }}
           showAxes={false}
-          margin={{ top: 6, bottom: 6, left: 0, right: 0 }}
+          margin={{ top: 4, bottom: 4, left: 0, right: 0 }}
         />
       </div>
       <div style={{

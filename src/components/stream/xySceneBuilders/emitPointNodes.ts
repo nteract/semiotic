@@ -12,9 +12,12 @@ import type { XYSceneContext } from "./types"
 export function emitPointNodes(
   ctx: XYSceneContext,
   groups: { key: string; data: Record<string, any>[] }[],
-  nodes: SceneNode[]
+  nodes: SceneNode[],
+  yGetOverride?: (d: Record<string, any>) => number
 ): void {
   if (!ctx.config.pointStyle) return
+
+  const yGet = yGetOverride ?? ctx.getY
 
   for (const g of groups) {
     const groupColor = ctx.resolveGroupColor(g.key)
@@ -25,7 +28,7 @@ export function emitPointNodes(
       }
       const r = style.r ?? 3
       const pointId = ctx.getPointId ? String(ctx.getPointId(d)) : undefined
-      const node = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style, pointId)
+      const node = buildPointNode(d, ctx.scales, ctx.getX, yGet, r, style, pointId)
       if (node) nodes.push(node)
     }
   }
