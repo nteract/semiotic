@@ -2602,10 +2602,6 @@
               "description": "Starting angle in radians",
               "default": 0
             },
-            "slicePadding": {
-              "type": "number",
-              "default": 2
-            },
             "title": {
               "type": "string"
             },
@@ -2716,10 +2712,6 @@
             "startAngle": {
               "type": "number",
               "default": 0
-            },
-            "slicePadding": {
-              "type": "number",
-              "default": 2
             },
             "title": {
               "type": "string"
