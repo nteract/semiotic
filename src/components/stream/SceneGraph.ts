@@ -77,6 +77,9 @@ export function buildAreaNode(
   return { type: "area", topPath, bottomPath, style, datum: data, group }
 }
 
+/** Per-group-per-x stacked top values, keyed by group then x */
+export type StackedTops = Map<string, Map<number, number>>
+
 export function buildStackedAreaNodes(
   groups: { key: string; data: Record<string, any>[] }[],
   scales: StreamScales,
@@ -85,7 +88,7 @@ export function buildStackedAreaNodes(
   styleFn: (group: string, sampleDatum?: Record<string, any>) => Style,
   normalize?: boolean,
   curve?: CurveType
-): AreaSceneNode[] {
+): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
   // Collect all unique x values
   const xSet = new Set<number>()
   for (const g of groups) {
@@ -125,6 +128,7 @@ export function buildStackedAreaNodes(
 
   // Build stacked area nodes bottom-up
   const nodes: AreaSceneNode[] = []
+  const stackedTops: StackedTops = new Map()
   const baselines = new Map<number, number>() // x → cumulative y
   for (const x of xValues) baselines.set(x, 0)
 
@@ -132,6 +136,7 @@ export function buildStackedAreaNodes(
     const vMap = valueMaps.get(g.key)!
     const topPath: [number, number][] = []
     const bottomPath: [number, number][] = []
+    const groupTops = new Map<number, number>()
 
     for (const x of xValues) {
       let rawY = vMap.get(x) || 0
@@ -142,11 +147,15 @@ export function buildStackedAreaNodes(
         rawY = rawY / total
       }
 
+      const stackedY = base + rawY
       const px = scales.x(x)
       bottomPath.push([px, scales.y(base)])
-      topPath.push([px, scales.y(base + rawY)])
-      baselines.set(x, base + rawY)
+      topPath.push([px, scales.y(stackedY)])
+      baselines.set(x, stackedY)
+      groupTops.set(x, stackedY)
     }
+
+    stackedTops.set(g.key, groupTops)
 
     const areaNode: AreaSceneNode = {
       type: "area",
@@ -160,7 +169,7 @@ export function buildStackedAreaNodes(
     nodes.push(areaNode)
   }
 
-  return nodes
+  return { nodes, stackedTops }
 }
 
 export function buildPointNode(

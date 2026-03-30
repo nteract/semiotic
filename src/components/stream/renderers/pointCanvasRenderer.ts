@@ -4,7 +4,8 @@ import { renderCirclePulse } from "./renderPulse"
 
 /**
  * Canvas point renderer.
- * Renders PointSceneNode as circles. Used for Scatterplot, BubbleChart, and SwarmChart.
+ * Renders PointSceneNode as circles. Used by Scatterplot, BubbleChart, SwarmChart,
+ * and showPoints on LineChart, AreaChart, and StackedAreaChart.
  * Supports pulse glow effect via _pulseIntensity/_pulseColor fields.
  */
 export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {

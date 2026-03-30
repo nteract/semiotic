@@ -52,7 +52,7 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
   const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined
-  const nodes: SceneNode[] = buildStackedAreaNodes(
+  const { nodes: areaNodes, stackedTops } = buildStackedAreaNodes(
     groups,
     ctx.scales,
     ctx.getX,
@@ -61,61 +61,20 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
     ctx.config.normalize,
     curveType
   )
+  const nodes: SceneNode[] = areaNodes
 
-  // Emit points at stacked (cumulative) Y positions, not raw values.
-  // Mirrors buildStackedAreaNodes: aggregate per-group-per-x first, then stack.
+  // Emit points at stacked (cumulative) Y positions using stackedTops
+  // computed by buildStackedAreaNodes — no duplicate stacking pass.
   if (ctx.config.pointStyle) {
     const stackedYMap = new WeakMap<Record<string, any>, number>()
-
-    // Step 1: aggregate y per group per x (same as buildStackedAreaNodes valueMaps)
-    const valueMaps = new Map<string, Map<number, number>>()
     for (const g of groups) {
-      const m = new Map<number, number>()
+      const groupTops = stackedTops.get(g.key)
+      if (!groupTops) continue
       for (const d of g.data) {
         const x = ctx.getX(d)
         const y = ctx.getY(d)
-        if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
-          m.set(x, (m.get(x) || 0) + y)
-        }
-      }
-      valueMaps.set(g.key, m)
-    }
-
-    // Step 2: compute totals per x for normalization
-    let totals: Map<number, number> | undefined
-    if (ctx.config.normalize) {
-      totals = new Map()
-      for (const [, m] of valueMaps) {
-        for (const [x, y] of m) {
-          totals.set(x, (totals.get(x) || 0) + y)
-        }
-      }
-      for (const [x, v] of totals) {
-        if (v === 0) totals.set(x, 1)
-      }
-    }
-
-    // Step 3: stack groups and assign the same stacked top to all datums at that x
-    const xBaselines = new Map<number, number>()
-    for (const g of groups) {
-      const vMap = valueMaps.get(g.key)!
-      // Compute stacked top per x for this group
-      const stackedTopAtX = new Map<number, number>()
-      for (const [x, rawY] of vMap) {
-        let y = rawY
-        if (ctx.config.normalize && totals) {
-          y = y / totals.get(x)!
-        }
-        const base = xBaselines.get(x) || 0
-        stackedTopAtX.set(x, base + y)
-        xBaselines.set(x, base + y)
-      }
-      // Assign stacked Y only to datums with valid X and Y
-      for (const d of g.data) {
-        const x = ctx.getX(d)
-        const y = ctx.getY(d)
-        if (x != null && !Number.isNaN(x) && y != null && !Number.isNaN(y) && stackedTopAtX.has(x)) {
-          stackedYMap.set(d, stackedTopAtX.get(x)!)
+        if (x != null && !Number.isNaN(x) && y != null && !Number.isNaN(y) && groupTops.has(x)) {
+          stackedYMap.set(d, groupTops.get(x)!)
         }
       }
     }
