@@ -10,6 +10,7 @@
  */
 
 const warned = new Set<string>()
+const proxyCache = new WeakMap<object, Map<string, object>>()
 
 export function wrapWithDataHint<T extends { data?: Record<string, any> }>(
   datum: T,
@@ -18,7 +19,16 @@ export function wrapWithDataHint<T extends { data?: Record<string, any> }>(
   if (process.env.NODE_ENV === "production") return datum
   if (!datum || !datum.data || typeof datum.data !== "object") return datum
 
-  return new Proxy(datum, {
+  let byName = proxyCache.get(datum)
+  if (byName) {
+    const cached = byName.get(callbackName)
+    if (cached) return cached as T
+  } else {
+    byName = new Map()
+    proxyCache.set(datum, byName)
+  }
+
+  const proxy = new Proxy(datum, {
     get(target, prop, receiver) {
       if (typeof prop === "string" && !(prop in target) && target.data && prop in target.data) {
         const key = `${callbackName}:${prop}`
@@ -33,4 +43,7 @@ export function wrapWithDataHint<T extends { data?: Record<string, any> }>(
       return Reflect.get(target, prop, receiver)
     }
   })
+
+  byName.set(callbackName, proxy)
+  return proxy
 }
