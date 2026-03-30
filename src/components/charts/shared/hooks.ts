@@ -90,7 +90,7 @@ export function resolveAccessor<T = any>(
 export function useColorScale(
   data: Array<Record<string, any>>,
   colorBy: string | ((d: any, i?: number) => any) | undefined,
-  colorScheme: string | string[] | undefined
+  colorScheme?: string | string[]
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()
   const themeCategorical = useThemeCategorical()

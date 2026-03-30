@@ -9,8 +9,6 @@ import PlaygroundLayout from "../../components/PlaygroundLayout"
 const controls = [
   { name: "innerRadius", type: "number", label: "Inner Radius", group: "Donut",
     default: 60, min: 20, max: 120, step: 5 },
-  { name: "slicePadding", type: "number", label: "Slice Padding", group: "Donut",
-    default: 2, min: 0, max: 10, step: 1 },
   { name: "startAngle", type: "number", label: "Start Angle", group: "Donut",
     default: 0, min: 0, max: 360, step: 15 },
   { name: "enableHover", type: "boolean", label: "Enable Hover", group: "Interaction",

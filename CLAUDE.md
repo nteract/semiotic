@@ -42,7 +42,7 @@
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **RidgelinePlot** — + `bins`, `amplitude` (1.5, unitless multiplier of lane width)
 **DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
-**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
+**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode)
 **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"), `categoryAccessor` (optional), `colorBy`, `connectorOpacity` (0.3), `orientation` ("horizontal"|"vertical"). Horizontal: centered bars with trapezoid connectors. Vertical: bars with diagonal hatch for dropoff. Multi-category: `categoryAccessor="channel"` mirrors (horizontal) or groups (vertical).
 **SwimlaneChart** — `data`, `categoryAccessor` ("category"), `subcategoryAccessor` (required), `valueAccessor` ("value"), `colorBy` (defaults to subcategoryAccessor), `colorScheme`, `orientation` ("horizontal"|"vertical"), `barPadding` (40). Renders categorical lanes with items stacked sequentially — unlike StackedBarChart, the same subcategory can appear multiple times in the same lane. Items stack left-to-right (horizontal) or bottom-to-top (vertical) in data order. Wraps StreamOrdinalFrame with `chartType="swimlane"`. Supports push API for streaming.

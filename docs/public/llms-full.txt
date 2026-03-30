@@ -40,7 +40,7 @@
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **RidgelinePlot** — + `bins`, `amplitude` (1.5, unitless multiplier of lane width)
 **DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
-**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
+**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode)
 **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"), `categoryAccessor` (optional), `colorBy`, `connectorOpacity` (0.3), `orientation` ("horizontal"|"vertical"). Horizontal: centered bars with trapezoid connectors. Vertical: bars with diagonal hatch for dropoff. Multi-category: `categoryAccessor="channel"` mirrors (horizontal) or groups (vertical).
 

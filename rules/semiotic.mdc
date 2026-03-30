@@ -61,7 +61,7 @@ The `datum` field contains your original data object (not a wrapper).
 **Histogram** — + `bins` (25), `relative`. Always horizontal. `categoryAccessor` is optional (defaults to `"category"`) — for a single-group histogram, either omit it or ensure your data has a `category` field with a single value.
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
-**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`, `slicePadding`
+**PieChart** — `data`, `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent` (ReactNode — any React element, e.g. `<div>50%</div>`)
 
 ## Network Charts (`semiotic/network`)

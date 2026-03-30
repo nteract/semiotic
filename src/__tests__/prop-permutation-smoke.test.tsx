@@ -480,8 +480,6 @@ smokeTest("PieChart", PieChart, {
   { data: [] },
   { data: ordinalSingleItem },
   { colorBy: "group" },
-  { slicePadding: 0 },
-  { slicePadding: 10 },
   { data: undefined },
 ])
 
