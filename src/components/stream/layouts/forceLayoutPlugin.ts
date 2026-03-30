@@ -9,6 +9,7 @@ import {
 import { scaleLinear } from "d3-scale"
 import { min, max } from "d3-array"
 import { schemeCategory10 } from "d3-scale-chromatic"
+import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -266,8 +267,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     for (const node of nodes) {
       if (node.x == null || node.y == null) continue
 
-      const r = nodeSizeFn(node)
-      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
+      const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
+      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
         fill: userStyle.fill || nodeColorMap.get(node.id) || "#007bff",
         stroke: userStyle.stroke || "#fff",
@@ -301,7 +302,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       if (sourceNode.x == null || sourceNode.y == null) continue
       if (targetNode.x == null || targetNode.y == null) continue
 
-      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
+      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
       const style: Style = {
         stroke: userStyle.stroke || "#999",
         strokeWidth: userStyle.strokeWidth ?? 1,
@@ -329,7 +330,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         const text = labelFn ? labelFn(node) : node.id
         if (!text) continue
 
-        const r = nodeSizeFn(node)
+        const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
 
         labels.push({
           x: node.x,

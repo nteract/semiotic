@@ -5,6 +5,9 @@ import { buildPointScene, buildSwarmScene } from "./pointScene"
 import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./statisticalScene"
 import { buildTimelineScene } from "./timelineScene"
 import { buildConnectors } from "./connectorScene"
+import { buildFunnelScene } from "./funnelScene"
+import { buildBarFunnelScene } from "./barFunnelScene"
+import { buildSwimlaneScene } from "./swimlaneScene"
 import type { OrdinalSceneContext } from "./types"
 import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig } from "../ordinalTypes"
 import type { Style } from "../types"
@@ -1139,5 +1142,609 @@ describe("buildConnectors", () => {
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(0)
+  })
+})
+
+// ── funnelScene ────────────────────────────────────────────────────────
+
+describe("buildFunnelScene", () => {
+  // Funnel uses horizontal projection: ordinal band maps to y-axis (col.x = y, col.width = band height)
+  // layout.width is the horizontal extent for bars
+
+  function makeFunnelScales(steps: string[]): OrdinalScales {
+    return {
+      o: scaleBand<string>().domain(steps).range([0, 300]).padding(0.1),
+      r: scaleLinear().domain([0, 100]).range([0, 400]),
+      projection: "horizontal"
+    }
+  }
+
+  it("single-category data: centered bars with width proportional to value", () => {
+    const steps = ["Visitors", "Signups", "Paid"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {
+        Visitors: makeColumn("Visitors", [{ step: "Visitors", value: 1000 }], { x: scales.o("Visitors")!, width: band, pieceData: [{ step: "Visitors", value: 1000 }] }),
+        Signups: makeColumn("Signups", [{ step: "Signups", value: 600 }], { x: scales.o("Signups")!, width: band, pieceData: [{ step: "Signups", value: 600 }] }),
+        Paid: makeColumn("Paid", [{ step: "Paid", value: 200 }], { x: scales.o("Paid")!, width: band, pieceData: [{ step: "Paid", value: 200 }] }),
+      },
+      getR: (d: any) => d.value,
+    })
+    const nodes = buildFunnelScene(ctx, layout)
+
+    // 3 rect nodes + 2 trapezoid connectors = 5
+    const rects = nodes.filter(n => n.type === "rect")
+    expect(rects.length).toBe(3)
+
+    // Bars should be centered around layout.width/2 = 200
+    const centerX = layout.width / 2
+    for (const r of rects) {
+      if (r.type === "rect") {
+        expect(r.x + r.w / 2).toBeCloseTo(centerX, 0)
+      }
+    }
+
+    // First bar (1000) should be widest, last bar (200) narrowest
+    if (rects[0].type === "rect" && rects[2].type === "rect") {
+      expect(rects[0].w).toBeGreaterThan(rects[2].w)
+    }
+
+    // Width should be proportional: 1000:600:200 = 5:3:1
+    if (rects[0].type === "rect" && rects[1].type === "rect" && rects[2].type === "rect") {
+      const ratio01 = rects[0].w / rects[1].w
+      expect(ratio01).toBeCloseTo(1000 / 600, 1)
+      const ratio02 = rects[0].w / rects[2].w
+      expect(ratio02).toBeCloseTo(1000 / 200, 1)
+    }
+  })
+
+  it("multi-category data: mirrored layout (even categories right, odd left)", () => {
+    const steps = ["Step1", "Step2"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      getStack: (d: any) => d.channel,
+      columns: {
+        Step1: makeColumn("Step1", [
+          { step: "Step1", value: 100, channel: "Web" },
+          { step: "Step1", value: 80, channel: "Mobile" },
+        ], { x: scales.o("Step1")!, width: band }),
+        Step2: makeColumn("Step2", [
+          { step: "Step2", value: 60, channel: "Web" },
+          { step: "Step2", value: 40, channel: "Mobile" },
+        ], { x: scales.o("Step2")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildFunnelScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+    const centerX = layout.width / 2
+
+    // 2 steps x 2 categories = 4 rects
+    expect(rects.length).toBe(4)
+
+    // Step1 rects: Web (even index=0) extends right from center, Mobile (odd index=1) extends left
+    const step1Rects = rects.filter(n => n.type === "rect" && n.datum.__funnelStep === "Step1")
+    expect(step1Rects.length).toBe(2)
+
+    // Web (category index 0, even) should be to the right of center
+    const webRect = step1Rects.find(n => n.datum.category === "Web")!
+    if (webRect.type === "rect") {
+      expect(webRect.x).toBeGreaterThanOrEqual(centerX - 1) // starts at or right of center
+    }
+
+    // Mobile (category index 1, odd) should be to the left of center
+    const mobileRect = step1Rects.find(n => n.datum.category === "Mobile")!
+    if (mobileRect.type === "rect") {
+      expect(mobileRect.x + mobileRect.w).toBeLessThanOrEqual(centerX + 1) // ends at or left of center
+    }
+  })
+
+  it("trapezoid connectors between adjacent steps", () => {
+    const steps = ["A", "B", "C"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {
+        A: makeColumn("A", [{ value: 100 }], { x: scales.o("A")!, width: band }),
+        B: makeColumn("B", [{ value: 50 }], { x: scales.o("B")!, width: band }),
+        C: makeColumn("C", [{ value: 25 }], { x: scales.o("C")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildFunnelScene(ctx, layout)
+    const trapezoids = nodes.filter(n => n.type === "trapezoid")
+
+    // 3 steps = 2 connectors
+    expect(trapezoids.length).toBe(2)
+
+    // Each trapezoid should have 4 corner points
+    for (const t of trapezoids) {
+      if (t.type === "trapezoid") {
+        expect(t.points.length).toBe(4)
+        // Each point should be [x, y]
+        for (const pt of t.points) {
+          expect(pt.length).toBe(2)
+          expect(typeof pt[0]).toBe("number")
+          expect(typeof pt[1]).toBe("number")
+        }
+      }
+    }
+
+    // The first trapezoid connects step A (wider) to step B (narrower)
+    // Top edge (prev bar bottom) should be wider than bottom edge (curr bar top)
+    if (trapezoids[0].type === "trapezoid") {
+      const pts = trapezoids[0].points
+      const topWidth = Math.abs(pts[1][0] - pts[0][0])
+      const bottomWidth = Math.abs(pts[2][0] - pts[3][0])
+      expect(topWidth).toBeGreaterThan(bottomWidth)
+    }
+  })
+
+  it("label metadata set on each rect datum", () => {
+    const steps = ["Visit", "Signup"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {
+        Visit: makeColumn("Visit", [{ value: 100 }], { x: scales.o("Visit")!, width: band }),
+        Signup: makeColumn("Signup", [{ value: 40 }], { x: scales.o("Signup")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildFunnelScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+
+    for (const r of rects) {
+      if (r.type === "rect") {
+        expect(r.datum.__funnelStep).toBeDefined()
+        expect(typeof r.datum.__funnelValue).toBe("number")
+        expect(typeof r.datum.__funnelPercent).toBe("number")
+      }
+    }
+  })
+
+  it("first step is 100% baseline", () => {
+    const steps = ["Top", "Mid", "Bot"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {
+        Top: makeColumn("Top", [{ value: 200 }], { x: scales.o("Top")!, width: band }),
+        Mid: makeColumn("Mid", [{ value: 100 }], { x: scales.o("Mid")!, width: band }),
+        Bot: makeColumn("Bot", [{ value: 50 }], { x: scales.o("Bot")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildFunnelScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+
+    // First step
+    const firstRect = rects.find(n => n.type === "rect" && n.datum.__funnelStep === "Top")!
+    expect(firstRect.datum.__funnelPercent).toBeCloseTo(100)
+    expect(firstRect.datum.__funnelIsFirstStep).toBe(true)
+
+    // Second step should not be marked as first step
+    const midRect = rects.find(n => n.type === "rect" && n.datum.__funnelStep === "Mid")!
+    expect(midRect.datum.__funnelIsFirstStep).toBe(false)
+  })
+
+  it("empty columns returns empty result", () => {
+    const scales = makeFunnelScales(["A"])
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {},
+    })
+    const nodes = buildFunnelScene(ctx, layout)
+    expect(nodes).toHaveLength(0)
+  })
+
+  it("percentage calculation relative to first step", () => {
+    const steps = ["S1", "S2", "S3"]
+    const scales = makeFunnelScales(steps)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
+      columns: {
+        S1: makeColumn("S1", [{ value: 400 }], { x: scales.o("S1")!, width: band }),
+        S2: makeColumn("S2", [{ value: 200 }], { x: scales.o("S2")!, width: band }),
+        S3: makeColumn("S3", [{ value: 100 }], { x: scales.o("S3")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildFunnelScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+
+    const s1 = rects.find(n => n.datum.__funnelStep === "S1")!
+    const s2 = rects.find(n => n.datum.__funnelStep === "S2")!
+    const s3 = rects.find(n => n.datum.__funnelStep === "S3")!
+
+    expect(s1.datum.__funnelPercent).toBeCloseTo(100) // 400/400
+    expect(s2.datum.__funnelPercent).toBeCloseTo(50)  // 200/400
+    expect(s3.datum.__funnelPercent).toBeCloseTo(25)  // 100/400
+  })
+})
+
+// ── barFunnelScene ─────────────────────────────────────────────────────
+
+describe("buildBarFunnelScene", () => {
+  // Bar funnel uses vertical projection: bars on x-axis, values on y-axis
+
+  function makeBarFunnelScales(steps: string[], maxVal: number): OrdinalScales {
+    return {
+      o: scaleBand<string>().domain(steps).range([0, 400]).padding(0.1),
+      r: scaleLinear().domain([0, maxVal]).range([300, 0]),
+      projection: "vertical"
+    }
+  }
+
+  it("produces solid bars for retained values", () => {
+    const steps = ["Aware", "Interest", "Decision"]
+    const scales = makeBarFunnelScales(steps, 100)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
+      columns: {
+        Aware: makeColumn("Aware", [{ value: 100 }], { x: scales.o("Aware")!, width: band }),
+        Interest: makeColumn("Interest", [{ value: 60 }], { x: scales.o("Interest")!, width: band }),
+        Decision: makeColumn("Decision", [{ value: 30 }], { x: scales.o("Decision")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildBarFunnelScene(ctx, layout)
+    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum.__barFunnelIsDropoff)
+
+    // 3 steps = 3 retained bars
+    expect(retainedBars.length).toBe(3)
+
+    // All retained bars should be marked as not dropoff
+    for (const bar of retainedBars) {
+      expect(bar.datum.__barFunnelIsDropoff).toBe(false)
+    }
+
+    // Retained bar heights should be proportional to value
+    // rScale(100) - rScale(0) for Aware, rScale(60) - rScale(0) for Interest, etc.
+    if (retainedBars[0].type === "rect" && retainedBars[1].type === "rect") {
+      // value=100 → h=300 (full height), value=60 → h=180
+      expect(retainedBars[0].h).toBeCloseTo(300)
+      expect(retainedBars[1].h).toBeCloseTo(180)
+    }
+  })
+
+  it("dropoff bars marked with __barFunnelIsDropoff flag", () => {
+    const steps = ["Step1", "Step2"]
+    const scales = makeBarFunnelScales(steps, 100)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
+      columns: {
+        Step1: makeColumn("Step1", [{ value: 100 }], { x: scales.o("Step1")!, width: band }),
+        Step2: makeColumn("Step2", [{ value: 70 }], { x: scales.o("Step2")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildBarFunnelScene(ctx, layout)
+    const dropoffBars = nodes.filter(n => n.type === "rect" && n.datum.__barFunnelIsDropoff === true)
+
+    // Step2 has dropoff of 100-70=30
+    expect(dropoffBars.length).toBe(1)
+    expect(dropoffBars[0].datum.__barFunnelValue).toBe(30)
+    expect(dropoffBars[0].datum.__barFunnelIsDropoff).toBe(true)
+
+    // Dropoff bar should sit on top of the retained bar for Step2
+    const step2Retained = nodes.find(n => n.type === "rect" && n.datum.__barFunnelStep === "Step2" && !n.datum.__barFunnelIsDropoff)!
+    if (dropoffBars[0].type === "rect" && step2Retained.type === "rect") {
+      // Dropoff top (y) should be above retained top (y), i.e. smaller y value
+      expect(dropoffBars[0].y).toBeLessThan(step2Retained.y)
+      // Dropoff bottom should meet retained top
+      expect(dropoffBars[0].y + dropoffBars[0].h).toBeCloseTo(step2Retained.y)
+    }
+  })
+
+  it("first step has zero dropoff", () => {
+    const steps = ["First", "Second"]
+    const scales = makeBarFunnelScales(steps, 100)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
+      columns: {
+        First: makeColumn("First", [{ value: 100 }], { x: scales.o("First")!, width: band }),
+        Second: makeColumn("Second", [{ value: 50 }], { x: scales.o("Second")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildBarFunnelScene(ctx, layout)
+
+    // First step should have __barFunnelIsFirstStep=true and no dropoff bar
+    const firstStepNodes = nodes.filter(n => n.type === "rect" && n.datum.__barFunnelStep === "First")
+    expect(firstStepNodes.length).toBe(1) // only retained, no dropoff
+    expect(firstStepNodes[0].datum.__barFunnelIsFirstStep).toBe(true)
+    expect(firstStepNodes[0].datum.__barFunnelIsDropoff).toBe(false)
+    expect(firstStepNodes[0].datum.__barFunnelDropoffValue).toBe(0)
+  })
+
+  it("multi-category groups positioned side-by-side", () => {
+    const steps = ["S1", "S2"]
+    const scales = makeBarFunnelScales(steps, 100)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
+      getStack: (d: any) => d.channel,
+      columns: {
+        S1: makeColumn("S1", [
+          { value: 100, channel: "Web" },
+          { value: 80, channel: "App" },
+        ], { x: scales.o("S1")!, width: band }),
+        S2: makeColumn("S2", [
+          { value: 60, channel: "Web" },
+          { value: 40, channel: "App" },
+        ], { x: scales.o("S2")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildBarFunnelScene(ctx, layout)
+    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum.__barFunnelIsDropoff)
+
+    // 2 steps x 2 categories = 4 retained bars
+    expect(retainedBars.length).toBe(4)
+
+    // Within the same step, bars for different categories should have different x positions
+    const s1Retained = retainedBars.filter(n => n.datum.__barFunnelStep === "S1")
+    expect(s1Retained.length).toBe(2)
+    if (s1Retained[0].type === "rect" && s1Retained[1].type === "rect") {
+      expect(s1Retained[0].x).not.toBeCloseTo(s1Retained[1].x, 0)
+    }
+  })
+
+  it("label metadata set on each datum", () => {
+    const steps = ["Top", "Bottom"]
+    const scales = makeBarFunnelScales(steps, 100)
+    const band = scales.o.bandwidth()
+
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
+      columns: {
+        Top: makeColumn("Top", [{ value: 100 }], { x: scales.o("Top")!, width: band }),
+        Bottom: makeColumn("Bottom", [{ value: 40 }], { x: scales.o("Bottom")!, width: band }),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildBarFunnelScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+
+    for (const r of rects) {
+      expect(r.datum.__barFunnelStep).toBeDefined()
+      expect(typeof r.datum.__barFunnelValue).toBe("number")
+      expect(typeof r.datum.__barFunnelPercent).toBe("number")
+    }
+
+    // Check specific percent values
+    const topRect = rects.find(n => n.datum.__barFunnelStep === "Top" && !n.datum.__barFunnelIsDropoff)!
+    expect(topRect.datum.__barFunnelPercent).toBeCloseTo(100) // 100/100
+
+    const bottomRetained = rects.find(n => n.datum.__barFunnelStep === "Bottom" && !n.datum.__barFunnelIsDropoff)!
+    expect(bottomRetained.datum.__barFunnelPercent).toBeCloseTo(40) // 40/100
+  })
+})
+
+// ── swimlaneScene ──────────────────────────────────────────────────────
+
+describe("buildSwimlaneScene", () => {
+  it("each datum gets its own rect node", () => {
+    const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        LaneA: makeColumn("LaneA", [
+          { value: 20, sub: "task1" },
+          { value: 30, sub: "task2" },
+          { value: 10, sub: "task3" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+    expect(nodes.length).toBe(3)
+    expect(nodes.every(n => n.type === "rect")).toBe(true)
+  })
+
+  it("rects within a lane stack sequentially (offset accumulates)", () => {
+    const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        Lane: makeColumn("Lane", [
+          { value: 20, sub: "a" },
+          { value: 30, sub: "b" },
+          { value: 10, sub: "c" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+    expect(nodes.length).toBe(3)
+
+    // Horizontal: offset accumulates along x-axis
+    // rScale maps [0,100] → [0,400], so 1 data unit = 4 px
+    if (nodes[0].type === "rect" && nodes[1].type === "rect" && nodes[2].type === "rect") {
+      // First rect: offset=0, value=20 → x=rScale(0)=0, w=rScale(20)-rScale(0)=80
+      expect(nodes[0].x).toBeCloseTo(0)
+      expect(nodes[0].w).toBeCloseTo(80)
+
+      // Second rect: offset=20, value=30 → x=rScale(20)=80, w=rScale(50)-rScale(20)=120
+      expect(nodes[1].x).toBeCloseTo(80)
+      expect(nodes[1].w).toBeCloseTo(120)
+
+      // Third rect: offset=50, value=10 → x=rScale(50)=200, w=rScale(60)-rScale(50)=40
+      expect(nodes[2].x).toBeCloseTo(200)
+      expect(nodes[2].w).toBeCloseTo(40)
+    }
+  })
+
+  it("duplicate subcategories allowed (same subcategory appears multiple times)", () => {
+    const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        Lane: makeColumn("Lane", [
+          { value: 15, sub: "task" },
+          { value: 25, sub: "task" },
+          { value: 10, sub: "task" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+
+    // All three items should produce rects even though they share "task" subcategory
+    expect(nodes.length).toBe(3)
+
+    // They should still stack sequentially, not overlap
+    if (nodes[0].type === "rect" && nodes[1].type === "rect" && nodes[2].type === "rect") {
+      // First ends where second begins
+      expect(nodes[0].x + nodes[0].w).toBeCloseTo(nodes[1].x, 1)
+      // Second ends where third begins
+      expect(nodes[1].x + nodes[1].w).toBeCloseTo(nodes[2].x, 1)
+    }
+  })
+
+  it("negative values converted to absolute", () => {
+    const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        Lane: makeColumn("Lane", [
+          { value: -30, sub: "neg" },
+          { value: 20, sub: "pos" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+    expect(nodes.length).toBe(2)
+
+    // Negative value treated as abs(30): x=rScale(0)=0, w=rScale(30)-rScale(0)=120
+    if (nodes[0].type === "rect") {
+      expect(nodes[0].w).toBeCloseTo(120)
+      expect(nodes[0].x).toBeCloseTo(0)
+    }
+
+    // Second item starts at offset=30: x=rScale(30)=120, w=rScale(50)-rScale(30)=80
+    if (nodes[1].type === "rect") {
+      expect(nodes[1].x).toBeCloseTo(120)
+      expect(nodes[1].w).toBeCloseTo(80)
+    }
+  })
+
+  it("zero values skipped", () => {
+    const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        Lane: makeColumn("Lane", [
+          { value: 20, sub: "a" },
+          { value: 0, sub: "b" },
+          { value: 10, sub: "c" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+    // Zero-value item is skipped
+    expect(nodes.length).toBe(2)
+
+    // Second remaining rect should start at offset=20 (zero item didn't advance offset)
+    if (nodes[1].type === "rect") {
+      expect(nodes[1].x).toBeCloseTo(scales.r(20))
+    }
+  })
+
+  it("vertical projection affects rect dimensions (stacks bottom-to-top)", () => {
+    // Vertical: rScale maps [0,100] → [300,0] (value axis is y)
+    const scales = makeScales({ projection: "vertical", rDomain: [0, 100], rRange: [300, 0] })
+    const ctx = makeCtx({
+      scales,
+      config: makeConfig({ chartType: "swimlane", projection: "vertical" }),
+      getStack: (d: any) => d.sub,
+      columns: {
+        Lane: makeColumn("Lane", [
+          { value: 40, sub: "x" },
+          { value: 30, sub: "y" },
+        ]),
+      },
+      getR: (d: any) => d.value,
+    })
+
+    const nodes = buildSwimlaneScene(ctx, layout)
+    expect(nodes.length).toBe(2)
+
+    // In vertical mode: x = col.x, w = col.width (the lane)
+    // y0 = rScale(offset + val), y1 = rScale(offset), h = y1 - y0
+    if (nodes[0].type === "rect") {
+      // First rect: offset=0, val=40 → y0=rScale(40)=180, y1=rScale(0)=300, h=120
+      expect(nodes[0].x).toBe(10) // col.x
+      expect(nodes[0].w).toBe(80) // col.width
+      expect(nodes[0].y).toBeCloseTo(180) // rScale(40)
+      expect(nodes[0].h).toBeCloseTo(120) // rScale(0) - rScale(40) = 300-180
+    }
+
+    if (nodes[1].type === "rect") {
+      // Second rect: offset=40, val=30 → y0=rScale(70)=90, y1=rScale(40)=180, h=90
+      expect(nodes[1].y).toBeCloseTo(90)
+      expect(nodes[1].h).toBeCloseTo(90)
+    }
   })
 })

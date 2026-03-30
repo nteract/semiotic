@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "semiotic",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "React data visualization library for charts, networks, and beyond",
   "tools": [
     {
@@ -3937,6 +3937,18 @@
             },
             "gap": {
               "type": "number"
+            },
+            "brush": {
+              "type": ["boolean", "string", "object"],
+              "description": "Enable brush selection. true defaults to { dimension: \"x\", snap: \"bin\" }. String: \"x\". Object: { dimension, snap: \"continuous\"|\"bin\", snapDuring }."
+            },
+            "onBrush": {
+              "type": "function",
+              "description": "Callback when brush extent changes: (extent | null) => void"
+            },
+            "linkedBrush": {
+              "type": ["string", "object"],
+              "description": "Cross-chart brush coordination via LinkedCharts. String: selection name. Object: { name, xField, yField }."
             },
             "showAxes": {
               "type": "boolean",

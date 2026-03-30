@@ -1,4 +1,5 @@
 import { pie as d3Pie } from "d3-shape"
+import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -335,8 +336,8 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     for (const node of nodes) {
       if (node.x == null || node.y == null) continue
 
-      const r = nodeSizeFn(node)
-      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
+      const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
+      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
         fill: userStyle.fill || "#6366f1",
         stroke: userStyle.stroke || "#fff",
@@ -388,7 +389,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     if (config.showLabels) {
       const labelFn = config.nodeLabel
       for (const node of nodes) {
-        const r = nodeSizeFn(node)
+        const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
         if (r <= 4) continue
         const text = typeof labelFn === "function"
           ? labelFn(node)

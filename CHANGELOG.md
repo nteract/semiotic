@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2] - 2026-03-30
+
+### Added
+
+- **Exhaustive scene builder test coverage** — 346 new tests across all XY scene builders (line, area, stacked area, point, swarm, heatmap, waterfall, candlestick, bar) and ordinal scene builders (funnel, bar-funnel, swimlane). Tests assert actual coordinates, baselines, cumulative positions, and style resolution — not just "it didn't crash."
+- **FunnelChart and LikertChart HOC tests** — First test suites for the two previously untested HOCs. FunnelChart: 29 tests covering horizontal/vertical modes, multi-category mirroring, connector opacity, tooltip metadata. LikertChart: 31 tests covering raw/pre-aggregated modes, diverging colors, neutral sentinels, error states.
+- **Render pipeline benchmarks** — `benchmarks/unit/render-pipeline.bench.ts` covering scene builder throughput (scatter 50k: 4ms, line 10k: 0.45ms, stacked area 10k: 1.3ms), RingBuffer push/iteration, and end-to-end ingest-to-scene-build. Identified heatmap at 50k (49ms) as the only builder exceeding frame budget.
+- **Dev-mode `d.data` access warning** — Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize`) now warn in development when users access properties that exist on `.data` but not on the RealtimeNode/RealtimeEdge wrapper (e.g., `d.category` instead of `d.data?.category`). Zero production overhead. Applied to all 5 layout plugins (sankey, force, chord, orbit, hierarchy).
+- **Streaming-first docs narrative** — Landing page and Getting Started page restructured to lead with the streaming engine (push API, two-canvas RAF loop, ring buffer, decay/pulse/staleness/transitions) as the primary differentiator.
+
+### Fixed
+
+- **`@modelcontextprotocol/sdk` removed from production dependencies** — The MCP CLI (`semiotic-mcp`) now bundles the SDK via esbuild, so `npm install semiotic` no longer pulls in the 4MB+ MCP SDK and its transitive deps. The bundled CLI works identically — zero behavior change for `npx semiotic-mcp` users.
+- **`@types/d3-quadtree` moved to devDependencies** — Type declaration packages are always dev-only.
+- **Stacked area points at wrong Y position** — `emitPointNodes` used raw `ctx.getY` instead of cumulative stacked Y. Fixed by adding `yGetOverride` parameter and computing stacked positions from `buildStackedAreaNodes`' `stackedTops` map — no duplicate stacking pass.
+- **Null Y datums assigned stacked Y** — Added `y != null && !Number.isNaN(y)` guard before setting stacked point positions.
+- **Stale forecast overlays on prop removal** — Early return in LineChart effect when both `forecast` and `anomaly` become falsy now clears previous statistical overlays.
+- **GeoCanvasHitTester inconsistent hit radius** — Quadtree path used `(r||4)+4`, linear scan used `Math.max((r||4)+5, 12)`. Unified to `Math.max((r||4)+5, 12)` everywhere.
+- **backgroundGraphics not honoring margins** — StreamXYFrame and StreamGeoFrame rendered `backgroundGraphics` outside the margin-translated `<g>`. Fixed in both client and SSR paths.
+
 ## [3.2.1] - 2026-03-30
 
 ### Added

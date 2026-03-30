@@ -1,4 +1,5 @@
 import { chord, ribbon } from "d3-chord"
+import { wrapWithDataHint } from "../devDataAccessWarning"
 import { arc } from "d3-shape"
 import { schemeCategory10, schemeTableau10 } from "d3-scale-chromatic"
 import type {
@@ -184,13 +185,13 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 
       let fill: string
       if (nodeStyleFn) {
-        const userStyle = nodeStyleFn(node)
+        const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
         fill = userStyle.fill || nodeColorMap.get(node.id) || palette[i % palette.length]
       } else {
         fill = nodeColorMap.get(node.id) || palette[i % palette.length]
       }
 
-      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
+      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
         fill,
         stroke: userStyle.stroke || "black",
@@ -234,7 +235,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       // inherit from source or target node color
       let fill = "#999"
       if (edgeStyleFn) {
-        const userStyle = edgeStyleFn(edge)
+        const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
         fill = userStyle.fill || fill
       } else {
         // Auto-color by source or target node
@@ -247,7 +248,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         }
       }
 
-      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
+      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
       const style: Style = {
         fill,
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
