@@ -53,8 +53,8 @@ const quickStartSteps = [
     title: "Streaming data — push via refs",
     code: `const ref = useRef()
 
-// Push data at any rate — Semiotic handles the rest
-ref.current.push({ time: Date.now(), value: 42 })
+// Push from effects, handlers, or WebSocket callbacks
+ref.current?.push({ time: Date.now(), value: 42 })
 
 <RealtimeLineChart ref={ref}
   timeAccessor="time" valueAccessor="value"

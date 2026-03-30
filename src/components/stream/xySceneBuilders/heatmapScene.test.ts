@@ -86,10 +86,8 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(fills[0]).not.toBe(fills[1])
   })
 
-  it("handles string axes — sorts alphabetically and positions correctly", () => {
-    // String x-values: "b", "a", "c" should sort to "a", "b", "c" (wait — no, strings are NOT sorted)
-    // Actually looking at the code: xNumeric is false for strings, so xValues = xRaw (insertion order)
-    // Let's just verify it produces correct number of cells
+  it("handles string axes — preserves insertion order and positions cells correctly", () => {
+    // String axes are non-numeric, so values are taken in insertion order (not sorted).
     const data = [
       { x: "b", y: "q", value: 10 },
       { x: "a", y: "q", value: 20 },

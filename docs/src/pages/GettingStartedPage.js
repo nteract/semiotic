@@ -42,7 +42,7 @@ function LiveMetrics() {
   useEffect(() => {
     const ws = new WebSocket("wss://metrics.example.com")
     ws.onmessage = (e) => {
-      ref.current.push(JSON.parse(e.data))
+      ref.current?.push(JSON.parse(e.data))
     }
     return () => ws.close()
   }, [])
@@ -61,9 +61,11 @@ function LiveMetrics() {
 
 const pushApiSnippet = `// Any HOC chart supports push via refs — just omit the data prop
 const ref = useRef()
-ref.current.push({ x: 1, y: 42 })       // single point
-ref.current.pushMany([...points])         // batch
-ref.current.clear()                       // reset
+
+// Push from effects, event handlers, or WebSocket callbacks
+ref.current?.push({ x: 1, y: 42 })       // single point
+ref.current?.pushMany([...points])        // batch
+ref.current?.clear()                      // reset
 
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" />`
 

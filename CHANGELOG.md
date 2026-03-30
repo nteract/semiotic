@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`@modelcontextprotocol/sdk` moved to devDependencies** — Was incorrectly listed as a production dependency, causing downstream consumers to install the MCP SDK and its transitive deps. Only used by `ai/mcp-server.ts` (CLI tool), never imported from library source.
+- **`@modelcontextprotocol/sdk` removed from production dependencies** — The MCP CLI (`semiotic-mcp`) now bundles the SDK via esbuild, so `npm install semiotic` no longer pulls in the 4MB+ MCP SDK and its transitive deps. The bundled CLI works identically — zero behavior change for `npx semiotic-mcp` users.
 - **`@types/d3-quadtree` moved to devDependencies** — Type declaration packages are always dev-only.
 - **Stacked area points at wrong Y position** — `emitPointNodes` used raw `ctx.getY` instead of cumulative stacked Y. Fixed by adding `yGetOverride` parameter and computing stacked positions from `buildStackedAreaNodes`' `stackedTops` map — no duplicate stacking pass.
 - **Null Y datums assigned stacked Y** — Added `y != null && !Number.isNaN(y)` guard before setting stacked point positions.

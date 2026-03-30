@@ -207,7 +207,6 @@ describe("buildBarScene", () => {
     }) as XYSceneContext
 
     buildBarScene(ctx, data1)
-    const firstOrder = ctx.barCategoryCache!.order.slice()
 
     // New category C appears
     const data2 = [
