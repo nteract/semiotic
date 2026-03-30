@@ -17,8 +17,8 @@ interface UseOrdinalStreamingConfig {
   isPushMode: boolean
   /** Color-by accessor (may be derived from stackBy/groupBy/etc.) */
   colorBy: Accessor<string> | undefined
-  /** Color scheme name or array */
-  colorScheme: string | string[]
+  /** Color scheme name or array — undefined lets useColorScale consult the theme */
+  colorScheme: string | string[] | undefined
   /** Whether legend is requested */
   showLegend: boolean | undefined
   /** Legend position */

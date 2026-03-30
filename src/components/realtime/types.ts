@@ -28,6 +28,8 @@ export interface AnnotationContext {
     y?: ScaleLinear<number, number>
     time?: ScaleLinear<number, number>
     value?: ScaleLinear<number, number>
+    /** The raw ordinal band scale (only in ordinal frames). Has .bandwidth(). */
+    o?: any
   } | null
   /** @deprecated Use scales.x / scales.y instead */
   timeAxis?: "x" | "y"
@@ -37,6 +39,8 @@ export interface AnnotationContext {
   height?: number
   data?: Record<string, any>[]
   frameType?: "xy" | "ordinal" | "network"
+  /** Ordinal projection direction (only in ordinal frames) */
+  projection?: "vertical" | "horizontal"
   /** Point scene nodes for point-anchored annotations */
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
   /** Curve interpolation type from the parent chart */

@@ -77,7 +77,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     targetAccessor = "target",
     nodeLabel,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     nodeSize = 8,
     nodeSizeRange = [5, 20],
     edgeWidth = 1,
@@ -88,6 +88,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     tooltip,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -184,12 +185,12 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     defaults: resolved.marginDefaults
   })
 
-  const { customHoverBehavior } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     unwrapData: true,
-    onObservation, chartType: "ForceDirectedGraph", chartId,
+    onObservation, onClick, chartType: "ForceDirectedGraph", chartId,
   })
 
   // Validate
@@ -233,7 +234,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
       legend={legend}
       legendPosition={legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {

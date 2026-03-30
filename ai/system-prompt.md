@@ -21,6 +21,8 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **PieChart** — `categoryAccessor`, `valueAccessor`
 - **DonutChart** — `categoryAccessor`, `valueAccessor`, `innerRadius`, `centerContent` (ReactNode, e.g. `<div>50%</div>`)
 
+All ordinal HOCs (except Pie/Donut) support `categoryFormat` — a function `(label, index?) => string` for custom tick label formatting (truncation, abbreviation).
+
 ## Hierarchical Data (`data: { children: [...] }`)
 - **TreeDiagram** — `childrenAccessor`, `nodeIdAccessor`, `layout` ("tree"|"cluster"|"partition"), `orientation`
 - **Treemap** — `childrenAccessor`, `valueAccessor`, `nodeIdAccessor`, `colorByDepth`
@@ -65,10 +67,13 @@ For advanced streaming control, use Stream Frames (`StreamXYFrame`, `StreamOrdin
 - When using with `size={[w, h]}`, set `height={h}` on the container or you'll get extra whitespace.
 
 ## Common Props (all components)
-`width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`, `onObservation`, `emphasis` ("primary"|"secondary")
+`width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`, `onObservation`, `onClick`, `emphasis` ("primary"|"secondary")
 
 ### tooltip
 `true` (default) | `false` | `(datum) => ReactNode` (function receives your raw data) | config `{ fields?, title?, format?, style? }`
+
+### onClick
+`onClick={(datum, { x, y }) => ...}` — called when a data element is clicked. Receives the original datum and pixel coordinates. Works on lines, bars, areas, pie slices, nodes, and geo features.
 
 ### onObservation
 Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selection", datum: <your data>, x, y, timestamp, chartType, chartId }`. The `datum` field is your original data object. Hover-end/click-end events omit `datum`.
@@ -76,9 +81,10 @@ Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selecti
 ### emphasis
 `emphasis="primary"` makes a chart span two columns inside a `ChartGrid`.
 
-## Annotations (XY charts)
-- `annotations={[{ type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050" }]}` — horizontal reference line
-- `annotations={[{ type: "x-threshold", value: 50, label: "Cutoff" }]}` — vertical reference line
+## Annotations (XY and ordinal charts)
+- `annotations={[{ type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050", labelPosition: "right" }]}` — horizontal reference line (works on XY and vertical ordinal charts). `labelPosition`: "left"|"center"|"right"
+- `annotations={[{ type: "x-threshold", value: 50, label: "Cutoff", labelPosition: "top" }]}` — vertical reference line. `labelPosition`: "top"|"center"|"bottom"
+- `annotations={[{ type: "category-highlight", category: "Q3 2024", color: "#4589ff", opacity: 0.15 }]}` — highlight a category column/row in ordinal charts
 - `annotations={[{ type: "widget", time: 42, latency: 850, dy: -10, content: <span>Alert</span> }]}` — place React element at data coordinates
 - `annotations={[{ type: "enclose", coordinates: [datum1, datum2], label: "Cluster" }]}` — circle enclosing data points
 
@@ -98,6 +104,8 @@ All charts respond to CSS custom properties on any ancestor:
 }
 ```
 Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"tufte-dark"`, `"pastels"`, `"bi-tool"`, `"italian"`, `"journalist"`, `"playful"` (each with `-dark` variant), `"dark"`, `"high-contrast"`.
+
+**Color resolution**: When `colorBy` is set, charts use: explicit `colorScheme` prop > ThemeProvider `colors.categorical` > `"category10"`. No need to pass `colorScheme` on every chart when using ThemeProvider.
 
 `semiotic/themes` entry point: `themeToCSS(theme, selector)` generates CSS string, `themeToTokens(theme)` generates DTCG design tokens, `resolveThemePreset("tufte")` returns theme object by name. Theme objects: `TUFTE_LIGHT`, `TUFTE_DARK`, `PASTELS_LIGHT`, `BI_TOOL_LIGHT`, `ITALIAN_LIGHT`, `JOURNALIST_LIGHT`, `PLAYFUL_LIGHT`, etc.
 

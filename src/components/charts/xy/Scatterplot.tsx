@@ -103,7 +103,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     xAccessor = "x",
     yAccessor = "y",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     sizeBy,
     sizeRange = [3, 15],
     pointRadius = 5,
@@ -117,6 +117,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     linkedHover,
     linkedBrush,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -151,6 +152,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     unwrapData: false,
     onObservation,
+    onClick,
     chartType: "Scatterplot",
     chartId,
     showLegend,
@@ -285,11 +287,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),
+    ...setup.crosshairProps,
     ...frameProps
   }
 

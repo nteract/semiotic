@@ -60,7 +60,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     valueAccessor = "value",
     nodeIdAccessor = "name",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     colorByDepth = false,
     nodeLabel,
     circleOpacity = 0.7,
@@ -68,6 +68,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     tooltip,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -143,10 +144,10 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const { customHoverBehavior } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true, onObservation, chartType: "CirclePack", chartId,
+    unwrapData: true, onObservation, onClick, chartType: "CirclePack", chartId,
   })
 
   // Validate
@@ -177,7 +178,8 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

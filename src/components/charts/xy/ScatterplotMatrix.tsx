@@ -533,7 +533,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     fields,
     fieldLabels = {},
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     cellSize = 150,
     cellGap = 4,
     pointRadius = 2,

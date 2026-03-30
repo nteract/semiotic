@@ -96,6 +96,17 @@ export function createDefaultAnnotationRules(
         const px = resolveX(ann, context)
         if (px == null) return null
         const color = ann.color || "#f97316"
+        const labelPos = ann.labelPosition || "top"
+
+        let textY: number
+        if (labelPos === "bottom") {
+          textY = (context.height || 0) - 4
+        } else if (labelPos === "center") {
+          textY = (context.height || 0) / 2
+        } else {
+          textY = 12
+        }
+
         return (
           <g key={`ann-${index}`}>
             <line
@@ -108,7 +119,7 @@ export function createDefaultAnnotationRules(
               strokeDasharray={ann.strokeDasharray || "6,3"}
             />
             {ann.label && (
-              <text x={px + 4} y={12} fill={color} fontSize={12} fontWeight="bold">
+              <text x={px + 4} y={textY} fill={color} fontSize={12} fontWeight="bold">
                 {ann.label}
               </text>
             )}
@@ -121,6 +132,20 @@ export function createDefaultAnnotationRules(
         const py = resolveY(ann, context)
         if (py == null) return null
         const color = ann.color || "#f97316"
+        const labelPos = ann.labelPosition || "right"
+
+        let textX: number, anchor: "start" | "middle" | "end"
+        if (labelPos === "left") {
+          textX = 4
+          anchor = "start"
+        } else if (labelPos === "center") {
+          textX = (context.width || 0) / 2
+          anchor = "middle"
+        } else {
+          textX = (context.width || 0) - 4
+          anchor = "end"
+        }
+
         return (
           <g key={`ann-${index}`}>
             <line
@@ -134,9 +159,9 @@ export function createDefaultAnnotationRules(
             />
             {ann.label && (
               <text
-                x={(context.width || 0) - 4}
+                x={textX}
                 y={py - 4}
-                textAnchor="end"
+                textAnchor={anchor}
                 fill={color}
                 fontSize={12}
                 fontWeight="bold"
@@ -733,6 +758,61 @@ export function createDefaultAnnotationRules(
             {ann.label}
           </text>
         )
+      }
+
+      // ── Category Highlight (ordinal band behind a category) ──────────
+      case "category-highlight": {
+        const catValue = ann.category
+        if (catValue == null) return null
+
+        // Prefer the raw ordinal band scale (available in ordinal frames via context.scales.o).
+        // Fall back to checking x/y for band scales (XY frames with band axes).
+        const rawO = (context.scales as any)?.o
+        const oScale = context.scales?.x
+        const altScale = context.scales?.y
+        const scale = rawO?.bandwidth
+          ? rawO
+          : (oScale as any)?.bandwidth ? oScale
+          : (altScale as any)?.bandwidth ? altScale
+          : null
+        if (!scale) return null
+
+        const pos = scale(catValue)
+        if (pos == null) return null
+        const bandwidth = (scale as any).bandwidth()
+        // Determine orientation: use projection from context (ordinal frames),
+        // or fall back to checking which axis has the band scale (XY frames)
+        const isVertical = context.projection
+          ? context.projection === "vertical"
+          : scale === oScale
+
+        const color = ann.color || "var(--semiotic-primary, #4589ff)"
+        const opacity = ann.opacity ?? 0.15
+        const label = ann.label
+
+        if (isVertical) {
+          return (
+            <g key={`ann-${index}`}>
+              <rect x={pos} y={0} width={bandwidth} height={context.height || 0}
+                    fill={color} fillOpacity={opacity} />
+              {label && (
+                <text x={pos + bandwidth / 2} y={12} textAnchor="middle"
+                      fill={color} fontSize={12} fontWeight="bold">{label}</text>
+              )}
+            </g>
+          )
+        } else {
+          return (
+            <g key={`ann-${index}`}>
+              <rect x={0} y={pos} width={context.width || 0} height={bandwidth}
+                    fill={color} fillOpacity={opacity} />
+              {label && (
+                <text x={12} y={pos + bandwidth / 2} dominantBaseline="middle"
+                      fill={color} fontSize={12} fontWeight="bold">{label}</text>
+              )}
+            </g>
+          )
+        }
       }
 
       // ── Unrecognized type ─────────────────────────────────────────────

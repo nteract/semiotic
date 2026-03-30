@@ -5,7 +5,7 @@ import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -110,6 +110,8 @@ export interface LikertChartProps<TDatum extends Record<string, any> = Record<st
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -143,10 +145,11 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     levels, orientation = "horizontal",
     colorScheme: colorSchemeProp, barPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId, valueFormat,
+    onObservation, onClick, chartId, valueFormat,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
+    categoryFormat,
   } = props
 
   const width = resolved.width
@@ -242,6 +245,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     fallbackFields: ["__likertLevelLabel"],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "LikertChart",
     chartId,
     showLegend,
@@ -406,6 +410,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     oLabel: categoryLabel,
     rLabel: valueLabel || (isDiverging ? undefined : "Percentage"),
     rFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     ...effectiveLegendProps,
     ...(title && { title }),
@@ -418,7 +423,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       : tooltip === true
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

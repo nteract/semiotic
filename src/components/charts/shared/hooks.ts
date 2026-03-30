@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react"
+import { useMemo, useCallback, useState, useId, useEffect } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
@@ -6,6 +6,7 @@ import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
+import { setCrosshairPosition, clearCrosshairPosition } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
@@ -83,16 +84,22 @@ export function resolveAccessor<T = any>(
 
 /**
  * Hook to create a color scale from data and colorBy configuration.
- * Returns undefined when colorBy is absent or is a function accessor.
+ * Returns undefined when colorBy is absent or data is empty (push API mode).
+ * Supports both string and function accessors for colorBy.
  */
 export function useColorScale(
   data: Array<Record<string, any>>,
   colorBy: string | ((d: any, i?: number) => any) | undefined,
-  colorScheme: string | string[] = "category10"
+  colorScheme?: string | string[]
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()
+  const themeCategorical = useThemeCategorical()
   return useMemo(() => {
     if (!colorBy) return undefined
+    // Resolve effective scheme: explicit prop > theme categorical > "category10"
+    const effectiveScheme: string | string[] = colorScheme
+      ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
+      ?? "category10"
     // When data is empty (push API mode), return undefined so the pipeline's
     // STREAMING_PALETTE fallback handles coloring. Building a scale from empty
     // data creates an ordinal scale with an implicit domain that can intercept
@@ -100,7 +107,9 @@ export function useColorScale(
     if (data.length === 0) {
       // Still use CategoryColorProvider if available — it has stable colors
       if (categoryColors && Object.keys(categoryColors).length > 0) {
-        return (v: string) => categoryColors[v] || "#999"
+        // Use effectiveScheme as fallback for categories not in the provider
+        const fallbackScale = createColorScale([{ _: "a" }], "_", effectiveScheme)
+        return (v: string) => categoryColors[v] || fallbackScale(v)
       }
       return undefined
     }
@@ -108,19 +117,22 @@ export function useColorScale(
     if (typeof colorBy === "function") {
       const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
       if (categoryColors && Object.keys(categoryColors).length > 0) {
-        return (v: string) => categoryColors[v] || "#999"
+        // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
+        const syntheticData = categories.map(c => ({ _cat: c }))
+        const fallbackScale = createColorScale(syntheticData, "_cat", effectiveScheme)
+        return (v: string) => categoryColors[v] || fallbackScale(v)
       }
       // Build a synthetic data array so createColorScale can derive unique values
       const syntheticData = categories.map(c => ({ _cat: c }))
-      return createColorScale(syntheticData, "_cat", colorScheme)
+      return createColorScale(syntheticData, "_cat", effectiveScheme)
     }
     // If a CategoryColorProvider is present, use its color map as the scale
     if (categoryColors && Object.keys(categoryColors).length > 0) {
-      const fallbackScale = createColorScale(data, colorBy as string, colorScheme)
+      const fallbackScale = createColorScale(data, colorBy as string, effectiveScheme)
       return (v: string) => categoryColors[v] || fallbackScale(v)
     }
-    return createColorScale(data, colorBy as string, colorScheme)
-  }, [data, colorBy, colorScheme, categoryColors])
+    return createColorScale(data, colorBy as string, effectiveScheme)
+  }, [data, colorBy, colorScheme, categoryColors, themeCategorical])
 }
 
 /**
@@ -159,6 +171,7 @@ export function useChartSelection({
   onObservation,
   chartType,
   chartId,
+  onClick,
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -167,11 +180,15 @@ export function useChartSelection({
   onObservation?: OnObservationCallback
   chartType?: string
   chartId?: string
+  onClick?: (datum: any, event: { x: number; y: number }) => void
 }): {
   activeSelectionHook: SelectionHookResult | null
   customHoverBehavior: (d: Record<string, any> | null) => void
   customClickBehavior: (d: Record<string, any> | null) => void
+  /** Stable ID for this chart instance, used to suppress linked crosshair on source chart */
+  crosshairSourceId: string
 } {
+  const crosshairSourceId = useId()
   const hoverConfig = normalizeLinkedHover(linkedHover, fallbackFields)
 
   // Selection fields: use the same fields as the hover config so that
@@ -204,9 +221,27 @@ export function useChartSelection({
         if (d) {
           let datum = d.data || d.datum || d
           if (Array.isArray(datum)) datum = datum[0]
-          linkedHoverHook.onHover(datum)
+
+          // x-position mode: broadcast X value to crosshair store
+          if (hoverConfig?.mode === "x-position" && hoverConfig.xField) {
+            const xVal = datum?.[hoverConfig.xField]
+            if (xVal != null && Number.isFinite(Number(xVal))) {
+              setCrosshairPosition(hoverConfig.name || "hover", Number(xVal), crosshairSourceId)
+            }
+          }
+
+          // Field-based mode (default): produce selection
+          if (hoverConfig?.mode !== "x-position") {
+            linkedHoverHook.onHover(datum)
+          }
         } else {
-          linkedHoverHook.onHover(null)
+          // Clear on hover-end
+          if (hoverConfig?.mode === "x-position") {
+            clearCrosshairPosition(hoverConfig.name || "hover", crosshairSourceId)
+          }
+          if (hoverConfig?.mode !== "x-position") {
+            linkedHoverHook.onHover(null)
+          }
         }
       }
 
@@ -234,11 +269,17 @@ export function useChartSelection({
         }
       }
     },
-    [linkedHover, linkedHoverHook, onObservation, chartType, chartId, pushObservation]
+    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation]
   )
 
   const customClickBehavior = useCallback(
     (d: Record<string, any> | null) => {
+      if (d && onClick) {
+        let datum = d.data || d.datum || d
+        if (Array.isArray(datum)) datum = datum[0]
+        onClick(datum, { x: d.x ?? 0, y: d.y ?? 0 })
+      }
+
       if (onObservation || pushObservation) {
         const now = Date.now()
         const base = { timestamp: now, chartType: chartType || "unknown", chartId }
@@ -262,10 +303,38 @@ export function useChartSelection({
         }
       }
     },
-    [onObservation, pushObservation, chartType, chartId]
+    [onClick, onObservation, pushObservation, chartType, chartId]
   )
 
-  return { activeSelectionHook, customHoverBehavior, customClickBehavior }
+  // Clean up crosshair on unmount or config change to prevent stale entries
+  // when the source chart is conditionally rendered or navigated away from
+  useEffect(() => {
+    if (hoverConfig?.mode !== "x-position") return
+    const name = hoverConfig.name || "hover"
+    return () => {
+      clearCrosshairPosition(name, crosshairSourceId)
+    }
+  }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])
+
+  return { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
+}
+
+/**
+ * Compute crosshair props for StreamXYFrame from linkedHover config.
+ * Returns undefined when linkedHover is not in x-position mode.
+ */
+export function getCrosshairProps(
+  linkedHover: unknown,
+  crosshairSourceId: string
+): { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined {
+  const config = (typeof linkedHover === "object" && linkedHover !== null)
+    ? linkedHover as { name?: string; mode?: string }
+    : undefined
+  if (config?.mode !== "x-position") return undefined
+  return {
+    linkedCrosshairName: config.name || "hover",
+    linkedCrosshairSourceId: crosshairSourceId,
+  }
 }
 
 /**

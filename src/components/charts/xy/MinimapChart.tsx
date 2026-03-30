@@ -32,7 +32,7 @@ export interface MinimapConfig {
 }
 
 export interface MinimapChartProps<TDatum extends Record<string, any> = Record<string, any>>
-  extends BaseChartProps,
+  extends Omit<BaseChartProps, "onClick" | "onObservation" | "selection" | "linkedHover">,
     AxisConfig {
   /** Array of data points or line objects with coordinates */
   data: TDatum[]
@@ -234,7 +234,7 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     lineBy,
     lineDataAccessor = "coordinates",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     curve = "linear",
     lineWidth = 2,
     fillArea = false,

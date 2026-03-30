@@ -51,6 +51,7 @@ import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
+import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useReducedMotion } from "./useMediaPreferences"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -787,24 +788,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       : 0
 
     const tooltipElement = tooltipRendered ? (
-      <div
+      <FlippingTooltip
+        x={tooltipX}
+        y={tooltipY}
+        containerWidth={adjustedWidth}
+        containerHeight={adjustedHeight}
+        margin={margin}
         className="stream-ordinal-tooltip"
-        style={{
-          position: "absolute",
-          left: margin.left + tooltipX,
-          top: margin.top + tooltipY,
-          transform: `translate(${
-            tooltipX > adjustedWidth * 0.7 ? "calc(-100% - 12px)" : "12px"
-          }, ${
-            tooltipY < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
-          })`,
-          pointerEvents: "none",
-          zIndex: 1,
-          width: "max-content"
-        }}
       >
         {tooltipRendered}
-      </div>
+      </FlippingTooltip>
     ) : null
 
     // ── SSR path: render SVG instead of canvas ──────────────────────────

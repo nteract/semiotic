@@ -24,7 +24,7 @@ export interface SelectionConfig {
 export type LinkedHoverProp =
   | boolean
   | string
-  | { name?: string; fields: string[] }
+  | { name?: string; fields?: string[]; mode?: "field" | "x-position"; xField?: string }
 
 /**
  * Linked brush config
@@ -92,6 +92,10 @@ export interface BaseChartProps {
   /** Enable accessible data table below the chart canvas. Default: true (via frame). */
   accessibleTable?: boolean
 
+  /** Callback when a data element is clicked. Receives the original datum and pixel coordinates.
+   * For lines, receives the line data; for bars, the bar datum; for pie slices, the slice datum. */
+  onClick?: (datum: any, event: { x: number; y: number }) => void
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 
@@ -113,6 +117,12 @@ export interface AxisConfig {
   /** Format function for y-axis tick labels */
   yFormat?: (d: any) => string
 }
+
+/**
+ * Category formatting for ordinal chart tick labels.
+ * Receives the category value and its index, returns a formatted string.
+ */
+export type CategoryFormatFn = (label: string, index?: number) => string
 
 /**
  * Accessor type - can be a property name or a function

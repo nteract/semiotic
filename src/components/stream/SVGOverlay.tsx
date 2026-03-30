@@ -8,6 +8,7 @@ import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
+import { useCrosshairPosition } from "../store/LinkedCrosshairStore"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 export interface AxisConfig {
@@ -126,6 +127,11 @@ interface SVGOverlayProps {
 
   /** When true, grid lines and axis baselines are skipped (rendered by SVGUnderlay instead) */
   underlayRendered?: boolean
+
+  /** Name of the linked crosshair store entry to read */
+  linkedCrosshairName?: string
+  /** Source chart ID — crosshair line is suppressed on the source to avoid double rendering */
+  linkedCrosshairSourceId?: string
 
   children?: ReactNode
 }
@@ -345,6 +351,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
     pointNodes,
     curve: annCurve,
     underlayRendered,
+    linkedCrosshairName,
+    linkedCrosshairSourceId,
     children
   } = props
 
@@ -450,7 +458,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
       .filter(Boolean)
   }, [annotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve])
 
-  const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
+  // Linked crosshair from coordinate-based hover sync
+  const crosshairPos = useCrosshairPosition(linkedCrosshairName)
+
+  const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
 
   if (!hasContent) return null
 
@@ -720,6 +731,21 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Foreground graphics */}
         {foregroundGraphics}
+
+        {/* Linked crosshair line (coordinate-based hover sync) */}
+        {crosshairPos && crosshairPos.sourceId !== linkedCrosshairSourceId && scales?.x && (() => {
+          const px = scales.x(crosshairPos.xValue)
+          if (px == null || px < 0 || px > width) return null
+          return (
+            <line
+              x1={px} y1={0} x2={px} y2={height}
+              stroke="var(--semiotic-text-secondary, rgba(0,0,0,0.25))"
+              strokeWidth={1}
+              strokeDasharray="4,4"
+              pointerEvents="none"
+            />
+          )
+        })()}
 
         {children}
       </g>

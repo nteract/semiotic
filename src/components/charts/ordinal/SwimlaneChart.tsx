@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
@@ -63,6 +63,8 @@ export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<
   onBrush?: (extent: { r: [number, number] } | null) => void
   /** LinkedCharts brush integration */
   linkedBrush?: string | { name: string; rField?: string }
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   /** Pass-through props to StreamOrdinalFrame */
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
@@ -94,7 +96,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     orientation = "horizontal",
     valueFormat,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     barPadding = 40,
     tooltip, annotations,
     brush: brushProp,
@@ -102,11 +104,12 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     linkedBrush,
     frameProps = {},
     selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    categoryFormat,
   } = props
 
   const width = resolved.width
@@ -137,6 +140,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "SwimlaneChart",
     chartId,
     showLegend,
@@ -211,6 +215,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     ...effectiveLegendProps,
     ...(title && { title }),
@@ -221,7 +226,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
     ...frameProps

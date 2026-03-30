@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -38,6 +38,8 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -77,14 +79,15 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", bins = 20, amplitude = 1.5,
     valueFormat,
-    colorBy, colorScheme = "category10", categoryPadding = 5,
+    colorBy, colorScheme, categoryPadding = 5,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
-    showCategoryTicks
+    showCategoryTicks,
+    categoryFormat
   } = props
 
   const width = resolved.width
@@ -113,6 +116,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "RidgelinePlot",
     chartId,
     showLegend,
@@ -167,6 +171,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     showCategoryTicks,
     oSort: false,
@@ -180,7 +185,8 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

@@ -9,11 +9,13 @@ import {
   useChartLegendAndMargin,
   useChartMode,
   useLegendInteraction,
+  getCrosshairProps,
   DEFAULT_COLOR,
 } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
+import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition } from "../../store/LinkedCrosshairStore"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -676,5 +678,208 @@ describe("useLegendInteraction", () => {
     // highlightedCategory should remain null, no state change
     expect(result.current.highlightedCategory).toBeNull()
     expect(result.current.legendSelectionHook).toBeNull()
+  })
+})
+
+// ── useChartSelection: onClick ──────────────────────────────────────────
+
+describe("useChartSelection onClick", () => {
+  it("calls onClick with unwrapped datum and coordinates", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick, chartType: "BarChart" }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ x: 10, y: 20, data: { id: 1, name: "test" } })
+    })
+
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(onClick).toHaveBeenCalledWith(
+      { id: 1, name: "test" },
+      { x: 10, y: 20 }
+    )
+  })
+
+  it("unwraps .datum property for onClick", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ x: 5, y: 15, datum: { val: 42 } })
+    })
+
+    expect(onClick).toHaveBeenCalledWith({ val: 42 }, { x: 5, y: 15 })
+  })
+
+  it("does not call onClick when d is null", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior(null)
+    })
+
+    expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it("defaults x/y to 0 when missing from frame event", () => {
+    const onClick = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onClick }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior({ data: { a: 1 } })
+    })
+
+    expect(onClick).toHaveBeenCalledWith({ a: 1 }, { x: 0, y: 0 })
+  })
+})
+
+// ── useChartSelection: crosshair (x-position mode) ─────────────────────
+
+describe("useChartSelection crosshair x-position mode", () => {
+  it("sets crosshair position on hover and clears on hover-end", () => {
+    // Render both the selection hook and a crosshair reader in the same tree
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "testCH", mode: "x-position", xField: "time" },
+          chartType: "LineChart",
+        })
+        const crosshair = useCrosshairPosition("testCH")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Initially no crosshair
+    expect(result.current.crosshair).toBeNull()
+
+    // Hover with valid xField value
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+    })
+
+    // Crosshair should be set with the xField value
+    expect(result.current.crosshair).not.toBeNull()
+    expect(result.current.crosshair!.xValue).toBe(42)
+    expect(result.current.crosshair!.sourceId).toBe(result.current.selection.crosshairSourceId)
+
+    // Hover-end clears the crosshair
+    act(() => {
+      result.current.selection.customHoverBehavior(null)
+    })
+
+    expect(result.current.crosshair).toBeNull()
+  })
+
+  it("clears crosshair on unmount", () => {
+    const { result, unmount } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "unmountCH", mode: "x-position", xField: "time" },
+        })
+        const crosshair = useCrosshairPosition("unmountCH")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Set a crosshair position
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { time: 99 } })
+    })
+    expect(result.current.crosshair).not.toBeNull()
+
+    // Unmount should clear it via cleanup effect
+    unmount()
+
+    // Read from store directly after unmount
+    const { result: readerResult } = renderHook(
+      () => useCrosshairPosition("unmountCH"),
+      { wrapper: createWrapper() }
+    )
+    expect(readerResult.current).toBeNull()
+  })
+
+  it("returns a stable crosshairSourceId", () => {
+    const { result } = renderHook(
+      () => useChartSelection({
+        linkedHover: { name: "ch", mode: "x-position", xField: "x" },
+      }),
+      { wrapper: createWrapper() }
+    )
+
+    expect(typeof result.current.crosshairSourceId).toBe("string")
+    expect(result.current.crosshairSourceId.length).toBeGreaterThan(0)
+  })
+
+  it("does not broadcast crosshair for field-based mode", () => {
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "fieldMode", fields: ["region"] },
+        })
+        const crosshair = useCrosshairPosition("fieldMode")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Hover should not set crosshair in field-based mode
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 1, y: 2, data: { region: "North" } })
+    })
+    expect(result.current.crosshair).toBeNull()
+
+    act(() => {
+      result.current.selection.customHoverBehavior(null)
+    })
+    expect(result.current.crosshair).toBeNull()
+  })
+})
+
+// ── getCrosshairProps ────────────────────────────────────────────────────
+
+describe("getCrosshairProps", () => {
+  it("returns crosshair props for x-position mode", () => {
+    const result = getCrosshairProps(
+      { name: "myChart", mode: "x-position", xField: "time" },
+      "source-123"
+    )
+    expect(result).toEqual({
+      linkedCrosshairName: "myChart",
+      linkedCrosshairSourceId: "source-123",
+    })
+  })
+
+  it("returns undefined for field-based mode", () => {
+    expect(getCrosshairProps({ name: "hl", fields: ["cat"] }, "s1")).toBeUndefined()
+  })
+
+  it("returns undefined when linkedHover is undefined", () => {
+    expect(getCrosshairProps(undefined, "s1")).toBeUndefined()
+  })
+
+  it("returns undefined when linkedHover is a string", () => {
+    expect(getCrosshairProps("hl", "s1")).toBeUndefined()
+  })
+
+  it("defaults name to 'hover' when not provided", () => {
+    const result = getCrosshairProps({ mode: "x-position" }, "s1")
+    expect(result).toEqual({
+      linkedCrosshairName: "hover",
+      linkedCrosshairSourceId: "s1",
+    })
   })
 })

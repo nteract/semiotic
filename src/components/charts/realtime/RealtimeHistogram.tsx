@@ -114,7 +114,14 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
   /** Brush configuration. `true` defaults to `{ dimension: "x", snap: "bin" }`. */
-  brush?: boolean | "x" | { dimension?: "x" | "y" | "xy"; snap?: "continuous" | "bin" }
+  brush?: boolean | "x" | {
+    dimension?: "x" | "y" | "xy"
+    snap?: "continuous" | "bin"
+    /** Actual bin boundary values for data-driven snapping (auto-populated from histogram bins when omitted) */
+    binBoundaries?: number[]
+    /** When true, snap during drag (not just on release). Default false. */
+    snapDuring?: boolean
+  }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
   /** Linked brush for cross-chart coordination via LinkedCharts */

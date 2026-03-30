@@ -125,7 +125,6 @@ const donutChartProps = [
   { name: "colorBy", type: "string | function", required: false, default: "categoryAccessor", description: "Field name or function to determine slice color." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle offset in degrees." },
-  { name: "slicePadding", type: "number", required: false, default: "2", description: "Padding between slices in pixels." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on slices." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },

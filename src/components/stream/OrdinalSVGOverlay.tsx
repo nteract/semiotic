@@ -21,7 +21,7 @@ interface OrdinalSVGOverlayProps {
   showCategoryTicks?: boolean
   oLabel?: string
   rLabel?: string
-  oFormat?: (d: string) => string
+  oFormat?: (d: string, index?: number) => string
   rFormat?: (d: number) => string
 
   // Grid
@@ -207,10 +207,10 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   // Category labels (band scale)
   const categoryTicks = useMemo(() => {
     if (!showAxes || !showCategoryTicks || !scales || isRadial) return []
-    return scales.o.domain().map(cat => ({
+    return scales.o.domain().map((cat, index) => ({
       value: cat,
       pixel: (scales.o(cat) ?? 0) + scales.o.bandwidth() / 2,
-      label: oFormat ? oFormat(cat) : cat
+      label: oFormat ? oFormat(cat, index) : cat
     }))
   }, [showAxes, showCategoryTicks, scales, oFormat, isRadial])
 
@@ -258,6 +258,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             y: isHoriz ? (oCentered || scales.r) : scales.r,
             time: scales.r,
             value: scales.r,
+            o: scales.o,
           }
         : null,
       timeAxis: "x",
@@ -267,6 +268,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       height,
       data: annotationData,
       frameType: "ordinal",
+      projection: isHoriz ? "horizontal" : "vertical",
       stickyPositionCache: stickyPositionCacheRef.current
     }
 

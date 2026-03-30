@@ -5,7 +5,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -326,7 +326,7 @@ export const LineChart = forwardRef(
     lineBy,
     lineDataAccessor = "coordinates",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     curve = "linear",
     showPoints = false,
     pointRadius = 3,
@@ -344,6 +344,7 @@ export const LineChart = forwardRef(
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -510,12 +511,15 @@ export const LineChart = forwardRef(
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "LineChart", chartId
+    onObservation, onClick, chartType: "LineChart", chartId
   })
+
+  // Linked crosshair config (x-position mode)
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Record<string, any>) => {
@@ -918,11 +922,13 @@ export const LineChart = forwardRef(
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
     }),
+    ...crosshairFrameProps,
     ...frameProps
   }
 

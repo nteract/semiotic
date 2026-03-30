@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
@@ -48,6 +48,8 @@ export interface FunnelChartProps<TDatum extends Record<string, any> = Record<st
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -91,7 +93,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     valueAccessor = "value",
     categoryAccessor,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     orientation = "horizontal",
     connectorOpacity = 0.3,
     showLabels = true,
@@ -101,12 +103,14 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    categoryFormat,
   } = props
 
   const isVertical = orientation === "vertical"
@@ -145,6 +149,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "FunnelChart",
     chartId,
     showLegend,
@@ -242,6 +247,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     enableHover,
     showAxes: isVertical,
     showCategoryTicks: isVertical,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid: isVertical,
     ...(!isVertical && { connectorOpacity }),
     showLabels,
@@ -256,7 +262,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
       : tooltip === true || tooltip == null
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   } as any

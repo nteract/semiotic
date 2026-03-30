@@ -8,7 +8,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -165,7 +165,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     showQuadrantLabels = true,
     quadrantLabelSize = 12,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     sizeBy,
     sizeRange = [3, 15],
     pointRadius = 5,
@@ -177,6 +177,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -207,12 +208,14 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   warnMissingField("QuadrantChart", safeData, "yAccessor", yAccessor)
 
   // ── Selection hooks ───────────────────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
-    onObservation, chartType: "QuadrantChart", chartId
+    onObservation, onClick, chartType: "QuadrantChart", chartId
   })
+
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ──────────────────────────────────────────────────
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -585,10 +588,12 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,
+    ...crosshairFrameProps,
     ...frameProps,
     // Override pre-renderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),

@@ -32,8 +32,8 @@ export function useStreamingLegend({
   isPushMode: boolean
   /** The color-by accessor (may be derived from stackBy/groupBy/categoryAccessor) */
   colorBy: Accessor<string> | undefined
-  /** Color scheme name or custom array */
-  colorScheme: string | string[]
+  /** Color scheme name or custom array — undefined lets useColorScale consult the theme */
+  colorScheme: string | string[] | undefined
   /** Whether legend is requested */
   showLegend: boolean | undefined
   /** Legend position */

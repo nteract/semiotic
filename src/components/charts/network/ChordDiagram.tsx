@@ -74,7 +74,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     valueAccessor = "value",
     nodeIdAccessor = "id",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     edgeColorBy = "source",
     padAngle = 0.01,
     groupWidth = 20,
@@ -84,6 +84,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     tooltip,
     frameProps = {},
     onObservation,
+    onClick,
     chartId,
     selection,
     linkedHover,
@@ -190,10 +191,10 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
-  const { customHoverBehavior } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true, onObservation, chartType: "ChordDiagram", chartId,
+    unwrapData: true, onObservation, onClick, chartType: "ChordDiagram", chartId,
   })
 
   // Validate
@@ -236,7 +237,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation) ? customHoverBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: legendState.onLegendHover,
         legendClickBehavior: legendState.onLegendClick,

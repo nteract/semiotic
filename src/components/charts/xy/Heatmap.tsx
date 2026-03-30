@@ -6,7 +6,7 @@ import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridi
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction } from "../shared/hooks"
+import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -249,6 +249,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -285,12 +286,14 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: [],
-    onObservation, chartType: "Heatmap", chartId
+    onObservation, onClick, chartType: "Heatmap", chartId
   })
+
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for Heatmap since no colorBy categories)
   const legendState = useLegendInteraction(legendInteraction, undefined, [])
@@ -429,8 +432,10 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...crosshairFrameProps,
     ...frameProps
   }
 

@@ -197,6 +197,8 @@ export class PipelineStore {
   /** Separate group→color map for resolveGroupColor (insertion-order based, never invalidates _colorMapCache) */
   private _groupColorMap: Map<string, string> = new Map()
   private _barCategoryCache: { key: string; order: string[] } | null = null
+  /** Sorted bin boundary values from the last bar scene build (for data-driven brush snapping) */
+  private _binBoundaries: number[] = []
 
   // ── Stacked area extent caching ───────────────────────────────────
   /** Cache stacked area cumulative sums to skip recalculation when buffer hasn't changed */
@@ -742,9 +744,10 @@ export class PipelineStore {
       case "heatmap":
         return buildHeatmapScene(ctx, data, layout)
       case "bar": {
-        const result = buildBarScene(ctx, data)
+        const barResult = buildBarScene(ctx, data)
         this._barCategoryCache = ctx.barCategoryCache ?? null
-        return result
+        this._binBoundaries = barResult.binBoundaries
+        return barResult.nodes
       }
       case "swarm":
         return buildSwarmScene(ctx, data)
@@ -983,6 +986,11 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
+  /** Returns sorted bin boundary values from the last bar scene build. Persists until clear() or the next bar scene build. */
+  getBinBoundaries(): number[] {
+    return this._binBoundaries
+  }
+
   getExtents(): { x: [number, number]; y: [number, number] } | null {
     if (this.xExtent.min === Infinity) return null
     return {
@@ -1012,6 +1020,7 @@ export class PipelineStore {
     this._colorMapCache = null
     this._groupColorMap = new Map()
     this._barCategoryCache = null
+    this._binBoundaries = []
     this._stackExtentCache = null
     this.version++
   }

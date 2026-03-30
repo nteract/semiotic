@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
@@ -39,6 +39,8 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Record<string, any>[]
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -79,7 +81,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     orientation = "vertical",
     valueFormat,
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     sort = false,
     barPadding = 40,
     tooltip,
@@ -88,6 +90,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -95,6 +98,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     legendPosition: legendPositionProp,
     color,
     showCategoryTicks,
+    categoryFormat,
   } = props
 
   const width = resolved.width
@@ -124,6 +128,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "BarChart",
     chartId,
     showLegend,
@@ -201,6 +206,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     showCategoryTicks,
     oSort: sort,
@@ -213,7 +219,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

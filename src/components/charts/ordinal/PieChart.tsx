@@ -24,7 +24,6 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   startAngle?: number
-  slicePadding?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
@@ -53,10 +52,10 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
+    colorBy, colorScheme, startAngle = 0,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -88,6 +87,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "PieChart",
     chartId,
     showLegend,
@@ -166,7 +166,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

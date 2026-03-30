@@ -123,7 +123,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     edgeOpacity = 0.6,
     edgeWidthRange = [1, 8],
     edgeLinecap = "round",
-    colorScheme = "category10",
+    colorScheme,
     showParticles,
     particleStyle,
     tooltip,
@@ -133,6 +133,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -238,6 +239,30 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
       }
     },
     [linkedHover, linkedHoverHook, nodeIdAccessor, nodeFlowLookup, onObservation, chartId, pushObservation]
+  )
+
+  const customClickBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (d && onClick) {
+        let datum = d.data || d.datum || d
+        if (Array.isArray(datum)) datum = datum[0]
+        onClick(datum, { x: d.x ?? 0, y: d.y ?? 0 })
+      }
+      // Emit click observation
+      if (d && (onObservation || pushObservation)) {
+        let datum = d.data || d.datum || d
+        if (Array.isArray(datum)) datum = datum[0]
+        const now = Date.now()
+        const obs: ChartObservation = {
+          timestamp: now, chartType: "FlowMap", chartId,
+          type: "click",
+          datum: datum || {}, x: d.x ?? 0, y: d.y ?? 0,
+        }
+        if (onObservation) onObservation(obs)
+        if (pushObservation) pushObservation(obs)
+      }
+    },
+    [onClick, onObservation, pushObservation, chartId]
   )
 
   // Convert flows to line data
@@ -369,7 +394,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),

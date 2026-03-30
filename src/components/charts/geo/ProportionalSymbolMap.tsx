@@ -97,7 +97,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     sizeBy,
     sizeRange = [3, 30],
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     projection = "equalEarth",
     graticule,
     fitPadding,
@@ -117,6 +117,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -134,11 +135,12 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
     onObservation,
+    onClick,
     chartType: "ProportionalSymbolMap",
     chartId
   })
@@ -264,7 +266,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       legendHighlightedCategory: legendState.highlightedCategory,
       legendIsolatedCategories: legendState.isolatedCategories,
     }),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),

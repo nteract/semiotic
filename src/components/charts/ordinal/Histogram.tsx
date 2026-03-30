@@ -6,7 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -42,6 +42,8 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   onBrush?: (extent: { r: [number, number] } | null) => void
   /** LinkedCharts brush integration */
   linkedBrush?: string | { name: string; rField?: string }
+  /** Custom formatter for category tick labels */
+  categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -75,16 +77,17 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     categoryAccessor = "category", valueAccessor = "value",
     bins = 25, relative = false,
     valueFormat,
-    colorBy, colorScheme = "category10", categoryPadding = 20,
+    colorBy, colorScheme, categoryPadding = 20,
     tooltip, annotations,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
-    onObservation, chartId,
+    onObservation, onClick, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
-    showCategoryTicks
+    showCategoryTicks,
+    categoryFormat
   } = props
 
   const width = resolved.width
@@ -113,6 +116,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
     unwrapData: true,
     onObservation,
+    onClick,
     chartType: "Histogram",
     chartId,
     showLegend,
@@ -205,6 +209,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     showCategoryTicks,
     ...setup.legendBehaviorProps,
@@ -216,7 +221,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
     ...frameProps

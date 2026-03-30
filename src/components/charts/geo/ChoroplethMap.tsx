@@ -101,6 +101,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -132,10 +133,11 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   }, [resolvedAreas, valAcc, colorScheme])
 
   // Selection
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartType: "ChoroplethMap",
     chartId
   })
@@ -214,7 +216,8 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     ...(tileURL && { tileURL }),
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),

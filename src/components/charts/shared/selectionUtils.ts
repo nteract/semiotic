@@ -12,6 +12,8 @@
 export interface NormalizedLinkedHover {
   name: string
   fields: string[]
+  mode?: "field" | "x-position"
+  xField?: string
 }
 
 export interface NormalizedLinkedBrush {
@@ -30,7 +32,7 @@ export interface NormalizedLinkedBrush {
  * - `{ name: "hl", fields: ["category"] }` → as-is
  */
 export function normalizeLinkedHover(
-  prop: boolean | string | { name?: string; fields: string[] } | undefined,
+  prop: boolean | string | { name?: string; fields?: string[]; mode?: "field" | "x-position"; xField?: string } | undefined,
   fallbackFields?: string[]
 ): NormalizedLinkedHover | null {
   if (!prop) return null
@@ -40,7 +42,12 @@ export function normalizeLinkedHover(
   if (typeof prop === "string") {
     return { name: prop, fields: fallbackFields || [] }
   }
-  return { name: prop.name || "hover", fields: prop.fields }
+  return {
+    name: prop.name || "hover",
+    fields: prop.fields || fallbackFields || [],
+    mode: prop.mode,
+    xField: prop.xField,
+  }
 }
 
 /**

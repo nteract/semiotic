@@ -471,6 +471,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
     dimension?: "x" | "y" | "xy"
     /** Snap mode: "continuous" (default) for pixel-precise, "bin" to snap to bin boundaries */
     snap?: "continuous" | "bin"
+    /** Actual bin boundary values for data-driven snapping (overrides uniform grid math) */
+    binBoundaries?: number[]
+    /** When true, snap during drag (not just on release). Default false. */
+    snapDuring?: boolean
   }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
@@ -549,6 +553,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */
   summary?: string
+
+  // ── Linked crosshair (coordinate-based hover sync) ─
+  /** Name of the linked crosshair store entry — enables coordinate-based crosshair rendering */
+  linkedCrosshairName?: string
+  /** Source chart ID — crosshair is suppressed on the source chart to avoid double rendering */
+  linkedCrosshairSourceId?: string
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

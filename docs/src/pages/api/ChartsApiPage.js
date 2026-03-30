@@ -121,7 +121,6 @@ const pieChartKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access slice values." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine slice color by field or function." },
   { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle in degrees." },
-  { name: "slicePadding", type: "number", required: false, default: "2", description: "Padding between slices in pixels." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 

@@ -5,7 +5,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -202,7 +202,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     areaBy,
     lineDataAccessor = "coordinates",
     colorBy,
-    colorScheme = "category10",
+    colorScheme,
     curve = "monotoneX",
     areaOpacity = 0.7,
     showLine = true,
@@ -214,6 +214,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     selection,
     linkedHover,
     onObservation,
+    onClick,
     chartId,
     loading,
     emptyContent,
@@ -270,12 +271,14 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, chartType: "StackedAreaChart", chartId
+    onObservation, onClick, chartType: "StackedAreaChart", chartId
   })
+
+  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -462,8 +465,10 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation) && { customHoverBehavior }),
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...crosshairFrameProps,
     ...frameProps
   }
 
