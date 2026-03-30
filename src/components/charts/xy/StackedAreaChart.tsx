@@ -99,6 +99,19 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
   lineWidth?: number
 
   /**
+   * Show data points on the area lines.
+   * Useful for sparse data or single-point series.
+   * @default false
+   */
+  showPoints?: boolean
+
+  /**
+   * Point radius when showPoints is true
+   * @default 3
+   */
+  pointRadius?: number
+
+  /**
    * Normalize to 100% stacked (proportional)
    * @default false
    */
@@ -207,6 +220,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     areaOpacity = 0.7,
     showLine = true,
     lineWidth = 2,
+    showPoints = false,
+    pointRadius = 3,
     normalize = false,
     tooltip,
     annotations,
@@ -369,6 +384,20 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     [baseLineStyle, effectiveSelectionHook, selection]
   )
 
+  // Point style function (if showPoints is true)
+  const pointStyle = useMemo(() => {
+    if (!showPoints) return undefined
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
+      if (colorBy) {
+        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+      } else {
+        baseStyle.fill = DEFAULT_COLOR
+      }
+      return baseStyle
+    }
+  }, [showPoints, pointRadius, colorBy, colorScale])
+
   // Legend + margin
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: areaData,
@@ -439,6 +468,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     curve,
     normalize,
     lineStyle,
+    ...(showPoints && pointStyle && { pointStyle }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,

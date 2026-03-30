@@ -184,5 +184,34 @@ describe("StackedAreaChart", () => {
       const style = lastXYFrameProps.lineStyle({})
       expect(style.fillOpacity).toBe(0.5)
     })
+
+    it("passes pointStyle when showPoints is true", () => {
+      render(
+        <TooltipProvider>
+          <StackedAreaChart data={sampleData} showPoints={true} pointRadius={5} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.pointStyle).toBeDefined()
+      expect(typeof lastXYFrameProps.pointStyle).toBe("function")
+    })
+
+    it("does not pass pointStyle when showPoints is false", () => {
+      render(
+        <TooltipProvider>
+          <StackedAreaChart data={sampleData} showPoints={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.pointStyle).toBeUndefined()
+    })
+
+    it("encodes pointRadius in pointStyle function", () => {
+      render(
+        <TooltipProvider>
+          <StackedAreaChart data={sampleData} showPoints={true} pointRadius={7} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.pointStyle({})
+      expect(style.r).toBe(7)
+    })
   })
 })

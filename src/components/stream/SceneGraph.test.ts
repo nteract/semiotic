@@ -139,7 +139,7 @@ describe("SceneGraph — buildStackedAreaNodes", () => {
       { key: "b", data: [{ x: 3, y: 5 }, { x: 1, y: 15 }] }
     ]
     const scales = makeScales()
-    const nodes = buildStackedAreaNodes(
+    const { nodes } = buildStackedAreaNodes(
       groups, scales,
       d => d.x, d => d.y,
       (g) => ({ fill: g === "a" ? "red" : "blue" })

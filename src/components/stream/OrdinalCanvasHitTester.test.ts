@@ -76,17 +76,17 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       expect(result!.distance).toBe(0)
     })
 
-    it("uses minimum hit target of 5 for small points", () => {
+    it("uses minimum hit target of 12 for small points (Fitts's law)", () => {
       const tinyPoint: PointSceneNode = {
         type: "point",
         x: 50,
         y: 50,
-        r: 2, // smaller than min hit target of 5
+        r: 2, // smaller than min hit target of 12
         style: { fill: "blue" },
         datum: { id: "tiny" }
       }
-      // 4 px away — within the minimum hit target of 5
-      const result = findNearestOrdinalNode([tinyPoint], 54, 50)
+      // 11 px away — within the minimum hit target of 12
+      const result = findNearestOrdinalNode([tinyPoint], 61, 50)
       expect(result).not.toBeNull()
     })
 

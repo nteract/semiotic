@@ -92,7 +92,7 @@ function hitTestCircle(
   const dx = px - node.cx
   const dy = py - node.cy
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = Math.max(node.r, 5) + 5
+  const tolerance = Math.max(node.r + 5, 12) // minimum 12px hit target (Fitts's law)
 
   if (dist <= tolerance) {
     return {

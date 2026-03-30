@@ -68,7 +68,7 @@ function hitTestPoint(node: PointSceneNode, px: number, py: number): OrdinalHitR
   const dx = px - node.x
   const dy = py - node.y
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const hitR = Math.max(node.r, 5) // minimum hit target
+  const hitR = Math.max(node.r + 5, 12) // minimum 12px hit target (Fitts's law)
   if (dist <= hitR) {
     return {
       datum: node.datum,

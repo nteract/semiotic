@@ -114,8 +114,8 @@ describe("CanvasHitTester — findNearestNode", () => {
   })
 
   it("falls back to linear scan when quadtree candidate fails hitTestPoint", () => {
-    // Point A is closest in Euclidean distance but has r=1, so hitTestPoint
-    // rejects it (dist > r + 5 = 6). Point B is farther but has r=20 so it passes.
+    // Point A is closest in Euclidean distance but has r=1 (hit radius = max(6, 12) = 12).
+    // Query at 15px from A → miss. Point B is farther but has r=20 (hit radius = 25) → hit.
     const pointA: PointSceneNode = {
       type: "point", x: 100, y: 100, r: 1, style: { fill: "red" }, datum: { id: "a" }
     }
@@ -130,11 +130,11 @@ describe("CanvasHitTester — findNearestNode", () => {
       .y((d) => d.y)
       .addAll(points)
 
-    // Query at (110, 100): 10px from A (r=1, hit radius = 6 → miss),
-    // 10px from B (r=20, hit radius = 25 → hit).
+    // Query at (115, 100): 15px from A (hit radius = 12 → miss),
+    // 5px from B (hit radius = 25 → hit).
     // Quadtree returns A (nearest center), hitTestPoint rejects A,
     // so linear scan should find B.
-    const result = findNearestNode(points, 110, 100, 30, qt)
+    const result = findNearestNode(points, 115, 100, 30, qt)
     expect(result).not.toBeNull()
     expect(result!.datum.id).toBe("b")
   })

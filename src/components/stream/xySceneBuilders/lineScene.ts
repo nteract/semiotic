@@ -11,6 +11,7 @@ import type { SceneNode } from "../types"
 import { buildLineNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { buildBoundsForGroup } from "./boundsScene"
+import { emitPointNodes } from "./emitPointNodes"
 
 export function buildLineScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
   const groups = ctx.groupData(data)
@@ -44,6 +45,8 @@ export function buildLineScene(ctx: XYSceneContext, data: Record<string, any>[])
     }
     nodes.push(lineNode)
   }
+
+  emitPointNodes(ctx, groups, nodes)
 
   return nodes
 }

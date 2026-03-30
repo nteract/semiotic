@@ -82,6 +82,8 @@ const areaChartProps = [
   { name: "areaOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the filled area." },
   { name: "showLine", type: "boolean", required: false, default: "true", description: "Show a line on top of the area." },
   { name: "lineWidth", type: "number", required: false, default: "2", description: "Stroke width of the line when showLine is true." },
+  { name: "showPoints", type: "boolean", required: false, default: "false", description: "Show data points on the area line. Useful for sparse data or single-point series." },
+  { name: "pointRadius", type: "number", required: false, default: "3", description: "Point radius when showPoints is true." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-area)", description: "Show a legend. Defaults to true when multiple areas are present." },

@@ -119,6 +119,19 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   lineWidth?: number
 
   /**
+   * Show data points on the area line.
+   * Useful for sparse data or single-point series.
+   * @default false
+   */
+  showPoints?: boolean
+
+  /**
+   * Point radius when showPoints is true
+   * @default 3
+   */
+  pointRadius?: number
+
+  /**
    * Enable hover annotations
    * @default true
    */
@@ -230,6 +243,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     areaOpacity = 0.7,
     showLine = true,
     lineWidth = 2,
+    showPoints = false,
+    pointRadius = 3,
     tooltip,
     annotations,
     frameProps = {},
@@ -372,6 +387,20 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     [baseLineStyle, effectiveSelectionHook, selection]
   )
 
+  // Point style function (if showPoints is true)
+  const pointStyle = useMemo(() => {
+    if (!showPoints) return undefined
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
+      if (colorBy) {
+        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+      } else {
+        baseStyle.fill = DEFAULT_COLOR
+      }
+      return baseStyle
+    }
+  }, [showPoints, pointRadius, colorBy, colorScale])
+
   // Legend + margin
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: areaData,
@@ -426,6 +455,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     ...(gradientFill && { gradientFill }),
     curve,
     lineStyle,
+    ...(showPoints && pointStyle && { pointStyle }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
