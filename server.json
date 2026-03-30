@@ -6,12 +6,12 @@
     "url": "https://github.com/nteract/semiotic",
     "source": "github"
   },
-  "version": "3.1.2",
+  "version": "3.2.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "semiotic",
-      "version": "3.1.2",
+      "version": "3.2.1",
       "transport": {
         "type": "stdio"
       }

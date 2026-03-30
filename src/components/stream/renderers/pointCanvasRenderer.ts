@@ -9,6 +9,7 @@ import { renderCirclePulse } from "./renderPulse"
  */
 export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const pointNodes = nodes.filter((n): n is PointSceneNode => n.type === "point")
+  if (pointNodes.length === 0) return
 
   ctx.save()
   try {

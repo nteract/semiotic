@@ -8,8 +8,9 @@
  * Consumed by: PipelineStore.buildSceneNodes (chartTypes "area", "stackedarea")
  */
 import type { SceneNode } from "../types"
-import { buildAreaNode, buildStackedAreaNodes, buildPointNode } from "../SceneGraph"
+import { buildAreaNode, buildStackedAreaNodes } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
+import { emitPointNodes } from "./emitPointNodes"
 
 export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
   const groups = ctx.groupData(data)
@@ -37,17 +38,7 @@ export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[])
     nodes.push(node)
   }
 
-  // Emit point nodes when pointStyle is configured (showPoints on HOC)
-  if (ctx.config.pointStyle) {
-    for (const g of groups) {
-      for (const d of g.data) {
-        const style = ctx.config.pointStyle(d)
-        const r = style.r || 3
-        const ptNode = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style)
-        if (ptNode) nodes.push(ptNode)
-      }
-    }
-  }
+  emitPointNodes(ctx, groups, nodes)
 
   return nodes
 }
@@ -71,17 +62,7 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
     curveType
   )
 
-  // Emit point nodes when pointStyle is configured (showPoints on HOC)
-  if (ctx.config.pointStyle) {
-    for (const g of groups) {
-      for (const d of g.data) {
-        const style = ctx.config.pointStyle(d)
-        const r = style.r || 3
-        const ptNode = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style)
-        if (ptNode) nodes.push(ptNode)
-      }
-    }
-  }
+  emitPointNodes(ctx, groups, nodes)
 
   return nodes
 }
