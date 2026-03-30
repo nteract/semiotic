@@ -110,10 +110,11 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
         stackedTopAtX.set(x, base + y)
         xBaselines.set(x, base + y)
       }
-      // Assign stacked Y to every datum in this group
+      // Assign stacked Y only to datums with valid X and Y
       for (const d of g.data) {
         const x = ctx.getX(d)
-        if (x != null && stackedTopAtX.has(x)) {
+        const y = ctx.getY(d)
+        if (x != null && !Number.isNaN(x) && y != null && !Number.isNaN(y) && stackedTopAtX.has(x)) {
           stackedYMap.set(d, stackedTopAtX.get(x)!)
         }
       }

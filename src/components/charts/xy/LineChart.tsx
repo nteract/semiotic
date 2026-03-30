@@ -411,7 +411,16 @@ export const LineChart = forwardRef(
   const prevAnomalyRef = useRef(anomaly)
 
   useEffect(() => {
-    if (!forecast && !anomaly) return
+    if (!forecast && !anomaly) {
+      // Clear stale overlays when forecast/anomaly props are removed
+      if (prevForecastRef.current || prevAnomalyRef.current) {
+        setStatisticalResult(null)
+        setStatisticalAnnotations([])
+        prevForecastRef.current = forecast
+        prevAnomalyRef.current = anomaly
+      }
+      return
+    }
     let cancelled = false
     // Only clear previous results when the forecast/anomaly CONFIG changes.
     // Data-only changes keep the previous result visible to avoid flicker
