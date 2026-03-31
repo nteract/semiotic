@@ -404,6 +404,7 @@ function LinkedDashboardDemo() {
           colorScheme={channelColors}
           xLabel="Ad Spend ($K)"
           yLabel="ROI"
+          showLegend={false}
           linkedHover={{ name: "dash", fields: ["channel"] }}
           selection={{ name: "dash" }}
         />
