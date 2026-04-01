@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dev-mode `d.data` access warning** — Frame callbacks (`nodeStyle`, `edgeStyle`, `nodeSize`) now warn in development when users access properties that exist on `.data` but not on the RealtimeNode/RealtimeEdge wrapper (e.g., `d.category` instead of `d.data?.category`). Zero production overhead. Applied to all 5 layout plugins (sankey, force, chord, orbit, hierarchy).
 - **Streaming-first docs narrative** — Landing page and Getting Started page restructured to lead with the streaming engine (push API, two-canvas RAF loop, ring buffer, decay/pulse/staleness/transitions) as the primary differentiator.
 
+### Performance
+
+- **Heatmap scene builder optimized** — Streaming path uses flat `Int32Array`/`Float64Array` grids instead of `Map<string, {data[]}>`, eliminating 50k string key allocations and per-datum array pushes. Static path uses numeric Map keys and precomputed 256-entry color LUT (cached per scheme) instead of per-cell `scaleSequential` calls. Streaming 50k points into 20×20 grid: **0.37ms** (was ~49ms with Map+string approach). Static path ~15% faster at high cardinality.
+
 ### Fixed
 
 - **`@modelcontextprotocol/sdk` removed from production dependencies** — The MCP CLI (`semiotic-mcp`) now bundles the SDK via esbuild, so `npm install semiotic` no longer pulls in the 4MB+ MCP SDK and its transitive deps. The bundled CLI works identically — zero behavior change for `npx semiotic-mcp` users.

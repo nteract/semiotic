@@ -162,24 +162,53 @@ describe('Scene Builders — Stacked Area', () => {
   })
 })
 
-describe('Scene Builders — Heatmap', () => {
+describe('Scene Builders — Heatmap (static)', () => {
   const ctx = makeCtx({
     config: {
-      heatmapXBins: 20,
-      heatmapYBins: 20,
+      xAccessor: 'x',
+      yAccessor: 'y',
+      valueAccessor: 'value',
     },
   })
 
-  bench('heatmap-1k', () => {
+  bench('heatmap-static-1k', () => {
     buildHeatmapScene(ctx, scatter1k, defaultLayout)
   })
 
-  bench('heatmap-10k', () => {
+  bench('heatmap-static-10k', () => {
     buildHeatmapScene(ctx, scatter10k, defaultLayout)
   })
 
-  bench('heatmap-50k', () => {
+  bench('heatmap-static-50k', () => {
     buildHeatmapScene(ctx, scatter50k, defaultLayout)
+  })
+})
+
+describe('Scene Builders — Heatmap (streaming aggregation)', () => {
+  const ctx20 = makeCtx({
+    config: { heatmapAggregation: 'count', heatmapXBins: 20, heatmapYBins: 20, valueAccessor: 'value' },
+  })
+  const ctx50 = makeCtx({
+    config: { heatmapAggregation: 'count', heatmapXBins: 50, heatmapYBins: 50, valueAccessor: 'value' },
+  })
+  const ctx100 = makeCtx({
+    config: { heatmapAggregation: 'mean', heatmapXBins: 100, heatmapYBins: 100, valueAccessor: 'value' },
+  })
+
+  bench('heatmap-stream-10k-20x20', () => {
+    buildHeatmapScene(ctx20, scatter10k, defaultLayout)
+  })
+
+  bench('heatmap-stream-50k-20x20', () => {
+    buildHeatmapScene(ctx20, scatter50k, defaultLayout)
+  })
+
+  bench('heatmap-stream-50k-50x50', () => {
+    buildHeatmapScene(ctx50, scatter50k, defaultLayout)
+  })
+
+  bench('heatmap-stream-50k-100x100-mean', () => {
+    buildHeatmapScene(ctx100, scatter50k, defaultLayout)
   })
 })
 
