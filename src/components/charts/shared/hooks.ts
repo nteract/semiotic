@@ -355,7 +355,7 @@ export function useChartSelection({
     if (hoverConfig?.mode !== "x-position") return
     const name = hoverConfig.name || "hover"
     return () => {
-      unlockCrosshair(name)
+      unlockCrosshair(name, crosshairSourceId)
       clearCrosshairPosition(name, crosshairSourceId)
     }
   }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])

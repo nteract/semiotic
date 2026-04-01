@@ -709,18 +709,15 @@ export const LineChart = forwardRef(
 
   // Line style function
   const baseLineStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    // Second arg is the group key (series name), passed by PipelineStore.resolveLineStyle
+    return (d: Record<string, any>, group?: string) => {
       const baseStyle: Record<string, string | number> = {
         strokeWidth: lineWidth
       }
 
-      // Apply color — skip stroke/fill when colorScale unavailable (push API)
-      // so the frame's own color map can fill in
       // When fillArea is a string[], only apply fill to matching series
       const shouldFill = fillArea === true
-        || (Array.isArray(fillArea) && colorBy
-          ? fillArea.includes(typeof colorBy === "function" ? colorBy(d) : d[colorBy as string])
-          : false)
+        || (Array.isArray(fillArea) && group != null && fillArea.includes(group))
 
       if (colorBy) {
         if (colorScale) {

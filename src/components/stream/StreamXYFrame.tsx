@@ -703,6 +703,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const clickData: HoverData = {
         ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
         data: rawDatum,
+        time: hit.x,
+        value: hit.y,
         x: hit.x,
         y: hit.y,
       }

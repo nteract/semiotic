@@ -148,9 +148,10 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
 
       if ("colorStops" in node.fillGradient && node.fillGradient.colorStops.length >= 2) {
-        // Multi-color gradient with explicit stops
+        // Multi-color gradient with explicit stops — clamp offsets to [0,1]
         for (const stop of node.fillGradient.colorStops) {
-          grad.addColorStop(stop.offset, stop.color)
+          const offset = Math.max(0, Math.min(1, stop.offset))
+          if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
         }
       } else if ("topOpacity" in node.fillGradient) {
         // Opacity gradient: same color, varying alpha

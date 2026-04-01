@@ -66,10 +66,11 @@ export function toggleCrosshairLock(name: string, xValue: number, sourceId: stri
   return true
 }
 
-/** Force-unlock a crosshair by name (e.g. on Escape or unmount). */
-export function unlockCrosshair(name: string) {
+/** Force-unlock a crosshair by name. When sourceId is provided, only unlocks if it matches (safe for multi-chart unmount). */
+export function unlockCrosshair(name: string, sourceId?: string) {
   const current = state.positions.get(name)
   if (!current?.locked) return
+  if (sourceId && current.sourceId !== sourceId) return
   const next = new Map(state.positions)
   next.delete(name)
   state = { positions: next }
