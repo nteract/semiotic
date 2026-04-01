@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload snapshot baselines
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-snapshots
           path: integration-tests/*.spec.ts-snapshots/
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: integration-tests/test-results/
