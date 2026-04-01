@@ -140,21 +140,24 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     traceAreaPath(ctx, node)
 
     // Fill
-    if (node.fillGradient) {
+    const useGradient = node.fillGradient && (
+      ("colorStops" in node.fillGradient && node.fillGradient.colorStops.length >= 2) ||
+      ("topOpacity" in node.fillGradient)
+    )
+
+    if (useGradient && node.fillGradient) {
       let topY = Infinity
       for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
       let bottomY = -Infinity
       for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
       const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
 
-      if ("colorStops" in node.fillGradient && node.fillGradient.colorStops.length >= 2) {
-        // Multi-color gradient with explicit stops — clamp offsets to [0,1]
+      if ("colorStops" in node.fillGradient) {
         for (const stop of node.fillGradient.colorStops) {
           const offset = Math.max(0, Math.min(1, stop.offset))
           if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
         }
       } else if ("topOpacity" in node.fillGradient) {
-        // Opacity gradient: same color, varying alpha
         const parsed = parseColor(typeof fillColor === "string" ? fillColor : "#4e79a7")
         grad.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.topOpacity})`)
         grad.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.bottomOpacity})`)

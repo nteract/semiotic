@@ -137,7 +137,7 @@ Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var 
 **CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 
-**Linked crosshair** (coordinate-based hover sync): `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value. Other charts with the same `linkedHover` name render a synced vertical crosshair at that X position. Each chart shows its own Y values independently. Use for dashboards with multiple time-series at different scales. **Click-to-lock**: click a chart to lock the crosshair at that X position (solid line + lock icon). Click again or press Escape to unlock. Locking is automatic when `linkedHover` uses `x-position` mode.
+**Linked crosshair** (coordinate-based hover sync): `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value. Other charts with the same `linkedHover` name render a synced vertical crosshair at that X position. Each chart shows its own Y values independently. Use for dashboards with multiple time-series at different scales. **Click-to-lock**: click a chart to lock the crosshair at that X position; the locked line changes to a dashed white stroke. Click again or press Escape to unlock. Locking is automatic when `linkedHover` uses `x-position` mode.
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
 **ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig, dataSummary }), `controls`
 **ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
@@ -293,7 +293,7 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 - **Format functions returning ReactNode**: `xFormat`, `yFormat`, and `categoryFormat` can return `string | ReactNode`. When ReactNode is returned, tick labels render inside `<foreignObject>` (SVG interop). String returns use standard `<text>` elements. Useful for rotated, multi-line, or icon-decorated tick labels.
 - **Per-series fillArea**: `fillArea={["seriesA", "seriesB"]}` on LineChart fills only named series. Other series render as lines. Series names match the `lineBy`/`colorBy` group key.
 - **Hover highlight**: `hoverHighlight="series"` dims non-hovered series when hovering data marks directly (not just legend). Requires `colorBy` to be a string field name.
-- **Click-to-lock crosshair**: In `linkedHover` x-position mode, clicking locks the crosshair. Locked crosshairs show a solid line + lock icon, ignore hover updates, and unlock on click or Escape.
+- **Click-to-lock crosshair**: In `linkedHover` x-position mode, clicking locks the crosshair. Locked crosshairs show a dashed white line, ignore hover updates, and unlock on click or Escape.
 - **Multi-color gradientFill**: `gradientFill={{ colorStops: [{offset: 0, color: "green"}, {offset: 0.5, color: "yellow"}, {offset: 1, color: "red"}] }}` on AreaChart. Requires at least 2 stops.
 
 ## Performance

@@ -184,7 +184,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     }))
     // Estimate the widest label and use that as minimum spacing so labels
     // (which are center-anchored) don't overlap.
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : 60), 0)
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
     return filterTicksByPixelDistance(candidates, minPx)
   }, [scales, axes, xFormat, width])
@@ -373,7 +373,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       pixel: scales.x(v),
       label: fmt(v, i, rawValues)
     }))
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : 60), 0)
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
     return filterTicksByPixelDistance(candidates, minPx)
   }, [showAxes, scales, axes, xFormat, width])
