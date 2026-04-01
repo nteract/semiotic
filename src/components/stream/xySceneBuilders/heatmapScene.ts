@@ -89,14 +89,13 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   }
 
   // Parallel arrays: numeric keys, values, datums — avoids per-cell object allocation
-  const cellKeys = new Uint32Array(data.length)
+  // Float64Array for keys: safe for sparse grids where yi * xCount + xi > 2^32
+  const cellKeys = new Float64Array(data.length)
   const cellVals = new Float64Array(data.length)
   const cellDatums: any[] = new Array(data.length)
   // Track occupied cells to deduplicate (last write wins, same as old Map behavior)
   const occupied = new Map<number, number>() // key → index in parallel arrays
   let cellCount = 0
-  let minVal = Infinity
-  let maxVal = -Infinity
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
@@ -117,12 +116,19 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
     cellKeys[slot] = key
     cellVals[slot] = val
     cellDatums[slot] = d
+  }
+
+  // Compute min/max over deduped cells only (not during insert, where
+  // overwritten values could incorrectly widen the range)
+  let minVal = Infinity
+  let maxVal = -Infinity
+  for (let i = 0; i < cellCount; i++) {
+    const val = cellVals[i]
     if (isFinite(val)) {
       if (val < minVal) minVal = val
       if (val > maxVal) maxVal = val
     }
   }
-
   if (!isFinite(minVal) || !isFinite(maxVal)) return []
 
   const schemeName = typeof ctx.config.colorScheme === "string" ? ctx.config.colorScheme : "blues"
@@ -174,7 +180,11 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
   const yBinSize = yRange / yBins
 
   // Flat typed arrays — indexed by yi * xBins + xi — no string keys, no Map overhead
+  // Cap grid size to prevent OOM from extreme bin configs (e.g. 10000×10000)
+  const MAX_CELLS = 1_000_000
   const totalCells = xBins * yBins
+  if (totalCells > MAX_CELLS) return []
+
   const counts = new Int32Array(totalCells)
   const sums = new Float64Array(totalCells)
 
@@ -193,7 +203,8 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
     sums[idx] += isFinite(val) ? val : 0
   }
 
-  // Single pass: compute aggregated values and min/max
+  // Compute aggregated values for color scale min/max without overwriting sums
+  // (sums preserved so datum.sum always reflects the raw sum-of-values)
   let minVal = Infinity
   let maxVal = -Infinity
   for (let i = 0; i < totalCells; i++) {
@@ -204,8 +215,6 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
       case "mean": val = sums[i] / counts[i]; break
       default: val = counts[i]; break
     }
-    // Reuse sums array to store final values (avoids a third allocation)
-    sums[i] = val
     if (val < minVal) minVal = val
     if (val > maxVal) maxVal = val
   }
@@ -224,7 +233,14 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
       const idx = rowOffset + xi
       if (counts[idx] === 0) continue
 
-      const val = sums[idx]
+      // Recompute aggregated value (not stored to preserve raw sums)
+      let val: number
+      switch (agg) {
+        case "sum": val = sums[idx]; break
+        case "mean": val = sums[idx] / counts[idx]; break
+        default: val = counts[idx]; break
+      }
+
       const t = (val - minVal) / valRange
       const r = 220 - (180 * t + 0.5) | 0
       const g = 220 - (100 * t + 0.5) | 0
@@ -237,7 +253,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
       nodes.push(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,
-        { xi, yi, value: val, count: counts[idx], sum: agg === "count" ? counts[idx] : agg === "mean" ? val * counts[idx] : val },
+        { xi, yi, value: val, count: counts[idx], sum: sums[idx] },
         labelOpts
       ))
     }
