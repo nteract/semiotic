@@ -27,14 +27,15 @@ const COLOR_LUT_SIZE = 256
 const colorLutCache = new Map<string, string[]>()
 
 function getColorLut(schemeName: string): string[] {
-  let lut = colorLutCache.get(schemeName)
+  const cacheKey = schemeName in HEAT_INTERPOLATORS ? schemeName : "blues"
+  let lut = colorLutCache.get(cacheKey)
   if (lut) return lut
-  const interpolator = HEAT_INTERPOLATORS[schemeName] || interpolateBlues
   lut = new Array(COLOR_LUT_SIZE)
+  const fn = HEAT_INTERPOLATORS[cacheKey] || interpolateBlues
   for (let i = 0; i < COLOR_LUT_SIZE; i++) {
-    lut[i] = interpolator(i / (COLOR_LUT_SIZE - 1))
+    lut[i] = fn(i / (COLOR_LUT_SIZE - 1))
   }
-  colorLutCache.set(schemeName, lut)
+  colorLutCache.set(cacheKey, lut)
   return lut
 }
 
@@ -51,12 +52,17 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   const getRawY = resolveRawAccessor(ctx.config.yAccessor, "y")
 
   // Build index maps: raw value → integer index (avoids string key allocation)
+  // Cache raw values so non-stable accessors (e.g. returning new Date) work correctly
   const xIndex = new Map<any, number>()
   const yIndex = new Map<any, number>()
+  const rawXs = new Array(data.length)
+  const rawYs = new Array(data.length)
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
     const rx = getRawX(d)
     const ry = getRawY(d)
+    rawXs[i] = rx
+    rawYs[i] = ry
     if (!xIndex.has(rx)) xIndex.set(rx, xIndex.size)
     if (!yIndex.has(ry)) yIndex.set(ry, yIndex.size)
   }
@@ -94,8 +100,9 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
-    const xi = xIndex.get(getRawX(d))!
-    const yi = yIndex.get(getRawY(d))!
+    const xi = xIndex.get(rawXs[i])
+    const yi = yIndex.get(rawYs[i])
+    if (xi === undefined || yi === undefined) continue
     const val = getVal(d)
     const key = yi * xCount + xi
 
