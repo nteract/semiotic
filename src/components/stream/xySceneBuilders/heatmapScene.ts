@@ -8,7 +8,6 @@
  * Dependencies: SceneGraph (buildHeatcellNode), d3-scale/chromatic, accessorUtils
  * Consumed by: PipelineStore.buildSceneNodes (chartType "heatmap")
  */
-import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import type { SceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
@@ -84,7 +83,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   }
 
   // Parallel arrays: numeric keys, values, datums — avoids per-cell object allocation
-  const cellKeys = new Int32Array(data.length)
+  const cellKeys = new Uint32Array(data.length)
   const cellVals = new Float64Array(data.length)
   const cellDatums: any[] = new Array(data.length)
   // Track occupied cells to deduplicate (last write wins, same as old Map behavior)
@@ -231,7 +230,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
       nodes.push(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,
-        { xi, yi, value: val, count: counts[idx], sum: agg === "mean" ? val * counts[idx] : val },
+        { xi, yi, value: val, count: counts[idx], sum: agg === "count" ? counts[idx] : agg === "mean" ? val * counts[idx] : val },
         labelOpts
       ))
     }

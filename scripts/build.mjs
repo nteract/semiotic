@@ -2,7 +2,7 @@ import { execSync } from "child_process"
 import { copyFileSync, existsSync } from "fs"
 import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
-import typescript from "rollup-plugin-typescript2"
+import typescript from "@rollup/plugin-typescript"
 import terser from "@rollup/plugin-terser"
 import { visualizer } from "rollup-plugin-visualizer"
 import external from "rollup-plugin-auto-external"
@@ -50,16 +50,12 @@ async function createBundle(options = {}) {
 
     typescript({
       tsconfig: "tsconfig.json",
-      check: false,
-      useTsconfigDeclarationDir: false,
-      tsconfigOverride: {
-        compilerOptions: {
-          declaration: false,
-          target: "ES2015",
-          module: "ESNext"
-        },
-        exclude: ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/*.test.js"]
-      }
+      declaration: false,
+      declarationMap: false,
+      target: "ES2015",
+      module: "ESNext",
+      outDir: "dist",
+      exclude: ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/*.test.js"]
     }),
 
     resolve({
