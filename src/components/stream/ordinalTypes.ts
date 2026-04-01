@@ -306,7 +306,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   showCategoryTicks?: boolean
   oLabel?: string
   rLabel?: string
-  oFormat?: (d: string, index?: number) => string
+  oFormat?: (d: string, index?: number) => string | ReactNode
   rFormat?: (d: number | string) => string
 
   // Interaction

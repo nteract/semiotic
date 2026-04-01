@@ -55,6 +55,7 @@ import {
 import type { XYSceneContext } from "./xySceneBuilders/types"
 import { buildLineScene } from "./xySceneBuilders/lineScene"
 import { buildAreaScene, buildStackedAreaScene } from "./xySceneBuilders/areaScene"
+import { buildMixedScene } from "./xySceneBuilders/mixedScene"
 import { buildPointScene } from "./xySceneBuilders/pointScene"
 import { buildHeatmapScene } from "./xySceneBuilders/heatmapScene"
 import { buildBarScene } from "./xySceneBuilders/barScene"
@@ -117,8 +118,10 @@ export interface PipelineConfig {
   // Per-point area baseline (for band/ribbon charts like percentile bands)
   y0Accessor?: string | ((d: any) => number)
 
-  // Area gradient fill (opacity fades from top to baseline)
-  gradientFill?: { topOpacity: number; bottomOpacity: number }
+  // Area gradient fill (opacity or multi-color)
+  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  // Series names rendered as areas in "mixed" chart type
+  areaGroups?: Set<string>
 
   // Style
   lineStyle?: any
@@ -736,6 +739,8 @@ export class PipelineStore {
         return buildLineScene(ctx, data)
       case "area":
         return buildAreaScene(ctx, data)
+      case "mixed":
+        return buildMixedScene(ctx, data)
       case "stackedarea":
         return buildStackedAreaScene(ctx, data)
       case "scatter":

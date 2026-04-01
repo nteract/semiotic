@@ -44,7 +44,8 @@ export interface XYSceneConfig {
   curve?: CurveType
   colorScheme?: string | string[]
   normalize?: boolean
-  gradientFill?: boolean | { topOpacity?: number; bottomOpacity?: number }
+  gradientFill?: boolean | { topOpacity?: number; bottomOpacity?: number } | { colorStops: Array<{ offset: number; color: string }> }
+  areaGroups?: Set<string>
   annotations?: Record<string, any>[]
 
   // Point/bubble

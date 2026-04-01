@@ -21,7 +21,7 @@ interface OrdinalSVGOverlayProps {
   showCategoryTicks?: boolean
   oLabel?: string
   rLabel?: string
-  oFormat?: (d: string, index?: number) => string
+  oFormat?: (d: string, index?: number) => string | React.ReactNode
   rFormat?: (d: number) => string
 
   // Grid
@@ -332,16 +332,22 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(0,${tick.pixel})`}>
                     <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
-                    <text
-                      x={-8}
-                      textAnchor="end"
-                      dominantBaseline="middle"
-                      fontSize={10}
-                      fill="var(--semiotic-text-secondary, #666)"
-                      style={{ userSelect: "none" }}
-                    >
-                      {tick.label}
-                    </text>
+                    {typeof tick.label === "string" || typeof tick.label === "number" ? (
+                      <text
+                        x={-8}
+                        textAnchor="end"
+                        dominantBaseline="middle"
+                        fontSize={10}
+                        fill="var(--semiotic-text-secondary, #666)"
+                        style={{ userSelect: "none" }}
+                      >
+                        {tick.label}
+                      </text>
+                    ) : (
+                      <foreignObject x={-68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
+                        <div style={{ textAlign: "right", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                      </foreignObject>
+                    )}
                   </g>
                 ))}
                 {oLabel && (
@@ -395,15 +401,21 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
-                    <text
-                      y={18}
-                      textAnchor="middle"
-                      fontSize={10}
-                      fill="var(--semiotic-text-secondary, #666)"
-                      style={{ userSelect: "none" }}
-                    >
-                      {tick.label}
-                    </text>
+                    {typeof tick.label === "string" || typeof tick.label === "number" ? (
+                      <text
+                        y={18}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fill="var(--semiotic-text-secondary, #666)"
+                        style={{ userSelect: "none" }}
+                      >
+                        {tick.label}
+                      </text>
+                    ) : (
+                      <foreignObject x={-30} y={6} width={60} height={24} style={{ overflow: "visible" }}>
+                        <div style={{ textAlign: "center", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                      </foreignObject>
+                    )}
                   </g>
                 ))}
                 {oLabel && (

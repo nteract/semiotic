@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useRef } from "react"
+import { useMemo, useRef, useEffect } from "react"
 import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
@@ -8,14 +8,14 @@ import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
-import { useCrosshairPosition } from "../store/LinkedCrosshairStore"
+import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 export interface AxisConfig {
   orient: "left" | "right" | "top" | "bottom"
   label?: string
   ticks?: number
-  tickFormat?: (d: any, index?: number, allTicks?: number[]) => string
+  tickFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
   baseline?: boolean | "under"
   jaggedBase?: boolean
   /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
@@ -78,8 +78,8 @@ interface SVGOverlayProps {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
-  yFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: any) => string | ReactNode
 
   // Grid
   showGrid?: boolean
@@ -149,8 +149,8 @@ interface SVGUnderlayProps {
   showAxes?: boolean
   axes?: AxisConfig[]
   showGrid?: boolean
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
-  yFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: any) => string | ReactNode
 }
 
 export function SVGUnderlay(props: SVGUnderlayProps) {
@@ -184,7 +184,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     }))
     // Estimate the widest label and use that as minimum spacing so labels
     // (which are center-anchored) don't overlap.
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, c.label.length * 6.5), 0)
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
     return filterTicksByPixelDistance(candidates, minPx)
   }, [scales, axes, xFormat, width])
@@ -282,10 +282,10 @@ function defaultTickFormat(v: number, _index?: number, _allTicks?: number[]): st
 
 /** Greedily filter ticks so consecutive labels are at least `minPx` apart.
  *  Always keeps the first and last tick. */
-function filterTicksByPixelDistance(
-  ticks: Array<{ value: number; pixel: number; label: string }>,
+function filterTicksByPixelDistance<T extends { value: number; pixel: number; label: string | ReactNode }>(
+  ticks: T[],
   minPx: number
-): Array<{ value: number; pixel: number; label: string }> {
+): T[] {
   if (ticks.length <= 2) return ticks
   const result = [ticks[0]]
   for (let i = 1; i < ticks.length - 1; i++) {
@@ -373,7 +373,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       pixel: scales.x(v),
       label: fmt(v, i, rawValues)
     }))
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, c.label.length * 6.5), 0)
+    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
     return filterTicksByPixelDistance(candidates, minPx)
   }, [showAxes, scales, axes, xFormat, width])
@@ -461,6 +461,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // Linked crosshair from coordinate-based hover sync
   const crosshairPos = useCrosshairPosition(linkedCrosshairName)
 
+  // Escape key unlocks a locked crosshair
+  useEffect(() => {
+    if (!crosshairPos?.locked || !linkedCrosshairName) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") unlockCrosshair(linkedCrosshairName)
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [crosshairPos?.locked, linkedCrosshairName])
+
   const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
 
   if (!hasContent) return null
@@ -544,16 +554,22 @@ export function SVGOverlay(props: SVGOverlayProps) {
               return (
               <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${height})`}>
                 <line y2={5} stroke={axisStroke} strokeWidth={1} />
-                <text
-                  y={18}
-                  textAnchor="middle"
-                  fontSize={isLandmark ? 11 : 10}
-                  fontWeight={isLandmark ? 600 : 400}
-                  fill={tickColor}
-                  style={{ userSelect: "none" }}
-                >
-                  {tick.label}
-                </text>
+                {typeof tick.label === "string" || typeof tick.label === "number" ? (
+                  <text
+                    y={18}
+                    textAnchor="middle"
+                    fontSize={isLandmark ? 11 : 10}
+                    fontWeight={isLandmark ? 600 : 400}
+                    fill={tickColor}
+                    style={{ userSelect: "none" }}
+                  >
+                    {tick.label}
+                  </text>
+                ) : (
+                  <foreignObject x={-30} y={6} width={60} height={24} style={{ overflow: "visible" }}>
+                    <div style={{ textAlign: "center", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                  </foreignObject>
+                )}
               </g>
               )
             })}
@@ -586,17 +602,23 @@ export function SVGOverlay(props: SVGOverlayProps) {
               return (
               <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
                 <line x2={-5} stroke={axisStroke} strokeWidth={1} />
-                <text
-                  x={-8}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                  fontSize={isLandmark ? 11 : 10}
-                  fontWeight={isLandmark ? 600 : 400}
-                  fill={tickColor}
-                  style={{ userSelect: "none" }}
-                >
-                  {tick.label}
-                </text>
+                {typeof tick.label === "string" || typeof tick.label === "number" ? (
+                  <text
+                    x={-8}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                    fontSize={isLandmark ? 11 : 10}
+                    fontWeight={isLandmark ? 600 : 400}
+                    fill={tickColor}
+                    style={{ userSelect: "none" }}
+                  >
+                    {tick.label}
+                  </text>
+                ) : (
+                  <foreignObject x={-68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
+                    <div style={{ textAlign: "right", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                  </foreignObject>
+                )}
               </g>
               )
             })}
@@ -638,17 +660,23 @@ export function SVGOverlay(props: SVGOverlayProps) {
                     return (
                     <g key={`ytick-r-${i}`} transform={`translate(${width},${tick.pixel})`}>
                       <line x2={5} stroke={axisStroke} strokeWidth={1} />
-                      <text
-                        x={8}
-                        textAnchor="start"
-                        dominantBaseline="middle"
-                        fontSize={isLandmark ? 11 : 10}
-                        fontWeight={isLandmark ? 600 : 400}
-                        fill={tickColor}
-                        style={{ userSelect: "none" }}
-                      >
-                        {tick.label}
-                      </text>
+                      {typeof tick.label === "string" || typeof tick.label === "number" ? (
+                        <text
+                          x={8}
+                          textAnchor="start"
+                          dominantBaseline="middle"
+                          fontSize={isLandmark ? 11 : 10}
+                          fontWeight={isLandmark ? 600 : 400}
+                          fill={tickColor}
+                          style={{ userSelect: "none" }}
+                        >
+                          {tick.label}
+                        </text>
+                      ) : (
+                        <foreignObject x={8} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
+                          <div style={{ textAlign: "left", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                        </foreignObject>
+                      )}
                     </g>
                     )
                   })}
@@ -736,12 +764,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
         {crosshairPos && crosshairPos.sourceId !== linkedCrosshairSourceId && scales?.x && (() => {
           const px = scales.x(crosshairPos.xValue)
           if (px == null || px < 0 || px > width) return null
+          const isLocked = crosshairPos.locked
           return (
             <line
               x1={px} y1={0} x2={px} y2={height}
-              stroke="var(--semiotic-text-secondary, rgba(0,0,0,0.25))"
-              strokeWidth={1}
-              strokeDasharray="4,4"
+              stroke={isLocked ? "white" : "var(--semiotic-text-secondary, rgba(0,0,0,0.25))"}
+              strokeWidth={isLocked ? 1.5 : 1}
+              strokeDasharray={isLocked ? "6,3" : "4,4"}
               pointerEvents="none"
             />
           )

@@ -141,18 +141,23 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     // Fill
     if (node.fillGradient) {
-      // Vertical gradient: topOpacity at the line, bottomOpacity at the baseline
       let topY = Infinity
       for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
       let bottomY = -Infinity
       for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
-      // Use rgba color stops to vary opacity across the gradient
-      const parsed = parseColor(typeof fillColor === "string" ? fillColor : "#4e79a7")
-      const topAlpha = node.fillGradient.topOpacity
-      const bottomAlpha = node.fillGradient.bottomOpacity
       const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
-      grad.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${topAlpha})`)
-      grad.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${bottomAlpha})`)
+
+      if ("colorStops" in node.fillGradient && node.fillGradient.colorStops.length >= 2) {
+        // Multi-color gradient with explicit stops
+        for (const stop of node.fillGradient.colorStops) {
+          grad.addColorStop(stop.offset, stop.color)
+        }
+      } else if ("topOpacity" in node.fillGradient) {
+        // Opacity gradient: same color, varying alpha
+        const parsed = parseColor(typeof fillColor === "string" ? fillColor : "#4e79a7")
+        grad.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.topOpacity})`)
+        grad.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.bottomOpacity})`)
+      }
       ctx.fillStyle = grad
       ctx.globalAlpha = nodeOpacity
     } else {

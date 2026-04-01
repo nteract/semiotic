@@ -81,7 +81,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     tooltip, annotations,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -117,6 +117,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "Histogram",
     chartId,
     showLegend,
@@ -221,8 +222,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
     ...frameProps

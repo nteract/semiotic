@@ -94,11 +94,12 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   y0Accessor?: ChartAccessor<TDatum, number>
 
   /**
-   * Gradient fill from line to baseline. Set `true` for default (80% → 5%)
-   * or `{ topOpacity, bottomOpacity }` for custom values.
+   * Gradient fill from line to baseline. Set `true` for default opacity (80% → 5%),
+   * `{ topOpacity, bottomOpacity }` for custom opacity, or
+   * `{ colorStops: [{offset, color}] }` for multi-color gradients.
    * @default false
    */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number }
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
 
   /**
    * Area opacity (flat fill, ignored when gradientFill is set)
@@ -252,11 +253,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color,
   } = props
 
   const width = resolved.width
@@ -283,11 +286,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "AreaChart", chartId
+    onObservation, onClick, chartType: "AreaChart", chartId,
+    hoverHighlight,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -345,9 +350,10 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
@@ -368,9 +374,10 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
           }
         }
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        const uniformColor = color || DEFAULT_COLOR
+        baseStyle.fill = uniformColor
         if (showLine) {
-          baseStyle.stroke = DEFAULT_COLOR
+          baseStyle.stroke = uniformColor
           baseStyle.strokeWidth = lineWidth
         } else {
           baseStyle.stroke = "none"
@@ -380,7 +387,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
       return baseStyle
     }
-  }, [colorBy, colorScale, areaOpacity, showLine, lineWidth])
+  }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth])
 
   const lineStyle = useMemo(
     () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, selection),
@@ -482,8 +489,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...crosshairFrameProps,
     ...frameProps

@@ -81,7 +81,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     valueFormat,
     colorBy, colorScheme, categoryPadding = 5,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -117,6 +117,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "RidgelinePlot",
     chartId,
     showLegend,
@@ -185,8 +186,8 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

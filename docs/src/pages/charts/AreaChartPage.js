@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { AreaChart } from "semiotic"
+import { AreaChart, LineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -410,6 +410,74 @@ export default function AreaChartPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Multi-Color Gradient Fill */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="multi-color-gradient">Multi-Color Gradient Fill</h3>
+      <p>
+        Use <code>gradientFill</code> with <code>colorStops</code> for
+        semantic color bands (e.g. severity zones). Each stop specifies an
+        offset (0–1) and a color string — including <code>transparent</code>.
+        Stops can be placed at any position to create non-uniform bands.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "month",
+          yAccessor: "sales",
+          color: "rgba(244,67,54,1)",
+          gradientFill: { colorStops: [
+            { offset: 0, color: "rgba(244,67,54,0.8)" },
+            { offset: 0.25, color: "rgba(255,193,7,0.8)" },
+            { offset: 0.5, color: "transparent" },
+          ]},
+        }}
+        type={AreaChart}
+        overrideProps={{
+          data: `simpleData`,
+          color: '"rgba(244,67,54,1)"',
+          gradientFill: `{ colorStops: [
+  { offset: 0, color: "rgba(244,67,54,0.8)" },
+  { offset: 0.25, color: "rgba(255,193,7,0.8)" },
+  { offset: 0.5, color: "transparent" },
+]}`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Per-Series Fill Area */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="per-series-fill-area">Per-Series Fill Area</h3>
+      <p>
+        Use <code>LineChart</code> with <code>fillArea</code> set to an array
+        of series names to fill only specific series while keeping others as
+        lines. Series names match the <code>lineBy</code>/<code>colorBy</code>{" "}
+        group key.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: multiAreaData,
+          xAccessor: "month",
+          yAccessor: "sales",
+          lineBy: "channel",
+          colorBy: "channel",
+          fillArea: ["Online", "Retail"],
+          areaOpacity: 0.3,
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `multiAreaData`,
+          lineBy: '"channel"',
+          colorBy: '"channel"',
+          fillArea: '["Online", "Retail"]',
+          areaOpacity: "0.3",
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
@@ -529,6 +597,7 @@ export default function AreaChartPage() {
           and positioning
         </li>
       </ul>
+
     </PageLayout>
   )
 }

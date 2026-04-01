@@ -178,11 +178,13 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -208,11 +210,13 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   warnMissingField("QuadrantChart", safeData, "yAccessor", yAccessor)
 
   // ── Selection hooks ───────────────────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
-    onObservation, onClick, chartType: "QuadrantChart", chartId
+    onObservation, onClick, chartType: "QuadrantChart", chartId,
+    hoverHighlight,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -233,9 +237,10 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Compute explicit extents from data + center point ────────────────
   // This ensures PipelineStore builds correct scales immediately. Without this,
@@ -300,7 +305,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
         const isRight = xCenter != null ? xVal >= xCenter : undefined
         const isTop = yCenter != null ? yVal >= yCenter : undefined
         if (isTop === undefined || isRight === undefined) {
-          baseStyle.fill = DEFAULT_COLOR
+          baseStyle.fill = color || DEFAULT_COLOR
         } else if (isTop && isRight) baseStyle.fill = quadrants.topRight.color
         else if (isTop && !isRight) baseStyle.fill = quadrants.topLeft.color
         else if (!isTop && isRight) baseStyle.fill = quadrants.bottomRight.color
@@ -311,7 +316,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
         : pointRadius
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants])
+  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -588,8 +593,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,

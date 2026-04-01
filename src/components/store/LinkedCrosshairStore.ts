@@ -6,13 +6,14 @@ import { useSyncExternalStore } from "react"
  * Lightweight store for broadcasting hover X-position across linked charts.
  * Used by linkedHover with mode: "x-position" for coordinate-based sync.
  *
- * Uses useSyncExternalStore (same pattern as React docs recommend) to avoid
- * adding a Zustand dependency.
+ * Supports click-to-lock: when locked, hover updates are ignored and the
+ * crosshair persists at the locked position until unlocked (click or Escape).
  */
 
 interface CrosshairPosition {
   xValue: number
   sourceId: string
+  locked?: boolean
 }
 
 interface CrosshairState {
@@ -30,6 +31,8 @@ function emit() {
 
 export function setCrosshairPosition(name: string, xValue: number, sourceId: string) {
   const current = state.positions.get(name)
+  // Ignore hover updates when locked
+  if (current?.locked) return
   if (current && current.xValue === xValue && current.sourceId === sourceId) return
   state = { positions: new Map(state.positions).set(name, { xValue, sourceId }) }
   emit()
@@ -37,7 +40,36 @@ export function setCrosshairPosition(name: string, xValue: number, sourceId: str
 
 export function clearCrosshairPosition(name: string, sourceId: string) {
   const current = state.positions.get(name)
+  // Don't clear a locked crosshair on hover-end
+  if (current?.locked) return
   if (!current || current.sourceId !== sourceId) return
+  const next = new Map(state.positions)
+  next.delete(name)
+  state = { positions: next }
+  emit()
+}
+
+/** Toggle lock: if unlocked, lock at xValue; if locked, unlock and clear. Returns new locked state. */
+export function toggleCrosshairLock(name: string, xValue: number, sourceId: string): boolean {
+  const current = state.positions.get(name)
+  if (current?.locked) {
+    // Unlock — remove the crosshair
+    const next = new Map(state.positions)
+    next.delete(name)
+    state = { positions: next }
+    emit()
+    return false
+  }
+  // Lock at this position
+  state = { positions: new Map(state.positions).set(name, { xValue, sourceId, locked: true }) }
+  emit()
+  return true
+}
+
+/** Force-unlock a crosshair by name (e.g. on Escape or unmount). */
+export function unlockCrosshair(name: string) {
+  const current = state.positions.get(name)
+  if (!current?.locked) return
   const next = new Map(state.positions)
   next.delete(name)
   state = { positions: next }
@@ -54,17 +86,15 @@ function subscribe(listener: Listener): () => void {
 }
 
 // No-op subscribe/snapshot for components that don't need crosshair updates.
-// Avoids re-renders on every crosshair change for non-crosshair charts.
 const EMPTY_STATE: CrosshairState = { positions: new Map() }
 function subscribeNoop(): () => void { return () => {} }
 function getSnapshotNoop(): CrosshairState { return EMPTY_STATE }
 
 /**
  * Hook to read a specific crosshair position by name.
- * Returns the X value and sourceId, or null if no crosshair is active.
- * When name is undefined, uses a no-op subscription to avoid unnecessary re-renders.
+ * Returns the X value, sourceId, and locked state, or null if no crosshair is active.
  */
-export function useCrosshairPosition(name: string | undefined): { xValue: number; sourceId: string } | null {
+export function useCrosshairPosition(name: string | undefined): { xValue: number; sourceId: string; locked?: boolean } | null {
   const snap = useSyncExternalStore(
     name ? subscribe : subscribeNoop,
     name ? getSnapshot : getSnapshotNoop,

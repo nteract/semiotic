@@ -196,6 +196,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
@@ -346,6 +347,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     unwrapData: false,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "MultiAxisLineChart",
     chartId,
     showLegend,
@@ -460,8 +462,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(className && { className }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...setup.crosshairProps,
     ...frameProps
   }

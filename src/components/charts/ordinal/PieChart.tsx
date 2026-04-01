@@ -55,7 +55,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     colorBy, colorScheme, startAngle = 0,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -88,6 +88,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "PieChart",
     chartId,
     showLegend,
@@ -166,8 +167,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

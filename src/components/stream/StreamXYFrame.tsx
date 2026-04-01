@@ -95,7 +95,8 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
   bar: [barCanvasRenderer],
   swarm: [swarmCanvasRenderer],
   waterfall: [waterfallCanvasRenderer],
-  candlestick: [candlestickCanvasRenderer]
+  candlestick: [candlestickCanvasRenderer],
+  mixed: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer]
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -317,6 +318,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsStyle,
       y0Accessor,
       gradientFill,
+      areaGroups,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -334,6 +336,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hoverAnnotation,
       tooltipContent,
       customHoverBehavior,
+      customClickBehavior,
       enableHover,
       annotations,
       svgAnnotationRules,
@@ -466,9 +469,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsAccessor,
       boundsStyle,
       y0Accessor,
-      gradientFill: typeof gradientFill === "boolean"
-        ? (gradientFill ? { topOpacity: 0.8, bottomOpacity: 0.05 } : undefined)
-        : gradientFill,
+      gradientFill: gradientFill === true
+        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+        : gradientFill === false
+          ? undefined
+          : gradientFill,
+      areaGroups: areaGroups ? new Set(areaGroups) : undefined,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -672,6 +678,38 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     )
     const onMouseLeave = useCallback(
       () => hoverLeaveRef.current(),
+      []
+    )
+
+    // ── Click handler (for click-to-lock crosshair, etc.) ──────────────
+
+    const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+    clickHandlerRef.current = (e: React.MouseEvent) => {
+      if (!customClickBehavior) return
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const chartX = e.clientX - rect.left - margin.left
+      const chartY = e.clientY - rect.top - margin.top
+      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+        customClickBehavior(null)
+        return
+      }
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) { customClickBehavior(null); return }
+      const hit = findNearestNode(store.scene, chartX, chartY, 30, store.quadtree)
+      if (!hit) { customClickBehavior(null); return }
+      const rawDatum = hit.datum || {}
+      const clickData: HoverData = {
+        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
+        data: rawDatum,
+        x: hit.x,
+        y: hit.y,
+      }
+      customClickBehavior(clickData)
+    }
+    const onClick = useCallback(
+      (e: React.MouseEvent) => clickHandlerRef.current(e),
       []
     )
 
@@ -1159,6 +1197,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (
           <svg

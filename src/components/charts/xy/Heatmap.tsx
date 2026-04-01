@@ -250,6 +250,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
@@ -286,11 +287,13 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: [],
-    onObservation, onClick, chartType: "Heatmap", chartId
+    onObservation, onClick, chartType: "Heatmap", chartId,
+    hoverHighlight,
+    colorByField: undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -300,9 +303,10 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -432,8 +436,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...crosshairFrameProps,
     ...frameProps

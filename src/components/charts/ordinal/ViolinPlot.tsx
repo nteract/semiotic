@@ -84,7 +84,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     tooltip, annotations,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -120,6 +120,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "ViolinPlot",
     chartId,
     showLegend,
@@ -189,8 +190,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
     ...frameProps

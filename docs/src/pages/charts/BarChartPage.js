@@ -289,6 +289,56 @@ export default function BarChartPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Custom Tick Labels (ReactNode) */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="custom-tick-labels">Custom Tick Labels (ReactNode)</h3>
+      <p>
+        <code>categoryFormat</code> can return a React element for custom tick rendering.
+        Non-string returns render inside <code>&lt;foreignObject&gt;</code>.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          categoryFormat: (label) => React.createElement("span", { style: { fontWeight: "bold", color: "#e45050" } }, label.toUpperCase()),
+        }}
+        type={BarChart}
+        overrideProps={{
+          data: `sampleData`,
+          categoryFormat: `(label) => <span style={{ fontWeight: "bold", color: "#e45050" }}>{label.toUpperCase()}</span>`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Hover Highlight */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="hover-highlight-bars">Hover Highlight</h3>
+      <p>
+        Set <code>hoverHighlight="series"</code> with <code>colorBy</code> to
+        dim non-hovered categories when hovering a bar.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: colorData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          colorBy: "category",
+          hoverHighlight: "series",
+        }}
+        type={BarChart}
+        overrideProps={{
+          data: `sampleData`,
+          colorBy: '"category"',
+          hoverHighlight: '"series"',
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
@@ -400,6 +450,7 @@ export default function BarChartPage() {
           and positioning
         </li>
       </ul>
+
     </PageLayout>
   )
 }
