@@ -18,9 +18,9 @@ export default {
     }
   ],
   webServer: {
-    command: "npm run serve-examples",
+    command: process.env.CI ? "npm run serve-examples:ci" : "npm run serve-examples",
     port: 1234,
-    timeout: 60 * 1000,
+    timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI
   }
 } as PlaywrightTestConfig

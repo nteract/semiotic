@@ -8,7 +8,6 @@
  * Dependencies: SceneGraph (buildHeatcellNode), d3-scale/chromatic, accessorUtils
  * Consumed by: PipelineStore.buildSceneNodes (chartType "heatmap")
  */
-import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import type { SceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
@@ -22,83 +21,156 @@ const HEAT_INTERPOLATORS: Record<string, (t: number) => string> = {
   viridis: interpolateViridis,
 }
 
+// Precomputed color LUT: 256 entries per scheme, built lazily and cached.
+// Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
+const COLOR_LUT_SIZE = 256
+const colorLutCache = new Map<string, string[]>()
+
+function getColorLut(schemeName: string): string[] {
+  const cacheKey = schemeName in HEAT_INTERPOLATORS ? schemeName : "blues"
+  let lut = colorLutCache.get(cacheKey)
+  if (lut) return lut
+  lut = new Array(COLOR_LUT_SIZE)
+  const fn = HEAT_INTERPOLATORS[cacheKey] || interpolateBlues
+  for (let i = 0; i < COLOR_LUT_SIZE; i++) {
+    lut[i] = fn(i / (COLOR_LUT_SIZE - 1))
+  }
+  colorLutCache.set(cacheKey, lut)
+  return lut
+}
+
 export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
   // Streaming heatmap: 2D grid binning with aggregation
   if (ctx.config.heatmapAggregation) {
     return buildStreamingHeatmapScene(ctx, data, layout)
   }
 
-  const nodes: SceneNode[] = []
+  if (data.length === 0) return []
+
   const getVal = resolveAccessor(ctx.config.valueAccessor, "value")
   const getRawX = resolveRawAccessor(ctx.config.xAccessor, "x")
   const getRawY = resolveRawAccessor(ctx.config.yAccessor, "y")
 
-  const xSet = new Set<any>()
-  const ySet = new Set<any>()
-  for (const d of data) {
-    xSet.add(getRawX(d))
-    ySet.add(getRawY(d))
+  // Build index maps: raw value → integer index (avoids string key allocation)
+  // Cache raw values so non-stable accessors (e.g. returning new Date) work correctly
+  const xIndex = new Map<any, number>()
+  const yIndex = new Map<any, number>()
+  const rawXs = new Array(data.length)
+  const rawYs = new Array(data.length)
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i]
+    const rx = getRawX(d)
+    const ry = getRawY(d)
+    rawXs[i] = rx
+    rawYs[i] = ry
+    if (!xIndex.has(rx)) xIndex.set(rx, xIndex.size)
+    if (!yIndex.has(ry)) yIndex.set(ry, yIndex.size)
   }
 
-  const xRaw = Array.from(xSet)
-  const yRaw = Array.from(ySet)
-  const xNumeric = xRaw.every(v => typeof v === "number" && !isNaN(v))
-  const yNumeric = yRaw.every(v => typeof v === "number" && !isNaN(v))
-  const xValues = xNumeric ? xRaw.sort((a, b) => a - b) : xRaw
-  const yValues = yNumeric ? yRaw.sort((a, b) => a - b) : yRaw
-  if (xValues.length === 0 || yValues.length === 0) return nodes
+  const xCount = xIndex.size
+  const yCount = yIndex.size
+  if (xCount === 0 || yCount === 0) return []
 
-  const cellW = layout.width / xValues.length
-  const cellH = layout.height / yValues.length
+  // For numeric axes, sort and rebuild indices
+  const xKeys = Array.from(xIndex.keys())
+  const yKeys = Array.from(yIndex.keys())
+  const xNumeric = xKeys.every(v => typeof v === "number" && !isNaN(v))
+  const yNumeric = yKeys.every(v => typeof v === "number" && !isNaN(v))
 
-  const valueMap = new Map<string, { val: number; datum: any }>()
-  for (const d of data) {
-    const key = `${getRawX(d)}\0${getRawY(d)}`
-    valueMap.set(key, { val: getVal(d), datum: d })
+  if (xNumeric) {
+    xKeys.sort((a, b) => a - b)
+    xIndex.clear()
+    for (let i = 0; i < xKeys.length; i++) xIndex.set(xKeys[i], i)
+  }
+  if (yNumeric) {
+    yKeys.sort((a, b) => a - b)
+    yIndex.clear()
+    for (let i = 0; i < yKeys.length; i++) yIndex.set(yKeys[i], i)
   }
 
+  // Parallel arrays: numeric keys, values, datums — avoids per-cell object allocation
+  // Float64Array for keys: safe for sparse grids where yi * xCount + xi > 2^32
+  const cellKeys = new Float64Array(data.length)
+  const cellVals = new Float64Array(data.length)
+  const cellDatums: any[] = new Array(data.length)
+  // Track occupied cells to deduplicate (last write wins, same as old Map behavior)
+  const occupied = new Map<number, number>() // key → index in parallel arrays
+  let cellCount = 0
+
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i]
+    const xi = xIndex.get(rawXs[i])
+    const yi = yIndex.get(rawYs[i])
+    if (xi === undefined || yi === undefined) continue
+    const val = getVal(d)
+    const key = yi * xCount + xi
+
+    const existing = occupied.get(key)
+    let slot: number
+    if (existing !== undefined) {
+      slot = existing
+    } else {
+      slot = cellCount++
+      occupied.set(key, slot)
+    }
+    cellKeys[slot] = key
+    cellVals[slot] = val
+    cellDatums[slot] = d
+  }
+
+  // Compute min/max over deduped cells only (not during insert, where
+  // overwritten values could incorrectly widen the range)
   let minVal = Infinity
   let maxVal = -Infinity
-  for (const { val } of valueMap.values()) {
-    if (!isFinite(val)) continue
-    if (val < minVal) minVal = val
-    if (val > maxVal) maxVal = val
+  for (let i = 0; i < cellCount; i++) {
+    const val = cellVals[i]
+    if (isFinite(val)) {
+      if (val < minVal) minVal = val
+      if (val > maxVal) maxVal = val
+    }
   }
-  if (!isFinite(minVal) || !isFinite(maxVal)) return nodes
+  if (!isFinite(minVal) || !isFinite(maxVal)) return []
 
   const schemeName = typeof ctx.config.colorScheme === "string" ? ctx.config.colorScheme : "blues"
-  const interpolator = HEAT_INTERPOLATORS[schemeName] || interpolateBlues
-  const heatColor = scaleSequential(interpolator).domain([minVal, maxVal])
+  const lut = getColorLut(schemeName)
+  const valRange = maxVal - minVal || 1
+  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
 
-  for (let xi = 0; xi < xValues.length; xi++) {
-    for (let yi = 0; yi < yValues.length; yi++) {
-      const key = `${xValues[xi]}\0${yValues[yi]}`
-      const entry = valueMap.get(key)
-      if (!entry || !isFinite(entry.val)) continue
+  const cellW = layout.width / xCount
+  const cellH = layout.height / yCount
+  const showValues = ctx.config.showValues
+  const valueFormat = ctx.config.heatmapValueFormat
+  const nodes: SceneNode[] = []
 
-      const fill = heatColor(entry.val)
-      const labelOpts = ctx.config.showValues
-        ? { value: entry.val, showValues: true as const, valueFormat: ctx.config.heatmapValueFormat }
-        : undefined
-      nodes.push(buildHeatcellNode(
-        xi * cellW,
-        (yValues.length - 1 - yi) * cellH,
-        cellW, cellH, fill, entry.datum, labelOpts
-      ))
-    }
+  for (let i = 0; i < cellCount; i++) {
+    const val = cellVals[i]
+    if (!isFinite(val)) continue
+    const key = cellKeys[i]
+    const xi = key % xCount
+    const yi = (key - xi) / xCount
+
+    const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+    const fill = lut[lutIdx]
+    const labelOpts = showValues
+      ? { value: val, showValues: true as const, valueFormat }
+      : undefined
+    nodes.push(buildHeatcellNode(
+      xi * cellW,
+      (yCount - 1 - yi) * cellH,
+      cellW, cellH, fill, cellDatums[i], labelOpts
+    ))
   }
 
   return nodes
 }
 
 function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
-  const nodes: SceneNode[] = []
   const xBins = Math.max(1, Math.floor(ctx.config.heatmapXBins ?? 20))
   const yBins = Math.max(1, Math.floor(ctx.config.heatmapYBins ?? 20))
   const agg = ctx.config.heatmapAggregation ?? "count"
   const getVal = resolveAccessor(ctx.config.valueAccessor, "value")
 
-  if (!ctx.scales || data.length === 0) return nodes
+  if (!ctx.scales || data.length === 0) return []
 
   const [xMin, xMax] = ctx.scales.x.domain() as [number, number]
   const [yMin, yMax] = ctx.scales.y.domain() as [number, number]
@@ -107,9 +179,17 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
   const xBinSize = xRange / xBins
   const yBinSize = yRange / yBins
 
-  const grid = new Map<string, { sum: number; count: number; data: any[] }>()
+  // Flat typed arrays — indexed by yi * xBins + xi — no string keys, no Map overhead
+  // Cap grid size to prevent OOM from extreme bin configs (e.g. 10000×10000)
+  const MAX_CELLS = 1_000_000
+  const totalCells = xBins * yBins
+  if (totalCells > MAX_CELLS) return []
 
-  for (const d of data) {
+  const counts = new Int32Array(totalCells)
+  const sums = new Float64Array(totalCells)
+
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i]
     const xVal = ctx.getX(d)
     const yVal = ctx.getY(d)
     if (!isFinite(xVal) || !isFinite(yVal)) continue
@@ -117,58 +197,66 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, an
     const yi = Math.min(Math.floor((yVal - yMin) / yBinSize), yBins - 1)
     if (xi < 0 || yi < 0) continue
 
+    const idx = yi * xBins + xi
+    counts[idx]++
     const val = getVal(d)
-    const key = `${xi}_${yi}`
-    let cell = grid.get(key)
-    if (!cell) {
-      cell = { sum: 0, count: 0, data: [] }
-      grid.set(key, cell)
-    }
-    cell.count++
-    cell.sum += isFinite(val) ? val : 0
-    cell.data.push(d)
+    sums[idx] += isFinite(val) ? val : 0
   }
 
+  // Compute aggregated values for color scale min/max without overwriting sums
+  // (sums preserved so datum.sum always reflects the raw sum-of-values)
   let minVal = Infinity
   let maxVal = -Infinity
-  const cellValues = new Map<string, number>()
-  for (const [key, cell] of grid) {
+  for (let i = 0; i < totalCells; i++) {
+    if (counts[i] === 0) continue
     let val: number
     switch (agg) {
-      case "sum": val = cell.sum; break
-      case "mean": val = cell.count > 0 ? cell.sum / cell.count : 0; break
-      default: val = cell.count; break
+      case "sum": val = sums[i]; break
+      case "mean": val = sums[i] / counts[i]; break
+      default: val = counts[i]; break
     }
-    cellValues.set(key, val)
     if (val < minVal) minVal = val
     if (val > maxVal) maxVal = val
   }
-  const valRange = maxVal - minVal || 1
+  if (!isFinite(minVal)) return []
 
+  const valRange = maxVal - minVal || 1
   const cellW = layout.width / xBins
   const cellH = layout.height / yBins
+  const showValues = ctx.config.showValues
+  const valueFormat = ctx.config.heatmapValueFormat
+  const nodes: SceneNode[] = []
 
-  for (const [key, val] of cellValues) {
-    const [xiStr, yiStr] = key.split("_")
-    const xi = +xiStr
-    const yi = +yiStr
+  for (let yi = 0; yi < yBins; yi++) {
+    const rowOffset = yi * xBins
+    for (let xi = 0; xi < xBins; xi++) {
+      const idx = rowOffset + xi
+      if (counts[idx] === 0) continue
 
-    const t = (val - minVal) / valRange
-    const r = Math.round(220 - 180 * t)
-    const g = Math.round(220 - 100 * t)
-    const b = Math.round(255 - 50 * t)
-    const fill = `rgb(${r},${g},${b})`
+      // Recompute aggregated value (not stored to preserve raw sums)
+      let val: number
+      switch (agg) {
+        case "sum": val = sums[idx]; break
+        case "mean": val = sums[idx] / counts[idx]; break
+        default: val = counts[idx]; break
+      }
 
-    const cell = grid.get(key)!
-    const streamLabelOpts = ctx.config.showValues
-      ? { value: val, showValues: true as const, valueFormat: ctx.config.heatmapValueFormat }
-      : undefined
-    nodes.push(buildHeatcellNode(
-      xi * cellW, (yBins - 1 - yi) * cellH,
-      cellW, cellH, fill,
-      { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data },
-      streamLabelOpts
-    ))
+      const t = (val - minVal) / valRange
+      const r = 220 - (180 * t + 0.5) | 0
+      const g = 220 - (100 * t + 0.5) | 0
+      const b = 255 - (50 * t + 0.5) | 0
+      const fill = `rgb(${r},${g},${b})`
+
+      const labelOpts = showValues
+        ? { value: val, showValues: true as const, valueFormat }
+        : undefined
+      nodes.push(buildHeatcellNode(
+        xi * cellW, (yBins - 1 - yi) * cellH,
+        cellW, cellH, fill,
+        { xi, yi, value: val, count: counts[idx], sum: sums[idx] },
+        labelOpts
+      ))
+    }
   }
 
   return nodes
