@@ -300,6 +300,7 @@
     "node": "22.22.1"
   },
   "overrides": {
-    "flatted": "3.4.2"
+    "flatted": "3.4.2",
+    "minimatch": ">=9.0.7"
   }
 }
