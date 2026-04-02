@@ -331,7 +331,7 @@ export default function BarChartPage() {
         }}
         type={BarChart}
         overrideProps={{
-          data: `sampleData`,
+          data: `colorData`,
           colorBy: '"category"',
           hoverHighlight: '"series"',
         }}

@@ -505,7 +505,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
-      boundsAccessor, boundsStyle, y0Accessor, gradientFill,
+      boundsAccessor, boundsStyle, y0Accessor, gradientFill, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,

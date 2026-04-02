@@ -571,13 +571,6 @@ export default function LineChartPage() {
       </p>
 
       {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="props">Props</h2>
-
-      <PropTable componentName="LineChart" props={lineChartProps} />
-
-      {/* ----------------------------------------------------------------- */}
       {/* Hover Highlight */}
       {/* ----------------------------------------------------------------- */}
       <h3 id="hover-highlight">Hover Highlight (Sibling Dimming)</h3>
@@ -650,6 +643,13 @@ export default function LineChartPage() {
     tooltip
   />
 </LinkedCharts>`}</CodeBlock>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Props */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="props">Props</h2>
+
+      <PropTable componentName="LineChart" props={lineChartProps} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
