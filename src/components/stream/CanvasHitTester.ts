@@ -131,8 +131,9 @@ export function findAllNodesAtX(
           if (t >= 0 && t <= 1) interpY = y0 + t * (y1 - y0)
         }
       }
+      const datum = Array.isArray(areaNode.datum) && areaNode.datum[idx] ? areaNode.datum[idx] : areaNode.datum
       const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined
-      results.push({ node, datum: areaNode.datum, x: nx, y: interpY, group: areaNode.group, color: areaColor })
+      results.push({ node, datum, x: nx, y: interpY, group: areaNode.group, color: areaColor })
     }
   }
 

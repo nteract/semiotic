@@ -365,10 +365,14 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 )}
 
                 {/* Value axis baseline (bottom) — skipped when underlayRendered */}
-                {!underlayRendered && (() => {
-                  const zeroX = scales?.r ? scales.r(0) : 0
-                  const baseX = (zeroX >= 0 && zeroX <= width) ? zeroX : 0
-                  return <line x1={baseX} y1={0} x2={baseX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                {/* Value axis baseline (bottom) + zero line if different */}
+                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {!underlayRendered && scales?.r && (() => {
+                  const zeroX = scales.r(0)
+                  if (zeroX > 1 && zeroX < width - 1) {
+                    return <line x1={zeroX} y1={0} x2={zeroX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} strokeDasharray="4,4" />
+                  }
+                  return null
                 })()}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>

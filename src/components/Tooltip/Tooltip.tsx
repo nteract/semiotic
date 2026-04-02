@@ -401,21 +401,25 @@ export type TooltipContentFn = (d: Record<string, any>) => React.ReactNode
  */
 export function MultiPointTooltip(): TooltipContentFn {
   return (d: Record<string, any>) => {
-    const allSeries = d.allSeries as Array<{ group: string; value: number; color: string }> | undefined
+    const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: any }> | undefined
     if (!allSeries || allSeries.length === 0) {
-      // Fallback to single-datum display
+      // Fallback to single-datum display — prefer data-space values from datum
+      const val = d.data?.value ?? d.data?.y ?? d.value ?? d.y
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div>{formatValue(d.value ?? d.y)}</div>
+          <div>{formatValue(val)}</div>
         </div>
       )
     }
 
+    // Header: use xValue (data-space) set by StreamXYFrame, fall back to datum fields
+    const headerValue = d.xValue ?? d.data?.time ?? d.data?.x ?? d.time
+
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {d.time != null && (
+        {headerValue != null && (
           <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
-            {formatValue(d.time)}
+            {formatValue(headerValue)}
           </div>
         )}
         {allSeries.map((s, i) => (

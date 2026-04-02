@@ -262,7 +262,7 @@ describe("MultiPointTooltip", () => {
   it("renders all series with group names and values", () => {
     const fn = MultiPointTooltip()
     const data = {
-      time: 42,
+      xValue: 42,
       value: 100,
       allSeries: [
         { group: "Revenue", value: 100, color: "red" },
@@ -276,7 +276,7 @@ describe("MultiPointTooltip", () => {
     expect(container.textContent).toContain("Revenue")
     expect(container.textContent).toContain("Cost")
     expect(container.textContent).toContain("Profit")
-    // X value header
+    // X value header (data-space value from xValue)
     expect(container.textContent).toContain("42")
   })
 
@@ -301,10 +301,9 @@ describe("MultiPointTooltip", () => {
     expect(container.textContent).toContain("42")
   })
 
-  it("normalizeTooltip returns false for 'multi' string (handled by HOC)", () => {
-    // "multi" is handled at the HOC level, not by normalizeTooltip
+  it("normalizeTooltip returns a generic tooltip function for 'multi' (HOC handles it before normalizeTooltip)", () => {
+    // "multi" is intercepted at the HOC level; if it reaches normalizeTooltip it falls through to generic
     const result = normalizeTooltip("multi" as any)
-    // normalizeTooltip doesn't know about "multi" — it falls through to generic
     expect(typeof result).toBe("function")
   })
 })

@@ -421,11 +421,14 @@ export function SVGOverlay(props: SVGOverlayProps) {
       const domain = scales.y.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.y(domainMax)
-      const firstPx = filtered[0].pixel
-      if (Math.abs(maxPx - firstPx) > 1) {
+      // Y axis is inverted (domain max = top = smallest pixel). Compare with
+      // the tick closest to the top (first after filtering, since ticks are
+      // sorted by ascending domain value but descending pixel).
+      const nearestPx = filtered[filtered.length - 1].pixel
+      if (Math.abs(maxPx - nearestPx) > 1) {
         const maxLabel = fmt(domainMax)
-        if (Math.abs(maxPx - firstPx) < 22 && filtered.length > 1) filtered = filtered.slice(1)
-        filtered.unshift({ value: domainMax, pixel: maxPx, label: maxLabel })
+        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
+        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
       }
     }
     return filtered

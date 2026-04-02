@@ -657,12 +657,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       // Multi-tooltip mode: attach all series values at this X to the hover data
-      if (tooltipMode === "multi" && store.scene.length > 0) {
-        const allHits = findAllNodesAtX(store.scene, chartX, hoverRadius)
+      if (tooltipMode === "multi" && store.scene.length > 0 && store.scales) {
+        const allHits = findAllNodesAtX(store.scene, hit.x, hoverRadius)
+        const yInvert = store.scales.y.invert
+        const xInvert = store.scales.x.invert
         if (allHits.length > 0) {
+          ;(hover as any).xValue = xInvert ? xInvert(hit.x) : hit.x
           ;(hover as any).allSeries = allHits.map(h => ({
             group: h.group || "",
-            value: h.y,
+            value: yInvert ? yInvert(h.y) : h.y,
             color: h.color || "#007bff",
             datum: h.datum,
           }))
