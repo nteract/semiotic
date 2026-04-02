@@ -662,10 +662,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const yInvert = store.scales.y.invert
         const xInvert = store.scales.x.invert
         if (allHits.length > 0) {
-          ;(hover as any).xValue = xInvert ? xInvert(hit.x) : hit.x
+          const xValue = xInvert ? xInvert(hit.x) : hit.x
+          ;(hover as any).xValue = xValue
+          ;(hover as any).xPx = hit.x
           ;(hover as any).allSeries = allHits.map(h => ({
             group: h.group || "",
             value: yInvert ? yInvert(h.y) : h.y,
+            valuePx: h.y,
             color: h.color || "#007bff",
             datum: h.datum,
           }))

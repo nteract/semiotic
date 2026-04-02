@@ -84,6 +84,36 @@ export function findNearestNode(
 }
 
 /**
+ * Interpolate Y at a given X pixel by finding the bracketing segment.
+ * Returns null if px is outside the path range or beyond maxXDistance.
+ */
+function interpolatePathAtX(path: [number, number][], px: number, maxXDistance: number): number | null {
+  if (path.length === 0) return null
+  const idx = binarySearchPath(path, px)
+  if (idx < 0) return null
+  if (Math.abs(path[idx][0] - px) > maxXDistance) return null
+
+  // Find the bracketing segment: try idx-1→idx and idx→idx+1
+  // Pick the one where px falls between the two x values
+  let lo = idx
+  let hi = idx
+  if (idx > 0 && path[idx][0] >= px) {
+    lo = idx - 1
+    hi = idx
+  } else if (idx < path.length - 1) {
+    lo = idx
+    hi = idx + 1
+  }
+
+  const [x0, y0] = path[lo]
+  const [x1, y1] = path[hi]
+  if (x1 === x0) return y0
+
+  const t = Math.max(0, Math.min(1, (px - x0) / (x1 - x0)))
+  return y0 + t * (y1 - y0)
+}
+
+/**
  * Find all line/area nodes at a given X pixel coordinate.
  * For each node, interpolates the Y value at px using the path data.
  * Used for multi-point tooltip (show all series values at the hovered X).
@@ -99,41 +129,21 @@ export function findAllNodesAtX(
     if (node.type === "line") {
       const lineNode = node as LineSceneNode
       if (lineNode.path.length < 2) continue
+      const interpY = interpolatePathAtX(lineNode.path, px, maxXDistance)
+      if (interpY === null) continue
       const idx = binarySearchPath(lineNode.path, px)
-      if (idx < 0) continue
-      const [nx] = lineNode.path[idx]
-      if (Math.abs(nx - px) > maxXDistance) continue
-      // Interpolate Y between adjacent points for precision
-      let interpY = lineNode.path[idx][1]
-      if (idx < lineNode.path.length - 1) {
-        const [x0, y0] = lineNode.path[idx]
-        const [x1, y1] = lineNode.path[idx + 1]
-        if (x1 !== x0) {
-          const t = (px - x0) / (x1 - x0)
-          if (t >= 0 && t <= 1) interpY = y0 + t * (y1 - y0)
-        }
-      }
       const datum = Array.isArray(lineNode.datum) && lineNode.datum[idx] ? lineNode.datum[idx] : lineNode.datum
-      results.push({ node, datum, x: nx, y: interpY, group: lineNode.group, color: lineNode.style.stroke })
+      results.push({ node, datum, x: lineNode.path[idx][0], y: interpY, group: lineNode.group, color: lineNode.style.stroke })
     } else if (node.type === "area") {
       const areaNode = node as AreaSceneNode
+      if (areaNode.interactive === false) continue
       if (areaNode.topPath.length < 2) continue
+      const interpY = interpolatePathAtX(areaNode.topPath, px, maxXDistance)
+      if (interpY === null) continue
       const idx = binarySearchPath(areaNode.topPath, px)
-      if (idx < 0) continue
-      const [nx] = areaNode.topPath[idx]
-      if (Math.abs(nx - px) > maxXDistance) continue
-      let interpY = areaNode.topPath[idx][1]
-      if (idx < areaNode.topPath.length - 1) {
-        const [x0, y0] = areaNode.topPath[idx]
-        const [x1, y1] = areaNode.topPath[idx + 1]
-        if (x1 !== x0) {
-          const t = (px - x0) / (x1 - x0)
-          if (t >= 0 && t <= 1) interpY = y0 + t * (y1 - y0)
-        }
-      }
       const datum = Array.isArray(areaNode.datum) && areaNode.datum[idx] ? areaNode.datum[idx] : areaNode.datum
       const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined
-      results.push({ node, datum, x: nx, y: interpY, group: areaNode.group, color: areaColor })
+      results.push({ node, datum, x: areaNode.topPath[idx][0], y: interpY, group: areaNode.group, color: areaColor })
     }
   }
 
