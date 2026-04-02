@@ -100,6 +100,9 @@ export interface BaseChartProps {
   /** Dim non-hovered series when hovering a data mark. "series" dims by the colorBy group key. */
   hoverHighlight?: boolean | "series"
 
+  /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
+  hoverRadius?: number
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 

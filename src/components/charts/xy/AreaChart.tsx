@@ -108,6 +108,11 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   areaOpacity?: number
 
   /**
+   * Horizontal gradient for the line stroke. Color stops define a left-to-right gradient.
+   */
+  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+
+  /**
    * Show line on top of area
    * @default true
    */
@@ -242,6 +247,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     colorScheme,
     curve = "monotoneX",
     areaOpacity = 0.7,
+    lineGradient,
     showLine = true,
     lineWidth = 2,
     showPoints = false,
@@ -460,6 +466,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     groupAccessor: areaBy || undefined,
     ...(y0Accessor && { y0Accessor }),
     ...(gradientFill && { gradientFill }),
+    ...(lineGradient && { lineGradient }),
     curve,
     lineStyle,
     ...(showPoints && pointStyle && { pointStyle }),

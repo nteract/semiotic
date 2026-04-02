@@ -573,6 +573,61 @@ export default function LineChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Hover Highlight */}
       {/* ----------------------------------------------------------------- */}
+      <h3 id="multi-tooltip">Multi-Point Tooltip</h3>
+      <p>
+        Set <code>tooltip="multi"</code> to show all series values at the
+        hovered X position with color swatches — like a legend inside the tooltip.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: multiLineData,
+          xAccessor: "month",
+          yAccessor: "revenue",
+          lineBy: "product",
+          colorBy: "product",
+          tooltip: "multi",
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `multiLineData`,
+          tooltip: '"multi"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="axis-options">Axis Options</h3>
+      <p>
+        Configure axis behavior with <code>frameProps.axes</code>: force the
+        domain max tick with <code>includeMax</code>, auto-rotate crowded labels,
+        or use dashed baselines.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "month",
+          yAccessor: "revenue",
+          frameProps: {
+            axes: [
+              { orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" },
+              { orient: "left", includeMax: true },
+            ],
+          },
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `simpleData`,
+          frameProps: `{
+  axes: [
+    { orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" },
+    { orient: "left", includeMax: true },
+  ],
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
       <h3 id="hover-highlight">Hover Highlight (Sibling Dimming)</h3>
       <p>
         Set <code>hoverHighlight="series"</code> to dim non-hovered series

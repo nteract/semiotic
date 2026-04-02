@@ -365,7 +365,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 )}
 
                 {/* Value axis baseline (bottom) — skipped when underlayRendered */}
+                {/* Value axis baseline (bottom) + zero line if different */}
                 {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {!underlayRendered && scales?.r && (() => {
+                  const zeroX = scales.r(0)
+                  if (zeroX > 1 && zeroX < width - 1) {
+                    return <line x1={zeroX} y1={0} x2={zeroX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} strokeDasharray="4,4" />
+                  }
+                  return null
+                })()}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -396,8 +404,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             ) : (
               <>
                 {/* Vertical: categories on bottom, values on left */}
-                {/* Category axis baseline (bottom) — skipped when underlayRendered */}
-                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {/* Category axis baseline — drawn at rScale(0) to align with bar baseline, falls back to chart bottom */}
+                {!underlayRendered && (() => {
+                  const zeroY = scales?.r ? scales.r(0) : height
+                  const baseY = (zeroY >= 0 && zeroY <= height) ? zeroY : height
+                  return <line x1={0} y1={baseY} x2={width} y2={baseY} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                })()}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />

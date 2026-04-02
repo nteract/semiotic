@@ -327,6 +327,33 @@ export default function ScatterplotPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
+      <h3 id="hover-radius">Custom Hover Radius</h3>
+      <p>
+        Use <code>hoverRadius</code> to control how far the cursor can be from a
+        point and still trigger a hover. Default is 30px. Increase for sparse
+        charts, decrease for dense ones.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "height",
+          yAccessor: "weight",
+          hoverRadius: 60,
+          tooltip: true,
+        }}
+        type={Scatterplot}
+        overrideProps={{
+          data: `sampleData`,
+          hoverRadius: "60",
+          tooltip: "true",
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Props */}
+      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="Scatterplot" props={scatterplotProps} />

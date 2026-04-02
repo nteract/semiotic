@@ -239,13 +239,14 @@ describe("SwimlaneChart", () => {
     })
   })
 
-  it("passes showCategoryTicks={false} to frame", () => {
+  it("passes showCategoryTicks={false} to frame and suppresses oLabel", () => {
     render(
       <TooltipProvider>
         <SwimlaneChart data={sampleData} subcategoryAccessor="task" showCategoryTicks={false} />
       </TooltipProvider>
     )
     expect(lastOrdinalFrameProps.showCategoryTicks).toBe(false)
+    expect(lastOrdinalFrameProps.oLabel).toBeUndefined()
   })
 
   it("defaults showCategoryTicks to undefined (frame decides)", () => {

@@ -46,6 +46,7 @@ export interface XYSceneConfig {
   normalize?: boolean
   gradientFill?: boolean | { topOpacity?: number; bottomOpacity?: number } | { colorStops: Array<{ offset: number; color: string }> }
   areaGroups?: Set<string>
+  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
   annotations?: Record<string, any>[]
 
   // Point/bubble

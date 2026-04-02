@@ -383,6 +383,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
  */
 export type TooltipProp =
   | boolean
+  | "multi"
   | ((data: Record<string, unknown>) => React.ReactNode)
   | ReturnType<typeof Tooltip>
   | ReturnType<typeof MultiLineTooltip>
@@ -393,6 +394,45 @@ export type TooltipProp =
  * Compatible with HoverData and any Record-based hover object.
  */
 export type TooltipContentFn = (d: Record<string, any>) => React.ReactNode
+
+/**
+ * Multi-point tooltip: shows all series values at the hovered X position
+ * with color swatches (legend-style). Used when tooltipMode="multi".
+ */
+export function MultiPointTooltip(): TooltipContentFn {
+  return (d: Record<string, any>) => {
+    const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: any }> | undefined
+    if (!allSeries || allSeries.length === 0) {
+      // Fallback to single-datum display — prefer data-space values from datum
+      const val = d.data?.value ?? d.data?.y ?? d.value ?? d.y
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div>{formatValue(val)}</div>
+        </div>
+      )
+    }
+
+    // Header: use xValue (data-space) set by StreamXYFrame, fall back to datum fields
+    const headerValue = d.xValue ?? d.data?.time ?? d.data?.x ?? d.time
+
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        {headerValue != null && (
+          <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
+            {formatValue(headerValue)}
+          </div>
+        )}
+        {allSeries.map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "1px 0" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: "0.85em" }}>{s.group}</span>
+            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatValue(s.value)}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+}
 
 /**
  * Convert a tooltip prop to the format Semiotic expects.

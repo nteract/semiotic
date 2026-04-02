@@ -13,7 +13,7 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean|"series" — dims non-hovered series on data mark hover)
+`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | "multi" | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean|"series" — dims non-hovered series on data mark hover), `hoverRadius` (number, default 30 — max pixel distance for hover/click hit testing)
 
 `onClick` receives `(datum, { x, y })` — the original datum and pixel coordinates. Works on lines, bars, areas, pie slices, nodes, and geo features.
 
@@ -21,8 +21,8 @@
 
 ## XY Charts (`semiotic/xy`)
 
-**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[] — `true` fills all, `string[]` lists series names for per-series area fill), `areaOpacity` (0.3), `anomaly`, `forecast`, `directLabel`, `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType`/`yScaleType` ("linear"|"log")
-**AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}|{colorStops:[{offset,color}]}), `areaOpacity` (0.7), `showLine` (true)
+**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[] — `true` fills all, `string[]` lists series names for per-series area fill), `areaOpacity` (0.3), `lineGradient` ({colorStops:[{offset,color}]} — horizontal gradient for line stroke), `anomaly`, `forecast`, `directLabel`, `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType`/`yScaleType` ("linear"|"log")
+**AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}|{colorStops:[{offset,color}]}), `lineGradient` ({colorStops:[{offset,color}]}), `areaOpacity` (0.7), `showLine` (true)
 **StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`. Do NOT use `lineBy` or `lineDataAccessor`.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `bubbleOpacity` (0.6)
@@ -290,11 +290,34 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead. Frame style functions receive `(datum, categoryName)`, not `(datum, index)`.
 - **v2 migration**: `htmlAnnotationRules` → `widget` annotations + `svgAnnotationRules`. v2 `summaryStyle` index-based coloring → v3 category-string-based.
 - **accessibleTable**: Direct prop on HOCs. Set `accessibleTable={false}` to disable the sr-only data summary.
-- **Format functions returning ReactNode**: `xFormat`, `yFormat`, and `categoryFormat` can return `string | ReactNode`. When ReactNode is returned, tick labels render inside `<foreignObject>` (SVG interop). String returns use standard `<text>` elements. Useful for rotated, multi-line, or icon-decorated tick labels.
-- **Per-series fillArea**: `fillArea={["seriesA", "seriesB"]}` on LineChart fills only named series. Other series render as lines. Series names match the `lineBy`/`colorBy` group key.
-- **Hover highlight**: `hoverHighlight="series"` dims non-hovered series when hovering data marks directly (not just legend). Requires `colorBy` to be a string field name.
-- **Click-to-lock crosshair**: In `linkedHover` x-position mode, clicking locks the crosshair. Locked crosshairs show a dashed white line, ignore hover updates, and unlock on click or Escape.
-- **Multi-color gradientFill**: `gradientFill={{ colorStops: [{offset: 0, color: "green"}, {offset: 0.5, color: "yellow"}, {offset: 1, color: "red"}] }}` on AreaChart. Requires at least 2 stops.
+- **Format functions returning ReactNode**: `xFormat`, `yFormat`, and `categoryFormat` can return `string | ReactNode`. ReactNode labels render inside `<foreignObject>` (SVG interop). Useful for rotated, multi-line, or icon-decorated tick labels:
+  ```jsx
+  <BarChart categoryFormat={(label) => <span style={{ color: "red" }}>{label}</span>} />
+  ```
+- **Per-series fillArea**: `fillArea={["seriesA", "seriesB"]}` on LineChart fills only named series while others stay as lines. Series names must match `lineBy`/`colorBy` group keys. Uses a dedicated `"mixed"` chart type internally:
+  ```jsx
+  <LineChart data={data} lineBy="series" colorBy="series" fillArea={["Revenue", "Cost"]} />
+  ```
+- **Hover highlight**: `hoverHighlight="series"` dims non-hovered series on data mark hover (not just legend). Requires `colorBy` as a string field. Works on all XY and ordinal HOCs.
+- **Click-to-lock crosshair**: In `linkedHover` x-position mode, clicking locks the crosshair (dashed white line). Hover updates are ignored while locked. Click again or press Escape to unlock. Multi-chart safe — unmounting one chart doesn't unlock another's crosshair.
+- **Multi-color gradientFill**: `gradientFill={{ colorStops: [{offset, color}] }}` on AreaChart for semantic color bands. Supports `transparent`. Requires at least 2 stops. Offsets clamped to [0,1]:
+  ```jsx
+  <AreaChart gradientFill={{ colorStops: [{ offset: 0, color: "red" }, { offset: 0.5, color: "transparent" }] }} />
+  ```
+- **Line stroke gradient**: `lineGradient={{ colorStops: [{offset, color}] }}` on LineChart/AreaChart for horizontal gradient strokes. Gradient runs from first to last X point.
+- **Multi-point tooltip**: `tooltip="multi"` on LineChart shows all series values at hovered X with color swatches (legend-in-tooltip). Custom tooltip functions receive `datum.allSeries: Array<{group, value, color}>`:
+  ```jsx
+  <LineChart data={data} lineBy="series" colorBy="series" tooltip="multi" />
+  ```
+- **Axis config** (`frameProps.axes`): Per-axis options: `includeMax: true` forces domain-max tick. `autoRotate: true` rotates bottom-axis labels 45° when crowded. `baselineStyle: "dashed" | "dotted" | string` sets strokeDasharray on axis baselines:
+  ```jsx
+  <LineChart frameProps={{ axes: [{ orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" }] }} />
+  ```
+- **Bar baseline alignment**: Ordinal axis baseline aligns with `rScale(0)`, not chart edge. Bars are flush with the 0 line even when the domain has padding.
+- **hoverRadius**: Max pixel distance for hover/click hit testing (default 30). Available on all XY HOCs and `StreamXYFrameProps`:
+  ```jsx
+  <Scatterplot hoverRadius={60} tooltip />  {/* Larger hit area for sparse data */}
+  ```
 
 ## Performance
 

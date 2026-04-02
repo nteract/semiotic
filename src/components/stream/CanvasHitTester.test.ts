@@ -1,4 +1,4 @@
-import { findNearestNode } from "./CanvasHitTester"
+import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
 
@@ -171,5 +171,77 @@ describe("CanvasHitTester — findNearestNode", () => {
     const lineResult = findNearestNode(scene, 50, 5, 30, qt)
     expect(lineResult).not.toBeNull()
     expect(lineResult!.datum.id).toBe("l1")
+  })
+})
+
+describe("findAllNodesAtX", () => {
+  const lineA: LineSceneNode = {
+    type: "line",
+    path: [[10, 100], [50, 60], [90, 20]],
+    style: { stroke: "red" },
+    datum: [{ id: "a1" }, { id: "a2" }, { id: "a3" }],
+    group: "Series A",
+  }
+
+  const lineB: LineSceneNode = {
+    type: "line",
+    path: [[10, 80], [50, 40], [90, 10]],
+    style: { stroke: "blue" },
+    datum: [{ id: "b1" }, { id: "b2" }, { id: "b3" }],
+    group: "Series B",
+  }
+
+  const area: AreaSceneNode = {
+    type: "area",
+    topPath: [[10, 90], [50, 50], [90, 15]],
+    bottomPath: [[10, 100], [50, 100], [90, 100]],
+    style: { fill: "green", stroke: "green" },
+    datum: { id: "area1" },
+    group: "Area C",
+  }
+
+  it("returns all line nodes at a given X pixel", () => {
+    const results = findAllNodesAtX([lineA, lineB], 50, 30)
+    expect(results).toHaveLength(2)
+    expect(results[0].group).toBe("Series A")
+    expect(results[1].group).toBe("Series B")
+  })
+
+  it("includes area nodes", () => {
+    const results = findAllNodesAtX([lineA, area], 50, 30)
+    expect(results).toHaveLength(2)
+    const groups = results.map(r => r.group)
+    expect(groups).toContain("Series A")
+    expect(groups).toContain("Area C")
+  })
+
+  it("interpolates Y between path points", () => {
+    // At px=30 (between path[0].x=10 and path[1].x=50), Y should interpolate
+    const results = findAllNodesAtX([lineA], 30, 30)
+    expect(results).toHaveLength(1)
+    // lineA: (10,100) to (50,60). At x=30: t = (30-10)/(50-10) = 0.5, y = 100 + 0.5*(60-100) = 80
+    expect(results[0].y).toBeCloseTo(80, 0)
+  })
+
+  it("returns color from node style", () => {
+    const results = findAllNodesAtX([lineA, lineB], 50, 30)
+    expect(results[0].color).toBe("red")
+    expect(results[1].color).toBe("blue")
+  })
+
+  it("returns empty when no nodes within maxXDistance", () => {
+    const results = findAllNodesAtX([lineA], 200, 30)
+    expect(results).toHaveLength(0)
+  })
+
+  it("ignores non-line/area nodes", () => {
+    const point: PointSceneNode = {
+      type: "point", x: 50, y: 50, r: 5,
+      style: { fill: "orange" },
+      datum: { id: "p1" },
+    }
+    const results = findAllNodesAtX([point as any, lineA], 50, 30)
+    expect(results).toHaveLength(1)
+    expect(results[0].group).toBe("Series A")
   })
 })

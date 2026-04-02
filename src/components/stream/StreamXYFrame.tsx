@@ -23,7 +23,7 @@ import type {
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
-import { findNearestNode, type HitResult } from "./CanvasHitTester"
+import { findNearestNode, findAllNodesAtX, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -318,6 +318,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsStyle,
       y0Accessor,
       gradientFill,
+      lineGradient,
       areaGroups,
       openAccessor,
       highAccessor,
@@ -338,6 +339,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       customHoverBehavior,
       customClickBehavior,
       enableHover,
+      hoverRadius = 30,
+      tooltipMode,
       annotations,
       svgAnnotationRules,
       showGrid,
@@ -475,6 +478,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           ? undefined
           : gradientFill,
       areaGroups: areaGroups ? new Set(areaGroups) : undefined,
+      lineGradient,
       openAccessor,
       highAccessor,
       lowAccessor,
@@ -505,7 +509,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
-      boundsAccessor, boundsStyle, y0Accessor, gradientFill, areaGroups,
+      boundsAccessor, boundsStyle, y0Accessor, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
@@ -630,7 +634,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (!store || store.scene.length === 0) return
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
-      const hit = findNearestNode(store.scene, chartX, chartY, 30, store.quadtree)
+      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree)
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null
@@ -650,6 +654,25 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         value: hit.y,
         x: hit.x,
         y: hit.y
+      }
+
+      // Multi-tooltip mode: attach all series values at this X to the hover data
+      if (tooltipMode === "multi" && store.scene.length > 0 && store.scales) {
+        const allHits = findAllNodesAtX(store.scene, hit.x, hoverRadius)
+        const yInvert = store.scales.y.invert
+        const xInvert = store.scales.x.invert
+        if (allHits.length > 0) {
+          const xValue = xInvert ? xInvert(hit.x) : hit.x
+          ;(hover as any).xValue = xValue
+          ;(hover as any).xPx = hit.x
+          ;(hover as any).allSeries = allHits.map(h => ({
+            group: h.group || "",
+            value: yInvert ? yInvert(h.y) : h.y,
+            valuePx: h.y,
+            color: h.color || "#007bff",
+            datum: h.datum,
+          }))
+        }
       }
 
       hoverRef.current = hover
@@ -697,7 +720,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
       const store = storeRef.current
       if (!store || store.scene.length === 0) { customClickBehavior(null); return }
-      const hit = findNearestNode(store.scene, chartX, chartY, 30, store.quadtree)
+      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
       const clickData: HoverData = {

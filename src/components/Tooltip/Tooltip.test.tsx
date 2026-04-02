@@ -1,6 +1,6 @@
 import React from "react"
 import { render } from "@testing-library/react"
-import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip"
+import { Tooltip, MultiLineTooltip, MultiPointTooltip, normalizeTooltip } from "./Tooltip"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 
 describe("Tooltip", () => {
@@ -253,5 +253,57 @@ describe("buildDefaultTooltip with title role", () => {
     expect(container.textContent).toContain("1")
     expect(container.textContent).toContain("y")
     expect(container.textContent).toContain("2")
+  })
+})
+
+// ── MultiPointTooltip ─────────────────────────────────────────────────
+
+describe("MultiPointTooltip", () => {
+  it("renders all series with group names and values", () => {
+    const fn = MultiPointTooltip()
+    const data = {
+      xValue: 42,
+      value: 100,
+      allSeries: [
+        { group: "Revenue", value: 100, color: "red" },
+        { group: "Cost", value: 60, color: "blue" },
+        { group: "Profit", value: 40, color: "green" },
+      ],
+    }
+    const { container } = render(<>{fn(data)}</>)
+
+    // All series names rendered
+    expect(container.textContent).toContain("Revenue")
+    expect(container.textContent).toContain("Cost")
+    expect(container.textContent).toContain("Profit")
+    // X value header (data-space value from xValue)
+    expect(container.textContent).toContain("42")
+  })
+
+  it("renders color swatches as colored spans", () => {
+    const fn = MultiPointTooltip()
+    const data = {
+      time: 1,
+      allSeries: [
+        { group: "A", value: 10, color: "#ff0000" },
+        { group: "B", value: 20, color: "#0000ff" },
+      ],
+    }
+    const { container } = render(<>{fn(data)}</>)
+    const swatches = container.querySelectorAll("span[style*='border-radius']")
+    expect(swatches.length).toBe(2)
+  })
+
+  it("falls back to single-datum display when allSeries is missing", () => {
+    const fn = MultiPointTooltip()
+    const data = { value: 42 }
+    const { container } = render(<>{fn(data)}</>)
+    expect(container.textContent).toContain("42")
+  })
+
+  it("normalizeTooltip returns a generic tooltip function for 'multi' (HOC handles it before normalizeTooltip)", () => {
+    // "multi" is intercepted at the HOC level; if it reaches normalizeTooltip it falls through to generic
+    const result = normalizeTooltip("multi" as any)
+    expect(typeof result).toBe("function")
   })
 })

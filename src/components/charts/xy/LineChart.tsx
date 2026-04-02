@@ -8,7 +8,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -124,6 +124,12 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * @default 0.3
    */
   areaOpacity?: number
+
+  /**
+   * Horizontal gradient for the line stroke. Color stops define a left-to-right gradient.
+   * `{ colorStops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }`
+   */
+  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
 
   /**
    * Line stroke width
@@ -334,6 +340,7 @@ export const LineChart = forwardRef(
     fillArea = false,
     areaOpacity = 0.3,
     lineWidth = 2,
+    lineGradient,
     tooltip,
     pointIdAccessor,
     annotations,
@@ -347,6 +354,7 @@ export const LineChart = forwardRef(
     onObservation,
     onClick,
     hoverHighlight,
+    hoverRadius,
     chartId,
     loading,
     emptyContent,
@@ -916,6 +924,8 @@ export const LineChart = forwardRef(
   const streamProps: StreamXYFrameProps = {
     chartType,
     ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
+    ...(lineGradient && { lineGradient }),
+    ...(hoverRadius != null && { hoverRadius }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
@@ -951,7 +961,10 @@ export const LineChart = forwardRef(
     ...(className && { className }),
     tooltipContent: tooltip === false
       ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
+      : tooltip === "multi"
+        ? MultiPointTooltip()
+        : (normalizeTooltip(tooltip) || defaultTooltipContent),
+    ...(tooltip === "multi" && { tooltipMode: "multi" as const }),
     ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
     ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),

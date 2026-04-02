@@ -172,7 +172,18 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Fast path: no color thresholds — single-path draw
     } else if (!hasThresholds) {
       ctx.beginPath()
-      ctx.strokeStyle = baseColor
+
+      if (node.strokeGradient && node.strokeGradient.colorStops.length >= 2 && node.path.length >= 2) {
+        const x0 = node.path[0][0]
+        const x1 = node.path[node.path.length - 1][0]
+        const grad = ctx.createLinearGradient(x0, 0, x1, 0)
+        for (const stop of node.strokeGradient.colorStops) {
+          grad.addColorStop(Math.max(0, Math.min(1, stop.offset)), stop.color)
+        }
+        ctx.strokeStyle = grad
+      } else {
+        ctx.strokeStyle = baseColor
+      }
 
       if (curveFactory) {
         // Use d3-shape line generator with curve interpolation

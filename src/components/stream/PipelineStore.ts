@@ -122,6 +122,8 @@ export interface PipelineConfig {
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   // Series names rendered as areas in "mixed" chart type
   areaGroups?: Set<string>
+  // Horizontal gradient for line strokes
+  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
 
   // Style
   lineStyle?: any

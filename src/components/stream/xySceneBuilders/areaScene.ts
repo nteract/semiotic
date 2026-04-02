@@ -35,6 +35,9 @@ export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[])
     if (ctx.config.curve && ctx.config.curve !== "linear") {
       node.curve = ctx.config.curve
     }
+    if (ctx.config.lineGradient) {
+      node.strokeGradient = ctx.config.lineGradient
+    }
     nodes.push(node)
   }
 
