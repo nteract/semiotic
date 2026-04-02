@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { LineChart } from "semiotic"
+import { LineChart, LinkedCharts } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -571,6 +571,80 @@ export default function LineChartPage() {
       </p>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Hover Highlight */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="hover-highlight">Hover Highlight (Sibling Dimming)</h3>
+      <p>
+        Set <code>hoverHighlight="series"</code> to dim non-hovered series
+        when hovering a line. Requires <code>colorBy</code> to identify series.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: multiLineData,
+          xAccessor: "month",
+          yAccessor: "revenue",
+          lineBy: "product",
+          colorBy: "product",
+          hoverHighlight: "series",
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `multiLineData`,
+          hoverHighlight: '"series"',
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Click-to-Lock Crosshair */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="click-to-lock">Click-to-Lock Crosshair</h3>
+      <p>
+        With <code>linkedHover</code> in <code>"x-position"</code> mode,
+        click a chart to lock the crosshair at that X position. Click again
+        or press <kbd>Escape</kbd> to unlock. Hover to see the synced
+        crosshair, then click to lock it in place.
+      </p>
+
+      <LinkedCharts>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+          <LineChart
+            data={simpleData}
+            xAccessor="month"
+            yAccessor="revenue"
+            linkedHover={{ name: "lock-demo", mode: "x-position", xField: "month" }}
+            tooltip
+            width={500} height={180}
+          />
+          <LineChart
+            data={simpleData.map(d => ({ month: d.month, revenue: 50000 - d.revenue }))}
+            xAccessor="month"
+            yAccessor="revenue"
+            linkedHover={{ name: "lock-demo", mode: "x-position", xField: "month" }}
+            tooltip
+            color="#e45050"
+            width={500} height={180}
+          />
+        </div>
+      </LinkedCharts>
+
+      <CodeBlock language="jsx">{`<LinkedCharts>
+  <LineChart
+    data={revenueData}
+    xAccessor="month" yAccessor="revenue"
+    linkedHover={{ name: "sync", mode: "x-position", xField: "month" }}
+    tooltip
+  />
+  <LineChart
+    data={costData}
+    xAccessor="month" yAccessor="cost"
+    linkedHover={{ name: "sync", mode: "x-position", xField: "month" }}
+    tooltip
+  />
+</LinkedCharts>`}</CodeBlock>
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
@@ -684,6 +758,7 @@ export default function LineChartPage() {
           and positioning
         </li>
       </ul>
+
     </PageLayout>
   )
 }

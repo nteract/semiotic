@@ -113,10 +113,11 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   pointRadius?: number
 
   /**
-   * Fill area under the line
+   * Fill area under the line. `true` fills all series, `string[]` lists series
+   * names (matching lineBy/colorBy group key) that get area fill while others stay as lines.
    * @default false
    */
-  fillArea?: boolean
+  fillArea?: boolean | string[]
 
   /**
    * Area opacity when fillArea is true
@@ -345,13 +346,15 @@ export const LineChart = forwardRef(
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     xScaleType,
-    yScaleType
+    yScaleType,
+    color
   } = props
 
   const width = resolved.width
@@ -531,11 +534,13 @@ export const LineChart = forwardRef(
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "LineChart", chartId
+    onObservation, onClick, chartType: "LineChart", chartId,
+    hoverHighlight,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   // Linked crosshair config (x-position mode)
@@ -695,40 +700,44 @@ export const LineChart = forwardRef(
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
-  // Merge legend selection with cross-chart selection
+  // Merge hover highlight > legend selection > cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // Line style function
   const baseLineStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    // Second arg is the group key (series name), passed by PipelineStore.resolveLineStyle
+    return (d: Record<string, any>, group?: string) => {
       const baseStyle: Record<string, string | number> = {
         strokeWidth: lineWidth
       }
 
-      // Apply color — skip stroke/fill when colorScale unavailable (push API)
-      // so the frame's own color map can fill in
+      // When fillArea is a string[], only apply fill to matching series
+      const shouldFill = fillArea === true
+        || (Array.isArray(fillArea) && group != null && fillArea.includes(group))
+
       if (colorBy) {
         if (colorScale) {
           baseStyle.stroke = getColor(d, colorBy, colorScale)
-          if (fillArea) {
+          if (shouldFill) {
             baseStyle.fill = baseStyle.stroke
             baseStyle.fillOpacity = areaOpacity
           }
         }
       } else {
-        baseStyle.stroke = DEFAULT_COLOR
-        if (fillArea) {
-          baseStyle.fill = DEFAULT_COLOR
+        baseStyle.stroke = color || DEFAULT_COLOR
+        if (shouldFill) {
+          baseStyle.fill = color || DEFAULT_COLOR
           baseStyle.fillOpacity = areaOpacity
         }
       }
 
       return baseStyle
     }
-  }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity])
+  }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity, color])
 
   // Lazy-load segment-aware styling — only loads module when forecast is set
   const [segmentAwareStyle, setSegmentAwareStyle] = useState<((d: Record<string, any>) => Record<string, any>) | null>(null)
@@ -768,15 +777,15 @@ export const LineChart = forwardRef(
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = color || DEFAULT_COLOR
       }
 
       return baseStyle
     }
-  }, [showPoints, pointRadius, colorBy, colorScale])
+  }, [showPoints, pointRadius, colorBy, colorScale, color])
 
   // Determine chart type for StreamXYFrame
-  const chartType = fillArea ? "area" as const : "line" as const
+  const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
 
   // Direct labeling — generate annotations at line endpoints
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
@@ -906,6 +915,7 @@ export const LineChart = forwardRef(
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType,
+    ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
@@ -942,8 +952,8 @@ export const LineChart = forwardRef(
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],

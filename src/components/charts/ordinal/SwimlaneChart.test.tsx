@@ -238,4 +238,22 @@ describe("SwimlaneChart", () => {
       expect(lastOrdinalFrameProps.tooltipContent({ category: "A" })).toBeNull()
     })
   })
+
+  it("passes showCategoryTicks={false} to frame", () => {
+    render(
+      <TooltipProvider>
+        <SwimlaneChart data={sampleData} subcategoryAccessor="task" showCategoryTicks={false} />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.showCategoryTicks).toBe(false)
+  })
+
+  it("defaults showCategoryTicks to undefined (frame decides)", () => {
+    render(
+      <TooltipProvider>
+        <SwimlaneChart data={sampleData} subcategoryAccessor="task" />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.showCategoryTicks).toBeUndefined()
+  })
 })

@@ -249,11 +249,13 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     linkedBrush,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -333,11 +335,13 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "BubbleChart", chartId
+    onObservation, onClick, chartType: "BubbleChart", chartId,
+    hoverHighlight,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -370,9 +374,10 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // Calculate size domain (bounded mode from data, push mode from tracked range)
   const sizeDomain = useMemo(() => {
@@ -404,7 +409,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = color || DEFAULT_COLOR
       }
 
       // Apply size
@@ -412,7 +417,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor])
+  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
@@ -504,8 +509,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

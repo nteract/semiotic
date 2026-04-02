@@ -114,6 +114,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
@@ -174,10 +175,12 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Selection hooks ───────────────────────────────────────────────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection, linkedHover,
     fallbackFields: [],
-    onObservation, onClick, chartType: "ConnectedScatterplot", chartId
+    onObservation, onClick, chartType: "ConnectedScatterplot", chartId,
+    hoverHighlight,
+    colorByField: undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -187,9 +190,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Canvas pre-renderer for connecting lines (drawn under points) ─────
   //
@@ -361,8 +365,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
     svgPreRenderers,

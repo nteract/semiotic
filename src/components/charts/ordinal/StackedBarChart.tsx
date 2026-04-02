@@ -68,7 +68,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, normalize = false, barPadding = 40,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -105,6 +105,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "StackedBarChart",
     chartId,
     showLegend,
@@ -188,8 +189,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

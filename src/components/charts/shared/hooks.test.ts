@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import * as React from "react"
 import {
@@ -15,7 +15,7 @@ import {
 import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
-import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition } from "../../store/LinkedCrosshairStore"
+import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -881,5 +881,84 @@ describe("getCrosshairProps", () => {
       linkedCrosshairName: "hover",
       linkedCrosshairSourceId: "s1",
     })
+  })
+})
+
+// ── useChartSelection: click-to-lock crosshair ─────────────────────────
+
+describe("useChartSelection click-to-lock crosshair", () => {
+  const LOCK_NAME = "lockTest"
+
+  beforeEach(() => {
+    // Clean up any leftover locked state
+    unlockCrosshair(LOCK_NAME)
+    setCrosshairPosition(LOCK_NAME, 0, "__reset__")
+    clearCrosshairPosition(LOCK_NAME, "__reset__")
+  })
+
+  it("click toggles lock on crosshair in x-position mode", () => {
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: LOCK_NAME, mode: "x-position", xField: "time" },
+          chartType: "LineChart",
+        })
+        const crosshair = useCrosshairPosition(LOCK_NAME)
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Hover to set crosshair
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+    })
+    expect(result.current.crosshair?.xValue).toBe(42)
+    expect(result.current.crosshair?.locked).toBeFalsy()
+
+    // Click to lock
+    act(() => {
+      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+    })
+    expect(result.current.crosshair?.xValue).toBe(42)
+    expect(result.current.crosshair?.locked).toBe(true)
+
+    // Hover should be ignored while locked
+    act(() => {
+      result.current.selection.customHoverBehavior({ x: 30, y: 40, data: { time: 99, value: 200 } })
+    })
+    expect(result.current.crosshair?.xValue).toBe(42) // still locked at 42
+
+    // Hover-end should not clear while locked
+    act(() => {
+      result.current.selection.customHoverBehavior(null)
+    })
+    expect(result.current.crosshair).not.toBeNull()
+
+    // Click again to unlock
+    act(() => {
+      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { time: 42, value: 100 } })
+    })
+    expect(result.current.crosshair).toBeNull()
+  })
+
+  it("click does NOT toggle lock in field-based mode", () => {
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "fieldLock", fields: ["region"] },
+          chartType: "BarChart",
+        })
+        const crosshair = useCrosshairPosition("fieldLock")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.selection.customClickBehavior({ x: 10, y: 20, data: { region: "North" } })
+    })
+    // No crosshair should be set in field-based mode
+    expect(result.current.crosshair).toBeNull()
   })
 })

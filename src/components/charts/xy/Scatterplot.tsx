@@ -118,11 +118,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     linkedBrush,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -153,6 +155,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     unwrapData: false,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "Scatterplot",
     chartId,
     showLegend,
@@ -224,14 +227,14 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
         if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
         // else: let frame use its own color scheme (push API)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = color || DEFAULT_COLOR
       }
       baseStyle.r = sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
         : pointRadius
       return baseStyle
     }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
+  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color])
 
   const pointStyle = useMemo(
     () => wrapStyleWithSelection(basePointStyle, setup.effectiveSelectionHook, selection),
@@ -287,8 +290,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

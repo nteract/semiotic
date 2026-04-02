@@ -145,7 +145,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     levels, orientation = "horizontal",
     colorScheme: colorSchemeProp, barPadding = 20,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
-    onObservation, onClick, chartId, valueFormat,
+    onObservation, onClick, hoverHighlight, chartId, valueFormat,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -246,6 +246,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "LikertChart",
     chartId,
     showLegend,
@@ -423,8 +424,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       : tooltip === true
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

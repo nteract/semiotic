@@ -104,6 +104,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
@@ -150,6 +151,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "FunnelChart",
     chartId,
     showLegend,
@@ -262,8 +264,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
       : tooltip === true || tooltip == null
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   } as any

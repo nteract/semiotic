@@ -83,6 +83,7 @@ export type StreamChartType =
   | "line"
   | "area"
   | "stackedarea"
+  | "mixed"
   | "scatter"
   | "bubble"
   | "heatmap"
@@ -157,8 +158,8 @@ export interface AreaSceneNode {
   style: Style
   datum: any
   group?: string
-  /** Vertical gradient fill: opacity fades from topOpacity at the line to bottomOpacity at the baseline */
-  fillGradient?: { topOpacity: number; bottomOpacity: number }
+  /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
+  fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   /** When false, skip hit testing (used for decorative bounds areas) */
   interactive?: boolean
   /** Pulse intensity 0–1 (set when aggregated group value changes) */
@@ -382,7 +383,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
    * to bottomOpacity at the baseline. Set to `true` for default (0.8 → 0.05)
    * or `{ topOpacity, bottomOpacity }` for custom values.
    */
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number }
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+
+  /** Series names (matching lineBy/colorBy group keys) that render as filled areas in "mixed" chartType */
+  areaGroups?: string[]
 
   /**
    * Style for bounds/uncertainty areas.
@@ -453,8 +457,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
-  yFormat?: (d: any) => string
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: any) => string | ReactNode
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string
 
@@ -462,6 +466,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   customHoverBehavior?: (d: HoverData | null) => void
+  customClickBehavior?: (d: HoverData | null) => void
   enableHover?: boolean
 
   // ── Brush ─────────────────────────────────────────

@@ -1,3 +1,4 @@
+import type React from "react"
 import type { MarginType } from "../../types/generalTypes"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 
@@ -96,6 +97,9 @@ export interface BaseChartProps {
    * For lines, receives the line data; for bars, the bar datum; for pie slices, the slice datum. */
   onClick?: (datum: any, event: { x: number; y: number }) => void
 
+  /** Dim non-hovered series when hovering a data mark. "series" dims by the colorBy group key. */
+  hoverHighlight?: boolean | "series"
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 
@@ -112,17 +116,17 @@ export interface AxisConfig {
   xLabel?: string
   /** Label for the y-axis */
   yLabel?: string
-  /** Format function for x-axis tick labels */
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
-  /** Format function for y-axis tick labels */
-  yFormat?: (d: any) => string
+  /** Format function for x-axis tick labels. Return string or ReactNode for custom rendering. */
+  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | React.ReactNode
+  /** Format function for y-axis tick labels. Return string or ReactNode for custom rendering. */
+  yFormat?: (d: any) => string | React.ReactNode
 }
 
 /**
  * Category formatting for ordinal chart tick labels.
  * Receives the category value and its index, returns a formatted string.
  */
-export type CategoryFormatFn = (label: string, index?: number) => string
+export type CategoryFormatFn = (label: string, index?: number) => string | React.ReactNode
 
 /**
  * Accessor type - can be a property name or a function

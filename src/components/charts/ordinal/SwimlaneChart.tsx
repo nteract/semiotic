@@ -104,12 +104,13 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     linkedBrush,
     frameProps = {},
     selection, linkedHover,
-    onObservation, onClick, chartId,
+    onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
     categoryFormat,
+    showCategoryTicks,
   } = props
 
   const width = resolved.width
@@ -141,6 +142,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     unwrapData: true,
     onObservation,
     onClick,
+    hoverHighlight,
     chartType: "SwimlaneChart",
     chartId,
     showLegend,
@@ -216,6 +218,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     rLabel: valueLabel,
     rFormat: valueFormat,
     ...(categoryFormat && { oFormat: categoryFormat }),
+    ...(showCategoryTicks !== undefined && { showCategoryTicks }),
     showGrid,
     ...effectiveLegendProps,
     ...(title && { title }),
@@ -226,8 +229,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
     ...frameProps

@@ -69,6 +69,8 @@ export interface ChartSetupInput {
   marginDefaults: { top: number; bottom: number; left: number; right: number }
   /** onClick callback */
   onClick?: (datum: any, event: { x: number; y: number }) => void
+  /** Dim non-hovered series on data mark hover */
+  hoverHighlight?: boolean | "series"
   /** Loading state */
   loading: boolean | undefined
   /** Empty content override */
@@ -145,6 +147,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     userMargin,
     marginDefaults,
     onClick,
+    hoverHighlight,
     loading,
     emptyContent,
     width,
@@ -152,7 +155,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   } = input
 
   // ── Selection hooks (always called) ────────────────────────────────────
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const colorByField = typeof input.colorBy === "string" ? input.colorBy : undefined
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields,
@@ -161,6 +165,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     chartType,
     chartId,
     onClick,
+    hoverHighlight,
+    colorByField,
   })
 
   // ── Linked crosshair (x-position mode) ────────────────────────────────
@@ -183,11 +189,12 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // ── Legend interaction ─────────────────────────────────────────────────
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
-  // ── Merge legend selection with cross-chart selection ──────────────────
+  // ── Merge hover highlight > legend selection > cross-chart selection ───
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Legend & margin ────────────────────────────────────────────────────
   const { legend, margin, legendPosition } = useChartLegendAndMargin({

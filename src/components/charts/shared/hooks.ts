@@ -6,7 +6,7 @@ import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
-import { setCrosshairPosition, clearCrosshairPosition } from "../../store/LinkedCrosshairStore"
+import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
@@ -172,6 +172,8 @@ export function useChartSelection({
   chartType,
   chartId,
   onClick,
+  hoverHighlight,
+  colorByField,
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -181,8 +183,11 @@ export function useChartSelection({
   chartType?: string
   chartId?: string
   onClick?: (datum: any, event: { x: number; y: number }) => void
+  hoverHighlight?: boolean | "series"
+  colorByField?: string
 }): {
   activeSelectionHook: SelectionHookResult | null
+  hoverSelectionHook: SelectionHookResult | null
   customHoverBehavior: (d: Record<string, any> | null) => void
   customClickBehavior: (d: Record<string, any> | null) => void
   /** Stable ID for this chart instance, used to suppress linked crosshair on source chart */
@@ -213,6 +218,22 @@ export function useChartSelection({
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
     : null
 
+  // ── Hover highlight: track hovered series key for sibling dimming ──────
+  const [hoveredSeriesKey, setHoveredSeriesKey] = useState<string | null>(null)
+  const seriesField = colorByField || fallbackFields[0]
+
+  const hoverSelectionHook: SelectionHookResult | null = useMemo(() => {
+    if (!hoverHighlight || hoveredSeriesKey == null || !seriesField) return null
+    const key = hoveredSeriesKey
+    const field = seriesField
+    return {
+      isActive: true,
+      predicate: (d: Record<string, any>) => {
+        const val = typeof d[field] === "string" ? d[field] : String(d[field] ?? "")
+        return val === key
+      }
+    }
+  }, [hoverHighlight, hoveredSeriesKey, seriesField])
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
@@ -245,6 +266,18 @@ export function useChartSelection({
         }
       }
 
+      // Hover highlight: track hovered series for sibling dimming
+      if (hoverHighlight && seriesField) {
+        if (d) {
+          let datum = d.data || d.datum || d
+          if (Array.isArray(datum)) datum = datum[0]
+          const key = datum?.[seriesField]
+          setHoveredSeriesKey(key != null ? String(key) : null)
+        } else {
+          setHoveredSeriesKey(null)
+        }
+      }
+
       // Emit observation events
       if (onObservation || pushObservation) {
         const now = Date.now()
@@ -269,11 +302,21 @@ export function useChartSelection({
         }
       }
     },
-    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation]
+    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, hoverHighlight, seriesField]
   )
 
   const customClickBehavior = useCallback(
     (d: Record<string, any> | null) => {
+      // Click-to-lock crosshair (x-position mode)
+      if (hoverConfig?.mode === "x-position" && hoverConfig.xField && d) {
+        let datum = d.data || d.datum || d
+        if (Array.isArray(datum)) datum = datum[0]
+        const xVal = datum?.[hoverConfig.xField]
+        if (xVal != null && Number.isFinite(Number(xVal))) {
+          toggleCrosshairLock(hoverConfig.name || "hover", Number(xVal), crosshairSourceId)
+        }
+      }
+
       if (d && onClick) {
         let datum = d.data || d.datum || d
         if (Array.isArray(datum)) datum = datum[0]
@@ -303,7 +346,7 @@ export function useChartSelection({
         }
       }
     },
-    [onClick, onObservation, pushObservation, chartType, chartId]
+    [onClick, onObservation, pushObservation, chartType, chartId, hoverConfig, crosshairSourceId]
   )
 
   // Clean up crosshair on unmount or config change to prevent stale entries
@@ -312,11 +355,12 @@ export function useChartSelection({
     if (hoverConfig?.mode !== "x-position") return
     const name = hoverConfig.name || "hover"
     return () => {
+      unlockCrosshair(name, crosshairSourceId)
       clearCrosshairPosition(name, crosshairSourceId)
     }
   }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])
 
-  return { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
+  return { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId }
 }
 
 /**

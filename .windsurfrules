@@ -13,7 +13,7 @@
 - Every HOC accepts `frameProps` to pass through. TypeScript `strict: true`.
 
 ## Common Props (all HOCs)
-`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true)
+`title`, `description` (overrides aria-label), `summary` (sr-only note), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill — overrides theme/colorScheme), `enableHover` (true), `tooltip` (boolean | `(datum) => ReactNode` | `{ fields?, title?, format?, style? }`), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean|"series" — dims non-hovered series on data mark hover)
 
 `onClick` receives `(datum, { x, y })` — the original datum and pixel coordinates. Works on lines, bars, areas, pie slices, nodes, and geo features.
 
@@ -21,8 +21,8 @@
 
 ## XY Charts (`semiotic/xy`)
 
-**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea`, `areaOpacity` (0.3), `anomaly`, `forecast`, `directLabel`, `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType`/`yScaleType` ("linear"|"log")
-**AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}), `areaOpacity` (0.7), `showLine` (true)
+**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor` ("coordinates"), `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[] — `true` fills all, `string[]` lists series names for per-series area fill), `areaOpacity` (0.3), `anomaly`, `forecast`, `directLabel`, `gapStrategy` ("break"|"interpolate"|"zero"), `xScaleType`/`yScaleType` ("linear"|"log")
+**AreaChart** — LineChart props + `areaBy`, `y0Accessor` (band/ribbon), `gradientFill` (boolean|{topOpacity,bottomOpacity}|{colorStops:[{offset,color}]}), `areaOpacity` (0.7), `showLine` (true)
 **StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`. Do NOT use `lineBy` or `lineDataAccessor`.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `bubbleOpacity` (0.6)
@@ -49,7 +49,7 @@
 
 **LikertChart** — `data`, `categoryAccessor` ("question"), `valueAccessor` ("score", raw mode) or `levelAccessor`+`countAccessor` ("count", pre-aggregated mode), `levels` (required, ordered negative→positive), `orientation` ("horizontal"|"vertical"), `colorScheme`. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports any scale size (3-point to 7-point+). Raw mode aggregates integer scores automatically (1-based: score 1 → levels[0]). The `levels` array order defines polarity — first half negative, second half positive, center neutral if odd. Supports push API for streaming — accumulates raw data internally and re-aggregates percentages on each push.
 
-All ordinal HOCs support `colorBy` and `colorScheme`. `categoryFormat` (`(label: string, index?: number) => string`) customizes individual tick labels (truncation, formatting). `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
+All ordinal HOCs support `colorBy` and `colorScheme`. `categoryFormat` (`(label: string, index?: number) => string | ReactNode`) customizes individual tick labels (truncation, formatting, or custom ReactNode rendering via `<foreignObject>`). `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
 ## Network Charts (`semiotic/network`)
 
@@ -137,7 +137,7 @@ Fallback chain: `pointColor` → element color → `--semiotic-primary` CSS var 
 **CategoryColorProvider** — `colors` (map) or `categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 
-**Linked crosshair** (coordinate-based hover sync): `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value. Other charts with the same `linkedHover` name render a synced vertical crosshair at that X position. Each chart shows its own Y values independently. Use for dashboards with multiple time-series at different scales.
+**Linked crosshair** (coordinate-based hover sync): `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}` broadcasts the hovered X data value. Other charts with the same `linkedHover` name render a synced vertical crosshair at that X position. Each chart shows its own Y values independently. Use for dashboards with multiple time-series at different scales. **Click-to-lock**: click a chart to lock the crosshair at that X position; the locked line changes to a dashed white stroke. Click again or press Escape to unlock. Locking is automatic when `linkedHover` uses `x-position` mode.
 **ScatterplotMatrix** — `data`, `fields`, `colorBy`, `cellSize`, `hoverMode`, `brushMode`
 **ChartContainer** — `title`, `subtitle`, `height` (400), `width` ("100%"), `status`, `loading`, `error`, `errorBoundary`, `actions` ({ export, fullscreen, copyConfig, dataSummary }), `controls`
 **ChartGrid** — `columns` (number|"auto"), `minCellWidth` (300), `gap` (16). `emphasis="primary"` spans two columns.
@@ -290,6 +290,11 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead. Frame style functions receive `(datum, categoryName)`, not `(datum, index)`.
 - **v2 migration**: `htmlAnnotationRules` → `widget` annotations + `svgAnnotationRules`. v2 `summaryStyle` index-based coloring → v3 category-string-based.
 - **accessibleTable**: Direct prop on HOCs. Set `accessibleTable={false}` to disable the sr-only data summary.
+- **Format functions returning ReactNode**: `xFormat`, `yFormat`, and `categoryFormat` can return `string | ReactNode`. When ReactNode is returned, tick labels render inside `<foreignObject>` (SVG interop). String returns use standard `<text>` elements. Useful for rotated, multi-line, or icon-decorated tick labels.
+- **Per-series fillArea**: `fillArea={["seriesA", "seriesB"]}` on LineChart fills only named series. Other series render as lines. Series names match the `lineBy`/`colorBy` group key.
+- **Hover highlight**: `hoverHighlight="series"` dims non-hovered series when hovering data marks directly (not just legend). Requires `colorBy` to be a string field name.
+- **Click-to-lock crosshair**: In `linkedHover` x-position mode, clicking locks the crosshair. Locked crosshairs show a dashed white line, ignore hover updates, and unlock on click or Escape.
+- **Multi-color gradientFill**: `gradientFill={{ colorStops: [{offset: 0, color: "green"}, {offset: 0.5, color: "yellow"}, {offset: 1, color: "red"}] }}` on AreaChart. Requires at least 2 stops.
 
 ## Performance
 

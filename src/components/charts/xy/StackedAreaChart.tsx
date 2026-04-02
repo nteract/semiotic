@@ -230,11 +230,13 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     linkedHover,
     onObservation,
     onClick,
+    hoverHighlight,
     chartId,
     loading,
     emptyContent,
     legendInteraction,
-    legendPosition: legendPositionProp
+    legendPosition: legendPositionProp,
+    color
   } = props
 
   const width = resolved.width
@@ -286,11 +288,13 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "StackedAreaChart", chartId
+    onObservation, onClick, chartType: "StackedAreaChart", chartId,
+    hoverHighlight,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -348,9 +352,10 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
     if (legendState.legendSelectionHook) return legendState.legendSelectionHook
     return activeSelectionHook
-  }, [legendState.legendSelectionHook, activeSelectionHook])
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
@@ -369,15 +374,16 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
           baseStyle.stroke = "none"
         }
       } else if (!colorBy) {
-        baseStyle.fill = DEFAULT_COLOR
-        baseStyle.stroke = showLine ? DEFAULT_COLOR : "none"
+        const uniformColor = color || DEFAULT_COLOR
+        baseStyle.fill = uniformColor
+        baseStyle.stroke = showLine ? uniformColor : "none"
         if (showLine) baseStyle.strokeWidth = lineWidth
       }
       baseStyle.fillOpacity = areaOpacity
 
       return baseStyle
     }
-  }, [colorBy, colorScale, areaOpacity, showLine, lineWidth])
+  }, [colorBy, colorScale, areaOpacity, showLine, lineWidth, color])
 
   const lineStyle = useMemo(
     () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, selection),
@@ -392,11 +398,11 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
       } else {
-        baseStyle.fill = DEFAULT_COLOR
+        baseStyle.fill = color || DEFAULT_COLOR
       }
       return baseStyle
     }
-  }, [showPoints, pointRadius, colorBy, colorScale])
+  }, [showPoints, pointRadius, colorBy, colorScale, color])
 
   // Legend + margin
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
@@ -495,8 +501,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...crosshairFrameProps,
     ...frameProps
