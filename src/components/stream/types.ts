@@ -135,6 +135,8 @@ export interface LineSceneNode {
   style: Style
   datum: any
   group?: string
+  /** Horizontal gradient for the line stroke */
+  strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
   /** Curve interpolation type (default: linear / straight segments) */
   curve?: CurveType
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
@@ -160,6 +162,8 @@ export interface AreaSceneNode {
   group?: string
   /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Horizontal gradient for the line stroke */
+  strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
   /** When false, skip hit testing (used for decorative bounds areas) */
   interactive?: boolean
   /** Pulse intensity 0–1 (set when aggregated group value changes) */
@@ -385,6 +389,9 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
    */
   gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
 
+  /** Horizontal gradient for line strokes. Applied to all lines/area top-strokes. */
+  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
+
   /** Series names (matching lineBy/colorBy group keys) that render as filled areas in "mixed" chartType */
   areaGroups?: string[]
 
@@ -468,6 +475,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   customHoverBehavior?: (d: HoverData | null) => void
   customClickBehavior?: (d: HoverData | null) => void
   enableHover?: boolean
+  /** Max pixel distance for hover/click hit testing. Default 30. */
+  hoverRadius?: number
+  /** Tooltip mode: "single" (default) shows one datum, "multi" shows all series at the hovered X. */
+  tooltipMode?: "single" | "multi"
 
   // ── Brush ─────────────────────────────────────────
   /** Brush configuration — when provided, an SVG brush overlay is rendered */

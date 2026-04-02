@@ -43,6 +43,9 @@ export function buildLineScene(ctx: XYSceneContext, data: Record<string, any>[])
     if (ctx.config.curve && ctx.config.curve !== "linear") {
       lineNode.curve = ctx.config.curve
     }
+    if (ctx.config.lineGradient) {
+      lineNode.strokeGradient = ctx.config.lineGradient
+    }
     nodes.push(lineNode)
   }
 

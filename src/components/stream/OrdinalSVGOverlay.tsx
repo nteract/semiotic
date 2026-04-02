@@ -365,7 +365,11 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 )}
 
                 {/* Value axis baseline (bottom) — skipped when underlayRendered */}
-                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {!underlayRendered && (() => {
+                  const zeroX = scales?.r ? scales.r(0) : 0
+                  const baseX = (zeroX >= 0 && zeroX <= width) ? zeroX : 0
+                  return <line x1={baseX} y1={0} x2={baseX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                })()}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -396,8 +400,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
             ) : (
               <>
                 {/* Vertical: categories on bottom, values on left */}
-                {/* Category axis baseline (bottom) — skipped when underlayRendered */}
-                {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {/* Category axis baseline — drawn at rScale(0) to align with bar baseline, falls back to chart bottom */}
+                {!underlayRendered && (() => {
+                  const zeroY = scales?.r ? scales.r(0) : height
+                  const baseY = (zeroY >= 0 && zeroY <= height) ? zeroY : height
+                  return <line x1={0} y1={baseY} x2={width} y2={baseY} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                })()}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />

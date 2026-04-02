@@ -214,7 +214,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     barPadding,
     enableHover,
     showAxes: resolved.showAxes,
-    oLabel: categoryLabel,
+    oLabel: showCategoryTicks === false ? undefined : categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
     ...(categoryFormat && { oFormat: categoryFormat }),

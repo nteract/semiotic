@@ -358,4 +358,123 @@ describe("LineChart", () => {
       expect(container.textContent).not.toContain("No data available")
     })
   })
+
+  // ── tooltip="multi" ──────────────────────────────────────────────────
+
+  describe('tooltip="multi"', () => {
+    it("sets tooltipMode to multi on the frame", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} tooltip="multi" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBe("multi")
+    })
+
+    it("provides a tooltipContent function for multi mode", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} tooltip="multi" />
+        </TooltipProvider>
+      )
+      expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+    })
+
+    it("does not set tooltipMode for regular tooltip", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} tooltip />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBeUndefined()
+    })
+  })
+
+  // ── hoverRadius ──────────────────────────────────────────────────────
+
+  describe("hoverRadius", () => {
+    it("passes hoverRadius to the frame", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} hoverRadius={50} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.hoverRadius).toBe(50)
+    })
+
+    it("does not set hoverRadius when not provided", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.hoverRadius).toBeUndefined()
+    })
+  })
+
+  // ── per-series fillArea ──────────────────────────────────────────────
+
+  describe("fillArea string array", () => {
+    const multiData = [
+      { x: 1, y: 10, s: "A" }, { x: 2, y: 20, s: "A" },
+      { x: 1, y: 8, s: "B" }, { x: 2, y: 12, s: "B" },
+    ]
+
+    it('sets chartType to "mixed" when fillArea is a string array', () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={multiData} lineBy="s" colorBy="s" fillArea={["A"]} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("mixed")
+      expect(lastXYFrameProps.areaGroups).toEqual(["A"])
+    })
+
+    it('sets chartType to "area" when fillArea is true', () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} fillArea />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("area")
+    })
+
+    it('sets chartType to "line" when fillArea is false', () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} fillArea={false} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.chartType).toBe("line")
+    })
+  })
+
+  // ── lineGradient ─────────────────────────────────────────────────────
+
+  describe("lineGradient", () => {
+    it("passes lineGradient to the frame", () => {
+      const grad = { colorStops: [{ offset: 0, color: "blue" }, { offset: 1, color: "red" }] }
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} lineGradient={grad} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.lineGradient).toEqual(grad)
+    })
+  })
+
+  // ── color prop ───────────────────────────────────────────────────────
+
+  describe("color prop", () => {
+    it("applies color to the line style when no colorBy", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} color="#ff0000" />
+        </TooltipProvider>
+      )
+      // lineStyle is a function — call it to check the output
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.stroke).toBe("#ff0000")
+    })
+  })
 })

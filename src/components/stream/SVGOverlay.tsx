@@ -18,9 +18,22 @@ export interface AxisConfig {
   tickFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
   baseline?: boolean | "under"
   jaggedBase?: boolean
+  /** Baseline stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. */
+  baselineStyle?: "dashed" | "dotted" | string
+  /** Always include the domain max as a tick, even if d3 omits it. */
+  includeMax?: boolean
+  /** Auto-rotate labels 45° when horizontal spacing is too tight. */
+  autoRotate?: boolean
   /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
    * `true` auto-detects Date boundaries. A function receives (value, index) and returns true for landmark ticks. */
   landmarkTicks?: boolean | ((value: any, index: number) => boolean)
+}
+
+function resolveBaselineDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
+  if (!style) return undefined
+  if (style === "dashed") return "6,4"
+  if (style === "dotted") return "2,4"
+  return style
 }
 
 // ── Jagged baseline helper ────────────────────────────────────────────────
@@ -259,13 +272,13 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
 
         {/* Axis baselines */}
         {showBottomBaseline && !bottomJagged && (
-          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(bottomAxis?.baselineStyle)} />
         )}
         {bottomJagged && (
           <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
         )}
         {showLeftBaseline && !leftJagged && (
-          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} />
+          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(leftAxis?.baselineStyle)} />
         )}
         {leftJagged && (
           <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -375,7 +388,20 @@ export function SVGOverlay(props: SVGOverlayProps) {
     }))
     const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
-    return filterTicksByPixelDistance(candidates, minPx)
+    let filtered = filterTicksByPixelDistance(candidates, minPx)
+    // includeMax: ensure the domain max is represented as a tick
+    if (bottomAxis?.includeMax && filtered.length > 0) {
+      const domain = scales.x.domain() as [number, number]
+      const domainMax = domain[1]
+      const maxPx = scales.x(domainMax)
+      const lastPx = filtered[filtered.length - 1].pixel
+      if (Math.abs(maxPx - lastPx) > 1) {
+        const maxLabel = fmt(domainMax, filtered.length, rawValues)
+        if (maxPx - lastPx < minPx && filtered.length > 1) filtered = filtered.slice(0, -1)
+        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
+      }
+    }
+    return filtered
   }, [showAxes, scales, axes, xFormat, width])
 
   const yTicks = useMemo(() => {
@@ -390,7 +416,19 @@ export function SVGOverlay(props: SVGOverlayProps) {
       pixel: scales.y(v),
       label: fmt(v)
     }))
-    return filterTicksByPixelDistance(candidates, 22)
+    let filtered = filterTicksByPixelDistance(candidates, 22)
+    if (leftAxis?.includeMax && filtered.length > 0) {
+      const domain = scales.y.domain() as [number, number]
+      const domainMax = domain[1]
+      const maxPx = scales.y(domainMax)
+      const firstPx = filtered[0].pixel
+      if (Math.abs(maxPx - firstPx) > 1) {
+        const maxLabel = fmt(domainMax)
+        if (Math.abs(maxPx - firstPx) < 22 && filtered.length > 1) filtered = filtered.slice(1)
+        filtered.unshift({ value: domainMax, pixel: maxPx, label: maxLabel })
+      }
+    }
+    return filtered
   }, [showAxes, scales, axes, yFormat, height])
 
   // Right Y axis ticks — same pixel positions as left but different labels
@@ -536,11 +574,18 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
 
+          // Detect if bottom-axis labels need 45° rotation
+          const shouldRotateBottom = bottomAxis?.autoRotate && xTicks.length > 1 && (() => {
+            const avgSpacing = width / Math.max(xTicks.length - 1, 1)
+            const avgLabelWidth = xTicks.reduce((sum, t) => sum + (typeof t.label === "string" ? t.label.length * 6.5 : 60), 0) / xTicks.length
+            return avgSpacing < avgLabelWidth + 8
+          })()
+
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
             {/* X axis baseline (skipped when underlayRendered) */}
             {!underlayRendered && showBottomBaseline && !bottomJagged && (
-              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(bottomAxis?.baselineStyle)} />
             )}
             {!underlayRendered && bottomJagged && (
               <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -556,12 +601,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 <line y2={5} stroke={axisStroke} strokeWidth={1} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
-                    y={18}
-                    textAnchor="middle"
+                    y={shouldRotateBottom ? 10 : 18}
+                    textAnchor={shouldRotateBottom ? "end" : "middle"}
                     fontSize={isLandmark ? 11 : 10}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
                     style={{ userSelect: "none" }}
+                    transform={shouldRotateBottom ? "rotate(-45)" : undefined}
                   >
                     {tick.label}
                   </text>
@@ -588,7 +634,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
             {/* Y axis baseline (skipped when underlayRendered) */}
             {!underlayRendered && showLeftBaseline && !leftJagged && (
-              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} />
+              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(leftAxis?.baselineStyle)} />
             )}
             {!underlayRendered && leftJagged && (
               <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -649,7 +695,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
               return (
                 <>
                   {showRightBaseline && (
-                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(rightAxis.baselineStyle)} />
                   )}
                   {yTicksRight.map((tick, i) => {
                     const isLandmark = rightLandmark

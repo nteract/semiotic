@@ -83,6 +83,62 @@ export function findNearestNode(
   return best
 }
 
+/**
+ * Find all line/area nodes at a given X pixel coordinate.
+ * For each node, interpolates the Y value at px using the path data.
+ * Used for multi-point tooltip (show all series values at the hovered X).
+ */
+export function findAllNodesAtX(
+  scene: SceneNode[],
+  px: number,
+  maxXDistance: number = 30
+): Array<{ node: SceneNode; datum: any; x: number; y: number; group?: string; color?: string }> {
+  const results: Array<{ node: SceneNode; datum: any; x: number; y: number; group?: string; color?: string }> = []
+
+  for (const node of scene) {
+    if (node.type === "line") {
+      const lineNode = node as LineSceneNode
+      if (lineNode.path.length < 2) continue
+      const idx = binarySearchPath(lineNode.path, px)
+      if (idx < 0) continue
+      const [nx] = lineNode.path[idx]
+      if (Math.abs(nx - px) > maxXDistance) continue
+      // Interpolate Y between adjacent points for precision
+      let interpY = lineNode.path[idx][1]
+      if (idx < lineNode.path.length - 1) {
+        const [x0, y0] = lineNode.path[idx]
+        const [x1, y1] = lineNode.path[idx + 1]
+        if (x1 !== x0) {
+          const t = (px - x0) / (x1 - x0)
+          if (t >= 0 && t <= 1) interpY = y0 + t * (y1 - y0)
+        }
+      }
+      const datum = Array.isArray(lineNode.datum) && lineNode.datum[idx] ? lineNode.datum[idx] : lineNode.datum
+      results.push({ node, datum, x: nx, y: interpY, group: lineNode.group, color: lineNode.style.stroke })
+    } else if (node.type === "area") {
+      const areaNode = node as AreaSceneNode
+      if (areaNode.topPath.length < 2) continue
+      const idx = binarySearchPath(areaNode.topPath, px)
+      if (idx < 0) continue
+      const [nx] = areaNode.topPath[idx]
+      if (Math.abs(nx - px) > maxXDistance) continue
+      let interpY = areaNode.topPath[idx][1]
+      if (idx < areaNode.topPath.length - 1) {
+        const [x0, y0] = areaNode.topPath[idx]
+        const [x1, y1] = areaNode.topPath[idx + 1]
+        if (x1 !== x0) {
+          const t = (px - x0) / (x1 - x0)
+          if (t >= 0 && t <= 1) interpY = y0 + t * (y1 - y0)
+        }
+      }
+      const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined
+      results.push({ node, datum: areaNode.datum, x: nx, y: interpY, group: areaNode.group, color: areaColor })
+    }
+  }
+
+  return results
+}
+
 function hitTestPoint(node: PointSceneNode, px: number, py: number): HitResult | null {
   const dx = px - node.x
   const dy = py - node.y

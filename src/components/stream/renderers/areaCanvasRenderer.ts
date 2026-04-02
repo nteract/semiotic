@@ -180,7 +180,17 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Stroke on top
     if (node.style.stroke && node.style.stroke !== "none") {
       ctx.globalAlpha = nodeOpacity
-      ctx.strokeStyle = node.style.stroke
+      if (node.strokeGradient && node.strokeGradient.colorStops.length >= 2 && node.topPath.length >= 2) {
+        const x0 = node.topPath[0][0]
+        const x1 = node.topPath[node.topPath.length - 1][0]
+        const grad = ctx.createLinearGradient(x0, 0, x1, 0)
+        for (const stop of node.strokeGradient.colorStops) {
+          grad.addColorStop(Math.max(0, Math.min(1, stop.offset)), stop.color)
+        }
+        ctx.strokeStyle = grad
+      } else {
+        ctx.strokeStyle = node.style.stroke
+      }
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])
 
