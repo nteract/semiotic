@@ -112,6 +112,8 @@ export interface PipelineConfig {
   lowAccessor?: string | ((d: any) => number)
   closeAccessor?: string | ((d: any) => number)
   candlestickStyle?: CandlestickStyle
+  /** Internal: set by PipelineStore when open/close accessors are both missing */
+  candlestickRangeMode?: boolean
 
   // Bounds/uncertainty
   boundsAccessor?: string | ((d: any) => number)
@@ -278,7 +280,7 @@ export class PipelineStore {
       this.getClose = config.closeAccessor != null ? resolveAccessor(config.closeAccessor, "close") : undefined
       // Set range mode flag for scene builder
       if (!config.openAccessor && !config.closeAccessor) {
-        ;(this.config as any).candlestickRangeMode = true
+        this.config.candlestickRangeMode = true
       }
     }
 
@@ -555,7 +557,9 @@ export class PipelineStore {
     // Build scales
     // For streaming charts, use time/value axes based on arrowOfTime
     const isStreaming = config.runtimeMode === "streaming"
-    const sp = config.scalePadding || 0
+    // Clamp scalePadding to non-negative, no larger than half the smallest layout dimension
+    const rawSp = config.scalePadding || 0
+    const sp = Math.max(0, Math.min(rawSp, Math.min(layout.width, layout.height) / 2 - 1))
     if (isStreaming) {
       const timeAxis = getTimeAxis(config.arrowOfTime)
       if (timeAxis === "x") {
@@ -712,13 +716,11 @@ export class PipelineStore {
       }
       return scaleLinear().domain(domain).range(range)
     }
+    // Rebuild ranges using new layout dimensions + scalePadding (constant pixel inset, not proportional)
+    const rsp = Math.max(0, Math.min(this.config.scalePadding || 0, Math.min(layout.width, layout.height) / 2 - 1))
     this.scales = {
-      x: remapScale(this.config.xScaleType, xDomain, [
-        oldXRange[0] * wRatio, oldXRange[1] * wRatio
-      ]),
-      y: remapScale(this.config.yScaleType, yDomain, [
-        oldYRange[0] * hRatio, oldYRange[1] * hRatio
-      ])
+      x: remapScale(this.config.xScaleType, xDomain, [rsp, layout.width - rsp]),
+      y: remapScale(this.config.yScaleType, yDomain, [layout.height - rsp, rsp])
     }
 
     this.lastLayout = { width: layout.width, height: layout.height }

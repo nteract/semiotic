@@ -109,7 +109,6 @@ test.describe("XY Charts - Landmark Ticks", () => {
 
     // Get all text elements in the SVG overlay
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Landmark tick labels:", texts)
 
     // Should have tick labels containing month names from the Jan-Mar 2024 data
     const dateLabels = texts.filter(t => /Jan|Feb|Mar/.test(t))
@@ -135,7 +134,6 @@ test.describe("XY Charts - Auto-Rotate Labels", () => {
     const testCase = page.locator('[data-testid="xy-auto-rotate"]')
 
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Auto-rotate tick labels:", texts)
 
     // X-axis labels should be long date strings
     const dateLabels = texts.filter(t => /January|February|March/.test(t))
@@ -170,7 +168,6 @@ test.describe("XY Charts - Range Plot", () => {
 
     // Check that axes rendered (SVG text elements)
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Range plot labels:", texts)
     expect(texts.length).toBeGreaterThan(2)
   })
 })

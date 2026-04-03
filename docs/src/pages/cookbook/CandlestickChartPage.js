@@ -95,8 +95,8 @@ function StreamingCandlestickDemo({ width }) {
       lowAccessor="low"
       closeAccessor="close"
       candlestickStyle={{
-        upColor: "#4daf4a",
-        downColor: "#e41a1c",
+        upColor: "#4caf50",
+        downColor: "#e45050",
         wickColor: "#999",
       }}
       windowSize={40}
@@ -162,8 +162,8 @@ export default function CandlestickChartPage() {
   closeAccessor="close"
   scalePadding={12}         // prevents edge candles from clipping
   candlestickStyle={{
-    upColor: "#4daf4a",   // close >= open
-    downColor: "#e41a1c", // close < open
+    upColor: "#4caf50",     // close >= open
+    downColor: "#e45050",  // close < open
     wickColor: "#999",
   }}
 />`}

@@ -12,11 +12,11 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, 
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
   // Range mode: detected by PipelineStore when open/close accessors are not provided
-  const isRangeMode = !!(ctx.config as any).candlestickRangeMode
+  const isRangeMode = ctx.config.candlestickRangeMode ?? false
 
   const nodes: SceneNode[] = []
   const cs = ctx.config.candlestickStyle || {}
-  const rangeColor = cs.rangeColor || "var(--semiotic-primary, #6366f1)"
+  const rangeColor = cs.rangeColor || "#6366f1"
   const upColor = isRangeMode ? rangeColor : (cs.upColor || "#28a745")
   const downColor = isRangeMode ? rangeColor : (cs.downColor || "#dc3545")
   const wickColor = isRangeMode ? rangeColor : (cs.wickColor || "#333")

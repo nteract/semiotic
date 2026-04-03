@@ -86,8 +86,8 @@ const frameProps = {
   lowAccessor: "low",
   closeAccessor: "close",
   candlestickStyle: {
-    upColor: theme[2],
-    downColor: theme[1],
+    upColor: "#4caf50",
+    downColor: "#e45050",
     wickColor: "#999",
   },
   scalePadding: 12,
