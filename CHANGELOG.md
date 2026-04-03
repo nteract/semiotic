@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3] - 2026-04-03
+
+### Added
+
+- **GaugeChart** — New ordinal HOC for single-value gauges with threshold zones, needle indicator, and configurable sweep angle. Built on StreamOrdinalFrame radial projection (reuses pie/donut rendering pipeline). Supports `fillZones={false}` for fixed-zone displays where only the needle moves (e.g. election needle). Exported from `semiotic` and `semiotic/ordinal`.
+- **Range/dumbbell plot** — Candlestick chart type now supports range mode: omit `openAccessor`/`closeAccessor` and provide only `highAccessor`/`lowAccessor` to render vertical lines with endpoint dots. Single `rangeColor` via `candlestickStyle`. No new HOC — demonstrates StreamXYFrame flexibility.
+- **`scalePadding`** — Pixel inset on XY scale ranges to prevent glyph clipping at chart edges. Available on `StreamXYFrameProps`; HOCs pass via `frameProps={{ scalePadding: 12 }}`. Domain and tick values unchanged.
+- **`xScaleType="time"`** — New scale type creates `d3.scaleTime` for Date-aware tick generation. Required for landmark ticks with timestamp data.
+- **`sweepAngle`** — New prop on `StreamOrdinalFrameProps` limiting pie/donut arc to less than 360° (used internally by GaugeChart).
+- **Multi-point tooltip** — `tooltip="multi"` on LineChart shows all series values at hovered X with color swatches. Custom functions receive `datum.allSeries` with `{group, value, valuePx, color, datum}`.
+- **Click-to-lock crosshair** — In `linkedHover` x-position mode, click locks the crosshair. Escape or click again to unlock. Source-aware unlock prevents multi-chart interference.
+- **Hover-based sibling dimming** — `hoverHighlight="series"` on all HOCs dims non-hovered series on data mark hover.
+- **Per-series fillArea** — `fillArea={["A","B"]}` on LineChart fills named series as areas, others stay as lines. New `"mixed"` chart type with dedicated scene builder.
+- **Multi-color gradient fills** — `gradientFill={{ colorStops: [{offset, color}] }}` on AreaChart for semantic color bands. Supports `transparent`.
+- **Line stroke gradients** — `lineGradient={{ colorStops }}` on LineChart/AreaChart for horizontal gradient strokes.
+- **Axis config extensions** — `includeMax` forces domain-max tick, `autoRotate` rotates labels 45° when crowded, `gridStyle` ("dashed"|"dotted"|string) for grid lines, `landmarkTicks` bolds month/year boundaries.
+- **`baselinePadding`** — Boolean prop on bar chart HOCs. Default `false` makes bars flush with 0 baseline.
+- **`hoverRadius`** — Configurable hit-test distance (default 30px) on all XY HOCs and `StreamXYFrameProps`.
+- **ReactNode tick labels** — `xFormat`, `yFormat`, `categoryFormat` accept `=> string | ReactNode` with `<foreignObject>` fallback.
+- **Tick deduplication** — Adjacent identical tick labels automatically removed.
+- **`getHitRadius`** and `MultiPointTooltip` exported from `semiotic/utils`.
+- **`isTimeLandmark`** and **`toDate`** exported from `hitTestUtils.ts` (shared across SVGOverlay and tests).
+
+### Fixed
+
+- **30px default hit radius** — All 4 hit testers (XY, Network, Geo, Ordinal) now use `getHitRadius()` from shared `hitTestUtils.ts`. Previous 12px Fitts's law cap was too small for comfortable interaction.
+- **`lineDataAccessor` data flattening** — StreamXYFrame now flattens line-object data before pipeline ingestion. Previously the pipeline read `xAccessor` on line objects (which lack that field), producing NaN extents.
+- **`scaleTime` domain comparison** — `valueOf()` comparison for Date objects prevents stale scales from blocking updates.
+- **Annotation dark mode** — `Annotation.tsx` text uses `var(--semiotic-text)`, connectors use `var(--semiotic-text-secondary)` instead of hardcoded black.
+- **SwimlaneChart `showCategoryTicks={false}`** — Now suppresses both tick labels and axis title.
+- **Floating point tooltip precision** — `formatValue` rounds via `toPrecision(6)`.
+- **Default tick format Date-aware** — `defaultTickFormat` handles Date objects (formats as "Jan 7" style).
+- **`bodyWidth: 0` on candlestick** — Body rect skipped entirely, no invisible canvas elements.
+- **Ordinal bar baseline** — Value axis baseline draws at `rScale(0)`, not chart edge. Include-zero applied before padding.
+- **Remap fast-path with `scalePadding`** — Disabled proportional remap when padding is set (forces full rebuild for correctness).
+- **Candlestick `updateConfig`** — OHLC accessors and `candlestickRangeMode` recomputed on prop changes.
+
+### Changed
+
+- **`baselineStyle` renamed to `gridStyle`** — Applies to grid lines (not axis baselines, which stay solid).
+- **Build system** — `rollup-plugin-typescript2` replaced with `@rollup/plugin-typescript` (fixes TS compilation).
+- **Playwright CI** — `serve-examples:ci` script skips redundant `npm run dist`. Timeout bumped to 120s.
+
 ## [3.2.2] - 2026-03-30
 
 ### Added
