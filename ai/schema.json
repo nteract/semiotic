@@ -2781,6 +2781,69 @@
     {
       "type": "function",
       "function": {
+        "name": "GaugeChart",
+        "description": "Single-value gauge with threshold zones, needle indicator, and configurable sweep angle. Built on StreamOrdinalFrame radial projection.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "description": "Current gauge value"
+            },
+            "min": {
+              "type": "number",
+              "default": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 100
+            },
+            "thresholds": {
+              "type": "array",
+              "description": "Array of { value, color, label? } defining threshold zones. Last value should equal max.",
+              "items": { "type": "object" }
+            },
+            "arcWidth": {
+              "type": "number",
+              "description": "Arc thickness as fraction of radius (0-1)",
+              "default": 0.3
+            },
+            "sweep": {
+              "type": "number",
+              "description": "Arc sweep angle in degrees (gap centered at bottom)",
+              "default": 240
+            },
+            "showNeedle": {
+              "type": "boolean",
+              "default": true
+            },
+            "needleColor": {
+              "type": "string"
+            },
+            "valueFormat": {
+              "type": "string",
+              "description": "Format function for center value label"
+            },
+            "showScaleLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "width": {
+              "type": "number",
+              "default": 300
+            },
+            "height": {
+              "type": "number",
+              "default": 250
+            }
+          },
+          "required": ["value"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "ForceDirectedGraph",
         "description": "Physics-based node-link diagram. Use for relationships, social networks, knowledge graphs.",
         "parameters": {

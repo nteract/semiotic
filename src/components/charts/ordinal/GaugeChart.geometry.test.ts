@@ -70,7 +70,6 @@ describe("Gauge geometry: gap centered at 6 o'clock", () => {
   })
 
   it("360° sweep (full circle) should start at 12 o'clock", () => {
-    const sweep = 360
     // No gap, start at 12 o'clock
     // pieSceneStartAngle(0) = -π/2 = 12 o'clock
     const startAngleDeg = 0
