@@ -43,6 +43,7 @@ import RealtimeHeatmapPage from "./pages/charts/RealtimeHeatmapPage"
 // RealtimeSankey has been merged into the SankeyDiagram page
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
+import GaugeChartPage from "./pages/charts/GaugeChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
 import FunnelChartPage from "./pages/charts/FunnelChartPage"
 import SwimlaneChartPage from "./pages/charts/SwimlaneChartPage"
@@ -421,6 +422,7 @@ export default function DocsApp() {
               <Route path="dot-plot" element={<DotPlotPage />} />
               <Route path="pie-chart" element={<PieChartPage />} />
               <Route path="donut-chart" element={<DonutChartPage />} />
+              <Route path="gauge-chart" element={<GaugeChartPage />} />
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
               <Route path="funnel-chart" element={<FunnelChartPage />} />
               <Route path="swimlane-chart" element={<SwimlaneChartPage />} />

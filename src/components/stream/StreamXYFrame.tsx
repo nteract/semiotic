@@ -481,7 +481,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       valueAccessor,
       colorAccessor,
       sizeAccessor,
-      groupAccessor,
+      groupAccessor: groupAccessor || (lineDataAccessor ? "_lineGroup" : undefined),
       categoryAccessor,
       lineDataAccessor,
       xScaleType,

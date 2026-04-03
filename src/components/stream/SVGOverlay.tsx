@@ -295,8 +295,12 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
 }
 
 
-function defaultTickFormat(v: number, _index?: number, _allTicks?: number[]): string {
-  return String(Math.round(v * 100) / 100)
+function defaultTickFormat(v: any, _index?: number, _allTicks?: number[]): string {
+  if (v instanceof Date) {
+    return `${v.toLocaleString("en", { month: "short" })} ${v.getDate()}`
+  }
+  if (typeof v === "number") return String(Math.round(v * 100) / 100)
+  return String(v)
 }
 
 /** Greedily filter ticks so consecutive labels are at least `minPx` apart.

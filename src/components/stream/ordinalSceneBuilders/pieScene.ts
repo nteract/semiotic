@@ -13,11 +13,12 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   // Start from 12 o'clock (-π/2) plus any user offset
   const startAngleOffset = -Math.PI / 2 + ((config.startAngle || 0) * Math.PI) / 180
 
-  const twoPi = Math.PI * 2
+  // sweepAngle limits the total arc (default: full circle). Used by GaugeChart for partial arcs.
+  const totalArc = config.sweepAngle != null ? (config.sweepAngle * Math.PI) / 180 : Math.PI * 2
 
   for (const col of Object.values(columns)) {
-    const startAngle = startAngleOffset + col.pctStart * twoPi
-    const endAngle = startAngleOffset + (col.pctStart + col.pct) * twoPi
+    const startAngle = startAngleOffset + col.pctStart * totalArc
+    const endAngle = startAngleOffset + (col.pctStart + col.pct) * totalArc
     const style = resolvePieceStyle(col.pieceData[0], col.name)
 
     nodes.push({

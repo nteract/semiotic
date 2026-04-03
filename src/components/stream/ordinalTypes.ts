@@ -202,6 +202,8 @@ export interface OrdinalPipelineConfig {
   innerRadius?: number
   normalize?: boolean
   startAngle?: number
+  /** Total arc sweep in degrees (default 360 = full circle). Used by GaugeChart for partial arcs. */
+  sweepAngle?: number
 
   // Summary config
   bins?: number
@@ -271,6 +273,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   innerRadius?: number
   normalize?: boolean
   startAngle?: number
+  sweepAngle?: number
   dynamicColumnWidth?: string | ((data: T[]) => number)
 
   // Summary config
