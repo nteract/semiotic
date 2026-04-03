@@ -326,4 +326,8 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 
 ## Performance
 
+- **Range/dumbbell plot**: Use `chartType="candlestick"` on StreamXYFrame with only `highAccessor` + `lowAccessor` (omit `openAccessor`/`closeAccessor`). Auto-detects range mode: no body rect, endpoint dots, single `rangeColor` via `candlestickStyle={{ rangeColor: "#6366f1" }}`. When `bodyWidth === 0`, body rect is skipped entirely (no invisible DOM elements).
+
+## Performance
+
 Prefer string accessors (`xAccessor="value"`) over function accessors — always referentially stable. If you must use functions, memoize with `useCallback` or define outside the component. The pipeline uses `.toString()` comparison for inline arrows but this fails for closures capturing changing variables.

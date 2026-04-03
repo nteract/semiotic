@@ -115,9 +115,16 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     const styles = new Map<string, { fill: string; opacity?: number }>()
     const scaleAnnotations: Record<string, any>[] = []
 
-    const zones = thresholds && thresholds.length > 0
-      ? thresholds
+    // Normalize thresholds: sort by value, clamp to [min, max], ensure last zone reaches max
+    let zones = thresholds && thresholds.length > 0
+      ? [...thresholds].sort((a, b) => a.value - b.value)
       : [{ value: max, color: fillColor || "var(--semiotic-primary, #007bff)" }]
+    // Clamp zone values to [min, max]
+    zones = zones.map(z => ({ ...z, value: Math.max(min, Math.min(max, z.value)) }))
+    // Ensure the last zone reaches max
+    if (zones[zones.length - 1].value < max) {
+      zones.push({ value: max, color: zones[zones.length - 1].color })
+    }
 
     // Data values sum to 1.0. pieScene uses sweepAngle to limit the arc.
     // No gap segment needed — the gap is the empty space after the arc ends.

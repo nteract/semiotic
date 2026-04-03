@@ -173,14 +173,12 @@ function computeGaugeMargins(width: number, height: number, sweepDeg: number) {
 describe("Gauge sizing", () => {
   it("240° gauge in 300x250 should have radius close to optimal", () => {
     const result = computeGaugeMargins(300, 250, 240)
-    console.log("240° in 300x250:", { maxR: Math.round(result.maxRadius), frame: Math.round(result.frameRadius), layout: { w: Math.round(result.layoutW), h: Math.round(result.layoutH) }, margins: { l: Math.round(result.marginLeft), t: Math.round(result.marginTop), r: Math.round(result.marginRight), b: Math.round(result.marginBottom) } })
     // Frame radius should be very close to the computed optimal R (within 4px for the pieScene padding)
     expect(result.frameRadius).toBeGreaterThan(result.maxRadius * 0.9)
   })
 
   it("180° sunrise in 300x200 should have radius close to optimal", () => {
     const result = computeGaugeMargins(300, 200, 180)
-    console.log("180° in 300x200:", { maxR: Math.round(result.maxRadius), frame: Math.round(result.frameRadius), layout: { w: Math.round(result.layoutW), h: Math.round(result.layoutH) }, margins: { l: Math.round(result.marginLeft), t: Math.round(result.marginTop), r: Math.round(result.marginRight), b: Math.round(result.marginBottom) } })
     expect(result.frameRadius).toBeGreaterThan(result.maxRadius * 0.9)
   })
 

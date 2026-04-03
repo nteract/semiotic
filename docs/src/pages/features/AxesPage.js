@@ -408,10 +408,10 @@ export default function AxesPage() {
       <h3 id="landmark-ticks">Landmark Ticks for Time Series</h3>
       <p>
         When displaying time series data, <code>landmarkTicks</code> applies
-        semibold styling to tick labels at time boundaries (e.g., when the month,
-        year, or day changes). This provides hierarchical context that
-        dramatically improves readability of long time axes. Notice how "Feb"
-        and "Mar" are rendered bolder than regular day ticks:
+        semibold styling to tick labels at higher-level time boundaries (e.g.,
+        when the month or year changes). This provides hierarchical context
+        that dramatically improves readability of long time axes. Notice how
+        "Feb" and "Mar" are rendered bolder than regular day ticks:
       </p>
 
       <StreamXYFrame

@@ -74,7 +74,7 @@ export interface XYSceneConfig {
   waterfallStyle?: { positiveColor?: string; negativeColor?: string; gap?: number; stroke?: string; strokeWidth?: number; connectorStroke?: string; connectorWidth?: number }
 
   // Candlestick
-  candlestickStyle?: { upColor?: string; downColor?: string; wickColor?: string; wickWidth?: number; bodyWidth?: number }
+  candlestickStyle?: { upColor?: string; downColor?: string; wickColor?: string; wickWidth?: number; bodyWidth?: number; rangeColor?: string }
 
   // Bounds
   boundsStyle?: Style | ((d: any, group: string) => Style)

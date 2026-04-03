@@ -575,6 +575,8 @@ export class PipelineStore {
           return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
         }
         if (type === "time") {
+          // Cast: scaleTime returns Date ticks at runtime, but typed as ScaleLinear for pipeline compat.
+          // Consumers should use valueOf() when comparing domain values (see StreamScales JSDoc).
           return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
         }
         return scaleLinear().domain(domain).range(range)

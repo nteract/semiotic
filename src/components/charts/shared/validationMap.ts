@@ -443,7 +443,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
 
   GaugeChart: {
     required: ["value"],
-    dataShape: "none",
+    dataShape: "object",
     dataAccessors: [],
     props: {
       ...commonProps,

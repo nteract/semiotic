@@ -254,6 +254,72 @@ export default function CandlestickChartPage() {
         </li>
       </ul>
 
+      <h2 id="range-plot">Range Plot / Temporal Dumbbell</h2>
+      <p>
+        Provide only <code>highAccessor</code> and <code>lowAccessor</code>{" "}
+        (omit <code>openAccessor</code> and <code>closeAccessor</code>) to get
+        a range/dumbbell plot. The candlestick renderer automatically detects
+        range mode: no body rect, endpoint dots, and a single{" "}
+        <code>rangeColor</code> instead of up/down coloring.
+      </p>
+
+      <div style={{ marginBottom: 24 }}>
+        <StreamXYFrame
+          chartType="candlestick"
+          data={[
+            { day: 1, high: 85, low: 42 },
+            { day: 2, high: 78, low: 55 },
+            { day: 3, high: 92, low: 38 },
+            { day: 4, high: 68, low: 45 },
+            { day: 5, high: 95, low: 60 },
+            { day: 6, high: 72, low: 30 },
+            { day: 7, high: 88, low: 50 },
+            { day: 8, high: 65, low: 40 },
+            { day: 9, high: 90, low: 55 },
+            { day: 10, high: 82, low: 35 },
+          ]}
+          xAccessor="day"
+          highAccessor="high"
+          lowAccessor="low"
+          candlestickStyle={{ rangeColor: "#6366f1", wickWidth: 2 }}
+          showAxes={true}
+          enableHover={true}
+          tooltipContent={(d) => {
+            const datum = d.data || d
+            return React.createElement("div", { style: { padding: "6px 10px" } },
+              React.createElement("div", { style: { fontWeight: 600 } }, "Day " + datum.day),
+              React.createElement("div", null, "Range: " + datum.low + " – " + datum.high)
+            )
+          }}
+          size={[500, 300]}
+          margin={{ top: 20, bottom: 40, left: 50, right: 20 }}
+        />
+      </div>
+
+      <CodeBlock
+        code={`// Range plot — omit openAccessor/closeAccessor for dumbbell mode
+<StreamXYFrame
+  chartType="candlestick"
+  data={rangeData}
+  xAccessor="day"
+  highAccessor="high"
+  lowAccessor="low"
+  candlestickStyle={{ rangeColor: "#6366f1", wickWidth: 2 }}
+  showAxes enableHover
+  tooltipContent={d => (
+    <div>Day {d.data.day}: {d.data.low}–{d.data.high}</div>
+  )}
+/>`}
+        language="jsx"
+      />
+
+      <p>
+        This is <strong>not</strong> a separate HOC — it demonstrates the
+        flexibility of <code>StreamXYFrame</code>'s candlestick chart type.
+        The same renderer handles both OHLC candlesticks and range/dumbbell
+        plots based on which accessors are provided.
+      </p>
+
       <h2 id="related">Related</h2>
       <ul>
         <li>
