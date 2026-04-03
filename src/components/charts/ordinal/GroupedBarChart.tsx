@@ -29,6 +29,7 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   barPadding?: number
+  baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
   showCategoryTicks?: boolean
@@ -65,7 +66,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", groupBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, barPadding = 60,
+    colorBy, colorScheme, barPadding = 60, baselinePadding = false,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
@@ -171,6 +172,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     barPadding,
+    baselinePadding,
     enableHover,
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,

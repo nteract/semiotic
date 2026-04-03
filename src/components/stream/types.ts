@@ -421,7 +421,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   timeAccessor?: string | ((d: T) => number)
 
   // ── Scale types ─────────────────────────────────
-  xScaleType?: "linear" | "log"
+  xScaleType?: "linear" | "log" | "time"
   yScaleType?: "linear" | "log"
 
   // ── Extents ──────────────────────────────────────

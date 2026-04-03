@@ -13,6 +13,7 @@ const {
   BarChart,
   StackedBarChart,
   GroupedBarChart,
+  SwimlaneChart,
   PieChart,
   DonutChart,
   SwarmPlot,
@@ -194,6 +195,49 @@ const examples = [
       width: 400,
       height: 300,
       colorScheme: colors
+    })
+  }),
+  // Swimlane with category ticks
+  TestCase({
+    title: "Swimlane (with labels)",
+    testId: "ord-swimlane",
+    children: React.createElement(SwimlaneChart, {
+      data: [
+        { lane: "A", task: "Design", value: 3 },
+        { lane: "A", task: "Dev", value: 5 },
+        { lane: "B", task: "Design", value: 2 },
+        { lane: "B", task: "QA", value: 4 },
+        { lane: "C", task: "Dev", value: 6 },
+      ],
+      categoryAccessor: "lane",
+      subcategoryAccessor: "task",
+      valueAccessor: "value",
+      colorBy: "task",
+      orientation: "horizontal",
+      width: 400,
+      height: 200,
+    })
+  }),
+  // Swimlane WITHOUT category ticks
+  TestCase({
+    title: "Swimlane (no labels)",
+    testId: "ord-swimlane-no-ticks",
+    children: React.createElement(SwimlaneChart, {
+      data: [
+        { lane: "A", task: "Design", value: 3 },
+        { lane: "A", task: "Dev", value: 5 },
+        { lane: "B", task: "Design", value: 2 },
+        { lane: "B", task: "QA", value: 4 },
+        { lane: "C", task: "Dev", value: 6 },
+      ],
+      categoryAccessor: "lane",
+      subcategoryAccessor: "task",
+      valueAccessor: "value",
+      colorBy: "task",
+      orientation: "horizontal",
+      showCategoryTicks: false,
+      width: 400,
+      height: 150,
     })
   })
 ]

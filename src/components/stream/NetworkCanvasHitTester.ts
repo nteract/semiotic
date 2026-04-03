@@ -6,7 +6,7 @@ import type {
   NetworkArcNode,
   NetworkBezierEdge
 } from "./networkTypes"
-import { hitTestRect as sharedHitTestRect, normalizeAngle } from "./hitTestUtils"
+import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 
 export interface NetworkHitResult {
   type: "node" | "edge"
@@ -35,7 +35,7 @@ export function findNearestNetworkNode(
   let bestRectArea = Infinity
 
   for (const node of sceneNodes) {
-    const result = hitTestNode(node, px, py)
+    const result = hitTestNode(node, px, py, maxDistance)
     if (!result) continue
 
     if (node.type === "rect") {
@@ -70,11 +70,12 @@ export function findNearestNetworkNode(
 function hitTestNode(
   node: NetworkSceneNode,
   px: number,
-  py: number
+  py: number,
+  maxDistance: number = 30
 ): NetworkHitResult | null {
   switch (node.type) {
     case "circle":
-      return hitTestCircle(node, px, py)
+      return hitTestCircle(node, px, py, maxDistance)
     case "rect":
       return hitTestRect(node, px, py)
     case "arc":
@@ -87,12 +88,13 @@ function hitTestNode(
 function hitTestCircle(
   node: NetworkCircleNode,
   px: number,
-  py: number
+  py: number,
+  maxDistance: number = 30
 ): NetworkHitResult | null {
   const dx = px - node.cx
   const dy = py - node.cy
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = Math.max(node.r + 5, 12) // minimum 12px hit target (Fitts's law)
+  const tolerance = getHitRadius(node.r, maxDistance)
 
   if (dist <= tolerance) {
     return {

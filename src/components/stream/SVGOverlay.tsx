@@ -18,8 +18,8 @@ export interface AxisConfig {
   tickFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
   baseline?: boolean | "under"
   jaggedBase?: boolean
-  /** Baseline stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. */
-  baselineStyle?: "dashed" | "dotted" | string
+  /** Grid line stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. Applied to grid lines extending from ticks across the chart area. */
+  gridStyle?: "dashed" | "dotted" | string
   /** Always include the domain max as a tick, even if d3 omits it. */
   includeMax?: boolean
   /** Auto-rotate labels 45° when horizontal spacing is too tight. */
@@ -29,7 +29,7 @@ export interface AxisConfig {
   landmarkTicks?: boolean | ((value: any, index: number) => boolean)
 }
 
-function resolveBaselineDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
+function resolveGridDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
   if (!style) return undefined
   if (style === "dashed") return "6,4"
   if (style === "dotted") return "2,4"
@@ -243,7 +243,10 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines */}
-        {hasGrid && (
+        {hasGrid && (() => {
+          const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
+          const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
+          return (
           <g className="stream-grid">
             {xTicks.map((tick, i) => (
               <line
@@ -254,6 +257,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
                 y2={height}
                 stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
+                strokeDasharray={bottomGridStyle}
               />
             ))}
             {yTicks.map((tick, i) => (
@@ -265,20 +269,22 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
                 y2={tick.pixel}
                 stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
+                strokeDasharray={leftGridStyle}
               />
             ))}
           </g>
-        )}
+          )
+        })()}
 
         {/* Axis baselines */}
         {showBottomBaseline && !bottomJagged && (
-          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(bottomAxis?.baselineStyle)} />
+          <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1}  />
         )}
         {bottomJagged && (
           <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
         )}
         {showLeftBaseline && !leftJagged && (
-          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(leftAxis?.baselineStyle)} />
+          <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
         )}
         {leftJagged && (
           <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -317,14 +323,21 @@ function filterTicksByPixelDistance<T extends { value: number; pixel: number; la
 }
 
 /** Detect whether a tick marks a time boundary (new month, year, day) compared to the previous tick */
+function toDate(value: any): Date | null {
+  if (value instanceof Date) return value
+  if (typeof value === "number" && value > 1e9) return new Date(value)
+  return null
+}
+
 function isTimeLandmark(value: any, prevValue: any): boolean {
-  if (!(value instanceof Date)) return false
-  if (!prevValue || !(prevValue instanceof Date)) return true
-  // New year, new month, or new day
+  const d = toDate(value)
+  if (!d) return false
+  const prev = toDate(prevValue)
+  if (!prev) return true
+  // New year or new month boundary
   return (
-    value.getFullYear() !== prevValue.getFullYear() ||
-    value.getMonth() !== prevValue.getMonth() ||
-    value.getDate() !== prevValue.getDate()
+    d.getFullYear() !== prev.getFullYear() ||
+    d.getMonth() !== prev.getMonth()
   )
 }
 
@@ -387,8 +400,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
       label: fmt(v, i, rawValues)
     }))
     const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
-    const minPx = Math.max(55, maxLabelWidth + 8)
+    // When autoRotate is enabled, labels will be angled so they need much less horizontal space
+    const minPx = bottomAxis?.autoRotate
+      ? Math.max(20, Math.min(maxLabelWidth + 8, 55))
+      : Math.max(55, maxLabelWidth + 8)
     let filtered = filterTicksByPixelDistance(candidates, minPx)
+    // Deduplicate adjacent identical labels (e.g. low-resolution date formats)
+    if (filtered.length > 1) {
+      filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
+    }
     // includeMax: ensure the domain max is represented as a tick
     if (bottomAxis?.includeMax && filtered.length > 0) {
       const domain = scales.x.domain() as [number, number]
@@ -417,6 +437,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
       label: fmt(v)
     }))
     let filtered = filterTicksByPixelDistance(candidates, 22)
+    // Deduplicate adjacent identical labels
+    if (filtered.length > 1) {
+      filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
+    }
     if (leftAxis?.includeMax && filtered.length > 0) {
       const domain = scales.y.domain() as [number, number]
       const domainMax = domain[1]
@@ -534,7 +558,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
       <desc>{typeof title === "string" ? `${title} — XY data visualization` : "XY data visualization"}</desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in SVGUnderlay) */}
-        {showGrid && scales && !underlayRendered && (
+        {showGrid && scales && !underlayRendered && (() => {
+          const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
+          const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
+          return (
           <g className="stream-grid">
             {xTicks.map((tick, i) => (
               <line
@@ -545,6 +572,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y2={height}
                 stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
+                strokeDasharray={bottomGridStyle}
               />
             ))}
             {yTicks.map((tick, i) => (
@@ -556,10 +584,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y2={tick.pixel}
                 stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
+                strokeDasharray={leftGridStyle}
               />
             ))}
           </g>
-        )}
+          )
+        })()}
 
         {/* Axes */}
         {showAxes && scales && (() => {
@@ -577,18 +607,18 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const tickColor = "var(--semiotic-text-secondary, var(--semiotic-text, #666))"
           const labelColor = "var(--semiotic-text, #333)"
 
-          // Detect if bottom-axis labels need 45° rotation
-          const shouldRotateBottom = bottomAxis?.autoRotate && xTicks.length > 1 && (() => {
+          // Rotate bottom-axis labels 45° when autoRotate is set AND labels would overlap horizontally
+          const shouldRotateBottom = !!bottomAxis?.autoRotate && xTicks.length > 1 && (() => {
             const avgSpacing = width / Math.max(xTicks.length - 1, 1)
-            const avgLabelWidth = xTicks.reduce((sum, t) => sum + (typeof t.label === "string" ? t.label.length * 6.5 : 60), 0) / xTicks.length
-            return avgSpacing < avgLabelWidth + 8
+            const maxLabelW = xTicks.reduce((max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60), 0)
+            return avgSpacing < maxLabelW + 8
           })()
 
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
             {/* X axis baseline (skipped when underlayRendered) */}
             {!underlayRendered && showBottomBaseline && !bottomJagged && (
-              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(bottomAxis?.baselineStyle)} />
+              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1}  />
             )}
             {!underlayRendered && bottomJagged && (
               <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -637,7 +667,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
             {/* Y axis baseline (skipped when underlayRendered) */}
             {!underlayRendered && showLeftBaseline && !leftJagged && (
-              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(leftAxis?.baselineStyle)} />
+              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
             )}
             {!underlayRendered && leftJagged && (
               <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
@@ -698,7 +728,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
               return (
                 <>
                   {showRightBaseline && (
-                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} strokeDasharray={resolveBaselineDash(rightAxis.baselineStyle)} />
+                    <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
                   )}
                   {yTicksRight.map((tick, i) => {
                     const isLandmark = rightLandmark

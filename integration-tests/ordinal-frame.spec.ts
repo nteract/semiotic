@@ -129,3 +129,43 @@ test.describe("Ordinal Charts - Interactivity", () => {
     }
   })
 })
+
+test.describe("Ordinal Charts - Swimlane", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/ordinal-examples/")
+  })
+
+  test("swimlane renders canvas data marks", async ({ page }) => {
+    await waitForVisualization(page, "ord-swimlane")
+    const testCase = page.locator('[data-testid="ord-swimlane"]')
+    const canvas = testCase.locator("canvas").first()
+    // Canvas should have non-zero dimensions
+    const box = await canvas.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.width).toBeGreaterThan(100)
+
+    // Should have category tick labels A, B, C
+    const texts = await testCase.locator("svg text").allTextContents()
+    console.log("Swimlane WITH labels:", texts)
+    expect(texts).toContain("A")
+    expect(texts).toContain("B")
+    expect(texts).toContain("C")
+  })
+
+  test("swimlane with showCategoryTicks=false renders data but no lane labels", async ({ page }) => {
+    await waitForVisualization(page, "ord-swimlane-no-ticks")
+    const testCase = page.locator('[data-testid="ord-swimlane-no-ticks"]')
+    const canvas = testCase.locator("canvas").first()
+    // Canvas should still render data marks
+    const box = await canvas.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.width).toBeGreaterThan(100)
+
+    // Should NOT have category tick labels A, B, C
+    const texts = await testCase.locator("svg text").allTextContents()
+    console.log("Swimlane NO labels:", texts)
+    expect(texts).not.toContain("A")
+    expect(texts).not.toContain("B")
+    expect(texts).not.toContain("C")
+  })
+})

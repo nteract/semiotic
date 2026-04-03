@@ -16,7 +16,7 @@
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
-import { scaleLinear, scaleLog, type ScaleLinear } from "d3-scale"
+import { scaleLinear, scaleLog, scaleTime, type ScaleLinear } from "d3-scale"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
@@ -92,7 +92,7 @@ export interface PipelineConfig {
   lineDataAccessor?: string
 
   // Scale types
-  xScaleType?: "linear" | "log"
+  xScaleType?: "linear" | "log" | "time"
   yScaleType?: "linear" | "log"
 
   // Fixed extents (partial: [min] or [min, undefined] to set only min)
@@ -535,7 +535,15 @@ export class PipelineStore {
     }
 
     // Handle degenerate extents
-    if (xDomain[0] === Infinity || xDomain[1] === -Infinity) xDomain = [0, 1]
+    if (xDomain[0] === Infinity || xDomain[1] === -Infinity) {
+      // Empty data fallback — use sensible default for the scale type
+      if (config.xScaleType === "time") {
+        const now = Date.now()
+        xDomain = [now - 86400000, now] // last 24 hours
+      } else {
+        xDomain = [0, 1]
+      }
+    }
     if (yDomain[0] === Infinity || yDomain[1] === -Infinity) yDomain = [0, 1]
 
     // Build scales
@@ -561,11 +569,13 @@ export class PipelineStore {
         }
       }
     } else {
-      const makeScale = (type: "linear" | "log" | undefined, domain: [number, number], range: [number, number]) => {
+      const makeScale = (type: "linear" | "log" | "time" | undefined, domain: [number, number], range: [number, number]) => {
         if (type === "log") {
-          // Log scales cannot include 0; clamp minimum to a small positive value
           const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
           return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+        }
+        if (type === "time") {
+          return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
         }
         return scaleLinear().domain(domain).range(range)
       }
@@ -683,10 +693,13 @@ export class PipelineStore {
     const yDomain = this.scales!.y.domain() as [number, number]
     const oldXRange = this.scales!.x.range() as [number, number]
     const oldYRange = this.scales!.y.range() as [number, number]
-    const remapScale = (type: "linear" | "log" | undefined, domain: [number, number], range: [number, number]) => {
+    const remapScale = (type: "linear" | "log" | "time" | undefined, domain: [number, number], range: [number, number]) => {
       if (type === "log") {
         const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
         return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+      }
+      if (type === "time") {
+        return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
       }
       return scaleLinear().domain(domain).range(range)
     }

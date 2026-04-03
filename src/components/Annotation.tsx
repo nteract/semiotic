@@ -107,12 +107,14 @@ function renderNote(
   let yOffset = 0
   const textElements: React.ReactElement[] = []
 
+  const textFill = color || "var(--semiotic-text, #333)"
+
   if (titleLines.length > 0) {
     textElements.push(
       <text
         key="annotation-note-title"
         className="annotation-note-title"
-        fill={color || undefined}
+        fill={textFill}
         textAnchor={textAnchor}
         fontWeight="bold"
       >
@@ -131,7 +133,7 @@ function renderNote(
       <text
         key="annotation-note-label"
         className="annotation-note-label"
-        fill={color || undefined}
+        fill={textFill}
         textAnchor={textAnchor}
         y={yOffset}
       >
@@ -164,7 +166,7 @@ function renderNote(
           x2={x2}
           y1={0}
           y2={0}
-          stroke={color || "currentColor"}
+          stroke={color || "var(--semiotic-text-secondary, currentColor)"}
         />
       )
     } else {
@@ -187,7 +189,7 @@ function renderNote(
           x2={0}
           y1={y1}
           y2={y2}
-          stroke={color || "currentColor"}
+          stroke={color || "var(--semiotic-text-secondary, currentColor)"}
         />
       )
     }
@@ -252,7 +254,7 @@ function renderSubject(
             key="subject-circle"
             r={totalRadius}
             fill="none"
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
           />
         )
       }
@@ -268,7 +270,7 @@ function renderSubject(
             width={width}
             height={height}
             fill="none"
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
           />
         )
       }
@@ -298,7 +300,7 @@ function renderSubject(
             y1={y1}
             x2={sx}
             y2={y2}
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
             strokeDasharray="5,5"
           />
         )
@@ -313,7 +315,7 @@ function renderSubject(
             y1={sy}
             x2={x2}
             y2={sy}
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
             strokeDasharray="5,5"
           />
         )
@@ -328,7 +330,7 @@ function renderSubject(
             y1={0}
             x2={x2}
             y2={0}
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
             strokeDasharray="5,5"
           />
         )
@@ -343,7 +345,7 @@ function renderSubject(
             y1={y1}
             x2={0}
             y2={y2}
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
             strokeDasharray="5,5"
           />
         )
@@ -362,7 +364,7 @@ function renderSubject(
             key="bracket-path"
             d={bracketPath(bracketType, span, depth, isVertical)}
             fill="none"
-            stroke={color || "currentColor"}
+            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
           />
         )
       }
@@ -441,7 +443,7 @@ function renderConnector(
         y1={startY}
         x2={dx}
         y2={dy}
-        stroke={color || "currentColor"}
+        stroke={color || "var(--semiotic-text-secondary, currentColor)"}
       />
     )
 
@@ -458,7 +460,7 @@ function renderConnector(
         <path
           key="connector-arrow"
           d={`M${startX},${startY}L${a1x},${a1y}L${a2x},${a2y}Z`}
-          fill={color || "currentColor"}
+          fill={color || "var(--semiotic-text-secondary, currentColor)"}
           stroke="none"
         />
       )

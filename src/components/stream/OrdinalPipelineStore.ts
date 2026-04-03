@@ -490,15 +490,19 @@ export class OrdinalPipelineStore {
     }
 
     // Apply padding (bar-funnel needs exact [0, max] — no padding)
+    const isBarType = chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane"
     if (chartType !== "bar-funnel") {
       const range = max - min
       const padAmount = range > 0 ? range * pad : 1
-      if (this.config.rExtent?.[0] == null) min -= padAmount
-      if (this.config.rExtent?.[1] == null) max += padAmount
+      // When baselinePadding is false (default) and bars start at 0, don't pad the baseline side
+      const skipMinPad = isBarType && !this.config.baselinePadding && min === 0
+      const skipMaxPad = isBarType && !this.config.baselinePadding && max === 0
+      if (this.config.rExtent?.[0] == null && !skipMinPad) min -= padAmount
+      if (this.config.rExtent?.[1] == null && !skipMaxPad) max += padAmount
     }
 
     // Bars should include zero (unless user explicitly set rExtent)
-    if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane") {
+    if (isBarType) {
       if (!(this.config.rExtent?.[0] != null || this.config.rExtent?.[1] != null)) {
         if (min > 0) min = 0
         if (max < 0) max = 0

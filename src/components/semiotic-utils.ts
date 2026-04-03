@@ -40,6 +40,9 @@ export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 export { validateProps } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 
+// ── Hit testing ─────────────────────────────────────────────────────────
+export { getHitRadius } from "./stream/hitTestUtils"
+
 // ── Serialization ────────────────────────────────────────────────────────
 export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
@@ -56,7 +59,7 @@ export { RingBuffer } from "./realtime/RingBuffer"
 export { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // ── Tooltip utilities ────────────────────────────────────────────────────
-export { normalizeTooltip } from "./Tooltip/Tooltip"
+export { normalizeTooltip, MultiPointTooltip } from "./Tooltip/Tooltip"
 
 // ── Accessibility hooks ─────────────────────────────────────────────────
 export { useReducedMotion, useHighContrast } from "./stream/useMediaPreferences"

@@ -1,6 +1,7 @@
 import type { GeoAreaSceneNode, GeoSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
+import { getHitRadius } from "./hitTestUtils"
 
 export interface GeoHitResult {
   node: GeoSceneNode
@@ -38,7 +39,7 @@ export function findNearestGeoNode(
       const dx = candidate.x - mouseX
       const dy = candidate.y - mouseY
       const dist = Math.sqrt(dx * dx + dy * dy)
-      const hitRadius = Math.max((candidate.r || 4) + 5, 12)
+      const hitRadius = getHitRadius(candidate.r, maxDistance)
       if (dist <= hitRadius) {
         return { node: candidate, distance: dist }
       }
@@ -53,7 +54,7 @@ export function findNearestGeoNode(
     const dx = node.x - mouseX
     const dy = node.y - mouseY
     const dist = Math.sqrt(dx * dx + dy * dy)
-    const hitRadius = Math.max((node.r || 4) + 5, 12) // minimum 12px hit target (Fitts's law)
+    const hitRadius = getHitRadius(node.r, maxDistance)
     if (dist <= hitRadius && dist < bestPointDist) {
       bestPoint = node
       bestPointDist = dist

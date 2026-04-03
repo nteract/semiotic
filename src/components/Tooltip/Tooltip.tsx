@@ -112,9 +112,12 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     return ""
   }
 
-  // Only add commas for numbers > 9999 to avoid formatting years (2005 → "2,005")
+  // Format numbers: round to reasonable precision, add commas for large values
   if (typeof value === "number") {
-    return Math.abs(value) > 9999 ? value.toLocaleString() : String(value)
+    if (!Number.isFinite(value)) return String(value)
+    // Round to avoid floating point noise (e.g. 12.300000000001 → 12.3)
+    const rounded = Number.isInteger(value) ? value : parseFloat(value.toPrecision(6))
+    return Math.abs(rounded) > 9999 ? rounded.toLocaleString() : String(rounded)
   }
 
   // Format dates

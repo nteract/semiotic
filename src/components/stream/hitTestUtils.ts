@@ -25,6 +25,15 @@ export function hitTestRect(
 }
 
 /**
+ * Compute the effective hit radius for a point/circle node.
+ * Uses the larger of the visual radius + tolerance, Fitts's law minimum (12px),
+ * and the caller's maxDistance (default 30px).
+ */
+export function getHitRadius(nodeRadius: number | undefined, maxDistance: number = 30): number {
+  return Math.max((nodeRadius ?? 4) + 5, 12, maxDistance)
+}
+
+/**
  * Normalize an angle to the [0, 2π) range.
  */
 export function normalizeAngle(angle: number): number {

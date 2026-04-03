@@ -1,7 +1,7 @@
 import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode, StreamScales } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
-import { hitTestRect as sharedHitTestRect } from "./hitTestUtils"
+import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
 
 export interface HitResult {
   node: SceneNode
@@ -36,7 +36,7 @@ export function findNearestNode(
     // Callers should set maxDistance to account for point radius + hit tolerance.
     const found = pointQuadtree.find(px, py, maxDistance)
     if (found) {
-      const result = hitTestPoint(found, px, py)
+      const result = hitTestPoint(found, px, py, maxDistance)
       if (result && result.distance < maxDistance) {
         best = result
         quadtreeHitConfirmed = true
@@ -51,10 +51,10 @@ export function findNearestNode(
       case "point":
         // Skip linear point scan only when quadtree confirmed a hit
         if (pointQuadtree && quadtreeHitConfirmed) break
-        result = hitTestPoint(node, px, py)
+        result = hitTestPoint(node, px, py, maxDistance)
         break
       case "line":
-        result = hitTestLine(node, px, py)
+        result = hitTestLine(node, px, py, maxDistance)
         break
       case "rect":
         result = hitTestRect(node, px, py)
@@ -150,17 +150,16 @@ export function findAllNodesAtX(
   return results
 }
 
-function hitTestPoint(node: PointSceneNode, px: number, py: number): HitResult | null {
+function hitTestPoint(node: PointSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
   const dx = px - node.x
   const dy = py - node.y
   const dist = Math.sqrt(dx * dx + dy * dy)
-  // Minimum 12px hit radius for Fitts's law compliance, otherwise visual radius + tolerance
-  const hitR = Math.max(node.r + 5, 12)
+  const hitR = getHitRadius(node.r, maxDistance)
   if (dist > hitR) return null
   return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
 }
 
-function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | null {
+function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
   if (node.path.length === 0) return null
 
   // Binary search for nearest x in the path
@@ -190,9 +189,9 @@ function hitTestLine(node: LineSceneNode, px: number, py: number): HitResult | n
     dist = Math.sqrt(ddx * ddx + ddy * ddy)
   }
 
-  // Scale hit tolerance with stroke width, minimum 5px
+  // Use the larger of stroke-based tolerance and caller's maxDistance
   const strokeWidth = (node.style as any)?.strokeWidth ?? (node.style as any)?.lineWidth ?? 1
-  const tolerance = Math.max(5, strokeWidth / 2 + 2)
+  const tolerance = Math.max(5, strokeWidth / 2 + 2, maxDistance)
   if (dist > tolerance) return null
 
   // For line data, the datum is the array; return the index as well

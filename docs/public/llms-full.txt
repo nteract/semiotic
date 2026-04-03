@@ -309,15 +309,18 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
   ```jsx
   <LineChart data={data} lineBy="series" colorBy="series" tooltip="multi" />
   ```
-- **Axis config** (`frameProps.axes`): Per-axis options: `includeMax: true` forces domain-max tick. `autoRotate: true` rotates bottom-axis labels 45° when crowded. `baselineStyle: "dashed" | "dotted" | string` sets strokeDasharray on axis baselines:
+- **Axis config** (`frameProps.axes`): Per-axis options: `includeMax: true` forces domain-max tick. `autoRotate: true` rotates bottom-axis labels 45° when crowded. `gridStyle: "dashed" | "dotted" | string` sets strokeDasharray on grid lines (requires `showGrid`):
   ```jsx
-  <LineChart frameProps={{ axes: [{ orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" }] }} />
+  <LineChart showGrid frameProps={{ axes: [{ orient: "bottom", includeMax: true, autoRotate: true, gridStyle: "dashed" }] }} />
   ```
-- **Bar baseline alignment**: Ordinal axis baseline aligns with `rScale(0)`, not chart edge. Bars are flush with the 0 line even when the domain has padding.
-- **hoverRadius**: Max pixel distance for hover/click hit testing (default 30). Available on all XY HOCs and `StreamXYFrameProps`:
+- **Bar baseline alignment**: Ordinal axis baseline aligns with `rScale(0)`, not chart edge. `baselinePadding={true}` restores the old padded look; default `false` is flush.
+- **hoverRadius**: Max pixel distance for hover/click hit testing (default 30px across all frames — XY, network, geo, ordinal). Available on all XY HOCs and `StreamXYFrameProps`:
   ```jsx
   <Scatterplot hoverRadius={60} tooltip />  {/* Larger hit area for sparse data */}
   ```
+- **Landmark ticks**: `landmarkTicks: true` on bottom/left axis config bolds tick labels at month/year boundaries. Works with `xScaleType: "time"` for Date-aware ticks. Custom function: `landmarkTicks: (value, index) => boolean`.
+- **xScaleType: "time"**: Creates `scaleTime` for the X axis. Ticks land on real calendar boundaries (weeks, months) instead of round numbers. Required for landmark ticks with timestamp data.
+- **Tick deduplication**: Adjacent identical tick labels are automatically removed. Prevents duplicate labels when tick format has insufficient resolution (e.g. month-only format on weekly ticks).
 
 ## Performance
 
