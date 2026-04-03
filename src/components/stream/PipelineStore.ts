@@ -419,7 +419,7 @@ export class PipelineStore {
       this.lastLayout &&
       this.scene.length > 0 &&
       this.scales &&
-      !this.config.scalePadding &&  // scalePadding requires full rebuild (proportional remap distorts padding)
+      (this.config.scalePadding ?? 0) <= 0 &&  // positive scalePadding requires full rebuild (proportional remap distorts constant pixel inset)
       (this.lastLayout.width !== layout.width || this.lastLayout.height !== layout.height)
     ) {
       this.remapScene(layout)
@@ -717,11 +717,15 @@ export class PipelineStore {
       }
       return scaleLinear().domain(domain).range(range)
     }
-    // Rebuild ranges using new layout dimensions + scalePadding (constant pixel inset, not proportional)
+    // Rebuild ranges preserving original direction (e.g. arrowOfTime="left" has reversed x range)
     const rsp = Math.max(0, Math.min(this.config.scalePadding || 0, Math.min(layout.width, layout.height) / 2 - 1))
+    const xFlipped = oldXRange[0] > oldXRange[1]
+    const yFlipped = oldYRange[0] < oldYRange[1]  // standard Y is [height, 0] (flipped = [0, height])
     this.scales = {
-      x: remapScale(this.config.xScaleType, xDomain, [rsp, layout.width - rsp]),
-      y: remapScale(this.config.yScaleType, yDomain, [layout.height - rsp, rsp])
+      x: remapScale(this.config.xScaleType, xDomain,
+        xFlipped ? [layout.width - rsp, rsp] : [rsp, layout.width - rsp]),
+      y: remapScale(this.config.yScaleType, yDomain,
+        yFlipped ? [rsp, layout.height - rsp] : [layout.height - rsp, rsp])
     }
 
     this.lastLayout = { width: layout.width, height: layout.height }
@@ -1152,6 +1156,22 @@ export class PipelineStore {
     }
     if ("pointIdAccessor" in config && !accessorsEquivalent(config.pointIdAccessor, prev.pointIdAccessor)) {
       this.getPointId = this.config.pointIdAccessor != null ? resolveStringAccessor(this.config.pointIdAccessor) : undefined
+      accessorChanged = true
+    }
+    // Recompute candlestick OHLC accessors + range mode when they change
+    if (this.config.chartType === "candlestick" && (
+      ("openAccessor" in config && !accessorsEquivalent(config.openAccessor, prev.openAccessor)) ||
+      ("closeAccessor" in config && !accessorsEquivalent(config.closeAccessor, prev.closeAccessor)) ||
+      ("highAccessor" in config && !accessorsEquivalent(config.highAccessor, prev.highAccessor)) ||
+      ("lowAccessor" in config && !accessorsEquivalent(config.lowAccessor, prev.lowAccessor))
+    )) {
+      const hasOpen = this.config.openAccessor != null
+      const hasClose = this.config.closeAccessor != null
+      this.getOpen = hasOpen ? resolveAccessor(this.config.openAccessor, "open") : undefined
+      this.getHigh = resolveAccessor(this.config.highAccessor, "high")
+      this.getLow = resolveAccessor(this.config.lowAccessor, "low")
+      this.getClose = hasClose ? resolveAccessor(this.config.closeAccessor, "close") : undefined
+      this.config.candlestickRangeMode = !hasOpen && !hasClose
       accessorChanged = true
     }
 

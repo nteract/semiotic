@@ -16,6 +16,7 @@ const {
   SwimlaneChart,
   PieChart,
   DonutChart,
+  GaugeChart,
   SwarmPlot,
   BoxPlot,
   ViolinPlot,
@@ -238,6 +239,41 @@ const examples = [
       showCategoryTicks: false,
       width: 400,
       height: 150,
+    })
+  }),
+  // Gauge 180° half-circle
+  TestCase({
+    title: "Gauge 180° (half circle)",
+    testId: "ord-gauge-180",
+    children: React.createElement(GaugeChart, {
+      value: 65,
+      min: 0,
+      max: 100,
+      sweep: 180,
+      thresholds: [
+        { value: 50, color: "#d73027" },
+        { value: 75, color: "#fc8d59" },
+        { value: 100, color: "#4575b4" },
+      ],
+      width: 300,
+      height: 200,
+    })
+  }),
+  // Gauge 240° default
+  TestCase({
+    title: "Gauge 240° (default)",
+    testId: "ord-gauge-240",
+    children: React.createElement(GaugeChart, {
+      value: 72,
+      min: 0,
+      max: 100,
+      thresholds: [
+        { value: 50, color: "#4caf50" },
+        { value: 80, color: "#ff9800" },
+        { value: 100, color: "#f44336" },
+      ],
+      width: 300,
+      height: 250,
     })
   })
 ]
