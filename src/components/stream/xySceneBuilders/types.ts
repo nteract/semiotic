@@ -75,6 +75,8 @@ export interface XYSceneConfig {
 
   // Candlestick
   candlestickStyle?: { upColor?: string; downColor?: string; wickColor?: string; wickWidth?: number; bodyWidth?: number; rangeColor?: string }
+  /** True when candlestick is in range/dumbbell mode (no open/close accessors provided) */
+  candlestickRangeMode?: boolean
 
   // Bounds
   boundsStyle?: Style | ((d: any, group: string) => Style)

@@ -321,6 +321,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xExtent,
       yExtent,
       extentPadding = 0.1,
+      scalePadding,
       sizeRange,
       size: sizeProp = [500, 300],
       responsiveWidth,
@@ -475,6 +476,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       windowMode,
       arrowOfTime: isStreaming ? arrowOfTime : "right",
       extentPadding,
+      scalePadding,
       xAccessor: isStreaming ? undefined : xAccessor,
       yAccessor: isStreaming ? undefined : yAccessor,
       timeAccessor: isStreaming ? timeAccessor : undefined,
@@ -526,7 +528,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointIdAccessor,
       curve
     }), [
-      chartType, windowSize, windowMode, arrowOfTime, extentPadding,
+      chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,

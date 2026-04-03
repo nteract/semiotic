@@ -9,6 +9,7 @@ import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
+import { isTimeLandmark } from "./hitTestUtils"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 export interface AxisConfig {
@@ -325,8 +326,6 @@ function filterTicksByPixelDistance<T extends { value: number; pixel: number; la
   }
   return result
 }
-
-import { isTimeLandmark } from "./hitTestUtils"
 
 export function SVGOverlay(props: SVGOverlayProps) {
   const {

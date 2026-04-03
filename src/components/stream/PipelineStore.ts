@@ -78,6 +78,8 @@ export interface PipelineConfig {
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime
   extentPadding: number
+  /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
+  scalePadding?: number
   maxCapacity?: number
 
   // Accessors
@@ -270,10 +272,14 @@ export class PipelineStore {
 
     // Candlestick accessors
     if (config.chartType === "candlestick") {
-      this.getOpen = resolveAccessor(config.openAccessor, "open")
+      this.getOpen = config.openAccessor != null ? resolveAccessor(config.openAccessor, "open") : undefined
       this.getHigh = resolveAccessor(config.highAccessor, "high")
       this.getLow = resolveAccessor(config.lowAccessor, "low")
-      this.getClose = resolveAccessor(config.closeAccessor, "close")
+      this.getClose = config.closeAccessor != null ? resolveAccessor(config.closeAccessor, "close") : undefined
+      // Set range mode flag for scene builder
+      if (!config.openAccessor && !config.closeAccessor) {
+        ;(this.config as any).candlestickRangeMode = true
+      }
     }
 
     // Pulse: parallel timestamp buffer
@@ -549,22 +555,23 @@ export class PipelineStore {
     // Build scales
     // For streaming charts, use time/value axes based on arrowOfTime
     const isStreaming = config.runtimeMode === "streaming"
+    const sp = config.scalePadding || 0
     if (isStreaming) {
       const timeAxis = getTimeAxis(config.arrowOfTime)
       if (timeAxis === "x") {
         const xRange: [number, number] = config.arrowOfTime === "right"
-          ? [0, layout.width]
-          : [layout.width, 0]
+          ? [sp, layout.width - sp]
+          : [layout.width - sp, sp]
         this.scales = {
           x: scaleLinear().domain(xDomain).range(xRange),
-          y: scaleLinear().domain(yDomain).range([layout.height, 0])
+          y: scaleLinear().domain(yDomain).range([layout.height - sp, sp])
         }
       } else {
         const yRange: [number, number] = config.arrowOfTime === "down"
-          ? [0, layout.height]
-          : [layout.height, 0]
+          ? [sp, layout.height - sp]
+          : [layout.height - sp, sp]
         this.scales = {
-          x: scaleLinear().domain(yDomain).range([0, layout.width]),
+          x: scaleLinear().domain(yDomain).range([sp, layout.width - sp]),
           y: scaleLinear().domain(xDomain).range(yRange)
         }
       }
@@ -582,8 +589,8 @@ export class PipelineStore {
         return scaleLinear().domain(domain).range(range)
       }
       this.scales = {
-        x: makeScale(config.xScaleType, xDomain, [0, layout.width]),
-        y: makeScale(config.yScaleType, yDomain, [layout.height, 0])
+        x: makeScale(config.xScaleType, xDomain, [sp, layout.width - sp]),
+        y: makeScale(config.yScaleType, yDomain, [layout.height - sp, sp])
       }
     }
 

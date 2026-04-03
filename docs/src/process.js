@@ -152,6 +152,7 @@ export const processNodes = [
       "amplitude",
       "runtimeMode",
       "extentPadding",
+      "scalePadding",
       "nodeIDAccessor",
       "nodeIdAccessor",
       "sourceAccessor",

@@ -146,3 +146,31 @@ test.describe("XY Charts - Auto-Rotate Labels", () => {
     expect(uniqueLabels.size).toBe(dateLabels.length)
   })
 })
+
+test.describe("XY Charts - Range Plot", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  test("renders range/dumbbell plot with visible marks", async ({ page }) => {
+    await waitForVisualization(page, "xy-range-plot")
+    const testCase = page.locator('[data-testid="xy-range-plot"]')
+
+    // Take a screenshot for visual verification
+    await expect(testCase).toHaveScreenshot("xy-range-plot.png", {
+      maxDiffPixels: 100
+    })
+
+    // The canvas should have non-trivial content (not blank)
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.width).toBeGreaterThan(100)
+    expect(box!.height).toBeGreaterThan(100)
+
+    // Check that axes rendered (SVG text elements)
+    const texts = await testCase.locator("svg text").allTextContents()
+    console.log("Range plot labels:", texts)
+    expect(texts.length).toBeGreaterThan(2)
+  })
+})

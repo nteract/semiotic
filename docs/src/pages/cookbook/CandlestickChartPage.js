@@ -160,6 +160,7 @@ export default function CandlestickChartPage() {
   highAccessor="high"
   lowAccessor="low"
   closeAccessor="close"
+  scalePadding={12}         // prevents edge candles from clipping
   candlestickStyle={{
     upColor: "#4daf4a",   // close >= open
     downColor: "#e41a1c", // close < open
@@ -262,6 +263,14 @@ export default function CandlestickChartPage() {
         range mode: no body rect, endpoint dots, and a single{" "}
         <code>rangeColor</code> instead of up/down coloring.
       </p>
+      <p>
+        Both examples on this page use <code>scalePadding</code> to prevent
+        the edge glyphs (candle bodies, dumbbell dots) from being clipped at
+        the chart boundary. <code>scalePadding={`{12}`}</code> insets the X and Y
+        scale ranges by 12 pixels on each side — the data domain and tick
+        positions are unchanged, only the pixel mapping shifts inward so marks
+        at the min/max data values have room to render fully.
+      </p>
 
       <div style={{ marginBottom: 24 }}>
         <StreamXYFrame
@@ -281,6 +290,7 @@ export default function CandlestickChartPage() {
           xAccessor="day"
           highAccessor="high"
           lowAccessor="low"
+          scalePadding={12}
           candlestickStyle={{ rangeColor: "#6366f1", wickWidth: 2 }}
           showAxes={true}
           enableHover={true}
@@ -304,6 +314,7 @@ export default function CandlestickChartPage() {
   xAccessor="day"
   highAccessor="high"
   lowAccessor="low"
+  scalePadding={12}  // prevents edge glyph clipping
   candlestickStyle={{ rangeColor: "#6366f1", wickWidth: 2 }}
   showAxes enableHover
   tooltipContent={d => (

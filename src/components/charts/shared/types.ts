@@ -103,6 +103,9 @@ export interface BaseChartProps {
   /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
   hoverRadius?: number
 
+  /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
+  scalePadding?: number
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 
