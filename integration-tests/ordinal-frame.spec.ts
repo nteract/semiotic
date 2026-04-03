@@ -169,3 +169,33 @@ test.describe("Ordinal Charts - Swimlane", () => {
     expect(texts).not.toContain("C")
   })
 })
+
+test.describe("Ordinal Charts - Gauge", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/ordinal-examples/")
+  })
+
+  test("180° gauge renders visibly and is vertically centered", async ({ page }) => {
+    await waitForVisualization(page, "ord-gauge-180")
+    const testCase = page.locator('[data-testid="ord-gauge-180"]')
+    await expect(testCase).toHaveScreenshot("ord-gauge-180.png", {
+      maxDiffPixels: 100
+    })
+  })
+
+  test("election needle 180° renders without clipping", async ({ page }) => {
+    await waitForVisualization(page, "ord-gauge-needle")
+    const testCase = page.locator('[data-testid="ord-gauge-needle"]')
+    await expect(testCase).toHaveScreenshot("ord-gauge-needle.png", {
+      maxDiffPixels: 100
+    })
+  })
+
+  test("240° gauge renders visibly and is centered", async ({ page }) => {
+    await waitForVisualization(page, "ord-gauge-240")
+    const testCase = page.locator('[data-testid="ord-gauge-240"]')
+    await expect(testCase).toHaveScreenshot("ord-gauge-240.png", {
+      maxDiffPixels: 100
+    })
+  })
+})

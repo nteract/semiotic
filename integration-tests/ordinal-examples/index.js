@@ -259,6 +259,31 @@ const examples = [
       height: 200,
     })
   }),
+  // Election needle (180° with fillZones=false)
+  TestCase({
+    title: "Election Needle",
+    testId: "ord-gauge-needle",
+    children: React.createElement(GaugeChart, {
+      value: 53,
+      min: 40,
+      max: 60,
+      sweep: 180,
+      arcWidth: 0.15,
+      fillZones: false,
+      showNeedle: true,
+      needleColor: "#222",
+      showScaleLabels: false,
+      thresholds: [
+        { value: 45, color: "#d73027" },
+        { value: 48, color: "#fc8d59" },
+        { value: 52, color: "#ccc" },
+        { value: 55, color: "#91bfdb" },
+        { value: 60, color: "#4575b4" },
+      ],
+      width: 360,
+      height: 200,
+    })
+  }),
   // Gauge 240° default
   TestCase({
     title: "Gauge 240° (default)",

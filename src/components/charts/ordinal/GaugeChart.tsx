@@ -192,28 +192,45 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const gapDeg = 360 - sweep
   const startAngleDegFinal = 180 + gapDeg / 2
 
-  // ── Compute arc bounding box for centering offset ────────────────────
+  // ── Compute arc bounding box to maximize radius and center the arc ────
   const PAD = 10
   const offsetRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
   const arcPts: [number, number][] = [
     [Math.cos(offsetRad), Math.sin(offsetRad)],
     [Math.cos(offsetRad + sweepRad), Math.sin(offsetRad + sweepRad)],
-    [0, 0], // center
+    [0, 0],
   ]
   for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
     const norm = ((a - offsetRad) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
     if (norm <= sweepRad + 0.001) arcPts.push([Math.cos(a), Math.sin(a)])
   }
+  const arcMinX = Math.min(...arcPts.map(p => p[0]))
+  const arcMaxX = Math.max(...arcPts.map(p => p[0]))
   const arcMinY = Math.min(...arcPts.map(p => p[1]))
   const arcMaxY = Math.max(...arcPts.map(p => p[1]))
-  const arcCenterY = (arcMinY + arcMaxY) / 2
+  const arcW = arcMaxX - arcMinX   // e.g. 2.0 for symmetric arcs
+  const arcH = arcMaxY - arcMinY   // e.g. 1.0 for 180° half-circle
+  const arcCY = (arcMinY + arcMaxY) / 2
 
-  // The frame centers radial projection at (layoutW/2, layoutH/2).
-  // Shift margins to move the arc's visual center to the widget center.
-  // arcCenterY is in [-1, 1] — negative means arc is above center.
-  const radius = Math.min(width, height) / 2 - PAD - 4
+  // Maximize radius: the arc's visible bbox must fit in the widget.
+  // The arc occupies arcW*R horizontally and arcH*R vertically.
+  const arcCX = (arcMinX + arcMaxX) / 2
+  const radius = Math.max(10, Math.min(
+    (width - 2 * PAD) / arcW,
+    (height - 2 * PAD) / arcH
+  ) - 4)
   const innerRadius = Math.max(10, radius * (1 - arcWidth))
-  const verticalShift = -arcCenterY * radius  // positive = push layout center down
+
+  // Position the frame center so the arc bbox is centered in the widget.
+  // The arc center (0,0 in unit circle) maps to the frame layout center.
+  // Arc bbox center = frameCenterY + arcCY*R. We want this at height/2.
+  // So frameCenterY = height/2 - arcCY*R.
+  const frameCenterX = width / 2 - arcCX * radius
+  const frameCenterY = height / 2 - arcCY * radius
+
+  // The layout must be at least 2*(R+4) square for the frame to produce this radius.
+  // Allow the layout to extend outside the widget — the canvas clips to the widget size anyway.
+  const S = 2 * (radius + 4)
 
   // ── Center content ──────────────────────────────────────────────────────
   const centerEl = useMemo(() => {
@@ -331,10 +348,10 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
     margin: {
-      top: Math.max(2, PAD - verticalShift),
-      bottom: Math.max(2, PAD + verticalShift),
-      left: PAD,
-      right: PAD,
+      top: frameCenterY - S / 2,
+      bottom: height - frameCenterY - S / 2,
+      left: frameCenterX - S / 2,
+      right: width - frameCenterX - S / 2,
     },
     enableHover: resolved.enableHover,
     showAxes: false,

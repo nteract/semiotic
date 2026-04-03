@@ -53,7 +53,7 @@ function StreamingGaugeDemo() {
   const leaderColor = absLead < 2 ? "#888" : lead > 0 ? "#4575b4" : "#d73027"
 
   return (
-    <div style={{ textAlign: "center", marginBottom: 16 }}>
+    <div style={{ textAlign: "center", marginBottom: 16, display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "var(--semiotic-text-secondary, #888)", marginBottom: 4 }}>
         Estimated chance of winning
       </div>
@@ -85,7 +85,7 @@ function StreamingGaugeDemo() {
         width={360}
         height={200}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", maxWidth: 320, margin: "0 auto", fontSize: 11, color: "var(--semiotic-text-secondary, #888)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", width: 360, fontSize: 11, color: "var(--semiotic-text-secondary, #888)", padding: "4px 40px 0" }}>
         <span style={{ color: "#d73027", fontWeight: 600 }}>← Candidate A</span>
         <span style={{ color: "#4575b4", fontWeight: 600 }}>Candidate B →</span>
       </div>
