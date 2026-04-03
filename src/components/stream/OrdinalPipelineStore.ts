@@ -489,20 +489,24 @@ export class OrdinalPipelineStore {
       if (this.config.rExtent[1] != null) max = this.config.rExtent[1]
     }
 
-    // Apply padding (bar-funnel needs exact [0, max] — no padding)
-    if (chartType !== "bar-funnel") {
-      const range = max - min
-      const padAmount = range > 0 ? range * pad : 1
-      if (this.config.rExtent?.[0] == null) min -= padAmount
-      if (this.config.rExtent?.[1] == null) max += padAmount
-    }
-
-    // Bars should include zero (unless user explicitly set rExtent)
-    if (chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane") {
+    // Bars should include zero FIRST (unless user explicitly set rExtent)
+    const isBarType = chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane"
+    if (isBarType) {
       if (!(this.config.rExtent?.[0] != null || this.config.rExtent?.[1] != null)) {
         if (min > 0) min = 0
         if (max < 0) max = 0
       }
+    }
+
+    // Apply padding AFTER include-zero (bar-funnel needs exact [0, max])
+    if (chartType !== "bar-funnel") {
+      const range = max - min
+      const padAmount = range > 0 ? range * pad : 1
+      // When baselinePadding is false (default), don't pad the side that sits at 0
+      const skipMinPad = isBarType && !this.config.baselinePadding && min === 0
+      const skipMaxPad = isBarType && !this.config.baselinePadding && max === 0
+      if (this.config.rExtent?.[0] == null && !skipMinPad) min -= padAmount
+      if (this.config.rExtent?.[1] == null && !skipMaxPad) max += padAmount
     }
 
     return [min, max]

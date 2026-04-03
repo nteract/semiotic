@@ -44,8 +44,8 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
     })
 
     it("misses outside the tolerance radius", () => {
-      // Point 20px away — beyond tolerance of 15
-      const result = findNearestNetworkNode([circle], [], 220, 150)
+      // Point 35px away — beyond default 30px hit radius
+      const result = findNearestNetworkNode([circle], [], 235, 150)
       expect(result).toBeNull()
     })
 

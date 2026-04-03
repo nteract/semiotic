@@ -1,6 +1,6 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode, HoverData } from "./types"
-import { hitTestRect as sharedHitTestRect, normalizeAngle } from "./hitTestUtils"
+import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 
 export interface OrdinalHitResult {
   datum: any
@@ -27,7 +27,7 @@ export function findNearestOrdinalNode(
         result = hitTestRect(node, px, py)
         break
       case "point":
-        result = hitTestPoint(node, px, py)
+        result = hitTestPoint(node, px, py, maxDistance)
         break
       case "wedge":
         result = hitTestWedge(node, px, py)
@@ -64,11 +64,11 @@ function hitTestRect(node: RectSceneNode, px: number, py: number): OrdinalHitRes
   return null
 }
 
-function hitTestPoint(node: PointSceneNode, px: number, py: number): OrdinalHitResult | null {
+function hitTestPoint(node: PointSceneNode, px: number, py: number, maxDistance: number = 30): OrdinalHitResult | null {
   const dx = px - node.x
   const dy = py - node.y
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const hitR = Math.max(node.r + 5, 12) // minimum 12px hit target (Fitts's law)
+  const hitR = getHitRadius(node.r, maxDistance)
   if (dist <= hitR) {
     return {
       datum: node.datum,

@@ -7,7 +7,8 @@ const {
   LineChart,
   AreaChart,
   Scatterplot,
-  BubbleChart
+  BubbleChart,
+  StreamXYFrame
 } = Semiotic
 
 const TestCase = ({ title, children, testId, key }) =>
@@ -134,6 +135,78 @@ const examples = [
       width: 400,
       height: 300,
       colorScheme: colors
+    })
+  }),
+  // Landmark ticks with xScaleType="time"
+  TestCase({
+    title: "Landmark Ticks (scaleTime)",
+    testId: "xy-landmark-ticks",
+    children: React.createElement(StreamXYFrame, {
+      chartType: "line",
+      data: [{
+        label: "Metric",
+        coordinates: Array.from({ length: 90 }, (_, i) => {
+          const d = new Date(2024, 0, 1)
+          d.setDate(d.getDate() + i)
+          return { date: d.getTime(), value: 100 + Math.sin(i * 0.1) * 40 }
+        }),
+      }],
+      lineDataAccessor: "coordinates",
+      xAccessor: "date",
+      xScaleType: "time",
+      yAccessor: "value",
+      lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+      showAxes: true,
+      axes: [
+        { orient: "left" },
+        {
+          orient: "bottom",
+          landmarkTicks: true,
+          tickFormat: function(d) {
+            var date = new Date(d)
+            return date.toLocaleString("en", { month: "short" }) + " " + date.getDate()
+          },
+          ticks: 8,
+        },
+      ],
+      size: [500, 250],
+      margin: { top: 20, bottom: 50, left: 60, right: 20 },
+    })
+  }),
+  // Auto-rotate with long date labels
+  TestCase({
+    title: "Auto-Rotate Labels",
+    testId: "xy-auto-rotate",
+    children: React.createElement(StreamXYFrame, {
+      chartType: "line",
+      data: [{
+        label: "Metric",
+        coordinates: Array.from({ length: 90 }, (_, i) => {
+          const d = new Date(2024, 0, 1)
+          d.setDate(d.getDate() + i)
+          return { date: d.getTime(), value: 100 + Math.sin(i * 0.1) * 40 }
+        }),
+      }],
+      lineDataAccessor: "coordinates",
+      xAccessor: "date",
+      xScaleType: "time",
+      yAccessor: "value",
+      lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+      showAxes: true,
+      axes: [
+        { orient: "left" },
+        {
+          orient: "bottom",
+          autoRotate: true,
+          ticks: 8,
+          tickFormat: function(d) {
+            var date = new Date(d)
+            return date.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" })
+          },
+        },
+      ],
+      size: [300, 250],
+      margin: { top: 10, bottom: 100, left: 50, right: 10 },
     })
   })
 ]

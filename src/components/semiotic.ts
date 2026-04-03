@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -77,6 +77,7 @@ export {
   TreeDiagram,
   PieChart,
   DonutChart,
+  GaugeChart,
   FunnelChart,
   GroupedBarChart,
   SwimlaneChart,
@@ -153,6 +154,8 @@ export {
   DotPlotProps,
   PieChartProps,
   DonutChartProps,
+  GaugeChartProps,
+  GaugeThreshold,
   FunnelChartProps,
   GroupedBarChartProps,
   SwimlaneChartProps,

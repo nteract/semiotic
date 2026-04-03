@@ -49,6 +49,8 @@
 
 **LikertChart** — `data`, `categoryAccessor` ("question"), `valueAccessor` ("score", raw mode) or `levelAccessor`+`countAccessor` ("count", pre-aggregated mode), `levels` (required, ordered negative→positive), `orientation` ("horizontal"|"vertical"), `colorScheme`. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports any scale size (3-point to 7-point+). Raw mode aggregates integer scores automatically (1-based: score 1 → levels[0]). The `levels` array order defines polarity — first half negative, second half positive, center neutral if odd. Supports push API for streaming — accumulates raw data internally and re-aggregates percentages on each push.
 
+**GaugeChart** — `value` (required), `min` (0), `max` (100), `thresholds` (array of `{ value, color, label? }` defining zones), `arcWidth` (0.3, fraction of radius), `sweep` (240°), `showNeedle` (true), `needleColor`, `centerContent` (ReactNode or `(value, min, max) => ReactNode`), `valueFormat`, `showScaleLabels` (true), `backgroundColor`. Built on top of `StreamOrdinalFrame` with `projection="radial"` — reuses the existing pie/donut rendering pipeline. Supports streaming via push API. Annotations work for custom threshold markers.
+
 All ordinal HOCs support `colorBy` and `colorScheme`. `categoryFormat` (`(label: string, index?: number) => string | ReactNode`) customizes individual tick labels (truncation, formatting, or custom ReactNode rendering via `<foreignObject>`). `showCategoryTicks` (default true) hides per-tick labels when false — margins auto-adjust. For distribution charts with `colorBy`, set `showCategoryTicks={false}` since the legend identifies categories.
 
 ## Network Charts (`semiotic/network`)
@@ -309,15 +311,22 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
   ```jsx
   <LineChart data={data} lineBy="series" colorBy="series" tooltip="multi" />
   ```
-- **Axis config** (`frameProps.axes`): Per-axis options: `includeMax: true` forces domain-max tick. `autoRotate: true` rotates bottom-axis labels 45° when crowded. `baselineStyle: "dashed" | "dotted" | string` sets strokeDasharray on axis baselines:
+- **Axis config** (`frameProps.axes`): Per-axis options: `includeMax: true` forces domain-max tick. `autoRotate: true` rotates bottom-axis labels 45° when crowded. `gridStyle: "dashed" | "dotted" | string` sets strokeDasharray on grid lines (requires `showGrid`):
   ```jsx
-  <LineChart frameProps={{ axes: [{ orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" }] }} />
+  <LineChart showGrid frameProps={{ axes: [{ orient: "bottom", includeMax: true, autoRotate: true, gridStyle: "dashed" }] }} />
   ```
-- **Bar baseline alignment**: Ordinal axis baseline aligns with `rScale(0)`, not chart edge. Bars are flush with the 0 line even when the domain has padding.
-- **hoverRadius**: Max pixel distance for hover/click hit testing (default 30). Available on all XY HOCs and `StreamXYFrameProps`:
+- **Bar baseline alignment**: Ordinal axis baseline aligns with `rScale(0)`, not chart edge. `baselinePadding={true}` restores the old padded look; default `false` is flush.
+- **hoverRadius**: Max pixel distance for hover/click hit testing (default 30px across all frames — XY, network, geo, ordinal). Available on all XY HOCs and `StreamXYFrameProps`:
   ```jsx
   <Scatterplot hoverRadius={60} tooltip />  {/* Larger hit area for sparse data */}
   ```
+- **Landmark ticks**: `landmarkTicks: true` on bottom/left axis config bolds tick labels at month/year boundaries. Works with `xScaleType: "time"` for Date-aware ticks. Custom function: `landmarkTicks: (value, index) => boolean`.
+- **xScaleType: "time"**: Creates `scaleTime` for the X axis. Ticks land on real calendar boundaries (weeks, months) instead of round numbers. Required for landmark ticks with timestamp data.
+- **Tick deduplication**: Adjacent identical tick labels are automatically removed. Prevents duplicate labels when tick format has insufficient resolution (e.g. month-only format on weekly ticks).
+
+## Performance
+
+- **Range/dumbbell plot**: Use `chartType="candlestick"` on StreamXYFrame with only `highAccessor` + `lowAccessor` (omit `openAccessor`/`closeAccessor`). Auto-detects range mode: no body rect, endpoint dots, single `rangeColor` via `candlestickStyle={{ rangeColor: "#6366f1" }}`. When `bodyWidth === 0`, body rect is skipped entirely (no invisible DOM elements).
 
 ## Performance
 

@@ -197,9 +197,13 @@ export interface OrdinalPipelineConfig {
 
   // Layout
   barPadding?: number
+  /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
+  baselinePadding?: boolean
   innerRadius?: number
   normalize?: boolean
   startAngle?: number
+  /** Total arc sweep in degrees (default 360 = full circle). Used by GaugeChart for partial arcs. */
+  sweepAngle?: number
 
   // Summary config
   bins?: number
@@ -265,9 +269,11 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   barPadding?: number
+  baselinePadding?: boolean
   innerRadius?: number
   normalize?: boolean
   startAngle?: number
+  sweepAngle?: number
   dynamicColumnWidth?: string | ((data: T[]) => number)
 
   // Summary config

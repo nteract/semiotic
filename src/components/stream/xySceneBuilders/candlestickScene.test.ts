@@ -68,24 +68,25 @@ describe("buildCandlestickScene", () => {
     expect(asCandlestick(nodes[2]).isUp).toBe(true)
   })
 
-  it("returns empty when any OHLC accessor is missing", () => {
+  it("returns empty when high or low accessor is missing", () => {
     const data = [{ x: 0, open: 10, high: 15, low: 5, close: 12 }]
 
-    // Missing getOpen
-    const noOpen = makeCtx({ getOpen: undefined })
-    expect(buildCandlestickScene(noOpen, data, defaultLayout)).toEqual([])
-
-    // Missing getHigh
+    // Missing getHigh — always required
     const noHigh = makeCtx({ getHigh: undefined })
     expect(buildCandlestickScene(noHigh, data, defaultLayout)).toEqual([])
 
-    // Missing getLow
+    // Missing getLow — always required
     const noLow = makeCtx({ getLow: undefined })
     expect(buildCandlestickScene(noLow, data, defaultLayout)).toEqual([])
+  })
 
-    // Missing getClose
-    const noClose = makeCtx({ getClose: undefined })
-    expect(buildCandlestickScene(noClose, data, defaultLayout)).toEqual([])
+  it("falls back to range mode when open/close are missing", () => {
+    const data = [{ x: 0, high: 15, low: 5 }]
+    const noOC = makeCtx({ getOpen: undefined, getClose: undefined })
+    const nodes = buildCandlestickScene(noOC, data, defaultLayout)
+    // Should produce range-mode nodes, not empty
+    expect(nodes.length).toBe(1)
+    expect((nodes[0] as any).isRange).toBe(true)
   })
 
   it("skips data with null/NaN OHLC values", () => {
@@ -279,5 +280,77 @@ describe("buildCandlestickScene", () => {
     const node = asCandlestick(nodes[0])
     expect(node.wickColor).toBe("#aabbcc")
     expect(node.wickWidth).toBe(3)
+  })
+})
+
+describe("Range / dumbbell mode", () => {
+  const rangeData = [
+    { x: 10, high: 80, low: 20 },
+    { x: 30, high: 90, low: 40 },
+    { x: 50, high: 70, low: 30 },
+  ]
+
+  it("renders when only high/low accessors are provided (no open/close)", () => {
+    const ctx = makeCtx({
+      getOpen: undefined,
+      getClose: undefined,
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+    })
+    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
+    expect(nodes.length).toBe(3)
+  })
+
+  it("sets bodyWidth to 0 in range mode", () => {
+    const ctx = makeCtx({
+      getOpen: undefined,
+      getClose: undefined,
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+    })
+    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
+    const node = asCandlestick(nodes[0])
+    expect(node.bodyWidth).toBe(0)
+  })
+
+  it("uses range color (not up/down) in range mode", () => {
+    const ctx = makeCtx({
+      getOpen: undefined,
+      getClose: undefined,
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+      config: { candlestickStyle: { rangeColor: "#6366f1" } },
+    })
+    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
+    const node = asCandlestick(nodes[0])
+    // Range mode: rangeColor used instead of up/down
+    expect(node.upColor).toBe("#6366f1")
+    expect(node.downColor).toBe("#6366f1")
+  })
+
+  it("sets openY=highY and closeY=lowY in range mode (no body needed)", () => {
+    const ctx = makeCtx({
+      getOpen: undefined,
+      getClose: undefined,
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+    })
+    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
+    const node = asCandlestick(nodes[0])
+    // openY/closeY should mirror high/low since there's no open/close distinction
+    expect(node.openY).toBe(node.highY)
+    expect(node.closeY).toBe(node.lowY)
+  })
+
+  it("marks range mode nodes with isRange flag", () => {
+    const ctx = makeCtx({
+      getOpen: undefined,
+      getClose: undefined,
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+    })
+    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
+    const node = asCandlestick(nodes[0])
+    expect((node as any).isRange).toBe(true)
   })
 })

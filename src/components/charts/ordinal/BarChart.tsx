@@ -31,6 +31,8 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   colorScheme?: string | string[]
   sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
   barPadding?: number
+  /** When true, adds padding below the 0 baseline. Default false (bars flush with axis). */
+  baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
   showCategoryTicks?: boolean
@@ -84,6 +86,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     colorScheme,
     sort = false,
     barPadding = 40,
+    baselinePadding = false,
     tooltip,
     annotations,
     frameProps = {},
@@ -203,6 +206,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     responsiveHeight: props.responsiveHeight,
     margin: setup.margin,
     barPadding,
+    baselinePadding,
     enableHover,
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,

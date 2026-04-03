@@ -30,6 +30,7 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   colorScheme?: string | string[]
   normalize?: boolean
   barPadding?: number
+  baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
   showCategoryTicks?: boolean
@@ -66,7 +67,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, normalize = false, barPadding = 40,
+    colorBy, colorScheme, normalize = false, barPadding = 40, baselinePadding = false,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
@@ -173,6 +174,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     barPadding,
+    baselinePadding,
     enableHover,
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,

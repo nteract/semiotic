@@ -174,6 +174,66 @@ describe("CanvasHitTester — findNearestNode", () => {
   })
 })
 
+describe("hit radius defaults", () => {
+  it("line hit test respects default 30px maxDistance", () => {
+    // Horizontal line at y=50. Cursor at y=75 — 25px away (within 30px default).
+    const line: LineSceneNode = {
+      type: "line",
+      path: [[10, 50], [50, 50], [90, 50]],
+      style: { stroke: "#000", strokeWidth: 2 },
+      datum: [{ id: "a" }, { id: "b" }, { id: "c" }],
+    }
+    const hit = findNearestNode([line], 50, 75) // 25px from line
+    expect(hit).not.toBeNull()
+    expect(hit!.distance).toBeCloseTo(25, 0)
+  })
+
+  it("line hit test rejects beyond 30px default", () => {
+    const line: LineSceneNode = {
+      type: "line",
+      path: [[10, 50], [50, 50], [90, 50]],
+      style: { stroke: "#000", strokeWidth: 2 },
+      datum: [{ id: "a" }, { id: "b" }, { id: "c" }],
+    }
+    const hit = findNearestNode([line], 50, 85) // 35px from line
+    expect(hit).toBeNull()
+  })
+
+  it("line hit test uses custom maxDistance", () => {
+    const line: LineSceneNode = {
+      type: "line",
+      path: [[10, 50], [50, 50], [90, 50]],
+      style: { stroke: "#000", strokeWidth: 2 },
+      datum: [{ id: "a" }, { id: "b" }, { id: "c" }],
+    }
+    // 45px away — beyond 30px default but within 50px custom
+    const hit = findNearestNode([line], 50, 95, 50)
+    expect(hit).not.toBeNull()
+  })
+
+  it("point hit test respects default 30px maxDistance", () => {
+    const point: PointSceneNode = {
+      type: "point", x: 50, y: 50, r: 5,
+      style: { fill: "#000" },
+      datum: { id: "p1" },
+    }
+    // 25px away — within 30px
+    const hit = findNearestNode([point], 50, 75)
+    expect(hit).not.toBeNull()
+  })
+
+  it("point hit test rejects beyond 30px default", () => {
+    const point: PointSceneNode = {
+      type: "point", x: 50, y: 50, r: 5,
+      style: { fill: "#000" },
+      datum: { id: "p1" },
+    }
+    // 35px away — beyond 30px
+    const hit = findNearestNode([point], 50, 85)
+    expect(hit).toBeNull()
+  })
+})
+
 describe("findAllNodesAtX", () => {
   const lineA: LineSceneNode = {
     type: "line",

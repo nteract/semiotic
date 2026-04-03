@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
@@ -81,6 +81,64 @@ const axisProps = [
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
+function ResizableAutoRotateDemo() {
+  const [chartWidth, setChartWidth] = useState(300)
+  const cleanupRef = useRef(null)
+
+  // Ensure drag listeners are cleaned up on unmount
+  useEffect(() => () => { if (cleanupRef.current) cleanupRef.current() }, [])
+
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = chartWidth
+    const onMove = (ev) => setChartWidth(Math.max(200, Math.min(800, startWidth + ev.clientX - startX)))
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+      cleanupRef.current = null
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+    cleanupRef.current = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp) }
+  }, [chartWidth])
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "stretch" }}>
+        <div style={{ width: chartWidth, border: "1px solid var(--semiotic-border, #e0e0e0)", borderRadius: 4, padding: 4, flexShrink: 0 }}>
+          <StreamXYFrame
+            data={timeSeriesFrameData}
+            chartType="line"
+            lineDataAccessor="coordinates"
+            xAccessor="date"
+            xScaleType="time"
+            yAccessor="value"
+            lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+            showAxes={true}
+            axes={[
+              { orient: "left" },
+              { orient: "bottom", autoRotate: true, ticks: 8, tickFormat: (d) => {
+                const date = new Date(d)
+                return date.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" })
+              }},
+            ]}
+            size={[chartWidth - 10, 220]}
+            margin={{ top: 10, bottom: 100, left: 50, right: 10 }}
+          />
+        </div>
+        <div
+          onMouseDown={onMouseDown}
+          style={{ width: 8, cursor: "col-resize", background: "var(--semiotic-border, #ccc)", borderRadius: 4, marginLeft: 2, flexShrink: 0 }}
+        />
+      </div>
+      <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #666)", marginTop: 4 }}>
+        Drag the handle to resize — {chartWidth}px wide
+      </div>
+    </div>
+  )
+}
 
 export default function AxesPage() {
   return (
@@ -254,23 +312,33 @@ export default function AxesPage() {
         charts or adding reference scales.
       </p>
 
-      <CodeBlock
-        code={`<StreamXYFrame
-  data={data}
-  chartType="line"
-  lineDataAccessor="coordinates"
-  xAccessor="step"
-  yAccessor="value"
-  showAxes={true}
-  axes={[
-    { orient: "left", label: "Primary Scale" },
-    { orient: "right", label: "Secondary Scale" },
-    { orient: "bottom", label: "Time" },
-    { orient: "top" }
-  ]}
-  size={[600, 400]}
-/>`}
-        language="jsx"
+      <LiveExample
+        frameProps={{
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          xAccessor: "step",
+          yAccessor: "value",
+          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+          showAxes: true,
+          axes: [
+            { orient: "left", label: "Primary" },
+            { orient: "right", label: "Secondary" },
+            { orient: "bottom", label: "Step" },
+          ],
+          size: [500, 300],
+          margin: { top: 20, bottom: 50, left: 60, right: 60 },
+        }}
+        type={StreamXYFrame}
+        overrideProps={{
+          data: `frameLineData`,
+          axes: `[
+  { orient: "left", label: "Primary" },
+  { orient: "right", label: "Secondary" },
+  { orient: "bottom", label: "Step" },
+]`,
+        }}
+        hiddenProps={{}}
       />
 
       <h3 id="jagged-base">Jagged Base for Non-Zero Baselines</h3>
@@ -335,6 +403,200 @@ export default function AxesPage() {
   ]}
 />`}
         language="jsx"
+      />
+
+      <h3 id="landmark-ticks">Landmark Ticks for Time Series</h3>
+      <p>
+        When displaying time series data, <code>landmarkTicks</code> applies
+        semibold styling to tick labels at higher-level time boundaries (e.g.,
+        when the month or year changes). This provides hierarchical context
+        that dramatically improves readability of long time axes. Notice how
+        "Feb" and "Mar" are rendered bolder than regular day ticks:
+      </p>
+
+      <StreamXYFrame
+        data={timeSeriesFrameData}
+        chartType="line"
+        lineDataAccessor="coordinates"
+        xAccessor="date"
+        xScaleType="time"
+        yAccessor="value"
+        lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+        margin={{ top: 20, bottom: 60, left: 60, right: 20 }}
+        showAxes={true}
+        axes={[
+          { orient: "left", label: "Value" },
+          {
+            orient: "bottom",
+            label: "Date",
+            landmarkTicks: true,
+            tickFormat: (d) => {
+              const date = new Date(d)
+              return `${date.toLocaleString("en", { month: "short" })} ${date.getDate()}`
+            },
+            ticks: 8,
+          },
+        ]}
+        size={[600, 300]}
+      />
+
+      <CodeBlock
+        code={`<StreamXYFrame
+  data={timeSeriesData}  // 90 days, Jan–Mar 2024
+  xAccessor="date"
+  xScaleType="time"      // scaleTime for date-aware ticks
+  yAccessor="value"
+  axes={[
+    { orient: "left", label: "Value" },
+    { orient: "bottom", label: "Date",
+      landmarkTicks: true,  // bold at month boundaries
+      tickFormat: d => {
+        const date = new Date(d)
+        return \`\${date.toLocaleString("en", {month:"short"})} \${date.getDate()}\`
+      },
+      ticks: 8,
+    }
+  ]}
+/>`}
+        language="jsx"
+      />
+
+      <p>
+        Landmark ticks render at <code>fontSize: 11</code> with{" "}
+        <code>fontWeight: 600</code> (semibold), while regular ticks remain at{" "}
+        <code>fontSize: 10</code> with normal weight. You can also pass a custom
+        function:
+      </p>
+
+      <CodeBlock
+        code={`// Custom landmark detection
+axes={[{
+  orient: "bottom",
+  landmarkTicks: (d, i) => d.getMonth() === 0,  // bold only January ticks
+}]}`}
+        language="jsx"
+      />
+
+      <h3 id="explicit-tick-values">Explicit Tick Values</h3>
+      <p>
+        Use <code>tickValues</code> when you need exact control over which
+        ticks appear:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          xAccessor: "step",
+          yAccessor: "value",
+          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+          showAxes: true,
+          axes: [
+            { orient: "left", tickValues: [3000, 5000, 7000, 9000], tickFormat: (d) => `$${d.toLocaleString()}` },
+            { orient: "bottom", tickValues: [1, 4, 7, 10], tickFormat: (d) => `Step ${d}` },
+          ],
+          size: [500, 300],
+        }}
+        type={StreamXYFrame}
+        overrideProps={{
+          data: `frameLineData`,
+          axes: `[
+  { orient: "left", tickValues: [3000, 5000, 7000, 9000], tickFormat: d => "$" + d.toLocaleString() },
+  { orient: "bottom", tickValues: [1, 4, 7, 10], tickFormat: d => "Step " + d },
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="include-max">Include Max Tick</h3>
+      <p>
+        Set <code>includeMax: true</code> to ensure the domain maximum always
+        appears as a labeled tick, even if d3's default tick generation skips it.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          xAccessor: "step",
+          yAccessor: "value",
+          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+          showAxes: true,
+          axes: [
+            { orient: "left", label: "Value", includeMax: true },
+            { orient: "bottom", label: "Step", includeMax: true },
+          ],
+          size: [500, 300],
+        }}
+        type={StreamXYFrame}
+        overrideProps={{
+          data: `frameLineData`,
+          axes: `[
+  { orient: "left", label: "Value", includeMax: true },
+  { orient: "bottom", label: "Step", includeMax: true },
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="auto-rotate">Auto-Rotate Labels</h3>
+      <p>
+        Set <code>autoRotate: true</code> to automatically rotate bottom-axis
+        labels 45° when horizontal spacing is too tight to fit them. Drag the
+        handle to resize the chart and see labels switch between rotated and horizontal:
+      </p>
+
+      <ResizableAutoRotateDemo />
+
+      <CodeBlock
+        code={`<StreamXYFrame
+  xScaleType="time"
+  axes={[
+    { orient: "bottom", autoRotate: true,
+      tickFormat: d => new Date(d).toLocaleDateString("en-US",
+        { weekday: "short", month: "long", day: "numeric", year: "numeric" })
+    },
+  ]}
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="grid-style">Dashed & Dotted Grid Lines</h3>
+      <p>
+        Use <code>gridStyle</code> to change grid lines to dashed or
+        dotted. Accepts <code>"dashed"</code>, <code>"dotted"</code>,
+        or a custom <code>strokeDasharray</code> string. Requires{" "}
+        <code>showGrid</code> to be enabled.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          xAccessor: "step",
+          yAccessor: "value",
+          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
+          showAxes: true,
+          showGrid: true,
+          axes: [
+            { orient: "left", gridStyle: "dotted" },
+            { orient: "bottom", gridStyle: "dashed" },
+          ],
+          size: [500, 300],
+        }}
+        type={StreamXYFrame}
+        overrideProps={{
+          data: `frameLineData`,
+          showGrid: "true",
+          axes: `[
+  { orient: "left", gridStyle: "dotted" },
+  { orient: "bottom", gridStyle: "dashed" },
+]`,
+        }}
+        hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -403,103 +665,6 @@ export default function AxesPage() {
         console.log("Clicked axis at:", value)
         // Use this value to set a threshold annotation, filter data, etc.
       }
-    }
-  ]}
-/>`}
-        language="jsx"
-      />
-
-      <h3 id="landmark-ticks">Landmark Ticks for Time Series</h3>
-      <p>
-        When displaying time series data, <code>landmarkTicks</code> applies
-        semibold styling to tick labels at time boundaries (e.g., when the month,
-        year, or day changes). This provides hierarchical context that
-        dramatically improves readability of long time axes. Notice how "Feb"
-        and "Mar" are rendered bolder than regular day ticks:
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: timeSeriesFrameData,
-          chartType: "line",
-          lineDataAccessor: "coordinates",
-          xAccessor: "date",
-          yAccessor: "value",
-          lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
-          margin: { top: 20, bottom: 60, left: 60, right: 20 },
-          showAxes: true,
-          axes: [
-            { orient: "left", label: "Value" },
-            {
-              orient: "bottom",
-              label: "Date",
-              landmarkTicks: true,
-              tickFormat: (d) => {
-                const date = new Date(d)
-                return `${date.toLocaleString("en", { month: "short" })} ${date.getDate()}`
-              },
-              ticks: 8,
-            },
-          ],
-        }}
-        type={StreamXYFrame}
-        startHidden={false}
-        overrideProps={{
-          data: `[{
-  label: "Metric",
-  coordinates: timeSeriesData  // 90 days spanning Jan–Mar
-}]`,
-          axes: `[
-  { orient: "left", label: "Value" },
-  {
-    orient: "bottom",
-    label: "Date",
-    landmarkTicks: true,  // auto-bold at month boundaries
-    tickFormat: d => {
-      const date = new Date(d)
-      return \`\${date.toLocaleString("en", { month: "short" })} \${date.getDate()}\`
-    },
-    ticks: 8,
-  }
-]`,
-        }}
-        hiddenProps={{}}
-      />
-
-      <p>
-        Landmark ticks render at <code>fontSize: 11</code> with{" "}
-        <code>fontWeight: 600</code> (semibold), while regular ticks remain at{" "}
-        <code>fontSize: 10</code> with normal weight. You can also pass a custom
-        function:
-      </p>
-
-      <CodeBlock
-        code={`// Custom landmark detection
-axes={[{
-  orient: "bottom",
-  landmarkTicks: (d, i) => d.getMonth() === 0,  // bold only January ticks
-}]}`}
-        language="jsx"
-      />
-
-      <h3 id="explicit-tick-values">Explicit Tick Values</h3>
-      <p>
-        Use <code>tickValues</code> when you need exact control over which
-        ticks appear:
-      </p>
-
-      <CodeBlock
-        code={`<StreamXYFrame
-  axes={[
-    {
-      orient: "left",
-      tickValues: [0, 2500, 5000, 7500, 10000],
-      tickFormat: d => \`$\${d.toLocaleString()}\`
-    },
-    {
-      orient: "bottom",
-      tickValues: [1, 4, 7, 10],
-      tickFormat: d => \`Q\${Math.ceil(d / 3)}\`
     }
   ]}
 />`}

@@ -97,3 +97,52 @@ test.describe("XY Charts - Interactivity", () => {
     }
   })
 })
+
+test.describe("XY Charts - Landmark Ticks", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  test("renders date tick labels with landmark styling, not Dec 31", async ({ page }) => {
+    await waitForVisualization(page, "xy-landmark-ticks")
+    const testCase = page.locator('[data-testid="xy-landmark-ticks"]')
+
+    // Get all text elements in the SVG overlay
+    const texts = await testCase.locator("svg text").allTextContents()
+    console.log("Landmark tick labels:", texts)
+
+    // Should have tick labels containing month names from the Jan-Mar 2024 data
+    const dateLabels = texts.filter(t => /Jan|Feb|Mar/.test(t))
+    expect(dateLabels.length).toBeGreaterThan(2)
+
+    // No labels should say "Dec 31" (which means scaleLinear was used instead of scaleTime)
+    const dec31 = texts.filter(t => t.includes("Dec 31"))
+    expect(dec31.length).toBe(0)
+
+    // No labels should reference 1969/1970 (epoch fallback)
+    const epoch = texts.filter(t => /196[89]|1970/.test(t))
+    expect(epoch.length).toBe(0)
+  })
+})
+
+test.describe("XY Charts - Auto-Rotate Labels", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  test("renders distinct tick labels when autoRotate is set", async ({ page }) => {
+    await waitForVisualization(page, "xy-auto-rotate")
+    const testCase = page.locator('[data-testid="xy-auto-rotate"]')
+
+    const texts = await testCase.locator("svg text").allTextContents()
+    console.log("Auto-rotate tick labels:", texts)
+
+    // X-axis labels should be long date strings
+    const dateLabels = texts.filter(t => /January|February|March/.test(t))
+    expect(dateLabels.length).toBeGreaterThan(2)
+
+    // All date labels must be DISTINCT — no duplicates
+    const uniqueLabels = new Set(dateLabels)
+    expect(uniqueLabels.size).toBe(dateLabels.length)
+  })
+})

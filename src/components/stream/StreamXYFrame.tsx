@@ -194,6 +194,10 @@ function drawCrosshair(
   const showCrosshair = config.crosshair !== false
   if (!showCrosshair) return
 
+  const allSeries = (hover as any).allSeries as Array<{ group: string; valuePx?: number; color: string }> | undefined
+  const isMulti = allSeries && allSeries.length > 0
+  const xPx = (hover as any).xPx ?? hover.x
+
   ctx.save()
   const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
   ctx.strokeStyle = crossStyle.stroke || theme.crosshair
@@ -204,33 +208,51 @@ function drawCrosshair(
     ctx.setLineDash([4, 4])
   }
 
+  // Vertical crosshair line (always)
   ctx.beginPath()
-  ctx.moveTo(hover.x, 0)
-  ctx.lineTo(hover.x, height)
+  ctx.moveTo(isMulti ? xPx : hover.x, 0)
+  ctx.lineTo(isMulti ? xPx : hover.x, height)
   ctx.stroke()
 
-  ctx.beginPath()
-  ctx.moveTo(0, hover.y)
-  ctx.lineTo(width, hover.y)
-  ctx.stroke()
+  // Horizontal crosshair line (single-point mode only)
+  if (!isMulti) {
+    ctx.beginPath()
+    ctx.moveTo(0, hover.y)
+    ctx.lineTo(width, hover.y)
+    ctx.stroke()
+  }
 
   ctx.restore()
 
-  // Point indicator — use hovered element's color, then theme primary, then fallback
-  let semioticPrimary = ""
-  try {
-    if (ctx.canvas?.parentElement) {
-      semioticPrimary = getComputedStyle(ctx.canvas).getPropertyValue("--semiotic-primary").trim()
+  if (isMulti) {
+    // Multi-point mode: draw a dot on each series at its interpolated Y
+    ctx.lineWidth = 2
+    ctx.strokeStyle = theme.pointRing
+    for (const s of allSeries) {
+      if (s.valuePx == null) continue
+      ctx.beginPath()
+      ctx.arc(xPx, s.valuePx, 4, 0, Math.PI * 2)
+      ctx.fillStyle = s.color || "#007bff"
+      ctx.fill()
+      ctx.stroke()
     }
-  } catch { /* jsdom or SSR — fall through to hardcoded default */ }
-  const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || semioticPrimary || "#007bff"
-  ctx.beginPath()
-  ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
-  ctx.fillStyle = pointColor
-  ctx.fill()
-  ctx.strokeStyle = theme.pointRing
-  ctx.lineWidth = 2
-  ctx.stroke()
+  } else {
+    // Single-point mode: one dot at the hovered datum
+    let semioticPrimary = ""
+    try {
+      if (ctx.canvas?.parentElement) {
+        semioticPrimary = getComputedStyle(ctx.canvas).getPropertyValue("--semiotic-primary").trim()
+      }
+    } catch { /* jsdom or SSR — fall through to hardcoded default */ }
+    const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || semioticPrimary || "#007bff"
+    ctx.beginPath()
+    ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
+    ctx.fillStyle = pointColor
+    ctx.fill()
+    ctx.strokeStyle = theme.pointRing
+    ctx.lineWidth = 2
+    ctx.stroke()
+  }
 }
 
 // ── Line highlight on hover ───────────────────────────────────────────
@@ -459,7 +481,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       valueAccessor,
       colorAccessor,
       sizeAccessor,
-      groupAccessor,
+      groupAccessor: groupAccessor || (lineDataAccessor ? "_lineGroup" : undefined),
       categoryAccessor,
       lineDataAccessor,
       xScaleType,
@@ -598,8 +620,33 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     useEffect(() => {
       if (!data) return
+      // When lineDataAccessor is set, data is an array of line objects
+      // (e.g. [{ label: "A", coordinates: [...] }]). Flatten into coordinate
+      // datums for the pipeline — the pipeline needs flat data for extent
+      // tracking and scale computation.
+      if (lineDataAccessor && data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
+        const key = typeof lineDataAccessor === "string" ? lineDataAccessor : "coordinates"
+        const hasCoords = data[0][key]
+        if (Array.isArray(hasCoords)) {
+          const flat: any[] = []
+          for (const line of data) {
+            const coords = (line as any)[key]
+            if (Array.isArray(coords)) {
+              // Stamp group key onto each datum for grouping
+              const groupKey = (line as any).label || (line as any).id || (line as any).key
+              if (groupKey != null) {
+                for (const c of coords) flat.push({ ...c, _lineGroup: groupKey })
+              } else {
+                for (const c of coords) flat.push(c)
+              }
+            }
+          }
+          adapterRef.current?.setBoundedData(flat)
+          return
+        }
+      }
       adapterRef.current?.setBoundedData(data)
-    }, [data])
+    }, [data, lineDataAccessor])
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
@@ -952,11 +999,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
+        // Use valueOf() for domain comparison — scaleTime.domain() returns new Date objects each call
+        const v = (d: any) => typeof d === "object" && d !== null && typeof d.valueOf === "function" ? d.valueOf() : d
         const scalesChanged = !currentScales ||
-          currentScales.x.domain()[0] !== store.scales.x.domain()[0] ||
-          currentScales.x.domain()[1] !== store.scales.x.domain()[1] ||
-          currentScales.y.domain()[0] !== store.scales.y.domain()[0] ||
-          currentScales.y.domain()[1] !== store.scales.y.domain()[1] ||
+          v(currentScales.x.domain()[0]) !== v(store.scales.x.domain()[0]) ||
+          v(currentScales.x.domain()[1]) !== v(store.scales.x.domain()[1]) ||
+          v(currentScales.y.domain()[0]) !== v(store.scales.y.domain()[0]) ||
+          v(currentScales.y.domain()[1]) !== v(store.scales.y.domain()[1]) ||
           currentScales.x.range()[0] !== store.scales.x.range()[0] ||
           currentScales.x.range()[1] !== store.scales.x.range()[1] ||
           currentScales.y.range()[0] !== store.scales.y.range()[0] ||

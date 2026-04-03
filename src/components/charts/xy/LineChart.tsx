@@ -53,7 +53,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * Scale type for the x-axis
    * @default "linear"
    */
-  xScaleType?: "linear" | "log"
+  xScaleType?: "linear" | "log" | "time"
 
   /**
    * Scale type for the y-axis

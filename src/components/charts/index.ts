@@ -83,6 +83,9 @@ export type { PieChartProps } from "./ordinal/PieChart"
 export { DonutChart } from "./ordinal/DonutChart"
 export type { DonutChartProps } from "./ordinal/DonutChart"
 
+export { GaugeChart } from "./ordinal/GaugeChart"
+export type { GaugeChartProps, GaugeThreshold } from "./ordinal/GaugeChart"
+
 export { GroupedBarChart } from "./ordinal/GroupedBarChart"
 export type { GroupedBarChartProps } from "./ordinal/GroupedBarChart"
 

@@ -441,6 +441,27 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  GaugeChart: {
+    required: ["value"],
+    dataShape: "object",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      value: { type: "number" },
+      min: { type: "number" },
+      max: { type: "number" },
+      thresholds: { type: "array" },
+      arcWidth: { type: "number" },
+      sweep: { type: "number" },
+      showNeedle: { type: "boolean" },
+      needleColor: { type: "string" },
+      centerContent: { type: ["object", "string", "number", "function"] },
+      valueFormat: { type: "function" },
+      showScaleLabels: { type: "boolean" },
+      backgroundColor: { type: "string" },
+    },
+  },
+
   FunnelChart: {
     required: ["data"],
     dataShape: "array",

@@ -608,9 +608,10 @@ export default function LineChartPage() {
           data: simpleData,
           xAccessor: "month",
           yAccessor: "revenue",
+          showGrid: true,
           frameProps: {
             axes: [
-              { orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" },
+              { orient: "bottom", includeMax: true, autoRotate: true, gridStyle: "dashed" },
               { orient: "left", includeMax: true },
             ],
           },
@@ -618,9 +619,10 @@ export default function LineChartPage() {
         type={LineChart}
         overrideProps={{
           data: `simpleData`,
+          showGrid: "true",
           frameProps: `{
   axes: [
-    { orient: "bottom", includeMax: true, autoRotate: true, baselineStyle: "dashed" },
+    { orient: "bottom", includeMax: true, autoRotate: true, gridStyle: "dashed" },
     { orient: "left", includeMax: true },
   ],
 }`,

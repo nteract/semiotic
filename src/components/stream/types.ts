@@ -281,6 +281,8 @@ export interface CandlestickSceneNode {
   wickColor: string
   wickWidth: number
   isUp: boolean
+  /** Range/dumbbell mode — no body, endpoint dots instead */
+  isRange?: boolean
   datum: any
   /** Optional style object (used during transition opacity animations) */
   style?: Style
@@ -303,6 +305,8 @@ export interface CandlestickStyle {
   wickColor?: string
   bodyWidth?: number
   wickWidth?: number
+  /** Single color for range/dumbbell mode (replaces up/down when no open/close provided) */
+  rangeColor?: string
 }
 
 // ── Changeset ──────────────────────────────────────────────────────────
@@ -316,6 +320,11 @@ export interface Changeset<T = Record<string, any>> {
 
 // ── Scales ─────────────────────────────────────────────────────────────
 
+/**
+ * Note: when xScaleType="time", the x scale is a d3.scaleTime at runtime
+ * (domain returns Date objects, ticks() returns Date[]). It is typed as
+ * ScaleLinear for compatibility — use valueOf() when comparing domain values.
+ */
 export interface StreamScales {
   x: ScaleLinear<number, number>
   y: ScaleLinear<number, number>
@@ -421,7 +430,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   timeAccessor?: string | ((d: T) => number)
 
   // ── Scale types ─────────────────────────────────
-  xScaleType?: "linear" | "log"
+  xScaleType?: "linear" | "log" | "time"
   yScaleType?: "linear" | "log"
 
   // ── Extents ──────────────────────────────────────

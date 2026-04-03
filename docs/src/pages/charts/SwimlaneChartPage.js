@@ -211,8 +211,14 @@ function BrushZoomDemo() {
             brush
             onBrush={handleBrush}
             width={containerWidth}
-            height={180}
+            height={140}
             showLegend
+            showCategoryTicks={false}
+            showGrid={false}
+            barPadding={10}
+            legendPosition="top"
+            margin={{ left: 15, bottom: 15 }}
+            frameProps={{ showAxes: false }}
           />
           <div style={{ marginTop: 12, marginBottom: 4, fontSize: 12, color: "var(--text-2)" }}>
             {brushExtent ? "Detail view (zoomed to brushed region)" : "Detail view (brush above to zoom)"}
