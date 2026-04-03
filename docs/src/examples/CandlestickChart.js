@@ -86,10 +86,11 @@ const frameProps = {
   lowAccessor: "low",
   closeAccessor: "close",
   candlestickStyle: {
-    upColor: theme[2],
-    downColor: theme[1],
+    upColor: "#4caf50",
+    downColor: "#e45050",
     wickColor: "#999",
   },
+  scalePadding: 12,
   size: [700, 400],
   margin: { left: 80, bottom: 50, right: 10, top: 40 },
   showAxes: true,

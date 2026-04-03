@@ -34,28 +34,60 @@ const gaugeProps = [
 ]
 
 function StreamingGaugeDemo() {
+  // NYT-style election needle: value drifts around 50 with occasional swings
   const [value, setValue] = useState(50)
   useEffect(() => {
     const id = setInterval(() => {
-      setValue(v => Math.max(0, Math.min(100, v + (Math.random() - 0.45) * 8)))
-    }, 500)
+      setValue(v => {
+        const drift = (Math.random() - 0.48) * 3
+        const revert = (52 - v) * 0.02
+        return Math.max(40, Math.min(60, v + drift + revert))
+      })
+    }, 400)
     return () => clearInterval(id)
   }, [])
+
+  const lead = value - 50
+  const absLead = Math.abs(lead)
+  const leaderLabel = absLead < 2 ? "Toss-up" : lead > 0 ? "Candidate B" : "Candidate A"
+  const leaderColor = absLead < 2 ? "#888" : lead > 0 ? "#4575b4" : "#d73027"
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+    <div style={{ textAlign: "center", marginBottom: 16, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "var(--semiotic-text-secondary, #888)", marginBottom: 4 }}>
+        Estimated chance of winning
+      </div>
       <GaugeChart
         value={value}
-        max={100}
+        min={40}
+        max={60}
+        sweep={180}
+        arcWidth={0.15}
+        fillZones={false}
+        showNeedle={true}
+        needleColor="#222"
+        showScaleLabels={false}
         thresholds={[
-          { value: 50, color: "#4caf50", label: "Normal" },
-          { value: 80, color: "#ff9800", label: "Warning" },
-          { value: 100, color: "#f44336", label: "Critical" },
+          { value: 45, color: "#d73027" },
+          { value: 48, color: "#fc8d59" },
+          { value: 52, color: "#ccc" },
+          { value: 55, color: "#91bfdb" },
+          { value: 60, color: "#4575b4" },
         ]}
-        width={250}
+        centerContent={
+          <div style={{ textAlign: "center", lineHeight: 1.1 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: leaderColor }}>
+              {absLead < 2 ? "Even" : `+${absLead.toFixed(1)}`}
+            </div>
+            <div style={{ fontSize: 11, color: leaderColor, fontWeight: 600 }}>{leaderLabel}</div>
+          </div>
+        }
+        width={360}
         height={200}
       />
-      <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #666)" }}>
-        Live value: <strong>{Math.round(value)}</strong>
+      <div style={{ display: "flex", justifyContent: "space-between", width: 360, fontSize: 11, color: "var(--semiotic-text-secondary, #888)", padding: "4px 40px 0" }}>
+        <span style={{ color: "#d73027", fontWeight: 600 }}>← Candidate A</span>
+        <span style={{ color: "#4575b4", fontWeight: 600 }}>Candidate B →</span>
       </div>
     </div>
   )
@@ -284,24 +316,46 @@ export default function GaugeChartPage() {
         language="jsx"
       />
 
-      <h3 id="streaming">Streaming Updates</h3>
+      <h3 id="streaming">Streaming — Election Needle</h3>
       <p>
-        Update the <code>value</code> prop to animate the gauge. The example
-        below simulates a live metric that fluctuates every 500ms.
+        The gauge below simulates a live election forecast in the style of the
+        NYT needle. The value drifts around 50% with a slight lean,
+        updating every 400ms. The diverging color scheme runs from red
+        (Candidate A) through a grey toss-up zone to blue (Candidate B).
+        Only the needle moves — the threshold zones stay fixed.
       </p>
 
       <StreamingGaugeDemo />
 
       <CodeBlock
-        code={`function LiveGauge() {
+        code={`function ElectionNeedle() {
   const [value, setValue] = useState(50)
   useEffect(() => {
     const id = setInterval(() => {
-      setValue(v => Math.max(0, Math.min(100, v + (Math.random() - 0.45) * 8)))
-    }, 500)
+      setValue(v => {
+        const drift = (Math.random() - 0.48) * 3
+        const revert = (52 - v) * 0.02
+        return Math.max(40, Math.min(60, v + drift + revert))
+      })
+    }, 400)
     return () => clearInterval(id)
   }, [])
-  return <GaugeChart value={value} thresholds={[...]} />
+
+  return (
+    <GaugeChart
+      value={value} min={40} max={60} sweep={180}
+      arcWidth={0.15} needleColor="#222"
+      fillZones={false}  // zones stay fixed, only needle moves
+      thresholds={[
+        { value: 45, color: "#d73027" },   // strong A (dark red)
+        { value: 48, color: "#fc8d59" },   // lean A (light red)
+        { value: 52, color: "#ccc" },      // toss-up (grey)
+        { value: 55, color: "#91bfdb" },   // lean B (light blue)
+        { value: 60, color: "#4575b4" },   // strong B (dark blue)
+      ]}
+      centerContent={...}  // +{abs(value-50)} colored by leader
+    />
+  )
 }`}
         language="jsx"
       />

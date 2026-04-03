@@ -48,6 +48,8 @@ export interface GaugeChartProps extends BaseChartProps {
   showScaleLabels?: boolean
   /** Arc sweep angle in degrees (default 240 — leaves a 120° gap at the bottom) */
   sweep?: number
+  /** When false, all threshold zones render at full color and only the needle indicates value. Default true (zones fill up to value). */
+  fillZones?: boolean
   /** Enable tooltip on arc segments */
   tooltip?: TooltipProp
   /** Annotations — supports threshold markers via standard annotation system */
@@ -88,6 +90,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     valueFormat,
     showScaleLabels = true,
     sweep = 240,
+    fillZones = true,
     tooltip,
     annotations,
     frameProps = {},
@@ -127,27 +130,33 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     }
 
     // Data values sum to 1.0. pieScene uses sweepAngle to limit the arc.
-    // No gap segment needed — the gap is the empty space after the arc ends.
     let prevBound = min
     for (let i = 0; i < zones.length; i++) {
       const zone = zones[i]
       const zonePct = (zone.value - prevBound) / range
-      const zoneStart = (prevBound - min) / range
-      const zoneEnd = (zone.value - min) / range
 
-      const fillEnd = Math.min(pct, zoneEnd)
-      const fillPct = Math.max(0, fillEnd - zoneStart)
-      const bgPct = zonePct - fillPct
+      if (!fillZones) {
+        // No fill tracking — all zones render at full color, only needle moves
+        const key = `zone-${i}`
+        data.push({ category: key, value: zonePct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
+        styles.set(key, { fill: zone.color })
+      } else {
+        const zoneStart = (prevBound - min) / range
+        const zoneEnd = (zone.value - min) / range
+        const fillEnd = Math.min(pct, zoneEnd)
+        const fillPct = Math.max(0, fillEnd - zoneStart)
+        const bgPct = zonePct - fillPct
 
-      if (fillPct > 0) {
-        const fillKey = `fill-${i}`
-        data.push({ category: fillKey, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
-        styles.set(fillKey, { fill: zone.color })
-      }
-      if (bgPct > 0) {
-        const bgKey = `bg-${i}`
-        data.push({ category: bgKey, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
-        styles.set(bgKey, { fill: backgroundColor, opacity: 0.4 })
+        if (fillPct > 0) {
+          const fillKey = `fill-${i}`
+          data.push({ category: fillKey, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
+          styles.set(fillKey, { fill: zone.color })
+        }
+        if (bgPct > 0) {
+          const bgKey = `bg-${i}`
+          data.push({ category: bgKey, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
+          styles.set(bgKey, { fill: backgroundColor, opacity: 0.4 })
+        }
       }
 
       prevBound = zone.value
@@ -172,7 +181,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     }
 
     return { gaugeData: data, pieceStyle: styleFn, gaugeAnnotations: scaleAnnotations }
-  }, [value, min, max, thresholds, fillColor, backgroundColor, pct, range, showScaleLabels])
+  }, [value, min, max, thresholds, fillColor, backgroundColor, pct, range, showScaleLabels, fillZones])
 
   // ── Start angle ─────────────────────────────────────────────────────────
   // pieScene.ts: 0° = 12 o'clock, positive = clockwise. Adds startAngle (degrees→radians).
@@ -183,51 +192,45 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const gapDeg = 360 - sweep
   const startAngleDegFinal = 180 + gapDeg / 2
 
-  // ── Compute margins to maximize gauge size within widget ──────────────
-  // pieScene: outerRadius = min(layoutW, layoutH) / 2 - 4
-  // We compute the max R that fits both the arc bounding box AND the square layout.
-
+  // ── Compute arc bounding box to maximize radius and center the arc ────
+  const PAD = 10
   const offsetRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
-  const arcPoints: [number, number][] = [
+  const arcPts: [number, number][] = [
     [Math.cos(offsetRad), Math.sin(offsetRad)],
     [Math.cos(offsetRad + sweepRad), Math.sin(offsetRad + sweepRad)],
+    [0, 0],
   ]
   for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
     const norm = ((a - offsetRad) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
-    if (norm <= sweepRad + 0.001) arcPoints.push([Math.cos(a), Math.sin(a)])
+    if (norm <= sweepRad + 0.001) arcPts.push([Math.cos(a), Math.sin(a)])
   }
-  arcPoints.push([0, 0])
+  const arcMinX = Math.min(...arcPts.map(p => p[0]))
+  const arcMaxX = Math.max(...arcPts.map(p => p[0]))
+  const arcMinY = Math.min(...arcPts.map(p => p[1]))
+  const arcMaxY = Math.max(...arcPts.map(p => p[1]))
+  const arcW = arcMaxX - arcMinX   // e.g. 2.0 for symmetric arcs
+  const arcH = arcMaxY - arcMinY   // e.g. 1.0 for 180° half-circle
+  const arcCY = (arcMinY + arcMaxY) / 2
 
-  const minX = Math.min(...arcPoints.map(p => p[0]))
-  const maxX = Math.max(...arcPoints.map(p => p[0]))
-  const minY = Math.min(...arcPoints.map(p => p[1]))
-  const maxY = Math.max(...arcPoints.map(p => p[1]))
-  const arcW = maxX - minX
-  const arcH = maxY - minY
-  const arcCX = (minX + maxX) / 2
-  const arcCY = (minY + maxY) / 2
-
-  const PAD = 10
-  // R must satisfy: arc fits in widget AND layout square fits when shifted
-  const constraints = [
+  // Maximize radius: the arc's visible bbox must fit in the widget.
+  // The arc occupies arcW*R horizontally and arcH*R vertically.
+  const arcCX = (arcMinX + arcMaxX) / 2
+  const radius = Math.max(10, Math.min(
     (width - 2 * PAD) / arcW,
-    (height - 2 * PAD) / arcH,
-  ]
-  if (1 + arcCY !== 0) constraints.push((height / 2 - 4) / Math.abs(1 + arcCY))
-  if (1 - arcCY !== 0) constraints.push((height / 2 - 4) / Math.abs(1 - arcCY))
-  if (1 + arcCX !== 0) constraints.push((width / 2 - 4) / Math.abs(1 + arcCX))
-  if (1 - arcCX !== 0) constraints.push((width / 2 - 4) / Math.abs(1 - arcCX))
-
-  const radius = Math.min(...constraints)
+    (height - 2 * PAD) / arcH
+  ) - 4)
   const innerRadius = Math.max(10, radius * (1 - arcWidth))
-  const S = 2 * (radius + 4)
 
-  const layoutCX = width / 2 - arcCX * radius
-  const layoutCY = height / 2 - arcCY * radius
-  const marginLeft = Math.max(0, layoutCX - S / 2)
-  const marginTop = Math.max(0, layoutCY - S / 2)
-  const marginRight = Math.max(0, width - layoutCX - S / 2)
-  const marginBottom = Math.max(0, height - layoutCY - S / 2)
+  // Position the frame center so the arc bbox is centered in the widget.
+  // The arc center (0,0 in unit circle) maps to the frame layout center.
+  // Arc bbox center = frameCenterY + arcCY*R. We want this at height/2.
+  // So frameCenterY = height/2 - arcCY*R.
+  const frameCenterX = width / 2 - arcCX * radius
+  const frameCenterY = height / 2 - arcCY * radius
+
+  // The layout must be at least 2*(R+4) square for the frame to produce this radius.
+  // Allow the layout to extend outside the widget — the canvas clips to the widget size anyway.
+  const S = 2 * (radius + 4)
 
   // ── Center content ──────────────────────────────────────────────────────
   const centerEl = useMemo(() => {
@@ -334,6 +337,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     data: gaugeData,
     oAccessor: "category",
     rAccessor: "value",
+    oSort: false,  // preserve threshold zone order (don't sort by value)
     projection: "radial",
     pieceStyle,
     innerRadius,
@@ -343,7 +347,12 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: { top: marginTop, bottom: marginBottom, left: marginLeft, right: marginRight },
+    margin: {
+      top: frameCenterY - S / 2,
+      bottom: height - frameCenterY - S / 2,
+      left: frameCenterX - S / 2,
+      right: width - frameCenterX - S / 2,
+    },
     enableHover: resolved.enableHover,
     showAxes: false,
     showCategoryTicks: false,

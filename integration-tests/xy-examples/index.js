@@ -208,6 +208,29 @@ const examples = [
       size: [300, 250],
       margin: { top: 10, bottom: 100, left: 50, right: 10 },
     })
+  }),
+  // Range plot (candlestick with only high/low)
+  TestCase({
+    title: "Range Plot",
+    testId: "xy-range-plot",
+    children: React.createElement(StreamXYFrame, {
+      chartType: "candlestick",
+      data: [
+        { day: 1, high: 85, low: 42 },
+        { day: 2, high: 78, low: 55 },
+        { day: 3, high: 92, low: 38 },
+        { day: 4, high: 68, low: 45 },
+        { day: 5, high: 95, low: 60 },
+      ],
+      xAccessor: "day",
+      highAccessor: "high",
+      lowAccessor: "low",
+      candlestickStyle: { rangeColor: "#6366f1", wickWidth: 2 },
+      showAxes: true,
+      enableHover: true,
+      size: [400, 250],
+      margin: { top: 20, bottom: 40, left: 50, right: 20 },
+    })
   })
 ]
 

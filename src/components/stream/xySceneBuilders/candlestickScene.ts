@@ -11,13 +11,14 @@ import type { XYSceneContext } from "./types"
 export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
-  // Range mode: only high/low provided, no open/close
-  const isRangeMode = !ctx.getOpen || !ctx.getClose
+  // Range mode: detected by PipelineStore when both open/close accessors are missing.
+  // If only one of open/close is provided (invalid config), return empty.
+  const isRangeMode = ctx.config.candlestickRangeMode ?? false
   if (!isRangeMode && (!ctx.getOpen || !ctx.getClose)) return []
 
   const nodes: SceneNode[] = []
   const cs = ctx.config.candlestickStyle || {}
-  const rangeColor = cs.rangeColor || "var(--semiotic-primary, #6366f1)"
+  const rangeColor = cs.rangeColor || "#6366f1"
   const upColor = isRangeMode ? rangeColor : (cs.upColor || "#28a745")
   const downColor = isRangeMode ? rangeColor : (cs.downColor || "#dc3545")
   const wickColor = isRangeMode ? rangeColor : (cs.wickColor || "#333")
@@ -29,7 +30,7 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, 
     .sort((a, b) => a - b)
 
   let bodyWidth = isRangeMode ? 0 : (cs.bodyWidth ?? 0)
-  if (!isRangeMode && !cs.bodyWidth && sortedX.length > 1) {
+  if (!isRangeMode && cs.bodyWidth == null && sortedX.length > 1) {
     let minGap = Infinity
     for (let i = 1; i < sortedX.length; i++) {
       const gap = Math.abs(ctx.scales.x(sortedX[i]) - ctx.scales.x(sortedX[i - 1]))
@@ -40,7 +41,7 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, 
     } else {
       bodyWidth = 6
     }
-  } else if (!isRangeMode && !cs.bodyWidth) {
+  } else if (!isRangeMode && cs.bodyWidth == null) {
     bodyWidth = 6
   }
 

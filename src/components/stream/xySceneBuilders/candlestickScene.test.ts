@@ -82,7 +82,7 @@ describe("buildCandlestickScene", () => {
 
   it("falls back to range mode when open/close are missing", () => {
     const data = [{ x: 0, high: 15, low: 5 }]
-    const noOC = makeCtx({ getOpen: undefined, getClose: undefined })
+    const noOC = makeCtx({ getOpen: undefined, getClose: undefined, config: { candlestickRangeMode: true } })
     const nodes = buildCandlestickScene(noOC, data, defaultLayout)
     // Should produce range-mode nodes, not empty
     expect(nodes.length).toBe(1)
@@ -296,6 +296,7 @@ describe("Range / dumbbell mode", () => {
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
+      config: { candlestickRangeMode: true },
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     expect(nodes.length).toBe(3)
@@ -307,6 +308,7 @@ describe("Range / dumbbell mode", () => {
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
+      config: { candlestickRangeMode: true },
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])
@@ -319,7 +321,7 @@ describe("Range / dumbbell mode", () => {
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
-      config: { candlestickStyle: { rangeColor: "#6366f1" } },
+      config: { candlestickRangeMode: true, candlestickStyle: { rangeColor: "#6366f1" } },
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])
@@ -334,6 +336,7 @@ describe("Range / dumbbell mode", () => {
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
+      config: { candlestickRangeMode: true },
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])
@@ -348,6 +351,7 @@ describe("Range / dumbbell mode", () => {
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
+      config: { candlestickRangeMode: true },
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])

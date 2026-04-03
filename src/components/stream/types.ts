@@ -437,6 +437,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   xExtent?: [number | undefined, number | undefined] | [number]
   yExtent?: [number | undefined, number | undefined] | [number]
   extentPadding?: number
+  /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
+  scalePadding?: number
   sizeRange?: [number, number]
 
   // ── Layout ───────────────────────────────────────
