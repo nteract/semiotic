@@ -274,14 +274,14 @@ export class PipelineStore {
 
     // Candlestick accessors
     if (config.chartType === "candlestick") {
-      this.getOpen = config.openAccessor != null ? resolveAccessor(config.openAccessor, "open") : undefined
+      const hasOpen = config.openAccessor != null
+      const hasClose = config.closeAccessor != null
+      this.getOpen = hasOpen ? resolveAccessor(config.openAccessor, "open") : undefined
       this.getHigh = resolveAccessor(config.highAccessor, "high")
       this.getLow = resolveAccessor(config.lowAccessor, "low")
-      this.getClose = config.closeAccessor != null ? resolveAccessor(config.closeAccessor, "close") : undefined
-      // Set range mode flag for scene builder
-      if (!config.openAccessor && !config.closeAccessor) {
-        this.config.candlestickRangeMode = true
-      }
+      this.getClose = hasClose ? resolveAccessor(config.closeAccessor, "close") : undefined
+      // Range mode: both open AND close must be missing. If only one is provided, the scene builder returns [].
+      this.config.candlestickRangeMode = !hasOpen && !hasClose
     }
 
     // Pulse: parallel timestamp buffer
@@ -419,6 +419,7 @@ export class PipelineStore {
       this.lastLayout &&
       this.scene.length > 0 &&
       this.scales &&
+      !this.config.scalePadding &&  // scalePadding requires full rebuild (proportional remap distorts padding)
       (this.lastLayout.width !== layout.width || this.lastLayout.height !== layout.height)
     ) {
       this.remapScene(layout)

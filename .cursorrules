@@ -326,7 +326,7 @@ Charts render with `role="group"` (outer interactive wrapper, keyboard/focus) an
 
 ## Performance
 
-- **scalePadding**: Pixel inset on scale ranges to prevent glyph clipping at chart edges. Insets both X and Y ranges — edge data points map to N pixels from the chart boundary instead of 0px. Domain and ticks unchanged. On `StreamXYFrame`, use `scalePadding` directly; on HOC charts, pass via `frameProps`:
+- **scalePadding**: Pixel inset on scale ranges to prevent glyph clipping at chart edges. Insets both X and Y ranges — edge data points map to N pixels from the chart boundary instead of 0px. Domain and tick values unchanged (rendered positions shift inward with the range). On `StreamXYFrame`, use `scalePadding` directly; on HOC charts, pass via `frameProps`:
   ```jsx
   <StreamXYFrame chartType="candlestick" scalePadding={12} ... />
   <Scatterplot data={data} pointRadius={8} frameProps={{ scalePadding: 12 }} />

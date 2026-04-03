@@ -268,8 +268,9 @@ export default function CandlestickChartPage() {
         the edge glyphs (candle bodies, dumbbell dots) from being clipped at
         the chart boundary. <code>scalePadding={`{12}`}</code> insets the X and Y
         scale ranges by 12 pixels on each side — the data domain and tick
-        positions are unchanged, only the pixel mapping shifts inward so marks
-        at the min/max data values have room to render fully.
+        values are unchanged, but their rendered positions shift inward
+        because the pixel range is inset, so marks at the min/max data
+        values have room to render fully.
       </p>
 
       <div style={{ marginBottom: 24 }}>

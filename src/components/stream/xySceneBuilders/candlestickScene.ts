@@ -11,8 +11,10 @@ import type { XYSceneContext } from "./types"
 export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
-  // Range mode: detected by PipelineStore when open/close accessors are not provided
+  // Range mode: detected by PipelineStore when both open/close accessors are missing.
+  // If only one of open/close is provided (invalid config), return empty.
   const isRangeMode = ctx.config.candlestickRangeMode ?? false
+  if (!isRangeMode && (!ctx.getOpen || !ctx.getClose)) return []
 
   const nodes: SceneNode[] = []
   const cs = ctx.config.candlestickStyle || {}
