@@ -39,10 +39,7 @@ describe("PipelineStore xScaleType=time integration", () => {
     const ticks = xScale.ticks(8)
     expect(ticks.length).toBeGreaterThan(2)
 
-    console.log("Tick count:", ticks.length)
-    console.log("First tick:", ticks[0], "instanceof Date:", ticks[0] instanceof Date)
-
-    // THE KEY ASSERTION: ticks must be Date instances, not numbers
+    // ticks must be Date instances, not numbers
     expect(ticks[0]).toBeInstanceOf(Date)
 
     // Format check: should produce real dates, not "Dec 31"
@@ -50,8 +47,6 @@ describe("PipelineStore xScaleType=time integration", () => {
       const d = new Date(t)
       return `${d.toLocaleString("en", { month: "short" })} ${d.getDate()}`
     })
-    console.log("Formatted ticks:", formatted)
-
     // None should say "Dec 31" (that would mean scaleLinear was used)
     const dec31Count = formatted.filter(f => f.includes("Dec 31")).length
     expect(dec31Count).toBe(0)

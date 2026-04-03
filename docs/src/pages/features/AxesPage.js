@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
@@ -84,14 +84,24 @@ const axisProps = [
 
 function ResizableAutoRotateDemo() {
   const [chartWidth, setChartWidth] = useState(300)
+  const cleanupRef = useRef(null)
+
+  // Ensure drag listeners are cleaned up on unmount
+  useEffect(() => () => { if (cleanupRef.current) cleanupRef.current() }, [])
+
   const onMouseDown = useCallback((e) => {
     e.preventDefault()
     const startX = e.clientX
     const startWidth = chartWidth
     const onMove = (ev) => setChartWidth(Math.max(200, Math.min(800, startWidth + ev.clientX - startX)))
-    const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp) }
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+      cleanupRef.current = null
+    }
     document.addEventListener("mousemove", onMove)
     document.addEventListener("mouseup", onUp)
+    cleanupRef.current = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp) }
   }, [chartWidth])
 
   return (

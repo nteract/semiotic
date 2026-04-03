@@ -4,7 +4,8 @@
  * issues like scaleTime tick generation, label width estimation, and autoRotate.
  */
 import { describe, it, expect } from "vitest"
-import { scaleLinear, scaleTime } from "d3-scale"
+import { scaleTime } from "d3-scale"
+import { isTimeLandmark } from "./hitTestUtils"
 
 describe("scaleTime tick generation", () => {
   it("generates Date object ticks for a 90-day range", () => {
@@ -94,20 +95,6 @@ describe("label width estimation vs autoRotate", () => {
 })
 
 describe("isTimeLandmark with scaleTime ticks", () => {
-  function toDate(value: any): Date | null {
-    if (value instanceof Date) return value
-    if (typeof value === "number" && value > 1e9) return new Date(value)
-    return null
-  }
-
-  function isTimeLandmark(value: any, prevValue: any): boolean {
-    const d = toDate(value)
-    if (!d) return false
-    const prev = toDate(prevValue)
-    if (!prev) return true
-    return d.getFullYear() !== prev.getFullYear() || d.getMonth() !== prev.getMonth()
-  }
-
   it("detects month boundary in scaleTime ticks", () => {
     const start = new Date(2024, 0, 1)
     const end = new Date(2024, 2, 31)

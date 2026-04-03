@@ -322,24 +322,7 @@ function filterTicksByPixelDistance<T extends { value: number; pixel: number; la
   return result
 }
 
-/** Detect whether a tick marks a time boundary (new month, year, day) compared to the previous tick */
-function toDate(value: any): Date | null {
-  if (value instanceof Date) return value
-  if (typeof value === "number" && value > 1e9) return new Date(value)
-  return null
-}
-
-function isTimeLandmark(value: any, prevValue: any): boolean {
-  const d = toDate(value)
-  if (!d) return false
-  const prev = toDate(prevValue)
-  if (!prev) return true
-  // New year or new month boundary
-  return (
-    d.getFullYear() !== prev.getFullYear() ||
-    d.getMonth() !== prev.getMonth()
-  )
-}
+import { isTimeLandmark } from "./hitTestUtils"
 
 export function SVGOverlay(props: SVGOverlayProps) {
   const {

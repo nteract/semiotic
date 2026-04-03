@@ -1,31 +1,9 @@
 /**
- * Tests for SVGOverlay utility functions.
- * We test isTimeLandmark and toDate indirectly via the exported module,
- * but since they're private, we test the behavior through landmark tick detection.
+ * Tests for time landmark detection used by SVGOverlay tick rendering.
+ * Tests the shared isTimeLandmark/toDate functions from hitTestUtils.
  */
-
 import { describe, it, expect } from "vitest"
-
-// Since isTimeLandmark and toDate are private module functions, we need to
-// test them by importing them. Let's extract testable logic instead.
-// For now, replicate the functions here to verify correctness.
-
-function toDate(value: any): Date | null {
-  if (value instanceof Date) return value
-  if (typeof value === "number" && value > 1e9) return new Date(value)
-  return null
-}
-
-function isTimeLandmark(value: any, prevValue: any): boolean {
-  const d = toDate(value)
-  if (!d) return false
-  const prev = toDate(prevValue)
-  if (!prev) return true
-  return (
-    d.getFullYear() !== prev.getFullYear() ||
-    d.getMonth() !== prev.getMonth()
-  )
-}
+import { toDate, isTimeLandmark } from "./hitTestUtils"
 
 describe("isTimeLandmark", () => {
   it("returns true for Date objects at month boundary", () => {
@@ -58,27 +36,39 @@ describe("isTimeLandmark", () => {
   })
 
   it("returns false for non-timestamp numbers", () => {
-    // Small numbers (like scale tick values 0-100) should not be treated as dates
     expect(isTimeLandmark(50, 40)).toBe(false)
-  })
-
-  it("handles d3 scaleLinear ticks on timestamp range", () => {
-    // d3 scaleLinear generates "nice" round numbers, not date boundaries.
-    // E.g. domain [1704067200000, 1711929600000] might tick at 1.705e12, 1.707e12, etc.
-    // These ARE valid timestamps (> 1e9) but may not fall on month boundaries.
-    const tick1 = 1704000000000 // ~2023-12-31 (d3 rounds to nice number)
-    const tick2 = 1706000000000 // ~2024-01-23
-    const tick3 = 1708000000000 // ~2024-02-15
-
-    // tick1 to tick2: Dec to Jan → different month = landmark
-    expect(isTimeLandmark(tick2, tick1)).toBe(true)
-    // tick2 to tick3: Jan to Feb → different month = landmark
-    expect(isTimeLandmark(tick3, tick2)).toBe(true)
   })
 
   it("detects year boundary", () => {
     const dec = new Date(2023, 11, 20).getTime()
     const jan = new Date(2024, 0, 5).getTime()
     expect(isTimeLandmark(jan, dec)).toBe(true)
+  })
+})
+
+describe("toDate", () => {
+  it("returns Date for Date input", () => {
+    const d = new Date(2024, 0, 1)
+    expect(toDate(d)).toBe(d)
+  })
+
+  it("returns Date for large number (timestamp)", () => {
+    const ts = new Date(2024, 0, 1).getTime()
+    const result = toDate(ts)
+    expect(result).toBeInstanceOf(Date)
+    expect(result!.getFullYear()).toBe(2024)
+  })
+
+  it("returns null for small numbers", () => {
+    expect(toDate(42)).toBeNull()
+  })
+
+  it("returns null for strings", () => {
+    expect(toDate("2024-01-01")).toBeNull()
+  })
+
+  it("returns null for null/undefined", () => {
+    expect(toDate(null)).toBeNull()
+    expect(toDate(undefined)).toBeNull()
   })
 })
