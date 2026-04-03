@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ReactNode tick labels** — `xFormat`, `yFormat`, `categoryFormat` accept `=> string | ReactNode` with `<foreignObject>` fallback.
 - **Tick deduplication** — Adjacent identical tick labels automatically removed.
 - **`getHitRadius`** and `MultiPointTooltip` exported from `semiotic/utils`.
-- **`isTimeLandmark`** and `toDate`** exported from `hitTestUtils.ts` (shared across SVGOverlay and tests).
+- **`isTimeLandmark`** and **`toDate`** exported from `hitTestUtils.ts` (shared across SVGOverlay and tests).
 
 ### Fixed
 
