@@ -12,7 +12,7 @@ dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
 ```jsx
-import { LineChart } from "semiotic"
+import { LineChart } from "semiotic/xy"    // 143 KB gzip
 
 <LineChart
   data={salesData}
@@ -277,20 +277,35 @@ configToJSX(config)
 Supports bar, line, area, point, rect, arc, tick marks with encoding translation
 for color, size, aggregation, and binning.
 
-## Smaller Bundles
+## Bundle Sizes
 
-Import only what you need:
+Semiotic ships 11 entry points. **Don't import from `"semiotic"` unless you need everything** — use the sub-path that matches your chart type:
+
+| Entry Point | gzip | What's inside |
+|---|---|---|
+| `semiotic/xy` | **143 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 7 more XY charts |
+| `semiotic/ordinal` | **109 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **98 KB** | ForceDirectedGraph, SankeyDiagram, Treemap, + 4 more |
+| `semiotic/geo` | **93 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/realtime` | **145 KB** | RealtimeLineChart, RealtimeHistogram, + 3 streaming charts |
+| `semiotic/server` | **100 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **31 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/themes` | **5 KB** | Theme presets only (tufte, carbon, etc.) |
+| `semiotic/data` | **5 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
+| `semiotic/ai` | **269 KB** | All 38 HOCs + validation — optimized for LLM code generation |
+| `semiotic` | **278 KB** | Everything above (full bundle) |
 
 ```jsx
-import { LineChart } from "semiotic/xy"                 // ~123 KB gzip
-import { BarChart } from "semiotic/ordinal"              // ~88 KB gzip
-import { ForceDirectedGraph } from "semiotic/network"    // ~89 KB gzip
-import { ChoroplethMap } from "semiotic/geo"             // ~82 KB gzip
-import { LineChart } from "semiotic/ai"                  // ~236 KB gzip (all HOCs)
+// Import from the sub-path, not from "semiotic"
+import { LineChart } from "semiotic/xy"
+import { BarChart } from "semiotic/ordinal"
+import { SankeyDiagram } from "semiotic/network"
+import { ChoroplethMap } from "semiotic/geo"
 ```
 
-Granular entry points export only v3 Stream Frames and HOC charts — no legacy
-utilities or backwards-compatibility shims.
+**Tree-shaking**: Each sub-path is a self-contained bundle with `"sideEffects": false`. Bundlers (webpack, Rollup, Vite, esbuild) will tree-shake unused exports. If you only use `LineChart` from `semiotic/xy`, the bar/pie/network code is never included.
+
+**When to use `"semiotic"`**: Only if your app uses charts from 3+ categories (XY + ordinal + network) and you'd rather have one import than three. The full bundle is 278 KB gzip — comparable to a single D3 import.
 
 ## TypeScript
 
@@ -321,17 +336,22 @@ import { LineChart } from "semiotic"
 <LineChart data={data} xAccessor="date" yAccessor="value" />
 ```
 
-For standalone SVG generation (email, OG images, PDF), use the server entry point:
+For standalone SVG/PNG/GIF generation (email, OG images, PDF, Slack), use the server entry point:
 
 ```js
-import { renderToStaticSVG } from "semiotic/server"
+import { renderChart, renderToImage, renderToAnimatedGif } from "semiotic/server"
 
-const svg = renderToStaticSVG("xy", {
-  lines: [{ coordinates: data }],
-  xAccessor: "date",
-  yAccessor: "value",
-  size: [600, 400],
+// SVG — sync, no dependencies
+const svg = renderChart("LineChart", {
+  data, xAccessor: "date", yAccessor: "value",
+  theme: "tufte", title: "Revenue Trend",
 })
+
+// PNG — async, requires sharp
+const png = await renderToImage("BarChart", { data, ... }, { format: "png", scale: 2 })
+
+// Animated GIF — async, requires sharp + gifenc
+const gif = await renderToAnimatedGif("line", data, { ... }, { fps: 12 })
 ```
 
 ## MCP Server

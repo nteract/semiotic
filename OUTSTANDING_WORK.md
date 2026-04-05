@@ -1,9 +1,50 @@
 # Outstanding Work
 
-Last updated 2026-03-22.
+Last updated 2026-04-05.
 
 ---
 ## BUGS
+
+---
+
+## Push API: Selective Data Removal
+
+**Status**: Scoped, not started.
+
+### Problem
+
+The push API (`push`, `pushMany`, `clear`, `getData`) is additive-only. Data exits the buffer only through RingBuffer eviction (oldest items drop when window is full) or `clear()` (wipes everything). There is no way to remove a specific datum, edge, or node.
+
+This matters for network topology changes (edge/node removal), filtered live views (deselect a category), correction/tombstone streams, and TTL-based expiry.
+
+**Current workaround**: For server GIF rendering, `generateFrameSequence` accepts complete data snapshots per frame, so deletion is implicit (frame N+1 simply omits the deleted item). For client-side, the only option is `clear()` + `pushMany(filteredData)`, which loses transition state.
+
+### Proposed API
+
+```ts
+ref.current.remove((datum) => datum.id === "Lead")       // by predicate
+ref.current.removeWhere("id", "Lead")                     // field match sugar
+ref.current.removeEdge((edge) => edge.source === "Spark") // network edges
+```
+
+### Technical approach
+
+- **RingBuffer**: Add `remove(predicate)` — O(n) scan + compact. Size decreases, capacity stays. Subsequent pushes fill the gap.
+- **PipelineStore**: `remove(predicate)` calls `buffer.remove()`, recomputes extent from scratch (O(n), removal is infrequent), marks dirty.
+- **Transitions**: Existing enter/exit machinery handles this — removed items appear in the "previous" snapshot but not the "current" scene, so `startTransition()` creates fade-out exit nodes automatically.
+- **Network cascade**: Removing a node also removes edges that reference it.
+- **HOC handles**: All forwardRef HOCs get `remove` on their imperative handle. No prop changes.
+
+### Edge cases
+
+- Remove all data → empty state (same as `clear()`)
+- Remove during active transition → snap to end, start new transition
+- Network node removal → cascade to edges
+- Remove hovered/selected item → clear interaction state
+
+### Effort
+
+Medium (3-5 days). RingBuffer.remove (1d), PipelineStore.remove + extent recompute (1d), transition exits (1d, mostly existing), frame/HOC exposure (0.5d), network cascade (0.5d).
 
 ---
 

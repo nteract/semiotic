@@ -1,6 +1,6 @@
 # Semiotic — React Data Visualization
 
-Use `import { ComponentName } from "semiotic/ai"` for all components below.
+Use sub-path imports: `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB). Or `semiotic/ai` for all 38 HOCs in one import (269KB).
 
 ## Flat Array Data (`data: object[]`)
 - **LineChart** — `xAccessor`, `yAccessor`, `lineBy` (multi-line), `curve`
@@ -113,5 +113,5 @@ Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"t
 
 ## Key Patterns
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
-- **SSR**: `renderToStaticSVG("ordinal", props)` or `renderOrdinalToStaticSVG(props)` from `semiotic/server`. Frame type is `"xy"` | `"ordinal"` | `"network"` (NOT component name).
+- **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`.
 - **exportChart**: Pass the wrapper div, not the SVG element: `exportChart(wrapperDiv, { format: "png" })`. It finds canvas+SVG internally.

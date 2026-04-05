@@ -10,7 +10,7 @@ import PageLayout from "../components/PageLayout"
 
 const installSnippet = `npm install semiotic`
 
-const firstChartSnippet = `import { LineChart } from "semiotic"
+const firstChartSnippet = `import { LineChart } from "semiotic/xy"
 
 const data = [
   { month: "Jan", sales: 4200 },
@@ -545,6 +545,58 @@ export default function GettingStartedPage() {
         <strong>Tip:</strong> Start with a Chart. Use <code>frameProps</code> for one-off
         customizations. Only graduate to a Frame when you need full control over marks, layout, or
         rendering.
+      </div>
+
+      {/* --------------------------------------------------------------- */}
+      {/* Bundle Size */}
+      {/* --------------------------------------------------------------- */}
+      <h2 id="bundle-size">Bundle Size</h2>
+
+      <p>
+        Semiotic ships <strong>11 entry points</strong> so you only load the chart types you use.
+        Don't import from <code>"semiotic"</code> unless you need everything — use the sub-path
+        that matches your chart category:
+      </p>
+
+      <CodeBlock code={`// Instead of this (278 KB gzip — full library):
+import { LineChart } from "semiotic"
+
+// Do this (143 KB gzip — XY charts only):
+import { LineChart } from "semiotic/xy"
+
+// Or this (109 KB gzip — categorical charts only):
+import { BarChart } from "semiotic/ordinal"
+
+// Mixing is fine — each sub-path is independent:
+import { LineChart } from "semiotic/xy"
+import { BarChart } from "semiotic/ordinal"
+// Total: ~252 KB gzip (less than the full bundle)`} language="js" />
+
+      <table style={{ ...styles.table, marginTop: "16px" }}>
+        <thead>
+          <tr style={styles.headerRow}>
+            <th style={styles.th}>Entry Point</th>
+            <th style={styles.th}>gzip</th>
+            <th style={styles.th}>Charts</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/xy</td><td style={styles.td}>143 KB</td><td style={styles.td}>LineChart, AreaChart, Scatterplot, Heatmap, + 7 more</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/ordinal</td><td style={styles.td}>109 KB</td><td style={styles.td}>BarChart, PieChart, BoxPlot, Histogram, + 11 more</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/network</td><td style={styles.td}>98 KB</td><td style={styles.td}>ForceDirectedGraph, SankeyDiagram, Treemap, + 4 more</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/geo</td><td style={styles.td}>93 KB</td><td style={styles.td}>ChoroplethMap, FlowMap, DistanceCartogram, + 1 more</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/realtime</td><td style={styles.td}>145 KB</td><td style={styles.td}>RealtimeLineChart, RealtimeHistogram, + 3 streaming charts</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/server</td><td style={styles.td}>100 KB</td><td style={styles.td}>renderChart, renderDashboard, renderToImage, renderToAnimatedGif</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/utils</td><td style={styles.td}>31 KB</td><td style={styles.td}>ThemeProvider, validators, serialization — no chart components</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/themes</td><td style={styles.td}>5 KB</td><td style={styles.td}>Theme preset constants only</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/data</td><td style={styles.td}>5 KB</td><td style={styles.td}>bin, rollup, groupBy, pivot, fromVegaLite</td></tr>
+        </tbody>
+      </table>
+
+      <div style={styles.note}>
+        <strong>Tree-shaking:</strong> Each sub-path bundle has <code>sideEffects: false</code>.
+        Modern bundlers (webpack, Vite, Rollup, esbuild) will tree-shake unused exports automatically.
+        Sub-path imports give the most reliable size reduction since they're pre-split at the package level.
       </div>
 
       {/* --------------------------------------------------------------- */}

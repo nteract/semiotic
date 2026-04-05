@@ -427,7 +427,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
     ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...frameProps
+    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
+    // clobbering the HOC's color-resolved, selection-wrapped style function.
+    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
   if (validationError) {

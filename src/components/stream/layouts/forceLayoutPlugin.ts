@@ -141,7 +141,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       50,
       Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
     )
-    const iterations = useWarmStart ? WARM_START_ITERATIONS : coldIterations
+    // config.iterations=0 means "skip simulation" (pinned layout) regardless of warm/cold
+    const iterations = config.iterations === 0 ? 0
+      : useWarmStart ? WARM_START_ITERATIONS
+      : coldIterations
 
     // Build node size accessor for charge strength
     const nodeSizeFn = resolveNodeSizeFn(
@@ -151,52 +154,57 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     )
     const nodeRadius = (d: any) => nodeSizeFn(d)
 
-    // Configure link force
-    const linkForce = forceLink()
-      .strength((d: any) =>
-        Math.min(2.5, d.weight ? d.weight * forceStrength : forceStrength)
-      )
-      .id((d: any) => d.id)
+    // Skip simulation entirely when iterations=0 (pinned layout mode).
+    // d3-force's simulation.nodes() modifies positions during setup, so
+    // we must avoid calling it when positions are pre-set.
+    if (iterations > 0) {
+      // Configure link force
+      const linkForce = forceLink()
+        .strength((d: any) =>
+          Math.min(2.5, d.weight ? d.weight * forceStrength : forceStrength)
+        )
+        .id((d: any) => d.id)
 
-    // Build simulation
-    const simulation = forceSimulation()
-      .force(
-        "charge",
-        forceManyBody().strength((d: any) => -25 * nodeRadius(d))
-      )
-      // forceCenter shifts the center of mass to the target on every tick,
-      // ensuring the graph as a whole stays centered in the chart area
-      .force("center", forceCenter(cx, cy).strength(0.8))
-      // forceX/forceY pull individual nodes toward center, preventing outliers
-      .force("x", forceX(cx).strength(0.15))
-      .force("y", forceY(cy).strength(0.15))
+      // Build simulation
+      const simulation = forceSimulation()
+        .force(
+          "charge",
+          forceManyBody().strength((d: any) => -25 * nodeRadius(d))
+        )
+        // forceCenter shifts the center of mass to the target on every tick,
+        // ensuring the graph as a whole stays centered in the chart area
+        .force("center", forceCenter(cx, cy).strength(0.8))
+        // forceX/forceY pull individual nodes toward center, preventing outliers
+        .force("x", forceX(cx).strength(0.15))
+        .force("y", forceY(cy).strength(0.15))
 
-    simulation.nodes(nodes as any)
+      simulation.nodes(nodes as any)
 
-    if (edges.length > 0) {
-      // Resolve edge source/target to id strings for d3-force linking
-      const linkData = edges.map((e) => ({
-        ...e,
-        source: typeof e.source === "string" ? e.source : e.source.id,
-        target: typeof e.target === "string" ? e.target : e.target.id
-      }))
+      if (edges.length > 0) {
+        // Resolve edge source/target to id strings for d3-force linking
+        const linkData = edges.map((e) => ({
+          ...e,
+          source: typeof e.source === "string" ? e.source : e.source.id,
+          target: typeof e.target === "string" ? e.target : e.target.id
+        }))
 
-      simulation.force("link", linkForce)
-      ;(simulation.force("link") as any).links(linkData)
-    }
+        simulation.force("link", linkForce)
+        ;(simulation.force("link") as any).links(linkData)
+      }
 
-    // For warm start, use a lower initial alpha since the layout is mostly converged
-    if (useWarmStart) {
-      simulation.alpha(0.3)
-    } else if (simulation.alpha() < 0.1) {
-      simulation.alpha(1)
-    }
+      // For warm start, use a lower initial alpha since the layout is mostly converged
+      if (useWarmStart) {
+        simulation.alpha(0.3)
+      } else if (simulation.alpha() < 0.1) {
+        simulation.alpha(1)
+      }
 
-    simulation.stop()
+      simulation.stop()
 
-    // Run synchronously
-    for (let i = 0; i < iterations; ++i) {
-      simulation.tick()
+      // Run synchronously
+      for (let i = 0; i < iterations; ++i) {
+        simulation.tick()
+      }
     }
 
     // Clamp node positions to stay within the canvas area (with padding for node radius)
