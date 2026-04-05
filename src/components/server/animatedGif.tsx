@@ -42,7 +42,7 @@ export interface AnimatedGifOptions {
   xExtent?: [number, number]
   /** Lock Y axis domain (default: auto from full data) */
   yExtent?: [number, number]
-  /** Transition frames between data steps (0 = no easing, default 4) */
+  /** Transition frames between data steps (0 = no easing, default 4). XY charts only — ordinal charts use instant transitions. */
   transitionFrames?: number
   /** Easing for transitions (default "ease-out") */
   easing?: "linear" | "ease-out"
@@ -209,7 +209,13 @@ export function generateFrameSVGs(
 
 // ── SVG frame renderers ──────────────────────────────────────────────
 
-/** Render y-threshold annotations using the store's scales or yExtent fallback */
+/** Resolve the effective background color — always concrete, never CSS vars */
+function resolveBackground(props: Record<string, any>, theme: SemioticTheme): string | null {
+  const bg = props.background || theme.colors.background
+  return bg && bg !== "transparent" ? bg : null
+}
+
+/** Render y-threshold annotations using yExtent for coordinate mapping */
 function renderFrameAnnotations(
   annotations: Record<string, any>[] | undefined,
   innerWidth: number,
@@ -225,7 +231,9 @@ function renderFrameAnnotations(
     const ann = annotations[i]
     if (ann.type === "y-threshold" && ann.value != null && yExtent) {
       const [yMin, yMax] = yExtent
-      const py = innerHeight - ((ann.value - yMin) / (yMax - yMin)) * innerHeight
+      const span = yMax - yMin
+      if (span === 0) continue // degenerate extent — skip to avoid NaN
+      const py = innerHeight - ((ann.value - yMin) / span) * innerHeight
       const color = ann.color || s.primary
       elements.push(
         <g key={`ann-${i}`}>
@@ -256,16 +264,15 @@ function renderXYFrameSVG(
   const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
   const innerW = width - margin.left - margin.right
   const innerH = height - margin.top - margin.bottom
+  const bg = resolveBackground(props, theme)
 
   const dataMarks = scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)
   const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent)
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
-      style={{ fontFamily: s.fontFamily, background: props.background || s.background }}>
-      {props.background && props.background !== "transparent" && (
-        <rect x={0} y={0} width={width} height={height} fill={props.background} />
-      )}
+      style={{ fontFamily: s.fontFamily }}>
+      {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {annots}
         {dataMarks}
@@ -294,15 +301,14 @@ function renderOrdinalFrameSVG(
   const isRadial = props.projection === "radial"
   const tx = isRadial ? margin.left + (width - margin.left - margin.right) / 2 : margin.left
   const ty = isRadial ? margin.top + (height - margin.top - margin.bottom) / 2 : margin.top
+  const bg = resolveBackground(props, theme)
 
   const dataMarks = scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
-      style={{ fontFamily: s.fontFamily, background: props.background || s.background }}>
-      {props.background && props.background !== "transparent" && (
-        <rect x={0} y={0} width={width} height={height} fill={props.background} />
-      )}
+      style={{ fontFamily: s.fontFamily }}>
+      {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${tx},${ty})`}>
         {dataMarks}
       </g>
@@ -339,8 +345,11 @@ export async function renderToAnimatedGif(
   const scaledW = Math.round(width * scale)
   const scaledH = Math.round(height * scale)
 
+  // Pass background through to frame renderers so it's a real <rect>, not CSS
+  const propsWithBg = background ? { ...props, background } : props
+
   // Generate SVG frames
-  const svgFrames = generateFrameSVGs(chartType, data, props, options)
+  const svgFrames = generateFrameSVGs(chartType, data, propsWithBg, options)
   if (svgFrames.length === 0) {
     throw new Error("No frames generated — check that data is not empty")
   }
@@ -375,15 +384,7 @@ export async function renderToAnimatedGif(
   const encoder = GIFEncoder()
 
   for (let i = 0; i < svgFrames.length; i++) {
-    let svgStr = svgFrames[i]
-    if (background) {
-      // Merge into existing style attribute if present, otherwise add new one
-      if (svgStr.includes('style="')) {
-        svgStr = svgStr.replace(/style="/, `style="background:${background};`)
-      } else {
-        svgStr = svgStr.replace(/<svg /, `<svg style="background:${background}" `)
-      }
-    }
+    const svgStr = svgFrames[i]
 
     const pngBuffer = await sharp(Buffer.from(svgStr), { density: 72 * scale })
       .resize(scaledW, scaledH)
