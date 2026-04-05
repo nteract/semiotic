@@ -788,6 +788,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     layout: { width, height },
     theme,
     frameType: "ordinal",
+    projection: projection as "vertical" | "horizontal" | "radial",
   }) : null
 
   // Legend

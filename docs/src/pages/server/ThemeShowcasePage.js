@@ -141,7 +141,7 @@ export default function ThemeShowcasePage() {
       </p>
 
       <p>
-        Click any theme name to open it in the{" "}
+        To experiment with themes interactively, open the{" "}
         <Link to="/server/studio">Render Studio</Link>.
       </p>
 

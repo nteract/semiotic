@@ -30,6 +30,8 @@ export interface StaticAnnotationConfig {
   xAccessor?: string
   yAccessor?: string
   frameType: "xy" | "ordinal" | "network" | "geo"
+  /** Ordinal projection — determines whether r maps to x or y */
+  projection?: "vertical" | "horizontal" | "radial"
 }
 
 function resolveXPixel(
@@ -56,14 +58,13 @@ function resolveYPixel(
  * Render annotations as static SVG elements.
  */
 export function renderStaticAnnotations(config: StaticAnnotationConfig): React.ReactNode {
-  const { annotations, scales, layout, theme, xAccessor, yAccessor } = config
+  const { annotations } = config
   if (!annotations || annotations.length === 0) return null
 
   const elements: React.ReactNode[] = []
 
   for (let i = 0; i < annotations.length; i++) {
-    const ann = annotations[i]
-    const node = renderAnnotation(ann, i, scales, layout, theme, xAccessor, yAccessor)
+    const node = renderAnnotation(annotations[i], i, config)
     if (node) elements.push(node)
   }
 
@@ -73,22 +74,39 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
 function renderAnnotation(
   ann: Record<string, any>,
   index: number,
-  scales: AnnotationScales,
-  layout: AnnotationLayout,
-  theme: SemioticTheme,
-  xAccessor?: string,
-  yAccessor?: string
+  config: StaticAnnotationConfig,
 ): React.ReactNode | null {
+  const { scales, layout, theme, xAccessor, yAccessor } = config
   switch (ann.type) {
     case "y-threshold": {
       const value = ann.value
       if (value == null) return null
-      const py = scales.y ? scales.y(value) : scales.r ? scales.r(value) : null
-      if (py == null) return null
       const color = ann.color || theme.colors.primary
       const label = ann.label
       const labelPos = ann.labelPosition || "right"
       const dasharray = ann.strokeDasharray || "6,4"
+
+      // For horizontal ordinal charts, r maps to x — draw a vertical threshold line
+      if (config.projection === "horizontal" && scales.r) {
+        const px = scales.r(value)
+        if (px == null) return null
+        return (
+          <g key={`ann-ythresh-${index}`}>
+            <line x1={px} y1={0} x2={px} y2={layout.height}
+              stroke={color} strokeWidth={1.5} strokeDasharray={dasharray} />
+            {label && (
+              <text x={px + 4} y={12} textAnchor="start"
+                fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}>
+                {label}
+              </text>
+            )}
+          </g>
+        )
+      }
+
+      // Default: horizontal line (vertical ordinal or XY)
+      const py = scales.y ? scales.y(value) : scales.r ? scales.r(value) : null
+      if (py == null) return null
       return (
         <g key={`ann-ythresh-${index}`}>
           <line

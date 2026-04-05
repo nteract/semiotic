@@ -188,16 +188,17 @@ export function generateFrameSVGs(
       if (store.scene.length === 0) continue
 
       // Phase 1: Base frame (no transition)
-      svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps))
+      const scales = store.scales ? { y: store.scales.y } : undefined
+      svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales))
 
-      // Phase 2: Transition easing frames between data steps
+      // Phase 2: Transition easing frames between data steps (XY only)
       if (transitionFrames > 0 && fi > 0 && store.activeTransition) {
         const duration = transitionFrames * (1000 / fps)
         for (let tf = 1; tf <= transitionFrames; tf++) {
           const t = tf / transitionFrames
           const fakeNow = store.activeTransition.startTime + t * duration
           store.advanceTransition(fakeNow)
-          svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps))
+          svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales))
         }
       }
 
@@ -215,13 +216,14 @@ function resolveBackground(props: Record<string, any>, theme: SemioticTheme): st
   return bg && bg !== "transparent" ? bg : null
 }
 
-/** Render y-threshold annotations using yExtent for coordinate mapping */
+/** Render y-threshold annotations using yExtent or scale for coordinate mapping */
 function renderFrameAnnotations(
   annotations: Record<string, any>[] | undefined,
   innerWidth: number,
   innerHeight: number,
   theme: SemioticTheme,
-  yExtent?: [number, number]
+  yExtent?: [number, number],
+  yScale?: (v: number) => number
 ): React.ReactNode {
   if (!annotations || annotations.length === 0) return null
   const s = themeStyles(theme)
@@ -229,11 +231,21 @@ function renderFrameAnnotations(
 
   for (let i = 0; i < annotations.length; i++) {
     const ann = annotations[i]
-    if (ann.type === "y-threshold" && ann.value != null && yExtent) {
-      const [yMin, yMax] = yExtent
-      const span = yMax - yMin
-      if (span === 0) continue // degenerate extent — skip to avoid NaN
-      const py = innerHeight - ((ann.value - yMin) / span) * innerHeight
+    if (ann.type === "y-threshold" && ann.value != null) {
+      let py: number | null = null
+
+      if (yScale) {
+        // Use the store's computed scale — most accurate
+        py = yScale(ann.value)
+      } else if (yExtent) {
+        // Fall back to manual extent mapping
+        const [yMin, yMax] = yExtent
+        const span = yMax - yMin
+        if (span === 0) continue // degenerate extent — skip to avoid NaN
+        py = innerHeight - ((ann.value - yMin) / span) * innerHeight
+      }
+
+      if (py == null) continue
       const color = ann.color || s.primary
       elements.push(
         <g key={`ann-${i}`}>
@@ -258,7 +270,8 @@ function renderXYFrameSVG(
   width: number,
   height: number,
   theme: SemioticTheme,
-  props: Record<string, any>
+  props: Record<string, any>,
+  storeScales?: { y?: (v: number) => number }
 ): string {
   const s = themeStyles(theme)
   const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
@@ -267,20 +280,24 @@ function renderXYFrameSVG(
   const bg = resolveBackground(props, theme)
 
   const dataMarks = scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)
-  const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent)
+  // Use explicit yExtent for annotation mapping, falling back to store scales
+  const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent, storeScales?.y)
 
+  const titleText = typeof props.title === "string" ? props.title : undefined
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
+      role="img" aria-label={titleText}
       style={{ fontFamily: s.fontFamily }}>
+      {titleText && <title>{titleText}</title>}
       {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {annots}
         {dataMarks}
       </g>
-      {props.title && typeof props.title === "string" && (
+      {titleText && (
         <text x={width / 2} y={16} textAnchor="middle" fontSize={s.titleSize}
           fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
-          {props.title}
+          {titleText}
         </text>
       )}
     </svg>
@@ -304,18 +321,21 @@ function renderOrdinalFrameSVG(
   const bg = resolveBackground(props, theme)
 
   const dataMarks = scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)
+  const titleText = typeof props.title === "string" ? props.title : undefined
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
+      role="img" aria-label={titleText}
       style={{ fontFamily: s.fontFamily }}>
+      {titleText && <title>{titleText}</title>}
       {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${tx},${ty})`}>
         {dataMarks}
       </g>
-      {props.title && typeof props.title === "string" && (
+      {titleText && (
         <text x={width / 2} y={16} textAnchor="middle" fontSize={s.titleSize}
           fontWeight="bold" fill={s.text} fontFamily={s.fontFamily}>
-          {props.title}
+          {titleText}
         </text>
       )}
     </svg>

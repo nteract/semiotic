@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- **Use sub-path imports** — `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB), `semiotic/server` (99KB), `semiotic/utils` (31KB), `semiotic/themes` (5KB), `semiotic/data` (5KB). Full `semiotic` is 278KB gz.
+- **Use sub-path imports** — `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB), `semiotic/server` (100KB), `semiotic/utils` (31KB), `semiotic/themes` (5KB), `semiotic/data` (5KB). Full `semiotic` is 278KB gz.
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
