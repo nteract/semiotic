@@ -137,7 +137,7 @@ export default function ThemeShowcasePage() {
       <p>
         The same chart rendered with every built-in theme. All styling is inlined —
         no CSS custom properties, no browser needed. Each card shows the exact output
-        of <code>renderChart()</code> with <code>theme: "{"{themeName}"}"</code>.
+        of <code>renderChart()</code> with a different <code>theme</code> string.
       </p>
 
       <p>

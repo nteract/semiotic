@@ -272,7 +272,6 @@ function generateAxesSVG(
 
 function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): string {
   const theme = resolveTheme(props.theme)
-  const s = themeStyles(theme)
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 300]
   const margin = { ...defaultMargin, ...props.margin }
@@ -456,7 +455,6 @@ const HIERARCHICAL_TYPES: Set<string> = new Set([
 
 function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): string {
   const theme = resolveTheme(props.theme)
-  const s = themeStyles(theme)
   const chartType: NetworkChartType = props.chartType || "force"
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
@@ -1401,16 +1399,11 @@ export async function renderToImage(
     svg = svg.replace(/<svg /, `<svg style="background:${background}" `)
   }
 
-  // Load sharp dynamically — use indirect require to prevent bundlers
-  // (Parcel, webpack) from trying to resolve/polyfill it at build time.
+  // Load sharp dynamically — optional dep, loaded at call time only.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   let sharp: any
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const _require = typeof globalThis !== "undefined" && typeof (globalThis as any).process !== "undefined"
-      ? module.require || require
-      : null
-    if (!_require) throw new Error("not in Node")
-    sharp = _require("sharp")
+    sharp = require("sharp")
   } catch {
     throw new Error(
       `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +

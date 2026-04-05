@@ -4,6 +4,14 @@ import { generateFrameSVGs } from "../../../../src/components/server/animatedGif
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 
+function escapeForSVG(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
 // ── Sample datasets ──────────────────────────────────────────────────
 
 const DATASETS = {
@@ -155,14 +163,15 @@ export default function RenderStudioPage() {
     try {
       result = renderChart(chartType, props)
     } catch (e) {
-      result = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><text x="20" y="40" fill="red">${e.message}</text></svg>`
+      const msg = escapeForSVG(e && e.message ? e.message : String(e))
+      result = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><text x="20" y="40" fill="red">${msg}</text></svg>`
     }
     const t1 = performance.now()
 
     const codeProps = { ...props }
     delete codeProps.width
     delete codeProps.height
-    const codeStr = `import { renderChart } from "semiotic/server"\n\nconst svg = renderChart("${chartType}", ${JSON.stringify(codeProps, null, 2).replace(/"(\w+)":/g, "$1:").replace(/\n/g, "\n")
+    const codeStr = `import { renderChart } from "semiotic/server"\n\nconst svg = renderChart("${chartType}", ${JSON.stringify(codeProps, null, 2).replace(/"(\w+)":/g, "$1:")
     })`
 
     return { svg: result, code: codeStr, elapsed: (t1 - t0).toFixed(1) }
@@ -217,6 +226,8 @@ export default function RenderStudioPage() {
   }
 
   const downloadPNG = () => {
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement("canvas")
@@ -224,12 +235,13 @@ export default function RenderStudioPage() {
       const ctx = canvas.getContext("2d")
       ctx.scale(2, 2)
       ctx.drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(url)
       const link = document.createElement("a")
       link.download = `${chartType.toLowerCase()}-${theme}@2x.png`
       link.href = canvas.toDataURL("image/png")
       link.click()
     }
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)))
+    img.src = url
   }
 
   const copyEmbedCode = () => {

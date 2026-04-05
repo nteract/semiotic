@@ -345,13 +345,11 @@ export async function renderToAnimatedGif(
     throw new Error("No frames generated — check that data is not empty")
   }
 
-  // Load sharp
+  // Load sharp dynamically — these are optional deps, loaded at call time.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   let sharp: any
   try {
-    const _require = typeof globalThis !== "undefined" && typeof (globalThis as any).process !== "undefined"
-      ? module.require || require : null
-    if (!_require) throw new Error("not in Node")
-    sharp = _require("sharp")
+    sharp = require("sharp")
   } catch {
     throw new Error(
       `Animated GIF export requires "sharp". Install it:\n  npm install sharp`
@@ -361,10 +359,8 @@ export async function renderToAnimatedGif(
   // Load gifenc
   let GIFEncoder: any, quantize: any, applyPalette: any
   try {
-    const _require = typeof globalThis !== "undefined" && typeof (globalThis as any).process !== "undefined"
-      ? module.require || require : null
-    if (!_require) throw new Error("not in Node")
-    const gifenc = _require("gifenc")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const gifenc = require("gifenc")
     GIFEncoder = gifenc.GIFEncoder
     quantize = gifenc.quantize
     applyPalette = gifenc.applyPalette

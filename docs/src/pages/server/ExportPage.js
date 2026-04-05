@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { renderChart } from "../../../../src/components/server/renderToStaticSVG"
 import { generateFrameSVGs } from "../../../../src/components/server/animatedGif"
 import PageLayout from "../../components/PageLayout"
@@ -230,6 +230,8 @@ export default function ExportPage() {
   }
 
   const downloadPNG = (svg, name, w, h) => {
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" })
+    const blobUrl = URL.createObjectURL(blob)
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement("canvas")
@@ -237,10 +239,11 @@ export default function ExportPage() {
       const ctx = canvas.getContext("2d")
       ctx.scale(2, 2)
       ctx.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(blobUrl)
       const link = document.createElement("a")
       link.download = name; link.href = canvas.toDataURL("image/png"); link.click()
     }
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)))
+    img.src = blobUrl
   }
 
   return (

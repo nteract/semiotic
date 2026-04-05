@@ -122,9 +122,15 @@ function EmailFrame({ subject, from, to, body, chartSvg, emailSafe }) {
 }
 
 function stripClassesAndStyles(svg) {
-  return svg
-    .replace(/\sclass="[^"]*"/g, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/g, "")
+  let prev
+  let result = svg
+  do {
+    prev = result
+    result = prev
+      .replace(/\sclass="[^"]*"/g, "")
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/g, "")
+  } while (result !== prev)
+  return result
 }
 
 export default function EmailPreviewPage() {
