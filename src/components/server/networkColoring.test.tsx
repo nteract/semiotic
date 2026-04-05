@@ -42,8 +42,6 @@ describe("Network node coloring via nodeStyle", () => {
     const blueCount = (svg.match(/#a8c8f0/g) || []).length
     const redCount = (svg.match(/#f0a8a8/g) || []).length
 
-    console.log("Purple (broker):", purpleCount, "Blue (teamA):", blueCount, "Red (teamB):", redCount)
-
     expect(purpleCount).toBe(1)  // 1 broker node
     expect(blueCount).toBe(2)    // 2 teamA nodes
     expect(redCount).toBe(2)     // 2 teamB nodes

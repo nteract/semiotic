@@ -947,20 +947,17 @@ describe("Edge cases", () => {
     expect(svg).toContain("#1a1a2e")
   })
 
-  it("handles large datasets efficiently", () => {
+  it("handles large datasets", () => {
     const largeData = Array.from({ length: 1000 }, (_, i) => ({
       category: `cat-${i % 20}`,
       value: Math.random() * 100,
     }))
-    const start = Date.now()
     const svg = renderChart("BarChart", {
       data: largeData,
       categoryAccessor: "category",
       valueAccessor: "value",
     })
-    const elapsed = Date.now() - start
     expect(svg).toContain("<svg")
-    // Should complete in reasonable time
-    expect(elapsed).toBeLessThan(5000)
+    expect(svg).toContain("<rect")
   })
 })

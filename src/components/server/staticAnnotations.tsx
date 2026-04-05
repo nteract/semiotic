@@ -195,6 +195,16 @@ function renderAnnotation(
       const bandwidth = scales.o.bandwidth ? scales.o.bandwidth() : 40
       const color = ann.color || theme.colors.primary
       const opacity = ann.opacity ?? 0.1
+      // Horizontal ordinal: highlight across Y band
+      if (config.projection === "horizontal") {
+        return (
+          <rect
+            key={`ann-cathighlight-${index}`}
+            x={0} y={oVal} width={layout.width} height={bandwidth}
+            fill={color} opacity={opacity}
+          />
+        )
+      }
       return (
         <rect
           key={`ann-cathighlight-${index}`}
