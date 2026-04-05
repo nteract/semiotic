@@ -84,6 +84,7 @@ function renderAnnotation(
       const label = ann.label
       const labelPos = ann.labelPosition || "right"
       const dasharray = ann.strokeDasharray || "6,4"
+      const lineWidth = ann.strokeWidth ?? 1.5
 
       // For horizontal ordinal charts, r maps to x — draw a vertical threshold line
       if (config.projection === "horizontal" && scales.r) {
@@ -92,7 +93,7 @@ function renderAnnotation(
         return (
           <g key={`ann-ythresh-${index}`}>
             <line x1={px} y1={0} x2={px} y2={layout.height}
-              stroke={color} strokeWidth={1.5} strokeDasharray={dasharray} />
+              stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
             {label && (
               <text x={px + 4} y={12} textAnchor="start"
                 fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}>
@@ -110,7 +111,7 @@ function renderAnnotation(
         <g key={`ann-ythresh-${index}`}>
           <line
             x1={0} y1={py} x2={layout.width} y2={py}
-            stroke={color} strokeWidth={1.5} strokeDasharray={dasharray}
+            stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
           />
           {label && (
             <text
@@ -137,11 +138,12 @@ function renderAnnotation(
       const label = ann.label
       const labelPos = ann.labelPosition || "top"
       const dasharray = ann.strokeDasharray || "6,4"
+      const lineWidth = ann.strokeWidth ?? 1.5
       return (
         <g key={`ann-xthresh-${index}`}>
           <line
             x1={px} y1={0} x2={px} y2={layout.height}
-            stroke={color} strokeWidth={1.5} strokeDasharray={dasharray}
+            stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
           />
           {label && (
             <text

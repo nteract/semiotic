@@ -285,12 +285,18 @@ function renderFrameAnnotations(
 
       if (py == null) continue
       const color = ann.color || s.primary
+      const dasharray = ann.strokeDasharray || "6,4"
+      const lineWidth = ann.strokeWidth ?? 1.5
+      const labelPos = ann.labelPosition || "right"
       elements.push(
         <g key={`ann-${i}`}>
           <line x1={0} y1={py} x2={innerWidth} y2={py}
-            stroke={color} strokeWidth={1.5} strokeDasharray="6,4" />
+            stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
           {ann.label && (
-            <text x={innerWidth - 4} y={py - 5} textAnchor="end"
+            <text
+              x={labelPos === "left" ? 4 : labelPos === "center" ? innerWidth / 2 : innerWidth - 4}
+              y={py - 5}
+              textAnchor={labelPos === "left" ? "start" : labelPos === "center" ? "middle" : "end"}
               fontSize={s.tickSize} fill={color} fontFamily={s.fontFamily}>
               {ann.label}
             </text>
