@@ -11,10 +11,6 @@ Object.assign(global, { TextEncoder, TextDecoder })
 import {
   renderChart,
   renderToStaticSVG,
-  renderXYToStaticSVG,
-  renderOrdinalToStaticSVG,
-  renderNetworkToStaticSVG,
-  renderGeoToStaticSVG,
   renderToImage,
   renderDashboard,
 } from "./renderToStaticSVG"
