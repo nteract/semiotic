@@ -328,11 +328,17 @@ function renderXYFrameSVG(
   const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent, storeScales?.y)
 
   const titleText = typeof props.title === "string" ? props.title : undefined
+  const descText = typeof props.description === "string" ? props.description : undefined
+  const titleId = titleText ? "semiotic-title" : undefined
+  const descId = descText ? "semiotic-desc" : undefined
+  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
-      role="img" aria-label={titleText}
+      role="img" aria-labelledby={labelledBy}
       style={{ fontFamily: s.fontFamily }}>
-      {titleText && <title>{titleText}</title>}
+      {titleText && <title id={titleId}>{titleText}</title>}
+      {descText && <desc id={descId}>{descText}</desc>}
       {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {annots}
@@ -366,12 +372,17 @@ function renderOrdinalFrameSVG(
 
   const dataMarks = scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)
   const titleText = typeof props.title === "string" ? props.title : undefined
+  const descText = typeof props.description === "string" ? props.description : undefined
+  const titleId = titleText ? "semiotic-title" : undefined
+  const descId = descText ? "semiotic-desc" : undefined
+  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
-      role="img" aria-label={titleText}
+      role="img" aria-labelledby={labelledBy}
       style={{ fontFamily: s.fontFamily }}>
-      {titleText && <title>{titleText}</title>}
+      {titleText && <title id={titleId}>{titleText}</title>}
+      {descText && <desc id={descId}>{descText}</desc>}
       {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${tx},${ty})`}>
         {dataMarks}
