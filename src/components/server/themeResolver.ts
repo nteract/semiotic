@@ -34,11 +34,7 @@ export function resolveTheme(theme: ThemeInput): SemioticTheme {
   }
 
   // Object theme — merge onto base
-  const base = theme.mode === "dark"
-    ? DARK_THEME
-    : theme.mode === "light" || !theme.mode
-    ? LIGHT_THEME
-    : LIGHT_THEME
+  const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
 
   return {
     ...base,

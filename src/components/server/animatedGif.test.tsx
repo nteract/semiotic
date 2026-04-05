@@ -2,7 +2,7 @@
 import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
-import { generateFrameSVGs, renderToAnimatedGif } from "./animatedGif"
+import { generateFrameSVGs, generateFrameSequence, renderToAnimatedGif } from "./animatedGif"
 
 // ── Test data ────────────────────────────────────────────────────────
 
@@ -266,6 +266,72 @@ describe("generateFrameSVGs", () => {
       }, { transitionFrames: 0, stepSize: 5 })
       expect(frames.length).toBeGreaterThan(0)
     })
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════
+// generateFrameSequence — snapshot-based animation
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("generateFrameSequence", () => {
+  it("generates frames from ForceDirectedGraph snapshots", () => {
+    const snapshots = [
+      { nodes: [{ id: "A" }, { id: "B" }, { id: "C" }], edges: [{ source: "A", target: "B" }, { source: "B", target: "C" }] },
+      { nodes: [{ id: "A" }, { id: "B" }, { id: "C" }], edges: [{ source: "A", target: "B" }] },
+      { nodes: [{ id: "A" }, { id: "B" }], edges: [{ source: "A", target: "B" }] },
+    ]
+    const frames = generateFrameSequence("ForceDirectedGraph", snapshots, {
+      width: 300, height: 200,
+    })
+    expect(frames).toHaveLength(3)
+    frames.forEach(f => {
+      expect(f).toContain("<svg")
+      expect(f).toContain("<circle")
+    })
+    // First frame has 3 nodes, last has 2
+    const firstCircles = (frames[0].match(/<circle /g) || []).length
+    const lastCircles = (frames[2].match(/<circle /g) || []).length
+    expect(firstCircles).toBeGreaterThan(lastCircles)
+  })
+
+  it("generates frames from SankeyDiagram snapshots", () => {
+    const snapshots = [
+      { edges: [{ source: "A", target: "B", value: 50 }, { source: "B", target: "C", value: 50 }] },
+      { edges: [{ source: "A", target: "D", value: 50 }, { source: "D", target: "C", value: 50 }] },
+    ]
+    const frames = generateFrameSequence("SankeyDiagram", snapshots, {
+      width: 400, height: 200,
+    })
+    expect(frames).toHaveLength(2)
+    frames.forEach(f => {
+      expect(f).toContain("<svg")
+      expect(f).toContain("<rect") // sankey nodes
+    })
+  })
+
+  it("applies theme from baseProps", () => {
+    const snapshots = [
+      { nodes: [{ id: "A" }, { id: "B" }], edges: [{ source: "A", target: "B" }] },
+    ]
+    const frames = generateFrameSequence("ForceDirectedGraph", snapshots, {
+      width: 300, height: 200, theme: "dark",
+    })
+    expect(frames).toHaveLength(1)
+    expect(frames[0]).toContain("<svg")
+  })
+
+  it("handles empty snapshots array", () => {
+    const frames = generateFrameSequence("ForceDirectedGraph", [], {})
+    expect(frames).toEqual([])
+  })
+
+  it("handles render errors gracefully", () => {
+    const frames = generateFrameSequence("ForceDirectedGraph", [
+      { nodes: [], edges: [] },
+    ], { width: 200, height: 150 })
+    expect(frames).toHaveLength(1)
+    expect(frames[0]).toContain("<svg")
   })
 })
 

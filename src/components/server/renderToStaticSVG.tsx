@@ -363,7 +363,6 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     theme,
     xAccessor: typeof props.xAccessor === "string" ? props.xAccessor : undefined,
     yAccessor: typeof props.yAccessor === "string" ? props.yAccessor : undefined,
-    frameType: "xy",
   }) : null
 
   // Legend
@@ -427,7 +426,9 @@ function buildRealtimeNodes(
   const nodeIDFn = resolveAccessor(config.nodeIDAccessor, "id")
   return propsNodes.map((d) => ({
     id: String(nodeIDFn(d)),
-    x: 0, y: 0, x0: 0, x1: 0, y0: 0, y1: 0,
+    // Preserve pre-set positions from source data (for pinned layouts)
+    x: d.x ?? 0, y: d.y ?? 0,
+    x0: 0, x1: 0, y0: 0, y1: 0,
     width: 0, height: 0, value: 0, data: d
   }))
 }
@@ -565,6 +566,12 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
     nodes, edges, config, [innerWidth, innerHeight]
   )
+
+  // Apply theme text color to labels (layout plugins default to #333)
+  const s = themeStyles(theme)
+  for (const label of labels) {
+    if (!label.fill) label.fill = s.text
+  }
 
   const edgeElements = sceneEdges
     .map((edge, i) => networkSceneEdgeToSVG(edge, i))
@@ -787,7 +794,6 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     },
     layout: { width, height },
     theme,
-    frameType: "ordinal",
     projection: projection as "vertical" | "horizontal" | "radial",
   }) : null
 
@@ -1252,6 +1258,8 @@ export function renderChart(
         nodeLabel: rest.nodeLabel,
         nodeSize: rest.nodeSize,
         nodeSizeRange: rest.nodeSizeRange,
+        nodeStyle: rest.nodeStyle,
+        edgeStyle: rest.edgeStyle,
         ...common,
       } as any)
 
@@ -1273,6 +1281,8 @@ export function renderChart(
         colorBy: colorBy,
         edgeColorBy: rest.edgeColorBy,
         edgeOpacity: rest.edgeOpacity,
+        nodeStyle: rest.nodeStyle,
+        edgeStyle: rest.edgeStyle,
         colorScheme,
         ...common,
       } as any)
@@ -1404,7 +1414,8 @@ export async function renderToImage(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   let sharp: any
   try {
-    sharp = require("sharp")
+    const sharpModule = "sharp"
+    sharp = require(sharpModule)
   } catch {
     throw new Error(
       `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +

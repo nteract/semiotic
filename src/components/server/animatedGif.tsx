@@ -23,6 +23,7 @@ import type { SceneNode } from "../stream/types"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
+import { renderChart } from "./renderToStaticSVG"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (el: React.ReactElement) => string }
@@ -109,8 +110,17 @@ export function generateFrameSVGs(
     dataFrames.push(data.length)
   }
 
-  const isOrdinal = ["bar", "pie", "donut", "clusterbar", "swarm", "point",
-    "boxplot", "violin", "histogram", "timeline", "swimlane", "ridgeline"].includes(chartType)
+  const ORDINAL_TYPES = new Set([
+    "bar", "pie", "donut", "clusterbar", "swarm", "point",
+    "boxplot", "violin", "histogram", "timeline", "swimlane",
+    "ridgeline", "funnel", "bar-funnel",
+  ])
+  const isOrdinal = ORDINAL_TYPES.has(chartType)
+
+  // Compute inner dimensions from merged margin — same as frame renderers use
+  const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
+  const innerW = width - margin.left - margin.right
+  const innerH = height - margin.top - margin.bottom
 
   const svgFrames: string[] = []
 
@@ -142,7 +152,7 @@ export function generateFrameSVGs(
 
       const store = new OrdinalPipelineStore(config)
       store.ingest({ inserts: frameData, bounded: true })
-      store.computeScene({ width: width - 60, height: height - 50 })
+      store.computeScene({ width: innerW, height: innerH })
 
       if (store.scene.length > 0) {
         svgFrames.push(renderOrdinalFrameSVG(store.scene as OrdinalSceneNode[], width, height, theme, frameProps))
@@ -183,7 +193,7 @@ export function generateFrameSVGs(
 
       const store = new PipelineStore(config)
       store.ingest({ inserts: frameData, bounded: true })
-      store.computeScene({ width: width - 60, height: height - 50 })
+      store.computeScene({ width: innerW, height: innerH })
 
       if (store.scene.length === 0) continue
 
@@ -206,6 +216,34 @@ export function generateFrameSVGs(
   }
 
   return svgFrames
+}
+
+// ── Frame sequence from snapshots ────────────────────────────────────
+
+/**
+ * Generate SVG strings from an array of data snapshots.
+ *
+ * Unlike `generateFrameSVGs` which slices a single array progressively,
+ * this accepts pre-built snapshots — each entry is the complete props
+ * for one frame. Use for scenarios where data changes non-monotonically
+ * (edge deletion, network splits, failover paths).
+ *
+ * Each snapshot is passed directly to `renderChart()`.
+ */
+export function generateFrameSequence(
+  component: string,
+  snapshots: Record<string, any>[],
+  baseProps: Record<string, any> = {}
+): string[] {
+  return snapshots.map(snapshot => {
+    try {
+      return renderChart(component as any, { ...baseProps, ...snapshot })
+    } catch {
+      const w = baseProps.width || snapshot.width || 600
+      const h = baseProps.height || snapshot.height || 400
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`
+    }
+  })
 }
 
 // ── SVG frame renderers ──────────────────────────────────────────────
@@ -378,7 +416,8 @@ export async function renderToAnimatedGif(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   let sharp: any
   try {
-    sharp = require("sharp")
+    const sharpModule = "sharp"
+    sharp = require(sharpModule)
   } catch {
     throw new Error(
       `Animated GIF export requires "sharp". Install it:\n  npm install sharp`
@@ -389,7 +428,8 @@ export async function renderToAnimatedGif(
   let GIFEncoder: any, quantize: any, applyPalette: any
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const gifenc = require("gifenc")
+    const gifencModule = "gifenc"
+    const gifenc = require(gifencModule)
     GIFEncoder = gifenc.GIFEncoder
     quantize = gifenc.quantize
     applyPalette = gifenc.applyPalette

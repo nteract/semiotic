@@ -21,7 +21,6 @@ const baseConfig = {
   scales: { x: xScale as any, y: yScale as any },
   layout: { width: 400, height: 300 },
   theme: LIGHT_THEME,
-  frameType: "xy" as const,
 }
 
 describe("renderStaticAnnotations", () => {

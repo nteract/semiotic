@@ -16,7 +16,7 @@ export type {
   RenderDashboardOptions,
 } from "./server/renderToStaticSVG"
 
-export { renderToAnimatedGif, generateFrameSVGs } from "./server/animatedGif"
+export { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./server/animatedGif"
 export type { AnimatedGifOptions } from "./server/animatedGif"
 
 export { resolveTheme, themeStyles } from "./server/themeResolver"

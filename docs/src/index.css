@@ -45,7 +45,7 @@
   /* Layout */
   --sidebar-width: 220px;
   --toc-width: 160px;
-  --content-max-width: 800px;
+  --content-max-width: 960px;
 
   /* Legacy aliases (mapped to new tokens) */
   --bg-color: var(--surface-2);

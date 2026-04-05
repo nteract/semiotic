@@ -36,17 +36,12 @@ export interface StaticLegendConfig {
  * Build a categorical color scale from categories and colorScheme.
  */
 function buildColorScale(categories: string[], colorScheme: string | string[] | undefined, theme: SemioticTheme): (category: string) => string {
-  let colors: string[]
-  if (Array.isArray(colorScheme)) {
-    colors = colorScheme
-  } else if (colorScheme) {
-    // Named scheme — try theme categorical, fall back to category10
-    colors = theme.colors.categorical.length > 0 ? theme.colors.categorical : schemeCategory10 as unknown as string[]
-  } else {
-    colors = theme.colors.categorical.length > 0 ? theme.colors.categorical : schemeCategory10 as unknown as string[]
-  }
-  const scale = scaleOrdinal<string, string>().domain(categories).range(colors)
-  return scale
+  const colors = Array.isArray(colorScheme)
+    ? colorScheme
+    : theme.colors.categorical.length > 0
+    ? theme.colors.categorical
+    : schemeCategory10 as unknown as string[]
+  return scaleOrdinal<string, string>().domain(categories).range(colors)
 }
 
 /**
@@ -70,14 +65,15 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   const colorScale = buildColorScale(categories, colorScheme, theme)
   const isHorizontal = position === "top" || position === "bottom"
 
-  // Compute position
+  // Compute position — keep legend within SVG bounds
   let tx: number, ty: number
   if (position === "left") {
     tx = 4; ty = margin.top
   } else if (position === "top") {
     tx = margin.left; ty = hasTitle ? 32 : 8
   } else if (position === "bottom") {
-    tx = margin.left; ty = totalHeight - margin.bottom + 40
+    // Place inside the bottom margin area, not beyond SVG height
+    tx = margin.left; ty = totalHeight - margin.bottom + 8
   } else {
     // right (default)
     tx = totalWidth - margin.right + 10; ty = margin.top

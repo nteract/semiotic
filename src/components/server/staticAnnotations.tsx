@@ -29,7 +29,6 @@ export interface StaticAnnotationConfig {
   theme: SemioticTheme
   xAccessor?: string
   yAccessor?: string
-  frameType: "xy" | "ordinal" | "network" | "geo"
   /** Ordinal projection — determines whether r maps to x or y */
   projection?: "vertical" | "horizontal" | "radial"
 }
