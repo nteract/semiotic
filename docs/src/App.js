@@ -111,6 +111,11 @@ import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
+import RenderStudioPage from "./pages/server/RenderStudioPage"
+import ThemeShowcasePage from "./pages/server/ThemeShowcasePage"
+import DashboardGalleryPage from "./pages/server/DashboardGalleryPage"
+import EmailPreviewPage from "./pages/server/EmailPreviewPage"
+import ExportPage from "./pages/server/ExportPage"
 
 // Playground pages
 import LineChartPlayground from "./pages/playground/LineChartPlayground"
@@ -387,6 +392,11 @@ export default function DocsApp() {
             {/* Using Server-Side Rendering */}
             <Route path="using-ssr" element={<UsingSSRPage />} />
             <Route path="ssr-gallery" element={<SSRGalleryPage />} />
+            <Route path="server/studio" element={<RenderStudioPage />} />
+            <Route path="server/themes" element={<ThemeShowcasePage />} />
+            <Route path="server/dashboards" element={<DashboardGalleryPage />} />
+            <Route path="server/email" element={<EmailPreviewPage />} />
+            <Route path="server/export" element={<ExportPage />} />
 
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />

@@ -183,7 +183,9 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
     ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...frameProps
+    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
+    // clobbering the HOC's color-resolved, selection-wrapped style function.
+    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
   return <SafeRender componentName="DotPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>

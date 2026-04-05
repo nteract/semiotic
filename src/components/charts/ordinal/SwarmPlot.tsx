@@ -208,7 +208,9 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
     ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...ordinalBrush.brushStreamProps,
-    ...frameProps
+    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
+    // clobbering the HOC's color-resolved, selection-wrapped style function.
+    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
   return <SafeRender componentName="SwarmPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>

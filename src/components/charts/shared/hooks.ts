@@ -558,6 +558,7 @@ const MODE_DEFAULTS = {
 interface ChartModeInput {
   width?: number
   height?: number
+  showAxes?: boolean
   showGrid?: boolean
   enableHover?: boolean
   showLegend?: boolean
@@ -612,7 +613,7 @@ export function useChartMode(
   return {
     width: userProps.width ?? defaultWidth,
     height: userProps.height ?? defaultHeight,
-    showAxes: m.showAxes,
+    showAxes: userProps.showAxes ?? m.showAxes,
     showGrid: userProps.showGrid ?? m.showGrid,
     enableHover: userProps.enableHover ?? (userProps.linkedHover ? true : m.enableHover),
     showLegend: userProps.showLegend ?? m.showLegend,

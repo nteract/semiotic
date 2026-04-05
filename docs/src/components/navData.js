@@ -182,10 +182,15 @@ const navData = [
     ]
   },
   {
-    title: "Server-Side Rendering",
+    title: "Server Rendering",
     path: "/using-ssr",
     children: [
-      { title: "SSR Gallery", path: "/ssr-gallery" }
+      { title: "SSR Gallery", path: "/ssr-gallery" },
+      { title: "Render Studio", path: "/server/studio" },
+      { title: "Theme Showcase", path: "/server/themes" },
+      { title: "Dashboard Gallery", path: "/server/dashboards" },
+      { title: "Email Preview", path: "/server/email" },
+      { title: "Export & Embed", path: "/server/export" },
     ]
   },
   {
