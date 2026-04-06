@@ -58,7 +58,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
       const results: Record<string, any>[] = []
       for (const nodeId of ids) {
         const node = nodes.find(n => n.id === nodeId)
-        if (node) results.push(node.data ?? { id: nodeId })
+        if (node) results.push({ id: nodeId, ...(node.data ?? {}) })
         frameRef.current?.removeNode(nodeId)
       }
       return results

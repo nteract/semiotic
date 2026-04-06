@@ -250,7 +250,7 @@ export const RealtimeLineChart = forwardRef(
         pulse={pulse}
         staleness={staleness}
         transition={transition}
-        legendPosition={legendPositionProp}
+        pointIdAccessor={(props as any).pointIdAccessor}        legendPosition={legendPositionProp}
       />
     )
   }

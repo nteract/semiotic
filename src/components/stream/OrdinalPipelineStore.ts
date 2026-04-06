@@ -294,7 +294,7 @@ export class OrdinalPipelineStore {
         if (ext.dirty) ext.recalculate(buffer, acc)
         let [min, max] = ext.extent
         if (min === Infinity) { min = 0; max = 1 }
-        const pad = config.extentPadding || 0.05
+        const pad = config.extentPadding ?? 0.05
         const range = max - min
         const padAmt = range > 0 ? range * pad : 1
         min -= padAmt
@@ -414,7 +414,7 @@ export class OrdinalPipelineStore {
 
   private computeValueDomain(data: Record<string, any>[], oExtent: string[]): [number, number] {
     const chartType = this.config.chartType
-    const pad = this.config.extentPadding || 0.05
+    const pad = this.config.extentPadding ?? 0.05
 
     // For radial pie/donut, the value axis represents proportions
     // But for radial point (radar), use actual data values
@@ -506,7 +506,7 @@ export class OrdinalPipelineStore {
       const padAmount = range > 0 ? range * pad : 1
       // When baselinePadding is false (default), don't pad the side that sits at 0
       const skipMinPad = isBarType && !this.config.baselinePadding && min === 0
-      const skipMaxPad = isBarType && !this.config.baselinePadding && max === 0
+      const skipMaxPad = (isBarType && !this.config.baselinePadding && max === 0) || chartType === "swimlane"
       if (this.config.rExtent?.[0] == null && !skipMinPad) min -= padAmount
       if (this.config.rExtent?.[1] == null && !skipMaxPad) max += padAmount
     }
