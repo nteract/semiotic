@@ -2,6 +2,7 @@ import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import { PipelineStore } from "./PipelineStore"
+import { GeoPipelineStore } from "./GeoPipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 
@@ -502,5 +503,56 @@ describe("NetworkPipelineStore.removeEdge", () => {
     })
     store.ingestBounded([{ id: "A" }, { id: "B" }], [{ source: "A", target: "B" }], [200, 200])
     expect(store.removeEdge("A", "C")).toBe(false)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// GeoPipelineStore.removePoint
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("GeoPipelineStore.removePoint", () => {
+  it("removes points by ID from static data", () => {
+    const store = new GeoPipelineStore({
+      projection: "equalEarth",
+      pointIdAccessor: "id",
+      xAccessor: "lon",
+      yAccessor: "lat",
+    })
+    store.setPoints([
+      { id: "a", lon: 0, lat: 0 },
+      { id: "b", lon: 10, lat: 10 },
+      { id: "c", lon: 20, lat: 20 },
+    ])
+
+    const removed = store.removePoint("b")
+    expect(removed).toHaveLength(1)
+    expect(removed[0].id).toBe("b")
+  })
+
+  it("removes multiple points by ID array", () => {
+    const store = new GeoPipelineStore({
+      projection: "equalEarth",
+      pointIdAccessor: "id",
+      xAccessor: "lon",
+      yAccessor: "lat",
+    })
+    store.setPoints([
+      { id: "a", lon: 0, lat: 0 },
+      { id: "b", lon: 10, lat: 10 },
+      { id: "c", lon: 20, lat: 20 },
+    ])
+
+    const removed = store.removePoint(["a", "c"])
+    expect(removed).toHaveLength(2)
+  })
+
+  it("throws without pointIdAccessor", () => {
+    const store = new GeoPipelineStore({
+      projection: "equalEarth",
+      xAccessor: "lon",
+      yAccessor: "lat",
+    })
+    store.setPoints([{ lon: 0, lat: 0 }])
+    expect(() => store.removePoint("a")).toThrow("pointIdAccessor")
   })
 })

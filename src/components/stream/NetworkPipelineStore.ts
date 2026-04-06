@@ -1029,7 +1029,7 @@ export class NetworkPipelineStore {
   }
 
   /**
-   * Remove an edge by source+target ID pair or edge key.
+   * Remove an edge by source and target node IDs.
    * Returns true if the edge was found and removed.
    */
   removeEdge(sourceId: string, targetId: string): boolean {

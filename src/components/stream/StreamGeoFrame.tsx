@@ -400,7 +400,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           .map(p => p.datum)
           .filter(Boolean)
       }
-    }), [pushPoint, pushMany, clearAll])
+    }), [pushPoint, pushMany, clearAll, scheduleRender])
 
     // ── Hover handler ─────────────────────────────────────────────────
 
