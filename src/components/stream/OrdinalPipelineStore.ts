@@ -1048,10 +1048,7 @@ export class OrdinalPipelineStore {
     if (removed.length === 0) return removed
 
     for (const d of removed) {
-      this.rExtent.evict(this.getR(d))
-      for (let ai = 0; ai < this.rExtents.length; ai++) {
-        this.rExtents[ai].evict(this.rAccessors[ai]?.(d) ?? 0)
-      }
+      this.evictValueExtent(d)
     }
 
     // Rebuild category set from remaining data
@@ -1082,22 +1079,16 @@ export class OrdinalPipelineStore {
     )
     if (previous.length === 0) return previous
 
-    // Evict old values from primary and multi-axis extents
+    // Evict old values using the existing extent helper (handles timeline/multiAxis)
     for (const old of previous) {
-      this.rExtent.evict(this.getR(old))
-      for (let ai = 0; ai < this.rExtents.length; ai++) {
-        this.rExtents[ai].evict(this.rAccessors[ai]?.(old) ?? 0)
-      }
+      this.evictValueExtent(old)
     }
     // Rebuild categories and push new extents using pre-captured indices
     this.categories.clear()
     this.buffer.forEach((d, i) => {
       this.categories.add(this.getO(d))
       if (matchedIndices.has(i)) {
-        this.rExtent.push(this.getR(d))
-        for (let ai = 0; ai < this.rExtents.length; ai++) {
-          this.rExtents[ai].push(this.rAccessors[ai]?.(d) ?? 0)
-        }
+        this.pushValueExtent(d)
       }
     })
 

@@ -91,7 +91,7 @@ ref.current.clear()
 ref.current.getData()
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
-`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY charts, `dataIdAccessor` on ordinal charts. Network charts use `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
+`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Coordinated Views

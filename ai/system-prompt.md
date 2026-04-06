@@ -58,7 +58,7 @@ const chartRef = useRef()
 chartRef.current.push({ x: 1, y: 2 })
 <Scatterplot ref={chartRef} xAccessor="x" yAccessor="y" />
 ```
-Methods: `push(datum)`, `pushMany(data)`, `remove(id)` (requires `pointIdAccessor`/`dataIdAccessor`), `update(id, updater)`, `clear()`, `getData()`. Network charts: `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`. Geo charts: `update()` is implemented as remove+push internally. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`. Supported: XY charts, ordinal charts, network charts (ForceDirectedGraph, SankeyDiagram, ChordDiagram), ProportionalSymbolMap, DistanceCartogram. Not supported: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram), ChoroplethMap, FlowMap, ScatterplotMatrix.
+Methods: `push(datum)`, `pushMany(data)`, `remove(id)` (requires `pointIdAccessor`/`dataIdAccessor`), `update(id, updater)`, `clear()`, `getData()`. Network HOC refs use `remove()`/`update()` for node operations. Edge-level methods (`removeNode`, `removeEdge`, `updateNode`, `updateEdge`) are on `StreamNetworkFrameHandle`. Geo charts: `update()` is implemented as remove+push internally. Streaming-specific props (`windowSize`, `decay`, `pulse`) go in `frameProps`. Supported: XY charts, ordinal charts, network charts (ForceDirectedGraph, SankeyDiagram, ChordDiagram), ProportionalSymbolMap, DistanceCartogram. Not supported: hierarchy charts (TreeDiagram, Treemap, CirclePack, OrbitDiagram), ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 For advanced streaming control, use Stream Frames (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`) with `runtimeMode="streaming"` and ref-based push.
 
