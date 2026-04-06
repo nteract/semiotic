@@ -1,6 +1,88 @@
 # Outstanding Work
 
-Last updated 2026-04-05.
+Last updated 2026-04-06.
+
+---
+
+## Rounded Corners
+
+**Status**: Scoped, not started.
+
+### What
+
+Optional rounded corners on:
+1. **Pie/donut wedges** — `cornerRadius` on PieChart/DonutChart/GaugeChart. Rounds the outer corners of each wedge arc.
+2. **Bar chart tops** — `roundedTop` on BarChart. Rounds only the top two corners of each bar (the end away from the baseline). Bottom stays flush with the axis.
+3. **Stacked bar top piece** — Only the topmost bar segment in a stack gets rounded corners. Interior segments stay rectangular so they stack cleanly.
+4. **RealtimeHistogram** — Same as stacked bar — only the top bin gets rounded.
+
+### Prop API
+
+```tsx
+<PieChart cornerRadius={8} />
+<DonutChart cornerRadius={6} />
+<BarChart roundedTop={4} />         // pixel radius
+<StackedBarChart roundedTop={4} />  // only topmost segment
+<RealtimeHistogram roundedTop={4} />
+```
+
+### Technical approach
+
+**Pie/donut (d3-shape `arc.cornerRadius`)**:
+- d3-shape's `arc()` generator already supports `.cornerRadius(r)`. The scene builder (`pieScene.ts`) creates `WedgeSceneNode` with start/end angles and radii.
+- Add `cornerRadius?: number` to `WedgeSceneNode`.
+- In `wedgeCanvasRenderer.ts`: replace manual `ctx.arc()` calls with d3-shape `arc()` generator that respects `cornerRadius`. The generator produces a path string; use `Path2D` to render it on canvas.
+- In `SceneToSVG.tsx ordinalSceneNodeToSVG` wedge case: already uses `d3Arc()` — just chain `.cornerRadius(n.cornerRadius || 0)`.
+- `OrdinalPipelineConfig` gets `cornerRadius?: number`. PieChart/DonutChart HOC props expose it and pass through.
+
+**Bar chart tops (canvas rounded rect)**:
+- Add `roundedTop?: number` to `RectSceneNode` (or pass via style).
+- In `barCanvasRenderer.ts`: when `roundedTop` is set, draw a path with rounded top-left and top-right corners instead of `ctx.fillRect`. For horizontal bars, round the end corners (right side for LTR, left for negative values).
+- In `SceneToSVG.tsx` rect case: use `rx`/`ry` SVG attributes. SVG `<rect rx>` rounds all corners — for top-only, render as a `<path>` with explicit arc commands on the top two corners.
+- Scene builder (`barScene.ts`): propagate `roundedTop` from config to each `RectSceneNode`. For stacked bars, only the last (topmost) segment gets `roundedTop`; interior segments get `roundedTop: 0`.
+
+**Stacked bar / histogram**:
+- The ordinal scene builder produces rect nodes in category order. The topmost segment in a stack is the last rect node for that category.
+- After building all rects for a category, mark only the last one with `roundedTop`.
+- For `normalize` mode (100% stacked), the topmost segment touches the full extent — still only round the top.
+
+### Canvas helper
+
+```ts
+function roundedTopRect(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number,
+  radius: number
+): void {
+  const r = Math.min(radius, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x, y + h)          // bottom-left
+  ctx.lineTo(x, y + r)          // left side up
+  ctx.arcTo(x, y, x + r, y, r) // top-left corner
+  ctx.lineTo(x + w - r, y)     // top edge
+  ctx.arcTo(x + w, y, x + w, y + r, r) // top-right corner
+  ctx.lineTo(x + w, y + h)     // right side down
+  ctx.closePath()
+}
+```
+
+### Effort
+
+Medium (3-4 days):
+- Pie/donut cornerRadius: 0.5 day (d3-shape already supports it)
+- Bar roundedTop canvas renderer: 1 day
+- Bar roundedTop SVG renderer: 0.5 day
+- Stacked bar topmost-only logic: 0.5 day
+- HOC prop wiring: 0.5 day
+- Tests: 0.5 day
+
+### Edge cases
+
+- `cornerRadius` larger than wedge angle → d3-shape clamps automatically
+- `roundedTop` larger than bar height → clamp to `min(radius, h/2, w/2)`
+- Horizontal bars → round the end that points away from the axis (right for positive, left for negative)
+- Negative value bars (below zero baseline) → round the bottom (the end away from zero)
+- Single-segment stacked bar → round the top (it's both the first and last segment)
 
 ---
 ## BUGS

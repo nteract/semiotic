@@ -105,7 +105,8 @@ function BarUpdateDemo() {
   // Initialize with data on first render
   const initRef = useCallback((node) => {
     ref.current = node
-    if (node && !initialized.current) {
+    if (!node) { initialized.current = false; return }
+    if (!initialized.current) {
       initialized.current = true
       REGIONS.forEach((region, i) => {
         node.push({ id: region, category: region, value: 20 + i * 15 })
@@ -171,7 +172,8 @@ function NetworkDemo() {
 
   const initRef = useCallback((node) => {
     ref.current = node
-    if (node && !initialized.current) {
+    if (!node) { initialized.current = false; return }
+    if (!initialized.current) {
       initialized.current = true
       // Build a small network
       const edges = [

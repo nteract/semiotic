@@ -110,12 +110,15 @@ export class RingBuffer<T> {
       const item = this.buffer[idx]!
       if (predicate(item)) {
         // Snapshot before calling updater so extent eviction sees original values
-        previous.push(
-          typeof item !== "object" || item === null ? item
-          : typeof structuredClone === "function" ? structuredClone(item)
-          : Array.isArray(item) ? ([...item] as unknown as T)
-          : ({ ...item } as T)
-        )
+        let snapshot: T
+        if (typeof item !== "object" || item === null) {
+          snapshot = item
+        } else if (Array.isArray(item)) {
+          snapshot = [...item] as unknown as T
+        } else {
+          snapshot = { ...item } as T
+        }
+        previous.push(snapshot)
         this.buffer[idx] = updater(item)
       }
     }
