@@ -1076,6 +1076,10 @@ export class PipelineStore {
     }
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getPointId = this.getPointId
+    // Capture matched indices before mutation (updater may change the ID field)
+    const matchedIndices = new Set<number>()
+    this.buffer.forEach((d, i) => { if (ids.has(getPointId(d))) matchedIndices.add(i) })
+
     const previous = this.buffer.update(
       item => ids.has(getPointId(item)),
       updater
@@ -1093,9 +1097,9 @@ export class PipelineStore {
         if (this.getY0) this.yExtent.evict(this.getY0(old))
       }
     }
-    // Push new extents from the updated buffer
-    this.buffer.forEach(d => {
-      if (ids.has(getPointId(d))) {
+    // Push new extents using pre-captured indices (safe if ID changed)
+    this.buffer.forEach((d, i) => {
+      if (matchedIndices.has(i)) {
         this.xExtent.push(this.getX(d))
         if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
           this.yExtent.push(this.getHigh(d))

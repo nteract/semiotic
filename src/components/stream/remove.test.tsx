@@ -464,7 +464,7 @@ describe("NetworkPipelineStore.updateEdge", () => {
     )
 
     const previous = store.updateEdge("A", "B", d => ({ ...d, value: 200 }))
-    expect(previous).not.toBeNull()
+    expect(previous).toHaveLength(1)
     // Edge value should be updated
     for (const [, edge] of store.edges) {
       expect(edge.value).toBe(200)

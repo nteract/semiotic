@@ -592,12 +592,12 @@ export interface StreamNetworkFrameHandle {
   pushMany(edges: EdgePush[]): void
   /** Remove a node by ID. Also removes connected edges. */
   removeNode(id: string): boolean
-  /** Remove an edge by source and target node IDs. */
+  /** Remove all edges between source and target node IDs. */
   removeEdge(sourceId: string, targetId: string): boolean
   /** Update a node's data by ID. Returns previous data. */
   updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null
-  /** Update an edge's data by source+target. Returns previous data. */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null
+  /** Update all edges between source+target. Returns array of previous data. */
+  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any>[]
   clear(): void
   getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
   getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }

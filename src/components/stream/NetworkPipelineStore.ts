@@ -984,27 +984,27 @@ export class NetworkPipelineStore {
   }
 
   /**
-   * Update an edge's data/value by source+target. Returns the previous data, or null.
+   * Update all edges between source and target. Handles parallel edges.
+   * Returns array of previous data values (one per updated edge), or empty array.
    */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
+  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    const valAcc = this.config.valueAccessor
+    const valFn = typeof valAcc === "function" ? valAcc
+      : valAcc ? (d: any) => d[valAcc]
+      : (d: any) => d.value
+    const results: Record<string, any>[] = []
     for (const [, edge] of this.edges) {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
       if (src === sourceId && tgt === targetId) {
-        const previous = edge.data ? { ...edge.data } : {}
+        results.push(edge.data ? { ...edge.data } : {})
         edge.data = updater(edge.data ?? {})
-        // Re-derive edge.value using the configured valueAccessor
-        const valAcc = this.config.valueAccessor
-        const valFn = typeof valAcc === "function" ? valAcc
-          : valAcc ? (d: any) => d[valAcc]
-          : (d: any) => d.value
         const newValue = valFn(edge.data)
         if (newValue != null) edge.value = Number(newValue)
-        this.layoutVersion++
-        return previous
       }
     }
-    return null
+    if (results.length > 0) this.layoutVersion++
+    return results
   }
 
   /**

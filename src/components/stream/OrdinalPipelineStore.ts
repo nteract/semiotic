@@ -1072,6 +1072,10 @@ export class OrdinalPipelineStore {
     }
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getDataId = this.getDataId
+    // Capture matched indices before mutation (updater may change the ID field)
+    const matchedIndices = new Set<number>()
+    this.buffer.forEach((d, i) => { if (ids.has(getDataId(d))) matchedIndices.add(i) })
+
     const previous = this.buffer.update(
       item => ids.has(getDataId(item)),
       updater
@@ -1085,11 +1089,11 @@ export class OrdinalPipelineStore {
         this.rExtents[ai].evict(this.rAccessors[ai]?.(old) ?? 0)
       }
     }
-    // Rebuild categories and push new extents
+    // Rebuild categories and push new extents using pre-captured indices
     this.categories.clear()
-    this.buffer.forEach(d => {
+    this.buffer.forEach((d, i) => {
       this.categories.add(this.getO(d))
-      if (ids.has(getDataId(d))) {
+      if (matchedIndices.has(i)) {
         this.rExtent.push(this.getR(d))
         for (let ai = 0; ai < this.rExtents.length; ai++) {
           this.rExtents[ai].push(this.rAccessors[ai]?.(d) ?? 0)

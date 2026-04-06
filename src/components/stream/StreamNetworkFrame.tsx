@@ -652,8 +652,8 @@ const StreamNetworkFrame = forwardRef<
         return previous
       },
       updateEdge: (sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>) => {
-        const previous = storeRef.current?.updateEdge(sourceId, targetId, updater) ?? null
-        if (previous) {
+        const previous = storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
+        if (previous.length > 0) {
           dirtyRef.current = true
           scheduleRender()
         }
