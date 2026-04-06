@@ -35,6 +35,7 @@ import { select } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
@@ -320,8 +321,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }, [])
 
-    // ── Theme change → repaint canvas ─────────────────────────────
+    // ── Theme change → repaint canvas, clear CSS var cache ────────
     useEffect(() => {
+      if (containerRef.current) {
+        const canvas = containerRef.current.querySelector("canvas")
+        if (canvas) clearCSSColorCache(canvas)
+      }
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])

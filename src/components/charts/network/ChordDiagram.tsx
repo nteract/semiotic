@@ -55,7 +55,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       const results: Record<string, any>[] = []
       for (const nodeId of ids) {
         const node = nodes.find(n => n.id === nodeId)
-        if (node) results.push({ id: nodeId, ...(node.data ?? {}) })
+        if (node) results.push({ ...(node.data ?? {}), id: nodeId })
         frameRef.current?.removeNode(nodeId)
       }
       return results
@@ -64,7 +64,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       const ids = Array.isArray(id) ? id : [id]
       return ids.flatMap(nodeId => {
         const prev = frameRef.current?.updateNode(nodeId, updater)
-        return prev ? [{ id: nodeId, ...prev }] : []
+        return prev ? [{ ...prev, id: nodeId }] : []
       })
     },
     clear: () => frameRef.current?.clear(),

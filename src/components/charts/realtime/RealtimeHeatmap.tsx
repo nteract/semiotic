@@ -103,6 +103,8 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** ID accessor for remove()/update() on the push API */
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 /**
@@ -251,7 +253,8 @@ export const RealtimeHeatmap = forwardRef(
         pulse={pulse}
         staleness={staleness}
         legendPosition={legendPositionProp}
-        pointIdAccessor={(props as any).pointIdAccessor}      />
+        pointIdAccessor={props.pointIdAccessor}
+      />
     )
   }
 ) as unknown as {

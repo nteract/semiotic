@@ -101,6 +101,8 @@ export interface RealtimeWaterfallChartProps<TDatum extends Record<string, any> 
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** ID accessor for remove()/update() on the push API */
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 /**
@@ -249,7 +251,7 @@ export const RealtimeWaterfallChart = forwardRef(
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
         legendPosition={legendPositionProp}
-        pointIdAccessor={(props as any).pointIdAccessor}
+        pointIdAccessor={props.pointIdAccessor}
       />
     )
   }

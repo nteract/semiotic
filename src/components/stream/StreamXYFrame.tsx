@@ -44,6 +44,7 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -562,8 +563,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes
+    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
     useEffect(() => {
+      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])
