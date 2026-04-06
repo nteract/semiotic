@@ -9,7 +9,7 @@ Last updated 2026-04-05.
 
 ## Push API: Selective Data Removal
 
-**Status**: Scoped, not started.
+**Status**: Implemented. `remove()` and `update()` ship on all stores and frame handles.
 
 ### Problem
 
@@ -45,6 +45,138 @@ ref.current.removeEdge((edge) => edge.source === "Spark") // network edges
 ### Effort
 
 Medium (3-5 days). RingBuffer.remove (1d), PipelineStore.remove + extent recompute (1d), transition exits (1d, mostly existing), frame/HOC exposure (0.5d), network cascade (0.5d).
+
+---
+
+## Push API: Transition Exits on Remove
+
+**Status**: Not started.
+
+When `remove()` is called, items vanish instantly instead of fading out. The existing transition machinery supports enter/exit animations — `snapshotPositions()` captures pre-change state, `computeScene()` builds post-change scene, `startTransition()` creates exit nodes with `_targetOpacity: 0`. But `remove()` currently marks dirty and triggers rebuild without calling `snapshotPositions()` first, so the transition system has no "before" state to animate from.
+
+**Fix**: Call `snapshotPositions()` inside `remove()` before the buffer changes (same pattern as `computeScene()` uses). The next `computeScene()` call will then see the removed items in the "previous" snapshot and create fade-out exits.
+
+**Effort**: Small (0.5-1 day). The machinery exists; it's wiring.
+
+---
+
+## Push API: Selection Clearing on Remove
+
+**Status**: Not started.
+
+If the removed item is currently hovered or selected (via `linkedHover` or `selection`), the interaction state points at a ghost datum. Not a crash — the selection references a datum no longer in the scene — but it can leave a stale tooltip or highlight.
+
+**Fix**: After `remove()`, check if any removed item matches the current hover/selection state and clear it. The selection store has `clearSelection()` and the hover store has `clearHover()`.
+
+**Effort**: Small (0.5 day).
+
+---
+
+## Push API: Network Edge ID Accessor
+
+**Status**: Not started.
+
+`removeEdge(sourceId, targetId)` requires knowing both endpoints. For named edges (a specific contract, SLA, or data pipeline link), users want `removeEdge(edgeId)`. The network store keys edges by `source\0target\0index`, but there's no user-facing edge ID accessor.
+
+**Fix**: Add `edgeIdAccessor` to `NetworkPipelineConfig`. Build a reverse map from edge ID → edge key. `removeEdge` and `updateEdge` accept either `(sourceId, targetId)` or `(edgeId)`.
+
+**Effort**: Small (0.5 day).
+
+---
+
+## Push API: Undo
+
+**Status**: Not scoped.
+
+`remove()` and `update()` return the previous values, so the caller can `push` them back. But there's no built-in undo stack. For a chat agent workflow ("remove that node" / "undo"), the caller holds the return value manually.
+
+A built-in undo would be: `ref.current.undo()` that reverses the last mutation (remove, update, push). Requires an operation log with inverse operations. Scoping TBD — may be better as a userland wrapper than a library feature.
+
+---
+
+## Discord / Slack Chart Agent
+
+**Status**: Scoped in CHAT_AGENT_PLAN.md, not started.
+
+A bot that listens in a channel, accepts data (CSV/JSON paste or code block), interprets natural language requests via an LLM, and replies with a chart image (PNG or animated GIF). Conversational — "dark mode", "add a threshold at 50K", "animate it" refine the previous chart.
+
+Architecture: discord.js / @slack/bolt → Claude API (with ai/system-prompt.md + ai/schema.json as context) → semiotic/server renderToImage/renderToAnimatedGif → file upload. Per-channel state stores last data + last config for iterative refinement.
+
+**Effort**: Phase 1 (slash command, JSON in → PNG out): 1-2 days. Phase 2 (natural language via LLM): 2-3 days. Phase 3 (conversational refinement + GIF): 2-3 days. Phase 4 (polish, error handling, rate limiting): 1-2 days. Total: 6-10 days.
+
+**Dependencies**: @anthropic-ai/sdk, discord.js or @slack/bolt. semiotic/server + sharp already available.
+
+---
+
+## CLI Screenshot Generator
+
+**Status**: Not started. Trivial.
+
+A Node script (`scripts/demo-server-render.mjs`) that batch-renders charts to SVG/PNG files on disk. Produces the exact images needed for PR descriptions and release posts. ~80 lines.
+
+**Effort**: 0.5 day.
+
+---
+
+## OG Image HTTP Server
+
+**Status**: Not started. Trivial.
+
+A ~60-line Node HTTP server (`scripts/og-server.mjs`) that returns chart SVG/PNG from URL query parameters. `GET /og?component=BarChart&theme=dark&title=Revenue` → PNG. Deployable as Vercel serverless function, Cloudflare Worker, or AWS Lambda.
+
+**Effort**: 0.5 day.
+
+---
+
+## PDF Export
+
+**Status**: Not scoped.
+
+`renderToPDF(component, props, options)` — generate PDF documents with embedded charts. Multi-page dashboard support via pdfkit or jsPDF (peer dependency). Text as vectors (no font embedding). Page layout (A4, Letter, custom).
+
+**Effort**: Large (1-2 weeks).
+
+---
+
+## Edge Runtime Compatibility
+
+**Status**: Not scoped.
+
+Verify `renderChart`, `renderDashboard`, `generateFrameSVGs`, `generateFrameSequence` work in Cloudflare Workers, Vercel Edge Functions, and Deno Deploy. The sync functions should already work (they only use react-dom/server). The async functions (renderToImage, renderToAnimatedGif) require sharp which is Node-only — resvg-wasm would enable edge PNG generation.
+
+**Effort**: Medium (3-5 days). Mostly testing and polyfill discovery.
+
+---
+
+## GIF Transition Easing (Phase 2 fix)
+
+**Status**: Known limitation, not started.
+
+`transitionFrames` in `generateFrameSVGs` is currently a no-op because each frame creates a new PipelineStore. The store needs a previous scene snapshot to compute enter/update/exit transitions, but a fresh store has no history. Fixing this requires keeping a single store instance across frames and ingesting data incrementally (push the delta, let the store snapshot previous positions before rebuilding).
+
+`generateFrameSequence` is not affected — it renders each snapshot independently via `renderChart`, so transitions don't apply.
+
+**Effort**: Medium (2-3 days). Requires changing the XY branch of `generateFrameSVGs` to use incremental ingestion instead of bounded re-creation per frame.
+
+---
+
+## SVG Hatch Pattern Fills for Server Rendering
+
+**Status**: Not started.
+
+`createHatchPattern()` produces CanvasPatterns which don't work in SVG server output. For server-rendered charts, hatch fills (used by FunnelChart vertical mode and desired for visual differentiation like the Backup-B node in the ETL failover demo) need SVG `<pattern>` elements with `<line>` strokes inside a `<defs>` block.
+
+**Effort**: Small (1 day). Create `createSVGHatchPattern(opts)` that returns a `<pattern>` element and a `url(#id)` fill reference. Wire into server frame renderers.
+
+---
+
+## Render Studio: Real GIF Downloads
+
+**Status**: Not started.
+
+The Render Studio page (`/server/studio`) animated preview still cycles SVG frames client-side. The Export & Embed page uses pre-built GIF files. The Studio could either generate GIFs at build time for common configs or link to the Export page for download.
+
+**Effort**: Small (0.5 day) if linking to Export page. Medium (1-2 days) if generating per-config GIFs at build time.
 
 ---
 

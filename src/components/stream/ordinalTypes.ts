@@ -231,6 +231,9 @@ export interface OrdinalPipelineConfig {
   colorScheme?: string | string[]
   barColors?: Record<string, string>
 
+  /** ID accessor for remove() — extracts a unique identifier from each datum */
+  dataIdAccessor?: string | ((d: any) => string)
+
   // Realtime encoding
   decay?: DecayConfig
   pulse?: PulseConfig
@@ -300,6 +303,9 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   // Connectors
   connectorAccessor?: string | ((d: T) => string)
   connectorStyle?: Style | ((d: any) => Style)
+
+  /** ID accessor for remove()/update() — extracts a unique identifier from each datum */
+  dataIdAccessor?: string | ((d: any) => string)
 
   // Style
   pieceStyle?: (d: any, category?: string) => Style
@@ -374,6 +380,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 export interface StreamOrdinalFrameHandle<T = Record<string, any>> {
   push(datum: T): void
   pushMany(data: T[]): void
+  /** Remove data items by ID. Requires dataIdAccessor. */
+  remove(id: string | string[]): T[]
+  /** Update data items by ID in place. Requires dataIdAccessor. Returns previous values. */
+  update(id: string | string[], updater: (d: T) => T): T[]
   clear(): void
   getData(): T[]
   getScales(): OrdinalScales | null

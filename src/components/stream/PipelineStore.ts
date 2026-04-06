@@ -1022,6 +1022,67 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
+  /**
+   * Remove data points by ID. Requires pointIdAccessor to be configured.
+   * Returns the removed items. Marks the store dirty for scene rebuild.
+   */
+  remove(id: string | string[]): Record<string, any>[] {
+    if (!this.getPointId) {
+      throw new Error("remove() requires pointIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getPointId = this.getPointId
+    const removed = this.buffer.remove(item => ids.has(getPointId(item)))
+    if (removed.length === 0) return removed
+
+    // Evict removed values from extent tracking
+    for (const d of removed) {
+      this.xExtent.evict(this.getX(d))
+      this.yExtent.evict(this.getY(d))
+    }
+
+    this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._ingestVersion++
+    return removed
+  }
+
+  /**
+   * Update data points by ID. Requires pointIdAccessor.
+   * The updater receives the current datum and returns the replacement.
+   * Returns the previous values. Extents and scene are marked dirty.
+   */
+  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    if (!this.getPointId) {
+      throw new Error("update() requires pointIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getPointId = this.getPointId
+    const previous = this.buffer.update(
+      item => ids.has(getPointId(item)),
+      updater
+    )
+    if (previous.length === 0) return previous
+
+    // Evict old values, push new values into extent tracking
+    for (const old of previous) {
+      this.xExtent.evict(this.getX(old))
+      this.yExtent.evict(this.getY(old))
+    }
+    // Push new extents from the updated buffer
+    this.buffer.forEach(d => {
+      if (ids.has(getPointId(d))) {
+        this.xExtent.push(this.getX(d))
+        this.yExtent.push(this.getY(d))
+      }
+    })
+
+    this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._ingestVersion++
+    return previous
+  }
+
   /** Returns sorted bin boundary values from the last bar scene build. Persists until clear() or the next bar scene build. */
   getBinBoundaries(): number[] {
     return this._binBoundaries

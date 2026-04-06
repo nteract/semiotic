@@ -164,6 +164,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       }
       frameRef.current.pushMany(transformed)
     },
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -452,6 +454,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     xFormat,
     ...(isDualAxis && yExtent && { yExtent }),
     enableHover,
+    ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     curve,
     ...setup.legendBehaviorProps,

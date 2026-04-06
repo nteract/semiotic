@@ -247,6 +247,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showLabels,
       connectorAccessor,
       connectorStyle,
+      dataIdAccessor,
       rExtent,
       oExtent,
       extentPadding = 0.05,
@@ -368,6 +369,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showLabels,
       connectorAccessor,
       connectorStyle,
+      dataIdAccessor,
       oSort,
       pieceStyle,
       summaryStyle,
@@ -383,7 +385,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, barPadding, baselinePadding, innerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
-      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, oSort,
+      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition, staleness,
       isStreaming
@@ -449,14 +451,31 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany: pushManyPoints,
+      remove: (id: string | string[]) => {
+        adapterRef.current?.flush()
+        const removed = storeRef.current?.remove(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      update: (id: string | string[], updater: (d: any) => any) => {
+        adapterRef.current?.flush()
+        const previous = storeRef.current?.update(id, updater) ?? []
+        if (previous.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
       clear: clearAll,
       getData: () => {
-        // Flush any buffered push data so getData() always returns up-to-date results
         adapterRef.current?.flush()
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null
-    }), [pushPoint, pushManyPoints, clearAll])
+    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

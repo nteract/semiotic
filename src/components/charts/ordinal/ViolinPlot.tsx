@@ -71,6 +71,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -174,6 +176,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
     margin: setup.margin,
     barPadding: categoryPadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,

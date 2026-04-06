@@ -103,6 +103,11 @@ export interface BaseChartProps {
   /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
   hoverRadius?: number
 
+  /** ID accessor for remove()/update() on XY charts. Extracts a unique identifier from each datum. */
+  pointIdAccessor?: string | ((d: any) => string)
+  /** ID accessor for remove()/update() on ordinal charts. Extracts a unique identifier from each datum. */
+  dataIdAccessor?: string | ((d: any) => string)
+
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 

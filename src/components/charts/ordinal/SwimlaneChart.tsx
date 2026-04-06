@@ -213,6 +213,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     margin: effectiveMargin,
     barPadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: showCategoryTicks === false ? undefined : categoryLabel,
     rLabel: valueLabel,

@@ -70,6 +70,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -103,6 +105,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     color,
     showCategoryTicks,
     categoryFormat,
+    dataIdAccessor,
   } = props
 
   const width = resolved.width
@@ -206,6 +209,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     responsiveHeight: props.responsiveHeight,
     margin: setup.margin,
     barPadding,
+    ...(dataIdAccessor && { dataIdAccessor }),
     baselinePadding,
     enableHover,
     showAxes: resolved.showAxes,

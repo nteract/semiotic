@@ -608,6 +608,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany: pushManyPoints,
+      remove: (id: string | string[]) => {
+        adapterRef.current?.flush()
+        const removed = storeRef.current?.remove(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      update: (id: string | string[], updater: (d: any) => any) => {
+        adapterRef.current?.flush()
+        const previous = storeRef.current?.update(id, updater) ?? []
+        if (previous.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
       clear: clearAll,
       getData: () => {
         // Flush any buffered push data so getData() always returns up-to-date results
@@ -616,7 +634,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null
-    }), [pushPoint, pushManyPoints, clearAll])
+    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

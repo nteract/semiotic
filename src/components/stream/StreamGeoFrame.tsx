@@ -369,6 +369,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany,
+      removePoint: (id: string | string[]) => {
+        const removed = storeRef.current?.removePoint(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
       clear: clearAll,
       getProjection: () => storeRef.current?.scales?.projection ?? null,
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,

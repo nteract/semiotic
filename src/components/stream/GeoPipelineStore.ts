@@ -365,6 +365,38 @@ export class GeoPipelineStore {
     this.lastIngestTime = now
   }
 
+  /**
+   * Remove points by ID. Requires pointIdAccessor to be configured.
+   * Returns the removed items.
+   */
+  removePoint(id: string | string[]): Record<string, any>[] {
+    const { pointIdAccessor } = this.config
+    if (!pointIdAccessor) {
+      throw new Error("removePoint() requires pointIdAccessor to be configured")
+    }
+    const getId = typeof pointIdAccessor === "function"
+      ? pointIdAccessor
+      : (d: any) => d[pointIdAccessor as string]
+    const ids = new Set(Array.isArray(id) ? id : [id])
+
+    if (this.streaming && this.pointBuffer) {
+      const removed = this.pointBuffer.remove(item => ids.has(String(getId(item))))
+      if (removed.length > 0) this.version++
+      return removed
+    } else {
+      const removed: Record<string, any>[] = []
+      this.pointData = this.pointData.filter(d => {
+        if (ids.has(String(getId(d)))) {
+          removed.push(d)
+          return false
+        }
+        return true
+      })
+      if (removed.length > 0) this.version++
+      return removed
+    }
+  }
+
   clear(): void {
     this.areas = []
     this.pointData = []

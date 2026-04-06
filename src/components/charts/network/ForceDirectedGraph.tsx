@@ -51,6 +51,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as EdgePush),
     pushMany: (points) => frameRef.current?.pushMany(points as EdgePush[]),
+    remove: (id) => { frameRef.current?.removeNode(id as string); return [] },
+    update: (id, updater) => { const prev = frameRef.current?.updateNode(id as string, updater); return prev ? [prev] : [] },
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getTopology()?.nodes?.map((n: any) => n.data) ?? []
   }))

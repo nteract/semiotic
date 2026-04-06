@@ -52,6 +52,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
     pushMany: (points) => frameRef.current?.pushMany(points as any),
+    remove: (id) => { frameRef.current?.removeNode(id as string); return [] },
+    update: (id, updater) => { const prev = frameRef.current?.updateNode(id as string, updater); return prev ? [prev] : [] },
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getTopology()?.edges?.map((e: any) => e.data) ?? []
   }))

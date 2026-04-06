@@ -176,6 +176,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     barPadding,
     baselinePadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,

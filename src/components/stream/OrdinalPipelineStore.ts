@@ -75,6 +75,7 @@ export class OrdinalPipelineStore {
   private getGroup: ((d: any) => string) | undefined
   private getColor: ((d: any) => string) | undefined
   private getConnector: ((d: any) => string) | undefined
+  private getDataId: ((d: any) => string) | undefined
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
@@ -135,6 +136,7 @@ export class OrdinalPipelineStore {
     this.getGroup = resolveStringAccessor(config.groupBy)
     this.getColor = resolveStringAccessor(config.colorAccessor)
     this.getConnector = resolveStringAccessor(config.connectorAccessor)
+    this.getDataId = resolveStringAccessor(config.dataIdAccessor)
 
     if (config.pulse) {
       this.timestampBuffer = new RingBuffer(config.windowSize)
@@ -1019,6 +1021,63 @@ export class OrdinalPipelineStore {
 
   getData(): Record<string, any>[] {
     return this.buffer.toArray()
+  }
+
+  /**
+   * Remove data items by ID. Requires dataIdAccessor to be configured.
+   * Returns the removed items. Marks the store dirty for scene rebuild.
+   */
+  remove(id: string | string[]): Record<string, any>[] {
+    if (!this.getDataId) {
+      throw new Error("remove() requires dataIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getDataId = this.getDataId
+    const removed = this.buffer.remove(item => ids.has(getDataId(item)))
+    if (removed.length === 0) return removed
+
+    for (const d of removed) {
+      this.rExtent.evict(this.getR(d))
+    }
+
+    // Rebuild category set from remaining data
+    this.categories.clear()
+    this.buffer.forEach(d => this.categories.add(this.getO(d)))
+
+    this.version++
+    return removed
+  }
+
+  /**
+   * Update data items by ID. Requires dataIdAccessor.
+   * Returns the previous values. Categories and extents are rebuilt.
+   */
+  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    if (!this.getDataId) {
+      throw new Error("update() requires dataIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getDataId = this.getDataId
+    const previous = this.buffer.update(
+      item => ids.has(getDataId(item)),
+      updater
+    )
+    if (previous.length === 0) return previous
+
+    for (const old of previous) {
+      this.rExtent.evict(this.getR(old))
+    }
+    // Rebuild categories and push new extents
+    this.categories.clear()
+    this.buffer.forEach(d => {
+      this.categories.add(this.getO(d))
+      if (ids.has(getDataId(d))) {
+        this.rExtent.push(this.getR(d))
+      }
+    })
+
+    this.version++
+    return previous
   }
 
   clear(): void {

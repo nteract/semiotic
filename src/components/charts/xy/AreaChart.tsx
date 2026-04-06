@@ -216,6 +216,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -480,6 +482,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     xFormat,
     yFormat,
     enableHover,
+    ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     ...(legend && { legend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {

@@ -279,6 +279,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   useImperativeHandle(ref, () => ({
     push: wrappedPush,
     pushMany: wrappedPushMany,
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => {
       streaming.resetCategories()
       frameRef.current?.clear()
@@ -485,6 +487,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     xFormat,
     yFormat,
     enableHover,
+    ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {

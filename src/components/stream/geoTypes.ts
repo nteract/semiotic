@@ -239,6 +239,8 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
 export interface StreamGeoFrameHandle {
   push(datum: Record<string, any>): void
   pushMany(data: Record<string, any>[]): void
+  /** Remove points by ID. Requires pointIdAccessor. */
+  removePoint(id: string | string[]): Record<string, any>[]
   clear(): void
   getProjection(): GeoProjection | null
   getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null

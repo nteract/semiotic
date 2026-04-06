@@ -971,6 +971,77 @@ export class NetworkPipelineStore {
     }
   }
 
+  /**
+   * Update a node's data by ID. Returns the previous data, or null if not found.
+   */
+  updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
+    const node = this.nodes.get(id)
+    if (!node) return null
+    const previous = node.data ?? {}
+    node.data = updater(previous)
+    this.layoutVersion++
+    return previous
+  }
+
+  /**
+   * Update an edge's data/value by source+target. Returns the previous data, or null.
+   */
+  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
+    for (const [, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === sourceId && tgt === targetId) {
+        const previous = edge.data ?? {}
+        edge.data = updater(previous)
+        const newValue = edge.data?.value
+        if (newValue != null) edge.value = Number(newValue)
+        this.layoutVersion++
+        return previous
+      }
+    }
+    return null
+  }
+
+  /**
+   * Remove a node by ID. Also removes all edges connected to this node.
+   * Returns true if the node was found and removed.
+   */
+  removeNode(id: string): boolean {
+    if (!this.nodes.has(id)) return false
+    this.nodes.delete(id)
+    this.nodeTimestamps.delete(id)
+    // Cascade: remove edges connected to this node
+    for (const [edgeKey, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === id || tgt === id) {
+        this.edges.delete(edgeKey)
+        this.edgeTimestamps.delete(edgeKey)
+      }
+    }
+    this.layoutVersion++
+    return true
+  }
+
+  /**
+   * Remove an edge by source+target ID pair or edge key.
+   * Returns true if the edge was found and removed.
+   */
+  removeEdge(sourceId: string, targetId: string): boolean {
+    // Try both key formats
+    for (const [edgeKey, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === sourceId && tgt === targetId) {
+        this.edges.delete(edgeKey)
+        this.edgeTimestamps.delete(edgeKey)
+        this.layoutVersion++
+        return true
+      }
+    }
+    return false
+  }
+
   clear(): void {
     this.nodes.clear()
     this.edges.clear()

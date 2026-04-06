@@ -76,6 +76,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.removePoint(id) ?? [],
+    update: () => { throw new Error("update() not supported on geo charts — use removePoint + push") },
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))

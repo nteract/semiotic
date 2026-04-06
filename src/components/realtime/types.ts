@@ -130,6 +130,10 @@ export interface RealtimeFrameProps {
 export interface RealtimeFrameHandle {
   push(point: Record<string, any>): void
   pushMany(points: Record<string, any>[]): void
+  /** Remove data by ID. Requires an ID accessor (pointIdAccessor or dataIdAccessor). */
+  remove(id: string | string[]): Record<string, any>[]
+  /** Update data by ID in place. Requires an ID accessor. Returns previous values. */
+  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[]
   clear(): void
   getData(): Record<string, any>[]
 }

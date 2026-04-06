@@ -97,6 +97,50 @@ export class RingBuffer<T> {
     return evicted
   }
 
+  /**
+   * Update items in place. The updater receives each matching item and returns
+   * the replacement. Returns the previous values of updated items.
+   * O(n) scan, no compaction needed — buffer positions stay stable.
+   */
+  update(predicate: (item: T) => boolean, updater: (item: T) => T): T[] {
+    const previous: T[] = []
+    const start = (this.head - this._size + this._capacity) % this._capacity
+    for (let i = 0; i < this._size; i++) {
+      const idx = (start + i) % this._capacity
+      const item = this.buffer[idx]!
+      if (predicate(item)) {
+        previous.push(item)
+        this.buffer[idx] = updater(item)
+      }
+    }
+    return previous
+  }
+
+  /**
+   * Remove items matching a predicate. Returns removed items.
+   * O(n) scan + compaction. Size decreases; capacity stays the same.
+   */
+  remove(predicate: (item: T) => boolean): T[] {
+    const kept: T[] = []
+    const removed: T[] = []
+    this.forEach(item => {
+      if (predicate(item)) {
+        removed.push(item)
+      } else {
+        kept.push(item)
+      }
+    })
+    if (removed.length === 0) return removed
+    // Rebuild buffer from kept items
+    this.buffer = new Array(this._capacity)
+    this.head = 0
+    this._size = 0
+    for (const item of kept) {
+      this.push(item)
+    }
+    return removed
+  }
+
   clear(): void {
     this.buffer = new Array(this._capacity)
     this.head = 0

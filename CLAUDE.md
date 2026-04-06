@@ -82,11 +82,16 @@ Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.
 Most HOCs support push via `forwardRef`. **Omit** `data` — do NOT pass `data={[]}`.
 ```jsx
 const ref = useRef()
-ref.current.push({ x: 1, y: 2 })
+ref.current.push({ id: "p1", x: 1, y: 2 })
 ref.current.pushMany([...points])
+ref.current.remove("p1")                          // by ID — requires pointIdAccessor
+ref.current.remove(["p1", "p2"])                   // batch remove
+ref.current.update("p1", d => ({ ...d, y: 99 }))  // in-place update — requires pointIdAccessor
 ref.current.clear()
-<Scatterplot ref={ref} xAccessor="x" yAccessor="y" />
+ref.current.getData()
+<Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
+`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY charts, `dataIdAccessor` on ordinal charts. Network charts use `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Coordinated Views

@@ -593,6 +593,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 export interface StreamXYFrameHandle<T = Record<string, any>> {
   push(datum: T): void
   pushMany(data: T[]): void
+  /** Remove data points by ID. Requires pointIdAccessor. */
+  remove(id: string | string[]): T[]
+  /** Update data points by ID in place. Requires pointIdAccessor. Returns previous values. */
+  update(id: string | string[], updater: (d: T) => T): T[]
   clear(): void
   getData(): T[]
   getScales(): StreamScales | null
