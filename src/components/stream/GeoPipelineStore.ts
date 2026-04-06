@@ -380,7 +380,18 @@ export class GeoPipelineStore {
     const ids = new Set(Array.isArray(id) ? id : [id])
 
     if (this.streaming && this.pointBuffer) {
-      const removed = this.pointBuffer.remove(item => ids.has(String(getId(item))))
+      const predicate = (item: Record<string, any>) => ids.has(String(getId(item)))
+      // Compact timestamp buffer in lockstep
+      if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+        const oldTimestamps = this.timestampBuffer.toArray()
+        const removeSet = new Set<number>()
+        this.pointBuffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+        this.timestampBuffer.clear()
+        for (let i = 0; i < oldTimestamps.length; i++) {
+          if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+        }
+      }
+      const removed = this.pointBuffer.remove(predicate)
       if (removed.length > 0) this.version++
       return removed
     } else {

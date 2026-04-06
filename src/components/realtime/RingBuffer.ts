@@ -109,7 +109,9 @@ export class RingBuffer<T> {
       const idx = (start + i) % this._capacity
       const item = this.buffer[idx]!
       if (predicate(item)) {
-        previous.push(item)
+        // Snapshot before calling updater — spread creates a shallow copy so
+        // extent eviction sees the original values even if updater mutates in place
+        previous.push(typeof item === "object" && item !== null ? { ...item } as T : item)
         this.buffer[idx] = updater(item)
       }
     }

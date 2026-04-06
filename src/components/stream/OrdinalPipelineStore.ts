@@ -1033,11 +1033,25 @@ export class OrdinalPipelineStore {
     }
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getDataId = this.getDataId
-    const removed = this.buffer.remove(item => ids.has(getDataId(item)))
+    // Compact timestamp buffer in lockstep with data removal
+    const predicate = (item: Record<string, any>) => ids.has(getDataId(item))
+    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+      const oldTimestamps = this.timestampBuffer.toArray()
+      const removeSet = new Set<number>()
+      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+      this.timestampBuffer.clear()
+      for (let i = 0; i < oldTimestamps.length; i++) {
+        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+      }
+    }
+    const removed = this.buffer.remove(predicate)
     if (removed.length === 0) return removed
 
     for (const d of removed) {
       this.rExtent.evict(this.getR(d))
+      for (let ai = 0; ai < this.rExtents.length; ai++) {
+        this.rExtents[ai].evict(this.rAccessors[ai]?.(d) ?? 0)
+      }
     }
 
     // Rebuild category set from remaining data
@@ -1064,8 +1078,12 @@ export class OrdinalPipelineStore {
     )
     if (previous.length === 0) return previous
 
+    // Evict old values from primary and multi-axis extents
     for (const old of previous) {
       this.rExtent.evict(this.getR(old))
+      for (let ai = 0; ai < this.rExtents.length; ai++) {
+        this.rExtents[ai].evict(this.rAccessors[ai]?.(old) ?? 0)
+      }
     }
     // Rebuild categories and push new extents
     this.categories.clear()
@@ -1073,6 +1091,9 @@ export class OrdinalPipelineStore {
       this.categories.add(this.getO(d))
       if (ids.has(getDataId(d))) {
         this.rExtent.push(this.getR(d))
+        for (let ai = 0; ai < this.rExtents.length; ai++) {
+          this.rExtents[ai].push(this.rAccessors[ai]?.(d) ?? 0)
+        }
       }
     })
 

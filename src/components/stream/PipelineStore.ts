@@ -1032,7 +1032,19 @@ export class PipelineStore {
     }
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getPointId = this.getPointId
-    const removed = this.buffer.remove(item => ids.has(getPointId(item)))
+    // Compact timestamp buffer in lockstep with data removal
+    const predicate = (item: Record<string, any>) => ids.has(getPointId(item))
+    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+      const oldTimestamps = this.timestampBuffer.toArray()
+      const removeSet = new Set<number>()
+      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+      this.timestampBuffer.clear()
+      for (let i = 0; i < oldTimestamps.length; i++) {
+        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+      }
+    }
+
+    const removed = this.buffer.remove(predicate)
     if (removed.length === 0) return removed
 
     // Evict removed values from extent tracking — mirror ingest() logic
