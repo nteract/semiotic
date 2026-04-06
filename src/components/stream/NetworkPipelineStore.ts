@@ -993,7 +993,12 @@ export class NetworkPipelineStore {
       if (src === sourceId && tgt === targetId) {
         const previous = edge.data ?? {}
         edge.data = updater(previous)
-        const newValue = edge.data?.value
+        // Re-derive edge.value using the configured valueAccessor
+        const valAcc = this.config.valueAccessor
+        const valFn = typeof valAcc === "function" ? valAcc
+          : valAcc ? (d: any) => d[valAcc]
+          : (d: any) => d.value
+        const newValue = valFn(edge.data)
         if (newValue != null) edge.value = Number(newValue)
         this.layoutVersion++
         return previous

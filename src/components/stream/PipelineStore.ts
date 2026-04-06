@@ -1035,10 +1035,16 @@ export class PipelineStore {
     const removed = this.buffer.remove(item => ids.has(getPointId(item)))
     if (removed.length === 0) return removed
 
-    // Evict removed values from extent tracking
+    // Evict removed values from extent tracking — mirror ingest() logic
     for (const d of removed) {
       this.xExtent.evict(this.getX(d))
-      this.yExtent.evict(this.getY(d))
+      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+        this.yExtent.evict(this.getHigh(d))
+        this.yExtent.evict(this.getLow(d))
+      } else {
+        this.yExtent.evict(this.getY(d))
+        if (this.getY0) this.yExtent.evict(this.getY0(d))
+      }
     }
 
     this.needsFullRebuild = true
@@ -1064,16 +1070,28 @@ export class PipelineStore {
     )
     if (previous.length === 0) return previous
 
-    // Evict old values, push new values into extent tracking
+    // Evict old values — mirror ingest() logic for candlestick/y0
     for (const old of previous) {
       this.xExtent.evict(this.getX(old))
-      this.yExtent.evict(this.getY(old))
+      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+        this.yExtent.evict(this.getHigh(old))
+        this.yExtent.evict(this.getLow(old))
+      } else {
+        this.yExtent.evict(this.getY(old))
+        if (this.getY0) this.yExtent.evict(this.getY0(old))
+      }
     }
     // Push new extents from the updated buffer
     this.buffer.forEach(d => {
       if (ids.has(getPointId(d))) {
         this.xExtent.push(this.getX(d))
-        this.yExtent.push(this.getY(d))
+        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+          this.yExtent.push(this.getHigh(d))
+          this.yExtent.push(this.getLow(d))
+        } else {
+          this.yExtent.push(this.getY(d))
+          if (this.getY0) this.yExtent.push(this.getY0(d))
+        }
       }
     })
 

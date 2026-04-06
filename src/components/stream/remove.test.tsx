@@ -1,8 +1,6 @@
 import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
-import React from "react"
-import { render } from "@testing-library/react"
 import { PipelineStore } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"

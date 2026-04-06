@@ -191,12 +191,6 @@ function NetworkDemo() {
     setLog(prev => ['removeNode("Cache") — edges cascade', ...prev].slice(0, 10))
   }, [])
 
-  const removeEdge = useCallback(() => {
-    // This removes via the HOC's remove() which maps to removeNode
-    // For edge removal, users go through frameProps or the stream frame directly
-    setLog(prev => ["Edge removal: use StreamNetworkFrame ref.removeEdge(src, tgt)", ...prev].slice(0, 10))
-  }, [])
-
   const addEdge = useCallback(() => {
     ref.current?.push({ source: "Web", target: "DB" })
     setLog(prev => ['push({ source: "Web", target: "DB" })', ...prev].slice(0, 10))
@@ -277,7 +271,8 @@ ref.current.getData()                                  // read current data`} la
       <p>
         <code>remove()</code> and <code>update()</code> require an ID accessor so
         the store can find the item to modify. XY charts use <code>pointIdAccessor</code>,
-        ordinal charts use <code>dataIdAccessor</code>.
+        ordinal charts use <code>dataIdAccessor</code>. Geo charts implement
+        <code>update()</code> as remove + push internally.
       </p>
 
       <h2>Push + Remove: Scatterplot</h2>

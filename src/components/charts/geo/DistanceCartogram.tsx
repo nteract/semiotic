@@ -235,7 +235,11 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     push: (point) => geoRef.current?.push(point),
     pushMany: (points) => geoRef.current?.pushMany(points),
     remove: (id) => geoRef.current?.removePoint(id) ?? [],
-    update: () => { throw new Error("update() not supported on geo charts — use removePoint + push") },
+    update: (id, updater) => {
+      const removed = geoRef.current?.removePoint(id) ?? []
+      for (const old of removed) geoRef.current?.push(updater(old))
+      return removed
+    },
     clear: () => geoRef.current?.clear(),
     getData: () => geoRef.current?.getData() ?? []
   }))
