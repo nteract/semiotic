@@ -249,7 +249,7 @@
     "eslint-plugin-react": "^7.27.1",
     "events": "^3.3.0",
     "jsdom": "^26.1.0",
-    "marked": "4.0.10",
+    "marked": "17.0.6",
     "os-browserify": "^0.3.0",
     "parcel": "^2.16.4",
     "path-browserify": "^1.0.1",
