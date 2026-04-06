@@ -134,6 +134,8 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** ID accessor for remove()/update() on the push API */
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 /**
@@ -371,7 +373,7 @@ export const RealtimeTemporalHistogram = forwardRef(
         pulse={pulse}
         staleness={staleness}
         transition={transition}
-        pointIdAccessor={(props as any).pointIdAccessor}
+        pointIdAccessor={props.pointIdAccessor}
         legendPosition={legendPositionProp}
         brush={normalizedBrush || (linkedBrush ? { dimension: "x" as const } : undefined)}
         onBrush={(normalizedBrush || linkedBrush) ? combinedOnBrush : undefined}

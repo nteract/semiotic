@@ -249,6 +249,7 @@ export const RealtimeWaterfallChart = forwardRef(
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
         legendPosition={legendPositionProp}
+        pointIdAccessor={(props as any).pointIdAccessor}
       />
     )
   }

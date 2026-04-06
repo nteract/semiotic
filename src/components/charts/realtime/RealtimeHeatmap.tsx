@@ -251,7 +251,7 @@ export const RealtimeHeatmap = forwardRef(
         pulse={pulse}
         staleness={staleness}
         legendPosition={legendPositionProp}
-      />
+        pointIdAccessor={(props as any).pointIdAccessor}      />
     )
   }
 ) as unknown as {

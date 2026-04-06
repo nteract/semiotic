@@ -61,6 +61,7 @@ import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -412,8 +413,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes
+    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
     useEffect(() => {
+      if (canvasRef.current) {
+        clearCSSColorCache(canvasRef.current)
+      }
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])

@@ -252,6 +252,7 @@ export const RealtimeSwarmChart = forwardRef(
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
         legendPosition={legendPositionProp}
+        pointIdAccessor={(props as any).pointIdAccessor}
       />
     )
   }

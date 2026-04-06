@@ -105,6 +105,8 @@ export interface RealtimeLineChartProps<TDatum extends Record<string, any> = Rec
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** ID accessor for remove()/update() on the push API */
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 /**
@@ -250,7 +252,7 @@ export const RealtimeLineChart = forwardRef(
         pulse={pulse}
         staleness={staleness}
         transition={transition}
-        pointIdAccessor={(props as any).pointIdAccessor}
+        pointIdAccessor={props.pointIdAccessor}
         legendPosition={legendPositionProp}
       />
     )

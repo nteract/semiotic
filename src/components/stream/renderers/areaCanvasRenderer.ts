@@ -190,6 +190,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         }
         ctx.strokeStyle = grad
       } else {
+        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       }
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])

@@ -94,9 +94,9 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     rFormat
   } = props
 
+  const { rTickValues } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
-  const rTickValues = (props as any).rTickValues as number[] | undefined
 
   const valueTicks = useMemo(() => {
     if (!scales || isRadial) return []
