@@ -394,14 +394,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           )
         }
       },
-      getData: () => {
-        const store = storeRef.current
-        if (!store) return []
-        return store.scene
-          .filter((n): n is PointSceneNode => n.type === "point")
-          .map(p => p.datum)
-          .filter(Boolean)
-      }
+      getData: () => storeRef.current?.getPoints() ?? []
     }), [pushPoint, pushMany, clearAll, scheduleRender])
 
     // ── Hover handler ─────────────────────────────────────────────────

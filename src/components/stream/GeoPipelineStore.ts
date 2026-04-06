@@ -698,7 +698,7 @@ export class GeoPipelineStore {
 
   // ── Build scene nodes ──────────────────────────────────────────
 
-  private getPoints(): Record<string, any>[] {
+  getPoints(): Record<string, any>[] {
     if (this.streaming && this.pointBuffer) {
       return this.pointBuffer.toArray()
     }
