@@ -30,7 +30,7 @@ export const wedgeCanvasRenderer = (
 
     ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 1
 
-    ctx.fillStyle = (typeof node.style.fill === 'string' ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
+    ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
     ctx.fill()
 
     if (node.style.stroke && node.style.stroke !== "none") {

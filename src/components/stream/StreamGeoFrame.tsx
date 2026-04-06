@@ -323,10 +323,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Theme change → repaint canvas, clear CSS var cache ────────
     useEffect(() => {
-      if (containerRef.current) {
-        const canvas = containerRef.current.querySelector("canvas")
-        if (canvas) clearCSSColorCache(canvas)
-      }
+      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])

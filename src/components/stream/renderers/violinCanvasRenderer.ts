@@ -20,7 +20,7 @@ export const violinCanvasRenderer = (
     const path = new Path2D(node.pathString)
 
     ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 0.6
-    ctx.fillStyle = (typeof node.style.fill === 'string' ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
+    ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
     ctx.fill(path)
 
     ctx.globalAlpha = 1

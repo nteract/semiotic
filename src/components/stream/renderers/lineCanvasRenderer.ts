@@ -285,7 +285,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     if (node.style.fill && node.style.fillOpacity && node.style.fillOpacity > 0) {
       ctx.beginPath()
       ctx.globalAlpha = node.style.fillOpacity
-      ctx.fillStyle = (typeof node.style.fill === 'string' ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || node.style.fill
+      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || node.style.fill
 
       if (curveFactory && !hasThresholds) {
         // Use d3-shape line generator for the curved top edge, then close with straight bottom
