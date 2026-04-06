@@ -977,8 +977,8 @@ export class NetworkPipelineStore {
   updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
     const node = this.nodes.get(id)
     if (!node) return null
-    const previous = node.data ?? {}
-    node.data = updater(previous)
+    const previous = node.data ? { ...node.data } : {}
+    node.data = updater(node.data ?? {})
     this.layoutVersion++
     return previous
   }
@@ -991,8 +991,8 @@ export class NetworkPipelineStore {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
       if (src === sourceId && tgt === targetId) {
-        const previous = edge.data ?? {}
-        edge.data = updater(previous)
+        const previous = edge.data ? { ...edge.data } : {}
+        edge.data = updater(edge.data ?? {})
         // Re-derive edge.value using the configured valueAccessor
         const valAcc = this.config.valueAccessor
         const valFn = typeof valAcc === "function" ? valAcc
@@ -1029,22 +1029,25 @@ export class NetworkPipelineStore {
   }
 
   /**
-   * Remove an edge by source and target node IDs.
-   * Returns true if the edge was found and removed.
+   * Remove all edges between source and target node IDs.
+   * Handles parallel edges (multiple edges between the same pair).
+   * Returns true if at least one edge was removed.
    */
   removeEdge(sourceId: string, targetId: string): boolean {
-    // Try both key formats
+    const toDelete: string[] = []
     for (const [edgeKey, edge] of this.edges) {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
       if (src === sourceId && tgt === targetId) {
-        this.edges.delete(edgeKey)
-        this.edgeTimestamps.delete(edgeKey)
-        this.layoutVersion++
-        return true
+        toDelete.push(edgeKey)
       }
     }
-    return false
+    for (const key of toDelete) {
+      this.edges.delete(key)
+      this.edgeTimestamps.delete(key)
+    }
+    if (toDelete.length > 0) this.layoutVersion++
+    return toDelete.length > 0
   }
 
   clear(): void {

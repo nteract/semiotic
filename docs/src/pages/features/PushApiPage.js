@@ -352,20 +352,19 @@ ref.current.remove("north")`} language="jsx" />
         "Rebuild" restores the original topology.
       </p>
       <NetworkDemo />
-      <CodeBlock code={`// Network charts use removeNode/removeEdge on the stream frame
-const ref = useRef<StreamNetworkFrameHandle>()
+      <CodeBlock code={`// Network HOCs expose remove/update for nodes via the standard ref API
+const ref = useRef()
 
-// Remove a node — connected edges cascade
-ref.current.removeNode("Cache")
+// Remove a node by ID — connected edges cascade automatically
+ref.current.remove("Cache")
 
-// Remove a specific edge
-ref.current.removeEdge("Web", "API")
+// Update a node's data (e.g., change its status or weight)
+ref.current.update("API", d => ({ ...d, status: "degraded" }))
 
-// Update a node's data (e.g., change its label or weight)
-ref.current.updateNode("API", d => ({ ...d, status: "degraded" }))
-
-// Update an edge's value (e.g., change throughput)
-ref.current.updateEdge("Web", "API", d => ({ ...d, value: 200 }))`} language="jsx" />
+// For edge-level operations (removeEdge, updateEdge), use StreamNetworkFrame:
+// const frameRef = useRef<StreamNetworkFrameHandle>()
+// frameRef.current.removeEdge("Web", "API")
+// frameRef.current.updateEdge("Web", "API", d => ({ ...d, value: 200 }))`} language="jsx" />
 
       <h2>When to use push vs. controlled data</h2>
 
