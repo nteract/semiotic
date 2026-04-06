@@ -65,6 +65,10 @@ export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<
   linkedBrush?: string | { name: string; rField?: string }
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Custom tick values for the value axis. Forces specific values instead of d3 auto-ticks. */
+  rTickValues?: number[]
+  /** Align first value tick label to start, last to end. Prevents clipping at chart edges. */
+  tickLabelEdgeAlign?: boolean
   /** Pass-through props to StreamOrdinalFrame */
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
@@ -110,6 +114,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     legendPosition: legendPositionProp,
     color,
     categoryFormat,
+    rTickValues,
+    tickLabelEdgeAlign,
     showCategoryTicks,
   } = props
 
@@ -218,6 +224,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     oLabel: showCategoryTicks === false ? undefined : categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat,
+    ...(rTickValues && { rTickValues }),
+    ...(tickLabelEdgeAlign != null && { tickLabelEdgeAlign }),
     ...(categoryFormat && { oFormat: categoryFormat }),
     ...(showCategoryTicks !== undefined && { showCategoryTicks }),
     showGrid,

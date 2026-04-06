@@ -1,4 +1,5 @@
 import type { SceneNode, LineSceneNode, LineColorThreshold, CurveType } from "../types"
+import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
 import {
@@ -284,7 +285,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     if (node.style.fill && node.style.fillOpacity && node.style.fillOpacity > 0) {
       ctx.beginPath()
       ctx.globalAlpha = node.style.fillOpacity
-      ctx.fillStyle = node.style.fill
+      ctx.fillStyle = (typeof node.style.fill === 'string' ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || node.style.fill
 
       if (curveFactory && !hasThresholds) {
         // Use d3-shape line generator for the curved top edge, then close with straight bottom

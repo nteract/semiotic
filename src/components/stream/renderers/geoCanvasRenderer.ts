@@ -1,4 +1,5 @@
 import type { GeoAreaSceneNode, GeoSceneNode } from "../geoTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 import { renderPathPulse } from "./renderPulse"
 
 /**
@@ -33,7 +34,7 @@ export function geoCanvasRenderer(
 
     // Stroke
     if (node.style.stroke && node.style.stroke !== "none") {
-      ctx.strokeStyle = node.style.stroke
+      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 0.5
       ctx.globalAlpha = node._decayOpacity ?? 1
       if (node.style.strokeDasharray) {

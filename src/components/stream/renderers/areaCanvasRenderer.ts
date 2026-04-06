@@ -1,4 +1,5 @@
 import type { SceneNode, AreaSceneNode, CurveType } from "../types"
+import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { renderPathPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
@@ -117,7 +118,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
       // Stroke on top with per-segment decay
       if (node.style.stroke && node.style.stroke !== "none") {
-        ctx.strokeStyle = node.style.stroke
+        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
         ctx.lineWidth = node.style.strokeWidth || 2
         ctx.setLineDash([])
         for (let i = 0; i < node.topPath.length - 1; i++) {
@@ -189,7 +190,6 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         }
         ctx.strokeStyle = grad
       } else {
-        ctx.strokeStyle = node.style.stroke
       }
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])

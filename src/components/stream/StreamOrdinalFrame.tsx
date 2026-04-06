@@ -265,6 +265,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       rLabel,
       oFormat,
       rFormat,
+      rTickValues,
+      tickLabelEdgeAlign,
       enableHover = true,
       hoverAnnotation,
       tooltipContent,
@@ -881,6 +883,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             rLabel={rLabel}
             oFormat={oFormat}
             rFormat={rFormat}
+            rTickValues={rTickValues}
+            tickLabelEdgeAlign={tickLabelEdgeAlign}
             showGrid={showGrid}
             title={title}
             legend={legend}
@@ -971,6 +975,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           showAxes={showAxes}
           showGrid={showGrid}
           rFormat={rFormat}
+          rTickValues={rTickValues}
         />
 
         <canvas

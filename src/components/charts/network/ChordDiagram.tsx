@@ -64,7 +64,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       const ids = Array.isArray(id) ? id : [id]
       return ids.flatMap(nodeId => {
         const prev = frameRef.current?.updateNode(nodeId, updater)
-        return prev ? [prev] : []
+        return prev ? [{ id: nodeId, ...prev }] : []
       })
     },
     clear: () => frameRef.current?.clear(),

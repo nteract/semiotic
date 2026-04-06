@@ -1,4 +1,5 @@
 import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.
@@ -29,7 +30,7 @@ export const trapezoidCanvasRenderer = (
     ctx.fill()
 
     if (node.style?.stroke) {
-      ctx.strokeStyle = node.style.stroke
+      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.stroke()
     }

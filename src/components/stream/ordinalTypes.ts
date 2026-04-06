@@ -307,6 +307,11 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   /** ID accessor for remove()/update() — extracts a unique identifier from each datum */
   dataIdAccessor?: string | ((d: any) => string)
 
+  /** Custom tick values for the value (r) axis. Overrides the default d3 ticks. */
+  rTickValues?: number[]
+  /** Align first tick label to start and last tick label to end. Default false. */
+  tickLabelEdgeAlign?: boolean
+
   // Style
   pieceStyle?: (d: any, category?: string) => Style
   summaryStyle?: (d: any, category?: string) => Style
