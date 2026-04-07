@@ -1,4 +1,5 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, ViolinSceneNode } from "../ordinalTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 export const violinCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -19,12 +20,12 @@ export const violinCanvasRenderer = (
     const path = new Path2D(node.pathString)
 
     ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 0.6
-    ctx.fillStyle = node.style.fill || "#007bff"
+    ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
     ctx.fill(path)
 
     ctx.globalAlpha = 1
     if (node.style.stroke && node.style.stroke !== "none") {
-      ctx.strokeStyle = node.style.stroke
+      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.stroke(path)
     }

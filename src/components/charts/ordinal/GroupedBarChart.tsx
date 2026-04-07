@@ -174,6 +174,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     barPadding,
     baselinePadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,

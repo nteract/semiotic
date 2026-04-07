@@ -23,6 +23,10 @@ interface OrdinalSVGOverlayProps {
   rLabel?: string
   oFormat?: (d: string, index?: number) => string | React.ReactNode
   rFormat?: (d: number) => string
+  /** Custom tick values for the value (r) axis */
+  rTickValues?: number[]
+  /** Align first tick label to start, last to end */
+  tickLabelEdgeAlign?: boolean
 
   // Grid
   showGrid?: boolean
@@ -74,6 +78,7 @@ interface OrdinalSVGUnderlayProps {
   showAxes?: boolean
   showGrid?: boolean
   rFormat?: (d: number) => string
+  rTickValues?: number[]
 }
 
 export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
@@ -89,17 +94,19 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     rFormat
   } = props
 
+  const { rTickValues } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
 
   const valueTicks = useMemo(() => {
     if (!scales || isRadial) return []
-    return scales.r.ticks(5).map(v => ({
+    const rawTicks = rTickValues || scales.r.ticks(5)
+    return rawTicks.map(v => ({
       value: v,
       pixel: scales.r(v),
       label: (rFormat || defaultRFormat)(v)
     }))
-  }, [scales, rFormat, isRadial])
+  }, [scales, rFormat, isRadial, rTickValues])
 
   const hasGrid = showGrid && scales && !isRadial
   const hasBaselines = showAxes && scales && !isRadial
@@ -214,15 +221,18 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     }))
   }, [showAxes, showCategoryTicks, scales, oFormat, isRadial])
 
-  // Value ticks (linear scale)
+  // Value ticks (linear scale) — custom rTickValues override d3 ticks
+  const rTickValues = props.rTickValues
+  const tickLabelEdgeAlign = props.tickLabelEdgeAlign
   const valueTicks = useMemo(() => {
     if (!showAxes || !scales || isRadial) return []
-    return scales.r.ticks(5).map(v => ({
+    const rawTicks = rTickValues || scales.r.ticks(5)
+    return rawTicks.map(v => ({
       value: v,
       pixel: scales.r(v),
       label: (rFormat || defaultRFormat)(v)
     }))
-  }, [showAxes, scales, rFormat, isRadial])
+  }, [showAxes, scales, rFormat, isRadial, rTickValues])
 
   // Persistent cache for sticky annotation positions
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())
@@ -374,20 +384,25 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                   }
                   return null
                 })()}
-                {valueTicks.map((tick, i) => (
-                  <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
-                    <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
-                    <text
-                      y={18}
-                      textAnchor="middle"
-                      fontSize={10}
-                      fill="var(--semiotic-text-secondary, #666)"
-                      style={{ userSelect: "none" }}
-                    >
-                      {tick.label}
-                    </text>
-                  </g>
-                ))}
+                {valueTicks.map((tick, i) => {
+                  const anchor = tickLabelEdgeAlign
+                    ? (i === 0 ? "start" : i === valueTicks.length - 1 ? "end" : "middle")
+                    : "middle"
+                  return (
+                    <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
+                      <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                      <text
+                        y={18}
+                        textAnchor={anchor}
+                        fontSize={10}
+                        fill="var(--semiotic-text-secondary, #666)"
+                        style={{ userSelect: "none" }}
+                      >
+                        {tick.label}
+                      </text>
+                    </g>
+                  )
+                })}
                 {rLabel && (
                   <text
                     x={width / 2}

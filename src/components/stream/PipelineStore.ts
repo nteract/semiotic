@@ -1022,6 +1022,101 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
+  /**
+   * Remove data points by ID. Requires pointIdAccessor to be configured.
+   * Returns the removed items. Marks the store dirty for scene rebuild.
+   */
+  remove(id: string | string[]): Record<string, any>[] {
+    if (!this.getPointId) {
+      throw new Error("remove() requires pointIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getPointId = this.getPointId
+    // Compact timestamp buffer in lockstep with data removal
+    const predicate = (item: Record<string, any>) => ids.has(getPointId(item))
+    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+      const oldTimestamps = this.timestampBuffer.toArray()
+      const removeSet = new Set<number>()
+      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+      this.timestampBuffer.clear()
+      for (let i = 0; i < oldTimestamps.length; i++) {
+        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+      }
+    }
+
+    const removed = this.buffer.remove(predicate)
+    if (removed.length === 0) return removed
+
+    // Evict removed values from extent tracking — mirror ingest() logic
+    for (const d of removed) {
+      this.xExtent.evict(this.getX(d))
+      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+        this.yExtent.evict(this.getHigh(d))
+        this.yExtent.evict(this.getLow(d))
+      } else {
+        this.yExtent.evict(this.getY(d))
+        if (this.getY0) this.yExtent.evict(this.getY0(d))
+      }
+    }
+
+    this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._ingestVersion++
+    return removed
+  }
+
+  /**
+   * Update data points by ID. Requires pointIdAccessor.
+   * The updater receives the current datum and returns the replacement.
+   * Returns the previous values. Extents and scene are marked dirty.
+   */
+  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    if (!this.getPointId) {
+      throw new Error("update() requires pointIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getPointId = this.getPointId
+    // Capture matched indices before mutation (updater may change the ID field)
+    const matchedIndices = new Set<number>()
+    this.buffer.forEach((d, i) => { if (ids.has(getPointId(d))) matchedIndices.add(i) })
+
+    const previous = this.buffer.update(
+      item => ids.has(getPointId(item)),
+      updater
+    )
+    if (previous.length === 0) return previous
+
+    // Evict old values — mirror ingest() logic for candlestick/y0
+    for (const old of previous) {
+      this.xExtent.evict(this.getX(old))
+      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+        this.yExtent.evict(this.getHigh(old))
+        this.yExtent.evict(this.getLow(old))
+      } else {
+        this.yExtent.evict(this.getY(old))
+        if (this.getY0) this.yExtent.evict(this.getY0(old))
+      }
+    }
+    // Push new extents using pre-captured indices (safe if ID changed)
+    this.buffer.forEach((d, i) => {
+      if (matchedIndices.has(i)) {
+        this.xExtent.push(this.getX(d))
+        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+          this.yExtent.push(this.getHigh(d))
+          this.yExtent.push(this.getLow(d))
+        } else {
+          this.yExtent.push(this.getY(d))
+          if (this.getY0) this.yExtent.push(this.getY0(d))
+        }
+      }
+    })
+
+    this.needsFullRebuild = true
+    this._bufferDirty = true
+    this._ingestVersion++
+    return previous
+  }
+
   /** Returns sorted bin boundary values from the last bar scene build. Persists until clear() or the next bar scene build. */
   getBinBoundaries(): number[] {
     return this._binBoundaries

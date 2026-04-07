@@ -68,6 +68,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -206,6 +208,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     margin: setup.margin,
     barPadding: categoryPadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,

@@ -81,6 +81,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -247,6 +249,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     responsiveHeight: props.responsiveHeight,
     margin: setup.margin,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: isVertical,
     showCategoryTicks: isVertical,
     ...(categoryFormat && { oFormat: categoryFormat }),

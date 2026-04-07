@@ -157,6 +157,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: false,
     ...effectiveLegendProps,
     ...(title && { title }),

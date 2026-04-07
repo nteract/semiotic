@@ -44,6 +44,7 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -562,8 +563,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes
+    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
     useEffect(() => {
+      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])
@@ -608,6 +610,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany: pushManyPoints,
+      remove: (id: string | string[]) => {
+        adapterRef.current?.flush()
+        const removed = storeRef.current?.remove(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      update: (id: string | string[], updater: (d: any) => any) => {
+        adapterRef.current?.flush()
+        const previous = storeRef.current?.update(id, updater) ?? []
+        if (previous.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
       clear: clearAll,
       getData: () => {
         // Flush any buffered push data so getData() always returns up-to-date results
@@ -616,7 +636,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null
-    }), [pushPoint, pushManyPoints, clearAll])
+    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

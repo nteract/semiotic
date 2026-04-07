@@ -77,6 +77,8 @@ export function useOrdinalStreaming({
   useImperativeHandle(ref, () => ({
     push: wrappedPush,
     pushMany: wrappedPushMany,
+    remove: (id: string | string[]) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => {
       streaming.resetCategories()
       frameRef.current?.clear()

@@ -627,6 +627,42 @@ const StreamNetworkFrame = forwardRef<
     () => ({
       push: pushEdge,
       pushMany: pushManyEdges,
+      removeNode: (id: string) => {
+        const removed = storeRef.current?.removeNode(id) ?? false
+        if (removed) {
+          nodeColorMap.current.delete(id)
+          runLayout()
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      removeEdge: (sourceId: string, targetId: string) => {
+        const removed = storeRef.current?.removeEdge(sourceId, targetId) ?? false
+        if (removed) {
+          runLayout()
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      updateNode: (id: string, updater: (data: Record<string, any>) => Record<string, any>) => {
+        const previous = storeRef.current?.updateNode(id, updater) ?? null
+        if (previous) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
+      updateEdge: (sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>) => {
+        const previous = storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
+        if (previous.length > 0) {
+          runLayout()
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
       clear: clearAll,
       getTopology: () =>
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
@@ -643,7 +679,7 @@ const StreamNetworkFrame = forwardRef<
       relayout: forceRelayout,
       getTension: () => storeRef.current?.tension ?? 0
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, runLayout, scheduleRender]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────

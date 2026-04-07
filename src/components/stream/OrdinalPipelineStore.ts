@@ -75,6 +75,7 @@ export class OrdinalPipelineStore {
   private getGroup: ((d: any) => string) | undefined
   private getColor: ((d: any) => string) | undefined
   private getConnector: ((d: any) => string) | undefined
+  private getDataId: ((d: any) => string) | undefined
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
@@ -135,6 +136,7 @@ export class OrdinalPipelineStore {
     this.getGroup = resolveStringAccessor(config.groupBy)
     this.getColor = resolveStringAccessor(config.colorAccessor)
     this.getConnector = resolveStringAccessor(config.connectorAccessor)
+    this.getDataId = resolveStringAccessor(config.dataIdAccessor)
 
     if (config.pulse) {
       this.timestampBuffer = new RingBuffer(config.windowSize)
@@ -292,7 +294,7 @@ export class OrdinalPipelineStore {
         if (ext.dirty) ext.recalculate(buffer, acc)
         let [min, max] = ext.extent
         if (min === Infinity) { min = 0; max = 1 }
-        const pad = config.extentPadding || 0.05
+        const pad = config.extentPadding ?? 0.05
         const range = max - min
         const padAmt = range > 0 ? range * pad : 1
         min -= padAmt
@@ -412,7 +414,7 @@ export class OrdinalPipelineStore {
 
   private computeValueDomain(data: Record<string, any>[], oExtent: string[]): [number, number] {
     const chartType = this.config.chartType
-    const pad = this.config.extentPadding || 0.05
+    const pad = this.config.extentPadding ?? 0.05
 
     // For radial pie/donut, the value axis represents proportions
     // But for radial point (radar), use actual data values
@@ -504,7 +506,7 @@ export class OrdinalPipelineStore {
       const padAmount = range > 0 ? range * pad : 1
       // When baselinePadding is false (default), don't pad the side that sits at 0
       const skipMinPad = isBarType && !this.config.baselinePadding && min === 0
-      const skipMaxPad = isBarType && !this.config.baselinePadding && max === 0
+      const skipMaxPad = (isBarType && !this.config.baselinePadding && max === 0) || chartType === "swimlane"
       if (this.config.rExtent?.[0] == null && !skipMinPad) min -= padAmount
       if (this.config.rExtent?.[1] == null && !skipMaxPad) max += padAmount
     }
@@ -1019,6 +1021,79 @@ export class OrdinalPipelineStore {
 
   getData(): Record<string, any>[] {
     return this.buffer.toArray()
+  }
+
+  /**
+   * Remove data items by ID. Requires dataIdAccessor to be configured.
+   * Returns the removed items. Marks the store dirty for scene rebuild.
+   */
+  remove(id: string | string[]): Record<string, any>[] {
+    if (!this.getDataId) {
+      throw new Error("remove() requires dataIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getDataId = this.getDataId
+    // Compact timestamp buffer in lockstep with data removal
+    const predicate = (item: Record<string, any>) => ids.has(getDataId(item))
+    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+      const oldTimestamps = this.timestampBuffer.toArray()
+      const removeSet = new Set<number>()
+      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+      this.timestampBuffer.clear()
+      for (let i = 0; i < oldTimestamps.length; i++) {
+        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+      }
+    }
+    const removed = this.buffer.remove(predicate)
+    if (removed.length === 0) return removed
+
+    for (const d of removed) {
+      this.evictValueExtent(d)
+    }
+
+    // Rebuild category set from remaining data
+    this.categories.clear()
+    this.buffer.forEach(d => this.categories.add(this.getO(d)))
+
+    this.version++
+    return removed
+  }
+
+  /**
+   * Update data items by ID. Requires dataIdAccessor.
+   * Returns the previous values. Categories and extents are rebuilt.
+   */
+  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    if (!this.getDataId) {
+      throw new Error("update() requires dataIdAccessor to be configured")
+    }
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const getDataId = this.getDataId
+    // Capture matched indices before mutation (updater may change the ID field)
+    const matchedIndices = new Set<number>()
+    this.buffer.forEach((d, i) => { if (ids.has(getDataId(d))) matchedIndices.add(i) })
+
+    const previous = this.buffer.update(
+      item => ids.has(getDataId(item)),
+      updater
+    )
+    if (previous.length === 0) return previous
+
+    // Evict old values using the existing extent helper (handles timeline/multiAxis)
+    for (const old of previous) {
+      this.evictValueExtent(old)
+    }
+    // Rebuild categories and push new extents using pre-captured indices
+    this.categories.clear()
+    this.buffer.forEach((d, i) => {
+      this.categories.add(this.getO(d))
+      if (matchedIndices.has(i)) {
+        this.pushValueExtent(d)
+      }
+    })
+
+    this.version++
+    return previous
   }
 
   clear(): void {

@@ -35,6 +35,7 @@ import { select } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
@@ -320,8 +321,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }, [])
 
-    // ── Theme change → repaint canvas ─────────────────────────────
+    // ── Theme change → repaint canvas, clear CSS var cache ────────
     useEffect(() => {
+      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])
@@ -369,6 +371,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany,
+      removePoint: (id: string | string[]) => {
+        const removed = storeRef.current?.removePoint(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
       clear: clearAll,
       getProjection: () => storeRef.current?.scales?.projection ?? null,
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
@@ -384,15 +394,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           )
         }
       },
-      getData: () => {
-        const store = storeRef.current
-        if (!store) return []
-        return store.scene
-          .filter((n): n is PointSceneNode => n.type === "point")
-          .map(p => p.datum)
-          .filter(Boolean)
-      }
-    }), [pushPoint, pushMany, clearAll])
+      getData: () => storeRef.current?.getPoints() ?? []
+    }), [pushPoint, pushMany, clearAll, scheduleRender])
 
     // ── Hover handler ─────────────────────────────────────────────────
 

@@ -61,6 +61,7 @@ import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -247,6 +248,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showLabels,
       connectorAccessor,
       connectorStyle,
+      dataIdAccessor,
       rExtent,
       oExtent,
       extentPadding = 0.05,
@@ -264,6 +266,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       rLabel,
       oFormat,
       rFormat,
+      rTickValues,
+      tickLabelEdgeAlign,
       enableHover = true,
       hoverAnnotation,
       tooltipContent,
@@ -368,6 +372,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       showLabels,
       connectorAccessor,
       connectorStyle,
+      dataIdAccessor,
       oSort,
       pieceStyle,
       summaryStyle,
@@ -383,7 +388,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, barPadding, baselinePadding, innerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
-      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, oSort,
+      bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition, staleness,
       isStreaming
@@ -408,8 +413,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes
+    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
     useEffect(() => {
+      if (canvasRef.current) {
+        clearCSSColorCache(canvasRef.current)
+      }
       dirtyRef.current = true
       scheduleRender()
     }, [currentTheme, scheduleRender])
@@ -449,14 +457,31 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany: pushManyPoints,
+      remove: (id: string | string[]) => {
+        adapterRef.current?.flush()
+        const removed = storeRef.current?.remove(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      update: (id: string | string[], updater: (d: any) => any) => {
+        adapterRef.current?.flush()
+        const previous = storeRef.current?.update(id, updater) ?? []
+        if (previous.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return previous
+      },
       clear: clearAll,
       getData: () => {
-        // Flush any buffered push data so getData() always returns up-to-date results
         adapterRef.current?.flush()
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null
-    }), [pushPoint, pushManyPoints, clearAll])
+    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 
@@ -862,6 +887,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             rLabel={rLabel}
             oFormat={oFormat}
             rFormat={rFormat}
+            rTickValues={rTickValues}
+            tickLabelEdgeAlign={tickLabelEdgeAlign}
             showGrid={showGrid}
             title={title}
             legend={legend}
@@ -952,6 +979,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           showAxes={showAxes}
           showGrid={showGrid}
           rFormat={rFormat}
+          rTickValues={rTickValues}
         />
 
         <canvas

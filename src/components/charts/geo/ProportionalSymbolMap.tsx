@@ -76,6 +76,12 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.removePoint(id) ?? [],
+    update: (id, updater) => {
+      const removed = frameRef.current?.removePoint(id) ?? []
+      for (const old of removed) frameRef.current?.push(updater(old))
+      return removed
+    },
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -243,6 +249,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     xAccessor: xAccessor as any,
     yAccessor: yAccessor as any,
     pointStyle: pointStyleFn,
+    ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     ...(resolvedAreas && { areas: resolvedAreas, areaStyle }),
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),

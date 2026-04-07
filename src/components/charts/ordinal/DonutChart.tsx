@@ -163,6 +163,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: false,
     ...effectiveLegendProps,
     ...(title && { title }),

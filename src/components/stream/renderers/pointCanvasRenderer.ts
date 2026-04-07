@@ -1,4 +1,5 @@
 import type { SceneNode, PointSceneNode } from "../types"
+import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { renderCirclePulse } from "./renderPulse"
 
@@ -23,11 +24,11 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout
         ctx.globalAlpha = alpha
       }
 
-      ctx.fillStyle = node.style.fill || "#4e79a7"
+      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#4e79a7"
       ctx.fill()
 
       if (node.style.stroke) {
-        ctx.strokeStyle = node.style.stroke
+        ctx.strokeStyle = (typeof node.style.stroke === "string" ? resolveCSSColor(ctx, node.style.stroke) : node.style.stroke) || node.style.stroke
         ctx.lineWidth = node.style.strokeWidth || 1
         ctx.stroke()
       }

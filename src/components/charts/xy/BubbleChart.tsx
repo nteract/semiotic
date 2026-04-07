@@ -324,6 +324,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   useImperativeHandle(ref, () => ({
     push: wrappedPush,
     pushMany: wrappedPushMany,
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => {
       streaming.resetCategories()
       streamingSizeDomainRef.current = null

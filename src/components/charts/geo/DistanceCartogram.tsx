@@ -234,6 +234,12 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   useImperativeHandle(ref, () => ({
     push: (point) => geoRef.current?.push(point),
     pushMany: (points) => geoRef.current?.pushMany(points),
+    remove: (id) => geoRef.current?.removePoint(id) ?? [],
+    update: (id, updater) => {
+      const removed = geoRef.current?.removePoint(id) ?? []
+      for (const old of removed) geoRef.current?.push(updater(old))
+      return removed
+    },
     clear: () => geoRef.current?.clear(),
     getData: () => geoRef.current?.getData() ?? []
   }))

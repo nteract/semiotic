@@ -112,7 +112,8 @@ const navData = [
       { title: "Serialization", path: "/features/serialization" },
       { title: "Vega-Lite Translator", path: "/features/vega-lite" },
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
-      { title: "Performance", path: "/features/performance" }
+      { title: "Performance", path: "/features/performance" },
+      { title: "Push API", path: "/features/push-api" }
     ]
   },
   {

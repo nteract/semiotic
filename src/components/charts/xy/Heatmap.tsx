@@ -213,6 +213,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))
@@ -427,6 +429,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     xFormat,
     yFormat,
     enableHover,
+    ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     ...(gradientLegend && { legend: gradientLegend, legendPosition }),
     ...(title && { title }),
     ...(description && { description }),

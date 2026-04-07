@@ -971,6 +971,85 @@ export class NetworkPipelineStore {
     }
   }
 
+  /**
+   * Update a node's data by ID. Returns the previous data, or null if not found.
+   */
+  updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
+    const node = this.nodes.get(id)
+    if (!node) return null
+    const previous = node.data ? { ...node.data } : {}
+    node.data = updater(node.data ?? {})
+    this.layoutVersion++
+    return previous
+  }
+
+  /**
+   * Update all edges between source and target. Handles parallel edges.
+   * Returns array of previous data values (one per updated edge), or empty array.
+   */
+  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+    const valAcc = this.config.valueAccessor
+    const valFn = typeof valAcc === "function" ? valAcc
+      : valAcc ? (d: any) => d[valAcc]
+      : (d: any) => d.value
+    const results: Record<string, any>[] = []
+    for (const [, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === sourceId && tgt === targetId) {
+        results.push(edge.data ? { ...edge.data } : {})
+        edge.data = updater(edge.data ?? {})
+        const newValue = valFn(edge.data)
+        if (newValue != null) edge.value = Number(newValue)
+      }
+    }
+    if (results.length > 0) this.layoutVersion++
+    return results
+  }
+
+  /**
+   * Remove a node by ID. Also removes all edges connected to this node.
+   * Returns true if the node was found and removed.
+   */
+  removeNode(id: string): boolean {
+    if (!this.nodes.has(id)) return false
+    this.nodes.delete(id)
+    this.nodeTimestamps.delete(id)
+    // Cascade: remove edges connected to this node
+    for (const [edgeKey, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === id || tgt === id) {
+        this.edges.delete(edgeKey)
+        this.edgeTimestamps.delete(edgeKey)
+      }
+    }
+    this.layoutVersion++
+    return true
+  }
+
+  /**
+   * Remove all edges between source and target node IDs.
+   * Handles parallel edges (multiple edges between the same pair).
+   * Returns true if at least one edge was removed.
+   */
+  removeEdge(sourceId: string, targetId: string): boolean {
+    const toDelete: string[] = []
+    for (const [edgeKey, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (src === sourceId && tgt === targetId) {
+        toDelete.push(edgeKey)
+      }
+    }
+    for (const key of toDelete) {
+      this.edges.delete(key)
+      this.edgeTimestamps.delete(key)
+    }
+    if (toDelete.length > 0) this.layoutVersion++
+    return toDelete.length > 0
+  }
+
   clear(): void {
     this.nodes.clear()
     this.edges.clear()

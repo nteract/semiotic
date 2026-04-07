@@ -365,6 +365,49 @@ export class GeoPipelineStore {
     this.lastIngestTime = now
   }
 
+  /**
+   * Remove points by ID. Requires pointIdAccessor to be configured.
+   * Returns the removed items.
+   */
+  removePoint(id: string | string[]): Record<string, any>[] {
+    const { pointIdAccessor } = this.config
+    if (!pointIdAccessor) {
+      throw new Error("removePoint() requires pointIdAccessor to be configured")
+    }
+    const getId = typeof pointIdAccessor === "function"
+      ? pointIdAccessor
+      : (d: any) => d[pointIdAccessor as string]
+    const ids = new Set(Array.isArray(id) ? id : [id])
+
+    if (this.streaming && this.pointBuffer) {
+      const predicate = (item: Record<string, any>) => ids.has(String(getId(item)))
+      // Compact timestamp buffer in lockstep
+      if (this.timestampBuffer && this.timestampBuffer.size > 0) {
+        const oldTimestamps = this.timestampBuffer.toArray()
+        const removeSet = new Set<number>()
+        this.pointBuffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
+        this.timestampBuffer.clear()
+        for (let i = 0; i < oldTimestamps.length; i++) {
+          if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
+        }
+      }
+      const removed = this.pointBuffer.remove(predicate)
+      if (removed.length > 0) this.version++
+      return removed
+    } else {
+      const removed: Record<string, any>[] = []
+      this.pointData = this.pointData.filter(d => {
+        if (ids.has(String(getId(d)))) {
+          removed.push(d)
+          return false
+        }
+        return true
+      })
+      if (removed.length > 0) this.version++
+      return removed
+    }
+  }
+
   clear(): void {
     this.areas = []
     this.pointData = []
@@ -655,7 +698,7 @@ export class GeoPipelineStore {
 
   // ── Build scene nodes ──────────────────────────────────────────
 
-  private getPoints(): Record<string, any>[] {
+  getPoints(): Record<string, any>[] {
     if (this.streaming && this.pointBuffer) {
       return this.pointBuffer.toArray()
     }

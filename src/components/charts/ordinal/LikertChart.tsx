@@ -224,6 +224,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   useImperativeHandle(ref, () => ({
     push: wrappedPush,
     pushMany: wrappedPushMany,
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => {
       accumulatorRef.current = []
       streaming.resetCategories()
@@ -407,6 +409,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     margin: effectiveMargin,
     barPadding,
     enableHover,
+    ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel || (isDiverging ? undefined : "Percentage"),

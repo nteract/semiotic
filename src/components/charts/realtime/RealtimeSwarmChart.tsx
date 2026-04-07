@@ -101,6 +101,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Record<string, any> = Re
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
+  /** ID accessor for remove()/update() on the push API */
+  pointIdAccessor?: string | ((d: any) => string)
 }
 
 /**
@@ -197,6 +199,8 @@ export const RealtimeSwarmChart = forwardRef(
     useImperativeHandle(ref, () => ({
       push: (point) => frameRef.current?.push(point),
       pushMany: (points) => frameRef.current?.pushMany(points),
+      remove: (id) => frameRef.current?.remove(id) ?? [],
+      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
       clear: () => frameRef.current?.clear(),
       getData: () => frameRef.current?.getData() ?? []
     }))
@@ -250,6 +254,7 @@ export const RealtimeSwarmChart = forwardRef(
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
         legendPosition={legendPositionProp}
+        pointIdAccessor={props.pointIdAccessor}
       />
     )
   }

@@ -79,6 +79,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
     pushMany: (points) => frameRef.current?.pushMany(points),
+    remove: (id) => frameRef.current?.remove(id) ?? [],
+    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? []
   }))

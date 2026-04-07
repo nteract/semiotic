@@ -1,5 +1,6 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
 import { renderPathPulse } from "./renderPulse"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /** Trace the wedge arc path (donut or pie) onto the current context. */
 function drawWedgePath(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
@@ -29,11 +30,11 @@ export const wedgeCanvasRenderer = (
 
     ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 1
 
-    ctx.fillStyle = node.style.fill || "#007bff"
+    ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
     ctx.fill()
 
     if (node.style.stroke && node.style.stroke !== "none") {
-      ctx.strokeStyle = node.style.stroke
+      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.stroke()
     }
