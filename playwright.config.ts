@@ -15,6 +15,20 @@ export default {
         browserName: "chromium",
         viewport: { width: 900, height: 800 }
       }
+    },
+    {
+      name: "firefox",
+      use: {
+        browserName: "firefox",
+        viewport: { width: 900, height: 800 }
+      }
+    },
+    {
+      name: "webkit",
+      use: {
+        browserName: "webkit",
+        viewport: { width: 900, height: 800 }
+      }
     }
   ],
   webServer: {

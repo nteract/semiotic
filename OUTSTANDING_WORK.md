@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-06.
+Last updated 2026-04-08.
 
 ---
 
@@ -89,47 +89,6 @@ Medium (3-4 days):
 
 ---
 
-## Push API: Selective Data Removal
-
-**Status**: Implemented. `remove()` and `update()` ship on all stores and frame handles.
-
-### Problem
-
-The push API (`push`, `pushMany`, `clear`, `getData`) is additive-only. Data exits the buffer only through RingBuffer eviction (oldest items drop when window is full) or `clear()` (wipes everything). There is no way to remove a specific datum, edge, or node.
-
-This matters for network topology changes (edge/node removal), filtered live views (deselect a category), correction/tombstone streams, and TTL-based expiry.
-
-**Current workaround**: For server GIF rendering, `generateFrameSequence` accepts complete data snapshots per frame, so deletion is implicit (frame N+1 simply omits the deleted item). For client-side, the only option is `clear()` + `pushMany(filteredData)`, which loses transition state.
-
-### Proposed API
-
-```ts
-ref.current.remove((datum) => datum.id === "Lead")       // by predicate
-ref.current.removeWhere("id", "Lead")                     // field match sugar
-ref.current.removeEdge((edge) => edge.source === "Spark") // network edges
-```
-
-### Technical approach
-
-- **RingBuffer**: Add `remove(predicate)` — O(n) scan + compact. Size decreases, capacity stays. Subsequent pushes fill the gap.
-- **PipelineStore**: `remove(predicate)` calls `buffer.remove()`, recomputes extent from scratch (O(n), removal is infrequent), marks dirty.
-- **Transitions**: Existing enter/exit machinery handles this — removed items appear in the "previous" snapshot but not the "current" scene, so `startTransition()` creates fade-out exit nodes automatically.
-- **Network cascade**: Removing a node also removes edges that reference it.
-- **HOC handles**: All forwardRef HOCs get `remove` on their imperative handle. No prop changes.
-
-### Edge cases
-
-- Remove all data → empty state (same as `clear()`)
-- Remove during active transition → snap to end, start new transition
-- Network node removal → cascade to edges
-- Remove hovered/selected item → clear interaction state
-
-### Effort
-
-Medium (3-5 days). RingBuffer.remove (1d), PipelineStore.remove + extent recompute (1d), transition exits (1d, mostly existing), frame/HOC exposure (0.5d), network cascade (0.5d).
-
----
-
 ## Push API: Transition Exits on Remove
 
 **Status**: Not started.
@@ -173,20 +132,6 @@ If the removed item is currently hovered or selected (via `linkedHover` or `sele
 `remove()` and `update()` return the previous values, so the caller can `push` them back. But there's no built-in undo stack. For a chat agent workflow ("remove that node" / "undo"), the caller holds the return value manually.
 
 A built-in undo would be: `ref.current.undo()` that reverses the last mutation (remove, update, push). Requires an operation log with inverse operations. Scoping TBD — may be better as a userland wrapper than a library feature.
-
----
-
-## Discord / Slack Chart Agent
-
-**Status**: Scoped in CHAT_AGENT_PLAN.md, not started.
-
-A bot that listens in a channel, accepts data (CSV/JSON paste or code block), interprets natural language requests via an LLM, and replies with a chart image (PNG or animated GIF). Conversational — "dark mode", "add a threshold at 50K", "animate it" refine the previous chart.
-
-Architecture: discord.js / @slack/bolt → Claude API (with ai/system-prompt.md + ai/schema.json as context) → semiotic/server renderToImage/renderToAnimatedGif → file upload. Per-channel state stores last data + last config for iterative refinement.
-
-**Effort**: Phase 1 (slash command, JSON in → PNG out): 1-2 days. Phase 2 (natural language via LLM): 2-3 days. Phase 3 (conversational refinement + GIF): 2-3 days. Phase 4 (polish, error handling, rate limiting): 1-2 days. Total: 6-10 days.
-
-**Dependencies**: @anthropic-ai/sdk, discord.js or @slack/bolt. semiotic/server + sharp already available.
 
 ---
 
@@ -242,16 +187,6 @@ Verify `renderChart`, `renderDashboard`, `generateFrameSVGs`, `generateFrameSequ
 
 ---
 
-## SVG Hatch Pattern Fills for Server Rendering
-
-**Status**: Not started.
-
-`createHatchPattern()` produces CanvasPatterns which don't work in SVG server output. For server-rendered charts, hatch fills (used by FunnelChart vertical mode and desired for visual differentiation like the Backup-B node in the ETL failover demo) need SVG `<pattern>` elements with `<line>` strokes inside a `<defs>` block.
-
-**Effort**: Small (1 day). Create `createSVGHatchPattern(opts)` that returns a `<pattern>` element and a `url(#id)` fill reference. Wire into server frame renderers.
-
----
-
 ## Render Studio: Real GIF Downloads
 
 **Status**: Not started.
@@ -264,9 +199,10 @@ The Render Studio page (`/server/studio`) animated preview still cycles SVG fram
 
 ## Release & CI Pipeline
 
-### Release pipeline hardening [YELLOW — partially addressed]
+### Release pipeline hardening [DONE]
 
-**Remaining**: No rollback mechanism, no post-publish smoke test. A bad release still requires manual `npm unpublish` within 72 hours.
+- **Post-publish smoke test** — added to `.github/workflows/release.yml`. After `npm publish`, waits for registry propagation then installs `semiotic@version` in a temp project and verifies 8 entry points (`semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/server`, `semiotic/themes`, `semiotic/utils`) export expected components.
+- **Rollback script** — `scripts/rollback-release.sh <bad-version> [good-version]`. Deprecates the bad version (shows warning on install) and points the dist-tag back to the previous version. Auto-detects previous version if not specified. Prints follow-up steps (delete git tag, optional unpublish).
 
 ---
 
@@ -387,47 +323,41 @@ Each renderer respects `_targetOpacity` via `ctx.globalAlpha`, composing with se
 
 ### Missing test specs
 
-1. `animation.spec.ts` — bounded data transitions, enter/exit (not yet written)
+1. `animation.spec.ts` — bounded data transitions, enter/exit (not yet written). Blocked on declarative animation implementation.
 
-### SSR testing gap [YELLOW — partially addressed]
+### SSR testing gap [DONE]
 
-Three test files exist: `renderToStaticSVG.test.tsx`, `componentSSR.test.tsx`, `SceneToSVG.test.tsx`. These run in Vitest (unit) but are not explicitly gated in CI as a separate step. Coverage of geo SSR and edge cases (empty data, invalid props) is thin.
+- 10 server test files with 31+ integration tests covering all chart types, themes, formats
+- Geo SSR test added: ChoroplethMap with pre-resolved GeoJSON features, ProportionalSymbolMap
+- Negative cases added: empty data, missing accessors (defaults), unknown component name (throws descriptive error), null data, empty dashboard
+- All SSR tests run in CI via `npx vitest run --coverage` (same as all other tests)
 
-**Remaining**: Ensure SSR tests run in CI. Add geo SSR test with pre-resolved features. Add negative case (invalid props → graceful fallback).
+### Cross-browser testing [DONE — config added]
 
-### Cross-browser testing [RED]
+Firefox and WebKit projects added to `playwright.config.ts`. CI installs all three browsers (`npx playwright install --with-deps chromium firefox webkit`). Snapshot baselines will need to be generated per-browser — the CI auto-generates missing baselines on first run.
 
-Playwright tests run Chromium only. No Firefox or Safari testing. Canvas rendering differences between browsers (anti-aliasing, font metrics, gradient interpolation) are untested.
+### Playwright snapshot baselines [YELLOW — partially addressed]
 
-**Fix**: Add Firefox and Safari (WebKit) projects to `playwright.config.ts`. Start with a subset of specs (xy-frame, ordinal-frame) to avoid screenshot baseline explosion.
+CI has auto-generation logic: if no Linux baselines exist, runs `--update-snapshots` on first run. Both macOS and Linux baselines can coexist. Firefox/WebKit baselines will be generated on first CI run with the new config.
 
-### Playwright snapshot baselines are macOS-only [YELLOW]
+### Canvas stub drift in unit tests [DONE]
 
-All E2E screenshot baselines are `*-chromium-darwin.png`. CI runs on `ubuntu-latest` (Linux), where Playwright looks for `*-chromium-linux.png` — which don't exist. Font hinting and subpixel antialiasing differ enough between platforms that sharing baselines across OSes isn't viable.
+CI step added to `node.js.yml`: scans all `ctx.<method>` calls in `src/components/stream/renderers/`, compares against the stubbed methods in `setupTests.ts`, and fails if any method is used in production but not stubbed. Excludes property assignments (fillStyle, strokeStyle, etc.).
 
-**Fix**: Generate Linux baselines via Playwright's Docker image (`mcr.microsoft.com/playwright:v1.x`) or a one-time CI run with `--update-snapshots`. Commit both `*-chromium-darwin.png` and `*-chromium-linux.png` baselines. Alternatively, pin E2E to a Docker-based CI runner so only one set of baselines is needed.
+### Sustained streaming load testing [DONE]
 
-### Canvas stub drift in unit tests [YELLOW]
+`benchmarks/unit/streaming-load.bench.ts` added with 6 benchmarks:
+- RingBuffer: 10k/50k pushes with eviction, forEach iteration cost
+- PipelineStore: 1k push + scene rebuild, 5k burst, incremental 100-point hot path
+- Memory stability: 50k push/evict cycles assert buffer stays at capacity
 
-`setupTests.ts` stubs ~40 canvas methods for jsdom. If a new canvas method is used in production but not stubbed, tests pass in Playwright but throw in Vitest. No CI step validates stub completeness.
+### Canvas accessibility [YELLOW — by design]
 
-### Sustained streaming load testing [RED]
+Canvas data marks are opaque to assistive technology. Mitigated by: ARIA labels on canvas elements, SVG overlay for text-accessible axes/legends, `accessibleTable` (default true) rendering screen-reader-only data summary, keyboard navigation with graph-based traversal. The data marks themselves have no text alternative beyond tooltips. This is an inherent canvas limitation — further improvement would require a parallel invisible DOM representation of each data point.
 
-No load test pushes high-throughput data (e.g., 10,000 points/second for 5 minutes) and measures frame drop rate, memory growth, or GC pauses. Benchmarks test batch processing, not sustained streaming. The architecture (microtask batching -> RingBuffer -> scene rebuild -> canvas repaint) is sound in design but unvalidated under sustained real-world load.
+### Benchmark regressions [DONE — now blocking]
 
-**Fix**: Add a benchmark or integration test that pushes data at sustained high rates and asserts: no memory leak (heap stable after GC), RAF callback completes within 16ms budget, no dropped frames.
-
-### Canvas accessibility [RED]
-
-axe-core catches WCAG violations in the DOM/SVG layer. But canvas content is opaque to accessibility tools. Keyboard navigation exists and is tested against specific patterns, but not comprehensively against screen reader behavior. Users relying on assistive technology may not be able to access canvas-rendered data marks.
-
-**Mitigation**: ARIA labels on canvas elements exist. SVG overlay provides text-accessible axes/legends. But the data marks themselves (the canvas layer) have no text alternative beyond tooltips.
-
-### Benchmark regressions non-blocking [YELLOW]
-
-The 5 existing benchmark suites run in CI but don't fail builds. Baselines aren't versioned in git. A 50% perf regression ships silently.
-
-**Fix**: Version baseline files in git. Add a CI check that fails on >20% regression vs baseline.
+CI runs `npx vitest bench --reporter=json --outputFile=bench-results.json` then `node scripts/check-bench-regression.js`. The script compares ops/s against `benchmarks/baselines.json` and fails if any benchmark regresses >25%. First CI run auto-saves the baseline. To update after intentional changes: `cp bench-results.json benchmarks/baselines.json`.
 
 ---
 

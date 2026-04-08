@@ -183,7 +183,7 @@ export function useChartSelection({
   chartType?: string
   chartId?: string
   onClick?: (datum: any, event: { x: number; y: number }) => void
-  hoverHighlight?: boolean | "series"
+  hoverHighlight?: boolean
   colorByField?: string
 }): {
   activeSelectionHook: SelectionHookResult | null

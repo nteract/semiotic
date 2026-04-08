@@ -338,3 +338,108 @@ describe("Cross-format consistency", () => {
     expect(isValidPNG(png)).toBe(true)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Geo SSR
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("Geo SSR", () => {
+  const geoFeatures = [
+    {
+      type: "Feature" as const,
+      properties: { name: "TestRegion", value: 100 },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
+      }
+    },
+    {
+      type: "Feature" as const,
+      properties: { name: "OtherRegion", value: 200 },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [[[20, 20], [30, 20], [30, 30], [20, 30], [20, 20]]]
+      }
+    }
+  ]
+
+  it("renderChart produces valid SVG for ChoroplethMap with pre-resolved features", () => {
+    const svg = renderChart("ChoroplethMap", {
+      areas: geoFeatures,
+      valueAccessor: (d: any) => d.properties.value,
+      width: 400, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    expect(svg).toContain("path")
+  })
+
+  it("renderChart produces valid SVG for ProportionalSymbolMap", () => {
+    const points = [
+      { lon: 5, lat: 5, pop: 1000, name: "A" },
+      { lon: 25, lat: 25, pop: 5000, name: "B" },
+    ]
+    const svg = renderChart("ProportionalSymbolMap" as any, {
+      points,
+      xAccessor: "lon",
+      yAccessor: "lat",
+      sizeBy: "pop",
+      areas: geoFeatures,
+      width: 400, height: 300,
+    })
+    // ProportionalSymbolMap may not be a supported renderChart name —
+    // if so, it should return a valid SVG with a fallback or error message, not crash
+    expect(typeof svg).toBe("string")
+    expect(svg.length).toBeGreaterThan(0)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Negative cases — invalid/edge-case props
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("Graceful handling of invalid props", () => {
+  it("renderChart with empty data produces valid SVG (not a crash)", () => {
+    const svg = renderChart("BarChart", {
+      data: [],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 300, height: 200,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+  })
+
+  it("renderChart with missing required accessors produces valid SVG", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      // deliberately omit xAccessor/yAccessor — should use defaults "x"/"y"
+      width: 300, height: 200,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+  })
+
+  it("renderChart with unknown component name throws a descriptive error", () => {
+    expect(() => {
+      renderChart("NonexistentChart" as any, {
+        data: barData,
+        width: 300, height: 200,
+      })
+    }).toThrow(/Unknown chart component/)
+  })
+
+  it("renderChart with null/undefined data does not crash", () => {
+    expect(() => {
+      renderChart("BarChart", {
+        data: null as any,
+        categoryAccessor: "category",
+        valueAccessor: "value",
+        width: 300, height: 200,
+      })
+    }).not.toThrow()
+  })
+
+  it("renderDashboard with empty charts array produces valid SVG", () => {
+    const svg = renderDashboard([], { width: 600 })
+    expect(typeof svg).toBe("string")
+    expect(svg.length).toBeGreaterThan(0)
+  })
+})

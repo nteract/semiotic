@@ -738,7 +738,7 @@ export class OrdinalPipelineStore {
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
       const baseOpacity = node.style?.opacity ?? 1
-      ;(node as any).style = { ...(node as any).style, opacity: baseOpacity * decayOpacity }
+      node.style = { ...node.style, opacity: baseOpacity * decayOpacity }
     }
   }
 
@@ -792,9 +792,9 @@ export class OrdinalPipelineStore {
       const age = now - insertTime
       if (age < duration) {
         const intensity = 1 - age / duration
-        ;(node as any)._pulseIntensity = intensity
-        ;(node as any)._pulseColor = pulseColor
-        ;(node as any)._pulseGlowRadius = glowRadius
+        node._pulseIntensity = intensity
+        node._pulseColor = pulseColor
+        node._pulseGlowRadius = glowRadius
       }
     }
   }
@@ -860,7 +860,7 @@ export class OrdinalPipelineStore {
 
       // Store stable key on node so advanceTransition can use it
       // even after exit nodes are appended to the scene
-      ;(node as any)._transitionKey = key
+      node._transitionKey = key
 
       const prev = this.prevPositionMap.get(key)
 
@@ -914,13 +914,13 @@ export class OrdinalPipelineStore {
           type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
           style: { opacity: prev.opacity ?? 1 }, datum: null,
           _targetOpacity: 0, _transitionKey: key
-        } as any)
+        })
       } else if (key.startsWith("r:")) {
         this.exitNodes.push({
           type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
           style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
           _targetOpacity: 0, _transitionKey: key
-        } as any)
+        })
       }
       hasChanges = true
     }
@@ -947,7 +947,7 @@ export class OrdinalPipelineStore {
 
     for (const node of this.scene) {
       // Use stable key stored during startTransition (immune to exit node shifts)
-      const key = (node as any)._transitionKey as string | undefined
+      const key = node._transitionKey
       if (!key) continue
 
       if (node.type === "point") {
@@ -983,8 +983,8 @@ export class OrdinalPipelineStore {
     if (rawT >= 1) {
       for (const node of this.scene) {
         if (node._targetOpacity !== undefined) {
-          (node as any).style = { ...((node as any).style || {}), opacity: node._targetOpacity === 0 ? 0 : node._targetOpacity }
-          ;(node as any)._targetOpacity = undefined
+          node.style = { ...(node.style || {}), opacity: node._targetOpacity === 0 ? 0 : node._targetOpacity }
+          node._targetOpacity = undefined
         }
         if (node.type === "point") {
           if (node._targetX === undefined) continue

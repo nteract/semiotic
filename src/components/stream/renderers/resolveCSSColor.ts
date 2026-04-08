@@ -3,12 +3,13 @@
  *
  * If the input is a `var(--name)` or `var(--name, fallback)` string,
  * reads the computed value from the canvas element. Otherwise returns
- * the input unchanged. Caches resolved values per canvas instance.
+ * the input unchanged.
+ *
+ * No caching — getComputedStyle is called each time so theme toggles
+ * are reflected immediately without manual cache invalidation.
  */
 
 const varPattern = /^var\(\s*(--[^,)]+)(?:\s*,\s*([^)]+))?\s*\)$/
-
-const cache = new WeakMap<HTMLCanvasElement, Map<string, string>>()
 
 export function resolveCSSColor(
   ctx: CanvasRenderingContext2D,
@@ -21,25 +22,13 @@ export function resolveCSSColor(
   const canvas = ctx.canvas
   if (!canvas) return match[2]?.trim() || value
 
-  // Check cache
-  let canvasCache = cache.get(canvas)
-  if (!canvasCache) {
-    canvasCache = new Map()
-    cache.set(canvas, canvasCache)
-  }
-  const cached = canvasCache.get(value)
-  if (cached) return cached
-
-  // Resolve
   const computed = getComputedStyle(canvas).getPropertyValue(match[1]).trim()
-  const resolved = computed || match[2]?.trim() || value
-  canvasCache.set(value, resolved)
-  return resolved
+  return computed || match[2]?.trim() || value
 }
 
 /**
- * Invalidate the cache for a canvas — call when theme changes.
+ * No-op retained for API compatibility — cache was removed.
  */
-export function clearCSSColorCache(canvas: HTMLCanvasElement): void {
-  cache.delete(canvas)
+export function clearCSSColorCache(_canvas: HTMLCanvasElement): void {
+  // No cache to clear — getComputedStyle is called fresh each time
 }

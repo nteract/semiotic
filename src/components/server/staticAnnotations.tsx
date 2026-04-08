@@ -67,7 +67,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     if (node) elements.push(node)
   }
 
-  return elements.length > 0 ? <g className="semiotic-annotations">{elements}</g> : null
+  return elements.length > 0 ? <g id="annotations" className="semiotic-annotations">{elements}</g> : null
 }
 
 function renderAnnotation(

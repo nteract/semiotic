@@ -12,6 +12,12 @@
   --surface-1: #12121a;
   --surface-2: #1a1a25;
   --surface-3: #252530;
+  /* Semiotic chart tokens — synced with docs theme */
+  --semiotic-bg: #0a0a0f;
+  --semiotic-text: #e0e0e0;
+  --semiotic-text-secondary: #aaa;
+  --semiotic-border: #555;
+  --semiotic-grid: #333;
 
   /* Text */
   --text-primary: #f0f0f5;
@@ -77,6 +83,12 @@
   --text-primary: #1a1a2e;
   --text-secondary: #6b7280;
   --accent: #4f46e5;
+  /* Semiotic chart tokens — synced with docs theme */
+  --semiotic-bg: #ffffff;
+  --semiotic-text: #333;
+  --semiotic-text-secondary: #666;
+  --semiotic-border: #ccc;
+  --semiotic-grid: #e0e0e0;
 }
 
 /* --------------------------------------------------------------------------

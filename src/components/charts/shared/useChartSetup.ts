@@ -70,7 +70,7 @@ export interface ChartSetupInput {
   /** onClick callback */
   onClick?: (datum: any, event: { x: number; y: number }) => void
   /** Dim non-hovered series on data mark hover */
-  hoverHighlight?: boolean | "series"
+  hoverHighlight?: boolean
   /** Loading state */
   loading: boolean | undefined
   /** Empty content override */

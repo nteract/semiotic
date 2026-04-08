@@ -133,9 +133,20 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     }
   }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
+  // Merge user frameProps.pieceStyle (for stroke etc.) into the HOC's color-resolved style
+  const mergedPieceStyle = useMemo(() => {
+    const userPieceStyle = frameProps?.pieceStyle
+    if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
+    return (d: Record<string, any>, category?: string) => {
+      const base = basePieceStyle(d, category)
+      const user = (userPieceStyle as Function)(d, category)
+      return { ...base, ...user }
+    }
+  }, [basePieceStyle, frameProps])
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, selection),
+    [mergedPieceStyle, setup.effectiveSelectionHook, selection]
   )
 
   const defaultTooltipContent = useMemo(

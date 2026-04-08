@@ -104,10 +104,9 @@ export class NetworkPipelineStore {
 
   updateConfig(config: NetworkPipelineConfig): void {
     // Preserve plugin state stored on the config object across updates
-    const prev = this.config as any
-    const next = config as any
-    if (prev.__orbitState) next.__orbitState = prev.__orbitState
-    if (prev.__hierarchyRoot) next.__hierarchyRoot = prev.__hierarchyRoot
+    const prev = this.config
+    if (prev.__orbitState) config.__orbitState = prev.__orbitState
+    if (prev.__hierarchyRoot) config.__hierarchyRoot = prev.__hierarchyRoot
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
@@ -136,7 +135,7 @@ export class NetworkPipelineStore {
     this._decaySortedNodes = null
 
     // Stash hierarchy root on config for the plugin to read
-    ;(this.config as any).__hierarchyRoot = rootData
+    this.config.__hierarchyRoot = rootData
 
     // Run layout — the hierarchical plugin will populate nodes/edges
     this.runLayout(size)
@@ -331,14 +330,14 @@ export class NetworkPipelineStore {
           }
         }
       }
-      (this.config as any).__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
+      this.config.__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
     }
 
     // Execute layout — hierarchical plugins push into the arrays directly
     plugin.computeLayout(nodesArr, edgesArr, this.config, size)
 
     // Clean up the stashed positions from config
-    delete (this.config as any).__previousPositions
+    this.config.__previousPositions = undefined
 
     // After hierarchical layout, sync the populated arrays back into the
     // store's Maps so buildScene and getLayoutData work correctly.
@@ -681,11 +680,11 @@ export class NetworkPipelineStore {
   }
 
   private buildCircularBezier(edge: RealtimeEdge): BezierCache {
-    const hw = ((edge as any)._circularWidth || edge.sankeyWidth || 1) / 2
+    const hw = (edge._circularWidth || edge.sankeyWidth || 1) / 2
     const cpd = edge.circularPathData
 
     // Stub edges: particles travel outbound stub, then teleport to inbound stub
-    if ((edge as any)._circularStub) {
+    if (edge._circularStub) {
       const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33))
       const stubLenT = Math.max(15, Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33))
 
@@ -783,9 +782,9 @@ export class NetworkPipelineStore {
       const age = now - ts
       if (age >= duration) continue
       const intensity = 1 - age / duration
-      ;(node as any)._pulseIntensity = intensity
-      ;(node as any)._pulseColor = pulseColor
-      ;(node as any)._pulseGlowRadius = glowRadius
+      node._pulseIntensity = intensity
+      node._pulseColor = pulseColor
+      node._pulseGlowRadius = glowRadius
     }
 
     for (const edge of this.sceneEdges) {
@@ -800,8 +799,8 @@ export class NetworkPipelineStore {
       const age = now - ts
       if (age >= duration) continue
       const intensity = 1 - age / duration
-      ;(edge as any)._pulseIntensity = intensity
-      ;(edge as any)._pulseColor = pulseColor
+      edge._pulseIntensity = intensity
+      edge._pulseColor = pulseColor
     }
   }
 
@@ -878,12 +877,12 @@ export class NetworkPipelineStore {
     for (const sceneNode of this.sceneNodes) {
       const nodeId = sceneNode.id
       if (!nodeId || !this.addedNodes.has(nodeId)) continue
-      ;(sceneNode as any)._pulseIntensity = Math.max(
-        (sceneNode as any)._pulseIntensity ?? 0,
+      sceneNode._pulseIntensity = Math.max(
+        sceneNode._pulseIntensity ?? 0,
         intensity
       )
-      ;(sceneNode as any)._pulseColor = "rgba(34, 197, 94, 0.7)"
-      ;(sceneNode as any)._pulseGlowRadius = 8
+      sceneNode._pulseColor = "rgba(34, 197, 94, 0.7)"
+      sceneNode._pulseGlowRadius = 8
     }
   }
 
@@ -924,9 +923,9 @@ export class NetworkPipelineStore {
       if (alertColor) {
         sceneNode.style = { ...sceneNode.style, fill: alertColor }
         if (shouldPulse) {
-          (sceneNode as any)._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
-          ;(sceneNode as any)._pulseColor = alertColor
-          ;(sceneNode as any)._pulseGlowRadius = 6
+          sceneNode._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
+          sceneNode._pulseColor = alertColor
+          sceneNode._pulseGlowRadius = 6
         }
       }
     }

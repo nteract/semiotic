@@ -48,6 +48,9 @@ export interface RealtimeNode {
   createdByFrame?: boolean
   sourceLinks?: RealtimeEdge[]
   targetLinks?: RealtimeEdge[]
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
 }
 
 export interface RealtimeEdge {
@@ -70,6 +73,12 @@ export interface RealtimeEdge {
   data?: Record<string, any>
   /** Unique key for this edge (supports parallel edges between same node pair) */
   _edgeKey?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
+  /** @internal Circular sankey layout fields */
+  _circularWidth?: number
+  _circularStub?: boolean
 }
 
 // ── Bezier cache ───────────────────────────────────────────────────────
@@ -222,6 +231,9 @@ export interface NetworkArcNode {
   datum: any
   id?: string
   label?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
 }
 
 /** Line edge — used by force */
@@ -254,6 +266,8 @@ export interface NetworkRibbonEdge {
   pathD: string
   style: Style
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 /** Curved edge — used by tree, cluster */
@@ -262,6 +276,8 @@ export interface NetworkCurvedEdge {
   pathD: string
   style: Style
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 export type NetworkSceneNode =
@@ -454,6 +470,14 @@ export interface NetworkPipelineConfig {
   orbitShowRings?: boolean
   /** Enable orbit animation. @default true */
   orbitAnimated?: boolean
+
+  // ── Internal plugin state (managed by layout plugins) ──────────
+  /** @internal Hierarchy root stashed for tree/treemap/circlepack plugins */
+  __hierarchyRoot?: unknown
+  /** @internal Orbit animation state preserved across config updates */
+  __orbitState?: unknown
+  /** @internal Previous node positions for warm-start force layout */
+  __previousPositions?: Map<string, { x: number; y: number }>
 }
 
 // ── Component props ─────────────────────────────────────────────────

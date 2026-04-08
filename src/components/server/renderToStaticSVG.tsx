@@ -58,6 +58,7 @@ import {
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import { renderStaticLegend, extractCategories } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
+import { createSVGHatchPattern } from "./svgHatchPattern"
 import type { SemioticTheme } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
@@ -90,7 +91,7 @@ function renderGridSVG(
   const yTicks = scales.y.ticks(5)
 
   return (
-    <g className="semiotic-grid" opacity={0.8}>
+    <g id="grid" className="semiotic-grid" opacity={0.8}>
       {xTicks.map((v: number, i: number) => {
         const px = scales.x(v)
         return (
@@ -123,7 +124,7 @@ function renderOrdinalGridSVG(
 
   if (isVertical) {
     return (
-      <g className="semiotic-grid" opacity={0.8}>
+      <g id="grid" className="semiotic-grid" opacity={0.8}>
         {rTicks.map((v: number, i: number) => {
           const py = scales.r(v)
           return (
@@ -135,7 +136,7 @@ function renderOrdinalGridSVG(
     )
   } else {
     return (
-      <g className="semiotic-grid" opacity={0.8}>
+      <g id="grid" className="semiotic-grid" opacity={0.8}>
         {rTicks.map((v: number, i: number) => {
           const px = scales.r(v)
           return (
@@ -164,6 +165,7 @@ function wrapSVG(
     innerHeight: number
     legend?: React.ReactNode
     outerElements?: React.ReactNode
+    defs?: React.ReactNode
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
@@ -184,14 +186,16 @@ function wrapSVG(
     >
       {titleText && <title id={titleId}>{titleText}</title>}
       {opts.description && <desc id={descId}>{opts.description}</desc>}
+      {opts.defs && <defs>{opts.defs}</defs>}
       {opts.background && opts.background !== "transparent" && (
         <rect x={0} y={0} width={opts.width} height={opts.height} fill={opts.background} />
       )}
-      <g transform={opts.innerTransform}>
+      <g id="data-area" transform={opts.innerTransform}>
         {content}
       </g>
       {titleText && (
         <text
+          id="chart-title"
           x={opts.width / 2} y={16}
           textAnchor="middle"
           fontSize={s.titleSize}
@@ -202,7 +206,7 @@ function wrapSVG(
           {titleText}
         </text>
       )}
-      {opts.legend}
+      {opts.legend && <g id="legend">{opts.legend}</g>}
       {opts.outerElements}
     </svg>
   )
@@ -228,7 +232,7 @@ function generateAxesSVG(
   }))
 
   return (
-    <g className="stream-axes">
+    <g id="axes" className="stream-axes">
       <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
       {xTicks.map((tick, i) => (
         <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -275,14 +279,18 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 300]
   const margin = { ...defaultMargin, ...props.margin }
+
+  // Expand margin for legend BEFORE calculating inner dimensions
+  const legendPos = (props as any).legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top, 40)
+  }
+
   const width = size[0] - margin.left - margin.right
   const height = size[1] - margin.top - margin.bottom
-
-  // Expand right margin for legend
-  const legendPos = (props as any).legendPosition
-  if (props.showLegend && (!legendPos || legendPos === "right")) {
-    margin.right = Math.max(margin.right, 100)
-  }
 
   const isStreaming = props.runtimeMode === "streaming" ||
     ["bar", "swarm", "waterfall"].includes(props.chartType)
@@ -337,7 +345,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
       wrapSVG(null, {
         width: size[0], height: size[1],
         className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description,
+        title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
       })
@@ -382,13 +390,8 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     })
   })() : null
 
-  const bg = props.background && props.background !== "transparent" ? (
-    <rect x={0} y={0} width={width} height={height} fill={props.background} />
-  ) : null
-
   const content = (
     <>
-      {bg}
       {grid}
       {annotationNodes}
       {dataMarks}
@@ -400,7 +403,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description,
+      title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth: width, innerHeight: height,
       legend,
@@ -516,7 +519,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
         wrapSVG(null, {
           width: size[0], height: size[1],
           className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-          title: props.title, description: props.description,
+          title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
         })
@@ -534,7 +537,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
         wrapSVG(null, {
           width: size[0], height: size[1],
           className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-          title: props.title, description: props.description,
+          title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
         })
@@ -585,13 +588,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     .map((label, i) => networkLabelToSVG(label, i))
     .filter(Boolean)
 
-  const bg = props.background && props.background !== "transparent" ? (
-    <rect x={0} y={0} width={innerWidth} height={innerHeight} fill={props.background} />
-  ) : null
-
   const content = (
     <>
-      {bg}
       {edgeElements}
       {nodeElements}
       {labelElements}
@@ -602,7 +600,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description,
+      title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
     })
@@ -637,7 +635,7 @@ function generateOrdinalAxesSVG(
 
   if (isVertical) {
     return (
-      <g className="ordinal-axes">
+      <g id="axes" className="ordinal-axes">
         <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
         {categoryTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -671,7 +669,7 @@ function generateOrdinalAxesSVG(
     )
   } else {
     return (
-      <g className="ordinal-axes">
+      <g id="axes" className="ordinal-axes">
         <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
         {rTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -711,6 +709,16 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 400]
   const margin = { ...defaultMargin, ...props.margin }
+
+  // Expand margin for legend BEFORE calculating inner dimensions
+  const legendPos = (props as any).legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top, 40)
+  }
+
   const width = size[0] - margin.left - margin.right
   const height = size[1] - margin.top - margin.bottom
 
@@ -767,7 +775,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       wrapSVG(null, {
         width: size[0], height: size[1],
         className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description,
+        title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
       })
@@ -775,6 +783,41 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   }
 
   const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme) : null
+
+  // Check for bar-funnel dropoff bars — they need SVG hatch patterns
+  const hasDropoffBars = store.scene.some(
+    (n: any) => n.type === "rect" && n.datum?.__barFunnelIsDropoff
+  )
+  let hatchDefs: React.ReactNode = null
+  if (hasDropoffBars) {
+    // Build a hatch pattern for each unique fill color used by dropoff bars
+    const dropoffColors = new Set<string>()
+    for (const n of store.scene) {
+      if (n.type === "rect" && (n as any).datum?.__barFunnelIsDropoff) {
+        const fill = typeof n.style.fill === "string" ? n.style.fill : "#666"
+        dropoffColors.add(fill)
+      }
+    }
+    hatchDefs = Array.from(dropoffColors).map((color, i) =>
+      createSVGHatchPattern({
+        id: `funnel-hatch-${i}`,
+        background: color,
+        stroke: theme.colors.background === "transparent" ? "#fff" : theme.colors.background,
+        lineWidth: 1.5,
+        spacing: 5,
+        angle: 45,
+      })
+    )
+    // Replace dropoff bar fills with pattern references
+    const colorToPatternId = new Map<string, string>()
+    Array.from(dropoffColors).forEach((c, i) => colorToPatternId.set(c, `funnel-hatch-${i}`))
+    for (const n of store.scene) {
+      if (n.type === "rect" && (n as any).datum?.__barFunnelIsDropoff) {
+        const origFill = typeof n.style.fill === "string" ? n.style.fill : "#666"
+        n.style = { ...n.style, fill: `url(#${colorToPatternId.get(origFill)})` }
+      }
+    }
+  }
 
   const dataMarks = store.scene
     .map((node, i) => ordinalSceneNodeToSVG(node, i))
@@ -817,13 +860,8 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top
 
-  const bg = props.background && props.background !== "transparent" ? (
-    <rect x={0} y={0} width={width} height={height} fill={props.background} />
-  ) : null
-
   const content = (
     <>
-      {bg}
       {grid}
       {annotationNodes}
       {dataMarks}
@@ -835,10 +873,11 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description,
+      title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${translateX},${translateY})`,
       innerWidth: width, innerHeight: height,
       legend,
+      defs: hatchDefs,
     })
   )
 }
@@ -891,7 +930,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       wrapSVG(null, {
         width: size[0], height: size[1],
         className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description,
+        title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
         innerWidth: width, innerHeight: height,
       })
@@ -902,13 +941,8 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     .map((node, i) => geoSceneNodeToSVG(node, i))
     .filter(Boolean)
 
-  const bg = props.background && props.background !== "transparent" ? (
-    <rect x={0} y={0} width={width} height={height} fill={props.background} />
-  ) : null
-
   const content = (
     <>
-      {bg}
       {dataMarks}
     </>
   )
@@ -917,7 +951,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description,
+      title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
     })
@@ -967,7 +1001,7 @@ export function renderGeoToStaticSVG(props: StreamGeoFrameProps & ThemeAwareProp
 /** Chart component name to frame type + props mapping */
 type ChartName =
   | "LineChart" | "AreaChart" | "StackedAreaChart" | "Scatterplot"
-  | "BubbleChart" | "ConnectedScatterplot" | "Heatmap"
+  | "BubbleChart" | "ConnectedScatterplot" | "Heatmap" | "Sparkline"
   | "BarChart" | "StackedBarChart" | "GroupedBarChart"
   | "PieChart" | "DonutChart" | "SwimlaneChart"
   | "Histogram" | "BoxPlot" | "ViolinPlot" | "SwarmPlot"
@@ -996,18 +1030,37 @@ export function renderChart(
   const {
     data, width = 600, height = 400, theme, title, description,
     showLegend, showGrid, background, className, annotations,
-    margin, colorScheme, colorBy,
+    margin, colorScheme, colorBy, legendPosition,
     ...rest
   } = props
 
   const size: [number, number] = [width, height]
-  const common: ThemeAwareProps & { size: [number, number]; margin?: any; colorScheme?: any } = {
+  // Flatten frameProps into the common object so pieceStyle, lineStyle, etc. flow through
+  const framePropsOverrides = rest.frameProps || {}
+  const common: ThemeAwareProps & { size: [number, number]; margin?: any; colorScheme?: any; legendPosition?: string } = {
     theme, title, description, showLegend, showGrid, background, className, annotations,
-    size, margin, colorScheme,
+    size, margin, colorScheme, legendPosition,
+    ...framePropsOverrides,
   }
 
   switch (component) {
     // ── XY Charts ──────────────────────────────────────────────────
+    case "Sparkline":
+      return renderStreamXYFrame({
+        chartType: "line",
+        data,
+        xAccessor: rest.xAccessor || "x",
+        yAccessor: rest.yAccessor || "y",
+        groupAccessor: rest.lineBy || colorBy,
+        colorAccessor: colorBy,
+        showAxes: false,
+        ...common,
+        margin: common.margin || { top: 2, right: 2, bottom: 2, left: 2 },
+        showLegend: false,
+        showGrid: false,
+        title: undefined,
+      } as any)
+
     case "LineChart":
       return renderStreamXYFrame({
         chartType: "line",
@@ -1206,16 +1259,28 @@ export function renderChart(
         ...common,
       } as any)
 
-    case "FunnelChart":
+    case "FunnelChart": {
+      const isVerticalFunnel = rest.orientation === "vertical"
       return renderOrdinalFrame({
-        chartType: "bar",
+        chartType: isVerticalFunnel ? "bar-funnel" : "funnel",
         data,
         oAccessor: rest.stepAccessor || "step",
         rAccessor: rest.valueAccessor || "value",
-        projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
-        colorAccessor: colorBy,
+        ...(rest.categoryAccessor && { stackBy: rest.categoryAccessor }),
+        projection: isVerticalFunnel ? "vertical" : "horizontal",
+        colorAccessor: colorBy || rest.categoryAccessor,
+        barPadding: isVerticalFunnel ? (rest.barPadding ?? 40) : (rest.barPadding ?? 0),
+        ...(!isVerticalFunnel && {
+          connectorAccessor: () => true,
+          connectorStyle: { opacity: rest.connectorOpacity ?? 0.3 },
+        }),
+        showAxes: isVerticalFunnel,
+        showCategoryTicks: isVerticalFunnel,
+        showGrid: isVerticalFunnel,
+        showLabels: rest.showLabels,
         ...common,
       } as any)
+    }
 
     case "RidgelinePlot":
       return renderOrdinalFrame({
@@ -1228,18 +1293,44 @@ export function renderChart(
         ...common,
       } as any)
 
-    case "GaugeChart":
+    case "GaugeChart": {
+      const gMin = rest.min ?? 0
+      const gMax = rest.max ?? 100
+      const sweep = rest.sweep ?? 240
+      const arcWidth = rest.arcWidth ?? 0.3
+      const gapDeg = 360 - sweep
+      const startAngleDeg = 180 + gapDeg / 2
+
+      // Build zone data from thresholds
+      const thresholds = rest.thresholds || [{ value: gMax, color: "#4e79a7" }]
+      const zoneData = thresholds.map((t: any, i: number) => ({
+        category: t.label || `zone-${i}`,
+        value: t.value - (i > 0 ? thresholds[i - 1].value : gMin),
+      }))
+      const zoneColors: Record<string, string> = {}
+      thresholds.forEach((t: any, i: number) => {
+        zoneColors[t.label || `zone-${i}`] = t.color || "#4e79a7"
+      })
+
+      // Compute inner radius from arcWidth fraction
+      const chartSize = Math.min(width || 300, height || 300)
+      const innerRadius = Math.max(10, (chartSize / 2) * (1 - arcWidth))
+
       return renderOrdinalFrame({
         chartType: "donut",
-        data: rest.thresholds ? rest.thresholds.map((t: any, i: number, arr: any[]) => ({
-          category: t.label || `zone-${i}`,
-          value: t.value - (i > 0 ? arr[i - 1].value : (rest.min || 0)),
-        })) : [{ category: "value", value: rest.value || 0 }],
+        data: zoneData,
         oAccessor: "category",
         rAccessor: "value",
         projection: "radial",
+        innerRadius,
+        sweepAngle: sweep,
+        startAngle: startAngleDeg,
+        oSort: false,
+        pieceStyle: (d: any, cat?: string) => ({ fill: zoneColors[cat || ""] || "#4e79a7" }),
         ...common,
+        showAxes: false,
       } as any)
+    }
 
     // ── Network Charts ─────────────────────────────────────────────
     case "ForceDirectedGraph":

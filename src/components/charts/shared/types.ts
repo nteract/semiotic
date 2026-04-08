@@ -98,7 +98,8 @@ export interface BaseChartProps {
   onClick?: (datum: any, event: { x: number; y: number }) => void
 
   /** Dim non-hovered series when hovering a data mark. "series" dims by the colorBy group key. */
-  hoverHighlight?: boolean | "series"
+  /** Dim non-hovered series when hovering a data mark. Requires `colorBy`. */
+  hoverHighlight?: boolean
 
   /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
   hoverRadius?: number

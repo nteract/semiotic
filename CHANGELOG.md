@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-04-08
+
+### Added
+
+- **`semiotic/server` production API** — `renderChart(component, props)` renders 27+ HOC chart types to standalone SVG strings. Supports all themes, legends (4 positions), grid, annotations (y-threshold, x-threshold, category-highlight, widget, enclose), and accessibility attributes (`role="img"`, `<title>`, `<desc>`, `aria-labelledby`). SVG groups have `id` attributes for Figma layer naming (`data-area`, `axes`, `grid`, `annotations`, `legend`, `chart-title`).
+- **`renderDashboard(charts, options)`** — Multi-chart dashboard layout with title, theme, configurable columns. Each chart entry supports `colSpan` for wide charts.
+- **`renderToImage(component, props, options)`** — PNG/JPEG rasterization via sharp (peer dependency). Configurable `scale` for retina output.
+- **`renderToAnimatedGif(chartType, data, props, options)`** — Animated GIF from streaming data windows. Options: `fps`, `transitionFrames`, `easing`, `decay`, `windowSize`, `loop`, `scale`.
+- **`generateFrameSequence(frames)`** — Snapshot-based animation for topology changes (network failover, edge removal). Each frame is an independent `renderChart` call.
+- **SVG hatch patterns** — `createSVGHatchPattern()` for server-rendered diagonal hatch fills. Used by FunnelChart vertical mode for dropoff bars.
+- **Push API `remove()` and `update()`** — Selective data removal and in-place update across all stores (RingBuffer, PipelineStore, OrdinalPipelineStore, NetworkPipelineStore) and all HOC/frame handles. `remove(id)` or `remove([ids])` by ID (requires `pointIdAccessor`/`dataIdAccessor`). `update(id, updater)` for in-place mutation. Network: `removeNode(id)` cascades to edges, `removeEdge(source, target)` removes parallel edges.
+- **`pointIdAccessor` / `dataIdAccessor`** — ID accessor props on BaseChartProps for `remove()` and `update()` targeting.
+- **GaugeChart server rendering** — Sweep angle, start angle, inner radius, threshold zone fills, needle indicator.
+- **FunnelChart server rendering** — Horizontal and vertical modes with trapezoid connectors. Vertical mode supports hatch pattern dropoff bars.
+- **Sparkline server rendering** — `renderChart("Sparkline", props)` with no axes, 2px margins, no grid/legend/title.
+- **6 interactive docs pages** — Render Studio, Theme Showcase, Dashboard Gallery, Email Preview, Export & Embed (with real GIF downloads), Push API demo.
+
+### Changed
+
+- **`hoverHighlight` simplified** — Changed from `boolean | "series"` to just `boolean`. Any truthy value triggers series-based dimming (requires `colorBy`).
+- **CSS variable resolution in canvas** — `resolveCSSColor()` resolves `var(--name, fallback)` via `getComputedStyle` at paint time. No caching — fresh per render for theme toggle support. All 9 canvas renderers updated.
+- **`extentPadding` nullish coalescing** — Changed `|| 0.05` to `?? 0.05` so `extentPadding: 0` is respected.
+- **Swimlane `skipMaxPad`** — Prevents trailing gap in swimlane charts by skipping max-side extent padding.
+- **`frameProps.pieceStyle` merging** — Ordinal HOCs now merge user's `pieceStyle` with computed base style instead of excluding it. Enables stroke overrides.
+- **`resolveGroupColor()` in server rendering** — XY line/area style fallbacks call `resolveGroupColor(group)` instead of hardcoding `#007bff`. Theme categorical colors flow through to server SVG.
+- **Force layout `iterations: 0`** — Now skips simulation entirely for pinned node positions. Previously warm-start detection overrode to 40 iterations.
+- **Background rect positioning** — Server SVG background rect renders at SVG root, not inside translated group (fixes Figma import).
+- **Dependency bumps** — vite 8.0.5, typedoc 0.28.18, vulnerable devdeps fixed.
+
+### Fixed
+
+- **Server legend margin** — Legend position expands margin before width/height calculation (right:100, left:100, bottom:70, top:40).
+- **Server `frameProps` passthrough** — `frameProps` spread into renderer common object so `pieceStyle`, `lineStyle` flow through.
+- **Server `effectiveColorScheme`** — Falls back to `theme.colors.categorical` when `colorScheme` prop not set.
+- **Network `remove()` return value** — Returns node data before removal instead of empty array.
+- **RingBuffer `update()` snapshot safety** — Proper type-aware cloning (array spread for arrays, object spread for objects).
+- **Timestamp buffer desync on remove** — Lockstep compaction removes matching indices from timestamp buffer.
+- **`buildRealtimeNodes` preserving positions** — Uses `x: d.x ?? 0, y: d.y ?? 0` instead of hardcoded zeros.
+- **Dark mode CSS var strokes** — Docs site sets `--semiotic-bg` in both dark/light blocks. `LiveExample` uses MutationObserver for chart remount on theme toggle.
+
 ## [3.2.3] - 2026-04-03
 
 ### Added
@@ -16,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`sweepAngle`** — New prop on `StreamOrdinalFrameProps` limiting pie/donut arc to less than 360° (used internally by GaugeChart).
 - **Multi-point tooltip** — `tooltip="multi"` on LineChart shows all series values at hovered X with color swatches. Custom functions receive `datum.allSeries` with `{group, value, valuePx, color, datum}`.
 - **Click-to-lock crosshair** — In `linkedHover` x-position mode, click locks the crosshair. Escape or click again to unlock. Source-aware unlock prevents multi-chart interference.
-- **Hover-based sibling dimming** — `hoverHighlight="series"` on all HOCs dims non-hovered series on data mark hover.
+- **Hover-based sibling dimming** — `hoverHighlight` on all HOCs dims non-hovered series on data mark hover (requires `colorBy`).
 - **Per-series fillArea** — `fillArea={["A","B"]}` on LineChart fills named series as areas, others stay as lines. New `"mixed"` chart type with dedicated scene builder.
 - **Multi-color gradient fills** — `gradientFill={{ colorStops: [{offset, color}] }}` on AreaChart for semantic color bands. Supports `transparent`.
 - **Line stroke gradients** — `lineGradient={{ colorStops }}` on LineChart/AreaChart for horizontal gradient strokes.

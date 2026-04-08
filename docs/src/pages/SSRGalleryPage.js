@@ -3,6 +3,7 @@ import {
   renderXYToStaticSVG,
   renderOrdinalToStaticSVG,
   renderNetworkToStaticSVG,
+  renderChart,
 } from "../../../src/components/server/renderToStaticSVG"
 import PageLayout from "../components/PageLayout"
 import CodeBlock from "../components/CodeBlock"
@@ -342,6 +343,40 @@ function useGalleryCharts() {
         nodeIDAccessor: "name",
         size: [W, H],
       }),
+    })
+
+    // Vertical Funnel (bar-funnel with hatch dropoff bars)
+    charts.push({
+      title: "Vertical Funnel (2 categories)",
+      svg: renderChart("FunnelChart", {
+        data: [
+          { step: "Leads", value: 1000, channel: "Web" },
+          { step: "Leads", value: 600, channel: "Mobile" },
+          { step: "Qualified", value: 500, channel: "Web" },
+          { step: "Qualified", value: 250, channel: "Mobile" },
+          { step: "Proposals", value: 200, channel: "Web" },
+          { step: "Proposals", value: 100, channel: "Mobile" },
+          { step: "Closed", value: 80, channel: "Web" },
+          { step: "Closed", value: 40, channel: "Mobile" },
+        ],
+        stepAccessor: "step",
+        valueAccessor: "value",
+        categoryAccessor: "channel",
+        colorBy: "channel",
+        orientation: "vertical",
+        colorScheme: ["#6366f1", "#f59e0b"],
+        width: W,
+        height: H + 40,
+      }),
+      code: `renderChart("FunnelChart", {
+  data: funnelData,
+  stepAccessor: "step",
+  valueAccessor: "value",
+  categoryAccessor: "channel",
+  colorBy: "channel",
+  orientation: "vertical",
+  colorScheme: ["#6366f1", "#f59e0b"],
+})`,
     })
 
     return charts
