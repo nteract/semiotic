@@ -30,7 +30,7 @@ if (!resultsPath) {
 }
 
 if (!fs.existsSync(BASELINE_PATH)) {
-  console.log("No baseline file found at benchmarks/baselines.json")
+  console.log("No baseline file found at benchmarks/setup/baseline.json")
   console.log("Saving current results as baseline...")
   fs.copyFileSync(resultsPath, BASELINE_PATH)
   console.log("Baseline saved. Future runs will compare against this.")
@@ -103,7 +103,7 @@ console.log(`\nSummary: ${unchanged} stable, ${improvements} faster, ${regressio
 if (regressions > 0) {
   console.error(`\n${regressions} benchmark(s) regressed >25%. Fix the regression or update baselines:`)
   console.error("  npx vitest bench --reporter=json --outputFile=bench-results.json")
-  console.error("  cp bench-results.json benchmarks/baselines.json")
+  console.error("  cp bench-results.json benchmarks/setup/baseline.json")
   process.exit(1)
 }
 
