@@ -1093,8 +1093,9 @@ export function renderChart(
         yAccessor: rest.yAccessor || "y",
         groupAccessor: rest.lineBy || colorBy,
         colorAccessor: colorBy,
-        showAxes: false,
         ...common,
+        // Sparkline-specific overrides — always applied regardless of frameProps
+        showAxes: false,
         margin: common.margin || { top: 2, right: 2, bottom: 2, left: 2 },
         showLegend: false,
         showGrid: false,
@@ -1352,21 +1353,23 @@ export function renderChart(
         zoneColors[t.label || `zone-${i}`] = t.color || "#4e79a7"
       })
 
-      // Compute inner radius from arcWidth fraction
-      const chartSize = Math.min(width || 300, height || 300)
+      // Compute from inner (margin-adjusted) dimensions — same as renderOrdinalFrame
+      const resolvedMargin = margin || { top: 20, right: 20, bottom: 30, left: 40 }
+      const innerWidth = (width || 300) - resolvedMargin.left - resolvedMargin.right
+      const innerHeight = (height || 300) - resolvedMargin.top - resolvedMargin.bottom
+      const chartSize = Math.min(innerWidth, innerHeight)
       const innerRadius = Math.max(10, (chartSize / 2) * (1 - arcWidth))
 
-      // Compute needle angle from value
+      // Compute needle angle from value (guard divide-by-zero)
       const gaugeValue = Math.max(gMin, Math.min(gMax, rest.value ?? gMin))
-      const valueFraction = (gaugeValue - gMin) / (gMax - gMin)
+      const valueFraction = gMax === gMin ? 0 : (gaugeValue - gMin) / (gMax - gMin)
       const needleAngleDeg = startAngleDeg + valueFraction * sweep
       const needleAngleRad = (needleAngleDeg - 90) * Math.PI / 180
-      const resolvedMargin = margin || { top: 20, right: 20, bottom: 30, left: 40 }
-      const outerRadius = chartSize / 2 - resolvedMargin.top
+      const outerRadius = chartSize / 2
       const needleLen = outerRadius * 0.85
-      // Center of the radial chart accounts for margins
-      const cx = resolvedMargin.left + (width - resolvedMargin.left - resolvedMargin.right) / 2
-      const cy = resolvedMargin.top + (height - resolvedMargin.top - resolvedMargin.bottom) / 2
+      // Center of the radial chart — margin offset + half inner dimension
+      const cx = resolvedMargin.left + innerWidth / 2
+      const cy = resolvedMargin.top + innerHeight / 2
       const resolvedTheme = resolveTheme(theme)
       const needleColor = resolvedTheme.colors.text
 

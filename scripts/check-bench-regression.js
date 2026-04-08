@@ -3,19 +3,25 @@
  * Check benchmark results against saved baselines.
  * Fails if any benchmark regresses >25% vs baseline.
  *
- * Usage:
+ * Usage (once vitest bench supports JSON output):
  *   npx vitest bench --reporter=json --outputFile=bench-results.json
  *   node scripts/check-bench-regression.js bench-results.json
  *
  * To update baselines after intentional changes:
- *   cp bench-results.json benchmarks/baselines.json
+ *   cp bench-results.json benchmarks/setup/baseline.json
+ *
+ * NOTE: As of vitest 4.x, `--reporter=json` does not work with `vitest bench`.
+ * This script is ready for when upstream support lands. Until then, benchmarks
+ * run in CI for visibility only (--reporter=verbose). The existing
+ * scripts/save-baseline.js and scripts/compare-baseline.js use hardcoded values
+ * and the same benchmarks/setup/baseline.json path.
  */
 
 const fs = require("fs")
 const path = require("path")
 
 const THRESHOLD = 0.25 // 25% regression threshold
-const BASELINE_PATH = path.join(__dirname, "..", "benchmarks", "baselines.json")
+const BASELINE_PATH = path.join(__dirname, "..", "benchmarks", "setup", "baseline.json")
 const resultsPath = process.argv[2]
 
 if (!resultsPath) {
