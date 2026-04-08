@@ -8,7 +8,7 @@ const galleryPath = path.resolve(__dirname, "../test-results/server-legend-galle
 test.beforeAll(async () => {
   if (!fs.existsSync(galleryPath)) {
     const { execSync } = require("child_process")
-    execSync("npx tsx scripts/generate-legend-test-page.ts", { cwd: path.resolve(__dirname, "..") })
+    execSync("npx tsx generate-legend-test-page.ts", { cwd: path.resolve(__dirname, "..") })
   }
 })
 

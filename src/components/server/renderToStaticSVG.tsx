@@ -63,8 +63,15 @@ import type { SemioticTheme } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
-/** Monotonic counter for unique SVG element IDs across multiple renderChart calls */
-let renderCounter = 0
+/** Generate a short stable ID from chart props for unique SVG element IDs */
+function chartUID(props: Record<string, any>): string {
+  // Use chartId if provided, otherwise hash a few distinguishing props
+  if (props.chartId) return props.chartId
+  const key = `${props.chartType || ""}:${props.title || ""}:${Array.isArray(props.data) ? props.data.length : 0}`
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0
+  return `c${(h >>> 0).toString(36)}`
+}
 
 // ── Shared rendering helpers ──────────────────────────────────────────
 
@@ -77,6 +84,8 @@ interface ThemeAwareProps {
   description?: string
   background?: string
   className?: string
+  /** Prefix for SVG element IDs — used by renderDashboard to avoid collisions */
+  _idPrefix?: string
 }
 
 function defaultTickFormat(v: number): string {
@@ -169,12 +178,15 @@ function wrapSVG(
     legend?: React.ReactNode
     outerElements?: React.ReactNode
     defs?: React.ReactNode
+    /** Prefix for SVG element IDs to avoid collisions in multi-chart documents */
+    idPrefix?: string
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
+  const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
   const titleText = typeof opts.title === "string" ? opts.title : undefined
-  const titleId = titleText ? "semiotic-title" : undefined
-  const descId = opts.description ? "semiotic-desc" : undefined
+  const titleId = titleText ? `${pfx}semiotic-title` : undefined
+  const descId = opts.description ? `${pfx}semiotic-desc` : undefined
   const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
 
   return (
@@ -193,12 +205,12 @@ function wrapSVG(
       {opts.background && opts.background !== "transparent" && (
         <rect x={0} y={0} width={opts.width} height={opts.height} fill={opts.background} />
       )}
-      <g id="data-area" transform={opts.innerTransform}>
+      <g id={`${pfx}data-area`} transform={opts.innerTransform}>
         {content}
       </g>
       {titleText && (
         <text
-          id="chart-title"
+          id={`${pfx}chart-title`}
           x={opts.width / 2} y={16}
           textAnchor="middle"
           fontSize={s.titleSize}
@@ -209,7 +221,7 @@ function wrapSVG(
           {titleText}
         </text>
       )}
-      {opts.legend && <g id="legend">{opts.legend}</g>}
+      {opts.legend && <g id={`${pfx}legend`}>{opts.legend}</g>}
       {opts.outerElements}
     </svg>
   )
@@ -351,6 +363,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
+        idPrefix: (props as any)._idPrefix,
       })
     )
   }
@@ -410,6 +423,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth: width, innerHeight: height,
       legend,
+      idPrefix: (props as ThemeAwareProps)._idPrefix,
     })
   )
 }
@@ -525,6 +539,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
           title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
+        idPrefix: (props as any)._idPrefix,
         })
       )
     }
@@ -543,6 +558,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
           title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
+        idPrefix: (props as any)._idPrefix,
         })
       )
     }
@@ -606,6 +622,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
+        idPrefix: (props as any)._idPrefix,
     })
   )
 }
@@ -781,6 +798,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
+        idPrefix: (props as any)._idPrefix,
       })
     )
   }
@@ -793,7 +811,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   )
   let hatchDefs: React.ReactNode = null
   if (hasDropoffBars) {
-    const uid = renderCounter++
+    const uid = chartUID(props)
     // Build a hatch pattern for each unique fill color used by dropoff bars
     const dropoffColors = new Set<string>()
     for (const n of store.scene) {
@@ -882,6 +900,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       innerWidth: width, innerHeight: height,
       legend,
       defs: hatchDefs,
+        idPrefix: (props as any)._idPrefix,
     })
   )
 }
@@ -937,6 +956,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
         innerWidth: width, innerHeight: height,
+        idPrefix: (props as any)._idPrefix,
       })
     )
   }
@@ -958,6 +978,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
+        idPrefix: (props as any)._idPrefix,
     })
   )
 }
@@ -1039,12 +1060,13 @@ export function renderChart(
   } = props
 
   const size: [number, number] = [width, height]
-  // Flatten frameProps into the common object so pieceStyle, lineStyle, etc. flow through
+  // Flatten frameProps into common — spread first so explicit top-level props always win
   const framePropsOverrides = rest.frameProps || {}
   const common: ThemeAwareProps & { size: [number, number]; margin?: any; colorScheme?: any; legendPosition?: string } = {
+    ...framePropsOverrides,
     theme, title, description, showLegend, showGrid, background, className, annotations,
     size, margin, colorScheme, legendPosition,
-    ...framePropsOverrides,
+    _idPrefix: rest._idPrefix,
   }
 
   switch (component) {
@@ -1646,6 +1668,7 @@ export function renderDashboard(
       width: w,
       height: h,
       theme: themeInput,
+      _idPrefix: `chart-${i}`,
     }
 
     let svgStr: string

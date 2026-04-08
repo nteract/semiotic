@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **`hoverHighlight` simplified** — Changed from `boolean | "series"` to just `boolean`. Any truthy value triggers series-based dimming (requires `colorBy`).
-- **CSS variable resolution in canvas** — `resolveCSSColor()` resolves `var(--name, fallback)` via `getComputedStyle` at paint time. No caching — fresh per render for theme toggle support. All 9 canvas renderers updated.
+- **CSS variable resolution in canvas** — `resolveCSSColor()` resolves `var(--name, fallback)` via `getComputedStyle` at paint time. Per-canvas cache avoids repeated calls within a paint cycle; `clearCSSColorCache()` invalidates on theme change. All 9 canvas renderers updated.
 - **`extentPadding` nullish coalescing** — Changed `|| 0.05` to `?? 0.05` so `extentPadding: 0` is respected.
 - **Swimlane `skipMaxPad`** — Prevents trailing gap in swimlane charts by skipping max-side extent padding.
 - **`frameProps.pieceStyle` merging** — Ordinal HOCs now merge user's `pieceStyle` with computed base style instead of excluding it. Enables stroke overrides.
