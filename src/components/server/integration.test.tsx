@@ -386,8 +386,6 @@ describe("Geo SSR", () => {
       areas: geoFeatures,
       width: 400, height: 300,
     })
-    // ProportionalSymbolMap may not be a supported renderChart name —
-    // if so, it should return a valid SVG with a fallback or error message, not crash
     expect(typeof svg).toBe("string")
     expect(svg.length).toBeGreaterThan(0)
   })

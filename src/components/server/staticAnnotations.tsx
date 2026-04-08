@@ -27,6 +27,8 @@ export interface StaticAnnotationConfig {
   scales: AnnotationScales
   layout: AnnotationLayout
   theme: SemioticTheme
+  /** ID prefix for multi-chart documents */
+  idPrefix?: string
   xAccessor?: string
   yAccessor?: string
   /** Ordinal projection — determines whether r maps to x or y */
@@ -67,7 +69,8 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     if (node) elements.push(node)
   }
 
-  return elements.length > 0 ? <g id="annotations" className="semiotic-annotations">{elements}</g> : null
+  const pfx = config.idPrefix ? `${config.idPrefix}-` : ""
+  return elements.length > 0 ? <g id={`${pfx}annotations`} className="semiotic-annotations">{elements}</g> : null
 }
 
 function renderAnnotation(

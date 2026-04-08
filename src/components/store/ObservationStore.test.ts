@@ -24,6 +24,9 @@ function createTestStore() {
   }
 
   function clearObservations() {
+    // Note: real store replaces the array via set(() => ({ observations: [] })),
+    // but push semantics (what we test here) are identical. Full store
+    // integration is covered by useObservation.test.tsx.
     observations.length = 0
     version = 0
   }

@@ -8,9 +8,9 @@
 
 import * as fs from "fs"
 import * as path from "path"
-import { renderChart } from "../src/components/server/renderToStaticSVG"
+import { renderChart } from "./src/components/server/renderToStaticSVG"
 
-const outDir = path.resolve(__dirname, "../test-results")
+const outDir = path.resolve(__dirname, "test-results")
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })
 
 const barData = [

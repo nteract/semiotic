@@ -65,8 +65,9 @@ type FrameType = "xy" | "ordinal" | "network" | "geo"
 
 /** Generate a short stable ID from chart props for unique SVG element IDs */
 function chartUID(props: Record<string, any>): string {
-  // Use chartId if provided, otherwise hash a few distinguishing props
-  if (props.chartId) return props.chartId
+  // Prefer _idPrefix (set by renderDashboard), then chartId, then hash
+  const raw = props._idPrefix || props.chartId
+  if (raw) return String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
   const key = `${props.chartType || ""}:${props.title || ""}:${Array.isArray(props.data) ? props.data.length : 0}`
   let h = 0
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0
@@ -96,14 +97,16 @@ function defaultTickFormat(v: number): string {
 function renderGridSVG(
   scales: StreamScales,
   layout: StreamLayout,
-  theme: SemioticTheme
+  theme: SemioticTheme,
+  idPrefix?: string
 ): React.ReactNode {
   const { grid } = themeStyles(theme)
+  const pfx = idPrefix ? `${idPrefix}-` : ""
   const xTicks = scales.x.ticks(5)
   const yTicks = scales.y.ticks(5)
 
   return (
-    <g id="grid" className="semiotic-grid" opacity={0.8}>
+    <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
       {xTicks.map((v: number, i: number) => {
         const px = scales.x(v)
         return (
@@ -126,17 +129,19 @@ function renderGridSVG(
 function renderOrdinalGridSVG(
   store: OrdinalPipelineStore,
   layout: { width: number; height: number },
-  theme: SemioticTheme
+  theme: SemioticTheme,
+  idPrefix?: string
 ): React.ReactNode {
   const scales = store.scales
   if (!scales || scales.projection === "radial") return null
   const { grid } = themeStyles(theme)
+  const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
   const rTicks = scales.r.ticks(5)
 
   if (isVertical) {
     return (
-      <g id="grid" className="semiotic-grid" opacity={0.8}>
+      <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
         {rTicks.map((v: number, i: number) => {
           const py = scales.r(v)
           return (
@@ -148,7 +153,7 @@ function renderOrdinalGridSVG(
     )
   } else {
     return (
-      <g id="grid" className="semiotic-grid" opacity={0.8}>
+      <g id={`${pfx}grid`} className="semiotic-grid" opacity={0.8}>
         {rTicks.map((v: number, i: number) => {
           const px = scales.r(v)
           return (
@@ -233,7 +238,8 @@ function generateAxesSVG(
   scales: StreamScales,
   layout: StreamLayout,
   props: StreamXYFrameProps,
-  theme: SemioticTheme
+  theme: SemioticTheme,
+  idPrefix?: string
 ): React.ReactNode {
   const s = themeStyles(theme)
   const xTicks = scales.x.ticks(5).map(v => ({
@@ -247,7 +253,7 @@ function generateAxesSVG(
   }))
 
   return (
-    <g id="axes" className="stream-axes">
+    <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
       <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
       {xTicks.map((tick, i) => (
         <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -368,7 +374,8 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     )
   }
 
-  const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme) : null
+  const idPfx = (props as ThemeAwareProps)._idPrefix
+  const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx) : null
 
   const dataMarks = store.scene
     .map((node, i) => xySceneNodeToSVG(node, i))
@@ -376,7 +383,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
 
   const showAxes = props.showAxes !== false
   const axes = showAxes
-    ? generateAxesSVG(store.scales, { width, height }, props, theme)
+    ? generateAxesSVG(store.scales, { width, height }, props, theme, idPfx)
     : null
 
   // Annotations
@@ -387,6 +394,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     theme,
     xAccessor: typeof props.xAccessor === "string" ? props.xAccessor : undefined,
     yAccessor: typeof props.yAccessor === "string" ? props.yAccessor : undefined,
+    idPrefix: idPfx,
   }) : null
 
   // Legend
@@ -633,7 +641,8 @@ function generateOrdinalAxesSVG(
   store: OrdinalPipelineStore,
   layout: { width: number; height: number },
   props: StreamOrdinalFrameProps,
-  theme: SemioticTheme
+  theme: SemioticTheme,
+  idPrefix?: string
 ): React.ReactNode {
   const scales = store.scales
   if (!scales) return null
@@ -655,7 +664,7 @@ function generateOrdinalAxesSVG(
 
   if (isVertical) {
     return (
-      <g id="axes" className="ordinal-axes">
+      <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="ordinal-axes">
         <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
         {categoryTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -689,7 +698,7 @@ function generateOrdinalAxesSVG(
     )
   } else {
     return (
-      <g id="axes" className="ordinal-axes">
+      <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="ordinal-axes">
         <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke={s.border} strokeWidth={1} />
         {rTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
@@ -803,7 +812,8 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     )
   }
 
-  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme) : null
+  const idPfx = (props as ThemeAwareProps)._idPrefix
+  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx) : null
 
   // Check for bar-funnel dropoff bars — they need SVG hatch patterns
   const hasDropoffBars = store.scene.some(
@@ -847,7 +857,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
 
   const showAxes = props.showAxes !== false
   const axes = showAxes
-    ? generateOrdinalAxesSVG(store, { width, height }, props, theme)
+    ? generateOrdinalAxesSVG(store, { width, height }, props, theme, idPfx)
     : null
 
   // Annotations
@@ -860,6 +870,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     layout: { width, height },
     theme,
     projection: projection as "vertical" | "horizontal" | "radial",
+    idPrefix: idPfx,
   }) : null
 
   // Legend
@@ -1065,7 +1076,10 @@ export function renderChart(
   const common: ThemeAwareProps & { size: [number, number]; margin?: any; colorScheme?: any; legendPosition?: string } = {
     ...framePropsOverrides,
     theme, title, description, showLegend, showGrid, background, className, annotations,
-    size, margin, colorScheme, legendPosition,
+    size,
+    ...(margin !== undefined && { margin }),
+    ...(colorScheme !== undefined && { colorScheme }),
+    ...(legendPosition !== undefined && { legendPosition }),
     _idPrefix: rest._idPrefix,
   }
 
@@ -1347,10 +1361,14 @@ export function renderChart(
       const valueFraction = (gaugeValue - gMin) / (gMax - gMin)
       const needleAngleDeg = startAngleDeg + valueFraction * sweep
       const needleAngleRad = (needleAngleDeg - 90) * Math.PI / 180
-      const outerRadius = chartSize / 2 - (margin?.top ?? common.margin?.top ?? 10)
+      const resolvedMargin = margin || { top: 20, right: 20, bottom: 30, left: 40 }
+      const outerRadius = chartSize / 2 - resolvedMargin.top
       const needleLen = outerRadius * 0.85
-      const cx = (width || 300) / 2
-      const cy = (height || 300) / 2
+      // Center of the radial chart accounts for margins
+      const cx = resolvedMargin.left + (width - resolvedMargin.left - resolvedMargin.right) / 2
+      const cy = resolvedMargin.top + (height - resolvedMargin.top - resolvedMargin.bottom) / 2
+      const resolvedTheme = resolveTheme(theme)
+      const needleColor = resolvedTheme.colors.text
 
       const baseSvg = renderOrdinalFrame({
         chartType: "donut",
@@ -1368,7 +1386,7 @@ export function renderChart(
       } as any)
 
       // Inject needle line before closing </svg>
-      const needleSvg = `<line x1="${cx}" y1="${cy}" x2="${cx + needleLen * Math.cos(needleAngleRad)}" y2="${cy + needleLen * Math.sin(needleAngleRad)}" stroke="${theme.colors.text}" stroke-width="2.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4" fill="${theme.colors.text}"/>`
+      const needleSvg = `<line x1="${cx}" y1="${cy}" x2="${cx + needleLen * Math.cos(needleAngleRad)}" y2="${cy + needleLen * Math.sin(needleAngleRad)}" stroke="${needleColor}" stroke-width="2.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4" fill="${needleColor}"/>`
       return baseSvg.replace("</svg>", `${needleSvg}</svg>`)
     }
 
