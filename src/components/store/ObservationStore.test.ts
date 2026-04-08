@@ -1,10 +1,13 @@
 import type { ChartObservation, HoverObservation, ClickObservation, BrushObservation } from "./ObservationStore"
 
 /**
- * ObservationStore is a zustand-style store created via createStore().
- * It can't be instantiated directly in a unit test without a React tree.
- * Instead, we test the store logic by extracting and exercising the
- * push/clear behavior from a fresh store instance.
+ * Tests for ObservationStore's core push/eviction/clear logic.
+ *
+ * The real store is created via createStore() and requires a React Provider.
+ * useObservation.test.tsx exercises the full production store through the
+ * ObservationProvider + useChartObserver hook. This file tests the logic
+ * independently (same algorithm, mirrored implementation) for fast,
+ * React-free validation of eviction semantics and edge cases.
  */
 
 function createTestStore() {

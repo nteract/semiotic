@@ -89,9 +89,7 @@ jobs:
           echo "All canvas methods are stubbed"
 
       - name: Run benchmarks
-        run: |
-          npx vitest bench --reporter=verbose --reporter=json --outputFile=bench-results.json
-          node scripts/check-bench-regression.js bench-results.json
+        run: npx vitest bench --reporter=verbose
 
   e2e:
     runs-on: ubuntu-latest

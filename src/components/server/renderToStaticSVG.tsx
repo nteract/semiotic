@@ -63,6 +63,9 @@ import type { SemioticTheme } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
+/** Monotonic counter for unique SVG element IDs across multiple renderChart calls */
+let renderCounter = 0
+
 // ── Shared rendering helpers ──────────────────────────────────────────
 
 interface ThemeAwareProps {
@@ -790,6 +793,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   )
   let hatchDefs: React.ReactNode = null
   if (hasDropoffBars) {
+    const uid = renderCounter++
     // Build a hatch pattern for each unique fill color used by dropoff bars
     const dropoffColors = new Set<string>()
     for (const n of store.scene) {
@@ -800,7 +804,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     }
     hatchDefs = Array.from(dropoffColors).map((color, i) =>
       createSVGHatchPattern({
-        id: `funnel-hatch-${i}`,
+        id: `funnel-hatch-${uid}-${i}`,
         background: color,
         stroke: theme.colors.background === "transparent" ? "#fff" : theme.colors.background,
         lineWidth: 1.5,
@@ -810,7 +814,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     )
     // Replace dropoff bar fills with pattern references
     const colorToPatternId = new Map<string, string>()
-    Array.from(dropoffColors).forEach((c, i) => colorToPatternId.set(c, `funnel-hatch-${i}`))
+    Array.from(dropoffColors).forEach((c, i) => colorToPatternId.set(c, `funnel-hatch-${uid}-${i}`))
     for (const n of store.scene) {
       if (n.type === "rect" && (n as any).datum?.__barFunnelIsDropoff) {
         const origFill = typeof n.style.fill === "string" ? n.style.fill : "#666"
@@ -1316,7 +1320,17 @@ export function renderChart(
       const chartSize = Math.min(width || 300, height || 300)
       const innerRadius = Math.max(10, (chartSize / 2) * (1 - arcWidth))
 
-      return renderOrdinalFrame({
+      // Compute needle angle from value
+      const gaugeValue = Math.max(gMin, Math.min(gMax, rest.value ?? gMin))
+      const valueFraction = (gaugeValue - gMin) / (gMax - gMin)
+      const needleAngleDeg = startAngleDeg + valueFraction * sweep
+      const needleAngleRad = (needleAngleDeg - 90) * Math.PI / 180
+      const outerRadius = chartSize / 2 - (margin?.top ?? common.margin?.top ?? 10)
+      const needleLen = outerRadius * 0.85
+      const cx = (width || 300) / 2
+      const cy = (height || 300) / 2
+
+      const baseSvg = renderOrdinalFrame({
         chartType: "donut",
         data: zoneData,
         oAccessor: "category",
@@ -1330,6 +1344,10 @@ export function renderChart(
         ...common,
         showAxes: false,
       } as any)
+
+      // Inject needle line before closing </svg>
+      const needleSvg = `<line x1="${cx}" y1="${cy}" x2="${cx + needleLen * Math.cos(needleAngleRad)}" y2="${cy + needleLen * Math.sin(needleAngleRad)}" stroke="${theme.colors.text}" stroke-width="2.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4" fill="${theme.colors.text}"/>`
+      return baseSvg.replace("</svg>", `${needleSvg}</svg>`)
     }
 
     // ── Network Charts ─────────────────────────────────────────────

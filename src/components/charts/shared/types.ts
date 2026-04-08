@@ -97,7 +97,6 @@ export interface BaseChartProps {
    * For lines, receives the line data; for bars, the bar datum; for pie slices, the slice datum. */
   onClick?: (datum: any, event: { x: number; y: number }) => void
 
-  /** Dim non-hovered series when hovering a data mark. "series" dims by the colorBy group key. */
   /** Dim non-hovered series when hovering a data mark. Requires `colorBy`. */
   hoverHighlight?: boolean
 

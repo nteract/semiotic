@@ -355,9 +355,9 @@ CI step added to `node.js.yml`: scans all `ctx.<method>` calls in `src/component
 
 Canvas data marks are opaque to assistive technology. Mitigated by: ARIA labels on canvas elements, SVG overlay for text-accessible axes/legends, `accessibleTable` (default true) rendering screen-reader-only data summary, keyboard navigation with graph-based traversal. The data marks themselves have no text alternative beyond tooltips. This is an inherent canvas limitation — further improvement would require a parallel invisible DOM representation of each data point.
 
-### Benchmark regressions [DONE — now blocking]
+### Benchmark regressions [YELLOW — tooling gap]
 
-CI runs `npx vitest bench --reporter=json --outputFile=bench-results.json` then `node scripts/check-bench-regression.js`. The script compares ops/s against `benchmarks/baselines.json` and fails if any benchmark regresses >25%. First CI run auto-saves the baseline. To update after intentional changes: `cp bench-results.json benchmarks/baselines.json`.
+CI runs `npx vitest bench --reporter=verbose` for visibility. `scripts/check-bench-regression.js` exists for baseline comparison but vitest bench does not support `--reporter=json` output, so automated regression gating is blocked on upstream vitest support. The script will work once vitest adds JSON bench output. For now, benchmarks run in CI for visibility but don't fail builds.
 
 ---
 

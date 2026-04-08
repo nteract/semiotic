@@ -5,11 +5,14 @@
  * reads the computed value from the canvas element. Otherwise returns
  * the input unchanged.
  *
- * No caching — getComputedStyle is called each time so theme toggles
- * are reflected immediately without manual cache invalidation.
+ * Per-canvas cache avoids repeated getComputedStyle calls within a single
+ * paint cycle. The cache is cleared on theme changes via clearCSSColorCache(),
+ * which each Stream Frame calls in its theme-change useEffect.
  */
 
 const varPattern = /^var\(\s*(--[^,)]+)(?:\s*,\s*([^)]+))?\s*\)$/
+
+const cache = new WeakMap<HTMLCanvasElement, Map<string, string>>()
 
 export function resolveCSSColor(
   ctx: CanvasRenderingContext2D,
@@ -22,13 +25,24 @@ export function resolveCSSColor(
   const canvas = ctx.canvas
   if (!canvas) return match[2]?.trim() || value
 
+  let canvasCache = cache.get(canvas)
+  if (!canvasCache) {
+    canvasCache = new Map()
+    cache.set(canvas, canvasCache)
+  }
+  const cached = canvasCache.get(value)
+  if (cached) return cached
+
   const computed = getComputedStyle(canvas).getPropertyValue(match[1]).trim()
-  return computed || match[2]?.trim() || value
+  const resolved = computed || match[2]?.trim() || value
+  canvasCache.set(value, resolved)
+  return resolved
 }
 
 /**
- * No-op retained for API compatibility — cache was removed.
+ * Clear the per-canvas CSS variable cache. Called by Stream Frames
+ * when the theme changes so the next paint reads fresh computed values.
  */
-export function clearCSSColorCache(_canvas: HTMLCanvasElement): void {
-  // No cache to clear — getComputedStyle is called fresh each time
+export function clearCSSColorCache(canvas: HTMLCanvasElement): void {
+  cache.delete(canvas)
 }
