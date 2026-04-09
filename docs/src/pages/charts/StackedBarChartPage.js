@@ -315,6 +315,40 @@ export default function StackedBarChartPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="segment-stroke">Segment Stroke</h3>
+      <p>
+        Use <code>frameProps.pieceStyle</code> with a CSS custom property to add
+        a dark/light-mode-aware stroke between segments. The canvas renderer resolves{" "}
+        <code>var(--semiotic-bg)</code> at render time.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          stackBy: "product",
+          valueAccessor: "value",
+          colorScheme: ["#6366f1", "#f59e0b", "#10b981"],
+          categoryLabel: "Quarter",
+          valueLabel: "Revenue ($)",
+          frameProps: {
+            pieceStyle: () => ({ stroke: "var(--semiotic-bg, #fff)", strokeWidth: 1 }),
+          },
+        }}
+        type={StackedBarChart}
+        overrideProps={{
+          data: "quarterlyData",
+          colorScheme: '["#6366f1", "#f59e0b", "#10b981"]',
+          frameProps: `{
+  pieceStyle: () => ({
+    stroke: "var(--semiotic-bg, #fff)",  // adapts to dark/light mode
+    strokeWidth: 1,
+  }),
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}

@@ -54,6 +54,40 @@ jobs:
       - name: Check bundle sizes
         run: npx size-limit
 
+      - name: Validate canvas stub completeness
+        run: |
+          # Extract canvas method names used in production renderers
+          USED=$(grep -roh 'ctx\.\([a-zA-Z]*\)' src/components/stream/renderers/ | \
+            sed 's/ctx\.//' | sort -u | grep -v '^$')
+          # Extract stubbed method names from setupTests.ts
+          STUBBED=$(grep -oP '"\K[a-zA-Z]+(?=")' src/setupTests.ts | sort -u)
+          # Find methods used in renderers but not stubbed
+          MISSING=""
+          for method in $USED; do
+            if ! echo "$STUBBED" | grep -qx "$method"; then
+              # Skip property assignments (not methods)
+              case "$method" in
+                fillStyle|strokeStyle|lineWidth|lineCap|lineJoin|globalAlpha|\
+                globalCompositeOperation|font|textAlign|textBaseline|shadowColor|\
+                shadowBlur|shadowOffsetX|shadowOffsetY|lineDashOffset|miterLimit|\
+                canvas|imageSmoothingEnabled|direction|filter|letterSpacing|\
+                fontKerning|fontStretch|fontVariantCaps|textRendering|wordSpacing)
+                  ;; # property, not a method — skip
+                *)
+                  MISSING="$MISSING $method"
+                  ;;
+              esac
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Canvas methods used in renderers but not stubbed in setupTests.ts:"
+            echo "$MISSING"
+            echo ""
+            echo "Add these to the canvasMethods array in src/setupTests.ts"
+            exit 1
+          fi
+          echo "All canvas methods are stubbed"
+
       - name: Run benchmarks
         run: npx vitest bench --reporter=verbose
 
@@ -75,7 +109,7 @@ jobs:
         run: npm install
 
       - name: Install Playwright browsers
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build library
         run: npm run dist

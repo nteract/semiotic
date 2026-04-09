@@ -322,7 +322,7 @@ export class PipelineStore {
         const rawAccessor = this.config.xAccessor
         const rawVal = typeof rawAccessor === "function"
           ? rawAccessor(sample)
-          : (sample as any)[rawAccessor || "x"]
+          : (sample as Record<string, unknown>)[rawAccessor || "x"]
 
         const isDateObj = rawVal instanceof Date
         const isDateStr = typeof rawVal === "string"
@@ -944,7 +944,8 @@ export class PipelineStore {
         opacity: ls.opacity
       }
     }
-    return { stroke: "#007bff", strokeWidth: 2 }
+    const color = this.resolveGroupColor(group) || "#007bff"
+    return { stroke: color, strokeWidth: 2 }
   }
 
   private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
@@ -976,7 +977,8 @@ export class PipelineStore {
         strokeWidth: ls.strokeWidth || 2
       }
     }
-    return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
+    const color = this.resolveGroupColor(group) || "#4e79a7"
+    return { fill: color, fillOpacity: 0.7, stroke: color, strokeWidth: 2 }
   }
 
   /** Resolve a group name to a color from the cached color map or a dedicated group palette.
@@ -1276,7 +1278,7 @@ export class PipelineStore {
     if (!accessorChanged) {
       const nonAccessorKeys = Object.keys(config).filter(k => !k.endsWith("Accessor") && k !== "timeAccessor" && k !== "valueAccessor")
       for (const k of nonAccessorKeys) {
-        if ((config as any)[k] !== (prev as any)[k]) {
+        if ((config as Record<string, unknown>)[k] !== (prev as Record<string, unknown>)[k]) {
           accessorChanged = true
           break
         }

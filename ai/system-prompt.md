@@ -113,5 +113,5 @@ Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"t
 
 ## Key Patterns
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
-- **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`.
+- **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `"Sparkline"` (no axes, 2px margins). `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`. Required props: StackedBarChart needs `stackBy`, GroupedBarChart needs `groupBy`, StackedAreaChart needs `areaBy`, BubbleChart needs `sizeBy`, FunnelChart uses `stepAccessor`, GaugeChart needs `thresholds`.
 - **exportChart**: Pass the wrapper div, not the SVG element: `exportChart(wrapperDiv, { format: "png" })`. It finds canvas+SVG internally.

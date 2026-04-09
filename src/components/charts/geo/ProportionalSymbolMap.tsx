@@ -156,8 +156,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   // Compute size domain for scaling
   const sizeDomain = useMemo(() => {
     if (!sizeBy) return undefined
-    const acc = typeof sizeBy === "function" ? sizeBy : (d: any) => d[sizeBy as string]
-    const vals = safeData.map(d => acc(d)).filter(v => v != null && isFinite(v))
+    const acc = typeof sizeBy === "function" ? sizeBy : (d: any) => d?.[sizeBy as string]
+    const vals = safeData.filter(Boolean).map(d => acc(d)).filter(v => v != null && isFinite(v))
     if (vals.length === 0) return undefined
     return [Math.min(...vals), Math.max(...vals)] as [number, number]
   }, [safeData, sizeBy])

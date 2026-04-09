@@ -66,3 +66,55 @@ jobs:
         run: npm publish --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Post-publish smoke test
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=${{ steps.dist-tag.outputs.tag }}
+          echo "Waiting for npm to propagate semiotic@${VERSION}..."
+          for i in 1 2 3 4 5; do
+            PUBLISHED=$(npm view semiotic@${VERSION} version 2>/dev/null || echo "")
+            if [ "$PUBLISHED" = "$VERSION" ]; then
+              echo "Package available on npm"
+              break
+            fi
+            echo "Attempt $i: not yet available, waiting 15s..."
+            sleep 15
+          done
+          if [ "$PUBLISHED" != "$VERSION" ]; then
+            echo "WARNING: Package not yet visible on npm registry after 75s"
+            echo "This is likely a propagation delay — check manually"
+            exit 0
+          fi
+
+          # Install in a temp project and verify imports
+          TMPDIR=$(mktemp -d)
+          cd "$TMPDIR"
+          npm init -y > /dev/null 2>&1
+          npm install semiotic@${VERSION} react react-dom > /dev/null 2>&1
+
+          node -e "
+            const assert = require('assert');
+            // Main entry
+            const s = require('semiotic');
+            assert(s.BarChart, 'BarChart not exported from semiotic');
+            assert(s.LineChart, 'LineChart not exported from semiotic');
+            assert(s.ForceDirectedGraph, 'ForceDirectedGraph not exported from semiotic');
+            // Sub-path entries
+            const xy = require('semiotic/xy');
+            assert(xy.LineChart, 'LineChart not exported from semiotic/xy');
+            const ord = require('semiotic/ordinal');
+            assert(ord.BarChart, 'BarChart not exported from semiotic/ordinal');
+            const net = require('semiotic/network');
+            assert(net.SankeyDiagram, 'SankeyDiagram not exported from semiotic/network');
+            const rt = require('semiotic/realtime');
+            assert(rt.RealtimeLineChart, 'RealtimeLineChart not exported from semiotic/realtime');
+            const srv = require('semiotic/server');
+            assert(srv.renderChart, 'renderChart not exported from semiotic/server');
+            const themes = require('semiotic/themes');
+            assert(themes.resolveThemePreset, 'resolveThemePreset not exported from semiotic/themes');
+            const utils = require('semiotic/utils');
+            assert(utils.validateProps, 'validateProps not exported from semiotic/utils');
+            console.log('All smoke tests passed — 8 entry points verified');
+          "
+          rm -rf "$TMPDIR"

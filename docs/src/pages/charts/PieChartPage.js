@@ -256,6 +256,36 @@ export default function PieChartPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="slice-stroke">Slice Stroke</h3>
+      <p>
+        Add a stroke between slices using <code>frameProps.pieceStyle</code>.
+        The <code>var(--semiotic-bg)</code> token resolves to white in light mode
+        and the dark background in dark mode, so slice borders always match the
+        chart background.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          frameProps: {
+            pieceStyle: () => ({ stroke: "var(--semiotic-bg, #fff)", strokeWidth: 2 }),
+          },
+        }}
+        type={PieChart}
+        overrideProps={{
+          data: "sampleData",
+          frameProps: `{
+  pieceStyle: () => ({
+    stroke: "var(--semiotic-bg, #fff)",  // adapts to dark/light mode
+    strokeWidth: 2,
+  }),
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}

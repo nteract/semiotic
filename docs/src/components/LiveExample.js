@@ -179,6 +179,20 @@ export default function LiveExample({
   const vizContainerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(null)
 
+  // Track docs theme to force chart remount on toggle (canvas reads CSS vars at mount time)
+  const [docsTheme, setDocsTheme] = useState(() =>
+    typeof document !== "undefined"
+      ? document.documentElement.getAttribute("data-theme") || "dark"
+      : "dark"
+  )
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setDocsTheme(document.documentElement.getAttribute("data-theme") || "dark")
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
+    return () => observer.disconnect()
+  }, [])
+
   const Frame = type
   const frameName = Frame.displayName
 
@@ -303,8 +317,8 @@ export default function LiveExample({
   const visualization = (
     <div ref={vizContainerRef} style={styles.vizContainer}>
       {containerWidth
-        ? <Frame {...responsiveFrameProps} />
-        : <Frame {...frameProps} />
+        ? <Frame key={docsTheme} {...responsiveFrameProps} />
+        : <Frame key={docsTheme} {...frameProps} />
       }
     </div>
   )

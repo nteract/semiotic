@@ -12,7 +12,7 @@
 - Every HOC accepts `frameProps` for pass-through. TypeScript `strict: true`. Every HOC has error boundary + dev-mode validation.
 
 ## Common Props (all HOCs)
-`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean|"series"), `hoverRadius` (30)
+`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean — dims non-hovered series, requires `colorBy`), `hoverRadius` (30)
 
 `onClick` receives `(datum, { x, y })`. `onObservation` receives `{ type, datum?, x?, y?, timestamp, chartType, chartId }`.
 
@@ -82,11 +82,16 @@ Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.
 Most HOCs support push via `forwardRef`. **Omit** `data` — do NOT pass `data={[]}`.
 ```jsx
 const ref = useRef()
-ref.current.push({ x: 1, y: 2 })
+ref.current.push({ id: "p1", x: 1, y: 2 })
 ref.current.pushMany([...points])
+ref.current.remove("p1")                          // by ID — requires pointIdAccessor
+ref.current.remove(["p1", "p2"])                   // batch remove
+ref.current.update("p1", d => ({ ...d, y: 99 }))  // in-place update — requires pointIdAccessor
 ref.current.clear()
-<Scatterplot ref={ref} xAccessor="x" yAccessor="y" />
+ref.current.getData()
+<Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
+`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Coordinated Views
@@ -111,7 +116,26 @@ const dashboard = renderDashboard([{ component: "BarChart", props: {...} }, { co
 
 All render functions accept `theme` (preset name or object). Theme categorical colors flow to data marks automatically. `generateFrameSVGs()` returns frame SVGs without sharp/gifenc (sync, for client preview).
 AnimatedGifOptions: `fps`, `stepSize`, `windowSize`, `frameCount`, `xExtent`/`yExtent` (lock axes), `transitionFrames`, `easing`, `decay`, `loop`, `scale`.
-Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations (y-threshold, x-threshold, band, label, text, category-highlight).
+Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations (y-threshold, x-threshold, band, label, text, category-highlight). SVG groups have `id` attributes for Figma layer naming: `data-area`, `axes`, `grid`, `annotations`, `legend`, `chart-title`.
+
+**`renderChart` required props by component:**
+- **Sparkline** — `data`, `xAccessor`, `yAccessor`. No axes/grid/legend/title by default. Margin defaults to 2px.
+- **LineChart/AreaChart** — `data`, `xAccessor`, `yAccessor`. Optional: `lineBy`/`areaBy`, `colorBy`, `colorScheme`.
+- **StackedAreaChart** — `data`, `xAccessor`, `yAccessor`, `areaBy` (required).
+- **Scatterplot/BubbleChart** — `data`, `xAccessor`, `yAccessor`. BubbleChart requires `sizeBy`.
+- **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`.
+- **BarChart** — `data`, `categoryAccessor`, `valueAccessor`.
+- **StackedBarChart** — `data`, `categoryAccessor`, `valueAccessor`, `stackBy` (required).
+- **GroupedBarChart** — `data`, `categoryAccessor`, `valueAccessor`, `groupBy` (required).
+- **PieChart/DonutChart** — `data`, `categoryAccessor`, `valueAccessor`.
+- **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"). Renders with trapezoid connectors, no axes.
+- **GaugeChart** — `value`, `thresholds` (array of `{value, color, label}`). Optional: `min`, `max`, `sweep`, `arcWidth`.
+- **SwimlaneChart** — `data`, `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`.
+- **ForceDirectedGraph** — `edges` (required). `nodes` optional (inferred from edges).
+- **SankeyDiagram** — `edges` (required), `valueAccessor`.
+- **ChoroplethMap** — `areas` (GeoJSON features, pre-resolved).
+
+All components accept: `width`, `height`, `theme`, `title`, `description`, `showLegend`, `showGrid`, `background`, `annotations`, `margin`, `colorScheme`, `colorBy`, `legendPosition`. Pass additional frame-level props via `frameProps`.
 
 ## Annotations
 
@@ -155,7 +179,7 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead.
 - **Geo imports**: Always `semiotic/geo`, never `semiotic`, to avoid d3-geo in non-geo bundles.
 - **fillArea**: `fillArea={["seriesA"]}` fills named series only. Names must match `lineBy`/`colorBy` keys.
-- **hoverHighlight**: `"series"` mode requires `colorBy` as string field.
+- **hoverHighlight**: Requires `colorBy` as a string field.
 - **tooltip="multi"**: Shows all series at hovered X. Custom fn receives `datum.allSeries`.
 - **Axis config**: `frameProps.axes: [{ orient, includeMax, autoRotate, gridStyle, landmarkTicks }]`
 - **xScaleType: "time"**: Creates `scaleTime`. Required for landmark ticks with timestamps.

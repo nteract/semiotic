@@ -125,7 +125,7 @@ export function getColor(
     return value
   }
 
-  const colorValue = dataPoint[colorBy]
+  const colorValue = dataPoint?.[colorBy]
 
   if (colorScale) {
     return colorScale(colorValue)
@@ -218,7 +218,7 @@ export function getSize(
   if (typeof sizeBy === "function") {
     value = sizeBy(dataPoint)
   } else {
-    value = dataPoint[sizeBy]
+    value = dataPoint?.[sizeBy]
   }
 
   if (!domain) {

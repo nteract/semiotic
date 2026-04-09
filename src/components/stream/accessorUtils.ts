@@ -25,30 +25,30 @@ export function accessorsEquivalent(
   return false
 }
 
-export function resolveAccessor<T>(
+export function resolveAccessor<T extends Record<string, unknown>>(
   accessor: string | ((d: T) => number) | undefined,
   fallback: string
 ): (d: T) => number {
   if (typeof accessor === "function") return (d: T) => +accessor(d)
   const key = accessor || fallback
-  return (d: T) => +(d as any)[key]
+  return (d: T) => +(d[key] as number)
 }
 
-export function resolveRawAccessor<T>(
-  accessor: string | ((d: T) => any) | undefined,
+export function resolveRawAccessor<T extends Record<string, unknown>>(
+  accessor: string | ((d: T) => unknown) | undefined,
   fallback: string
-): (d: T) => any {
+): (d: T) => unknown {
   if (typeof accessor === "function") return accessor
   const key = accessor || fallback
-  return (d: T) => (d as any)[key]
+  return (d: T) => d[key]
 }
 
-export function resolveStringAccessor<T>(
+export function resolveStringAccessor<T extends Record<string, unknown>>(
   accessor: string | ((d: T) => string) | undefined,
   fallback?: string
 ): ((d: T) => string) | undefined {
   if (typeof accessor === "function") return accessor
-  if (accessor) return (d: T) => String((d as any)[accessor])
-  if (fallback) return (d: T) => String((d as any)[fallback])
+  if (accessor) return (d: T) => String(d[accessor])
+  if (fallback) return (d: T) => String(d[fallback])
   return undefined
 }

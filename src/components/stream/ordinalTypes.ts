@@ -56,12 +56,11 @@ export interface WedgeSceneNode {
   style: Style
   datum: any
   category?: string
-  /** Pulse intensity 0–1 (set when aggregated category value changes) */
   _pulseIntensity?: number
-  /** Pulse color */
   _pulseColor?: string
-  /** Animation target opacity (set during enter/exit transitions) */
+  _pulseGlowRadius?: number
   _targetOpacity?: number
+  _transitionKey?: string
 }
 
 export interface BoxplotSceneNode {
@@ -83,7 +82,11 @@ export interface BoxplotSceneNode {
   datum: any
   category?: string
   outliers?: { px: number; py: number; value: number; datum: any }[]
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
   _targetOpacity?: number
+  _transitionKey?: string
 }
 
 export interface DistributionStats {
@@ -112,7 +115,11 @@ export interface ViolinSceneNode {
   style: Style
   datum: any
   category?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
   _targetOpacity?: number
+  _transitionKey?: string
 }
 
 export interface ConnectorSceneNode {
@@ -124,7 +131,11 @@ export interface ConnectorSceneNode {
   style: Style
   datum: any
   group?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
   _targetOpacity?: number
+  _transitionKey?: string
 }
 
 export interface TrapezoidSceneNode {
@@ -134,7 +145,11 @@ export interface TrapezoidSceneNode {
   style: Style
   datum: any
   category?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
   _targetOpacity?: number
+  _transitionKey?: string
 }
 
 // Re-export scene node types from XY that we reuse

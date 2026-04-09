@@ -173,9 +173,18 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     }
   }, [colorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
+  const mergedPieceStyle = useMemo(() => {
+    const userPieceStyle = frameProps?.pieceStyle
+    if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
+    return (d: Record<string, any>, category?: string) => ({
+      ...basePieceStyle(d, category),
+      ...((userPieceStyle as Function)(d, category) || {}),
+    })
+  }, [basePieceStyle, frameProps])
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, selection),
+    [mergedPieceStyle, setup.effectiveSelectionHook, selection]
   )
 
   // Default tooltip
