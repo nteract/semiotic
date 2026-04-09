@@ -181,11 +181,13 @@ export default function LiveExample({
 
   // Track docs theme to force chart remount on toggle (canvas reads CSS vars at mount time)
   const [docsTheme, setDocsTheme] = useState(() =>
-    typeof document !== "undefined" ? document.documentElement.getAttribute("data-theme") : "dark"
+    typeof document !== "undefined"
+      ? document.documentElement.getAttribute("data-theme") || "dark"
+      : "dark"
   )
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      setDocsTheme(document.documentElement.getAttribute("data-theme"))
+      setDocsTheme(document.documentElement.getAttribute("data-theme") || "dark")
     })
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
     return () => observer.disconnect()

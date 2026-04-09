@@ -30,8 +30,7 @@ export function resolveCSSColor(
     canvasCache = new Map()
     cache.set(canvas, canvasCache)
   }
-  const cached = canvasCache.get(value)
-  if (cached) return cached
+  if (canvasCache.has(value)) return canvasCache.get(value)!
 
   const computed = getComputedStyle(canvas).getPropertyValue(match[1]).trim()
   const resolved = computed || match[2]?.trim() || value

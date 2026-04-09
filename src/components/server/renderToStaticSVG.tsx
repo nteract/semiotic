@@ -1354,7 +1354,8 @@ export function renderChart(
       })
 
       // Compute from inner (margin-adjusted) dimensions — same as renderOrdinalFrame
-      const resolvedMargin = margin || { top: 20, right: 20, bottom: 30, left: 40 }
+      // Use common.margin (includes frameProps + legend expansion), not raw margin prop
+      const resolvedMargin = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
       const innerWidth = (width || 300) - resolvedMargin.left - resolvedMargin.right
       const innerHeight = (height || 300) - resolvedMargin.top - resolvedMargin.bottom
       const chartSize = Math.min(innerWidth, innerHeight)

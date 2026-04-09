@@ -72,8 +72,8 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   } else if (position === "top") {
     tx = margin.left; ty = hasTitle ? 32 : 8
   } else if (position === "bottom") {
-    // Place below axis labels — axis ticks use ~30px of the bottom margin
-    tx = margin.left; ty = totalHeight - 20
+    // Place at the bottom of the chart area, within the reserved bottom margin
+    tx = margin.left; ty = totalHeight - Math.min(margin.bottom, 20)
   } else {
     // right (default)
     tx = totalWidth - margin.right + 10; ty = margin.top
