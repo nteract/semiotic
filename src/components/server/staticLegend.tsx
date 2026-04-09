@@ -72,8 +72,8 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   } else if (position === "top") {
     tx = margin.left; ty = hasTitle ? 32 : 8
   } else if (position === "bottom") {
-    // Place at the bottom of the chart area, within the reserved bottom margin
-    tx = margin.left; ty = totalHeight - Math.min(margin.bottom, 20)
+    // Place inside the reserved bottom margin area (expanded to ~70px by renderToStaticSVG)
+    tx = margin.left; ty = totalHeight - margin.bottom + 8
   } else {
     // right (default)
     tx = totalWidth - margin.right + 10; ty = margin.top

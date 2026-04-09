@@ -67,7 +67,11 @@ type FrameType = "xy" | "ordinal" | "network" | "geo"
 function chartUID(props: Record<string, any>): string {
   // Prefer _idPrefix (set by renderDashboard), then chartId, then hash
   const raw = props._idPrefix || props.chartId
-  if (raw) return String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
+  if (raw) {
+    const sanitized = String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
+    // Ensure valid XML Name: must start with letter or underscore
+    return /^[A-Za-z_]/.test(sanitized) ? sanitized : `c${sanitized}`
+  }
   const key = `${props.chartType || ""}:${props.title || ""}:${Array.isArray(props.data) ? props.data.length : 0}`
   let h = 0
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0
@@ -1389,9 +1393,19 @@ export function renderChart(
         showAxes: false,
       } as any)
 
-      // Inject needle line before closing </svg>
-      const needleSvg = `<line x1="${cx}" y1="${cy}" x2="${cx + needleLen * Math.cos(needleAngleRad)}" y2="${cy + needleLen * Math.sin(needleAngleRad)}" stroke="${needleColor}" stroke-width="2.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4" fill="${needleColor}"/>`
-      return baseSvg.replace("</svg>", `${needleSvg}</svg>`)
+      // Render needle as React elements (safe from injection via theme color strings)
+      const needleEl = ReactDOMServer.renderToStaticMarkup(
+        <>
+          <line
+            x1={cx} y1={cy}
+            x2={cx + needleLen * Math.cos(needleAngleRad)}
+            y2={cy + needleLen * Math.sin(needleAngleRad)}
+            stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
+          />
+          <circle cx={cx} cy={cy} r={4} fill={needleColor} />
+        </>
+      )
+      return baseSvg.replace("</svg>", `${needleEl}</svg>`)
     }
 
     // ── Network Charts ─────────────────────────────────────────────
