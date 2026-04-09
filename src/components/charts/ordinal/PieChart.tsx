@@ -120,7 +120,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
     return (d: Record<string, any>, category?: string) => ({
       ...basePieceStyle(d, category),
-      ...(userPieceStyle as Function)(d, category),
+      ...((userPieceStyle as Function)(d, category) || {}),
     })
   }, [basePieceStyle, frameProps])
 

@@ -139,7 +139,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
     return (d: Record<string, any>, category?: string) => {
       const base = basePieceStyle(d, category)
-      const user = (userPieceStyle as Function)(d, category)
+      const user = (userPieceStyle as Function)(d, category) || {}
       return { ...base, ...user }
     }
   }, [basePieceStyle, frameProps])
