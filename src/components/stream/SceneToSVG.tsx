@@ -231,11 +231,13 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
     }
     case "arc": {
       const n = node as NetworkArcNode
+      // Scene stores angles in canvas convention (0 = 3 o'clock).
+      // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
       const arcPath = d3Arc()
         .innerRadius(n.innerR)
         .outerRadius(n.outerR)
-        .startAngle(n.startAngle)
-        .endAngle(n.endAngle)({} as any) || ""
+        .startAngle(n.startAngle + Math.PI / 2)
+        .endAngle(n.endAngle + Math.PI / 2)({} as any) || ""
       return (
         <path
           key={`net-arc-${i}`}
@@ -371,11 +373,13 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
     }
     case "wedge": {
       const n = node as WedgeSceneNode
+      // Scene stores angles in canvas convention (0 = 3 o'clock).
+      // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
       const arcPath = d3Arc()
         .innerRadius(n.innerRadius)
         .outerRadius(n.outerRadius)
-        .startAngle(n.startAngle)
-        .endAngle(n.endAngle)({} as any) || ""
+        .startAngle(n.startAngle + Math.PI / 2)
+        .endAngle(n.endAngle + Math.PI / 2)({} as any) || ""
       return (
         <path
           key={baseKey}

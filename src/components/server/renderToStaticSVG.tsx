@@ -89,6 +89,7 @@ interface ThemeAwareProps {
   description?: string
   background?: string
   className?: string
+  legendPosition?: "right" | "left" | "top" | "bottom"
   /** Prefix for SVG element IDs — used by renderDashboard to avoid collisions */
   _idPrefix?: string
 }
@@ -306,7 +307,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const margin = { ...defaultMargin, ...props.margin }
 
   // Expand margin for legend BEFORE calculating inner dimensions
-  const legendPos = (props as any).legendPosition
+  const legendPos = props.legendPosition
   if (props.showLegend) {
     if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
     else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
@@ -373,7 +374,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
       })
     )
   }
@@ -410,7 +411,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
       categories,
       colorScheme: props.colorScheme,
       theme,
-      position: (props as any).legendPosition || "right",
+      position: props.legendPosition || "right",
       totalWidth: size[0],
       totalHeight: size[1],
       margin,
@@ -551,11 +552,11 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
           title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
         })
       )
     }
-    (config as any).__hierarchyRoot = hierarchyRoot
+    config.__hierarchyRoot = hierarchyRoot
     nodes = []
     edges = []
   } else {
@@ -570,7 +571,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
           title: props.title, description: props.description, background: props.background,
           theme, innerTransform: `translate(${margin.left},${margin.top})`,
           innerWidth, innerHeight,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
         })
       )
     }
@@ -634,7 +635,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
     })
   )
 }
@@ -744,7 +745,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   const margin = { ...defaultMargin, ...props.margin }
 
   // Expand margin for legend BEFORE calculating inner dimensions
-  const legendPos = (props as any).legendPosition
+  const legendPos = props.legendPosition
   if (props.showLegend) {
     if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
     else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
@@ -781,6 +782,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     innerRadius: props.innerRadius,
     normalize: props.normalize,
     startAngle: props.startAngle,
+    sweepAngle: props.sweepAngle,
     bins: props.bins,
     showOutliers: props.showOutliers,
     showIQR: props.showIQR,
@@ -811,7 +813,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
       })
     )
   }
@@ -829,7 +831,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     // Build a hatch pattern for each unique fill color used by dropoff bars
     const dropoffColors = new Set<string>()
     for (const n of store.scene) {
-      if (n.type === "rect" && (n as any).datum?.__barFunnelIsDropoff) {
+      if (n.type === "rect" && n.datum?.__barFunnelIsDropoff) {
         const fill = typeof n.style.fill === "string" ? n.style.fill : "#666"
         dropoffColors.add(fill)
       }
@@ -848,7 +850,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     const colorToPatternId = new Map<string, string>()
     Array.from(dropoffColors).forEach((c, i) => colorToPatternId.set(c, `funnel-hatch-${uid}-${i}`))
     for (const n of store.scene) {
-      if (n.type === "rect" && (n as any).datum?.__barFunnelIsDropoff) {
+      if (n.type === "rect" && n.datum?.__barFunnelIsDropoff) {
         const origFill = typeof n.style.fill === "string" ? n.style.fill : "#666"
         n.style = { ...n.style, fill: `url(#${colorToPatternId.get(origFill)})` }
       }
@@ -886,7 +888,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       categories,
       colorScheme: props.colorScheme,
       theme,
-      position: (props as any).legendPosition || "right",
+      position: props.legendPosition || "right",
       totalWidth: size[0],
       totalHeight: size[1],
       margin,
@@ -915,7 +917,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       innerWidth: width, innerHeight: height,
       legend,
       defs: hatchDefs,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
     })
   )
 }
@@ -971,7 +973,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
         title: props.title, description: props.description, background: props.background,
         theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
         innerWidth: width, innerHeight: height,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
       })
     )
   }
@@ -993,7 +995,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
-        idPrefix: (props as any)._idPrefix,
+        idPrefix: props._idPrefix,
     })
   )
 }

@@ -87,6 +87,14 @@ Medium (3-4 days):
 ---
 ## BUGS
 
+### StackedBarChart and GroupedBarChart missing `sort` prop
+
+`BarChart` supports `sort` via `useSortedData` but `StackedBarChart` and `GroupedBarChart` don't declare or implement it. The prop is silently ignored. Worse, the underlying frame defaults `oSort` to descending value sort when undefined — so categories always appear sorted by total value, not insertion order. Pre-sorting the data array doesn't help because the pipeline re-sorts.
+
+**Workaround**: Pass `frameProps={{ oSort: false }}` to preserve data insertion order.
+
+**Fix**: Add `sort` to `StackedBarChartProps` and `GroupedBarChartProps`. Default to `false` (insertion order). Map `"asc"`/`"desc"` to frame `oSort`. Small (0.5 day).
+
 ---
 
 ## Push API: Transition Exits on Remove

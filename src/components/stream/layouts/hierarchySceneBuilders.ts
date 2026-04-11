@@ -27,6 +27,18 @@ import type { Style } from "../types"
 import { DEPTH_PALETTE, contrastTextColor, resolveLabelFn, resolveDefaultNodeSize } from "./hierarchyUtils"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 
+/** Resolve depth palette from config.colorScheme, falling back to DEPTH_PALETTE */
+function resolveDepthPalette(config: NetworkPipelineConfig): readonly string[] {
+  if (Array.isArray(config.colorScheme)) return config.colorScheme
+  return DEPTH_PALETTE
+}
+
+/** Resolve default fill from config.colorScheme (first color) or hardcoded fallback */
+function resolveDefaultFill(config: NetworkPipelineConfig): string {
+  if (Array.isArray(config.colorScheme) && config.colorScheme.length > 0) return config.colorScheme[0]
+  return "#4d430c"
+}
+
 // ── Tree/Cluster scene ────────────────────────────────────────────────
 
 export function buildTreeScene(
@@ -62,10 +74,11 @@ export function buildTreeScene(
     }
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || "#4d430c"
+    let fill = userStyle.fill || resolveDefaultFill(config)
 
     if (config.colorByDepth && node.depth !== undefined) {
-      fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
+      const palette = resolveDepthPalette(config)
+      fill = palette[node.depth % palette.length]
     }
 
     const style: Style = {
@@ -209,10 +222,11 @@ export function buildRectScene(
     if (w <= 0 || h <= 0) continue
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || "#4d430c"
+    let fill = userStyle.fill || resolveDefaultFill(config)
 
     if (config.colorByDepth && node.depth !== undefined) {
-      fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
+      const palette = resolveDepthPalette(config)
+      fill = palette[node.depth % palette.length]
     }
 
     const style: Style = {
@@ -262,9 +276,10 @@ export function buildRectScene(
       if (w < minWidth || h < minHeight) continue
 
       const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-      let fill = userStyle.fill || "#4d430c"
+      let fill = userStyle.fill || resolveDefaultFill(config)
       if (config.colorByDepth && node.depth !== undefined) {
-        fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
+        const palette = resolveDepthPalette(config)
+        fill = palette[node.depth % palette.length]
       }
       const textColor = contrastTextColor(fill)
 
@@ -317,10 +332,11 @@ export function buildCircleScene(
     if (r <= 0) continue
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || "#4d430c"
+    let fill = userStyle.fill || resolveDefaultFill(config)
 
     if (config.colorByDepth && node.depth !== undefined) {
-      fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
+      const palette = resolveDepthPalette(config)
+      fill = palette[node.depth % palette.length]
     }
 
     const style: Style = {
@@ -358,9 +374,10 @@ export function buildCircleScene(
       const isLeaf = !(node.data?.children && node.data.children.length > 0)
 
       const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-      let fill = userStyle.fill || "#4d430c"
+      let fill = userStyle.fill || resolveDefaultFill(config)
       if (config.colorByDepth && node.depth !== undefined) {
-        fill = DEPTH_PALETTE[node.depth % DEPTH_PALETTE.length]
+        const palette = resolveDepthPalette(config)
+        fill = palette[node.depth % palette.length]
       }
 
       if (isLeaf) {

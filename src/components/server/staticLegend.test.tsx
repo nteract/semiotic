@@ -70,8 +70,8 @@ describe("renderStaticLegend", () => {
 
   it("positions legend at bottom within SVG bounds", () => {
     const svg = renderLegendString({ ...baseConfig, position: "bottom" })
-    // Bottom: totalHeight(400) - margin.bottom(30) + 8 = 378
-    expect(svg).toContain("translate(40,378)")
+    // Bottom: totalHeight(400) - margin.bottom(30) + 38 = 408 (below axes)
+    expect(svg).toContain("translate(40,408)")
   })
 
   it("positions legend at left", () => {

@@ -68,6 +68,22 @@ export interface HoverData {
   value: number
   x: number
   y: number
+  /** Ordinal: distribution statistics for boxplot/violin/ridgeline */
+  stats?: { n: number; min: number; q1: number; median: number; q3: number; max: number; mean: number }
+  /** Ordinal: category label of hovered element */
+  category?: string
+  /** @internal Ordinal accessor hints for tooltip rendering */
+  __oAccessor?: string
+  /** @internal Ordinal value accessor hint */
+  __rAccessor?: string
+  /** @internal Chart type hint */
+  __chartType?: string
+  /** XY: all series values at hovered X (multi-point tooltip) */
+  allSeries?: Array<{ group: string; value: number; valuePx?: number; color: string; datum: any }>
+  /** XY: pixel X of hover position */
+  xPx?: number
+  /** XY: raw X value at hover position */
+  xValue?: any
 }
 
 export interface BarStyle {
