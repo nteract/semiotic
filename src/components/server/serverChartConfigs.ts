@@ -8,12 +8,6 @@
  * each chart type independently readable and testable.
  */
 
-import { resolveTheme } from "./themeResolver"
-import type { ThemeInput } from "./themeResolver"
-import * as React from "react"
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (element: React.ReactElement) => string }
-
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
 interface ChartConfig {

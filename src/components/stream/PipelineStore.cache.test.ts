@@ -26,11 +26,6 @@ function setData(store: PipelineStore, data: Record<string, any>[]) {
   store.ingest({ inserts: data, bounded: true })
 }
 
-/** Ingest as streaming data (appends to buffer) */
-function pushData(store: PipelineStore, data: Record<string, any>[]) {
-  store.ingest({ inserts: data, bounded: false })
-}
-
 // ── Color resolution via scene ───────────────────────────────────────────
 
 describe("resolveGroupColor after data changes", () => {
@@ -101,9 +96,6 @@ describe("stacked area extent cache invalidation", () => {
       { x: 2, y: 25, group: "B" },
     ])
     store.computeScene([400, 300])
-
-    // Max stacked value at x=2: 15+25 = 40
-    const sceneBefore = [...store.scene]
 
     // Re-set with data that has higher cumulative sum
     setData(store, [

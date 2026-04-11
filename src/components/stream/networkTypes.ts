@@ -395,7 +395,7 @@ export interface NetworkPipelineConfig {
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
   childrenAccessor?: string | ((d: any) => any[])
-  hierarchySum?: (d: any) => number
+  hierarchySum?: string | ((d: any) => number)
 
   // ── Sankey layout ────────────────────────────────
   orientation?: "horizontal" | "vertical"
