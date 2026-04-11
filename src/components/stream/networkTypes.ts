@@ -390,6 +390,8 @@ export interface NetworkPipelineConfig {
   sourceAccessor?: string | ((d: any) => string)
   targetAccessor?: string | ((d: any) => string)
   valueAccessor?: string | ((d: any) => number)
+  /** Edge ID accessor for removeEdge(edgeId) — enables single-ID edge removal */
+  edgeIdAccessor?: string | ((d: any) => string)
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
   childrenAccessor?: string | ((d: any) => any[])
@@ -619,8 +621,8 @@ export interface StreamNetworkFrameHandle {
   pushMany(edges: EdgePush[]): void
   /** Remove a node by ID. Also removes connected edges. */
   removeNode(id: string): boolean
-  /** Remove all edges between source and target node IDs. */
-  removeEdge(sourceId: string, targetId: string): boolean
+  /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
+  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
   /** Update a node's data by ID. Returns previous data. */
   updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null
   /** Update all edges between source+target. Returns array of previous data. */

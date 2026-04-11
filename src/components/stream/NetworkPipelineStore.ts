@@ -1009,15 +1009,38 @@ export class NetworkPipelineStore {
    * Handles parallel edges (multiple edges between the same pair).
    * Returns true if at least one edge was removed.
    */
-  removeEdge(sourceId: string, targetId: string): boolean {
+  /**
+   * Remove edges by source+target IDs, or by edge ID when edgeIdAccessor is configured.
+   *
+   * - `removeEdge(sourceId, targetId)` — removes all parallel edges between endpoints
+   * - `removeEdge(edgeId)` — removes the edge matching edgeIdAccessor (requires config.edgeIdAccessor)
+   */
+  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean {
     const toDelete: string[] = []
-    for (const [edgeKey, edge] of this.edges) {
-      const src = typeof edge.source === "string" ? edge.source : edge.source.id
-      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
-      if (src === sourceId && tgt === targetId) {
-        toDelete.push(edgeKey)
+
+    if (targetId === undefined) {
+      // Single-ID mode: use edgeIdAccessor
+      const accessor = this.config.edgeIdAccessor
+      if (!accessor) {
+        throw new Error("removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead.")
+      }
+      const getEdgeId = typeof accessor === "function" ? accessor : (d: any) => d?.[accessor]
+      for (const [edgeKey, edge] of this.edges) {
+        if (getEdgeId(edge.data) === sourceIdOrEdgeId) {
+          toDelete.push(edgeKey)
+        }
+      }
+    } else {
+      // Two-ID mode: match source + target
+      for (const [edgeKey, edge] of this.edges) {
+        const src = typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+        if (src === sourceIdOrEdgeId && tgt === targetId) {
+          toDelete.push(edgeKey)
+        }
       }
     }
+
     for (const key of toDelete) {
       this.edges.delete(key)
       this.edgeTimestamps.delete(key)

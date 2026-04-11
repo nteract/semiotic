@@ -626,6 +626,11 @@ const StreamNetworkFrame = forwardRef<
       removeNode: (id: string) => {
         const removed = storeRef.current?.removeNode(id) ?? false
         if (removed) {
+          // Clear hover if the removed node was being hovered
+          if (hoverRef.current && hoverRef.current.data?.id === id) {
+            hoverRef.current = null
+            setHoverData(null)
+          }
           nodeColorMap.current.delete(id)
           runLayout()
           dirtyRef.current = true
@@ -633,8 +638,8 @@ const StreamNetworkFrame = forwardRef<
         }
         return removed
       },
-      removeEdge: (sourceId: string, targetId: string) => {
-        const removed = storeRef.current?.removeEdge(sourceId, targetId) ?? false
+      removeEdge: (sourceIdOrEdgeId: string, targetId?: string) => {
+        const removed = storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
         if (removed) {
           runLayout()
           dirtyRef.current = true

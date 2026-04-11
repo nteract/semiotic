@@ -1032,6 +1032,10 @@ export class PipelineStore {
     if (!this.getPointId) {
       throw new Error("remove() requires pointIdAccessor to be configured")
     }
+    // Snapshot positions before mutation so the transition system can animate exits
+    if (this.config.transition && this.scene.length > 0) {
+      this.snapshotPositions()
+    }
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getPointId = this.getPointId
     // Compact timestamp buffer in lockstep with data removal

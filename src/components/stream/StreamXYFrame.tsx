@@ -614,6 +614,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         adapterRef.current?.flush()
         const removed = storeRef.current?.remove(id) ?? []
         if (removed.length > 0) {
+          // Clear hover if the removed datum was being hovered
+          if (hoverRef.current && removed.some(d => d === hoverRef.current?.data)) {
+            hoverRef.current = null
+            setHoverPoint(null)
+          }
           dirtyRef.current = true
           scheduleRender()
         }

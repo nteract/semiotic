@@ -87,49 +87,27 @@ Medium (3-4 days):
 ---
 ## BUGS
 
-### StackedBarChart and GroupedBarChart missing `sort` prop
+### StackedBarChart and GroupedBarChart missing `sort` prop [DONE]
 
-`BarChart` supports `sort` via `useSortedData` but `StackedBarChart` and `GroupedBarChart` don't declare or implement it. The prop is silently ignored. Worse, the underlying frame defaults `oSort` to descending value sort when undefined — so categories always appear sorted by total value, not insertion order. Pre-sorting the data array doesn't help because the pipeline re-sorts.
-
-**Workaround**: Pass `frameProps={{ oSort: false }}` to preserve data insertion order.
-
-**Fix**: Add `sort` to `StackedBarChartProps` and `GroupedBarChartProps`. Default to `false` (insertion order). Map `"asc"`/`"desc"` to frame `oSort`. Small (0.5 day).
+`sort` prop added to both `StackedBarChartProps` and `GroupedBarChartProps`. Default: `false` (data insertion order). Accepts `"asc"`, `"desc"`, `boolean`, or custom comparator. Mapped to `oSort` on the frame.
 
 ---
 
-## Push API: Transition Exits on Remove
+## Push API: Transition Exits on Remove [DONE]
 
-**Status**: Not started.
-
-When `remove()` is called, items vanish instantly instead of fading out. The existing transition machinery supports enter/exit animations — `snapshotPositions()` captures pre-change state, `computeScene()` builds post-change scene, `startTransition()` creates exit nodes with `_targetOpacity: 0`. But `remove()` currently marks dirty and triggers rebuild without calling `snapshotPositions()` first, so the transition system has no "before" state to animate from.
-
-**Fix**: Call `snapshotPositions()` inside `remove()` before the buffer changes (same pattern as `computeScene()` uses). The next `computeScene()` call will then see the removed items in the "previous" snapshot and create fade-out exits.
-
-**Effort**: Small (0.5-1 day). The machinery exists; it's wiring.
+`remove()` now calls `snapshotPositions()` before buffer mutation in both PipelineStore and OrdinalPipelineStore. The next `computeScene()` will see the removed items in the "previous" snapshot and create fade-out exit transitions.
 
 ---
 
-## Push API: Selection Clearing on Remove
+## Push API: Selection Clearing on Remove [DONE]
 
-**Status**: Not started.
-
-If the removed item is currently hovered or selected (via `linkedHover` or `selection`), the interaction state points at a ghost datum. Not a crash — the selection references a datum no longer in the scene — but it can leave a stale tooltip or highlight.
-
-**Fix**: After `remove()`, check if any removed item matches the current hover/selection state and clear it. The selection store has `clearSelection()` and the hover store has `clearHover()`.
-
-**Effort**: Small (0.5 day).
+All three stream frames (XY, Ordinal, Network) now check if the hovered datum was in the removed set after `remove()`. If so, hover state is cleared (`hoverRef.current = null`, `setHoverPoint(null)`). Prevents stale tooltips and ghost highlights.
 
 ---
 
-## Push API: Network Edge ID Accessor
+## Push API: Network Edge ID Accessor [DONE]
 
-**Status**: Not started.
-
-`removeEdge(sourceId, targetId)` requires knowing both endpoints. For named edges (a specific contract, SLA, or data pipeline link), users want `removeEdge(edgeId)`. The network store keys edges by `source\0target\0index`, but there's no user-facing edge ID accessor.
-
-**Fix**: Add `edgeIdAccessor` to `NetworkPipelineConfig`. Build a reverse map from edge ID → edge key. `removeEdge` and `updateEdge` accept either `(sourceId, targetId)` or `(edgeId)`.
-
-**Effort**: Small (0.5 day).
+`edgeIdAccessor` added to `NetworkPipelineConfig`. `removeEdge()` now accepts either `(sourceId, targetId)` for endpoint-based removal or `(edgeId)` for single-ID removal when `edgeIdAccessor` is configured. Throws descriptive error if `edgeIdAccessor` not set and single-ID form is used. Handle type updated on `StreamNetworkFrameHandle`.
 
 ---
 

@@ -465,6 +465,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         adapterRef.current?.flush()
         const removed = storeRef.current?.remove(id) ?? []
         if (removed.length > 0) {
+          if (hoverRef.current && removed.some(d => d === hoverRef.current?.data)) {
+            hoverRef.current = null
+            setHoverPoint(null)
+          }
           dirtyRef.current = true
           scheduleRender()
         }

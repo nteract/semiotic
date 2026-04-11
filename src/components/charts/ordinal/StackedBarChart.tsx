@@ -29,6 +29,8 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   normalize?: boolean
+  /** Category sort order. Default: false (data insertion order). "asc"/"desc" sorts by total stacked value. */
+  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
   barPadding?: number
   baselinePadding?: boolean
   enableHover?: boolean
@@ -67,7 +69,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, normalize = false, barPadding = 40, baselinePadding = false,
+    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, baselinePadding = false,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
@@ -178,6 +180,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     rAccessor: valueAccessor,
     stackBy,
     normalize,
+    oSort: sort,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     pieceStyle,
     size: [width, height],
