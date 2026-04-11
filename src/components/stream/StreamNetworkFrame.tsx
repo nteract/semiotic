@@ -191,6 +191,7 @@ const StreamNetworkFrame = forwardRef<
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
+    edgeIdAccessor,
     childrenAccessor,
     hierarchySum,
     orientation = "horizontal",
@@ -299,6 +300,7 @@ const StreamNetworkFrame = forwardRef<
       sourceAccessor,
       targetAccessor,
       valueAccessor,
+      edgeIdAccessor,
       childrenAccessor,
       hierarchySum,
       orientation,
@@ -641,6 +643,11 @@ const StreamNetworkFrame = forwardRef<
       removeEdge: (sourceIdOrEdgeId: string, targetId?: string) => {
         const removed = storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
         if (removed) {
+          // Clear hover if the removed edge was being hovered
+          if (hoverRef.current && hoverRef.current.nodeOrEdge === "edge") {
+            hoverRef.current = null
+            setHoverData(null)
+          }
           runLayout()
           dirtyRef.current = true
           scheduleRender()

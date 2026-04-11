@@ -505,10 +505,12 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   sourceAccessor?: string | ((d: T) => string)
   targetAccessor?: string | ((d: T) => string)
   valueAccessor?: string | ((d: T) => number)
+  /** Edge ID accessor for removeEdge(edgeId) single-ID removal */
+  edgeIdAccessor?: string | ((d: any) => string)
 
   // ── Hierarchy ────────────────────────────────────
   childrenAccessor?: string | ((d: T) => T[])
-  hierarchySum?: (d: T) => number
+  hierarchySum?: string | ((d: T) => number)
 
   // ── Layout config ────────────────────────────────
   orientation?: "horizontal" | "vertical"

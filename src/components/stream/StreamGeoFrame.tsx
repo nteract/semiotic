@@ -547,21 +547,27 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover = navPointToHover(point)
-      hoverRef.current = hover
-      setHoverPoint(hover)
-
-      // Detect geoarea vs point and flatten GeoJSON properties for consistent hover shape
+      // Build full HoverData with flattened GeoJSON properties — same shape for
+      // both state (tooltip) and customHoverBehavior (no mismatch)
       const rawDatum: any = point.datum
-      let hoverType: "point" | "geoarea" = "point"
       let data: any = rawDatum
       if (rawDatum && typeof rawDatum === "object" && "geometry" in rawDatum) {
-        hoverType = "geoarea"
         if (rawDatum.properties && typeof rawDatum.properties === "object") {
           data = { ...rawDatum, ...rawDatum.properties }
         }
       }
-      customHoverBehavior?.({ data, x: point.x, y: point.y, time: 0, value: 0, properties: data?.properties })
+      const hover: HoverData = {
+        ...data,
+        data: rawDatum,
+        properties: rawDatum?.properties,
+        x: point.x,
+        y: point.y,
+        time: 0,
+        value: 0,
+      }
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      customHoverBehavior?.(hover)
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 

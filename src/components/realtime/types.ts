@@ -69,9 +69,9 @@ export interface HoverData {
   x: number
   /** Pixel Y coordinate of the hovered element */
   y: number
-  /** Time value (XY/Realtime) or 0 for non-temporal charts */
+  /** Pixel X coordinate, aliased as "time" for backwards compatibility with realtime charts */
   time: number
-  /** Numeric value (Y for XY, R for ordinal, 0 for network/geo) */
+  /** Pixel Y coordinate, aliased as "value" for backwards compatibility with realtime charts */
   value: number
 
   // ── XY-specific ──────────────────────────────────────────────────────
