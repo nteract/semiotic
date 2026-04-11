@@ -10,7 +10,9 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   const cy = 0
   const outerRadius = Math.min(layout.width, layout.height) / 2 - 4
   const innerRadius = config.chartType === "donut" ? (config.innerRadius || 60) : 0
-  // Start from 12 o'clock (-π/2) plus any user offset
+  // Angles are in canvas convention (0 = 3 o'clock / east).
+  // Start from 12 o'clock (-π/2) plus any user offset in degrees.
+  // The SVG renderer (SceneToSVG.tsx) adds π/2 back when converting to d3-shape arcs.
   const startAngleOffset = -Math.PI / 2 + ((config.startAngle || 0) * Math.PI) / 180
 
   // sweepAngle limits the total arc (default: full circle). Used by GaugeChart for partial arcs.

@@ -44,6 +44,12 @@ export interface OrdinalScales {
 }
 
 // ── Scene nodes ────────────────────────────────────────────────────────
+//
+// Angle convention: all scene node angles use **canvas convention**
+// (0 = 3 o'clock / east, positive = clockwise). This matches
+// CanvasRenderingContext2D.arc(). The SVG renderer (SceneToSVG.tsx)
+// adds π/2 when passing to d3-shape's arc() generator, which uses
+// 0 = 12 o'clock / north.
 
 export interface WedgeSceneNode {
   type: "wedge"
@@ -51,7 +57,9 @@ export interface WedgeSceneNode {
   cy: number
   innerRadius: number
   outerRadius: number
+  /** Start angle in radians, canvas convention (0 = 3 o'clock, positive = clockwise) */
   startAngle: number
+  /** End angle in radians, canvas convention */
   endAngle: number
   style: Style
   datum: any

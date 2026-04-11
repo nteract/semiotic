@@ -219,13 +219,16 @@ export interface NetworkRectNode {
 }
 
 /** Arc node — used by chord */
+/** Arc node — used by chord. Angles in canvas convention (0 = 3 o'clock). */
 export interface NetworkArcNode {
   type: "arc"
   cx: number
   cy: number
   innerR: number
   outerR: number
+  /** Start angle in radians, canvas convention (0 = 3 o'clock, positive = clockwise) */
   startAngle: number
+  /** End angle in radians, canvas convention */
   endAngle: number
   style: Style
   datum: any
