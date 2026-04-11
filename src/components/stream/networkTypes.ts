@@ -554,9 +554,9 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Interaction ──────────────────────────────────
   enableHover?: boolean
-  tooltipContent?: (d: { type: "node" | "edge"; data: any; x: number; y: number }) => ReactNode
-  customHoverBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
-  customClickBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
+  tooltipContent?: (d: HoverData) => ReactNode
+  customHoverBehavior?: (d: HoverData | null) => void
+  customClickBehavior?: (d: HoverData | null) => void
   /** Observation callback — emits hover/click events to the ObservationStore and this callback */
   onObservation?: OnObservationCallback
   /** Chart instance identifier for observation filtering */

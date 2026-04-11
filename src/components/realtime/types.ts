@@ -63,27 +63,44 @@ export interface HoverAnnotationConfig {
 }
 
 export interface HoverData {
+  /** The raw datum from the user's data array */
   data: Record<string, any>
-  time: number
-  value: number
+  /** Pixel X coordinate of the hovered element */
   x: number
+  /** Pixel Y coordinate of the hovered element */
   y: number
-  /** Ordinal: distribution statistics for boxplot/violin/ridgeline */
-  stats?: { n: number; min: number; q1: number; median: number; q3: number; max: number; mean: number }
-  /** Ordinal: category label of hovered element */
-  category?: string
-  /** @internal Ordinal accessor hints for tooltip rendering */
-  __oAccessor?: string
-  /** @internal Ordinal value accessor hint */
-  __rAccessor?: string
-  /** @internal Chart type hint */
-  __chartType?: string
-  /** XY: all series values at hovered X (multi-point tooltip) */
+  /** Time value (XY/Realtime) or 0 for non-temporal charts */
+  time: number
+  /** Numeric value (Y for XY, R for ordinal, 0 for network/geo) */
+  value: number
+
+  // ── XY-specific ──────────────────────────────────────────────────────
+  /** All series values at hovered X (multi-point tooltip mode) */
   allSeries?: Array<{ group: string; value: number; valuePx?: number; color: string; datum: any }>
-  /** XY: pixel X of hover position */
+  /** Pixel X of hover position (may differ from x for multi-point snap) */
   xPx?: number
-  /** XY: raw X value at hover position */
+  /** Raw X domain value at hover position */
   xValue?: any
+
+  // ── Ordinal-specific ─────────────────────────────────────────────────
+  /** Distribution statistics for boxplot/violin/ridgeline */
+  stats?: { n: number; min: number; q1: number; median: number; q3: number; max: number; mean: number }
+  /** Category label of hovered element */
+  category?: string
+  /** @internal Category accessor name for tooltip rendering */
+  __oAccessor?: string
+  /** @internal Value accessor name for tooltip rendering */
+  __rAccessor?: string
+  /** @internal Chart type hint for tooltip rendering */
+  __chartType?: string
+
+  // ── Network-specific ─────────────────────────────────────────────────
+  /** Whether the hovered element is a node or edge */
+  nodeOrEdge?: "node" | "edge"
+
+  // ── Geo-specific ─────────────────────────────────────────────────────
+  /** GeoJSON feature properties (flattened for convenience) */
+  properties?: Record<string, any>
 }
 
 export interface BarStyle {

@@ -453,15 +453,19 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
           // Flatten GeoJSON feature properties so custom tooltips
           // can access d.name, d.population etc. directly
-          const hover = {
+          const hover: HoverData = {
             ...rawData,
             ...(rawData?.properties || {}),
-            data: rawData, x, y, time: 0
+            data: rawData,
+            properties: rawData?.properties,
+            x, y,
+            time: 0,
+            value: 0,
           }
           hoverRef.current = hover
           hoveredNodeRef.current = node
           setHoverPoint(hover)
-          customHoverBehavior?.({ type: node.type, data: rawData, x, y })
+          customHoverBehavior?.(hover)
           scheduleRender()
         } else {
           if (hoverRef.current) {
@@ -506,7 +510,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (hit) {
         const datum = hit.node.datum
         const rawData = datum?.properties ? datum : (datum?.data || datum)
-        customClickBehavior({ type: hit.node.type, data: rawData, x: chartX, y: chartY })
+        customClickBehavior({ data: rawData, x: chartX, y: chartY, time: 0, value: 0, properties: rawData?.properties })
       }
     }, [customClickBehavior, margin])
 
@@ -557,7 +561,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           data = { ...rawDatum, ...rawDatum.properties }
         }
       }
-      customHoverBehavior?.({ type: hoverType, data, x: point.x, y: point.y })
+      customHoverBehavior?.({ data, x: point.x, y: point.y, time: 0, value: 0, properties: data?.properties })
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 

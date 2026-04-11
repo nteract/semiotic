@@ -552,7 +552,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
         __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
         __chartType: chartType
-      } as any
+      }
 
       hoverRef.current = hover
       setHoverPoint(hover)
@@ -616,12 +616,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         kbFocusIndexRef.current = 0
         const point = graph.flat[0]
         focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-        const hover = {
+        const hover: HoverData = {
           ...navPointToHover(point),
           __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
           __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
           __chartType: chartType
-        } as HoverData
+        }
         hoverRef.current = hover
         setHoverPoint(hover)
         if (customHoverBehavior) customHoverBehavior(hover)
@@ -648,12 +648,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       kbFocusIndexRef.current = next
       const point = graph.flat[next]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover = {
+      const hover: HoverData = {
         ...navPointToHover(point),
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
         __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
         __chartType: chartType
-      } as HoverData
+      }
       hoverRef.current = hover
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)
