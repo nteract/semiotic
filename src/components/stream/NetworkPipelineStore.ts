@@ -2,6 +2,7 @@ import { interpolateNumber } from "d3-interpolate"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type {
   NetworkChartType,
@@ -812,7 +813,6 @@ export class NetworkPipelineStore {
     const decay = this.config.decay
     if (!decay) return
 
-    const minOpacity = decay.minOpacity ?? 0.1
     const nodeCount = this.nodeTimestamps.size
     if (nodeCount <= 1) return
 
@@ -832,30 +832,7 @@ export class NetworkPipelineStore {
       const ageIndex = nodeAgeMap.get(nodeId)
       if (ageIndex === undefined) continue
 
-      const age = nodeCount - 1 - ageIndex // 0=newest
-
-      let opacity: number
-      switch (decay.type) {
-        case "linear": {
-          const t = 1 - age / (nodeCount - 1)
-          opacity = minOpacity + t * (1 - minOpacity)
-          break
-        }
-        case "exponential": {
-          const halfLife = decay.halfLife ?? nodeCount / 2
-          const t = Math.pow(0.5, age / halfLife)
-          opacity = minOpacity + t * (1 - minOpacity)
-          break
-        }
-        case "step": {
-          const threshold = decay.stepThreshold ?? nodeCount * 0.5
-          opacity = age < threshold ? 1 : minOpacity
-          break
-        }
-        default:
-          opacity = 1
-      }
-
+      const opacity = computeDecayOpacity(decay, ageIndex, nodeCount)
       const baseOpacity = node.style?.opacity ?? 1
       node.style = { ...node.style, opacity: baseOpacity * opacity }
     }

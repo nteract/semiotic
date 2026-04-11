@@ -26,6 +26,7 @@ import type {
   OrdinalChartType
 } from "./ordinalTypes"
 import type { Changeset, Style, DecayConfig } from "./types"
+import { computeDecayOpacity } from "./pipelineDecay"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
@@ -699,27 +700,7 @@ export class OrdinalPipelineStore {
   computeDecayOpacity(bufferIndex: number, bufferSize: number): number {
     const decay = this.config.decay
     if (!decay || bufferSize <= 1) return 1
-
-    const minOpacity = decay.minOpacity ?? 0.1
-    const age = bufferSize - 1 - bufferIndex
-
-    switch (decay.type) {
-      case "linear": {
-        const t = 1 - age / (bufferSize - 1)
-        return minOpacity + t * (1 - minOpacity)
-      }
-      case "exponential": {
-        const halfLife = decay.halfLife ?? bufferSize / 2
-        const t = Math.pow(0.5, age / halfLife)
-        return minOpacity + t * (1 - minOpacity)
-      }
-      case "step": {
-        const threshold = decay.stepThreshold ?? bufferSize * 0.5
-        return age < threshold ? 1 : minOpacity
-      }
-      default:
-        return 1
-    }
+    return computeDecayOpacity(decay, bufferIndex, bufferSize)
   }
 
   private applyDecay(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {

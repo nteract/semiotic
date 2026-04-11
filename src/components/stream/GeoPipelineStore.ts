@@ -31,6 +31,7 @@ import type {
 } from "./types"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 
 // ── Projection resolution ────────────────────────────────────────────
@@ -1030,31 +1031,13 @@ export class GeoPipelineStore {
     const bufferSize = this.pointBuffer.size
     if (bufferSize === 0) return
 
-    const minOpacity = decay.minOpacity ?? 0.1
-    const halfLife = decay.halfLife ?? bufferSize / 2
-    const stepThreshold = decay.stepThreshold ?? bufferSize * 0.5
-
     // Points get per-node decay
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"
     )
 
     for (let i = 0; i < pointNodes.length; i++) {
-      const age = bufferSize - 1 - i
-      let opacity: number
-      switch (decay.type) {
-        case "exponential":
-          opacity = minOpacity + Math.pow(0.5, age / halfLife) * (1 - minOpacity)
-          break
-        case "step":
-          opacity = age < stepThreshold ? 1 : minOpacity
-          break
-        case "linear":
-        default: {
-          const t = bufferSize > 1 ? 1 - age / (bufferSize - 1) : 1
-          opacity = minOpacity + t * (1 - minOpacity)
-        }
-      }
+      const opacity = computeDecayOpacity(decay, i, bufferSize)
       pointNodes[i]._decayOpacity = opacity
       pointNodes[i].style = { ...pointNodes[i].style, opacity }
     }

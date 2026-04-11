@@ -1,11 +1,12 @@
 /**
- * Decay encoding for XY pipeline scene nodes.
+ * Shared decay encoding utilities for all pipeline stores.
  *
- * Applies age-based opacity fade to scene nodes — linear, exponential, or step.
- * Per-vertex decay for line/area nodes, uniform for discrete nodes (point, rect, etc.).
+ * `computeDecayOpacity()` — core algorithm used by all four pipeline stores
+ * (XY, Ordinal, Network, Geo) to compute age-based opacity.
  *
- * Dependencies: types (SceneNode, DecayConfig)
- * Consumed by: PipelineStore.computeScene (after scene build, before transitions)
+ * `applyDecay()` — XY-specific application that handles per-vertex decay
+ * for line/area nodes. Other stores call `computeDecayOpacity()` directly
+ * with their own node iteration logic.
  */
 import type { SceneNode, DecayConfig } from "./types"
 
