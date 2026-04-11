@@ -59,6 +59,7 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import { renderStaticLegend, extractCategories } from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
+import { CHART_CONFIGS } from "./serverChartConfigs"
 import type { SemioticTheme } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
@@ -1089,456 +1090,59 @@ export function renderChart(
     _idPrefix: rest._idPrefix,
   }
 
-  switch (component) {
-    // ── XY Charts ──────────────────────────────────────────────────
-    case "Sparkline":
-      return renderStreamXYFrame({
-        chartType: "line",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        groupAccessor: rest.lineBy || colorBy,
-        colorAccessor: colorBy,
-        ...common,
-        // Sparkline-specific overrides — always applied regardless of frameProps
-        showAxes: false,
-        margin: common.margin || { top: 2, right: 2, bottom: 2, left: 2 },
-        showLegend: false,
-        showGrid: false,
-        title: undefined,
-      } as any)
-
-    case "LineChart":
-      return renderStreamXYFrame({
-        chartType: "line",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        groupAccessor: rest.lineBy || colorBy,
-        lineDataAccessor: rest.lineDataAccessor,
-        colorAccessor: colorBy,
-        ...common,
-      } as any)
-
-    case "AreaChart":
-      return renderStreamXYFrame({
-        chartType: "area",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        groupAccessor: rest.areaBy || colorBy,
-        colorAccessor: colorBy,
-        ...common,
-      } as any)
-
-    case "StackedAreaChart":
-      return renderStreamXYFrame({
-        chartType: "stackedarea",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        groupAccessor: rest.areaBy,
-        colorAccessor: colorBy || rest.areaBy,
-        normalize: rest.normalize,
-        ...common,
-      } as any)
-
-    case "Scatterplot":
-    case "BubbleChart":
-      return renderStreamXYFrame({
-        chartType: "scatter",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        colorAccessor: colorBy,
-        sizeAccessor: rest.sizeBy,
-        sizeRange: rest.sizeRange || (component === "BubbleChart" ? [5, 40] : undefined),
-        ...common,
-      } as any)
-
-    case "ConnectedScatterplot":
-      return renderStreamXYFrame({
-        chartType: "scatter",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        colorAccessor: colorBy,
-        ...common,
-      } as any)
-
-    case "Heatmap":
-      return renderStreamXYFrame({
-        chartType: "heatmap",
-        data,
-        xAccessor: rest.xAccessor || "x",
-        yAccessor: rest.yAccessor || "y",
-        valueAccessor: rest.valueAccessor || "value",
-        colorScheme: colorScheme || "blues",
-        ...common,
-      } as any)
-
-    // ── Ordinal Charts ─────────────────────────────────────────────
-    case "BarChart":
-      return renderOrdinalFrame({
-        chartType: "bar",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
-        colorAccessor: colorBy,
-        barPadding: rest.barPadding,
-        ...common,
-      } as any)
-
-    case "StackedBarChart":
-      return renderOrdinalFrame({
-        chartType: "bar",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        stackBy: rest.stackBy,
-        projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
-        colorAccessor: colorBy || rest.stackBy,
-        normalize: rest.normalize,
-        barPadding: rest.barPadding,
-        ...common,
-      } as any)
-
-    case "GroupedBarChart":
-      return renderOrdinalFrame({
-        chartType: "clusterbar",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        groupBy: rest.groupBy,
-        projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
-        colorAccessor: colorBy || rest.groupBy,
-        barPadding: rest.barPadding,
-        ...common,
-      } as any)
-
-    case "PieChart":
-      return renderOrdinalFrame({
-        chartType: "pie",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        projection: "radial",
-        colorAccessor: colorBy || rest.categoryAccessor || "category",
-        ...common,
-      } as any)
-
-    case "DonutChart":
-      return renderOrdinalFrame({
-        chartType: "donut",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        projection: "radial",
-        innerRadius: rest.innerRadius || 60,
-        colorAccessor: colorBy || rest.categoryAccessor || "category",
-        ...common,
-      } as any)
-
-    case "Histogram":
-      return renderOrdinalFrame({
-        chartType: "histogram",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        bins: rest.bins || 25,
-        projection: "horizontal",
-        ...common,
-      } as any)
-
-    case "BoxPlot":
-      return renderOrdinalFrame({
-        chartType: "boxplot",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        colorAccessor: colorBy,
-        ...common,
-      } as any)
-
-    case "ViolinPlot":
-      return renderOrdinalFrame({
-        chartType: "violin",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        colorAccessor: colorBy,
-        bins: rest.bins,
-        ...common,
-      } as any)
-
-    case "SwarmPlot":
-      return renderOrdinalFrame({
-        chartType: "swarm",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        colorAccessor: colorBy,
-        ...common,
-      } as any)
-
-    case "DotPlot":
-      return renderOrdinalFrame({
-        chartType: "point",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        colorAccessor: colorBy,
-        ...common,
-        showGrid: showGrid ?? true,
-      } as any)
-
-    case "SwimlaneChart":
-      return renderOrdinalFrame({
-        chartType: "swimlane",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        stackBy: rest.subcategoryAccessor,
-        projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
-        colorAccessor: colorBy || rest.subcategoryAccessor,
-        barPadding: rest.barPadding,
-        ...common,
-      } as any)
-
-    case "FunnelChart": {
-      const isVerticalFunnel = rest.orientation === "vertical"
-      return renderOrdinalFrame({
-        chartType: isVerticalFunnel ? "bar-funnel" : "funnel",
-        data,
-        oAccessor: rest.stepAccessor || "step",
-        rAccessor: rest.valueAccessor || "value",
-        ...(rest.categoryAccessor && { stackBy: rest.categoryAccessor }),
-        projection: isVerticalFunnel ? "vertical" : "horizontal",
-        colorAccessor: colorBy || rest.categoryAccessor,
-        barPadding: isVerticalFunnel ? (rest.barPadding ?? 40) : (rest.barPadding ?? 0),
-        ...(!isVerticalFunnel && {
-          connectorAccessor: () => true,
-          connectorStyle: { opacity: rest.connectorOpacity ?? 0.3 },
-        }),
-        showAxes: isVerticalFunnel,
-        showCategoryTicks: isVerticalFunnel,
-        showGrid: isVerticalFunnel,
-        showLabels: rest.showLabels,
-        ...common,
-      } as any)
-    }
-
-    case "RidgelinePlot":
-      return renderOrdinalFrame({
-        chartType: "ridgeline",
-        data,
-        oAccessor: rest.categoryAccessor || "category",
-        rAccessor: rest.valueAccessor || "value",
-        bins: rest.bins,
-        amplitude: rest.amplitude,
-        ...common,
-      } as any)
-
-    case "GaugeChart": {
-      const gMin = rest.min ?? 0
-      const gMax = rest.max ?? 100
-      const sweep = rest.sweep ?? 240
-      const arcWidth = rest.arcWidth ?? 0.3
-      const gapDeg = 360 - sweep
-      const startAngleDeg = 180 + gapDeg / 2
-
-      // Build zone data from thresholds
-      const thresholds = rest.thresholds || [{ value: gMax, color: "#4e79a7" }]
-      const zoneData = thresholds.map((t: any, i: number) => ({
-        category: t.label || `zone-${i}`,
-        value: t.value - (i > 0 ? thresholds[i - 1].value : gMin),
-      }))
-      const zoneColors: Record<string, string> = {}
-      thresholds.forEach((t: any, i: number) => {
-        zoneColors[t.label || `zone-${i}`] = t.color || "#4e79a7"
-      })
-
-      // Compute from inner (margin-adjusted) dimensions — same as renderOrdinalFrame
-      // Use common.margin (includes frameProps + legend expansion), not raw margin prop
-      const resolvedMargin = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
-      const innerWidth = (width || 300) - resolvedMargin.left - resolvedMargin.right
-      const innerHeight = (height || 300) - resolvedMargin.top - resolvedMargin.bottom
-      const chartSize = Math.min(innerWidth, innerHeight)
-      const innerRadius = Math.max(10, (chartSize / 2) * (1 - arcWidth))
-
-      // Compute needle angle from value (guard divide-by-zero)
-      const gaugeValue = Math.max(gMin, Math.min(gMax, rest.value ?? gMin))
-      const valueFraction = gMax === gMin ? 0 : (gaugeValue - gMin) / (gMax - gMin)
-      const needleAngleDeg = startAngleDeg + valueFraction * sweep
-      const needleAngleRad = (needleAngleDeg - 90) * Math.PI / 180
-      const outerRadius = chartSize / 2
-      const needleLen = outerRadius * 0.85
-      // Center of the radial chart — margin offset + half inner dimension
-      const cx = resolvedMargin.left + innerWidth / 2
-      const cy = resolvedMargin.top + innerHeight / 2
-      const resolvedTheme = resolveTheme(theme)
-      const needleColor = resolvedTheme.colors.text
-
-      const baseSvg = renderOrdinalFrame({
-        chartType: "donut",
-        data: zoneData,
-        oAccessor: "category",
-        rAccessor: "value",
-        projection: "radial",
-        innerRadius,
-        sweepAngle: sweep,
-        startAngle: startAngleDeg,
-        oSort: false,
-        pieceStyle: (d: any, cat?: string) => ({ fill: zoneColors[cat || ""] || "#4e79a7" }),
-        ...common,
-        showAxes: false,
-      } as any)
-
-      // Render needle as React elements (safe from injection via theme color strings)
-      const needleEl = ReactDOMServer.renderToStaticMarkup(
-        <>
-          <line
-            x1={cx} y1={cy}
-            x2={cx + needleLen * Math.cos(needleAngleRad)}
-            y2={cy + needleLen * Math.sin(needleAngleRad)}
-            stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
-          />
-          <circle cx={cx} cy={cy} r={4} fill={needleColor} />
-        </>
-      )
-      return baseSvg.replace("</svg>", `${needleEl}</svg>`)
-    }
-
-    // ── Network Charts ─────────────────────────────────────────────
-    case "ForceDirectedGraph":
-      return renderNetworkFrame({
-        chartType: "force",
-        nodes: rest.nodes,
-        edges: rest.edges,
-        nodeIDAccessor: rest.nodeIDAccessor,
-        sourceAccessor: rest.sourceAccessor,
-        targetAccessor: rest.targetAccessor,
-        colorBy: colorBy,
-        colorScheme,
-        iterations: rest.iterations,
-        forceStrength: rest.forceStrength,
-        showLabels: rest.showLabels,
-        nodeLabel: rest.nodeLabel,
-        nodeSize: rest.nodeSize,
-        nodeSizeRange: rest.nodeSizeRange,
-        nodeStyle: rest.nodeStyle,
-        edgeStyle: rest.edgeStyle,
-        ...common,
-      } as any)
-
-    case "SankeyDiagram":
-      return renderNetworkFrame({
-        chartType: "sankey",
-        nodes: rest.nodes,
-        edges: rest.edges,
-        nodeIDAccessor: rest.nodeIdAccessor || rest.nodeIDAccessor,
-        sourceAccessor: rest.sourceAccessor,
-        targetAccessor: rest.targetAccessor,
-        valueAccessor: rest.valueAccessor,
-        orientation: rest.orientation,
-        nodeAlign: rest.nodeAlign,
-        nodeWidth: rest.nodeWidth,
-        nodePaddingRatio: rest.nodePaddingRatio,
-        showLabels: rest.showLabels,
-        nodeLabel: rest.nodeLabel,
-        colorBy: colorBy,
-        edgeColorBy: rest.edgeColorBy,
-        edgeOpacity: rest.edgeOpacity,
-        nodeStyle: rest.nodeStyle,
-        edgeStyle: rest.edgeStyle,
-        colorScheme,
-        ...common,
-      } as any)
-
-    case "ChordDiagram":
-      return renderNetworkFrame({
-        chartType: "chord",
-        nodes: rest.nodes,
-        edges: rest.edges,
-        valueAccessor: rest.valueAccessor,
-        padAngle: rest.padAngle,
-        groupWidth: rest.groupWidth,
-        showLabels: rest.showLabels,
-        colorBy: colorBy,
-        edgeColorBy: rest.edgeColorBy,
-        colorScheme,
-        ...common,
-      } as any)
-
-    case "TreeDiagram":
-      return renderNetworkFrame({
-        chartType: rest.layout === "cluster" ? "cluster" : "tree",
-        data: data,
-        childrenAccessor: rest.childrenAccessor,
-        colorBy: colorBy,
-        colorByDepth: rest.colorByDepth,
-        orientation: rest.orientation,
-        showLabels: rest.showLabels,
-        colorScheme,
-        ...common,
-      } as any)
-
-    case "Treemap":
-      return renderNetworkFrame({
-        chartType: "treemap",
-        data: data,
-        childrenAccessor: rest.childrenAccessor,
-        hierarchySum: rest.valueAccessor,
-        colorBy: colorBy,
-        colorByDepth: rest.colorByDepth,
-        showLabels: rest.showLabels,
-        colorScheme,
-        ...common,
-      } as any)
-
-    case "CirclePack":
-      return renderNetworkFrame({
-        chartType: "circlepack",
-        data: data,
-        childrenAccessor: rest.childrenAccessor,
-        hierarchySum: rest.valueAccessor,
-        colorBy: colorBy,
-        colorByDepth: rest.colorByDepth,
-        colorScheme,
-        ...common,
-      } as any)
-
-    // ── Geo Charts ─────────────────────────────────────────────────
-    case "ChoroplethMap":
-      return renderGeoFrame({
-        areas: rest.areas,
-        projection: rest.projection || "equalEarth",
-        areaStyle: rest.areaStyle,
-        graticule: rest.graticule,
-        fitPadding: rest.fitPadding,
-        ...common,
-      } as any)
-
-    case "ProportionalSymbolMap":
-      return renderGeoFrame({
-        points: rest.points,
-        areas: rest.areas,
-        xAccessor: rest.xAccessor || "lon",
-        yAccessor: rest.yAccessor || "lat",
-        pointStyle: rest.pointStyle,
-        projection: rest.projection || "equalEarth",
-        graticule: rest.graticule,
-        fitPadding: rest.fitPadding,
-        ...common,
-      } as any)
-
-    default:
-      throw new Error(
-        `Unknown chart component: "${component}". ` +
-        `See CLAUDE.md for supported chart types.`
-      )
+  // Look up chart config from registry
+  const config = CHART_CONFIGS[component]
+  if (!config) {
+    throw new Error(
+      `Unknown chart component: "${component}". ` +
+      `See CLAUDE.md for supported chart types.`
+    )
   }
+
+  const frameProps2 = config.buildProps(data, colorBy, colorScheme, common, rest)
+
+  // Dispatch to the appropriate frame renderer
+  const renderers: Record<string, (p: any) => string> = {
+    xy: renderStreamXYFrame,
+    ordinal: renderOrdinalFrame,
+    network: renderNetworkFrame,
+    geo: renderGeoFrame,
+  }
+  const renderFn = renderers[config.frameType]
+  let svg = renderFn(frameProps2)
+
+  // GaugeChart post-processing: inject needle SVG
+  if (component === "GaugeChart" && frameProps2.__gauge) {
+    const g = frameProps2.__gauge
+    const resolvedMargin = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
+    const innerW = (width || 300) - resolvedMargin.left - resolvedMargin.right
+    const innerH = (height || 300) - resolvedMargin.top - resolvedMargin.bottom
+    const chartSize = Math.min(innerW, innerH)
+    const outerRadius = chartSize / 2
+    const needleLen = outerRadius * 0.85
+    const cx = resolvedMargin.left + innerW / 2
+    const cy = resolvedMargin.top + innerH / 2
+    const gaugeValue = Math.max(g.gMin, Math.min(g.gMax, g.value ?? g.gMin))
+    const valueFraction = g.gMax === g.gMin ? 0 : (gaugeValue - g.gMin) / (g.gMax - g.gMin)
+    const needleAngleRad = (g.startAngleDeg + valueFraction * g.sweep - 90) * Math.PI / 180
+    const resolvedTheme = resolveTheme(theme)
+    const needleColor = resolvedTheme.colors.text
+
+    const needleEl = ReactDOMServer.renderToStaticMarkup(
+      <>
+        <line
+          x1={cx} y1={cy}
+          x2={cx + needleLen * Math.cos(needleAngleRad)}
+          y2={cy + needleLen * Math.sin(needleAngleRad)}
+          stroke={needleColor} strokeWidth={2.5} strokeLinecap="round"
+        />
+        <circle cx={cx} cy={cy} r={4} fill={needleColor} />
+      </>
+    )
+    svg = svg.replace("</svg>", `${needleEl}</svg>`)
+  }
+
+  return svg
 }
 
 // ── Image export ────────────────────────────────────────────────────────
