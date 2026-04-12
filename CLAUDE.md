@@ -31,8 +31,8 @@
 ## Ordinal Charts (`semiotic/ordinal`)
 
 **BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40)
-**StackedBarChart** — + `stackBy` (required), `normalize`
-**GroupedBarChart** — + `groupBy` (required), `barPadding` (60)
+**StackedBarChart** — + `stackBy` (required), `normalize`, `sort` (default false — insertion order)
+**GroupedBarChart** — + `groupBy` (required), `barPadding` (60), `sort` (default false — insertion order)
 **SwarmPlot** — `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
 **BoxPlot** — + `showOutliers`, `outlierRadius`
 **Histogram** — + `bins` (25), `relative`. Always horizontal.
@@ -91,7 +91,7 @@ ref.current.clear()
 ref.current.getData()
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
-`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
+`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Coordinated Views
@@ -174,6 +174,7 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 - **Legend**: "bottom" expands margin ~80px. MultiAxisLineChart: use `legendPosition="bottom"`.
 - **Log scale**: Domain min clamped to 1e-6.
 - **barPadding**: Pixel value (40/60 default). Reduce for small charts.
+- **sort on StackedBarChart/GroupedBarChart**: Default `false` preserves insertion order. The underlying frame defaults to value-descending if `oSort` is undefined, so always pass `sort` explicitly if order matters.
 - **Horizontal bars**: Need wider left margin: `margin={{ left: 120 }}`.
 - **Push API**: Omit `data` entirely. `data={[]}` clears on every render.
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead.

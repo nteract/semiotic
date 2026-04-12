@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2026-04-11
+
+### Added
+
+- **`sort` prop on StackedBarChart and GroupedBarChart** — Default: `false` (data insertion order). Accepts `"asc"`, `"desc"`, `boolean`, or custom `(a, b) => number` comparator. Maps to frame `oSort`. Previously categories were always sorted by total value.
+- **`edgeIdAccessor`** on `NetworkPipelineConfig` — Enables `removeEdge(edgeId)` single-ID edge removal. Accepts string or function accessor. Throws descriptive error if not configured when single-ID form is used.
+- **Transition exits on `remove()`** — `remove()` now calls `snapshotPositions()` before buffer mutation in PipelineStore and OrdinalPipelineStore. Removed items get fade-out exit transitions instead of vanishing instantly.
+- **Selection clearing on `remove()`** — All three stream frames (XY, Ordinal, Network) clear hover state when the removed datum matches the current hover. Prevents stale tooltips and ghost highlights.
+- **`serverChartConfigs.ts`** — Extracted `renderChart()` dispatch from a 400-line switch statement into a lookup table of `{ frameType, buildProps }` entries. Each chart type is independently readable and testable.
+- **Shared `computeDecayOpacity()`** — Decay algorithm consolidated from 4 inline implementations (OrdinalPipelineStore, NetworkPipelineStore, GeoPipelineStore) into the existing `pipelineDecay.ts` utility. Single source of truth.
+- **`HoverData` unified type** — All four stream frames now construct typed `HoverData` objects instead of ad-hoc shapes. Network frames use `nodeOrEdge` field (replaces untyped `type`); geo frames use `properties` field. Fixed GeoFrame mismatch where tooltip and `customHoverBehavior` received different shapes. **Breaking**: Network `customHoverBehavior`/`tooltipContent` callbacks no longer receive `d.type` — use `d.nodeOrEdge` instead.
+- **SSR angle convention fix** — SVG wedge/arc rendering adds `π/2` to convert from canvas convention (0 = 3 o'clock) to d3-shape convention (0 = 12 o'clock). Fixes -90° rotation on all SSR pie, donut, gauge, and chord charts.
+- **SSR hierarchy theme colors** — Treemap, CirclePack, and TreeDiagram `colorByDepth` now uses `config.colorScheme` (from theme) instead of hardcoded `DEPTH_PALETTE`. Default fill uses first scheme color instead of `#4d430c`.
+- **SSR GaugeChart needle** — Needle rendered via React elements (XSS-safe), positioned from inner (margin-adjusted) dimensions, uses `resolveTheme()` for color, divide-by-zero guard on `gMax === gMin`.
+- **SSR `sweepAngle` passthrough** — `sweepAngle` was on the props but missing from the `pipelineConfig` builder. Gauge arcs now render with correct sweep.
+- **SSR `hierarchySum` string resolution** — String `valueAccessor` (e.g., `"value"`) now resolved to a function before passing to `d3-hierarchy.sum()`.
+- **SSR bottom legend positioning** — Legend placed at `totalHeight - margin.bottom + 38` (below axes) instead of hardcoded offset that overlapped chart area.
+- **SSR ID uniqueness** — All SVG element IDs (`data-area`, `axes`, `grid`, `legend`, `chart-title`, `annotations`, `semiotic-title`, `semiotic-desc`, hatch patterns) prefixed with `_idPrefix` in multi-chart documents. `renderDashboard` passes per-chart prefixes.
+- **88 new tests** — Push API edge cases (17), server rendering coverage (27), HOC rendering integration (22), callback wiring + accessibility + bad data resilience (22). Plus 9 PipelineStore cache invalidation tests.
+- **Ordinal scene builder tests refactored** — 14 exact-pixel assertions replaced with relationship/proportional assertions. Tests now survive layout constant changes.
+
+### Changed
+
+- **`as any` reduced: 240 → 164** — Hover data types, renderer arrays, pipeline config, accessor utils, SSR prop threading.
+- **SSR `frameProps` override priority** — `frameProps` spread first, explicit top-level props override. `margin`/`colorScheme`/`legendPosition` only override when defined (not `undefined`).
+- **SSR gallery** — All 15 charts use `renderChart` with explicit themes (11 different presets). Dark-themed charts have dark card backgrounds.
+
+### Fixed
+
+- **`getColor()` / `getSize()` null datum guard** — Optional chaining prevents crash when datum is undefined.
+- **`ProportionalSymbolMap` sizeDomain crash** — `filter(Boolean)` + optional chaining in accessor.
+- **`resolveCSSColor` cache** — Restored per-canvas `WeakMap` cache with `has()` check (handles falsy values). `clearCSSColorCache()` invalidates on theme change.
+- **`pieceStyle` merge null guard** — User `frameProps.pieceStyle` returning `undefined`/`null` no longer crashes spread.
+- **GeoFrame hover/click shape mismatch** — `customHoverBehavior` and `tooltipContent` now receive the same `HoverData` object.
+- **Bottom legend overlap** — Positioned below axes area in reserved margin.
+
 ## [3.3.0] - 2026-04-08
 
 ### Added

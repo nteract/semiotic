@@ -1,10 +1,5 @@
 import React, { useMemo } from "react"
-import {
-  renderXYToStaticSVG,
-  renderOrdinalToStaticSVG,
-  renderNetworkToStaticSVG,
-  renderChart,
-} from "../../../src/components/server/renderToStaticSVG"
+import { renderChart } from "../../../src/components/server/renderToStaticSVG"
 import PageLayout from "../components/PageLayout"
 import CodeBlock from "../components/CodeBlock"
 import { Link } from "react-router-dom"
@@ -127,16 +122,16 @@ const treemapData = {
 // Gallery card
 // ---------------------------------------------------------------------------
 
-function GalleryCard({ title, svgString, code }) {
+function GalleryCard({ title, svgString, code, darkCard }) {
   return (
     <div style={{
-      background: "var(--card-bg, #fff)",
+      background: darkCard ? "#1a1a2e" : "var(--card-bg, #fff)",
       borderRadius: "8px",
       padding: "16px",
       boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-      border: "1px solid var(--border-color, #e0e0e0)",
+      border: darkCard ? "1px solid #333" : "1px solid var(--border-color, #e0e0e0)",
     }}>
-      <h4 style={{ margin: "0 0 12px", fontSize: "14px", color: "var(--text-secondary, #666)", fontWeight: 500 }}>
+      <h4 style={{ margin: "0 0 12px", fontSize: "14px", color: darkCard ? "#aaa" : "var(--text-secondary, #666)", fontWeight: 500 }}>
         {title}
       </h4>
       <div
@@ -166,188 +161,221 @@ function useGalleryCharts() {
 
     const charts = []
 
-    // Line
+    // Line — tufte theme
     charts.push({
-      title: "Line Chart",
-      svg: renderXYToStaticSVG({
-        chartType: "line",
+      title: "Line Chart — tufte",
+      svg: renderChart("LineChart", {
         data: timeSeriesData,
         xAccessor: "month",
         yAccessor: "revenue",
-        size: [W, H],
-        showAxes: true,
+        theme: "tufte",
+        title: "Monthly Revenue",
+        width: W,
+        height: H,
       }),
-      code: `renderXYToStaticSVG({
-  chartType: "line",
+      code: `renderChart("LineChart", {
   data: timeSeriesData,
   xAccessor: "month",
   yAccessor: "revenue",
-  size: [460, 300],
-  showAxes: true,
+  theme: "tufte",
+  title: "Monthly Revenue",
 })`,
     })
 
-    // Scatter
+    // Scatter — dark theme
     charts.push({
-      title: "Scatterplot",
-      svg: renderXYToStaticSVG({
-        chartType: "scatter",
+      title: "Scatterplot — dark",
+      svg: renderChart("Scatterplot", {
         data: scatterData,
         xAccessor: "age",
         yAccessor: "income",
-        size: [W, H],
-        showAxes: true,
+        theme: "dark",
+        background: "#1a1a2e",
+        title: "Age vs Income",
+        width: W,
+        height: H,
       }),
-      code: `renderXYToStaticSVG({
-  chartType: "scatter",
+      code: `renderChart("Scatterplot", {
   data: scatterData,
   xAccessor: "age",
   yAccessor: "income",
-  size: [460, 300],
-  showAxes: true,
+  theme: "dark",
+  title: "Age vs Income",
 })`,
+      dark: true,
     })
 
-    // Bar
+    // Bar — italian theme
     charts.push({
-      title: "Bar Chart",
-      svg: renderOrdinalToStaticSVG({
-        chartType: "bar",
+      title: "Bar Chart — italian",
+      svg: renderChart("BarChart", {
         data: categoryData,
-        oAccessor: "department",
-        rAccessor: "headcount",
-        size: [W, H],
-        showAxes: true,
+        categoryAccessor: "department",
+        valueAccessor: "headcount",
+        theme: "italian",
+        title: "Headcount by Dept",
+        width: W,
+        height: H,
       }),
-      code: `renderOrdinalToStaticSVG({
-  chartType: "bar",
+      code: `renderChart("BarChart", {
   data: categoryData,
-  oAccessor: "department",
-  rAccessor: "headcount",
-  size: [460, 300],
-  showAxes: true,
+  categoryAccessor: "department",
+  valueAccessor: "headcount",
+  theme: "italian",
+  title: "Headcount by Dept",
 })`,
     })
 
-    // Horizontal Bar
+    // Horizontal Bar — journalist theme
     charts.push({
-      title: "Bar Chart (horizontal)",
-      svg: renderOrdinalToStaticSVG({
-        chartType: "bar",
+      title: "Horizontal Bar — journalist",
+      svg: renderChart("BarChart", {
         data: categoryData,
-        oAccessor: "department",
-        rAccessor: "headcount",
-        projection: "horizontal",
-        size: [W, H],
-        showAxes: true,
+        categoryAccessor: "department",
+        valueAccessor: "headcount",
+        orientation: "horizontal",
+        theme: "journalist",
+        margin: { top: 20, right: 20, bottom: 30, left: 100 },
+        width: W,
+        height: H,
       }),
     })
 
-    // Pie
+    // Pie — pastels theme
     charts.push({
-      title: "Pie Chart",
-      svg: renderOrdinalToStaticSVG({
-        chartType: "pie",
+      title: "Pie Chart — pastels",
+      svg: renderChart("PieChart", {
         data: pieData,
-        oAccessor: "category",
-        rAccessor: "value",
-        projection: "radial",
-        size: [340, 340],
+        categoryAccessor: "category",
+        valueAccessor: "value",
+        colorBy: "category",
+        theme: "pastels",
+        width: 340,
+        height: 340,
       }),
-      code: `renderOrdinalToStaticSVG({
-  chartType: "pie",
+      code: `renderChart("PieChart", {
   data: pieData,
-  oAccessor: "category",
-  rAccessor: "value",
-  projection: "radial",
-  size: [340, 340],
+  categoryAccessor: "category",
+  valueAccessor: "value",
+  colorBy: "category",
+  theme: "pastels",
 })`,
     })
 
-    // Donut
+    // Donut — bi-tool-dark theme
     charts.push({
-      title: "Donut Chart",
-      svg: renderOrdinalToStaticSVG({
-        chartType: "donut",
+      title: "Donut Chart — bi-tool-dark",
+      svg: renderChart("DonutChart", {
         data: pieData,
-        oAccessor: "category",
-        rAccessor: "value",
-        projection: "radial",
-        innerRadius: 50,
-        size: [340, 340],
+        categoryAccessor: "category",
+        valueAccessor: "value",
+        colorBy: "category",
+        theme: "bi-tool-dark",
+        background: "#1a1a2e",
+        width: 340,
+        height: 340,
       }),
+      dark: true,
     })
 
-    // Sankey
+    // Sankey — tufte-dark theme
     charts.push({
-      title: "Sankey Diagram",
-      svg: renderNetworkToStaticSVG({
-        chartType: "sankey",
+      title: "Sankey Diagram — tufte-dark",
+      svg: renderChart("SankeyDiagram", {
         edges: sankeyEdges,
         sourceAccessor: "source",
         targetAccessor: "target",
         valueAccessor: "value",
-        size: [W, H],
+        theme: "tufte-dark",
+        background: "#1a1a2e",
+        width: W,
+        height: H,
       }),
-      code: `renderNetworkToStaticSVG({
-  chartType: "sankey",
+      code: `renderChart("SankeyDiagram", {
   edges: sankeyEdges,
   sourceAccessor: "source",
   targetAccessor: "target",
   valueAccessor: "value",
-  size: [460, 300],
+  theme: "tufte-dark",
 })`,
+      dark: true,
     })
 
-    // Force
+    // Force — playful theme
     charts.push({
-      title: "Force-Directed Graph",
-      svg: renderNetworkToStaticSVG({
-        chartType: "force",
+      title: "Force-Directed — playful",
+      svg: renderChart("ForceDirectedGraph", {
         nodes: networkNodes,
         edges: networkEdges,
         nodeIDAccessor: "id",
         sourceAccessor: "source",
         targetAccessor: "target",
-        size: [W, H],
+        showLabels: true,
+        theme: "playful",
+        width: W,
+        height: H,
       }),
-      code: `renderNetworkToStaticSVG({
-  chartType: "force",
+      code: `renderChart("ForceDirectedGraph", {
   nodes: networkNodes,
   edges: networkEdges,
   nodeIDAccessor: "id",
-  size: [460, 300],
+  showLabels: true,
+  theme: "playful",
 })`,
     })
 
-    // Tree
+    // Tree — journalist-dark theme, depth coloring
     charts.push({
-      title: "Tree Diagram",
-      svg: renderNetworkToStaticSVG({
-        chartType: "tree",
+      title: "Tree Diagram — journalist-dark",
+      svg: renderChart("TreeDiagram", {
         data: treeData,
         childrenAccessor: "children",
-        nodeIDAccessor: "name",
-        size: [W, H],
+        colorByDepth: true,
+        showLabels: true,
+        theme: "journalist-dark",
+        background: "#1a1a2e",
+        width: W,
+        height: H + 20,
+        margin: { top: 20, right: 20, bottom: 40, left: 20 },
       }),
+      code: `renderChart("TreeDiagram", {
+  data: treeData,
+  childrenAccessor: "children",
+  colorByDepth: true,
+  showLabels: true,
+  theme: "journalist-dark",
+})`,
+      dark: true,
     })
 
-    // Treemap
+    // Treemap — italian-dark theme, depth coloring
     charts.push({
-      title: "Treemap",
-      svg: renderNetworkToStaticSVG({
-        chartType: "treemap",
+      title: "Treemap — italian-dark",
+      svg: renderChart("Treemap", {
         data: treemapData,
         childrenAccessor: "children",
         valueAccessor: "value",
-        nodeIDAccessor: "name",
-        size: [W, H],
+        colorByDepth: true,
+        showLabels: true,
+        theme: "italian-dark",
+        background: "#1a1a2e",
+        width: W,
+        height: H,
       }),
+      code: `renderChart("Treemap", {
+  data: treemapData,
+  childrenAccessor: "children",
+  valueAccessor: "value",
+  colorByDepth: true,
+  showLabels: true,
+  theme: "italian-dark",
+})`,
+      dark: true,
     })
 
-    // Vertical Funnel (bar-funnel with hatch dropoff bars)
+    // Vertical Funnel — pastels-dark theme
     charts.push({
-      title: "Vertical Funnel (2 categories)",
+      title: "Vertical Funnel — pastels-dark",
       svg: renderChart("FunnelChart", {
         data: [
           { step: "Leads", value: 1000, channel: "Web" },
@@ -364,7 +392,8 @@ function useGalleryCharts() {
         categoryAccessor: "channel",
         colorBy: "channel",
         orientation: "vertical",
-        colorScheme: ["#6366f1", "#f59e0b"],
+        theme: "pastels-dark",
+        background: "#1a1a2e",
         width: W,
         height: H + 40,
       }),
@@ -375,8 +404,129 @@ function useGalleryCharts() {
   categoryAccessor: "channel",
   colorBy: "channel",
   orientation: "vertical",
-  colorScheme: ["#6366f1", "#f59e0b"],
+  theme: "pastels-dark",
 })`,
+      dark: true,
+    })
+
+    // Gauge — high-contrast theme
+    charts.push({
+      title: "Gauge Chart — high-contrast",
+      svg: renderChart("GaugeChart", {
+        value: 72,
+        min: 0,
+        max: 100,
+        sweep: 240,
+        arcWidth: 0.3,
+        thresholds: [
+          { value: 60, color: "#22c55e", label: "Normal" },
+          { value: 80, color: "#f59e0b", label: "Warning" },
+          { value: 100, color: "#ef4444", label: "Critical" },
+        ],
+        title: "CPU Usage",
+        theme: "high-contrast",
+        background: "#1a1a2e",
+        width: W,
+        height: H,
+      }),
+      code: `renderChart("GaugeChart", {
+  value: 72,
+  thresholds: [
+    { value: 60, color: "#22c55e", label: "Normal" },
+    { value: 80, color: "#f59e0b", label: "Warning" },
+    { value: 100, color: "#ef4444", label: "Critical" },
+  ],
+  theme: "high-contrast",
+})`,
+      dark: true,
+    })
+
+    // Grouped Bar — bi-tool theme, bottom legend
+    charts.push({
+      title: "Grouped Bar — bi-tool (bottom legend)",
+      svg: renderChart("GroupedBarChart", {
+        data: [
+          { quarter: "Q1", region: "Americas", revenue: 120 },
+          { quarter: "Q1", region: "EMEA", revenue: 80 },
+          { quarter: "Q1", region: "APAC", revenue: 45 },
+          { quarter: "Q2", region: "Americas", revenue: 140 },
+          { quarter: "Q2", region: "EMEA", revenue: 95 },
+          { quarter: "Q2", region: "APAC", revenue: 60 },
+          { quarter: "Q3", region: "Americas", revenue: 160 },
+          { quarter: "Q3", region: "EMEA", revenue: 110 },
+          { quarter: "Q3", region: "APAC", revenue: 70 },
+          { quarter: "Q4", region: "Americas", revenue: 180 },
+          { quarter: "Q4", region: "EMEA", revenue: 120 },
+          { quarter: "Q4", region: "APAC", revenue: 85 },
+        ],
+        categoryAccessor: "quarter",
+        groupBy: "region",
+        valueAccessor: "revenue",
+        colorBy: "region",
+        showLegend: true,
+        legendPosition: "bottom",
+        title: "Revenue by Quarter",
+        theme: "bi-tool",
+        width: W,
+        height: H + 60,
+      }),
+      code: `renderChart("GroupedBarChart", {
+  data: quarterlyRevenue,
+  categoryAccessor: "quarter",
+  groupBy: "region",
+  valueAccessor: "revenue",
+  colorBy: "region",
+  showLegend: true,
+  legendPosition: "bottom",
+  theme: "bi-tool",
+})`,
+    })
+
+    // Line Chart — playful-dark theme, bottom legend
+    charts.push({
+      title: "Multi-line — playful-dark (bottom legend)",
+      svg: renderChart("LineChart", {
+        data: [
+          { month: 1, value: 42, series: "Revenue" },
+          { month: 2, value: 58, series: "Revenue" },
+          { month: 3, value: 52, series: "Revenue" },
+          { month: 4, value: 71, series: "Revenue" },
+          { month: 5, value: 68, series: "Revenue" },
+          { month: 6, value: 84, series: "Revenue" },
+          { month: 1, value: 30, series: "Cost" },
+          { month: 2, value: 35, series: "Cost" },
+          { month: 3, value: 38, series: "Cost" },
+          { month: 4, value: 42, series: "Cost" },
+          { month: 5, value: 45, series: "Cost" },
+          { month: 6, value: 50, series: "Cost" },
+          { month: 1, value: 12, series: "Profit" },
+          { month: 2, value: 23, series: "Profit" },
+          { month: 3, value: 14, series: "Profit" },
+          { month: 4, value: 29, series: "Profit" },
+          { month: 5, value: 23, series: "Profit" },
+          { month: 6, value: 34, series: "Profit" },
+        ],
+        xAccessor: "month",
+        yAccessor: "value",
+        lineBy: "series",
+        colorBy: "series",
+        showLegend: true,
+        legendPosition: "bottom",
+        title: "Revenue vs Cost vs Profit",
+        theme: "playful-dark",
+        background: "#1a1a2e",
+        width: W,
+        height: H + 60,
+      }),
+      code: `renderChart("LineChart", {
+  data: financialData,
+  lineBy: "series",
+  colorBy: "series",
+  showLegend: true,
+  legendPosition: "bottom",
+  theme: "playful-dark",
+})`,
+      dark: true,
     })
 
     return charts
@@ -426,6 +576,7 @@ export default function SSRGalleryPage() {
             title={chart.title}
             svgString={chart.svg}
             code={chart.code}
+            darkCard={chart.dark}
           />
         ))}
       </div>

@@ -195,9 +195,9 @@ function drawCrosshair(
   const showCrosshair = config.crosshair !== false
   if (!showCrosshair) return
 
-  const allSeries = (hover as any).allSeries as Array<{ group: string; valuePx?: number; color: string }> | undefined
+  const allSeries = hover.allSeries
   const isMulti = allSeries && allSeries.length > 0
-  const xPx = (hover as any).xPx ?? hover.x
+  const xPx = hover.xPx ?? hover.x
 
   ctx.save()
   const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
@@ -614,6 +614,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         adapterRef.current?.flush()
         const removed = storeRef.current?.remove(id) ?? []
         if (removed.length > 0) {
+          // Clear hover if the removed datum was being hovered
+          if (hoverRef.current && removed.some(d => d === hoverRef.current?.data)) {
+            hoverRef.current = null
+            setHoverPoint(null)
+          }
           dirtyRef.current = true
           scheduleRender()
         }
@@ -732,9 +737,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const xInvert = store.scales.x.invert
         if (allHits.length > 0) {
           const xValue = xInvert ? xInvert(hit.x) : hit.x
-          ;(hover as any).xValue = xValue
-          ;(hover as any).xPx = hit.x
-          ;(hover as any).allSeries = allHits.map(h => ({
+          hover.xValue = xValue
+          hover.xPx = hit.x
+          hover.allSeries = allHits.map(h => ({
             group: h.group || "",
             value: yInvert ? yInvert(h.y) : h.y,
             valuePx: h.y,

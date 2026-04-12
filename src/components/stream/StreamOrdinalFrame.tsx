@@ -72,24 +72,28 @@ import { barFunnelHatchRenderer, barFunnelLabelRenderer } from "./renderers/barF
 
 // Connectors are built into the scene graph by the store, so every
 // chart type includes the connector renderer to paint them.
-const withConnectors = (renderers: OrdinalRendererFn[]): OrdinalRendererFn[] =>
-  [connectorCanvasRenderer as any, ...renderers]
+// Renderers internally filter nodes by type, so the union-typed array is safe.
+// Use a relaxed function type to avoid casting every renderer to OrdinalRendererFn.
+type AnyRendererFn = (ctx: CanvasRenderingContext2D, nodes: any[], scales: any, layout: any) => void
 
-const RENDERERS: Record<OrdinalChartType, OrdinalRendererFn[]> = {
-  bar: withConnectors([barCanvasRenderer as any]),
-  clusterbar: withConnectors([barCanvasRenderer as any]),
-  point: withConnectors([pointCanvasRenderer as any]),
-  swarm: withConnectors([pointCanvasRenderer as any]),
-  pie: [wedgeCanvasRenderer as any],
-  donut: [wedgeCanvasRenderer as any],
-  boxplot: withConnectors([boxplotCanvasRenderer as any, pointCanvasRenderer as any]),
-  violin: withConnectors([violinCanvasRenderer as any]),
-  histogram: withConnectors([barCanvasRenderer as any]),
-  ridgeline: withConnectors([violinCanvasRenderer as any]),
-  timeline: withConnectors([barCanvasRenderer as any]),
-  funnel: [barCanvasRenderer as any, trapezoidCanvasRenderer as any, funnelLabelRenderer as any],
-  "bar-funnel": [barCanvasRenderer as any, barFunnelHatchRenderer as any, barFunnelLabelRenderer as any],
-  swimlane: withConnectors([barCanvasRenderer as any])
+const withConnectors = (renderers: AnyRendererFn[]): AnyRendererFn[] =>
+  [connectorCanvasRenderer, ...renderers]
+
+const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
+  bar: withConnectors([barCanvasRenderer]),
+  clusterbar: withConnectors([barCanvasRenderer]),
+  point: withConnectors([pointCanvasRenderer]),
+  swarm: withConnectors([pointCanvasRenderer]),
+  pie: [wedgeCanvasRenderer],
+  donut: [wedgeCanvasRenderer],
+  boxplot: withConnectors([boxplotCanvasRenderer, pointCanvasRenderer]),
+  violin: withConnectors([violinCanvasRenderer]),
+  histogram: withConnectors([barCanvasRenderer]),
+  ridgeline: withConnectors([violinCanvasRenderer]),
+  timeline: withConnectors([barCanvasRenderer]),
+  funnel: [barCanvasRenderer, trapezoidCanvasRenderer, funnelLabelRenderer],
+  "bar-funnel": [barCanvasRenderer, barFunnelHatchRenderer, barFunnelLabelRenderer],
+  swimlane: withConnectors([barCanvasRenderer])
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -112,8 +116,8 @@ const defaultTooltipStyle: React.CSSProperties = {
 
 function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
-  const stats = (hover as any).stats
-  const hoverCategory = (hover as any).category
+  const stats = hover.stats
+  const hoverCategory = hover.category
 
   // For summary types (boxplot, violin, ridgeline), datum is an array of pieces
   if (Array.isArray(d)) {
@@ -158,9 +162,9 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   }
 
   // Accessor hints passed from the hover handler
-  const oAccessor = (hover as any).__oAccessor as string | undefined
-  const rAccessor = (hover as any).__rAccessor as string | undefined
-  const hoverChartType = (hover as any).__chartType as string | undefined
+  const oAccessor = hover.__oAccessor
+  const rAccessor = hover.__rAccessor
+  const hoverChartType = hover.__chartType
 
   // For swarm/point charts, show all datum fields (point-level data, not aggregated)
   if (hoverChartType === "swarm" || hoverChartType === "point") {
@@ -461,6 +465,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         adapterRef.current?.flush()
         const removed = storeRef.current?.remove(id) ?? []
         if (removed.length > 0) {
+          const hoveredData = hoverRef.current?.data
+          const shouldClear = hoverRef.current
+            ? Array.isArray(hoveredData)
+              ? removed.some(d => hoveredData.includes(d))
+              : removed.some(d => d === hoveredData)
+            : false
+          if (shouldClear) {
+            hoverRef.current = null
+            setHoverPoint(null)
+          }
           dirtyRef.current = true
           scheduleRender()
         }
@@ -548,7 +562,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
         __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
         __chartType: chartType
-      } as any
+      }
 
       hoverRef.current = hover
       setHoverPoint(hover)
@@ -612,12 +626,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         kbFocusIndexRef.current = 0
         const point = graph.flat[0]
         focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-        const hover = {
+        const hover: HoverData = {
           ...navPointToHover(point),
           __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
           __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
           __chartType: chartType
-        } as HoverData
+        }
         hoverRef.current = hover
         setHoverPoint(hover)
         if (customHoverBehavior) customHoverBehavior(hover)
@@ -644,12 +658,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       kbFocusIndexRef.current = next
       const point = graph.flat[next]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover = {
+      const hover: HoverData = {
         ...navPointToHover(point),
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
         __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
         __chartType: chartType
-      } as HoverData
+      }
       hoverRef.current = hover
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)

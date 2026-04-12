@@ -219,13 +219,16 @@ export interface NetworkRectNode {
 }
 
 /** Arc node — used by chord */
+/** Arc node — used by chord. Angles in canvas convention (0 = 3 o'clock). */
 export interface NetworkArcNode {
   type: "arc"
   cx: number
   cy: number
   innerR: number
   outerR: number
+  /** Start angle in radians, canvas convention (0 = 3 o'clock, positive = clockwise) */
   startAngle: number
+  /** End angle in radians, canvas convention */
   endAngle: number
   style: Style
   datum: any
@@ -387,10 +390,12 @@ export interface NetworkPipelineConfig {
   sourceAccessor?: string | ((d: any) => string)
   targetAccessor?: string | ((d: any) => string)
   valueAccessor?: string | ((d: any) => number)
+  /** Edge ID accessor for removeEdge(edgeId) — enables single-ID edge removal */
+  edgeIdAccessor?: string | ((d: any) => string)
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
   childrenAccessor?: string | ((d: any) => any[])
-  hierarchySum?: (d: any) => number
+  hierarchySum?: string | ((d: any) => number)
 
   // ── Sankey layout ────────────────────────────────
   orientation?: "horizontal" | "vertical"
@@ -500,10 +505,12 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   sourceAccessor?: string | ((d: T) => string)
   targetAccessor?: string | ((d: T) => string)
   valueAccessor?: string | ((d: T) => number)
+  /** Edge ID accessor for removeEdge(edgeId) single-ID removal */
+  edgeIdAccessor?: string | ((d: any) => string)
 
   // ── Hierarchy ────────────────────────────────────
   childrenAccessor?: string | ((d: T) => T[])
-  hierarchySum?: (d: T) => number
+  hierarchySum?: string | ((d: T) => number)
 
   // ── Layout config ────────────────────────────────
   orientation?: "horizontal" | "vertical"
@@ -554,9 +561,9 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
 
   // ── Interaction ──────────────────────────────────
   enableHover?: boolean
-  tooltipContent?: (d: { type: "node" | "edge"; data: any; x: number; y: number }) => ReactNode
-  customHoverBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
-  customClickBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
+  tooltipContent?: (d: HoverData) => ReactNode
+  customHoverBehavior?: (d: HoverData | null) => void
+  customClickBehavior?: (d: HoverData | null) => void
   /** Observation callback — emits hover/click events to the ObservationStore and this callback */
   onObservation?: OnObservationCallback
   /** Chart instance identifier for observation filtering */
@@ -616,8 +623,8 @@ export interface StreamNetworkFrameHandle {
   pushMany(edges: EdgePush[]): void
   /** Remove a node by ID. Also removes connected edges. */
   removeNode(id: string): boolean
-  /** Remove all edges between source and target node IDs. */
-  removeEdge(sourceId: string, targetId: string): boolean
+  /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
+  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
   /** Update a node's data by ID. Returns previous data. */
   updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null
   /** Update all edges between source+target. Returns array of previous data. */

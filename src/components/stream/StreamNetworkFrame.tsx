@@ -20,6 +20,7 @@ import type {
   ParticleStyle,
   ThresholdAlertConfig
 } from "./networkTypes"
+import type { HoverData } from "../realtime/types"
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
@@ -79,9 +80,9 @@ const defaultTooltipStyle: React.CSSProperties = {
 function DefaultNetworkTooltip({
   data
 }: {
-  data: { type: "node" | "edge"; data: any }
+  data: HoverData
 }) {
-  if (data.type === "edge") {
+  if (data.nodeOrEdge === "edge") {
     const edge = data.data
     const sourceId =
       typeof edge.source === "object" ? edge.source.id : edge.source
@@ -190,6 +191,7 @@ const StreamNetworkFrame = forwardRef<
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
+    edgeIdAccessor,
     childrenAccessor,
     hierarchySum,
     orientation = "horizontal",
@@ -298,6 +300,7 @@ const StreamNetworkFrame = forwardRef<
       sourceAccessor,
       targetAccessor,
       valueAccessor,
+      edgeIdAccessor,
       childrenAccessor,
       hierarchySum,
       orientation,
@@ -413,12 +416,7 @@ const StreamNetworkFrame = forwardRef<
 
   // ── State ────────────────────────────────────────────────────────────
 
-  const [hoverData, setHoverData] = useState<{
-    type: "node" | "edge"
-    data: any
-    x: number
-    y: number
-  } | null>(null)
+  const [hoverData, setHoverData] = useState<HoverData | null>(null)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
@@ -630,6 +628,14 @@ const StreamNetworkFrame = forwardRef<
       removeNode: (id: string) => {
         const removed = storeRef.current?.removeNode(id) ?? false
         if (removed) {
+          // Clear hover if the removed node was being hovered
+          const hoveredId = hoverRef.current?.data
+            ? (typeof nodeIDAccessor === "function" ? nodeIDAccessor(hoverRef.current.data) : hoverRef.current.data[nodeIDAccessor])
+            : undefined
+          if (hoverRef.current && hoverRef.current.nodeOrEdge === "node" && hoveredId === id) {
+            hoverRef.current = null
+            setHoverData(null)
+          }
           nodeColorMap.current.delete(id)
           runLayout()
           dirtyRef.current = true
@@ -637,9 +643,28 @@ const StreamNetworkFrame = forwardRef<
         }
         return removed
       },
-      removeEdge: (sourceId: string, targetId: string) => {
-        const removed = storeRef.current?.removeEdge(sourceId, targetId) ?? false
+      removeEdge: (sourceIdOrEdgeId: string, targetId?: string) => {
+        const removed = storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
         if (removed) {
+          // Clear hover if the removed edge was being hovered
+          if (hoverRef.current && hoverRef.current.nodeOrEdge === "edge") {
+            const hoveredEdge = hoverRef.current.data
+            const hSrc = typeof hoveredEdge?.source === "object" ? hoveredEdge.source.id : hoveredEdge?.source
+            const hTgt = typeof hoveredEdge?.target === "object" ? hoveredEdge.target.id : hoveredEdge?.target
+            let matches: boolean
+            if (targetId !== undefined) {
+              matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
+            } else if (edgeIdAccessor && hoveredEdge) {
+              const getEid = typeof edgeIdAccessor === "function" ? edgeIdAccessor : (d: any) => d?.[edgeIdAccessor]
+              matches = getEid(hoveredEdge) === sourceIdOrEdgeId
+            } else {
+              matches = true // no accessor to compare — conservatively clear
+            }
+            if (matches) {
+              hoverRef.current = null
+              setHoverData(null)
+            }
+          }
           runLayout()
           dirtyRef.current = true
           scheduleRender()
@@ -746,7 +771,7 @@ const StreamNetworkFrame = forwardRef<
   // ── Observation wrappers ─────────────────────────────────────────────
 
   const customHoverBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+    (d: HoverData | null) => {
       if (customHoverBehaviorProp) customHoverBehaviorProp(d)
       if (onObservation) {
         const now = Date.now()
@@ -761,7 +786,7 @@ const StreamNetworkFrame = forwardRef<
   )
 
   const customClickBehavior = useCallback(
-    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+    (d: HoverData | null) => {
       if (customClickBehaviorProp) customClickBehaviorProp(d)
       if (onObservation) {
         const now = Date.now()
@@ -826,12 +851,14 @@ const StreamNetworkFrame = forwardRef<
     }
 
     const rawDatum = hit.datum || {}
-    const hover = {
+    const hover: HoverData = {
       ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-      type: hit.type,
       data: rawDatum,
       x: hit.x,
-      y: hit.y
+      y: hit.y,
+      time: hit.x,
+      value: hit.y,
+      nodeOrEdge: hit.type as "node" | "edge",
     }
 
     hoverRef.current = hover
@@ -886,10 +913,12 @@ const StreamNetworkFrame = forwardRef<
       const rawDatum = hit.datum || {}
       customClickBehavior({
         ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        type: hit.type,
         data: rawDatum,
         x: hit.x,
-        y: hit.y
+        y: hit.y,
+        time: hit.x,
+        value: hit.y,
+        nodeOrEdge: hit.type as "node" | "edge",
       })
     } else {
       customClickBehavior(null)
@@ -936,12 +965,14 @@ const StreamNetworkFrame = forwardRef<
       const point = graph.flat[0]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const rawDatum = point.datum || {}
-      const hover = {
+      const hover: HoverData = {
         ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        type: "node" as const,
         data: rawDatum,
         x: point.x,
-        y: point.y
+        y: point.y,
+        time: point.x,
+        value: point.y,
+        nodeOrEdge: "node",
       }
       hoverRef.current = hover
       setHoverData(hover)
@@ -971,12 +1002,14 @@ const StreamNetworkFrame = forwardRef<
     const point = graph.flat[next]
     focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
     const rawDatum = point.datum || {}
-    const hover = {
+    const hover: HoverData = {
       ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-      type: "node" as const,
       data: rawDatum,
       x: point.x,
-      y: point.y
+      y: point.y,
+      time: point.x,
+      value: point.y,
+      nodeOrEdge: "node",
     }
     hoverRef.current = hover
     setHoverData(hover)

@@ -55,7 +55,12 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
 
     const layoutType = config.chartType as HierarchyLayoutType
     const childrenAccessor = resolveChildrenAccessor(config.childrenAccessor)
-    const hierarchySum = config.hierarchySum || ((d: any) => d.value ?? 0)
+    const rawSum = config.hierarchySum
+    const hierarchySum = typeof rawSum === "function"
+      ? rawSum
+      : typeof rawSum === "string"
+        ? (d: any) => d[rawSum] ?? 0
+        : (d: any) => d.value ?? 0
 
     // Build d3 hierarchy from the root data
     const root = d3Hierarchy(hierarchyRoot, childrenAccessor)

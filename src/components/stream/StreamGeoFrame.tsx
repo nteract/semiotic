@@ -453,15 +453,19 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
           // Flatten GeoJSON feature properties so custom tooltips
           // can access d.name, d.population etc. directly
-          const hover = {
+          const hover: HoverData = {
             ...rawData,
             ...(rawData?.properties || {}),
-            data: rawData, x, y, time: 0
+            data: rawData,
+            properties: rawData?.properties,
+            x, y,
+            time: x,
+            value: y,
           }
           hoverRef.current = hover
           hoveredNodeRef.current = node
           setHoverPoint(hover)
-          customHoverBehavior?.({ type: node.type, data: rawData, x, y })
+          customHoverBehavior?.(hover)
           scheduleRender()
         } else {
           if (hoverRef.current) {
@@ -506,7 +510,16 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (hit) {
         const datum = hit.node.datum
         const rawData = datum?.properties ? datum : (datum?.data || datum)
-        customClickBehavior({ type: hit.node.type, data: rawData, x: chartX, y: chartY })
+        const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
+        customClickBehavior({
+          ...flattened,
+          data: rawData,
+          properties: rawData?.properties,
+          x: chartX,
+          y: chartY,
+          time: chartX,
+          value: chartY,
+        })
       }
     }, [customClickBehavior, margin])
 
@@ -543,21 +556,27 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover = navPointToHover(point)
-      hoverRef.current = hover
-      setHoverPoint(hover)
-
-      // Detect geoarea vs point and flatten GeoJSON properties for consistent hover shape
+      // Build full HoverData with flattened GeoJSON properties — same shape for
+      // both state (tooltip) and customHoverBehavior (no mismatch)
       const rawDatum: any = point.datum
-      let hoverType: "point" | "geoarea" = "point"
       let data: any = rawDatum
       if (rawDatum && typeof rawDatum === "object" && "geometry" in rawDatum) {
-        hoverType = "geoarea"
         if (rawDatum.properties && typeof rawDatum.properties === "object") {
           data = { ...rawDatum, ...rawDatum.properties }
         }
       }
-      customHoverBehavior?.({ type: hoverType, data, x: point.x, y: point.y })
+      const hover: HoverData = {
+        ...data,
+        data: rawDatum,
+        properties: rawDatum?.properties,
+        x: point.x,
+        y: point.y,
+        time: point.x,
+        value: point.y,
+      }
+      hoverRef.current = hover
+      setHoverPoint(hover)
+      customHoverBehavior?.(hover)
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 

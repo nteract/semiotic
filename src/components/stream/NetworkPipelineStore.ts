@@ -2,6 +2,7 @@ import { interpolateNumber } from "d3-interpolate"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type {
   NetworkChartType,
@@ -812,7 +813,6 @@ export class NetworkPipelineStore {
     const decay = this.config.decay
     if (!decay) return
 
-    const minOpacity = decay.minOpacity ?? 0.1
     const nodeCount = this.nodeTimestamps.size
     if (nodeCount <= 1) return
 
@@ -832,30 +832,7 @@ export class NetworkPipelineStore {
       const ageIndex = nodeAgeMap.get(nodeId)
       if (ageIndex === undefined) continue
 
-      const age = nodeCount - 1 - ageIndex // 0=newest
-
-      let opacity: number
-      switch (decay.type) {
-        case "linear": {
-          const t = 1 - age / (nodeCount - 1)
-          opacity = minOpacity + t * (1 - minOpacity)
-          break
-        }
-        case "exponential": {
-          const halfLife = decay.halfLife ?? nodeCount / 2
-          const t = Math.pow(0.5, age / halfLife)
-          opacity = minOpacity + t * (1 - minOpacity)
-          break
-        }
-        case "step": {
-          const threshold = decay.stepThreshold ?? nodeCount * 0.5
-          opacity = age < threshold ? 1 : minOpacity
-          break
-        }
-        default:
-          opacity = 1
-      }
-
+      const opacity = computeDecayOpacity(decay, ageIndex, nodeCount)
       const baseOpacity = node.style?.opacity ?? 1
       node.style = { ...node.style, opacity: baseOpacity * opacity }
     }
@@ -1032,15 +1009,38 @@ export class NetworkPipelineStore {
    * Handles parallel edges (multiple edges between the same pair).
    * Returns true if at least one edge was removed.
    */
-  removeEdge(sourceId: string, targetId: string): boolean {
+  /**
+   * Remove edges by source+target IDs, or by edge ID when edgeIdAccessor is configured.
+   *
+   * - `removeEdge(sourceId, targetId)` — removes all parallel edges between endpoints
+   * - `removeEdge(edgeId)` — removes the edge matching edgeIdAccessor (requires config.edgeIdAccessor)
+   */
+  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean {
     const toDelete: string[] = []
-    for (const [edgeKey, edge] of this.edges) {
-      const src = typeof edge.source === "string" ? edge.source : edge.source.id
-      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
-      if (src === sourceId && tgt === targetId) {
-        toDelete.push(edgeKey)
+
+    if (targetId === undefined) {
+      // Single-ID mode: use edgeIdAccessor
+      const accessor = this.config.edgeIdAccessor
+      if (!accessor) {
+        throw new Error("removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead.")
+      }
+      const getEdgeId = typeof accessor === "function" ? accessor : (d: any) => d?.[accessor]
+      for (const [edgeKey, edge] of this.edges) {
+        if (getEdgeId(edge.data) === sourceIdOrEdgeId) {
+          toDelete.push(edgeKey)
+        }
+      }
+    } else {
+      // Two-ID mode: match source + target
+      for (const [edgeKey, edge] of this.edges) {
+        const src = typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+        if (src === sourceIdOrEdgeId && tgt === targetId) {
+          toDelete.push(edgeKey)
+        }
       }
     }
+
     for (const key of toDelete) {
       this.edges.delete(key)
       this.edgeTimestamps.delete(key)

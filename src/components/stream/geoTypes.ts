@@ -202,9 +202,9 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   // ── Interaction ──
   enableHover?: boolean
   hoverAnnotation?: boolean | HoverAnnotationConfig
-  tooltipContent?: (d: any) => ReactNode
-  customClickBehavior?: (d: any) => void
-  customHoverBehavior?: (d: any) => void
+  tooltipContent?: (d: HoverData) => ReactNode
+  customClickBehavior?: (d: HoverData | null) => void
+  customHoverBehavior?: (d: HoverData | null) => void
   annotations?: Record<string, any>[]
 
   // ── Realtime encoding ──
