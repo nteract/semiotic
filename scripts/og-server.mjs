@@ -35,8 +35,21 @@
 import { createServer } from "node:http"
 import { URL } from "node:url"
 
-// Dynamic import so this script works without building dist first
-const { renderChart } = await import("../src/components/server/renderToStaticSVG.js")
+// Load the built server renderer. Run `npm run dist` first, or use `npx tsx scripts/og-server.mjs`.
+let renderChart
+try {
+  ;({ renderChart } = await import("../dist/semiotic-server.js"))
+} catch {
+  // Fallback: try tsx/ts-node source import
+  try {
+    ;({ renderChart } = await import("../src/components/server/renderToStaticSVG.js"))
+  } catch (e) {
+    throw new Error(
+      'Unable to load semiotic/server. Run "npm run dist" first, or use "npx tsx scripts/og-server.mjs".',
+      { cause: e }
+    )
+  }
+}
 
 const DEFAULT_PORT = 3001
 const DEFAULT_WIDTH = 1200
@@ -52,11 +65,17 @@ function parsePort() {
  * Parse query parameters into renderChart props.
  * Handles JSON-encoded data, numeric values, and boolean flags.
  */
+const MAX_WIDTH = 4096
+const MAX_HEIGHT = 4096
+const MAX_SCALE = 4
+const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"])
+
 function parseProps(searchParams) {
-  const props = {}
+  const props = Object.create(null)
 
   for (const [key, value] of searchParams) {
     if (key === "component" || key === "format" || key === "scale") continue
+    if (BLOCKED_KEYS.has(key)) continue
 
     // Try JSON parse for complex values (data arrays, objects)
     if (value.startsWith("[") || value.startsWith("{")) {
@@ -86,7 +105,14 @@ function parseProps(searchParams) {
 async function handleRequest(req, res) {
   // CORS headers for cross-origin embedding
   res.setHeader("Access-Control-Allow-Origin", "*")
-  res.setHeader("Access-Control-Allow-Methods", "GET")
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type")
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204)
+    res.end()
+    return
+  }
 
   const url = new URL(req.url, `http://${req.headers.host}`)
 
@@ -113,7 +139,7 @@ async function handleRequest(req, res) {
   const params = url.searchParams
   const component = params.get("component")
   const format = params.get("format") || "svg"
-  const scale = parseInt(params.get("scale") || "2", 10)
+  const scale = Math.min(parseInt(params.get("scale") || "2", 10) || 2, MAX_SCALE)
 
   if (!component) {
     res.writeHead(400, { "Content-Type": "application/json" })
@@ -123,8 +149,8 @@ async function handleRequest(req, res) {
 
   try {
     const props = parseProps(params)
-    props.width = props.width || DEFAULT_WIDTH
-    props.height = props.height || DEFAULT_HEIGHT
+    props.width = Math.min(props.width || DEFAULT_WIDTH, MAX_WIDTH)
+    props.height = Math.min(props.height || DEFAULT_HEIGHT, MAX_HEIGHT)
 
     // Default data for demo when no data provided
     if (!props.data) {
@@ -163,7 +189,7 @@ async function handleRequest(req, res) {
     }
   } catch (err) {
     res.writeHead(500, { "Content-Type": "application/json" })
-    res.end(JSON.stringify({ error: err.message }))
+    res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }))
   }
 }
 

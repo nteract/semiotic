@@ -247,6 +247,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       orientation: { type: "string", enum: orientationEnum as unknown as string[] },
       sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
+      roundedTop: { type: "number" },
     },
   },
 
@@ -263,7 +264,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       valueAccessor: { type: ["string", "function"] },
       orientation: { type: "string", enum: orientationEnum as unknown as string[] },
       normalize: { type: "boolean" },
+      sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
+      roundedTop: { type: "number" },
     },
   },
 
@@ -423,6 +426,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       categoryAccessor: { type: ["string", "function"] },
       valueAccessor: { type: ["string", "function"] },
       startAngle: { type: "number" },
+      cornerRadius: { type: "number" },
     },
   },
 
@@ -438,6 +442,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       innerRadius: { type: "number" },
       centerContent: { type: ["object", "string", "number"] },
       startAngle: { type: "number" },
+      cornerRadius: { type: "number" },
     },
   },
 

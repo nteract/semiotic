@@ -70,9 +70,13 @@ export const wedgeCanvasRenderer = (
       }
     }
 
-    // Pulse overlay
+    // Pulse overlay — use same path shape as the main wedge
     if (node._pulseIntensity && node._pulseIntensity > 0) {
-      drawWedgeManual(ctx, node) // pulse uses simple path
+      if (node.cornerRadius) {
+        drawWedgeRounded(ctx, node)
+      } else {
+        drawWedgeManual(ctx, node)
+      }
       renderPathPulse(ctx, node)
     }
 
