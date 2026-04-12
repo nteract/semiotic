@@ -222,6 +222,7 @@ function useGalleryCharts() {
   data: categoryData,
   categoryAccessor: "department",
   valueAccessor: "headcount",
+  roundedTop: 6,
   theme: "italian",
   title: "Headcount by Dept",
 })`,
@@ -260,6 +261,7 @@ function useGalleryCharts() {
   categoryAccessor: "category",
   valueAccessor: "value",
   colorBy: "category",
+  cornerRadius: 8,
   theme: "pastels",
 })`,
     })

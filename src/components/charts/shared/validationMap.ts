@@ -859,4 +859,42 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       staleness: { type: "object" },
     },
   },
+
+  // ── Composite/Geo charts (minimal validation) ──────────────────────
+  ScatterplotMatrix: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: { ...commonProps, data: { type: "array" } },
+  },
+  MinimapChart: {
+    required: [],
+    dataShape: "array",
+    dataAccessors: [],
+    props: { ...commonProps },
+  },
+  ChoroplethMap: {
+    required: ["areas"],
+    dataShape: "array",
+    dataAccessors: ["valueAccessor"],
+    props: { ...commonProps, areas: { type: ["array", "string"] }, valueAccessor: { type: ["string", "function"] }, projection: { type: "string" } },
+  },
+  ProportionalSymbolMap: {
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    props: { ...commonProps, points: { type: "array" }, xAccessor: { type: ["string", "function"] }, yAccessor: { type: ["string", "function"] }, sizeBy: { type: ["string", "function"] } },
+  },
+  FlowMap: {
+    required: ["flows"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: { ...commonProps, flows: { type: "array" } },
+  },
+  DistanceCartogram: {
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: { ...commonProps, points: { type: "array" } },
+  },
 }

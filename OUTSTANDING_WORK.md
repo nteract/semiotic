@@ -6,7 +6,7 @@ Last updated 2026-04-08.
 
 ## Rounded Corners
 
-**Status**: Pie/donut `cornerRadius` DONE. Bar `roundedTop` not started.
+**Status**: Pie/donut `cornerRadius` DONE. Bar/StackedBar `roundedTop` DONE (topmost segment only). GroupedBar `roundedTop` not yet implemented. Negative-value bar rounding not yet handled (rounds top regardless of sign direction).
 
 ### What
 

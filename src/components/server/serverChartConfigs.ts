@@ -157,6 +157,7 @@ const stackedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     normalize: rest.normalize,
     oSort: rest.sort ?? false,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -174,7 +175,6 @@ const groupedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     oSort: rest.sort ?? false,
     barPadding: rest.barPadding,
-    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -303,6 +303,22 @@ const ridgelinePlot: ChartConfig = {
     rAccessor: rest.valueAccessor || "value",
     bins: rest.bins,
     amplitude: rest.amplitude,
+    ...common,
+  }),
+}
+
+const likertChart: ChartConfig = {
+  frameType: "ordinal",
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    chartType: "bar",
+    data,
+    oAccessor: rest.categoryAccessor || "category",
+    rAccessor: rest.valueAccessor || "value",
+    stackBy: rest.levelAccessor || "level",
+    colorAccessor: colorBy || rest.levelAccessor || "level",
+    colorScheme,
+    normalize: true,
+    projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
     ...common,
   }),
 }
@@ -557,6 +573,7 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   DotPlot: dotPlot,
   SwimlaneChart: swimlaneChart,
   RidgelinePlot: ridgelinePlot,
+  LikertChart: likertChart,
   FunnelChart: funnelChart,
   GaugeChart: gaugeChart,
   ForceDirectedGraph: forceDirectedGraph,

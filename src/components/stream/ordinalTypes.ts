@@ -227,7 +227,7 @@ export interface OrdinalPipelineConfig {
   /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
   baselinePadding?: boolean
   innerRadius?: number
-  /** Corner radius for rounded wedge arcs (pie/donut/gauge) */
+  /** Corner radius for rounded wedge arcs (pie/donut) */
   cornerRadius?: number
   normalize?: boolean
   startAngle?: number
