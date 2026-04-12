@@ -79,17 +79,20 @@ export const LIGHT_THEME: SemioticTheme = {
       "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
     ],
     sequential: "blues",
+    diverging: "RdBu",
     background: "transparent",
     text: "#333",
     textSecondary: "#666",
     grid: "#e0e0e0",
-    border: "#ccc"
+    border: "#ccc",
+    selection: "#00a2ce",
+    selectionOpacity: 0.15,
   },
   typography: {
     fontFamily: "sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10
+    tickSize: 10,
   }
 }
 
@@ -102,11 +105,14 @@ export const DARK_THEME: SemioticTheme = {
       "#a1887f", "#f06292", "#90a4ae", "#dce775", "#4dd0e1"
     ],
     sequential: "blues",
+    diverging: "RdBu",
     background: "#1a1a2e",
     text: "#e0e0e0",
     textSecondary: "#aaa",
     grid: "#333",
-    border: "#555"
+    border: "#555",
+    selection: "#4fc3f7",
+    selectionOpacity: 0.15,
   },
   typography: {
     fontFamily: "sans-serif",
