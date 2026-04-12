@@ -135,6 +135,7 @@ const barChart: ChartConfig = {
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+    oSort: rest.sort ?? false,
     colorAccessor: colorBy,
     colorScheme,
     barPadding: rest.barPadding,
@@ -154,7 +155,7 @@ const stackedBarChart: ChartConfig = {
     colorScheme,
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     normalize: rest.normalize,
-    oSort: rest.sort,
+    oSort: rest.sort ?? false,
     ...common,
   }),
 }
@@ -170,7 +171,7 @@ const groupedBarChart: ChartConfig = {
     colorAccessor: colorBy || rest.groupBy,
     colorScheme,
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
-    oSort: rest.sort,
+    oSort: rest.sort ?? false,
     barPadding: rest.barPadding,
     ...common,
   }),
@@ -267,8 +268,8 @@ const dotPlot: ChartConfig = {
     rAccessor: rest.valueAccessor || "value",
     colorAccessor: colorBy,
     colorScheme,
-    showGrid: common.showGrid ?? true,
     ...common,
+    showGrid: common.showGrid ?? true,
   }),
 }
 

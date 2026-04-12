@@ -510,7 +510,16 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (hit) {
         const datum = hit.node.datum
         const rawData = datum?.properties ? datum : (datum?.data || datum)
-        customClickBehavior({ data: rawData, x: chartX, y: chartY, time: chartX, value: chartY, properties: rawData?.properties })
+        const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
+        customClickBehavior({
+          ...flattened,
+          data: rawData,
+          properties: rawData?.properties,
+          x: chartX,
+          y: chartY,
+          time: chartX,
+          value: chartY,
+        })
       }
     }, [customClickBehavior, margin])
 
