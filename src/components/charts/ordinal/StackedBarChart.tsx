@@ -32,6 +32,8 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   /** Category sort order. Default: false (data insertion order). "asc"/"desc" sorts by total stacked value. Custom comparators receive category keys. */
   sort?: boolean | "asc" | "desc" | ((a: string, b: string) => number)
   barPadding?: number
+  /** Rounded top corner radius. Only the topmost stacked segment gets rounded. */
+  roundedTop?: number
   baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
@@ -69,7 +71,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, baselinePadding = false,
+    colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, baselinePadding = false,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
@@ -188,6 +190,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     barPadding,
+    ...(roundedTop != null && { roundedTop }),
     baselinePadding,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),

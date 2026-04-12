@@ -3,34 +3,6 @@ import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } f
 import { renderPathPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 
-/** Build the wedge path — uses d3-shape arc for cornerRadius support. */
-function drawWedgePath(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): Path2D | null {
-  if (node.cornerRadius) {
-    // Use d3-shape arc generator for rounded corners → Path2D
-    const arcGen = d3Arc()
-      .innerRadius(node.innerRadius)
-      .outerRadius(node.outerRadius)
-      .startAngle(node.startAngle)
-      .endAngle(node.endAngle)
-      .cornerRadius(node.cornerRadius)
-    const pathStr = arcGen({} as any)
-    if (!pathStr) return null
-    // d3-shape uses 0 = 12 o'clock, but scene stores canvas convention (0 = 3 o'clock).
-    // Canvas arc() is 0 = 3 o'clock, so no conversion needed — but d3-shape path IS
-    // in 12 o'clock convention. We need to translate to cx/cy then draw.
-    // Actually: d3-shape arc draws centered at (0,0), so we translate the context.
-    ctx.save()
-    ctx.translate(node.cx, node.cy)
-    // d3-shape uses 0 = 12 o'clock, scene is 0 = 3 o'clock. Rotate -π/2 to compensate.
-    ctx.rotate(-Math.PI / 2)
-    const path = new Path2D(pathStr)
-    ctx.restore()
-    // We can't use the rotated context with fill — use a transform on Path2D instead
-    return null // fall through to manual approach with rotation
-  }
-  return null
-}
-
 /** Trace the wedge arc path (donut or pie) onto the current context — fast path for no cornerRadius. */
 function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
   ctx.beginPath()

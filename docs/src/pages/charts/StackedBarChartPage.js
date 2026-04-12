@@ -143,6 +143,7 @@ const stackedBarChartProps = [
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% (percentage stacked chart)." },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bar groups in pixels." },
+  { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on topmost stack segment." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bar segments." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend for stacked categories." },
@@ -348,6 +349,36 @@ export default function StackedBarChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="rounded-top">Rounded Top (Topmost Segment)</h3>
+      <p>
+        Use <code>roundedTop</code> to round the top corners of bars.
+        For stacked bars, <strong>only the topmost segment</strong> gets rounded corners —
+        interior segments stay rectangular so they stack cleanly.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          stackBy: "product",
+          colorBy: "product",
+          roundedTop: 6,
+        }}
+        type={StackedBarChart}
+        overrideProps={{ data: "sampleData" }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock code={`<StackedBarChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  stackBy="product"
+  colorBy="product"
+  roundedTop={6}
+/>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

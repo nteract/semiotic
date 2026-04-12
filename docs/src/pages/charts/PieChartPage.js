@@ -121,6 +121,7 @@ const pieChartProps = [
   { name: "colorBy", type: "string | function", required: false, default: "categoryAccessor", description: "Field name or function to determine slice color. Defaults to the category accessor." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle offset in degrees." },
+  { name: "cornerRadius", type: "number", required: false, default: "0", description: "Rounded corner radius on wedge arcs. Clamped by wedge angular width." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on slices." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
@@ -285,6 +286,36 @@ export default function PieChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="corner-radius">Rounded Corners</h3>
+      <p>
+        Use <code>cornerRadius</code> to round the outer corners of each wedge arc.
+        Works on both PieChart and DonutChart. The radius is clamped by d3-shape
+        so it can't exceed the wedge's angular width.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          colorBy: "category",
+          cornerRadius: 8,
+        }}
+        type={PieChart}
+        overrideProps={{
+          data: "sampleData",
+        }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock code={`<PieChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  colorBy="category"
+  cornerRadius={8}
+/>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

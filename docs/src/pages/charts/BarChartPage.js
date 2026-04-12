@@ -115,6 +115,7 @@ const barChartProps = [
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "sort", type: "boolean | string | function", required: false, default: "false", description: 'Sort bars by value. Accepts true, "asc", "desc", or a custom comparator function.' },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bars in pixels." },
+  { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on bar tops (the end away from baseline)." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bars." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy set)", description: "Show a legend. Defaults to true when colorBy is specified." },
@@ -335,6 +336,49 @@ export default function BarChartPage() {
           colorBy: '"category"',
           hoverHighlight: '"series"',
         }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="rounded-top">Rounded Top Corners</h3>
+      <p>
+        Use <code>roundedTop</code> to round only the top corners of each bar
+        (the end away from the baseline). The bottom stays flush with the axis.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          roundedTop: 6,
+        }}
+        type={BarChart}
+        overrideProps={{ data: "sampleData" }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock code={`<BarChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  roundedTop={6}
+/>`} />
+
+      <p>
+        Works with horizontal bars too — the rounded end points away from the value axis:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          orientation: "horizontal",
+          roundedTop: 6,
+          margin: { left: 100, top: 20, right: 20, bottom: 30 },
+        }}
+        type={BarChart}
+        overrideProps={{ data: "sampleData" }}
         hiddenProps={{}}
       />
 

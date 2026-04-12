@@ -207,11 +207,12 @@ function useGalleryCharts() {
 
     // Bar — italian theme
     charts.push({
-      title: "Bar Chart — italian",
+      title: "Bar Chart — italian (rounded)",
       svg: renderChart("BarChart", {
         data: categoryData,
         categoryAccessor: "department",
         valueAccessor: "headcount",
+        roundedTop: 6,
         theme: "italian",
         title: "Headcount by Dept",
         width: W,
@@ -241,14 +242,15 @@ function useGalleryCharts() {
       }),
     })
 
-    // Pie — pastels theme
+    // Pie — pastels theme with rounded corners
     charts.push({
-      title: "Pie Chart — pastels",
+      title: "Pie Chart — pastels (rounded)",
       svg: renderChart("PieChart", {
         data: pieData,
         categoryAccessor: "category",
         valueAccessor: "value",
         colorBy: "category",
+        cornerRadius: 8,
         theme: "pastels",
         width: 340,
         height: 340,
@@ -425,7 +427,6 @@ function useGalleryCharts() {
         ],
         title: "CPU Usage",
         theme: "high-contrast",
-        background: "#1a1a2e",
         width: W,
         height: H,
       }),
@@ -438,7 +439,6 @@ function useGalleryCharts() {
   ],
   theme: "high-contrast",
 })`,
-      dark: true,
     })
 
     // Grouped Bar — bi-tool theme, bottom legend

@@ -139,6 +139,7 @@ const barChart: ChartConfig = {
     colorAccessor: colorBy,
     colorScheme,
     barPadding: rest.barPadding,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -173,6 +174,7 @@ const groupedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     oSort: rest.sort ?? false,
     barPadding: rest.barPadding,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -187,6 +189,7 @@ const pieChart: ChartConfig = {
     projection: "radial",
     colorAccessor: colorBy || rest.categoryAccessor,
     colorScheme,
+    ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
     ...common,
   }),
 }
@@ -202,6 +205,7 @@ const donutChart: ChartConfig = {
     innerRadius: rest.innerRadius || 60,
     colorAccessor: colorBy || rest.categoryAccessor,
     colorScheme,
+    ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
     ...common,
   }),
 }

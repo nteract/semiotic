@@ -125,6 +125,7 @@ const donutChartProps = [
   { name: "colorBy", type: "string | function", required: false, default: "categoryAccessor", description: "Field name or function to determine slice color." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle offset in degrees." },
+  { name: "cornerRadius", type: "number", required: false, default: "0", description: "Rounded corner radius on wedge arcs." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on slices." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
@@ -244,6 +245,37 @@ export default function DonutChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="corner-radius">Rounded Corners</h3>
+      <p>
+        Use <code>cornerRadius</code> to round the outer and inner corners of each wedge arc.
+        Particularly effective on donut charts where the arc thickness is visible.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          colorBy: "category",
+          cornerRadius: 6,
+          innerRadius: 60,
+        }}
+        type={DonutChart}
+        overrideProps={{
+          data: "sampleData",
+        }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock code={`<DonutChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  colorBy="category"
+  cornerRadius={6}
+  innerRadius={60}
+/>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

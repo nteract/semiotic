@@ -19,6 +19,37 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
     if (node.style.icon) {
       // Icon/isotype mode: stamp the image to fill the bar
       drawIconBar(ctx, node)
+    } else if (node.roundedTop) {
+      // Rounded corners on the end away from the baseline
+      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
+      const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
+      ctx.beginPath()
+      if (node.roundedEdge === "right") {
+        // Horizontal: round the right edge (value end)
+        ctx.moveTo(node.x, node.y)                              // top-left
+        ctx.lineTo(node.x + node.w - r, node.y)                 // top edge
+        ctx.arcTo(node.x + node.w, node.y, node.x + node.w, node.y + r, r) // top-right
+        ctx.lineTo(node.x + node.w, node.y + node.h - r)        // right side down
+        ctx.arcTo(node.x + node.w, node.y + node.h, node.x + node.w - r, node.y + node.h, r) // bottom-right
+        ctx.lineTo(node.x, node.y + node.h)                     // bottom edge
+        ctx.closePath()
+      } else {
+        // Vertical: round the top edge (value end)
+        ctx.moveTo(node.x, node.y + node.h)                     // bottom-left
+        ctx.lineTo(node.x, node.y + r)                           // left side up
+        ctx.arcTo(node.x, node.y, node.x + r, node.y, r)       // top-left
+        ctx.lineTo(node.x + node.w - r, node.y)                 // top edge
+        ctx.arcTo(node.x + node.w, node.y, node.x + node.w, node.y + r, r) // top-right
+        ctx.lineTo(node.x + node.w, node.y + node.h)            // right side down
+        ctx.closePath()
+      }
+      ctx.fill()
+
+      if (node.style.stroke) {
+        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+        ctx.lineWidth = node.style.strokeWidth || 1
+        ctx.stroke()
+      }
     } else {
       // Standard solid fill
       ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"

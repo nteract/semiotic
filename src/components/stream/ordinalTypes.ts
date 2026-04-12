@@ -222,6 +222,8 @@ export interface OrdinalPipelineConfig {
 
   // Layout
   barPadding?: number
+  /** Rounded top corner radius for bar charts. Only the end away from the baseline is rounded. For stacked bars, only the topmost segment gets rounded. */
+  roundedTop?: number
   /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
   baselinePadding?: boolean
   innerRadius?: number
@@ -299,6 +301,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   responsiveHeight?: boolean
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   barPadding?: number
+  roundedTop?: number
   baselinePadding?: boolean
   innerRadius?: number
   cornerRadius?: number
