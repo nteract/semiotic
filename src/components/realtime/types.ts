@@ -63,8 +63,8 @@ export interface HoverAnnotationConfig {
 }
 
 export interface HoverData {
-  /** The raw datum from the user's data array */
-  data: Record<string, any>
+  /** The raw datum from the user's data array (may be an object, array, or null for exit nodes) */
+  data: any
   /** Pixel X coordinate of the hovered element */
   x: number
   /** Pixel Y coordinate of the hovered element */

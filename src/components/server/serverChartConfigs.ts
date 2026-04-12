@@ -212,6 +212,7 @@ const histogram: ChartConfig = {
     data,
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
+    projection: "horizontal",
     bins: rest.bins,
     colorAccessor: colorBy,
     colorScheme,

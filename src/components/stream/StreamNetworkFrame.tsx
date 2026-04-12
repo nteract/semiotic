@@ -629,7 +629,10 @@ const StreamNetworkFrame = forwardRef<
         const removed = storeRef.current?.removeNode(id) ?? false
         if (removed) {
           // Clear hover if the removed node was being hovered
-          if (hoverRef.current && hoverRef.current.data?.id === id) {
+          const hoveredId = hoverRef.current?.data
+            ? (typeof nodeIDAccessor === "function" ? nodeIDAccessor(hoverRef.current.data) : hoverRef.current.data[nodeIDAccessor])
+            : undefined
+          if (hoverRef.current && hoverRef.current.nodeOrEdge === "node" && hoveredId === id) {
             hoverRef.current = null
             setHoverData(null)
           }
@@ -648,9 +651,15 @@ const StreamNetworkFrame = forwardRef<
             const hoveredEdge = hoverRef.current.data
             const hSrc = typeof hoveredEdge?.source === "object" ? hoveredEdge.source.id : hoveredEdge?.source
             const hTgt = typeof hoveredEdge?.target === "object" ? hoveredEdge.target.id : hoveredEdge?.target
-            const matches = targetId !== undefined
-              ? hSrc === sourceIdOrEdgeId && hTgt === targetId
-              : true // single-ID mode — edge was removed, conservatively clear
+            let matches: boolean
+            if (targetId !== undefined) {
+              matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
+            } else if (edgeIdAccessor && hoveredEdge) {
+              const getEid = typeof edgeIdAccessor === "function" ? edgeIdAccessor : (d: any) => d?.[edgeIdAccessor]
+              matches = getEid(hoveredEdge) === sourceIdOrEdgeId
+            } else {
+              matches = true // no accessor to compare — conservatively clear
+            }
             if (matches) {
               hoverRef.current = null
               setHoverData(null)
@@ -998,8 +1007,8 @@ const StreamNetworkFrame = forwardRef<
       data: rawDatum,
       x: point.x,
       y: point.y,
-      time: 0,
-      value: 0,
+      time: point.x,
+      value: point.y,
       nodeOrEdge: "node",
     }
     hoverRef.current = hover
