@@ -114,14 +114,35 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
       if (!byCat.has(cat)) byCat.set(cat, [])
       byCat.get(cat)!.push(n)
     }
+    const isV = projection === "vertical"
+    const baseline = rScale(0)
     for (const rects of byCat.values()) {
       if (rects.length === 0) continue
-      const isV = projection === "vertical"
-      const topmost = isV
-        ? rects.reduce((a, b) => a.y < b.y ? a : b)
-        : rects.reduce((a, b) => (a.x + a.w) > (b.x + b.w) ? a : b)
-      topmost.roundedTop = r
-      topmost.roundedEdge = isV ? "top" : "right"
+      // Split into positive (above/right of baseline) and negative (below/left)
+      const positive = rects.filter(n => {
+        const val = n.datum?.__aggregateValue ?? 0
+        return val >= 0
+      })
+      const negative = rects.filter(n => {
+        const val = n.datum?.__aggregateValue ?? 0
+        return val < 0
+      })
+      // Topmost positive segment: farthest from baseline in positive direction
+      if (positive.length > 0) {
+        const topmost = isV
+          ? positive.reduce((a, b) => a.y < b.y ? a : b)
+          : positive.reduce((a, b) => (a.x + a.w) > (b.x + b.w) ? a : b)
+        topmost.roundedTop = r
+        topmost.roundedEdge = isV ? "top" : "right"
+      }
+      // Bottommost negative segment: farthest from baseline in negative direction
+      if (negative.length > 0) {
+        const bottommost = isV
+          ? negative.reduce((a, b) => (a.y + a.h) > (b.y + b.h) ? a : b)
+          : negative.reduce((a, b) => a.x < b.x ? a : b)
+        bottommost.roundedTop = r
+        bottommost.roundedEdge = isV ? "bottom" : "left"
+      }
     }
   }
 
@@ -129,7 +150,7 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
 }
 
 export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { scales, columns, getR, getGroup, resolvePieceStyle } = ctx
+  const { scales, columns, config, getR, getGroup, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isVertical = projection === "vertical"
@@ -185,6 +206,21 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLa
             style, d, groupKeys[gi]
           ))
         }
+      }
+    }
+  }
+
+  // Apply roundedTop — each grouped bar is independent (not stacked)
+  if (config.roundedTop && config.roundedTop > 0) {
+    const r = Math.max(0, config.roundedTop)
+    for (const n of nodes) {
+      if (n.type !== "rect") continue
+      const val = getR(n.datum)
+      n.roundedTop = r
+      if (isVertical) {
+        n.roundedEdge = val >= 0 ? "top" : "bottom"
+      } else {
+        n.roundedEdge = val >= 0 ? "right" : "left"
       }
     }
   }

@@ -21,12 +21,20 @@ export interface SemioticTheme {
     selection?: string
     /** Opacity for non-selected (dimmed) elements, 0–1 */
     selectionOpacity?: number
+    /** Default annotation text/marker color. Falls back to `text` if unset. */
+    annotation?: string
   }
   typography: {
     fontFamily: string
     titleSize: number
     labelSize: number
     tickSize: number
+    /** Font size for legend text. Falls back to `labelSize` if unset. */
+    legendSize?: number
+    /** Font family for axis tick labels. Use monospace for aligned numerics. Falls back to `fontFamily`. */
+    tickFontFamily?: string
+    /** Font size for chart title. Falls back to `titleSize` if unset. */
+    titleFontSize?: number
   }
   tooltip?: {
     background?: string
@@ -36,6 +44,12 @@ export interface SemioticTheme {
     shadow?: string
   }
   borderRadius?: string
+  accessibility?: {
+    /** Auto-swap to color-blind safe palette when true */
+    colorBlindSafe?: boolean
+    /** Enforce minimum 3:1 contrast ratios */
+    highContrast?: boolean
+  }
 }
 
 // ── Curated palettes ────────────────────────────────────────────────────────

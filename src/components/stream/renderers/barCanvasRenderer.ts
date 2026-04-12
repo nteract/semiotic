@@ -24,25 +24,42 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
       ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
       ctx.beginPath()
-      if (node.roundedEdge === "right") {
-        // Horizontal: round the right edge (value end)
-        ctx.moveTo(node.x, node.y)                              // top-left
-        ctx.lineTo(node.x + node.w - r, node.y)                 // top edge
-        ctx.arcTo(node.x + node.w, node.y, node.x + node.w, node.y + r, r) // top-right
-        ctx.lineTo(node.x + node.w, node.y + node.h - r)        // right side down
-        ctx.arcTo(node.x + node.w, node.y + node.h, node.x + node.w - r, node.y + node.h, r) // bottom-right
-        ctx.lineTo(node.x, node.y + node.h)                     // bottom edge
-        ctx.closePath()
-      } else {
-        // Vertical: round the top edge (value end)
-        ctx.moveTo(node.x, node.y + node.h)                     // bottom-left
-        ctx.lineTo(node.x, node.y + r)                           // left side up
-        ctx.arcTo(node.x, node.y, node.x + r, node.y, r)       // top-left
-        ctx.lineTo(node.x + node.w - r, node.y)                 // top edge
-        ctx.arcTo(node.x + node.w, node.y, node.x + node.w, node.y + r, r) // top-right
-        ctx.lineTo(node.x + node.w, node.y + node.h)            // right side down
-        ctx.closePath()
+      const { x, y, w, h } = node
+      switch (node.roundedEdge) {
+        case "right": // horizontal positive: round right edge
+          ctx.moveTo(x, y)
+          ctx.lineTo(x + w - r, y)
+          ctx.arcTo(x + w, y, x + w, y + r, r)
+          ctx.lineTo(x + w, y + h - r)
+          ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+          ctx.lineTo(x, y + h)
+          break
+        case "left": // horizontal negative: round left edge
+          ctx.moveTo(x + w, y)
+          ctx.lineTo(x + r, y)
+          ctx.arcTo(x, y, x, y + r, r)
+          ctx.lineTo(x, y + h - r)
+          ctx.arcTo(x, y + h, x + r, y + h, r)
+          ctx.lineTo(x + w, y + h)
+          break
+        case "bottom": // vertical negative: round bottom edge
+          ctx.moveTo(x, y)
+          ctx.lineTo(x + w, y)
+          ctx.lineTo(x + w, y + h - r)
+          ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+          ctx.lineTo(x + r, y + h)
+          ctx.arcTo(x, y + h, x, y + h - r, r)
+          break
+        default: // "top" — vertical positive: round top edge
+          ctx.moveTo(x, y + h)
+          ctx.lineTo(x, y + r)
+          ctx.arcTo(x, y, x + r, y, r)
+          ctx.lineTo(x + w - r, y)
+          ctx.arcTo(x + w, y, x + w, y + r, r)
+          ctx.lineTo(x + w, y + h)
+          break
       }
+      ctx.closePath()
       ctx.fill()
 
       if (node.style.stroke && node.style.stroke !== "none") {

@@ -210,12 +210,15 @@ export const TUFTE_LIGHT: SemioticTheme = {
     grid: "#e0ddd0",
     border: "#e0ddd0",
     focus: "#8b0000",
+    annotation: "#8b0000",
   },
   typography: {
     fontFamily: "Georgia, 'Times New Roman', serif",
     titleSize: 16,
     labelSize: 12,
     tickSize: 10,
+    tickFontFamily: "'Courier New', Courier, monospace",
+    legendSize: 11,
   },
   tooltip: {
     background: "#fffff8",
@@ -268,12 +271,15 @@ export const JOURNALIST_LIGHT: SemioticTheme = {
     grid: "#d4d4d4",
     border: "#d4d4d4",
     focus: "#e45050",
+    annotation: "#e45050",
   },
   typography: {
     fontFamily: "'Franklin Gothic Medium', 'Libre Franklin', Arial, sans-serif",
-    titleSize: 16,
+    titleSize: 18,
     labelSize: 12,
     tickSize: 10,
+    tickFontFamily: "'Courier New', Courier, monospace",
+    legendSize: 11,
   },
   tooltip: {
     background: "#f8f8f8",
@@ -547,6 +553,20 @@ export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
     vars.push(`  --semiotic-border-radius: ${theme.borderRadius};`)
   }
 
+  // New theme tokens
+  if (theme.colors.annotation) {
+    vars.push(`  --semiotic-annotation-color: ${theme.colors.annotation};`)
+  }
+  if (theme.typography.legendSize) {
+    vars.push(`  --semiotic-legend-font-size: ${theme.typography.legendSize}px;`)
+  }
+  if (theme.typography.titleFontSize) {
+    vars.push(`  --semiotic-title-font-size: ${theme.typography.titleFontSize}px;`)
+  }
+  if (theme.typography.tickFontFamily) {
+    vars.push(`  --semiotic-tick-font-family: ${theme.typography.tickFontFamily};`)
+  }
+
   return `${selector} {\n${vars.join("\n")}\n}`
 }
 
@@ -599,6 +619,18 @@ export function themeToTokens(theme: SemioticTheme): Record<string, any> {
           $type: "string",
           $description: "d3-scale-chromatic diverging scheme name",
         },
+      } : {}),
+      ...(theme.colors.annotation ? {
+        "annotation-color": { $value: theme.colors.annotation, $type: "color" },
+      } : {}),
+      ...(theme.typography.legendSize ? {
+        "legend-font-size": { $value: `${theme.typography.legendSize}px`, $type: "dimension" },
+      } : {}),
+      ...(theme.typography.titleFontSize ? {
+        "title-font-size": { $value: `${theme.typography.titleFontSize}px`, $type: "dimension" },
+      } : {}),
+      ...(theme.typography.tickFontFamily ? {
+        "tick-font-family": { $value: theme.typography.tickFontFamily, $type: "fontFamily" },
       } : {}),
     },
   }
