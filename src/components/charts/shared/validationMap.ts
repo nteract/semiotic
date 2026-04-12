@@ -247,6 +247,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       orientation: { type: "string", enum: orientationEnum as unknown as string[] },
       sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
+      roundedTop: { type: "number" },
     },
   },
 
@@ -263,7 +264,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       valueAccessor: { type: ["string", "function"] },
       orientation: { type: "string", enum: orientationEnum as unknown as string[] },
       normalize: { type: "boolean" },
+      sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
+      roundedTop: { type: "number" },
     },
   },
 
@@ -423,6 +426,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       categoryAccessor: { type: ["string", "function"] },
       valueAccessor: { type: ["string", "function"] },
       startAngle: { type: "number" },
+      cornerRadius: { type: "number" },
     },
   },
 
@@ -438,6 +442,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       innerRadius: { type: "number" },
       centerContent: { type: ["object", "string", "number"] },
       startAngle: { type: "number" },
+      cornerRadius: { type: "number" },
     },
   },
 
@@ -852,6 +857,74 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       decay: { type: "object" },
       pulse: { type: "object" },
       staleness: { type: "object" },
+    },
+  },
+
+  // ── Composite/Geo charts (minimal validation) ──────────────────────
+  ScatterplotMatrix: {
+    required: ["data", "fields"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      data: { type: "array" },
+      fields: { type: "array" },
+    },
+  },
+  MinimapChart: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      data: { type: "array" },
+    },
+  },
+  ChoroplethMap: {
+    required: ["areas"],
+    dataShape: "array",
+    dataAccessors: ["valueAccessor"],
+    props: {
+      ...commonProps,
+      areas: { type: ["array", "string"] },
+      valueAccessor: { type: ["string", "function"] },
+      colorScheme: { type: ["string", "array"] },
+      projection: { type: "string" },
+    },
+  },
+  ProportionalSymbolMap: {
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    props: {
+      ...commonProps,
+      points: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      yAccessor: { type: ["string", "function"] },
+      sizeBy: { type: ["string", "function"] },
+      areas: { type: ["array", "string"] },
+    },
+  },
+  FlowMap: {
+    required: ["flows"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      flows: { type: "array" },
+      nodes: { type: "array" },
+      valueAccessor: { type: ["string", "function"] },
+    },
+  },
+  DistanceCartogram: {
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: [],
+    props: {
+      ...commonProps,
+      points: { type: "array" },
+      center: { type: "array" },
+      costAccessor: { type: ["string", "function"] },
     },
   },
 }

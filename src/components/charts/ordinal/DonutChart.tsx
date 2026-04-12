@@ -26,6 +26,8 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   startAngle?: number
+  /** Rounded corner radius on wedge arcs */
+  cornerRadius?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
@@ -56,7 +58,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius = 60, centerContent,
-    colorBy, colorScheme, startAngle = 0,
+    colorBy, colorScheme, startAngle = 0, cornerRadius,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -157,6 +159,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     pieceStyle,
     innerRadius,
     startAngle,
+    ...(cornerRadius != null && { cornerRadius }),
     centerContent,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

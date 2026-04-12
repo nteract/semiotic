@@ -6,7 +6,7 @@ Last updated 2026-04-08.
 
 ## Rounded Corners
 
-**Status**: Scoped, not started.
+**Status**: Pie/donut `cornerRadius` DONE. Bar/StackedBar `roundedTop` DONE (topmost segment only). GroupedBar `roundedTop` not yet implemented. Negative-value bar rounding not yet handled (rounds top regardless of sign direction).
 
 ### What
 
@@ -131,13 +131,12 @@ A Node script (`scripts/demo-server-render.mjs`) that batch-renders charts to SV
 
 ---
 
-## OG Image HTTP Server
+## OG Image HTTP Server [DONE]
 
-**Status**: Not started. Trivial.
+`scripts/og-server.mjs` — Node HTTP server serving chart SVG/PNG from URL query parameters.
+`GET /og?component=BarChart&theme=dark&title=Revenue&format=png&scale=2`
 
-A ~60-line Node HTTP server (`scripts/og-server.mjs`) that returns chart SVG/PNG from URL query parameters. `GET /og?component=BarChart&theme=dark&title=Revenue` → PNG. Deployable as Vercel serverless function, Cloudflare Worker, or AWS Lambda.
-
-**Effort**: 0.5 day.
+Features: CORS, default demo data per chart type, JSON-encoded data in query params, landing page with example links. Deployable as standalone server or adapted to Vercel/Cloudflare.
 
 ---
 

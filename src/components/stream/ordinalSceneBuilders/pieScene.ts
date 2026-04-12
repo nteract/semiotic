@@ -30,6 +30,7 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
       outerRadius,
       startAngle,
       endAngle,
+      ...(config.cornerRadius && { cornerRadius: config.cornerRadius }),
       style,
       datum: col.pieceData,
       category: col.name

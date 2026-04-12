@@ -139,6 +139,7 @@ const barChart: ChartConfig = {
     colorAccessor: colorBy,
     colorScheme,
     barPadding: rest.barPadding,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -156,6 +157,7 @@ const stackedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     normalize: rest.normalize,
     oSort: rest.sort ?? false,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }
@@ -187,6 +189,7 @@ const pieChart: ChartConfig = {
     projection: "radial",
     colorAccessor: colorBy || rest.categoryAccessor,
     colorScheme,
+    ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
     ...common,
   }),
 }
@@ -202,6 +205,7 @@ const donutChart: ChartConfig = {
     innerRadius: rest.innerRadius || 60,
     colorAccessor: colorBy || rest.categoryAccessor,
     colorScheme,
+    ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
     ...common,
   }),
 }
@@ -299,6 +303,22 @@ const ridgelinePlot: ChartConfig = {
     rAccessor: rest.valueAccessor || "value",
     bins: rest.bins,
     amplitude: rest.amplitude,
+    ...common,
+  }),
+}
+
+const likertChart: ChartConfig = {
+  frameType: "ordinal",
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    chartType: "bar",
+    data,
+    oAccessor: rest.categoryAccessor || "category",
+    rAccessor: rest.valueAccessor || "value",
+    stackBy: rest.levelAccessor || "level",
+    colorAccessor: colorBy || rest.levelAccessor || "level",
+    colorScheme,
+    normalize: true,
+    projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
     ...common,
   }),
 }
@@ -553,6 +573,7 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   DotPlot: dotPlot,
   SwimlaneChart: swimlaneChart,
   RidgelinePlot: ridgelinePlot,
+  LikertChart: likertChart,
   FunnelChart: funnelChart,
   GaugeChart: gaugeChart,
   ForceDirectedGraph: forceDirectedGraph,

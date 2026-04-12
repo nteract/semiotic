@@ -347,6 +347,22 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
   switch (node.type) {
     case "rect": {
       const n = node as RectSceneNode
+      if (n.roundedTop && n.roundedTop > 0) {
+        const r = Math.min(n.roundedTop, n.w / 2, n.h / 2)
+        const d = n.roundedEdge === "right"
+          ? `M${n.x},${n.y} L${n.x + n.w - r},${n.y} A${r},${r} 0 0 1 ${n.x + n.w},${n.y + r} L${n.x + n.w},${n.y + n.h - r} A${r},${r} 0 0 1 ${n.x + n.w - r},${n.y + n.h} L${n.x},${n.y + n.h} Z`
+          : `M${n.x},${n.y + n.h} L${n.x},${n.y + r} A${r},${r} 0 0 1 ${n.x + r},${n.y} L${n.x + n.w - r},${n.y} A${r},${r} 0 0 1 ${n.x + n.w},${n.y + r} L${n.x + n.w},${n.y + n.h} Z`
+        return (
+          <path
+            key={baseKey}
+            d={d}
+            fill={svgFill(n.style.fill)}
+            opacity={n.style.opacity}
+            stroke={n.style.stroke}
+            strokeWidth={n.style.strokeWidth}
+          />
+        )
+      }
       return (
         <rect
           key={baseKey}
@@ -375,11 +391,13 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const n = node as WedgeSceneNode
       // Scene stores angles in canvas convention (0 = 3 o'clock).
       // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
-      const arcPath = d3Arc()
+      const arcGen = d3Arc()
         .innerRadius(n.innerRadius)
         .outerRadius(n.outerRadius)
         .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)({} as any) || ""
+        .endAngle(n.endAngle + Math.PI / 2)
+      if (n.cornerRadius) arcGen.cornerRadius(n.cornerRadius)
+      const arcPath = arcGen({} as any) || ""
       return (
         <path
           key={baseKey}

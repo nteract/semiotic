@@ -38,6 +38,9 @@ jobs:
       - name: Check schema freshness
         run: npm run check:schema
 
+      - name: Check SSR alignment
+        run: node scripts/check-ssr-alignment.js
+
       - name: Build production bundles
         run: npm run dist:prod
 

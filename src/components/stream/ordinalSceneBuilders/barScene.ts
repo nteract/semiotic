@@ -1,5 +1,6 @@
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
+import type { RectSceneNode } from "../types"
 import type { OrdinalSceneContext } from "./types"
 
 export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
@@ -100,6 +101,27 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
         if (val >= 0) posOffset += val
         else negOffset += val
       }
+    }
+  }
+
+  // Apply roundedTop to the topmost segment per category
+  if (config.roundedTop && config.roundedTop > 0) {
+    const r = Math.max(0, config.roundedTop)
+    const byCat = new Map<string, RectSceneNode[]>()
+    for (const n of nodes) {
+      if (n.type !== "rect") continue
+      const cat = n.datum?.category || ""
+      if (!byCat.has(cat)) byCat.set(cat, [])
+      byCat.get(cat)!.push(n)
+    }
+    for (const rects of byCat.values()) {
+      if (rects.length === 0) continue
+      const isV = projection === "vertical"
+      const topmost = isV
+        ? rects.reduce((a, b) => a.y < b.y ? a : b)
+        : rects.reduce((a, b) => (a.x + a.w) > (b.x + b.w) ? a : b)
+      topmost.roundedTop = r
+      topmost.roundedEdge = isV ? "top" : "right"
     }
   }
 

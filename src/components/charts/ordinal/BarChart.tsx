@@ -31,6 +31,8 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   colorScheme?: string | string[]
   sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
   barPadding?: number
+  /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
+  roundedTop?: number
   /** When true, adds padding below the 0 baseline. Default false (bars flush with axis). */
   baselinePadding?: boolean
   enableHover?: boolean
@@ -87,7 +89,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     colorBy,
     colorScheme,
     sort = false,
-    barPadding = 40,
+    barPadding = 40, roundedTop,
     baselinePadding = false,
     tooltip,
     annotations,
@@ -218,6 +220,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     responsiveHeight: props.responsiveHeight,
     margin: setup.margin,
     barPadding,
+    ...(roundedTop != null && { roundedTop }),
     ...(dataIdAccessor && { dataIdAccessor }),
     baselinePadding,
     enableHover,
