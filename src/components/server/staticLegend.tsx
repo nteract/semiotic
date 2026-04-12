@@ -73,8 +73,8 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
     tx = margin.left; ty = hasTitle ? 32 : 8
   } else if (position === "bottom") {
     // Place below the axes in the reserved bottom margin area.
-    // Axes use ~35px of the bottom margin; legend goes after that.
-    tx = margin.left; ty = totalHeight - margin.bottom + 38
+    // Axes use ~35px; legend goes after that. Clamp to stay within SVG bounds.
+    tx = margin.left; ty = Math.min(totalHeight - margin.bottom + 38, totalHeight - 16)
   } else {
     // right (default)
     tx = totalWidth - margin.right + 10; ty = margin.top

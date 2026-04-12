@@ -459,8 +459,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             data: rawData,
             properties: rawData?.properties,
             x, y,
-            time: 0,
-            value: 0,
+            time: x,
+            value: y,
           }
           hoverRef.current = hover
           hoveredNodeRef.current = node
@@ -510,7 +510,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (hit) {
         const datum = hit.node.datum
         const rawData = datum?.properties ? datum : (datum?.data || datum)
-        customClickBehavior({ data: rawData, x: chartX, y: chartY, time: 0, value: 0, properties: rawData?.properties })
+        customClickBehavior({ data: rawData, x: chartX, y: chartY, time: chartX, value: chartY, properties: rawData?.properties })
       }
     }, [customClickBehavior, margin])
 
@@ -562,8 +562,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         properties: rawDatum?.properties,
         x: point.x,
         y: point.y,
-        time: 0,
-        value: 0,
+        time: point.x,
+        value: point.y,
       }
       hoverRef.current = hover
       setHoverPoint(hover)

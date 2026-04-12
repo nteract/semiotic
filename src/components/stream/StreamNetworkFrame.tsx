@@ -645,8 +645,16 @@ const StreamNetworkFrame = forwardRef<
         if (removed) {
           // Clear hover if the removed edge was being hovered
           if (hoverRef.current && hoverRef.current.nodeOrEdge === "edge") {
-            hoverRef.current = null
-            setHoverData(null)
+            const hoveredEdge = hoverRef.current.data
+            const hSrc = typeof hoveredEdge?.source === "object" ? hoveredEdge.source.id : hoveredEdge?.source
+            const hTgt = typeof hoveredEdge?.target === "object" ? hoveredEdge.target.id : hoveredEdge?.target
+            const matches = targetId !== undefined
+              ? hSrc === sourceIdOrEdgeId && hTgt === targetId
+              : true // single-ID mode — edge was removed, conservatively clear
+            if (matches) {
+              hoverRef.current = null
+              setHoverData(null)
+            }
           }
           runLayout()
           dirtyRef.current = true
@@ -839,8 +847,8 @@ const StreamNetworkFrame = forwardRef<
       data: rawDatum,
       x: hit.x,
       y: hit.y,
-      time: 0,
-      value: 0,
+      time: hit.x,
+      value: hit.y,
       nodeOrEdge: hit.type as "node" | "edge",
     }
 
@@ -899,8 +907,8 @@ const StreamNetworkFrame = forwardRef<
         data: rawDatum,
         x: hit.x,
         y: hit.y,
-        time: 0,
-        value: 0,
+        time: hit.x,
+        value: hit.y,
         nodeOrEdge: hit.type as "node" | "edge",
       })
     } else {
@@ -953,8 +961,8 @@ const StreamNetworkFrame = forwardRef<
         data: rawDatum,
         x: point.x,
         y: point.y,
-        time: 0,
-        value: 0,
+        time: point.x,
+        value: point.y,
         nodeOrEdge: "node",
       }
       hoverRef.current = hover

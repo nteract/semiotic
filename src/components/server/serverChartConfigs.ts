@@ -342,13 +342,21 @@ const gaugeChart: ChartConfig = {
       zoneColors[t.label || `zone-${i}`] = t.color || "#4e79a7"
     })
 
+    // Compute innerRadius from arcWidth fraction, matching renderOrdinalFrame's layout
+    const m = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
+    const [w, h] = common.size || [300, 300]
+    const innerW = w - (m.left || 0) - (m.right || 0)
+    const innerH = h - (m.top || 0) - (m.bottom || 0)
+    const chartSize = Math.min(innerW, innerH)
+    const computedInnerRadius = Math.max(10, (chartSize / 2) * (1 - arcWidth))
+
     return {
       chartType: "donut",
       data: zoneData,
       oAccessor: "category",
       rAccessor: "value",
       projection: "radial",
-      innerRadius: undefined, // computed in renderChart from arcWidth
+      innerRadius: computedInnerRadius,
       sweepAngle: sweep,
       startAngle: startAngleDeg,
       oSort: false,
@@ -515,7 +523,20 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   AreaChart: areaChart,
   StackedAreaChart: stackedAreaChart,
   Scatterplot: scatterplot,
-  BubbleChart: scatterplot, // same config, sizeBy handled via rest
+  BubbleChart: {
+    frameType: "xy",
+    buildProps: (data, colorBy, colorScheme, common, rest) => ({
+      chartType: "scatter",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      colorAccessor: colorBy,
+      sizeAccessor: rest.sizeBy,
+      sizeRange: rest.sizeRange || [5, 40],
+      colorScheme,
+      ...common,
+    }),
+  },
   ConnectedScatterplot: connectedScatterplot,
   Heatmap: heatmap,
   BarChart: barChart,
