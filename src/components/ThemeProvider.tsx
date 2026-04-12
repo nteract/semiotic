@@ -119,9 +119,9 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.colors.selectionOpacity != null ? { "--semiotic-selection-opacity": String(theme.colors.selectionOpacity) } : {}),
     ...(theme.colors.diverging ? { "--semiotic-diverging": theme.colors.diverging } : {}),
     ...(theme.colors.annotation ? { "--semiotic-annotation-color": theme.colors.annotation } : {}),
-    ...(theme.typography.legendSize ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
-    ...(theme.typography.titleFontSize ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
-    ...(theme.typography.tickFontFamily ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
+    ...(theme.typography.legendSize != null ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
+    ...(theme.typography.titleFontSize != null ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
+    ...(theme.typography.tickFontFamily != null ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
   }
 
   const themeName = React.useContext(ThemeNameContext)

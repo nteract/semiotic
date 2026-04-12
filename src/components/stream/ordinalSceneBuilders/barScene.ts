@@ -115,7 +115,6 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
       byCat.get(cat)!.push(n)
     }
     const isV = projection === "vertical"
-    const baseline = rScale(0)
     for (const rects of byCat.values()) {
       if (rects.length === 0) continue
       // Split into positive (above/right of baseline) and negative (below/left)

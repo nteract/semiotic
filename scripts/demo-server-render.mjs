@@ -40,6 +40,10 @@ try {
 
 const generatePNG = process.argv.includes("--png")
 const outIdx = process.argv.indexOf("--out")
+if (outIdx !== -1 && (!process.argv[outIdx + 1] || process.argv[outIdx + 1].startsWith("--"))) {
+  console.error('Error: "--out" requires a directory path.\nUsage: npx tsx scripts/demo-server-render.mjs [--png] [--out <directory>]')
+  process.exit(1)
+}
 const outDir = outIdx !== -1 ? process.argv[outIdx + 1] : path.join(__dirname, "..", "demo-output")
 
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })

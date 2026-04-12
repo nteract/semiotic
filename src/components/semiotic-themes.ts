@@ -557,13 +557,13 @@ export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
   if (theme.colors.annotation) {
     vars.push(`  --semiotic-annotation-color: ${theme.colors.annotation};`)
   }
-  if (theme.typography.legendSize) {
+  if (theme.typography.legendSize != null) {
     vars.push(`  --semiotic-legend-font-size: ${theme.typography.legendSize}px;`)
   }
-  if (theme.typography.titleFontSize) {
+  if (theme.typography.titleFontSize != null) {
     vars.push(`  --semiotic-title-font-size: ${theme.typography.titleFontSize}px;`)
   }
-  if (theme.typography.tickFontFamily) {
+  if (theme.typography.tickFontFamily != null) {
     vars.push(`  --semiotic-tick-font-family: ${theme.typography.tickFontFamily};`)
   }
 
@@ -623,13 +623,13 @@ export function themeToTokens(theme: SemioticTheme): Record<string, any> {
       ...(theme.colors.annotation ? {
         "annotation-color": { $value: theme.colors.annotation, $type: "color" },
       } : {}),
-      ...(theme.typography.legendSize ? {
+      ...(theme.typography.legendSize != null ? {
         "legend-font-size": { $value: `${theme.typography.legendSize}px`, $type: "dimension" },
       } : {}),
-      ...(theme.typography.titleFontSize ? {
+      ...(theme.typography.titleFontSize != null ? {
         "title-font-size": { $value: `${theme.typography.titleFontSize}px`, $type: "dimension" },
       } : {}),
-      ...(theme.typography.tickFontFamily ? {
+      ...(theme.typography.tickFontFamily != null ? {
         "tick-font-family": { $value: theme.typography.tickFontFamily, $type: "fontFamily" },
       } : {}),
     },
