@@ -229,7 +229,7 @@ for (const chart of charts) {
       fs.writeFileSync(pngPath, png)
       console.log(`  PNG  ${chart.name}.png (${(png.length / 1024).toFixed(1)}KB)`)
     } catch (e) {
-      console.log(`  PNG  ${chart.name}.png SKIPPED (${e.message})`)
+      console.log(`  PNG  ${chart.name}.png SKIPPED (${e instanceof Error ? e.message : String(e)})`)
     }
   }
 }
