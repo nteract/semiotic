@@ -107,7 +107,7 @@ function renderNote(
   let yOffset = 0
   const textElements: React.ReactElement[] = []
 
-  const textFill = color || "var(--semiotic-text, #333)"
+  const textFill = color || "var(--semiotic-annotation-color, var(--semiotic-text, #333))"
 
   if (titleLines.length > 0) {
     textElements.push(

@@ -300,7 +300,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       groupBy: { type: ["string", "function"] },
       valueAccessor: { type: ["string", "function"] },
       orientation: { type: "string", enum: orientationEnum as unknown as string[] },
+      sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
+      roundedTop: { type: "number" },
     },
   },
 

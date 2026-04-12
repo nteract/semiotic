@@ -152,7 +152,7 @@ All HOCs accept `annotations` (array). Coordinates use data field names.
 
 ## Theming
 
-CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-secondary`, `--semiotic-border`, `--semiotic-grid`, `--semiotic-primary`, `--semiotic-focus`, `--semiotic-font-family`, `--semiotic-tooltip-bg`/`text`/`radius`/`font-size`/`shadow`.
+CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-secondary`, `--semiotic-border`, `--semiotic-grid`, `--semiotic-primary`, `--semiotic-focus`, `--semiotic-font-family`, `--semiotic-annotation-color`, `--semiotic-legend-font-size`, `--semiotic-title-font-size`, `--semiotic-tick-font-family`, `--semiotic-tooltip-bg`/`text`/`radius`/`font-size`/`shadow`.
 
 ```jsx
 <ThemeProvider theme="tufte">       {/* Named preset */}

@@ -223,8 +223,8 @@ export interface RectSceneNode {
   h: number
   /** Rounded corner radius on the end away from the baseline */
   roundedTop?: number
-  /** Which edge to round: "top" (vertical bars), "right" (horizontal bars) */
-  roundedEdge?: "top" | "right"
+  /** Which edge to round: "top"/"bottom" (vertical), "right"/"left" (horizontal) */
+  roundedEdge?: "top" | "bottom" | "right" | "left"
   style: Style
   datum: any
   group?: string

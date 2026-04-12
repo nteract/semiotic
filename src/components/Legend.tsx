@@ -146,7 +146,7 @@ const renderLegendGroupVertical = (
         />}
         {renderedType}
         {isIsolated && <CheckMark />}
-        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
+        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
@@ -258,7 +258,7 @@ const renderLegendGroupHorizontal = (
         />}
         {renderedType}
         {isIsolated && <CheckMark />}
-        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" fontSize={12} fill="var(--semiotic-text, #333)">
+        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>

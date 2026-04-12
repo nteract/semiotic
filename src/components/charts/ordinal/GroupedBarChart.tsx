@@ -31,6 +31,8 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   /** Category sort order. Default: false (data insertion order). "asc"/"desc" sorts by total grouped value. Custom comparators receive category keys. */
   sort?: boolean | "asc" | "desc" | ((a: string, b: string) => number)
   barPadding?: number
+  /** Rounded corner radius on bar ends (away from baseline). */
+  roundedTop?: number
   baselinePadding?: boolean
   enableHover?: boolean
   showGrid?: boolean
@@ -68,7 +70,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     data, margin: userMargin, className,
     categoryAccessor = "category", groupBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme, sort = false, barPadding = 60, baselinePadding = false,
+    colorBy, colorScheme, sort = false, barPadding = 60, roundedTop, baselinePadding = false,
     tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
@@ -175,6 +177,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     responsiveHeight: props.responsiveHeight,
     margin: effectiveMargin,
     barPadding,
+    ...(roundedTop != null && { roundedTop }),
     baselinePadding,
     enableHover,
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),

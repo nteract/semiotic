@@ -175,6 +175,7 @@ const groupedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     oSort: rest.sort ?? false,
     barPadding: rest.barPadding,
+    ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
 }

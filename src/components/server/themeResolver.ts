@@ -62,5 +62,9 @@ export function themeStyles(theme: SemioticTheme) {
     labelSize: theme.typography.labelSize,
     tickSize: theme.typography.tickSize,
     categorical: theme.colors.categorical,
+    annotation: theme.colors.annotation ?? theme.colors.text,
+    legendSize: theme.typography.legendSize ?? theme.typography.labelSize,
+    titleFontSize: theme.typography.titleFontSize ?? theme.typography.titleSize,
+    tickFontFamily: theme.typography.tickFontFamily ?? theme.typography.fontFamily,
   }
 }

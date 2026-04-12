@@ -340,7 +340,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
   // Build a unique key combining node type, category (or group), and index
   // to avoid duplicate key warnings when multiple nodes share the same index
   // within stacked/grouped ordinal charts.
-  const category = (node as any).category || (node as any).group || ""
+  const category = ("category" in node ? node.category : undefined) || ("group" in node ? node.group : undefined) || ""
   const nodeKey = (suffix: string) => `ord-${node.type}-${category}-${i}-${suffix}`
   const baseKey = `ord-${node.type}-${category}-${i}`
 
@@ -349,9 +349,21 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const n = node as RectSceneNode
       if (n.roundedTop && n.roundedTop > 0) {
         const r = Math.min(n.roundedTop, n.w / 2, n.h / 2)
-        const d = n.roundedEdge === "right"
-          ? `M${n.x},${n.y} L${n.x + n.w - r},${n.y} A${r},${r} 0 0 1 ${n.x + n.w},${n.y + r} L${n.x + n.w},${n.y + n.h - r} A${r},${r} 0 0 1 ${n.x + n.w - r},${n.y + n.h} L${n.x},${n.y + n.h} Z`
-          : `M${n.x},${n.y + n.h} L${n.x},${n.y + r} A${r},${r} 0 0 1 ${n.x + r},${n.y} L${n.x + n.w - r},${n.y} A${r},${r} 0 0 1 ${n.x + n.w},${n.y + r} L${n.x + n.w},${n.y + n.h} Z`
+        const { x, y, w, h } = n
+        let d: string
+        switch (n.roundedEdge) {
+          case "right":
+            d = `M${x},${y} L${x+w-r},${y} A${r},${r} 0 0 1 ${x+w},${y+r} L${x+w},${y+h-r} A${r},${r} 0 0 1 ${x+w-r},${y+h} L${x},${y+h} Z`
+            break
+          case "left":
+            d = `M${x+w},${y} L${x+r},${y} A${r},${r} 0 0 0 ${x},${y+r} L${x},${y+h-r} A${r},${r} 0 0 0 ${x+r},${y+h} L${x+w},${y+h} Z`
+            break
+          case "bottom":
+            d = `M${x},${y} L${x+w},${y} L${x+w},${y+h-r} A${r},${r} 0 0 1 ${x+w-r},${y+h} L${x+r},${y+h} A${r},${r} 0 0 1 ${x},${y+h-r} Z`
+            break
+          default: // "top"
+            d = `M${x},${y+h} L${x},${y+r} A${r},${r} 0 0 1 ${x+r},${y} L${x+w-r},${y} A${r},${r} 0 0 1 ${x+w},${y+r} L${x+w},${y+h} Z`
+        }
         return (
           <path
             key={baseKey}
