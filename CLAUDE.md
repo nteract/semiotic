@@ -27,6 +27,8 @@
 **QuadrantChart** — Scatterplot + `quadrants` (required), `xCenter`, `yCenter`
 **MultiAxisLineChart** — Dual Y-axis. `series` (required: `[{ yAccessor, label?, color?, format?, extent? }]`). Falls back to multi-line if not 2 series.
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
+**ScatterplotMatrix** — `data`, `fields` (array of numeric field names for grid)
+**MinimapChart** — Overview + detail with linked zoom. Wraps an XY chart.
 
 ## Ordinal Charts (`semiotic/ordinal`)
 

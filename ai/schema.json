@@ -4793,6 +4793,101 @@
           ]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ScatterplotMatrix",
+        "description": "Multi-panel scatterplot grid with crossfilter brushing. Requires data array with numeric fields.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": { "type": "array" },
+            "fields": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "MinimapChart",
+        "description": "Overview + detail chart with linked zoom. Wraps an XY chart with a minimap navigation pane.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": { "type": "array" }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ChoroplethMap",
+        "description": "Geographic choropleth map with colored regions based on data values.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "areas": { "type": ["array", "string"], "description": "GeoJSON features or reference geography name" },
+            "valueAccessor": { "type": "string" },
+            "colorScheme": { "type": "string" },
+            "projection": { "type": "string", "default": "equalEarth" }
+          },
+          "required": ["areas"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ProportionalSymbolMap",
+        "description": "Geographic map with sized symbols at point locations.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "points": { "type": "array" },
+            "xAccessor": { "type": "string", "default": "lon" },
+            "yAccessor": { "type": "string", "default": "lat" },
+            "sizeBy": { "type": "string" },
+            "areas": { "type": ["array", "string"] }
+          },
+          "required": ["points"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "FlowMap",
+        "description": "Geographic flow map showing movement between locations with animated particles.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "flows": { "type": "array" },
+            "nodes": { "type": "array" },
+            "valueAccessor": { "type": "string" }
+          },
+          "required": ["flows"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "DistanceCartogram",
+        "description": "Cartogram distorting geographic positions based on travel time or cost from a center point.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "points": { "type": "array" },
+            "center": { "type": "array" },
+            "costAccessor": { "type": "string" }
+          },
+          "required": ["points"]
+        }
+      }
     }
   ]
 }
