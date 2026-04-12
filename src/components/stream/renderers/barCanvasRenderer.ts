@@ -45,7 +45,7 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
       }
       ctx.fill()
 
-      if (node.style.stroke) {
+      if (node.style.stroke && node.style.stroke !== "none") {
         ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
         ctx.lineWidth = node.style.strokeWidth || 1
         ctx.stroke()
@@ -55,7 +55,7 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
       ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
       ctx.fillRect(node.x, node.y, node.w, node.h)
 
-      if (node.style.stroke) {
+      if (node.style.stroke && node.style.stroke !== "none") {
         ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
         ctx.lineWidth = node.style.strokeWidth || 1
         ctx.strokeRect(node.x, node.y, node.w, node.h)

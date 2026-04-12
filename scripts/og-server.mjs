@@ -42,7 +42,7 @@ try {
 } catch {
   // Fallback: try tsx/ts-node source import
   try {
-    ;({ renderChart } = await import("../src/components/server/renderToStaticSVG.js"))
+    ;({ renderChart } = await import("../src/components/semiotic-server.ts"))
   } catch (e) {
     throw new Error(
       'Unable to load semiotic/server. Run "npm run dist" first, or use "npx tsx scripts/og-server.mjs".',

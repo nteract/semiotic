@@ -278,3 +278,77 @@ describe("hierarchy charts with colorByDepth", () => {
     expect(isValidSVG(svg)).toBe(true)
   })
 })
+
+// ── Rounded corners in SSR ────────────────────────────────────────────
+
+describe("rounded corners in SSR", () => {
+  it("PieChart with cornerRadius renders path elements", () => {
+    const svg = renderChart("PieChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "category",
+      cornerRadius: 8,
+      width: 300, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    expect(svg).toContain("<path")
+  })
+
+  it("DonutChart with cornerRadius renders without error", () => {
+    const svg = renderChart("DonutChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "category",
+      cornerRadius: 6,
+      width: 300, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+  })
+
+  it("BarChart with roundedTop renders path elements", () => {
+    const svg = renderChart("BarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      roundedTop: 6,
+      width: 400, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    expect(svg).toContain("<path")
+  })
+
+  it("StackedBarChart with roundedTop renders path elements", () => {
+    const stackData = [
+      { category: "A", value: 10, group: "X" },
+      { category: "A", value: 5, group: "Y" },
+      { category: "B", value: 20, group: "X" },
+      { category: "B", value: 8, group: "Y" },
+    ]
+    const svg = renderChart("StackedBarChart", {
+      data: stackData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      stackBy: "group",
+      roundedTop: 6,
+      width: 400, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    // Topmost segments render as <path> (rounded), others as <rect>
+    expect(svg).toContain("<path")
+  })
+
+  it("horizontal BarChart with roundedTop renders correctly", () => {
+    const svg = renderChart("BarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      orientation: "horizontal",
+      roundedTop: 6,
+      width: 400, height: 300,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    expect(svg).toContain("<path")
+  })
+})
