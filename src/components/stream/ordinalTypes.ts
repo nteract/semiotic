@@ -61,6 +61,8 @@ export interface WedgeSceneNode {
   startAngle: number
   /** End angle in radians, canvas convention */
   endAngle: number
+  /** Corner radius for rounded wedge arcs (d3-shape arc.cornerRadius) */
+  cornerRadius?: number
   style: Style
   datum: any
   category?: string
@@ -223,6 +225,8 @@ export interface OrdinalPipelineConfig {
   /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
   baselinePadding?: boolean
   innerRadius?: number
+  /** Corner radius for rounded wedge arcs (pie/donut/gauge) */
+  cornerRadius?: number
   normalize?: boolean
   startAngle?: number
   /** Total arc sweep in degrees (default 360 = full circle). Used by GaugeChart for partial arcs. */
@@ -297,6 +301,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   barPadding?: number
   baselinePadding?: boolean
   innerRadius?: number
+  cornerRadius?: number
   normalize?: boolean
   startAngle?: number
   sweepAngle?: number

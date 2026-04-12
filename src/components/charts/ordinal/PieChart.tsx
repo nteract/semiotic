@@ -24,6 +24,8 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
   startAngle?: number
+  /** Rounded corner radius on wedge arcs */
+  cornerRadius?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
   showLegend?: boolean
@@ -52,7 +54,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    colorBy, colorScheme, startAngle = 0,
+    colorBy, colorScheme, startAngle = 0, cornerRadius,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -161,6 +163,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     projection: "radial",
     pieceStyle,
     startAngle,
+    ...(cornerRadius != null && { cornerRadius }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,

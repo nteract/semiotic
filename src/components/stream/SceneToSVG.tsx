@@ -375,11 +375,13 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const n = node as WedgeSceneNode
       // Scene stores angles in canvas convention (0 = 3 o'clock).
       // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
-      const arcPath = d3Arc()
+      const arcGen = d3Arc()
         .innerRadius(n.innerRadius)
         .outerRadius(n.outerRadius)
         .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)({} as any) || ""
+        .endAngle(n.endAngle + Math.PI / 2)
+      if (n.cornerRadius) arcGen.cornerRadius(n.cornerRadius)
+      const arcPath = arcGen({} as any) || ""
       return (
         <path
           key={baseKey}
