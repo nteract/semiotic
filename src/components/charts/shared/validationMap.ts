@@ -862,7 +862,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
 
   // ── Composite/Geo charts (minimal validation) ──────────────────────
   ScatterplotMatrix: {
-    required: ["data"],
+    required: ["data", "fields"],
     dataShape: "array",
     dataAccessors: [],
     props: {
@@ -872,7 +872,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
   MinimapChart: {
-    required: [],
+    required: ["data"],
     dataShape: "array",
     dataAccessors: [],
     props: {

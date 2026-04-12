@@ -4805,7 +4805,7 @@
             "data": { "type": "array" },
             "fields": { "type": "array", "items": { "type": "string" } }
           },
-          "required": ["data"]
+          "required": ["data", "fields"]
         }
       }
     },
@@ -4818,7 +4818,8 @@
           "type": "object",
           "properties": {
             "data": { "type": "array" }
-          }
+          },
+          "required": ["data"]
         }
       }
     },

@@ -6,8 +6,8 @@
  * Fails CI if:
  * 1. An HOC chart exists but has no SSR config entry
  * 2. An SSR config entry references a chart that doesn't exist as an HOC
- * 3. Key props (colorBy, colorScheme, sort, roundedTop, cornerRadius) are
- *    missing from SSR configs for charts that support them
+ * 3. Checked key props (currently oSort and cornerRadius) are missing from
+ *    SSR configs for charts that support them
  *
  * Usage:
  *   node scripts/check-ssr-alignment.js

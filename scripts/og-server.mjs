@@ -139,7 +139,7 @@ async function handleRequest(req, res) {
   const params = url.searchParams
   const component = params.get("component")
   const format = params.get("format") || "svg"
-  const scale = Math.min(parseInt(params.get("scale") || "2", 10) || 2, MAX_SCALE)
+  const scale = Math.max(1, Math.min(parseInt(params.get("scale") || "2", 10) || 2, MAX_SCALE))
 
   if (!component) {
     res.writeHead(400, { "Content-Type": "application/json" })
@@ -170,8 +170,15 @@ async function handleRequest(req, res) {
         return
       }
 
+      const pxW = props.width * scale
+      const pxH = props.height * scale
+      if (pxW * pxH > 16_000_000) { // ~16MP cap
+        res.writeHead(400, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ error: `Requested image too large (${pxW}x${pxH}). Max ~16MP.` }))
+        return
+      }
       const png = await sharp(Buffer.from(svg))
-        .resize(props.width * scale, props.height * scale)
+        .resize(pxW, pxH)
         .png()
         .toBuffer()
 

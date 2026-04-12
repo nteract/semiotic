@@ -105,8 +105,8 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   }
 
   // Apply roundedTop to the topmost segment per category
-  if (config.roundedTop) {
-    const r = config.roundedTop
+  if (config.roundedTop && config.roundedTop > 0) {
+    const r = Math.max(0, config.roundedTop)
     const byCat = new Map<string, RectSceneNode[]>()
     for (const n of nodes) {
       if (n.type !== "rect") continue

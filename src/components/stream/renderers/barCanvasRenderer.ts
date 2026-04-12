@@ -19,7 +19,7 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) 
     if (node.style.icon) {
       // Icon/isotype mode: stamp the image to fill the bar
       drawIconBar(ctx, node)
-    } else if (node.roundedTop) {
+    } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
       ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
