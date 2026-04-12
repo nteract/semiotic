@@ -20,10 +20,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Load from dist or source
 let renderChart, renderDashboard, renderToImage
 try {
-  const mod = await import("../dist/semiotic-server.js")
-  renderChart = mod.renderChart
-  renderDashboard = mod.renderDashboard
-  renderToImage = mod.renderToImage
+  const mod = await import("../dist/server.module.min.js")
+  const server = mod.default ?? mod
+  renderChart = server.renderChart
+  renderDashboard = server.renderDashboard
+  renderToImage = server.renderToImage
 } catch {
   try {
     const mod = await import("../src/components/semiotic-server.ts")

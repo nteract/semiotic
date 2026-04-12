@@ -38,7 +38,8 @@ import { URL } from "node:url"
 // Load the built server renderer. Run `npm run dist` first, or use `npx tsx scripts/og-server.mjs`.
 let renderChart
 try {
-  ;({ renderChart } = await import("../dist/semiotic-server.js"))
+  const mod = await import("../dist/server.module.min.js")
+  renderChart = (mod.default ?? mod).renderChart
 } catch {
   // Fallback: try tsx/ts-node source import
   try {

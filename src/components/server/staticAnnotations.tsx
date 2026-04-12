@@ -83,7 +83,7 @@ function renderAnnotation(
     case "y-threshold": {
       const value = ann.value
       if (value == null) return null
-      const color = ann.color || theme.colors.annotation || theme.colors.primary
+      const color = ann.color || theme.colors.annotation || theme.colors.text
       const label = ann.label
       const labelPos = ann.labelPosition || "right"
       const dasharray = ann.strokeDasharray || "6,4"
@@ -137,7 +137,7 @@ function renderAnnotation(
       if (value == null || !scales.x) return null
       const px = scales.x(value)
       if (px == null) return null
-      const color = ann.color || theme.colors.annotation || theme.colors.primary
+      const color = ann.color || theme.colors.annotation || theme.colors.text
       const label = ann.label
       const labelPos = ann.labelPosition || "top"
       const dasharray = ann.strokeDasharray || "6,4"
@@ -170,7 +170,7 @@ function renderAnnotation(
       if (y0 == null || y1 == null) return null
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
-      const fill = ann.fill || ann.color || theme.colors.annotation || theme.colors.primary
+      const fill = ann.fill || ann.color || theme.colors.annotation || theme.colors.text
       const opacity = ann.opacity ?? 0.1
       return (
         <g key={`ann-band-${index}`}>
@@ -198,7 +198,7 @@ function renderAnnotation(
       const oVal = scales.o(ann.category)
       if (oVal == null) return null
       const bandwidth = scales.o.bandwidth ? scales.o.bandwidth() : 40
-      const color = ann.color || theme.colors.annotation || theme.colors.primary
+      const color = ann.color || theme.colors.annotation || theme.colors.text
       const opacity = ann.opacity ?? 0.1
       // Horizontal ordinal: highlight across Y band
       if (config.projection === "horizontal") {
