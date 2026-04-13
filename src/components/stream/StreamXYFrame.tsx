@@ -45,6 +45,7 @@ import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
+import { buildHoverData } from "./hoverUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -721,14 +722,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       const rawDatum = hit.datum || {}
-      const hover: HoverData = {
-        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        data: rawDatum,
-        time: hit.x,
-        value: hit.y,
-        x: hit.x,
-        y: hit.y
-      }
+      const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y)
 
       // Multi-tooltip mode: attach all series values at this X to the hover data
       if (tooltipMode === "multi" && store.scene.length > 0 && store.scales) {
@@ -797,15 +791,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
-      const clickData: HoverData = {
-        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        data: rawDatum,
-        time: hit.x,
-        value: hit.y,
-        x: hit.x,
-        y: hit.y,
-      }
-      customClickBehavior(clickData)
+      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y))
     }
     const onClick = useCallback(
       (e: React.MouseEvent) => clickHandlerRef.current(e),

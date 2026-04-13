@@ -62,6 +62,7 @@ import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
+import { buildHoverData } from "./hoverUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -554,19 +555,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
 
       const rawDatum = hit.datum || {}
-      const hover: HoverData = {
-        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        data: rawDatum,
-        time: hit.x,
-        value: hit.y,
-        x: hit.x,
-        y: hit.y,
+      const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
         ...(hit.stats && { stats: hit.stats }),
         ...(hit.category && { category: hit.category }),
         __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
         __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
         __chartType: chartType
-      }
+      })
 
       hoverRef.current = hover
       setHoverPoint(hover)
