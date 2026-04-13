@@ -21,6 +21,7 @@ import type {
   ThresholdAlertConfig
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
+import { buildHoverData } from "./hoverUtils"
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
@@ -851,15 +852,9 @@ const StreamNetworkFrame = forwardRef<
     }
 
     const rawDatum = hit.datum || {}
-    const hover: HoverData = {
-      ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-      data: rawDatum,
-      x: hit.x,
-      y: hit.y,
-      time: hit.x,
-      value: hit.y,
+    const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
       nodeOrEdge: hit.type as "node" | "edge",
-    }
+    })
 
     hoverRef.current = hover
     setHoverData(hover)
@@ -911,15 +906,9 @@ const StreamNetworkFrame = forwardRef<
 
     if (hit) {
       const rawDatum = hit.datum || {}
-      customClickBehavior({
-        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        data: rawDatum,
-        x: hit.x,
-        y: hit.y,
-        time: hit.x,
-        value: hit.y,
+      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y, {
         nodeOrEdge: hit.type as "node" | "edge",
-      })
+      }))
     } else {
       customClickBehavior(null)
     }
@@ -965,15 +954,9 @@ const StreamNetworkFrame = forwardRef<
       const point = graph.flat[0]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       const rawDatum = point.datum || {}
-      const hover: HoverData = {
-        ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
-        data: rawDatum,
-        x: point.x,
-        y: point.y,
-        time: point.x,
-        value: point.y,
+      const hover: HoverData = buildHoverData(rawDatum, point.x, point.y, {
         nodeOrEdge: "node",
-      }
+      })
       hoverRef.current = hover
       setHoverData(hover)
       if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
