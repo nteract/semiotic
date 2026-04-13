@@ -248,7 +248,7 @@
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.27.1",
     "events": "^3.3.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^29.0.2",
     "marked": "4.0.10",
     "os-browserify": "^0.3.0",
     "parcel": "^2.16.4",
