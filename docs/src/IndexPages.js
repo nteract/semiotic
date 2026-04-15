@@ -329,6 +329,11 @@ export function PlaygroundIndex() {
           title="Realtime Bar / Swarm"
           thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
         />
+        <PageLink
+          href="/playground/animation"
+          title="Animation"
+          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
+        />
       </div>
     </div>
   )

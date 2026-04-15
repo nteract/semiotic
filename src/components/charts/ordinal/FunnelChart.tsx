@@ -262,6 +262,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : tooltip === true || tooltip == null

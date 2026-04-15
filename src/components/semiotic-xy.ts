@@ -25,3 +25,14 @@ export type {
   StreamXYFrameProps,
   StreamXYFrameHandle
 } from "./stream/types"
+
+// Chart prop types
+export type { LineChartProps } from "./charts/xy/LineChart"
+export type { AreaChartProps } from "./charts/xy/AreaChart"
+export type { StackedAreaChartProps } from "./charts/xy/StackedAreaChart"
+export type { ScatterplotProps } from "./charts/xy/Scatterplot"
+export type { ConnectedScatterplotProps } from "./charts/xy/ConnectedScatterplot"
+export type { BubbleChartProps } from "./charts/xy/BubbleChart"
+export type { HeatmapProps } from "./charts/xy/Heatmap"
+export type { QuadrantChartProps } from "./charts/xy/QuadrantChart"
+export type { MultiAxisLineChartProps } from "./charts/xy/MultiAxisLineChart"

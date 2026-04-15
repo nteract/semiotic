@@ -143,7 +143,9 @@ const stackedBarChartProps = [
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% (percentage stacked chart)." },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bar groups in pixels." },
+  { name: "sort", type: 'boolean | "asc" | "desc" | function', required: false, default: "false", description: 'Sort categories by total value. Accepts true, "asc", "desc", or a custom comparator. Default false preserves insertion order.' },
   { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on topmost stack segment." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing }` for custom." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bar segments." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend for stacked categories." },
@@ -346,6 +348,31 @@ export default function StackedBarChartPage() {
     strokeWidth: 1,
   }),
 }`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="sorted">Sorted Stacked Bars</h3>
+      <p>
+        Use <code>sort</code> to order categories by their total value.
+        Accepts <code>"asc"</code>, <code>"desc"</code>, or a custom comparator.
+        Default is <code>false</code> (preserves insertion order).
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          stackBy: "product",
+          valueAccessor: "value",
+          sort: "desc",
+          categoryLabel: "Quarter",
+          valueLabel: "Revenue ($)",
+        }}
+        type={StackedBarChart}
+        overrideProps={{
+          data: "quarterlyData",
+          sort: '"desc"',
         }}
         hiddenProps={{}}
       />

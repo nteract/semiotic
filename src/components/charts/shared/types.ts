@@ -111,9 +111,10 @@ export interface BaseChartProps {
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
 
-  /** Enable declarative bounded animation (enter/exit/update transitions).
-   * `true` uses defaults (300ms ease-out). Object form allows customization. */
-  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out" }
+  /** Enable declarative bounded animation (enter/exit/update transitions + intro).
+   * `true` uses defaults (300ms ease-out, intro enabled). Object form allows customization.
+   * Set `{ intro: false }` to disable the animated intro on first render. */
+  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
 }
 
 /**

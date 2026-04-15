@@ -224,6 +224,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     ...(resolved.summary && { summary: resolved.summary }),
     ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     ...frameProps
   }
 

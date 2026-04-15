@@ -138,6 +138,7 @@ import StatisticalAnnotationsPlayground from "./pages/playground/StatisticalAnno
 import ForecastPlayground from "./pages/playground/ForecastPlayground"
 import ChoroplethMapPlayground from "./pages/playground/ChoroplethMapPlayground"
 import DistanceCartogramPlayground from "./pages/playground/DistanceCartogramPlayground"
+import AnimationPlayground from "./pages/playground/AnimationPlayground"
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -355,6 +356,7 @@ export default function DocsApp() {
               <Route path="forecast" element={<ForecastPlayground />} />
               <Route path="choropleth-map" element={<ChoroplethMapPlayground />} />
               <Route path="distance-cartogram" element={<DistanceCartogramPlayground />} />
+              <Route path="animation" element={<AnimationPlayground />} />
             </Route>
 
             {/* Frames routes */}

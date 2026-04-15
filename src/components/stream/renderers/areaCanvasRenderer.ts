@@ -96,6 +96,15 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
   for (const node of areaNodes) {
     if (node.topPath.length < 2) continue
 
+    // Intro clip: reveal area from left to right
+    const clipFrac = node._introClipFraction
+    if (clipFrac !== undefined && clipFrac < 1) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(0, 0, layout.width * clipFrac, layout.height)
+      ctx.clip()
+    }
+
     const fillColor = node.style.fill || "#4e79a7"
     const decayOpacities = node._decayOpacities
 
@@ -214,6 +223,11 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         }
       }
       ctx.stroke()
+    }
+
+    // Restore after intro clip
+    if (clipFrac !== undefined && clipFrac < 1) {
+      ctx.restore()
     }
 
     ctx.globalAlpha = 1

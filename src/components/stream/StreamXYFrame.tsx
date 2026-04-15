@@ -46,6 +46,7 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData } from "./hoverUtils"
+import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -385,7 +386,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onBrush,
       decay,
       pulse,
-      transition,
+      transition: transitionProp,
+      animate,
       staleness,
       heatmapAggregation,
       heatmapXBins,
@@ -471,6 +473,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const isStreaming = runtimeMode === "streaming" || ["bar", "swarm", "waterfall"].includes(chartType)
 
+    // Resolve animate prop → transition config + intro flag
+    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+
     const pipelineConfig = useMemo((): PipelineConfig => ({
       chartType,
       runtimeMode: isStreaming ? "streaming" : "bounded",
@@ -521,6 +526,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       decay,
       pulse,
       transition,
+      introAnimation: introEnabled,
       staleness,
       heatmapAggregation,
       heatmapXBins,
@@ -528,7 +534,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       showValues,
       heatmapValueFormat,
       pointIdAccessor,
-      curve
+      curve,
+      themeCategorical: currentTheme?.colors?.categorical,
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -538,10 +545,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsAccessor, boundsStyle, y0Accessor, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
-      decay, pulse, transition, staleness,
+      decay, pulse, transition, introEnabled, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
-      isStreaming, pointIdAccessor, curve
+      isStreaming, pointIdAccessor, curve, currentTheme, animate
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)

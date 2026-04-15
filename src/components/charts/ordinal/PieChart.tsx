@@ -177,6 +177,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),

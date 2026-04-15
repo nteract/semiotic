@@ -222,6 +222,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),

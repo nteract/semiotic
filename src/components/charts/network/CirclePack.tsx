@@ -191,6 +191,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       description={description}
       summary={summary}
       accessibleTable={accessibleTable}
+      {...(props.animate != null && { animate: props.animate })}
       {...frameProps}
     />
   </SafeRender>)

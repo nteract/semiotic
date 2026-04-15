@@ -63,6 +63,7 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData } from "./hoverUtils"
+import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -269,10 +270,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       barColors,
       showAxes = true,
       showCategoryTicks,
-      oLabel,
-      rLabel,
-      oFormat,
-      rFormat,
+      categoryLabel, valueLabel, categoryFormat, valueFormat,
+      oLabel: oLabelLegacy, rLabel: rLabelLegacy,
+      oFormat: oFormatLegacy, rFormat: rFormatLegacy,
       rTickValues,
       tickLabelEdgeAlign,
       enableHover = true,
@@ -296,7 +296,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       centerContent,
       decay,
       pulse,
-      transition,
+      transition: transitionProp,
+      animate,
       staleness,
       brush,
       onBrush: onBrushProp,
@@ -320,6 +321,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const resolvedForeground = typeof foregroundGraphics === "function"
       ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
       : foregroundGraphics
+
+    // Resolve new-style names with legacy fallback
+    const oLabel = categoryLabel ?? oLabelLegacy
+    const rLabel = valueLabel ?? rLabelLegacy
+    const oFormat = categoryFormat ?? oFormatLegacy
+    const rFormat = valueFormat ?? rFormatLegacy
 
     // ── Refs ─────────────────────────────────────────────────────────────
 
@@ -345,6 +352,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Pipeline ─────────────────────────────────────────────────────────
 
     const isStreaming = runtimeMode === "streaming"
+
+    // Resolve animate prop → transition config + intro flag
+    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
 
     const pipelineConfig = useMemo((): OrdinalPipelineConfig => ({
       chartType,
@@ -386,10 +396,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pieceStyle,
       summaryStyle,
       colorScheme,
+      themeCategorical: currentTheme?.colors?.categorical,
       barColors,
       decay,
       pulse,
       transition,
+      introAnimation: introEnabled,
       staleness
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
@@ -399,8 +411,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dynamicColumnWidth,
       bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
-      decay, pulse, transition, staleness,
-      isStreaming
+      decay, pulse, transition, introEnabled, staleness,
+      isStreaming, currentTheme, animate
     ])
 
     const storeRef = useRef<OrdinalPipelineStore | null>(null)

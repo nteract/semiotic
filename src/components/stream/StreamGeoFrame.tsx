@@ -27,6 +27,7 @@ import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
+import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useReducedMotion } from "./useMediaPreferences"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
@@ -175,7 +176,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Realtime
       decay,
       pulse,
-      transition,
+      transition: transitionProp,
+      animate,
       staleness,
 
       // Rendering
@@ -234,6 +236,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       return projName === "orthographic"
     }, [dragRotateProp, projection])
 
+    // ── Animate → transition resolution ─────────────────────────────
+
+    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+
     // ── Pipeline config ───────────────────────────────────────────────
 
     const pipelineConfig: GeoPipelineConfig = useMemo(() => ({
@@ -254,12 +260,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       decay,
       pulse,
       transition,
+      introAnimation: introEnabled,
       annotations,
       pointIdAccessor
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition, annotations, pointIdAccessor
+      projectionTransform, decay, pulse, transition, introEnabled, annotations, pointIdAccessor
     ])
 
     // ── Store ─────────────────────────────────────────────────────────

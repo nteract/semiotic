@@ -1,6 +1,29 @@
 "use client"
 import { createStore } from "./createStore"
 
+/** Apply accessibility flags to a resolved theme. Shared by ThemeStore and server themeResolver. */
+export function applyThemeAccessibility(theme: SemioticTheme): SemioticTheme {
+  if (!theme.accessibility) return theme
+  let result = theme
+  if (theme.accessibility.colorBlindSafe) {
+    result = { ...result, colors: { ...result.colors, categorical: COLOR_BLIND_SAFE_CATEGORICAL } }
+  }
+  if (theme.accessibility.highContrast) {
+    const isDark = result.mode === "dark"
+    result = {
+      ...result,
+      colors: {
+        ...result.colors,
+        text: isDark ? "#ffffff" : "#000000",
+        textSecondary: isDark ? "#cccccc" : "#333333",
+        grid: isDark ? "#666666" : "#999999",
+        border: isDark ? "#888888" : "#000000",
+      },
+    }
+  }
+  return result
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface SemioticTheme {
@@ -182,16 +205,16 @@ export const [ThemeProvider, useThemeSelector] = createStore(
         if (theme.mode && theme.mode !== "auto") {
           const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
           return {
-            theme: {
+            theme: applyThemeAccessibility({
               ...base,
               ...theme,
               colors: { ...base.colors, ...(theme.colors || {}) },
               typography: { ...base.typography, ...(theme.typography || {}) },
-            }
+            } as SemioticTheme)
           }
         }
         return {
-          theme: {
+          theme: applyThemeAccessibility({
             ...current.theme,
             ...theme,
             colors: {
@@ -202,7 +225,7 @@ export const [ThemeProvider, useThemeSelector] = createStore(
               ...current.theme.typography,
               ...(theme.typography || {})
             }
-          }
+          } as SemioticTheme)
         }
       })
     }

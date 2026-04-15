@@ -179,7 +179,8 @@ const navData = [
       { title: "Statistical Annotations", path: "/playground/statistical-annotations" },
       { title: "Forecast & Anomaly", path: "/playground/forecast" },
       { title: "Choropleth Map", path: "/playground/choropleth-map" },
-      { title: "Distance Cartogram", path: "/playground/distance-cartogram" }
+      { title: "Distance Cartogram", path: "/playground/distance-cartogram" },
+      { title: "Animation", path: "/playground/animation" }
     ]
   },
   {

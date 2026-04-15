@@ -48,6 +48,7 @@ import {
   snapshotPositions as snapshotPositionsFn,
   startTransition as startTransitionFn,
   advanceTransition as advanceTransitionFn,
+  getNodeIdentity,
   type PrevPosition,
   type PrevPath,
   type TransitionContext
@@ -136,6 +137,8 @@ export interface PipelineConfig {
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
   waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
   colorScheme?: string | string[]
+  /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
+  themeCategorical?: string[]
   barColors?: Record<string, string>
 
   // Annotations (threshold coloring uses these)
@@ -145,6 +148,8 @@ export interface PipelineConfig {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
+  /** Whether to animate elements on first render (points scale up, lines rise from baseline) */
+  introAnimation?: boolean
   staleness?: StalenessConfig
 
   // Streaming heatmap
@@ -191,6 +196,7 @@ export class PipelineStore {
 
   // ── Transition animation ────────────────────────────────────────────
   activeTransition: ActiveTransition | null = null
+  private _hasRenderedOnce = false
   private prevPositionMap = new Map<string, PrevPosition>()
   /** Previous line/area path arrays for path interpolation */
   private prevPathMap = new Map<string, PrevPath>()
@@ -617,6 +623,14 @@ export class PipelineStore {
       this.applyPulse(this.scene, bufferArray)
     }
 
+    // Intro animation: synthesize zero-state on first render
+    if (this.config.transition && !this._hasRenderedOnce && this.scene.length > 0) {
+      if (this.config.introAnimation) {
+        this.synthesizeIntroPositions()
+      }
+      this._hasRenderedOnce = true
+    }
+
     // Start transition animation from old to new positions
     if (this.config.transition && (this.prevPositionMap.size > 0 || this.prevPathMap.size > 0)) {
       this.startTransition()
@@ -853,6 +867,46 @@ export class PipelineStore {
     snapshotPositionsFn(this.transitionContext, this.scene, this.prevPositionMap, this.prevPathMap)
   }
 
+  /** Synthesize a zero-state prevPositionMap/prevPathMap for animated intro (first render). */
+  private synthesizeIntroPositions(): void {
+    this.prevPositionMap.clear()
+    this.prevPathMap.clear()
+    const baseline = this.scales?.y(0) ?? 0
+
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      const key = getNodeIdentity(this.transitionContext, node, i)
+      if (!key) continue
+
+      if (node.type === "point") {
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: 0, opacity: 0 })
+      } else if (node.type === "rect") {
+        this.prevPositionMap.set(key, {
+          x: node.x, y: baseline, w: node.w, h: 0, opacity: node.style.opacity ?? 1
+        })
+      } else if (node.type === "heatcell") {
+        this.prevPositionMap.set(key, {
+          x: node.x, y: node.y, w: node.w, h: node.h, opacity: 0
+        })
+      } else if (node.type === "line") {
+        // Draw from left: use actual path, reveal via clip fraction 0→1
+        node._introClipFraction = 0
+        this.prevPathMap.set(key, {
+          path: node.path.map(p => [p[0], p[1]] as [number, number]),
+          opacity: node.style.opacity
+        })
+      } else if (node.type === "area") {
+        // Draw from left: use actual paths, reveal via clip fraction 0→1
+        node._introClipFraction = 0
+        this.prevPathMap.set(key, {
+          topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
+          bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          opacity: node.style.opacity
+        })
+      }
+    }
+  }
+
   private startTransition(): void {
     if (!this.config.transition) return
     const state = startTransitionFn(
@@ -912,7 +966,7 @@ export class PipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : STREAMING_PALETTE
+      : this.config.themeCategorical || STREAMING_PALETTE
     const colorMap = new Map<string, string>()
     for (let ci = 0; ci < sorted.length; ci++) {
       colorMap.set(sorted[ci], palette[ci % palette.length])
@@ -996,7 +1050,7 @@ export class PipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : STREAMING_PALETTE
+      : this.config.themeCategorical || STREAMING_PALETTE
     const color = palette[this._groupColorMap.size % palette.length]
     this._groupColorMap.set(group, color)
     return color
@@ -1140,6 +1194,7 @@ export class PipelineStore {
     this.buffer.clear()
     this.xExtent.clear()
     this.yExtent.clear()
+    this._hasRenderedOnce = false
     if (this.timestampBuffer) this.timestampBuffer.clear()
     this.prevPositionMap.clear()
     this.prevPathMap.clear()

@@ -12,7 +12,7 @@
 - Every HOC accepts `frameProps` for pass-through. TypeScript `strict: true`. Every HOC has error boundary + dev-mode validation.
 
 ## Common Props (all HOCs)
-`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean — dims non-hovered series, requires `colorBy`), `hoverRadius` (30)
+`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean — dims non-hovered series, requires `colorBy`), `hoverRadius` (30), `animate` (boolean | { duration?, easing?, intro? } — animated intro on first render + smooth transitions on data change; intro defaults to true when animate is enabled)
 
 `onClick` receives `(datum, { x, y })`. `onObservation` receives `{ type, datum?, x?, y?, timestamp, chartType, chartId }`.
 

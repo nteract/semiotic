@@ -366,6 +366,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
   }
 

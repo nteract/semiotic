@@ -119,6 +119,15 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
   for (const node of lineNodes) {
     if (node.path.length < 2) continue
 
+    // Intro clip: reveal line from left to right
+    const clipFrac = node._introClipFraction
+    if (clipFrac !== undefined && clipFrac < 1) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(0, 0, layout.width * clipFrac, layout.height)
+      ctx.clip()
+    }
+
     const baseColor = node.style.stroke || "#007bff"
     const lineWidth = node.style.strokeWidth || 2
     const thresholds = node.colorThresholds
@@ -309,6 +318,11 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.lineTo(firstX, layout.height)
       ctx.closePath()
       ctx.fill()
+    }
+
+    // Restore after intro clip
+    if (clipFrac !== undefined && clipFrac < 1) {
+      ctx.restore()
     }
 
     ctx.globalAlpha = 1

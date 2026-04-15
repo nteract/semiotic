@@ -65,3 +65,35 @@ export function lerp(from: number, to: number, t: number): number {
 export function now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now()
 }
+
+// ── Animate prop resolution ───────────────────────────────────────────
+
+/** The animate prop type accepted by all HOCs and Stream Frames. */
+export type AnimateProp = boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+
+/** Transition config type (duplicated here to avoid circular import with types.ts). */
+export interface TransitionConfigResolved {
+  duration: number
+  easing: "ease-out" | "linear"
+}
+
+/**
+ * Resolve the declarative `animate` prop into a concrete TransitionConfig.
+ * Used by all 4 Stream Frames. `animate` takes precedence over `transitionProp`.
+ */
+export function resolveAnimateConfig(
+  animate: AnimateProp | undefined,
+  transitionProp: { duration?: number; easing?: "ease-out" | "linear" } | undefined
+): { transition: { duration?: number; easing?: "ease-out" | "linear" } | undefined; introEnabled: boolean } {
+  const transition = animate
+    ? (animate === true
+      ? { duration: 300 }
+      : { duration: animate.duration ?? 300, easing: animate.easing === "linear" ? "linear" as const : "ease-out" as const })
+    : transitionProp
+
+  const introEnabled = animate
+    ? (animate === true ? true : (animate as { intro?: boolean }).intro !== false)
+    : false
+
+  return { transition, introEnabled }
+}

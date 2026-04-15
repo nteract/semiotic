@@ -15,8 +15,7 @@
  */
 
 import * as React from "react"
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (element: React.ReactElement) => string }
+import * as ReactDOMServer from "react-dom/server"
 
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import type {
@@ -658,14 +657,20 @@ function generateOrdinalAxesSVG(
   const isVertical = scales.projection === "vertical"
   const columns = store.columns
 
+  // Prefer new-style names with legacy fallback
+  const catFormat = props.categoryFormat || props.oFormat
+  const valFormat = props.valueFormat || props.rFormat
+  const catLabel = props.categoryLabel || props.oLabel
+  const valLabel = props.valueLabel || props.rLabel
+
   const categoryTicks = Object.values(columns).map(col => ({
     pixel: col.middle,
-    label: (props.oFormat || String)(col.name)
+    label: (catFormat || String)(col.name)
   }))
 
   const rTicks = scales.r.ticks(5).map(v => ({
     pixel: scales.r(v),
-    label: (props.rFormat || defaultTickFormat)(v)
+    label: (valFormat || defaultTickFormat)(v)
   }))
 
   if (isVertical) {
@@ -678,9 +683,9 @@ function generateOrdinalAxesSVG(
             <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
           </g>
         ))}
-        {props.oLabel && (
+        {catLabel && (
           <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}>
-            {props.oLabel}
+            {catLabel}
           </text>
         )}
         <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
@@ -690,14 +695,14 @@ function generateOrdinalAxesSVG(
             <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
           </g>
         ))}
-        {props.rLabel && (
+        {valLabel && (
           <text
             x={-(props.margin?.left ?? 40) + 15}
             y={layout.height / 2}
             textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}
             transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
           >
-            {props.rLabel}
+            {valLabel}
           </text>
         )}
       </g>
@@ -712,9 +717,9 @@ function generateOrdinalAxesSVG(
             <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
           </g>
         ))}
-        {props.rLabel && (
+        {valLabel && (
           <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}>
-            {props.rLabel}
+            {valLabel}
           </text>
         )}
         <line x1={0} y1={0} x2={0} y2={layout.height} stroke={s.border} strokeWidth={1} />
@@ -724,14 +729,14 @@ function generateOrdinalAxesSVG(
             <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
           </g>
         ))}
-        {props.oLabel && (
+        {catLabel && (
           <text
             x={-(props.margin?.left ?? 40) + 15}
             y={layout.height / 2}
             textAnchor="middle" fontSize={s.labelSize} fill={s.text} fontFamily={s.fontFamily}
             transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
           >
-            {props.oLabel}
+            {catLabel}
           </text>
         )}
       </g>

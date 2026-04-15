@@ -267,6 +267,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       description={description}
       summary={summary}
       accessibleTable={accessibleTable}
+      {...(props.animate != null && { animate: props.animate })}
       {...frameProps}
     />
   </SafeRender>)

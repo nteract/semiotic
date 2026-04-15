@@ -501,6 +501,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),

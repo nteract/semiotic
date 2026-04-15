@@ -389,6 +389,10 @@ export function advanceTransition(
         const startOpacity = node._startOpacity ?? 0
         node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
       }
+      // Intro clip: reveal line from left to right
+      if (node._introClipFraction !== undefined) {
+        node._introClipFraction = t
+      }
       const prevPath = node._prevPath
       const targetPath = node._targetPath
       if (prevPath && targetPath && prevPath.length === node.path.length) {
@@ -401,6 +405,10 @@ export function advanceTransition(
       if (node._targetOpacity !== undefined) {
         const startOpacity = node._startOpacity ?? 0
         node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
+      }
+      // Intro clip: reveal area from left to right
+      if (node._introClipFraction !== undefined) {
+        node._introClipFraction = t
       }
       const prevTop = node._prevTopPath
       const prevBottom = node._prevBottomPath
@@ -470,6 +478,7 @@ export function advanceTransition(
         }
         node._prevPath = undefined
         node._targetPath = undefined
+        node._introClipFraction = undefined
       } else if (node.type === "area") {
         const targetTop = node._targetTopPath
         const targetBottom = node._targetBottomPath
@@ -487,6 +496,7 @@ export function advanceTransition(
         node._prevBottomPath = undefined
         node._targetTopPath = undefined
         node._targetBottomPath = undefined
+        node._introClipFraction = undefined
       }
     }
 

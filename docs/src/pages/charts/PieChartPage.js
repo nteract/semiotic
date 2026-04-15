@@ -128,6 +128,7 @@ const pieChartProps = [
   { name: "width", type: "number", required: false, default: "400", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing }` for custom." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]

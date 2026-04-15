@@ -59,6 +59,7 @@ export class NetworkPipelineStore {
   // ── Transition animation ──────────────────────────────────────────────
 
   transition: ActiveTransition | null = null
+  private _hasRenderedOnce = false
 
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
@@ -380,16 +381,33 @@ export class NetworkPipelineStore {
         (n._prevX0 !== 0 || n._prevX1 !== 0 || n._prevY0 !== 0 || n._prevY1 !== 0)
     )
 
-    if (hasOldPositions && this.tensionConfig.transitionDuration > 0) {
-      // Reset to previous positions (animation starts from here)
-      this.restorePreviousPositions()
+    // Resolve transition duration: config.transition (from animate) > tensionConfig
+    const transitionDuration = this.config.transition?.duration ?? this.tensionConfig.transitionDuration
 
-      // Start transition
-      this.transition = {
-        startTime: performance.now(),
-        duration: this.tensionConfig.transitionDuration
+    // Intro animation: synthesize center-origin prev positions on first layout
+    if (!this._hasRenderedOnce && this.config.introAnimation && nodesArr.length > 0 && transitionDuration > 0) {
+      const cx = size[0] / 2
+      const cy = size[1] / 2
+      for (const node of this.nodes.values()) {
+        node._prevX0 = cx
+        node._prevX1 = cx
+        node._prevY0 = cy
+        node._prevY1 = cy
       }
+      for (const edge of this.edges.values()) {
+        edge._prevY0 = cy
+        edge._prevY1 = cy
+        edge._prevSankeyWidth = 0
+      }
+      this.restorePreviousPositions()
+      this.transition = { startTime: performance.now(), duration: transitionDuration }
+    } else if (hasOldPositions && transitionDuration > 0) {
+      // Data-change transition: reset to previous positions (animation starts from here)
+      this.restorePreviousPositions()
+      this.transition = { startTime: performance.now(), duration: transitionDuration }
     }
+
+    this._hasRenderedOnce = true
 
     // Compute topology diff
     const currentNodeIds = new Set(this.nodes.keys())
@@ -1059,6 +1077,7 @@ export class NetworkPipelineStore {
     this.sceneEdges = []
     this.labels = []
     this.transition = null
+    this._hasRenderedOnce = false
     this.lastIngestTime = 0
     this._lastPositionSnapshot = null
     this.nodeTimestamps.clear()

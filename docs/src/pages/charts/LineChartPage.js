@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { LineChart, LinkedCharts } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -66,6 +66,48 @@ const multiLineData = [
   { month: 6, revenue: 14000, product: "Doohickey" },
 ]
 
+const animateLineA = [
+  { month: 1, revenue: 12000 }, { month: 2, revenue: 18000 },
+  { month: 3, revenue: 14000 }, { month: 4, revenue: 22000 },
+  { month: 5, revenue: 19000 }, { month: 6, revenue: 27000 },
+]
+
+const animateLineB = [
+  { month: 1, revenue: 20000 }, { month: 2, revenue: 11000 },
+  { month: 3, revenue: 25000 }, { month: 4, revenue: 15000 },
+  { month: 5, revenue: 30000 }, { month: 6, revenue: 18000 },
+]
+
+function AnimateLineDemo() {
+  const [useB, setUseB] = useState(false)
+  return (
+    <div>
+      <button
+        onClick={() => setUseB(v => !v)}
+        style={{
+          marginBottom: 12, padding: "6px 16px", borderRadius: 4,
+          border: "1px solid var(--semiotic-border, #ccc)", background: "var(--semiotic-bg, #fff)",
+          color: "var(--semiotic-text, #333)", cursor: "pointer", fontSize: 13,
+        }}
+      >
+        Swap data {useB ? "← A" : "→ B"}
+      </button>
+      <LineChart
+        data={useB ? animateLineB : animateLineA}
+        xAccessor="month"
+        yAccessor="revenue"
+        animate={{ duration: 600, easing: "ease-out" }}
+        showPoints
+        curve="monotoneX"
+        width={500}
+        height={250}
+        xLabel="Month"
+        yLabel="Revenue ($)"
+      />
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
@@ -113,6 +155,8 @@ const lineChartProps = [
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing }` for custom." },
+  { name: "hoverRadius", type: "number", required: false, default: "30", description: "Maximum distance (px) from a data point to trigger hover. Increase for sparse charts, decrease for dense ones." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
@@ -652,6 +696,29 @@ export default function LineChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Animate */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="animate">Animated Transitions</h3>
+      <p>
+        Set <code>animate</code> to smoothly transition line positions when data
+        changes. Pass <code>true</code> for defaults (300ms ease-out) or a
+        config object.
+      </p>
+
+      <AnimateLineDemo />
+
+      <CodeBlock code={`const [data, setData] = useState(datasetA)
+
+<LineChart
+  data={data}
+  xAccessor="month"
+  yAccessor="revenue"
+  animate={{ duration: 600, easing: "ease-out" }}
+  showPoints
+  curve="monotoneX"
+/>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Click-to-Lock Crosshair */}

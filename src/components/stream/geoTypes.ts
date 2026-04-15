@@ -126,6 +126,8 @@ export interface GeoPipelineConfig {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
+  /** Whether to animate elements on first render */
+  introAnimation?: boolean
 
   // Annotations
   annotations?: Record<string, any>[]
@@ -211,6 +213,10 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
+  /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
+   *  When enabled, charts animate on first render (intro) and on data change.
+   *  Set `{ intro: false }` to disable the intro animation. */
+  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
   staleness?: StalenessConfig
 
   // ── Rendering ──
