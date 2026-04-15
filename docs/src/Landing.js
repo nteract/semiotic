@@ -345,7 +345,7 @@ const galleryNetworkEdges = [
 ]
 
 const galleryAnimate = { duration: 600, intro: true }
-const galleryAnimateNoIntro = { duration: 600 }
+const galleryAnimateNoIntro = { duration: 600, intro: false }
 const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
 const galleryLineColors = { Revenue: "#6366f1", Costs: "#ec4899" }
 const galleryAreaColors = { Desktop: "#6366f1", Mobile: "#10b981" }

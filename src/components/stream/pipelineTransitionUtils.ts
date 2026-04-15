@@ -84,15 +84,21 @@ export function resolveAnimateConfig(
     return { transition: undefined, introEnabled: false }
   }
 
+  // Respect prefers-reduced-motion: skip intro so first paint is the final state.
+  // Data-change transitions are fast-forwarded by the frame's RAF loop (now + 1e6),
+  // but intro transitions are created DURING computeScene after the fast-forward step,
+  // causing a one-frame flash of the zero state. Disabling intro avoids this.
+  const reducedMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+
   const transition = animate
     ? (animate === true
       ? { duration: 300 }
       : { duration: animate.duration ?? 300, easing: animate.easing === "linear" ? "linear" as const : "ease-out" as const })
     : transitionProp
 
-  const introEnabled = animate
+  const introEnabled = reducedMotion ? false : (animate
     ? (animate === true ? true : (animate as { intro?: boolean }).intro !== false)
-    : false
+    : false)
 
   return { transition, introEnabled }
 }
