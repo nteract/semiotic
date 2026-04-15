@@ -79,6 +79,11 @@ export function resolveAnimateConfig(
   animate: AnimateProp | undefined,
   transitionProp: { duration?: number; easing?: "ease-out" | "linear" } | undefined
 ): { transition: { duration?: number; easing?: "ease-out" | "linear" } | undefined; introEnabled: boolean } {
+  // animate={false} explicitly disables transitions, overriding transitionProp
+  if (animate === false) {
+    return { transition: undefined, introEnabled: false }
+  }
+
   const transition = animate
     ? (animate === true
       ? { duration: 300 }

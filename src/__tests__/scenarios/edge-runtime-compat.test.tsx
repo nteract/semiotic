@@ -13,8 +13,8 @@
  * and are explicitly Node-only.
  */
 
-import { TextEncoder, TextDecoder } from "util"
-Object.assign(global, { TextEncoder, TextDecoder })
+// TextEncoder/TextDecoder are available globally in modern Node (>=18),
+// edge runtimes, and Vitest's jsdom environment. No polyfill needed.
 
 import { renderChart, renderToStaticSVG, renderDashboard } from "../../components/server/renderToStaticSVG"
 import { generateFrameSVGs } from "../../components/server/animatedGif"

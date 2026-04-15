@@ -912,16 +912,20 @@ export class OrdinalPipelineStore {
         if (prev) {
           matchedPrevKeys.add(key)
           node._targetOpacity = node.style.opacity ?? 1
-          if (prev.x !== node.x || prev.y !== node.y) {
+          if (prev.x !== node.x || prev.y !== node.y || (prev.r !== undefined && prev.r !== node.r)) {
             node._targetX = node.x
             node._targetY = node.y
+            node._targetR = node.r
             node.x = prev.x
             node.y = prev.y
+            if (prev.r !== undefined) node.r = prev.r
             hasChanges = true
           }
         } else {
-          // Entering node
+          // Entering node — scale from r=0
           node._targetOpacity = node.style.opacity ?? 1
+          node._targetR = node.r
+          node.r = 0
           node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
@@ -1048,11 +1052,14 @@ export class OrdinalPipelineStore {
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
-        if (node._targetX === undefined) continue
         const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
-        node.x = lerp(prev.x, node._targetX, t)
-        node.y = lerp(prev.y, node._targetY!, t)
+        if (node._targetX !== undefined && prev) {
+          node.x = lerp(prev.x, node._targetX, t)
+          node.y = lerp(prev.y, node._targetY!, t)
+        }
+        if (node._targetR !== undefined && prev?.r !== undefined) {
+          node.r = lerp(prev.r, node._targetR, t)
+        }
       } else if (node.type === "rect") {
         if (node._targetOpacity !== undefined) {
           const prev = this.prevPositionMap.get(key)
@@ -1091,11 +1098,12 @@ export class OrdinalPipelineStore {
           node._targetOpacity = undefined
         }
         if (node.type === "point") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
+          if (node._targetX === undefined && node._targetR === undefined) continue
+          if (node._targetX !== undefined) { node.x = node._targetX; node.y = node._targetY! }
+          if (node._targetR !== undefined) node.r = node._targetR
           node._targetX = undefined
           node._targetY = undefined
+          node._targetR = undefined
         } else if (node.type === "rect") {
           if (node._targetX === undefined) continue
           node.x = node._targetX
