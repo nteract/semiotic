@@ -145,7 +145,7 @@ const stackedBarChartProps = [
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bar groups in pixels." },
   { name: "sort", type: 'boolean | "asc" | "desc" | function', required: false, default: "false", description: 'Sort categories by total value. Accepts true, "asc", "desc", or a custom comparator. Default false preserves insertion order.' },
   { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on topmost stack segment." },
-  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing }` for custom." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth data-change transitions. `true` for defaults (300ms ease-out, intro enabled), or `{ duration, easing, intro }`. Set `{ intro: false }` to disable intro." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bar segments." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend for stacked categories." },

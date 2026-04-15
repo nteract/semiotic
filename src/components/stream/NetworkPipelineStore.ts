@@ -60,6 +60,10 @@ export class NetworkPipelineStore {
 
   transition: ActiveTransition | null = null
   private _hasRenderedOnce = false
+  /** Snapshot of node positions from before bounded re-ingestion cleared the maps */
+  private _boundedPrevSnapshot: Map<string, { x0: number; x1: number; y0: number; y1: number }> | null = null
+  /** Snapshot of edge positions from before bounded re-ingestion cleared the maps */
+  private _boundedEdgeSnapshot: Map<string, { y0: number; y1: number; sankeyWidth: number }> | null = null
 
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
@@ -132,6 +136,15 @@ export class NetworkPipelineStore {
     rootData: any,
     size: [number, number]
   ): void {
+    // Snapshot positions before clearing so data-change transitions work.
+    // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
+    this._boundedPrevSnapshot = new Map()
+    for (const [id, node] of this.nodes) {
+      if (node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0) {
+        this._boundedPrevSnapshot.set(id, { x0: node.x0, x1: node.x1, y0: node.y0, y1: node.y1 })
+      }
+    }
+
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null
@@ -141,6 +154,8 @@ export class NetworkPipelineStore {
 
     // Run layout — the hierarchical plugin will populate nodes/edges
     this.runLayout(size)
+
+    this._boundedPrevSnapshot = null
   }
 
   // ── Bounded data ingestion ────────────────────────────────────────────
@@ -177,6 +192,23 @@ export class NetworkPipelineStore {
       ? valueAccessor
       : (d: any) => d[valueAccessor] ?? 1
 
+    // Snapshot positions before clearing so data-change transitions work.
+    // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
+    this._boundedPrevSnapshot = new Map()
+    for (const [id, node] of this.nodes) {
+      if (node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0) {
+        this._boundedPrevSnapshot.set(id, { x0: node.x0, x1: node.x1, y0: node.y0, y1: node.y1 })
+      }
+    }
+    this._boundedEdgeSnapshot = new Map()
+    for (const [, edge] of this.edges) {
+      const src = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+      if (edge.sankeyWidth > 0) {
+        this._boundedEdgeSnapshot.set(`${src}\0${tgt}`, { y0: edge.y0, y1: edge.y1, sankeyWidth: edge.sankeyWidth })
+      }
+    }
+
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null
@@ -184,10 +216,7 @@ export class NetworkPipelineStore {
     // Build node map
     for (const raw of rawNodes) {
       const id = String(getNodeId(raw))
-      this.nodes.set(id, {
-        ...createNode(id),
-        data: raw
-      })
+      this.nodes.set(id, { ...createNode(id), data: raw })
     }
 
     // Build edge map (creating nodes if not provided).
@@ -215,7 +244,7 @@ export class NetworkPipelineStore {
         y1: 0,
         sankeyWidth: 0,
         data: raw,
-        _edgeKey: key
+        _edgeKey: key,
       })
     }
 
@@ -358,6 +387,25 @@ export class NetworkPipelineStore {
         edge._edgeKey = key
         this.edges.set(key, edge)
       }
+
+      // For hierarchical layouts, prepareForRelayout ran when the node Maps were
+      // empty (cleared before plugin). Apply the bounded snapshot now that the
+      // plugin has populated nodes so data-change transitions can fire.
+      const snapshot = this._boundedPrevSnapshot
+      if (snapshot && snapshot.size > 0) {
+        for (const node of this.nodes.values()) {
+          const prev = snapshot.get(node.id)
+          if (prev) {
+            node._prevX0 = prev.x0; node._prevX1 = prev.x1
+            node._prevY0 = prev.y0; node._prevY1 = prev.y1
+          }
+        }
+      }
+      this._boundedPrevSnapshot = null
+      this._boundedEdgeSnapshot = null
+
+      // Refresh nodesArr to include the populated nodes (used by hasOldPositions check below)
+      nodesArr = Array.from(this.nodes.values())
     }
 
     // Finalize — update derived properties and bezier caches
@@ -384,8 +432,12 @@ export class NetworkPipelineStore {
     // Resolve transition duration: config.transition (from animate) > tensionConfig
     const transitionDuration = this.config.transition?.duration ?? this.tensionConfig.transitionDuration
 
-    // Intro animation: synthesize center-origin prev positions on first layout
-    if (!this._hasRenderedOnce && this.config.introAnimation && nodesArr.length > 0 && transitionDuration > 0) {
+    // Intro animation: synthesize center-origin prev positions on first layout.
+    // Only for deterministic layouts (sankey, tree, treemap, circlepack) — force/chord
+    // layouts compute positions from randomized starting points and don't benefit
+    // from a center-origin intro (it fights the simulation).
+    const deterministicLayout = ["sankey", "tree", "treemap", "circlepack", "partition"].includes(this.config.chartType)
+    if (!this._hasRenderedOnce && this.config.introAnimation && deterministicLayout && nodesArr.length > 0 && transitionDuration > 0) {
       const cx = size[0] / 2
       const cy = size[1] / 2
       for (const node of this.nodes.values()) {
@@ -398,6 +450,7 @@ export class NetworkPipelineStore {
         edge._prevY0 = cy
         edge._prevY1 = cy
         edge._prevSankeyWidth = 0
+        edge._introFromZero = true
       }
       this.restorePreviousPositions()
       this.transition = { startTime: performance.now(), duration: transitionDuration }
@@ -517,7 +570,7 @@ export class NetworkPipelineStore {
         edge._targetY0 !== undefined &&
         edge._prevY0 !== undefined &&
         edge._prevSankeyWidth !== undefined &&
-        edge._prevSankeyWidth > 0
+        (edge._prevSankeyWidth > 0 || edge._introFromZero)
       ) {
         edge.y0 = lerp(edge._prevY0, edge._targetY0, t)
         edge.y1 = lerp(edge._prevY1!, edge._targetY1!, t)
@@ -541,16 +594,43 @@ export class NetworkPipelineStore {
   // ── Topology helpers (ported from TopologyStore) ──────────────────────
 
   private prepareForRelayout(): void {
+    const snapshot = this._boundedPrevSnapshot
     for (const node of this.nodes.values()) {
-      node._prevX0 = node.x0
-      node._prevX1 = node.x1
-      node._prevY0 = node.y0
-      node._prevY1 = node.y1
+      // For bounded re-ingestion, nodes were recreated with zeroed positions.
+      // Use the snapshot (captured before clear) as the "previous" positions.
+      const prev = snapshot?.get(node.id)
+      if (prev && node.x0 === 0 && node.x1 === 0 && node.y0 === 0 && node.y1 === 0) {
+        node._prevX0 = prev.x0; node._prevX1 = prev.x1
+        node._prevY0 = prev.y0; node._prevY1 = prev.y1
+      } else {
+        node._prevX0 = node.x0; node._prevX1 = node.x1
+        node._prevY0 = node.y0; node._prevY1 = node.y1
+      }
     }
+    const edgeSnapshot = this._boundedEdgeSnapshot
     for (const edge of this.edges.values()) {
+      // For bounded re-ingestion, look up previous edge position from snapshot
+      if (edgeSnapshot && edge.sankeyWidth === 0) {
+        const src = typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+        const prevEdge = edgeSnapshot.get(`${src}\0${tgt}`)
+        if (prevEdge) {
+          edge._prevY0 = prevEdge.y0
+          edge._prevY1 = prevEdge.y1
+          edge._prevSankeyWidth = prevEdge.sankeyWidth
+          continue
+        }
+      }
       edge._prevY0 = edge.y0
       edge._prevY1 = edge.y1
       edge._prevSankeyWidth = edge.sankeyWidth
+    }
+    // Only clear snapshots when nodes were present to process.
+    // For hierarchical layouts, nodes are empty at this point — the snapshot
+    // is consumed later in the post-plugin sync block inside runLayout.
+    if (this.nodes.size > 0) {
+      this._boundedPrevSnapshot = null
+      this._boundedEdgeSnapshot = null
     }
   }
 
@@ -641,6 +721,7 @@ export class NetworkPipelineStore {
         edge.y1 = edge._targetY1!
         edge.sankeyWidth = edge._targetSankeyWidth!
       }
+      edge._introFromZero = undefined
     }
     this.rebuildAllBeziers()
   }

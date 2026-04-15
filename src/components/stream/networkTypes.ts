@@ -66,6 +66,8 @@ export interface RealtimeEdge {
   _targetY0?: number
   _targetY1?: number
   _targetSankeyWidth?: number
+  /** Set during intro animation to allow edge interpolation from width 0 */
+  _introFromZero?: boolean
   direction?: string
   circular?: boolean
   circularPathData?: any

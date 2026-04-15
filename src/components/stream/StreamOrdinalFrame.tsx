@@ -411,8 +411,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dynamicColumnWidth,
       bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
-      decay, pulse, transition, introEnabled, staleness,
-      isStreaming, currentTheme, animate
+      decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
+      isStreaming, currentTheme
     ])
 
     const storeRef = useRef<OrdinalPipelineStore | null>(null)
@@ -803,7 +803,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
 
       // Schedule next frame for pulse/transition continuous rendering
-      if (isTransitioning || store.hasActivePulses) {
+      // Re-check activeTransition after computeScene — intro animation may
+      // have been set up during this frame's computeScene call.
+      const needsContinuation = isTransitioning || store.activeTransition != null || store.hasActivePulses
+      if (needsContinuation) {
         rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }
     }

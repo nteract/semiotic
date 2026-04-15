@@ -148,7 +148,7 @@ export interface PipelineConfig {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
-  /** Whether to animate elements on first render (points scale up, lines rise from baseline) */
+  /** Whether to animate elements on first render (points scale up, lines/areas clip from left, rects grow from baseline) */
   introAnimation?: boolean
   staleness?: StalenessConfig
 

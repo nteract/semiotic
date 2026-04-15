@@ -545,10 +545,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsAccessor, boundsStyle, y0Accessor, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
-      decay, pulse, transition, introEnabled, staleness,
+      decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
-      isStreaming, pointIdAccessor, curve, currentTheme, animate
+      isStreaming, pointIdAccessor, curve, currentTheme
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -1058,8 +1058,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         setIsStale(!!currentlyStale)
       }
 
-      // Schedule next frame for continuous rendering (pulse/transitions)
-      if (isTransitioning || store.hasActivePulses) {
+      // Schedule next frame for continuous rendering (pulse/transitions).
+      // Re-check activeTransition after computeScene — intro animation may
+      // have been set up during this frame's computeScene call.
+      const needsContinuation = isTransitioning || store.activeTransition != null || store.hasActivePulses
+      if (needsContinuation) {
         rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }
     }

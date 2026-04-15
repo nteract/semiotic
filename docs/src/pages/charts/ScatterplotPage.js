@@ -87,7 +87,7 @@ const scatterplotProps = [
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "hoverRadius", type: "number", required: false, default: "30", description: "Maximum distance (px) from a data point to trigger hover. Increase for sparse charts, decrease for dense ones." },
-  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing }` for custom." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth data-change transitions. `true` for defaults (300ms ease-out, intro enabled), or `{ duration, easing, intro }`. Set `{ intro: false }` to disable intro." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]

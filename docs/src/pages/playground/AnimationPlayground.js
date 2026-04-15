@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from "react"
-import { BarChart, StackedBarChart, PieChart, DonutChart, LineChart, Scatterplot, ForceDirectedGraph } from "semiotic"
+import React, { useState } from "react"
+import { BarChart, StackedBarChart, PieChart, DonutChart, LineChart, Scatterplot, ForceDirectedGraph, SankeyDiagram, Treemap } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 
@@ -161,23 +161,69 @@ const scatterB = Array.from({ length: 20 }, (_, i) => ({
   y: 60 - Math.sin(i * 0.5) * 25 + i * 1.5,
 }))
 
+const graphNodes = [
+  { id: "Alice" }, { id: "Bob" }, { id: "Carol" }, { id: "Dave" }, { id: "Eve" },
+]
+
 const graphEdgesA = [
-  { source: "Alice", target: "Bob", weight: 3 },
-  { source: "Alice", target: "Carol", weight: 5 },
-  { source: "Bob", target: "Dave", weight: 2 },
-  { source: "Carol", target: "Dave", weight: 4 },
-  { source: "Dave", target: "Eve", weight: 6 },
-  { source: "Eve", target: "Alice", weight: 1 },
+  { source: "Alice", target: "Bob" },
+  { source: "Alice", target: "Carol" },
+  { source: "Bob", target: "Dave" },
+  { source: "Carol", target: "Dave" },
+  { source: "Dave", target: "Eve" },
+  { source: "Eve", target: "Alice" },
 ]
 
 const graphEdgesB = [
-  { source: "Alice", target: "Bob", weight: 6 },
-  { source: "Alice", target: "Dave", weight: 3 },
-  { source: "Bob", target: "Carol", weight: 4 },
-  { source: "Carol", target: "Eve", weight: 5 },
-  { source: "Dave", target: "Eve", weight: 2 },
-  { source: "Eve", target: "Bob", weight: 1 },
+  { source: "Alice", target: "Dave" },
+  { source: "Bob", target: "Carol" },
+  { source: "Bob", target: "Eve" },
+  { source: "Carol", target: "Eve" },
+  { source: "Dave", target: "Bob" },
+  { source: "Eve", target: "Alice" },
 ]
+
+const sankeyEdgesA = [
+  { source: "Budget", target: "Engineering", value: 45 },
+  { source: "Budget", target: "Marketing", value: 28 },
+  { source: "Budget", target: "Sales", value: 32 },
+  { source: "Engineering", target: "Product", value: 30 },
+  { source: "Engineering", target: "Infra", value: 15 },
+  { source: "Marketing", target: "Product", value: 18 },
+  { source: "Sales", target: "Product", value: 22 },
+]
+
+const sankeyEdgesB = [
+  { source: "Budget", target: "Engineering", value: 55 },
+  { source: "Budget", target: "Marketing", value: 15 },
+  { source: "Budget", target: "Sales", value: 35 },
+  { source: "Engineering", target: "Product", value: 40 },
+  { source: "Engineering", target: "Infra", value: 15 },
+  { source: "Marketing", target: "Product", value: 10 },
+  { source: "Sales", target: "Product", value: 25 },
+]
+
+const treemapA = {
+  id: "root",
+  children: [
+    { id: "Engineering", value: 45 },
+    { id: "Marketing", value: 28 },
+    { id: "Sales", value: 32 },
+    { id: "Operations", value: 18 },
+    { id: "HR", value: 12 },
+  ],
+}
+
+const treemapB = {
+  id: "root",
+  children: [
+    { id: "Engineering", value: 55 },
+    { id: "Marketing", value: 15 },
+    { id: "Sales", value: 40 },
+    { id: "Operations", value: 25 },
+    { id: "HR", value: 8 },
+  ],
+}
 
 // ---------------------------------------------------------------------------
 // Section wrapper
@@ -297,7 +343,7 @@ function AnimatedLineChart({ animConfig }) {
   const [key, setKey] = useState(0)
   return (
     <Section title="Line Chart" id="line">
-      <p>Lines rise from the baseline on intro and interpolate vertex positions on data change.</p>
+      <p>Lines draw from left to right on intro and interpolate vertex positions on data change.</p>
       <SwapButton onClick={() => setUseB(v => !v)} label={`Swap data ${useB ? "\u2190 A" : "\u2192 B"}`} />
       <ResetButton onClick={() => { setKey(k => k + 1); setUseB(false) }} />
       <LineChart
@@ -345,11 +391,15 @@ function AnimatedForceGraph({ animConfig }) {
   const [key, setKey] = useState(0)
   return (
     <Section title="Force-Directed Graph" id="force">
-      <p>Nodes expand from the chart center on intro and transition to new positions when edges change.</p>
+      <p>
+        Force layouts use the simulation as their natural animation.
+        Swap edges to see the graph re-settle into a new arrangement.
+      </p>
       <SwapButton onClick={() => setUseB(v => !v)} label={`Swap edges ${useB ? "\u2190 A" : "\u2192 B"}`} />
       <ResetButton onClick={() => { setKey(k => k + 1); setUseB(false) }} />
       <ForceDirectedGraph
         key={key}
+        nodes={graphNodes}
         edges={useB ? graphEdgesB : graphEdgesA}
         nodeIDAccessor="id"
         sourceAccessor="source"
@@ -357,7 +407,52 @@ function AnimatedForceGraph({ animConfig }) {
         animate={animConfig}
         showLabels
         width={500}
-        height={350}
+        height={300}
+      />
+    </Section>
+  )
+}
+
+function AnimatedSankey({ animConfig }) {
+  const [useB, setUseB] = useState(false)
+  const [key, setKey] = useState(0)
+  return (
+    <Section title="Sankey Diagram" id="sankey">
+      <p>Nodes expand from the chart center on intro. Edge widths and node positions transition smoothly on data change.</p>
+      <SwapButton onClick={() => setUseB(v => !v)} label={`Swap data ${useB ? "\u2190 A" : "\u2192 B"}`} />
+      <ResetButton onClick={() => { setKey(k => k + 1); setUseB(false) }} />
+      <SankeyDiagram
+        key={key}
+        edges={useB ? sankeyEdgesB : sankeyEdgesA}
+        valueAccessor="value"
+        sourceAccessor="source"
+        targetAccessor="target"
+        animate={animConfig}
+        showLabels
+        width={500}
+        height={300}
+      />
+    </Section>
+  )
+}
+
+function AnimatedTreemap({ animConfig }) {
+  const [useB, setUseB] = useState(false)
+  const [key, setKey] = useState(0)
+  return (
+    <Section title="Treemap" id="treemap">
+      <p>Cells expand from the center on intro and resize smoothly when values change.</p>
+      <SwapButton onClick={() => setUseB(v => !v)} label={`Swap data ${useB ? "\u2190 A" : "\u2192 B"}`} />
+      <ResetButton onClick={() => { setKey(k => k + 1); setUseB(false) }} />
+      <Treemap
+        key={key}
+        data={useB ? treemapB : treemapA}
+        valueAccessor="value"
+        colorBy="id"
+        showLabels
+        animate={animConfig}
+        width={500}
+        height={300}
       />
     </Section>
   )
@@ -420,6 +515,8 @@ export default function AnimationPlayground() {
 
       <h3 id="network">Network Charts</h3>
       <AnimatedForceGraph animConfig={animConfig} />
+      <AnimatedSankey animConfig={animConfig} />
+      <AnimatedTreemap animConfig={animConfig} />
 
       <h2 id="how-it-works">How It Works</h2>
 

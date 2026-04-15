@@ -266,7 +266,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition, introEnabled, annotations, pointIdAccessor
+      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor
     ])
 
     // ── Store ─────────────────────────────────────────────────────────
@@ -821,7 +821,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
 
       // Reschedule if animating or tiles still loading
-      if (isTransitioning || store.hasActivePulses || needsContinuation) {
+      if (isTransitioning || store.activeTransition != null || store.hasActivePulses || needsContinuation) {
         rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }
     }

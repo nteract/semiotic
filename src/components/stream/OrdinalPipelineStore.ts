@@ -806,6 +806,7 @@ export class OrdinalPipelineStore {
     const keyCounts = new Map<string, number>()
     const baseline = this.scales?.r(0) ?? 0
     const isVertical = this.scales?.projection !== "horizontal"
+    let wedgeStartOffset: number | undefined
 
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
@@ -832,10 +833,10 @@ export class OrdinalPipelineStore {
         })
       } else if (node.type === "wedge") {
         // Wedges: collapse all arcs to the start angle offset
-        const startOffset = this.scene.find(n => n.type === "wedge")?.startAngle ?? node.startAngle
+        if (wedgeStartOffset === undefined) wedgeStartOffset = node.startAngle
         this.prevPositionMap.set(key, {
           x: node.cx, y: node.cy,
-          startAngle: startOffset, endAngle: startOffset,
+          startAngle: wedgeStartOffset, endAngle: wedgeStartOffset,
           innerRadius: node.innerRadius, outerRadius: node.outerRadius,
           opacity: 0
         })
@@ -998,7 +999,7 @@ export class OrdinalPipelineStore {
         const midAngle = ((prev.startAngle ?? 0) + (prev.endAngle ?? 0)) / 2
         this.exitNodes.push({
           type: "wedge",
-          cx: 0, cy: 0,
+          cx: prev.x, cy: prev.y,
           innerRadius: prev.innerRadius ?? 0,
           outerRadius: prev.outerRadius ?? 100,
           startAngle: prev.startAngle ?? 0,

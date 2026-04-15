@@ -280,6 +280,13 @@ const galleryBarData = [
   { region: "West", q1: 73, q2: 80, q3: 69, q4: 91 },
 ]
 
+const galleryBarFlat = galleryBarData.flatMap((d) => [
+  { region: d.region, quarter: "Q1", value: d.q1 },
+  { region: d.region, quarter: "Q2", value: d.q2 },
+  { region: d.region, quarter: "Q3", value: d.q3 },
+  { region: d.region, quarter: "Q4", value: d.q4 },
+])
+
 const galleryScatterData = Array.from({ length: 40 }, (_, i) => ({
   x: 10 + Math.random() * 80,
   y: 10 + Math.random() * 80,
@@ -337,10 +344,24 @@ const galleryNetworkEdges = [
   { source: "Monitor", target: "API" },
 ]
 
+const galleryAnimate = { duration: 600, intro: true }
+const galleryAnimateNoIntro = { duration: 600 }
 const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
 const galleryLineColors = { Revenue: "#6366f1", Costs: "#ec4899" }
 const galleryAreaColors = { Desktop: "#6366f1", Mobile: "#10b981" }
 const galleryScatterColors = { A: "#6366f1", B: "#ec4899", C: "#f97316" }
+
+const galleryBarStyle = (d) => {
+  const qi = ["Q1", "Q2", "Q3", "Q4"].indexOf(d.quarter)
+  return { fill: galleryColors[qi], stroke: "none" }
+}
+const galleryBarTooltip = (d) => (
+  <div style={{ padding: "8px 12px", background: "white", color: "#333", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
+    <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.data?.region} - {d.data?.quarter}</div>
+    <div>Value: {d.data?.value}</div>
+  </div>
+)
+const galleryBarMargin = { top: 16, right: 16, bottom: 36, left: 44 }
 
 const galleryItems = [
   {
@@ -361,6 +382,7 @@ const galleryItems = [
         showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
         enableHover={true}
+        animate={galleryAnimate}
       />
     ),
   },
@@ -371,30 +393,19 @@ const galleryItems = [
       <StreamOrdinalFrame
         size={[w, h]}
         chartType="clusterbar"
-        data={galleryBarData.flatMap((d) => [
-          { region: d.region, quarter: "Q1", value: d.q1 },
-          { region: d.region, quarter: "Q2", value: d.q2 },
-          { region: d.region, quarter: "Q3", value: d.q3 },
-          { region: d.region, quarter: "Q4", value: d.q4 },
-        ])}
+        projection="vertical"
+        data={galleryBarFlat}
         oAccessor="region"
         rAccessor="value"
         groupBy="quarter"
-        pieceStyle={(d) => {
-          const qi = ["Q1", "Q2", "Q3", "Q4"].indexOf(d.quarter)
-          return { fill: galleryColors[qi], stroke: "none" }
-        }}
+        pieceStyle={galleryBarStyle}
         showAxes={true}
         oLabel="region"
         barPadding={40}
-        margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+        margin={galleryBarMargin}
         enableHover={true}
-        tooltipContent={(d) => (
-          <div style={{ padding: "8px 12px", background: "white", color: "#333", borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", fontSize: 13 }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.data?.region} - {d.data?.quarter}</div>
-            <div>Value: {d.data?.value}</div>
-          </div>
-        )}
+        animate={galleryAnimate}
+        tooltipContent={galleryBarTooltip}
       />
     ),
   },
@@ -416,6 +427,7 @@ const galleryItems = [
         showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
         enableHover={true}
+        animate={galleryAnimate}
         tooltipContent={(d) => {
           const groupLabels = { A: "Indigo", B: "Pink", C: "Orange" }
           const raw = d.data || d
@@ -448,6 +460,7 @@ const galleryItems = [
         })}
         showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+        animate={galleryAnimate}
       />
     ),
   },
@@ -475,6 +488,7 @@ const galleryItems = [
           width={w}
           height={h}
           margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
+          animate={galleryAnimateNoIntro}
           tooltip={(d) => {
             const nodeId = d.id || d.data?.id
             const degree = degreeCentrality[nodeId] || 0

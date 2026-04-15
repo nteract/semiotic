@@ -394,7 +394,7 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
-      transition, introEnabled,
+      transition?.duration, transition?.easing, introEnabled,
       staleness,
       thresholds,
       orbitMode,
@@ -1147,7 +1147,7 @@ const StreamNetworkFrame = forwardRef<
     }
 
     // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation)
-    if (isContinuous || isTransitioning || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
+    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
