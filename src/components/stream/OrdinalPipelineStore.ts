@@ -873,11 +873,14 @@ export class OrdinalPipelineStore {
       } else if (node.type === "rect") {
         this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
       } else if (node.type === "wedge") {
+        // Store transition opacity (style.opacity), NOT fillOpacity.
+        // The renderer multiplies fillOpacity * opacity, so storing
+        // fillOpacity here would cause double-multiplication.
         this.prevPositionMap.set(key, {
           x: node.cx, y: node.cy,
           startAngle: node.startAngle, endAngle: node.endAngle,
           innerRadius: node.innerRadius, outerRadius: node.outerRadius,
-          opacity: node.style.opacity ?? node.style.fillOpacity
+          opacity: node.style.opacity ?? 1
         })
       }
     }
@@ -953,7 +956,7 @@ export class OrdinalPipelineStore {
       } else if (node.type === "wedge") {
         if (prev) {
           matchedPrevKeys.add(key)
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           if (prev.startAngle !== node.startAngle || prev.endAngle !== node.endAngle) {
             node._targetStartAngle = node.startAngle
             node._targetEndAngle = node.endAngle
@@ -963,7 +966,7 @@ export class OrdinalPipelineStore {
           }
         } else {
           // Entering wedge: collapse to zero arc at start angle, then sweep open
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           node._targetStartAngle = node.startAngle
           node._targetEndAngle = node.endAngle
           const collapsed = node.startAngle
