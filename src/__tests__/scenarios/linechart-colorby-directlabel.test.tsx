@@ -89,7 +89,7 @@ describe("LineChart colorBy + directLabel", () => {
     )
     // With directLabel=true, no legend should render
     const legendElements = container.querySelectorAll("[class*=legend]")
-    // The SVG overlay might contain legend group — but with directLabel it should be empty/absent
+    expect(legendElements.length).toBe(0)
     expect(container.innerHTML).not.toContain("legendGroup")
   })
 
