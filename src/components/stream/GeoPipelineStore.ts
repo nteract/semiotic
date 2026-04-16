@@ -316,6 +316,7 @@ export class GeoPipelineStore {
   // Transition state
   activeTransition: ActiveTransition | null = null
   private prevPositions: Map<string, [number, number]> | null = null
+  private _hasRenderedOnce = false
 
   constructor(config: GeoPipelineConfig) {
     this.config = config
@@ -417,6 +418,9 @@ export class GeoPipelineStore {
     this.timestampBuffer = null
     this.scene = []
     this.scales = null
+    this._hasRenderedOnce = false
+    this.activeTransition = null
+    this.prevPositions = null
     this.version++
   }
 
@@ -468,7 +472,20 @@ export class GeoPipelineStore {
       this.applyPulse()
     }
 
-    // Step 7: Transition
+    // Step 7: Intro animation — synthesize center-origin prev scene on first render
+    if (config.transition && !this._hasRenderedOnce && this.scene.length > 0 && config.introAnimation) {
+      const cx = layout.width / 2
+      const cy = layout.height / 2
+      const syntheticPrev = this.scene
+        .filter(n => n.type === "point")
+        .map(n => ({ ...n, x: cx, y: cy }))
+      if (syntheticPrev.length > 0) {
+        this.startTransition(syntheticPrev as any)
+      }
+    }
+    this._hasRenderedOnce = true
+
+    // Step 8: Data-change transition
     if (config.transition && prevScene.length > 0) {
       this.startTransition(prevScene)
     }

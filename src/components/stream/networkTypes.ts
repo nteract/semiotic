@@ -2,7 +2,8 @@ import type { ReactNode } from "react"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, StalenessConfig } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig } from "./types"
+import type { AnimateProp } from "./pipelineTransitionUtils"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -66,6 +67,8 @@ export interface RealtimeEdge {
   _targetY0?: number
   _targetY1?: number
   _targetSankeyWidth?: number
+  /** Set during intro animation to allow edge interpolation from width 0 */
+  _introFromZero?: boolean
   direction?: string
   circular?: boolean
   circularPathData?: any
@@ -445,6 +448,9 @@ export interface NetworkPipelineConfig {
   // ── Realtime encoding ─────────────────────────────
   decay?: DecayConfig
   pulse?: PulseConfig
+  transition?: TransitionConfig
+  /** Whether to animate elements on first render (nodes scale up, edges fade in) */
+  introAnimation?: boolean
   staleness?: StalenessConfig
 
   // ── Threshold alerting ────────────────────────────
@@ -592,6 +598,11 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   // ── Realtime encoding ─────────────────────────────
   decay?: DecayConfig
   pulse?: PulseConfig
+  transition?: TransitionConfig
+  /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
+   *  When enabled, charts animate on first render (intro) and on data change.
+   *  Set `{ intro: false }` to disable the intro animation. */
+  animate?: AnimateProp
   staleness?: StalenessConfig
 
   // ── Threshold alerting ────────────────────────────

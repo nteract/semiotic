@@ -91,7 +91,7 @@ export class OrdinalPipelineStore {
 
   // ── Transition animation ────────────────────────────────────────────
   activeTransition: ActiveTransition | null = null
-  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }>()
+  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; startAngle?: number; endAngle?: number; innerRadius?: number; outerRadius?: number; opacity?: number }>()
   /** Exit nodes awaiting fade-out removal */
   exitNodes: import("./ordinalTypes").OrdinalSceneNode[] = []
 
@@ -104,6 +104,7 @@ export class OrdinalPipelineStore {
   scene: OrdinalSceneNode[] = []
   columns: Record<string, OrdinalColumn> = {}
   version = 0
+  private _hasRenderedOnce = false
 
   constructor(config: OrdinalPipelineConfig) {
     this.config = config
@@ -111,21 +112,21 @@ export class OrdinalPipelineStore {
 
     // Resolve accessors
     this.getO = resolveStringAccessor(
-      config.oAccessor || config.categoryAccessor,
+      config.categoryAccessor || config.oAccessor,
       "category"
     ) as (d: any) => string
 
     const isStreaming = config.runtimeMode === "streaming"
 
-    // Resolve rAccessor — may be an array for multiAxis
-    const rawR = config.rAccessor
+    // Resolve valueAccessor/rAccessor — may be an array for multiAxis
+    const rawR = config.valueAccessor || config.rAccessor
     if (Array.isArray(rawR)) {
       this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
       this.getR = this.rAccessors[0]
       this.rExtents = rawR.map(() => new IncrementalExtent())
     } else {
-      if (isStreaming && (config.timeAccessor || config.valueAccessor)) {
-        this.getR = resolveAccessor(config.valueAccessor || rawR, "value")
+      if (isStreaming && (config.timeAccessor || rawR)) {
+        this.getR = resolveAccessor(rawR as string | ((d: any) => number) | undefined, "value")
       } else {
         this.getR = resolveAccessor(rawR, "value")
       }
@@ -226,7 +227,7 @@ export class OrdinalPipelineStore {
 
   /** For timeline type: resolve rAccessor as a [start, end] pair */
   private getRawRange(d: any): [number, number] | null {
-    const acc = this.config.rAccessor
+    const acc = this.config.valueAccessor || this.config.rAccessor
     if (!acc) return null
     const result = typeof acc === "function" ? (acc as Function)(d) : d[acc as string]
     if (Array.isArray(result) && result.length >= 2) {
@@ -341,6 +342,14 @@ export class OrdinalPipelineStore {
       this.applyPulse(this.scene, data)
     }
 
+    // Intro animation: synthesize zero-state on first render
+    if (this.config.transition && !this._hasRenderedOnce && this.scene.length > 0) {
+      if (this.config.introAnimation) {
+        this.synthesizeIntroPositions()
+      }
+      this._hasRenderedOnce = true
+    }
+
     // Start transition animation
     if (this.config.transition && this.prevPositionMap.size > 0) {
       this.startTransition()
@@ -350,7 +359,8 @@ export class OrdinalPipelineStore {
   }
 
   private resolveRAccessorName(index: number): string {
-    const acc = Array.isArray(this.config.rAccessor) ? this.config.rAccessor[index] : this.config.rAccessor
+    const rawR = this.config.valueAccessor || this.config.rAccessor
+    const acc = Array.isArray(rawR) ? rawR[index] : rawR
     return typeof acc === "string" ? acc : `value${index}`
   }
 
@@ -678,7 +688,7 @@ export class OrdinalPipelineStore {
 
     const palette = Array.isArray(this.config.colorScheme)
       ? this.config.colorScheme
-      : STREAMING_PALETTE
+      : this.config.themeCategorical || STREAMING_PALETTE
     const color = palette[this._colorSchemeIndex % palette.length]
     this._colorSchemeIndex++
     this._colorSchemeMap.set(key, color)
@@ -748,7 +758,7 @@ export class OrdinalPipelineStore {
         let bestIntensity = 0
         for (let i = 0; i < data.length; i++) {
           const d = data[i]
-          const oAcc = this.config.oAccessor
+          const oAcc = this.config.categoryAccessor || this.config.oAccessor
           const dCat = typeof oAcc === "function" ? oAcc(d) : d[oAcc || "category"]
           if (dCat !== cat) continue
           const insertTime = this.timestampBuffer.get(i)
@@ -790,6 +800,50 @@ export class OrdinalPipelineStore {
 
   // ── Transitions ─────────────────────────────────────────────────────
 
+  /** Synthesize a zero-state prevPositionMap for animated intro (first render). */
+  private synthesizeIntroPositions(): void {
+    this.prevPositionMap.clear()
+    const keyCounts = new Map<string, number>()
+    const baseline = this.scales?.r(0) ?? 0
+    const isVertical = this.scales?.projection !== "horizontal"
+    let wedgeStartOffset: number | undefined
+
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      const key = this.getNodeKey(node, keyCounts)
+      if (!key) continue
+
+      if (node.type === "rect") {
+        // Bars: zero height at baseline
+        if (isVertical) {
+          this.prevPositionMap.set(key, {
+            x: node.x, y: baseline, w: node.w, h: 0,
+            opacity: node.style.opacity ?? 1
+          })
+        } else {
+          this.prevPositionMap.set(key, {
+            x: baseline, y: node.y, w: 0, h: node.h,
+            opacity: node.style.opacity ?? 1
+          })
+        }
+      } else if (node.type === "point") {
+        // Points: scale from r=0
+        this.prevPositionMap.set(key, {
+          x: node.x, y: node.y, r: 0, opacity: 0
+        })
+      } else if (node.type === "wedge") {
+        // Wedges: collapse all arcs to the start angle offset
+        if (wedgeStartOffset === undefined) wedgeStartOffset = node.startAngle
+        this.prevPositionMap.set(key, {
+          x: node.cx, y: node.cy,
+          startAngle: wedgeStartOffset, endAngle: wedgeStartOffset,
+          innerRadius: node.innerRadius, outerRadius: node.outerRadius,
+          opacity: 0
+        })
+      }
+    }
+  }
+
   /** Build a stable identity key for a scene node based on its content, not array index */
   private getNodeKey(node: OrdinalSceneNode, keyCounts: Map<string, number>): string | null {
     if (node.type === "point") {
@@ -801,6 +855,8 @@ export class OrdinalPipelineStore {
       return `${baseKey}:${count}`
     } else if (node.type === "rect") {
       return `r:${node.group || ""}:${node.datum?.category ?? ""}`
+    } else if (node.type === "wedge") {
+      return `w:${node.category ?? ""}`
     }
     return null
   }
@@ -816,6 +872,16 @@ export class OrdinalPipelineStore {
         this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
       } else if (node.type === "rect") {
         this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
+      } else if (node.type === "wedge") {
+        // Store transition opacity (style.opacity), NOT fillOpacity.
+        // The renderer multiplies fillOpacity * opacity, so storing
+        // fillOpacity here would cause double-multiplication.
+        this.prevPositionMap.set(key, {
+          x: node.cx, y: node.cy,
+          startAngle: node.startAngle, endAngle: node.endAngle,
+          innerRadius: node.innerRadius, outerRadius: node.outerRadius,
+          opacity: node.style.opacity ?? 1
+        })
       }
     }
   }
@@ -849,16 +915,20 @@ export class OrdinalPipelineStore {
         if (prev) {
           matchedPrevKeys.add(key)
           node._targetOpacity = node.style.opacity ?? 1
-          if (prev.x !== node.x || prev.y !== node.y) {
+          if (prev.x !== node.x || prev.y !== node.y || (prev.r !== undefined && prev.r !== node.r)) {
             node._targetX = node.x
             node._targetY = node.y
+            node._targetR = node.r
             node.x = prev.x
             node.y = prev.y
+            if (prev.r !== undefined) node.r = prev.r
             hasChanges = true
           }
         } else {
-          // Entering node
+          // Entering node — scale from r=0
           node._targetOpacity = node.style.opacity ?? 1
+          node._targetR = node.r
+          node.r = 0
           node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
@@ -883,6 +953,35 @@ export class OrdinalPipelineStore {
           node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
+      } else if (node.type === "wedge") {
+        if (prev) {
+          matchedPrevKeys.add(key)
+          node._targetOpacity = node.style.opacity ?? 1
+          if (prev.startAngle !== node.startAngle || prev.endAngle !== node.endAngle) {
+            node._targetStartAngle = node.startAngle
+            node._targetEndAngle = node.endAngle
+            node.startAngle = prev.startAngle!
+            node.endAngle = prev.endAngle!
+            hasChanges = true
+          }
+        } else {
+          // Entering wedge: collapse to zero arc at start angle, then sweep open
+          node._targetOpacity = node.style.opacity ?? 1
+          node._targetStartAngle = node.startAngle
+          node._targetEndAngle = node.endAngle
+          const collapsed = node.startAngle
+          node.startAngle = collapsed
+          node.endAngle = collapsed
+          node.style = { ...node.style, opacity: 0 }
+          // Store synthetic prev so advanceTransition has a "from"
+          this.prevPositionMap.set(key, {
+            x: node.cx, y: node.cy,
+            startAngle: collapsed, endAngle: collapsed,
+            innerRadius: node.innerRadius, outerRadius: node.outerRadius,
+            opacity: 0
+          })
+          hasChanges = true
+        }
       }
     }
 
@@ -902,6 +1001,24 @@ export class OrdinalPipelineStore {
           style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
           _targetOpacity: 0, _transitionKey: key
         })
+      } else if (key.startsWith("w:")) {
+        // Exiting wedge: collapse arc to midpoint and fade out
+        const midAngle = ((prev.startAngle ?? 0) + (prev.endAngle ?? 0)) / 2
+        this.exitNodes.push({
+          type: "wedge",
+          cx: prev.x, cy: prev.y,
+          innerRadius: prev.innerRadius ?? 0,
+          outerRadius: prev.outerRadius ?? 100,
+          startAngle: prev.startAngle ?? 0,
+          endAngle: prev.endAngle ?? 0,
+          style: { opacity: prev.opacity ?? 1 },
+          datum: null,
+          category: key.slice(2),
+          _targetStartAngle: midAngle,
+          _targetEndAngle: midAngle,
+          _targetOpacity: 0,
+          _transitionKey: key
+        } as import("./ordinalTypes").WedgeSceneNode)
       }
       hasChanges = true
     }
@@ -938,11 +1055,14 @@ export class OrdinalPipelineStore {
           const startOpacity = prev ? (prev.opacity ?? 1) : 0
           node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
         }
-        if (node._targetX === undefined) continue
         const prev = this.prevPositionMap.get(key)
-        if (!prev) continue
-        node.x = lerp(prev.x, node._targetX, t)
-        node.y = lerp(prev.y, node._targetY!, t)
+        if (node._targetX !== undefined && prev) {
+          node.x = lerp(prev.x, node._targetX, t)
+          node.y = lerp(prev.y, node._targetY!, t)
+        }
+        if (node._targetR !== undefined && prev?.r !== undefined) {
+          node.r = lerp(prev.r, node._targetR, t)
+        }
       } else if (node.type === "rect") {
         if (node._targetOpacity !== undefined) {
           const prev = this.prevPositionMap.get(key)
@@ -958,6 +1078,19 @@ export class OrdinalPipelineStore {
           node.w = lerp(prev.w, node._targetW!, t)
           node.h = lerp(prev.h!, node._targetH!, t)
         }
+      } else if (node.type === "wedge") {
+        if (node._targetOpacity !== undefined) {
+          const prev = this.prevPositionMap.get(key)
+          const startOpacity = prev ? (prev.opacity ?? 1) : 0
+          node.style = { ...node.style, opacity: lerp(startOpacity, node._targetOpacity, t) }
+        }
+        if (node._targetStartAngle !== undefined && node._targetEndAngle !== undefined) {
+          const prev = this.prevPositionMap.get(key)
+          if (prev && prev.startAngle !== undefined) {
+            node.startAngle = lerp(prev.startAngle, node._targetStartAngle, t)
+            node.endAngle = lerp(prev.endAngle!, node._targetEndAngle, t)
+          }
+        }
       }
     }
 
@@ -968,11 +1101,12 @@ export class OrdinalPipelineStore {
           node._targetOpacity = undefined
         }
         if (node.type === "point") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
+          if (node._targetX === undefined && node._targetR === undefined) continue
+          if (node._targetX !== undefined) { node.x = node._targetX; node.y = node._targetY! }
+          if (node._targetR !== undefined) node.r = node._targetR
           node._targetX = undefined
           node._targetY = undefined
+          node._targetR = undefined
         } else if (node.type === "rect") {
           if (node._targetX === undefined) continue
           node.x = node._targetX
@@ -983,6 +1117,13 @@ export class OrdinalPipelineStore {
           node._targetY = undefined
           node._targetW = undefined
           node._targetH = undefined
+        } else if (node.type === "wedge") {
+          if (node._targetStartAngle !== undefined) {
+            node.startAngle = node._targetStartAngle
+            node.endAngle = node._targetEndAngle!
+            node._targetStartAngle = undefined
+            node._targetEndAngle = undefined
+          }
         }
       }
       // Remove exit nodes
@@ -1086,6 +1227,7 @@ export class OrdinalPipelineStore {
     this.rExtent.clear()
     this.categories.clear()
     this._hasStreamingData = false
+    this._hasRenderedOnce = false
     if (this.timestampBuffer) this.timestampBuffer.clear()
     this.prevPositionMap.clear()
     this.exitNodes = []
@@ -1122,24 +1264,25 @@ export class OrdinalPipelineStore {
     // Re-resolve accessors only when the accessor source actually changed.
     // Uses .toString() comparison to skip re-resolution for inline arrow functions
     // that are recreated on every parent render but have identical source code.
-    if (config.oAccessor !== undefined || config.categoryAccessor !== undefined) {
-      const newO = config.oAccessor || config.categoryAccessor
-      const prevO = prev.oAccessor || prev.categoryAccessor
+    if (config.categoryAccessor !== undefined || config.oAccessor !== undefined) {
+      const newO = config.categoryAccessor || config.oAccessor
+      const prevO = prev.categoryAccessor || prev.oAccessor
       if (!accessorsEquivalent(newO, prevO)) {
         this.getO = resolveStringAccessor(
-          this.config.oAccessor || this.config.categoryAccessor,
+          this.config.categoryAccessor || this.config.oAccessor,
           "category"
         ) as (d: any) => string
-        // Clear discovered categories so they're rebuilt with the new accessor
         this.categories.clear()
       }
     }
-    if (config.rAccessor !== undefined) {
-      const newArr = Array.isArray(config.rAccessor) ? config.rAccessor : [config.rAccessor]
-      const prevArr = Array.isArray(prev.rAccessor) ? prev.rAccessor : [prev.rAccessor]
+    if (config.valueAccessor !== undefined || config.rAccessor !== undefined) {
+      const newR = config.valueAccessor || config.rAccessor
+      const prevR = prev.valueAccessor || prev.rAccessor
+      const newArr = Array.isArray(newR) ? newR : [newR]
+      const prevArr = Array.isArray(prevR) ? prevR : [prevR]
       const rChanged = newArr.length !== prevArr.length || newArr.some((acc, i) => !accessorsEquivalent(acc, prevArr[i]))
       if (rChanged) {
-        const rawR = this.config.rAccessor
+        const rawR = this.config.valueAccessor || this.config.rAccessor
         if (Array.isArray(rawR)) {
           this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
           this.getR = this.rAccessors[0]

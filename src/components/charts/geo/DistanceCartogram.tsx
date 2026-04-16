@@ -408,6 +408,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...(resolved.summary && { summary: resolved.summary }),
     ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
     // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)
     ...(overlayGraphics && { foregroundGraphics: overlayGraphics })

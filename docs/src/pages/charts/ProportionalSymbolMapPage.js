@@ -397,6 +397,106 @@ function WorldSymbolMap() {
         language="jsx"
       />
 
+      <h3 id="custom-symbol">Custom Symbol (Ring + Fill)</h3>
+      <p>
+        Use <code>frameProps.pointStyle</code> to style the inner filled circle
+        and <code>frameProps.svgAnnotationRules</code> with per-point annotations
+        to draw a ring around each symbol. This creates a radar-blip effect with
+        a solid inner dot and a stroke-only outer ring with a gap.
+      </p>
+
+      <WorldSymbolMap
+        points={cityData}
+        xAccessor="lon"
+        yAccessor="lat"
+        sizeBy="population"
+        sizeRange={[4, 20]}
+        colorBy="region"
+        tooltip={(d) => (
+          <div style={{ padding: 4 }}>
+            <strong>{d.name}</strong><br />
+            Pop: {(d.population / 1e6).toFixed(1)}M
+          </div>
+        )}
+        width={700}
+        height={450}
+        frameProps={{
+          pointStyle: (d) => ({
+            fill: d.fill || "#6366f1",
+            fillOpacity: 0.85,
+            stroke: "none",
+            r: d.r || 6,
+          }),
+          svgAnnotationRules: (annotation, _index, context) => {
+            if (annotation.type !== "ring") return null
+            const node = (context?.sceneNodes || []).find(
+              (n) => n.type === "point" && n.datum?.id === annotation.id
+            )
+            if (!node) return null
+            const ringR = (node.r || 6) + 3
+            return (
+              <circle
+                key={annotation.id}
+                cx={node.x}
+                cy={node.y}
+                r={ringR}
+                fill="none"
+                stroke={node.style?.fill || "#6366f1"}
+                strokeWidth={1.5}
+                strokeOpacity={0.6}
+              />
+            )
+          },
+          annotations: cityData.map((c) => ({
+            type: "ring",
+            id: c.id,
+          })),
+        }}
+      />
+
+      <CodeBlock
+        code={`<ProportionalSymbolMap
+  points={cities}
+  sizeBy="population"
+  sizeRange={[4, 20]}
+  colorBy="region"
+  areas={worldAreas}
+  frameProps={{
+    // Inner filled circle (canvas layer)
+    pointStyle: (d) => ({
+      fill: d.fill || "#6366f1",
+      fillOpacity: 0.85,
+      stroke: "none",
+      r: d.r || 6,
+    }),
+    // Outer ring (SVG overlay layer)
+    svgAnnotationRules: (annotation, _index, context) => {
+      if (annotation.type !== "ring") return null
+      const node = context.sceneNodes.find(
+        n => n.type === "point" && n.datum?.id === annotation.id
+      )
+      if (!node) return null
+      const ringR = (node.r || 6) + 3  // 3px gap
+      return (
+        <circle
+          cx={node.x} cy={node.y} r={ringR}
+          fill="none"
+          stroke={node.style?.fill || "#6366f1"}
+          strokeWidth={1.5}
+          strokeOpacity={0.6}
+        />
+      )
+    },
+    // One ring annotation per data point
+    annotations: cities.map(c => ({
+      type: "ring",
+      id: c.id,
+    })),
+  }}
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
+import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -151,6 +152,8 @@ export interface LineSceneNode {
   _prevPath?: [number, number][]
   /** Target path coordinates for interpolation during transitions */
   _targetPath?: [number, number][]
+  /** Intro clip fraction (0→1): reveals line from left to right via canvas clip */
+  _introClipFraction?: number
 }
 
 export interface AreaSceneNode {
@@ -188,6 +191,8 @@ export interface AreaSceneNode {
   _prevBottomPath?: [number, number][]
   /** Target bottom path coordinates for interpolation during transitions */
   _targetBottomPath?: [number, number][]
+  /** Intro clip fraction (0→1): reveals area from left to right via canvas clip */
+  _introClipFraction?: number
 }
 
 export interface PointSceneNode {
@@ -556,6 +561,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   pulse?: PulseConfig
   /** Smooth position transitions on data change */
   transition?: TransitionConfig
+  /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
+   *  When enabled, charts animate on first render (intro) and on data change.
+   *  Set `{ intro: false }` to disable the intro animation. */
+  animate?: AnimateProp
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
 

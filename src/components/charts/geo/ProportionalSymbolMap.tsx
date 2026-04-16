@@ -178,9 +178,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const allCategories = useMemo(() => {
     if (!colorBy) return []
-    const acc = typeof colorBy === "function" ? colorBy : (d: any) => d[colorBy as string]
+    const acc = typeof colorBy === "function" ? colorBy : (d: any) => d?.[colorBy as string]
     const vals = new Set<string>()
     for (const d of safeData) {
+      if (!d) continue
       const v = acc(d)
       if (v != null) vals.add(String(v))
     }
@@ -281,6 +282,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(resolved.summary && { summary: resolved.summary }),
     ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     ...frameProps
   }
 

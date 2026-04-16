@@ -15,6 +15,7 @@ import type {
   TransitionConfig,
   StalenessConfig
 } from "./types"
+import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { LegendGroup } from "../types/legendTypes"
 
 // ── Chart types ────────────────────────────────────────────────────────
@@ -70,6 +71,8 @@ export interface WedgeSceneNode {
   _pulseColor?: string
   _pulseGlowRadius?: number
   _targetOpacity?: number
+  _targetStartAngle?: number
+  _targetEndAngle?: number
   _transitionKey?: string
 }
 
@@ -201,20 +204,20 @@ export interface OrdinalPipelineConfig {
   extentPadding: number
   projection: "vertical" | "horizontal" | "radial"
 
-  // Accessors — rAccessor can be an array for multiAxis support
-  oAccessor?: string | ((d: any) => string)
-  rAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
+  // Primary accessors
+  categoryAccessor?: string | ((d: any) => string)
+  valueAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
   colorAccessor?: string | ((d: any) => string)
   stackBy?: string | ((d: any) => string)
   groupBy?: string | ((d: any) => string)
-
-  // Multi-axis: each rAccessor gets an independent scale
-  multiAxis?: boolean
-
-  // Streaming accessors (aliases)
   timeAccessor?: string | ((d: any) => number)
-  valueAccessor?: string | ((d: any) => number)
-  categoryAccessor?: string | ((d: any) => string)
+
+  /** @deprecated Use categoryAccessor */
+  oAccessor?: string | ((d: any) => string)
+  /** @deprecated Use valueAccessor */
+  rAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
+
+  multiAxis?: boolean
 
   // Extents
   rExtent?: [number?, number?]
@@ -258,6 +261,7 @@ export interface OrdinalPipelineConfig {
   pieceStyle?: (d: any, category?: string) => Style
   summaryStyle?: (d: any, category?: string) => Style
   colorScheme?: string | string[]
+  themeCategorical?: string[]
   barColors?: Record<string, string>
 
   /** ID accessor for remove() — extracts a unique identifier from each datum */
@@ -267,6 +271,8 @@ export interface OrdinalPipelineConfig {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
+  /** Whether to animate elements on first render (bars grow from baseline, wedges sweep in) */
+  introAnimation?: boolean
   staleness?: StalenessConfig
 }
 
@@ -277,20 +283,23 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   runtimeMode?: "bounded" | "streaming"
   data?: T[]
 
-  // Accessors — rAccessor can be an array for multiAxis
-  oAccessor?: string | ((d: T) => string)
-  rAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
+  // Primary accessors (HOC-style naming)
+  /** Category field — the ordinal dimension (replaces oAccessor) */
+  categoryAccessor?: string | ((d: T) => string)
+  /** Value field — the quantitative dimension (replaces rAccessor). Can be array for multiAxis. */
+  valueAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
   colorAccessor?: string | ((d: T) => string)
   stackBy?: string | ((d: T) => string)
   groupBy?: string | ((d: T) => string)
-
-  // Multi-axis: each rAccessor gets an independent scale
-  multiAxis?: boolean
-
-  // Streaming accessors
   timeAccessor?: string | ((d: T) => number)
-  valueAccessor?: string | ((d: T) => number)
-  categoryAccessor?: string | ((d: T) => string)
+
+  /** @deprecated Use categoryAccessor instead */
+  oAccessor?: string | ((d: T) => string)
+  /** @deprecated Use valueAccessor instead */
+  rAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
+
+  // Multi-axis: each valueAccessor entry gets an independent scale
+  multiAxis?: boolean
 
   // Projection
   projection?: "vertical" | "horizontal" | "radial"
@@ -352,9 +361,21 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   // Axes
   showAxes?: boolean
   showCategoryTicks?: boolean
+  /** Category axis label */
+  categoryLabel?: string
+  /** Value axis label */
+  valueLabel?: string
+  /** Category tick formatter */
+  categoryFormat?: (d: string, index?: number) => string | ReactNode
+  /** Value tick formatter */
+  valueFormat?: (d: number | string) => string
+  /** @deprecated Use categoryLabel */
   oLabel?: string
+  /** @deprecated Use valueLabel */
   rLabel?: string
+  /** @deprecated Use categoryFormat */
   oFormat?: (d: string, index?: number) => string | ReactNode
+  /** @deprecated Use valueFormat */
   rFormat?: (d: number | string) => string
 
   // Interaction
@@ -400,6 +421,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
+  /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
+   *  When enabled, charts animate on first render (intro) and on data change.
+   *  Set `{ intro: false }` to disable the intro animation. */
+  animate?: AnimateProp
   staleness?: StalenessConfig
 
   // ── Accessibility ─────────────────────────────────

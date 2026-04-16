@@ -48,7 +48,11 @@ export const wedgeCanvasRenderer = (
   const wedgeNodes = nodes.filter((n): n is WedgeSceneNode => n.type === "wedge")
 
   for (const node of wedgeNodes) {
-    ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 1
+    // Combine fillOpacity and opacity so transition fade-in/fade-out works
+    // even when fillOpacity is set (e.g., 0.6 × 0.5 during enter transition)
+    const fillOpacity = node.style.fillOpacity ?? 1
+    const transitionOpacity = node.style.opacity ?? 1
+    ctx.globalAlpha = fillOpacity * transitionOpacity
     ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
 
     if (node.cornerRadius) {

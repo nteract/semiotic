@@ -7,7 +7,7 @@
  */
 
 import type { SemioticTheme } from "../store/ThemeStore"
-import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME } from "../store/ThemeStore"
+import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, applyThemeAccessibility } from "../store/ThemeStore"
 import { THEME_PRESETS } from "../semiotic-themes"
 
 export type ThemeInput = string | Partial<SemioticTheme> | undefined
@@ -36,13 +36,15 @@ export function resolveTheme(theme: ThemeInput): SemioticTheme {
   // Object theme — merge onto base
   const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
 
-  return {
+  const resolved = {
     ...base,
     ...theme,
     colors: { ...base.colors, ...(theme.colors || {}) },
     typography: { ...base.typography, ...(theme.typography || {}) },
     tooltip: { ...base.tooltip, ...(theme.tooltip || {}) },
   } as SemioticTheme
+
+  return applyThemeAccessibility(resolved)
 }
 
 /**

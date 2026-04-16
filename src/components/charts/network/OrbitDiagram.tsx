@@ -282,6 +282,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         orbitShowRings={showRings}
         orbitAnimated={animated}
         accessibleTable={accessibleTable}
+        {...(props.animate != null && { animate: props.animate })}
         {...frameProps}
       />
     </SafeRender>

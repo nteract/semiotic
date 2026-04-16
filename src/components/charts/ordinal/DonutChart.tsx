@@ -111,15 +111,26 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
+      let base: Record<string, any>
       if (effectiveColorBy) {
-        if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
-        return {} // Let frame use its own color scheme (push API)
+        if (setup.colorScale) base = { fill: getColor(d, effectiveColorBy, setup.colorScale) }
+        else base = {} // Let frame use its own color scheme (push API)
+      } else {
+        base = { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
       }
-      return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
+      }
+      return base
     }
-  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -174,6 +185,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),

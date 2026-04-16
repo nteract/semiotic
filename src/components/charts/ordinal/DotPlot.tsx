@@ -129,13 +129,21 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      const baseStyle: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      return baseStyle
+      const base: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
+      base.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
+      }
+      return base
     }
-  }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -180,6 +188,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),

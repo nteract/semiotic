@@ -15,6 +15,7 @@
  */
 
 import * as React from "react"
+import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
@@ -26,7 +27,7 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import { renderChart } from "./renderToStaticSVG"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (el: React.ReactElement) => string }
+// ReactDOMServer imported at top of file via ESM
 
 // ── Types ────────────────────────────────────────────────────────────
 

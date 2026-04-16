@@ -132,7 +132,10 @@ const groupedBarChartProps = [
   { name: "valueFormat", type: "function", required: false, default: null, description: "Format function for value axis tick labels." },
   { name: "colorBy", type: "string | function", required: false, default: "groupBy", description: "Field name or function to determine bar color. Defaults to groupBy." },
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
+  { name: "sort", type: 'boolean | "asc" | "desc" | function', required: false, default: "false", description: 'Sort categories by total value. Accepts true, "asc", "desc", or a custom comparator. Default false preserves insertion order.' },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bar groups in pixels." },
+  { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on bar tops (the end away from baseline)." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth data-change transitions. `true` for defaults (300ms ease-out, intro enabled), or `{ duration, easing, intro }`. Set `{ intro: false }` to disable intro." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bars." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend for groups." },
@@ -280,6 +283,64 @@ export default function GroupedBarChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="sorted">Sorted Groups</h3>
+      <p>
+        Use <code>sort</code> to order categories by their total value.
+        Default is <code>false</code> (preserves insertion order).
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          groupBy: "product",
+          valueAccessor: "value",
+          sort: "desc",
+          categoryLabel: "Quarter",
+          valueLabel: "Units Sold",
+        }}
+        type={GroupedBarChart}
+        overrideProps={{
+          data: "sampleData",
+          groupBy: '"product"',
+          sort: '"desc"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="rounded-top">Rounded Top Corners</h3>
+      <p>
+        Use <code>roundedTop</code> to round the top corners of each individual bar.
+        For grouped bars, every bar in the cluster gets rounded.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          groupBy: "product",
+          valueAccessor: "value",
+          colorBy: "product",
+          roundedTop: 4,
+        }}
+        type={GroupedBarChart}
+        overrideProps={{
+          data: "sampleData",
+          groupBy: '"product"',
+          colorBy: '"product"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <CodeBlock code={`<GroupedBarChart
+  data={sampleData}
+  categoryAccessor="category"
+  groupBy="product"
+  valueAccessor="value"
+  colorBy="product"
+  roundedTop={4}
+/>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

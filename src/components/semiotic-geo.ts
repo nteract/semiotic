@@ -35,3 +35,9 @@ export { mergeData } from "./geo/mergeData"
 export { resolveReferenceGeography } from "./geo/referenceGeography"
 export type { ReferenceGeography } from "./geo/referenceGeography"
 export type { AreasProp } from "./geo/useReferenceAreas"
+
+// Chart prop types
+export type { ChoroplethMapProps } from "./charts/geo/ChoroplethMap"
+export type { ProportionalSymbolMapProps } from "./charts/geo/ProportionalSymbolMap"
+export type { FlowMapProps } from "./charts/geo/FlowMap"
+export type { DistanceCartogramProps } from "./charts/geo/DistanceCartogram"

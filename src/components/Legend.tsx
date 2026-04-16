@@ -332,7 +332,7 @@ const renderVerticalGroup = ({
           key={`legend-text-${i}`}
           y={offset}
           className="legend-group-label"
-          fontSize={12}
+          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >
           {l.label}
@@ -412,7 +412,7 @@ const renderHorizontalGroup = ({
           transform={`translate(${offset},${verticalOffset}) rotate(90)`}
           textAnchor="start"
           className="legend-group-label"
-          fontSize={12}
+          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >
           {l.label}
@@ -605,7 +605,7 @@ export default function Legend(props: LegendProps) {
           y={16}
           x={width / 2}
           textAnchor="middle"
-          fontSize={12}
+          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
           fill="var(--semiotic-text, #333)"
         >
           {title}

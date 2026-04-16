@@ -230,6 +230,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       description={description}
       summary={summary}
       accessibleTable={accessibleTable}
+      {...(props.animate != null && { animate: props.animate })}
       {...frameProps}
     />
   </SafeRender>)

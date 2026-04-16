@@ -26,3 +26,12 @@ export type {
   NetworkLabel,
   ThresholdAlertConfig
 } from "./stream/networkTypes"
+
+// Chart prop types
+export type { ForceDirectedGraphProps } from "./charts/network/ForceDirectedGraph"
+export type { SankeyDiagramProps } from "./charts/network/SankeyDiagram"
+export type { ChordDiagramProps } from "./charts/network/ChordDiagram"
+export type { TreeDiagramProps } from "./charts/network/TreeDiagram"
+export type { TreemapProps } from "./charts/network/Treemap"
+export type { CirclePackProps } from "./charts/network/CirclePack"
+export type { OrbitDiagramProps } from "./charts/network/OrbitDiagram"

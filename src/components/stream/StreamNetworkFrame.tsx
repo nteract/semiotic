@@ -22,6 +22,7 @@ import type {
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
 import { buildHoverData } from "./hoverUtils"
+import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
@@ -250,6 +251,8 @@ const StreamNetworkFrame = forwardRef<
     backgroundGraphics,
     decay,
     pulse,
+    transition: transitionProp,
+    animate,
     staleness,
     thresholds,
     accessibleTable = true,
@@ -291,6 +294,10 @@ const StreamNetworkFrame = forwardRef<
     () => ({ ...DEFAULT_PARTICLE_STYLE, ...particleStyleProp }),
     [particleStyleProp]
   )
+
+  // ── Animate → transition resolution ──────────────────────────────────
+
+  const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
 
   // ── Pipeline config ──────────────────────────────────────────────────
 
@@ -335,6 +342,8 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
+      transition,
+      introAnimation: introEnabled,
       staleness,
       thresholds,
       orbitMode,
@@ -385,6 +394,7 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
+      transition?.duration, transition?.easing, introEnabled,
       staleness,
       thresholds,
       orbitMode,
@@ -1137,7 +1147,7 @@ const StreamNetworkFrame = forwardRef<
     }
 
     // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation)
-    if (isContinuous || isTransitioning || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
+    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }

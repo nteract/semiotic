@@ -37,3 +37,13 @@ export type {
   OrdinalScales,
   OrdinalSceneNode
 } from "./stream/ordinalTypes"
+
+// Chart prop types
+export type { BarChartProps } from "./charts/ordinal/BarChart"
+export type { StackedBarChartProps } from "./charts/ordinal/StackedBarChart"
+export type { GroupedBarChartProps } from "./charts/ordinal/GroupedBarChart"
+export type { SwimlaneChartProps } from "./charts/ordinal/SwimlaneChart"
+export type { PieChartProps } from "./charts/ordinal/PieChart"
+export type { DonutChartProps } from "./charts/ordinal/DonutChart"
+export type { FunnelChartProps } from "./charts/ordinal/FunnelChart"
+export type { LikertChartProps } from "./charts/ordinal/LikertChart"

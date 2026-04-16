@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { BarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -31,6 +31,50 @@ const colorData = [
   { category: "Toys", value: 4100, region: "South" },
   { category: "Books", value: 3800, region: "East" },
 ]
+
+const animateDataA = [
+  { category: "Electronics", value: 12400 },
+  { category: "Clothing", value: 8700 },
+  { category: "Grocery", value: 15300 },
+  { category: "Furniture", value: 6200 },
+  { category: "Toys", value: 4100 },
+  { category: "Books", value: 3800 },
+]
+
+const animateDataB = [
+  { category: "Electronics", value: 9200 },
+  { category: "Clothing", value: 14500 },
+  { category: "Grocery", value: 7800 },
+  { category: "Furniture", value: 11600 },
+  { category: "Toys", value: 8900 },
+  { category: "Books", value: 12100 },
+]
+
+function AnimateBarDemo() {
+  const [useB, setUseB] = useState(false)
+  return (
+    <div>
+      <button
+        onClick={() => setUseB(v => !v)}
+        style={{
+          marginBottom: 12, padding: "6px 16px", borderRadius: 4,
+          border: "1px solid var(--semiotic-border, #ccc)", background: "var(--semiotic-bg, #fff)",
+          color: "var(--semiotic-text, #333)", cursor: "pointer", fontSize: 13,
+        }}
+      >
+        Swap data {useB ? "← A" : "→ B"}
+      </button>
+      <BarChart
+        data={useB ? animateDataB : animateDataA}
+        categoryAccessor="category"
+        valueAccessor="value"
+        animate={{ duration: 500, easing: "ease-out" }}
+        width={500}
+        height={300}
+      />
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Streaming demo
@@ -116,6 +160,7 @@ const barChartProps = [
   { name: "sort", type: "boolean | string | function", required: false, default: "false", description: 'Sort bars by value. Accepts true, "asc", "desc", or a custom comparator function.' },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bars in pixels." },
   { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on bar tops (the end away from baseline)." },
+  { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing, intro }` for custom. Bars grow from baseline on first render." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bars." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy set)", description: "Show a legend. Defaults to true when colorBy is specified." },
@@ -381,6 +426,33 @@ export default function BarChartPage() {
         overrideProps={{ data: "sampleData" }}
         hiddenProps={{}}
       />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Animate */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="animate">Animated Transitions</h3>
+      <p>
+        Set <code>animate</code> to smoothly transition bar heights when data changes.
+        Pass <code>true</code> for defaults (300ms ease-out) or a config object
+        with <code>duration</code> and <code>easing</code>.
+      </p>
+
+      <AnimateBarDemo />
+
+      <CodeBlock code={`const [data, setData] = useState(datasetA)
+
+<BarChart
+  data={data}
+  categoryAccessor="category"
+  valueAccessor="value"
+  animate={{ duration: 500, easing: "ease-out" }}
+/>
+
+<button onClick={() => setData(prev =>
+  prev === datasetA ? datasetB : datasetA
+)}>
+  Swap data
+</button>`} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

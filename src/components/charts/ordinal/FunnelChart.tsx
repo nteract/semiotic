@@ -183,20 +183,28 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     return "#4e79a7"
   }, [isSingleColor, color, themeCategorical, colorScheme])
 
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      const baseStyle: Record<string, string | number> = {}
+      const base: Record<string, string | number> = {}
       if (uniformFill) {
         // Single-category: every step gets the same color
-        baseStyle.fill = uniformFill
+        base.fill = uniformFill
       } else if (effectiveColorBy) {
-        baseStyle.fill = getColor(d, effectiveColorBy, setup.colorScale)
+        base.fill = getColor(d, effectiveColorBy, setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
+        base.fill = resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
       }
-      return baseStyle
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
+      }
+      return base
     }
-  }, [uniformFill, effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [uniformFill, effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
@@ -262,6 +270,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     ...(summary && { summary }),
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
+    ...(props.animate != null && { animate: props.animate }),
     tooltipContent: tooltip === false
       ? () => null
       : tooltip === true || tooltip == null

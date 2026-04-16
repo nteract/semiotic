@@ -36,6 +36,7 @@ export const PASTELS_LIGHT: SemioticTheme = {
     grid: "#e8d5c4",
     border: "#e8d5c4",
     focus: "#c9a0dc",
+    annotation: "#c9a0dc",
   },
   typography: {
     fontFamily: "Inter, system-ui, sans-serif",
@@ -64,6 +65,7 @@ export const PASTELS_DARK: SemioticTheme = {
     grid: "#3d3455",
     border: "#3d3455",
     focus: "#c9a0dc",
+    annotation: "#c9a0dc",
   },
   typography: {
     fontFamily: "Inter, system-ui, sans-serif",
@@ -94,6 +96,7 @@ export const BI_TOOL_LIGHT: SemioticTheme = {
     grid: "#d8dce3",
     border: "#d8dce3",
     focus: "#2563eb",
+    annotation: "#2563eb",
   },
   typography: {
     fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -122,6 +125,7 @@ export const BI_TOOL_DARK: SemioticTheme = {
     grid: "#374151",
     border: "#374151",
     focus: "#3b82f6",
+    annotation: "#3b82f6",
   },
   typography: {
     fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -152,6 +156,7 @@ export const ITALIAN_LIGHT: SemioticTheme = {
     grid: "#e0e0e0",
     border: "#e0e0e0",
     focus: "#cc0000",
+    annotation: "#cc0000",
   },
   typography: {
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
@@ -180,6 +185,7 @@ export const ITALIAN_DARK: SemioticTheme = {
     grid: "#333333",
     border: "#333333",
     focus: "#ff3333",
+    annotation: "#ff3333",
   },
   typography: {
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
@@ -241,6 +247,7 @@ export const TUFTE_DARK: SemioticTheme = {
     grid: "#3d3c35",
     border: "#3d3c35",
     focus: "#c05050",
+    annotation: "#c05050",
   },
   typography: {
     fontFamily: "Georgia, 'Times New Roman', serif",
@@ -302,6 +309,7 @@ export const JOURNALIST_DARK: SemioticTheme = {
     grid: "#383838",
     border: "#383838",
     focus: "#ff6b6b",
+    annotation: "#ff6b6b",
   },
   typography: {
     fontFamily: "'Franklin Gothic Medium', 'Libre Franklin', Arial, sans-serif",
@@ -332,6 +340,7 @@ export const PLAYFUL_LIGHT: SemioticTheme = {
     grid: "#e8d0f8",
     border: "#e8d0f8",
     focus: "#8b5cf6",
+    annotation: "#8b5cf6",
   },
   typography: {
     fontFamily: "'Nunito', 'Poppins', system-ui, sans-serif",
@@ -360,6 +369,7 @@ export const PLAYFUL_DARK: SemioticTheme = {
     grid: "#3a2560",
     border: "#3a2560",
     focus: "#a78bfa",
+    annotation: "#a78bfa",
   },
   typography: {
     fontFamily: "'Nunito', 'Poppins', system-ui, sans-serif",
@@ -412,6 +422,7 @@ export const CARBON_LIGHT: SemioticTheme = {
     grid: "#e0e0e0",
     border: "#e0e0e0",
     focus: "#0f62fe",
+    annotation: "#0f62fe",
   },
   typography: {
     fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
@@ -441,6 +452,7 @@ export const CARBON_DARK: SemioticTheme = {
     grid: "#393939",
     border: "#393939",
     focus: "#4589ff",
+    annotation: "#4589ff",
   },
   typography: {
     fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",

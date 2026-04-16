@@ -65,3 +65,41 @@ export function lerp(from: number, to: number, t: number): number {
 export function now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now()
 }
+
+// ── Animate prop resolution ───────────────────────────────────────────
+
+/** The animate prop type accepted by all HOCs and Stream Frames.
+ *  Single source of truth — re-exported by types.ts, ordinalTypes.ts, networkTypes.ts, geoTypes.ts. */
+export type AnimateProp = boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+
+/**
+ * Resolve the declarative `animate` prop into a concrete TransitionConfig.
+ * Used by all 4 Stream Frames. `animate` takes precedence over `transitionProp`.
+ */
+export function resolveAnimateConfig(
+  animate: AnimateProp | undefined,
+  transitionProp: { duration?: number; easing?: "ease-out" | "linear" } | undefined
+): { transition: { duration?: number; easing?: "ease-out" | "linear" } | undefined; introEnabled: boolean } {
+  // animate={false} explicitly disables transitions, overriding transitionProp
+  if (animate === false) {
+    return { transition: undefined, introEnabled: false }
+  }
+
+  // Respect prefers-reduced-motion: skip intro so first paint is the final state.
+  // Data-change transitions are fast-forwarded by the frame's RAF loop (now + 1e6),
+  // but intro transitions are created DURING computeScene after the fast-forward step,
+  // causing a one-frame flash of the zero state. Disabling intro avoids this.
+  const reducedMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+
+  const transition = animate
+    ? (animate === true
+      ? { duration: 300 }
+      : { duration: animate.duration ?? 300, easing: animate.easing === "linear" ? "linear" as const : "ease-out" as const })
+    : transitionProp
+
+  const introEnabled = reducedMotion ? false : (animate
+    ? (animate === true ? true : (animate as { intro?: boolean }).intro !== false)
+    : false)
+
+  return { transition, introEnabled }
+}
