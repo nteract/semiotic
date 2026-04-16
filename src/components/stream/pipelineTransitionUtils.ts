@@ -68,8 +68,9 @@ export function now(): number {
 
 // ── Animate prop resolution ───────────────────────────────────────────
 
-/** The animate prop type accepted by all HOCs and Stream Frames. */
-type AnimateProp = boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+/** The animate prop type accepted by all HOCs and Stream Frames.
+ *  Single source of truth — re-exported by types.ts, ordinalTypes.ts, networkTypes.ts, geoTypes.ts. */
+export type AnimateProp = boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
 
 /**
  * Resolve the declarative `animate` prop into a concrete TransitionConfig.

@@ -1,6 +1,7 @@
 import type React from "react"
 import type { MarginType } from "../../types/generalTypes"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -114,7 +115,7 @@ export interface BaseChartProps {
   /** Enable declarative bounded animation (enter/exit/update transitions + intro).
    * `true` uses defaults (300ms ease-out, intro enabled). Object form allows customization.
    * Set `{ intro: false }` to disable the animated intro on first render. */
-  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+  animate?: AnimateProp
 }
 
 /**

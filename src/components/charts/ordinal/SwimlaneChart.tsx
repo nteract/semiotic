@@ -167,15 +167,24 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
+  // Merge frameProps.pieceStyle (stroke/strokeWidth for themed borders) with
+  // the HOC's color-resolved fill. The HOC keeps control of fill; users can add borders.
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      if (effectiveColorBy) {
-        if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
-        return {}
+      const base: Record<string, any> = effectiveColorBy
+        ? (setup.colorScale ? { fill: getColor(d, effectiveColorBy, setup.colorScale) } : {})
+        : { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
       }
-      return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
+      return base
     }
-  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),

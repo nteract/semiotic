@@ -148,14 +148,22 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>, category?: string) => {
-      const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      baseStyle.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      baseStyle.r = sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius
-      return baseStyle
+      const base: Record<string, string | number> = { fillOpacity: pointOpacity }
+      base.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
+      base.r = sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
+      }
+      return base
     }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),

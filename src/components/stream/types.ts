@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
+import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -563,7 +564,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
    *  When enabled, charts animate on first render (intro) and on data change.
    *  Set `{ intro: false }` to disable the intro animation. */
-  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+  animate?: AnimateProp
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
 

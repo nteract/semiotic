@@ -270,20 +270,30 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levels, levelColorMap])
 
   // ── Piece style ──────────────────────────────────────────────────────
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Record<string, any>, category?: string) => {
       const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel
+      let base: Record<string, any>
       if (level === NEUTRAL_NEG || level === NEUTRAL_POS) {
-        return { fill: neutralColor }
+        base = { fill: neutralColor }
+      } else {
+        const key = label || level
+        base = (key && levelColorMap.has(key))
+          ? { fill: levelColorMap.get(key)! }
+          : { fill: "#888" }
       }
-      const key = label || level
-      if (key && levelColorMap.has(key)) {
-        return { fill: levelColorMap.get(key)! }
+      if (fpPieceStyle) {
+        const extra = fpPieceStyle(d, category)
+        if (extra.stroke) base.stroke = extra.stroke
+        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
+        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
       }
-      return { fill: "#888" }
+      return base
     }
-  }, [levelColorMap, neutralColor])
+  }, [levelColorMap, neutralColor, fpPieceStyle])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),

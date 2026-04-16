@@ -10,6 +10,7 @@ import type {
   PointSceneNode,
   LineSceneNode
 } from "./types"
+import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
   HoverAnnotationConfig,
   HoverData,
@@ -216,7 +217,7 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   /** Declarative animation: `true` for defaults (300ms ease-out), or config object.
    *  When enabled, charts animate on first render (intro) and on data change.
    *  Set `{ intro: false }` to disable the intro animation. */
-  animate?: boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+  animate?: AnimateProp
   staleness?: StalenessConfig
 
   // ── Rendering ──

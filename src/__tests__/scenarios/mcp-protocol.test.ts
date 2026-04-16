@@ -35,9 +35,14 @@ function sendRequest(
   id: string | number = 1
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error(`Timeout waiting for response to ${method}`)), 10000)
-
     let buffer = ""
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      proc.stdout!.off("data", onData)
+      proc.off("exit", onExit)
+    }
+
     const onData = (chunk: Buffer) => {
       buffer += chunk.toString()
       // MCP stdio transport sends newline-delimited JSON
@@ -48,8 +53,7 @@ function sendRequest(
         try {
           const msg = JSON.parse(line)
           if (msg.id === id) {
-            clearTimeout(timeout)
-            proc.stdout!.off("data", onData)
+            cleanup()
             resolve(msg)
           }
         } catch {
@@ -60,7 +64,18 @@ function sendRequest(
       buffer = lines[lines.length - 1]
     }
 
+    const onExit = (code: number | null) => {
+      cleanup()
+      reject(new Error(`Process exited with code ${code} before responding to ${method}`))
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error(`Timeout waiting for response to ${method}`))
+    }, 10000)
+
     proc.stdout!.on("data", onData)
+    proc.on("exit", onExit)
 
     const request = JSON.stringify({
       jsonrpc: "2.0",
