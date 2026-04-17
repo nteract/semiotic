@@ -69,10 +69,17 @@ export async function waitForChartReady(
 }
 
 /**
- * Wait for every chart on the current page (any element with a `canvas`
- * child) to have painted content. Used by "does the page render without
- * errors" tests instead of a bulk `waitForTimeout(5000)` — the test
- * proceeds as soon as the page is visibly stable.
+ * Wait for every data canvas on the current page to have painted content.
+ * Used by "does the page render without errors" tests instead of a bulk
+ * `waitForTimeout(5000)` — the test proceeds as soon as the page is
+ * visibly stable.
+ *
+ * Stream Frames render the chart onto a data canvas (which carries an
+ * `aria-label` via `computeCanvasAriaLabel`) and layer a transparent
+ * interaction canvas on top for pointer event capture. The interaction
+ * canvas stays blank until the user hovers, so we deliberately filter to
+ * `canvas[aria-label]` — otherwise this poll would hang until timeout on
+ * any page containing an XY or Geo chart.
  */
 export async function waitForAllChartsReady(
   page: Page,
@@ -82,9 +89,17 @@ export async function waitForAllChartsReady(
   await page.waitForLoadState("networkidle", { timeout })
   await page.waitForFunction(
     () => {
-      const canvases = Array.from(document.querySelectorAll("canvas")) as HTMLCanvasElement[]
-      if (canvases.length === 0) return false
-      for (const canvas of canvases) {
+      // Data canvases are the ones Stream Frames emit with an aria-label.
+      // Fall back to all canvases if a page has none (e.g. SVG-only charts
+      // that still happen to include a canvas element somewhere).
+      const labeled = Array.from(
+        document.querySelectorAll("canvas[aria-label]")
+      ) as HTMLCanvasElement[]
+      const candidates = labeled.length > 0
+        ? labeled
+        : (Array.from(document.querySelectorAll("canvas")) as HTMLCanvasElement[])
+      if (candidates.length === 0) return false
+      for (const canvas of candidates) {
         if (canvas.width === 0 || canvas.height === 0) return false
         const ctx = canvas.getContext("2d")
         if (!ctx) return false

@@ -88,10 +88,19 @@ export interface CanvasOpLog {
   strokeStyles: string[]
   fillAlphas: number[]
   strokeAlphas: number[]
+  /** `lineWidth` at the moment each stroke fired — useful for pulse /
+   *  emphasis renderers that vary stroke weight by intensity. */
+  strokeLineWidths: number[]
 }
 
 export function recordCanvasOps(ctx: Record<string, any>): CanvasOpLog {
-  const log: CanvasOpLog = { fillStyles: [], strokeStyles: [], fillAlphas: [], strokeAlphas: [] }
+  const log: CanvasOpLog = {
+    fillStyles: [],
+    strokeStyles: [],
+    fillAlphas: [],
+    strokeAlphas: [],
+    strokeLineWidths: []
+  }
   const origFill = ctx.fill as (...args: any[]) => void
   const origStroke = ctx.stroke as (...args: any[]) => void
   ctx.fill = ((...args: any[]) => {
@@ -102,6 +111,7 @@ export function recordCanvasOps(ctx: Record<string, any>): CanvasOpLog {
   ctx.stroke = ((...args: any[]) => {
     log.strokeStyles.push(String(ctx.strokeStyle))
     log.strokeAlphas.push(Number(ctx.globalAlpha))
+    log.strokeLineWidths.push(Number(ctx.lineWidth))
     return origStroke?.apply(ctx, args)
   }) as any
   return log

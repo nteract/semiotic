@@ -205,16 +205,10 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     store.computeScene({ width: 400, height: 300 })
     const before = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
 
-    // Explicitly clear themeCategorical (theme switch path).
-    store.updateConfig({
-      xAccessor: "x",
-      yAccessor: "y",
-      chartType: "scatter" as any,
-      windowSize: 100,
-      windowMode: "sliding" as const,
-      extentPadding: 0,
-      themeCategorical: undefined
-    })
+    // Explicitly clear themeCategorical (theme switch path). Only the
+    // field under test is passed — `updateConfig` does a shallow merge, so
+    // everything else is preserved from the original `makeConfig()` state.
+    store.updateConfig({ themeCategorical: undefined })
     store.computeScene({ width: 400, height: 300 })
     const after = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
 
