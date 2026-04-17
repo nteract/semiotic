@@ -770,12 +770,36 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
     }
 
+    // Coalesce pointermove events to one hit test per animation frame.
+    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
+    // wasteful re-renders. Capture the latest coords and process them in rAF.
+    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
+    const moveRafRef = useRef(0)
+    const flushPendingMove = useCallback(() => {
+      moveRafRef.current = 0
+      const coords = pendingMoveCoordsRef.current
+      pendingMoveCoordsRef.current = null
+      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+    }, [])
     const onMouseMove = useCallback(
-      (e: React.MouseEvent) => hoverHandlerRef.current(e),
-      []
+      (e: React.MouseEvent) => {
+        pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+        if (moveRafRef.current === 0) {
+          moveRafRef.current = requestAnimationFrame(flushPendingMove)
+        }
+      },
+      [flushPendingMove]
     )
     const onMouseLeave = useCallback(
-      () => hoverLeaveRef.current(),
+      () => {
+        // Drop any pending hover so a queued move doesn't fire after leave.
+        pendingMoveCoordsRef.current = null
+        if (moveRafRef.current !== 0) {
+          cancelAnimationFrame(moveRafRef.current)
+          moveRafRef.current = 0
+        }
+        hoverLeaveRef.current()
+      },
       []
     )
 
@@ -874,12 +898,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 
-    // Clear keyboard focus on mouse interaction
+    // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced
+    // hover path so the per-frame work cap still applies.
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      hoverHandlerRef.current(e)
-    }, [])
+      onMouseMove(e)
+    }, [onMouseMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -1073,6 +1098,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
       return () => {
         if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
+        pendingMoveCoordsRef.current = null
+        if (moveRafRef.current !== 0) {
+          cancelAnimationFrame(moveRafRef.current)
+          moveRafRef.current = 0
+        }
       }
     }, [scheduleRender])
 

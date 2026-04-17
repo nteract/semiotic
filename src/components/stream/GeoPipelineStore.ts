@@ -13,6 +13,7 @@ import {
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
 import { scaleLinear } from "d3-scale"
+import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import type {
   GeoPipelineConfig,
   GeoScales,
@@ -280,6 +281,13 @@ export class GeoPipelineStore {
   scales: GeoScales | null = null
   version = 0
 
+  // Spatial index for point hit testing (built when point count exceeds threshold)
+  private static readonly QUADTREE_THRESHOLD = 500
+  private _quadtree: Quadtree<PointSceneNode> | null = null
+  /** Largest visual point radius in the current scene; used to widen quadtree
+   *  hit-test radius when points are larger than the default maxDistance. */
+  private _maxPointRadius = 0
+
   // Internal state
   private projection: GeoProjection | null = null
   private geoPath: GeoPath<any, GeoPermissibleObjects> | null = null
@@ -458,6 +466,7 @@ export class GeoPipelineStore {
     // Step 4: Build scene nodes
     const prevScene = this.scene
     this.scene = this.buildSceneNodes(layout)
+    this.rebuildQuadtree()
 
     // Step 5: Apply distance cartogram transform
     if (config.projectionTransform) {
@@ -614,6 +623,7 @@ export class GeoPipelineStore {
 
     // Rebuild scene nodes with zoomed projection (skip re-fitting)
     this.scene = this.buildSceneNodes(layout)
+    this.rebuildQuadtree()
 
     // Apply cartogram transform if configured
     if (this.config.projectionTransform) {
@@ -653,6 +663,7 @@ export class GeoPipelineStore {
     }
 
     this.scene = this.buildSceneNodes(layout)
+    this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
@@ -687,6 +698,7 @@ export class GeoPipelineStore {
 
     // Rebuild scene
     this.scene = this.buildSceneNodes(layout)
+    this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
@@ -721,6 +733,49 @@ export class GeoPipelineStore {
       return this.pointBuffer.toArray()
     }
     return this.pointData
+  }
+
+  /**
+   * Build (or clear) the quadtree spatial index for point scene nodes.
+   * Only built when the point count exceeds QUADTREE_THRESHOLD; below that
+   * a linear scan is faster than indexing overhead. Also tracks the largest
+   * point radius so the hit tester can widen its query when symbols are big.
+   */
+  private rebuildQuadtree(): void {
+    let maxR = 0
+    let pointCount = 0
+    for (const node of this.scene) {
+      if (node.type === "point") {
+        pointCount++
+        if (node.r > maxR) maxR = node.r
+      }
+    }
+    this._maxPointRadius = maxR
+
+    if (pointCount <= GeoPipelineStore.QUADTREE_THRESHOLD) {
+      this._quadtree = null
+      return
+    }
+
+    const points: PointSceneNode[] = new Array(pointCount)
+    let i = 0
+    for (const node of this.scene) {
+      if (node.type === "point") points[i++] = node
+    }
+    this._quadtree = d3Quadtree<PointSceneNode>()
+      .x(n => n.x)
+      .y(n => n.y)
+      .addAll(points)
+  }
+
+  /** Quadtree spatial index for point hit testing, or null when below threshold. */
+  get quadtree(): Quadtree<PointSceneNode> | null {
+    return this._quadtree
+  }
+
+  /** Largest visual point radius in the current scene. */
+  get maxPointRadius(): number {
+    return this._maxPointRadius
   }
 
   private buildSceneNodes(layout: StreamLayout): GeoSceneNode[] {
@@ -789,13 +844,17 @@ export class GeoPipelineStore {
       const coords = lineDataAcc(line)
       if (!coords || coords.length < 2) continue
 
-      const lineCoords: [number, number][] = coords.map((d: any) => [xAcc(d), yAcc(d)])
-
-      let screenPath: [number, number][]
+      // Project lon/lat coords directly into a screen path, skipping unprojectable points.
+      // For "geo" lines, densify along great-circle arcs between each pair of points.
+      let screenPath: [number, number][] = []
 
       if (config.lineType === "geo") {
-        // Densify along great-circle arcs between each pair of points
-        const geoCoords: [number, number][] = []
+        // We need lineCoords to compute geoDistance/geoInterpolate, but we
+        // project on the fly to avoid a second array allocation.
+        const lineCoords: [number, number][] = new Array(coords.length)
+        for (let i = 0; i < coords.length; i++) {
+          lineCoords[i] = [xAcc(coords[i]), yAcc(coords[i])]
+        }
         for (let i = 0; i < lineCoords.length - 1; i++) {
           const start = lineCoords[i]
           const end = lineCoords[i + 1]
@@ -804,17 +863,17 @@ export class GeoPipelineStore {
           const interpolate = geoInterpolate(start, end)
           for (let s = 0; s <= steps; s++) {
             if (i > 0 && s === 0) continue // avoid duplicate at segment joins
-            geoCoords.push(interpolate(s / steps) as [number, number])
+            const projected = proj(interpolate(s / steps) as [number, number])
+            if (projected != null) screenPath.push(projected as [number, number])
           }
         }
-        screenPath = geoCoords
-          .map(([lon, lat]) => proj([lon, lat]))
-          .filter((p): p is [number, number] => p != null)
       } else {
-        // Straight-line segments in projected space
-        screenPath = lineCoords
-          .map(([lon, lat]) => proj([lon, lat]))
-          .filter((p): p is [number, number] => p != null)
+        // Straight-line segments in projected space — fused project + filter.
+        for (let i = 0; i < coords.length; i++) {
+          const d = coords[i]
+          const projected = proj([xAcc(d), yAcc(d)])
+          if (projected != null) screenPath.push(projected as [number, number])
+        }
       }
 
       if (screenPath.length < 2) continue
@@ -825,9 +884,9 @@ export class GeoPipelineStore {
 
       // Apply flow style transformation (only for simple 2-point source→target flows;
       // multi-point polylines keep their full geometry).
-      if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
+      if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
         screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (lineCoords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
+      } else if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
         if (config.lineType === "geo") {
           // Offset each point along its local normal to preserve great-circle curvature
           screenPath = buildOffsetGeoPath(screenPath, resolvedStrokeWidth)

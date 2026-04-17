@@ -264,6 +264,9 @@ export interface NetworkBezierEdge {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Lazily-built Path2D for hit testing; invalidated when pathD changes. */
+  _cachedPath2D?: Path2D
+  _cachedPath2DSource?: string
 }
 
 /** Ribbon edge — used by chord */
@@ -274,6 +277,8 @@ export interface NetworkRibbonEdge {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  _cachedPath2D?: Path2D
+  _cachedPath2DSource?: string
 }
 
 /** Curved edge — used by tree, cluster */
@@ -284,6 +289,8 @@ export interface NetworkCurvedEdge {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  _cachedPath2D?: Path2D
+  _cachedPath2DSource?: string
 }
 
 export type NetworkSceneNode =

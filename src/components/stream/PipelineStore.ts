@@ -208,7 +208,7 @@ export class PipelineStore {
 
   // ── Color map caching ──────────────────────────────────────────────
   /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
-  private _colorMapCache: { key: string; map: Map<string, string> } | null = null
+  private _colorMapCache: { key: string; map: Map<string, string>; version: number } | null = null
   /** Separate group→color map for resolveGroupColor (insertion-order based, never invalidates _colorMapCache) */
   private _groupColorMap: Map<string, string> = new Map()
   private _barCategoryCache: { key: string; order: string[] } | null = null
@@ -486,21 +486,18 @@ export class PipelineStore {
         } else {
           const groups = this.groupData(bufferArray)
 
-          // Build per-x-value totals across all groups
+          // Single pass: build per-x stacked totals and track the running max.
           const xTotals = new Map<number, number>()
+          let maxStacked = 0
           for (const g of groups) {
             for (const d of g.data) {
               const x = this.getX(d)
               const y = this.getY(d)
-              if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
-                xTotals.set(x, (xTotals.get(x) || 0) + y)
-              }
+              if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+              const total = (xTotals.get(x) || 0) + y
+              xTotals.set(x, total)
+              if (total > maxStacked) maxStacked = total
             }
-          }
-
-          let maxStacked = 0
-          for (const total of xTotals.values()) {
-            if (total > maxStacked) maxStacked = total
           }
 
           const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
@@ -948,10 +945,16 @@ export class PipelineStore {
 
   /**
    * Resolve a category→color map from data using the colorAccessor.
-   * Caches the result in _colorMapCache keyed by sorted category set —
-   * only rebuilds when the set of categories changes.
+   * Caches the result in _colorMapCache keyed by `_ingestVersion` (fast path)
+   * and a sorted-category fingerprint (so palette/scheme changes still
+   * invalidate). Multiple scene builders within one frame skip the data scan
+   * entirely after the first call.
    */
   private resolveColorMap(data: Record<string, any>[]): Map<string, string> {
+    if (this._colorMapCache && this._colorMapCache.version === this._ingestVersion) {
+      return this._colorMapCache.map
+    }
+
     const categories = new Set<string>()
     for (const d of data) {
       const c = this.getColor!(d)
@@ -961,6 +964,9 @@ export class PipelineStore {
     const cacheKey = sorted.join('\0')
 
     if (this._colorMapCache && this._colorMapCache.key === cacheKey) {
+      // Categories unchanged across the version bump (e.g., layout-only update).
+      // Refresh the version so future calls in this frame short-circuit.
+      this._colorMapCache.version = this._ingestVersion
       return this._colorMapCache.map
     }
 
@@ -971,7 +977,7 @@ export class PipelineStore {
     for (let ci = 0; ci < sorted.length; ci++) {
       colorMap.set(sorted[ci], palette[ci % palette.length])
     }
-    this._colorMapCache = { key: cacheKey, map: colorMap }
+    this._colorMapCache = { key: cacheKey, map: colorMap, version: this._ingestVersion }
     return colorMap
   }
 
@@ -1240,8 +1246,15 @@ export class PipelineStore {
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
 
-    // Invalidate color map caches when relevant config changes
-    if (config.colorScheme !== undefined) {
+    // Invalidate color map caches when any color-relevant config changes.
+    // resolveColorMap short-circuits on _ingestVersion, so we must explicitly
+    // null the cache for changes that don't bump that counter (theme palette
+    // swaps, accessor swaps, scheme overrides).
+    if (
+      config.colorScheme !== undefined
+      || config.themeCategorical !== undefined
+      || config.colorAccessor !== undefined
+    ) {
       this._colorMapCache = null
       this._groupColorMap = new Map()
     }

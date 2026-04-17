@@ -1,6 +1,8 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode, HoverData } from "./types"
+import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface OrdinalHitResult {
   datum: any
@@ -15,9 +17,29 @@ export function findNearestOrdinalNode(
   scene: OrdinalSceneNode[],
   px: number,
   py: number,
-  maxDistance: number = 30
+  maxDistance: number = 30,
+  pointQuadtree?: Quadtree<PointSceneNode> | null,
+  maxPointRadius = 0
 ): OrdinalHitResult | null {
   let best: OrdinalHitResult | null = null
+
+  // Fast path: quadtree-accelerated point hit test for swarm plots.
+  // Uses `visit()` rather than `find()` so variable-size points (where a
+  // farther point with a larger r can still be a valid hit) aren't missed.
+  // When a quadtree is provided, it's authoritative for points — whether
+  // it returns a hit or null, the linear point scan below is skipped so
+  // large swarms stay O(log n) for point testing.
+  if (pointQuadtree) {
+    const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
+    if (hit) {
+      best = {
+        datum: hit.node.datum,
+        x: hit.node.x,
+        y: hit.node.y,
+        distance: hit.distance
+      }
+    }
+  }
 
   for (const node of scene) {
     let result: OrdinalHitResult | null = null
@@ -27,6 +49,8 @@ export function findNearestOrdinalNode(
         result = hitTestRect(node, px, py)
         break
       case "point":
+        // Quadtree visit was authoritative — skip redundant linear scan.
+        if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
         break
       case "wedge":

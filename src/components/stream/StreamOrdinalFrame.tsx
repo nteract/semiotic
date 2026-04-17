@@ -555,7 +555,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const hitX = isRadialMode ? chartX - adjustedWidth / 2 : chartX
       const hitY = isRadialMode ? chartY - adjustedHeight / 2 : chartY
 
-      const hit = findNearestOrdinalNode(store.scene, hitX, hitY)
+      const hit = findNearestOrdinalNode(store.scene, hitX, hitY, 30, store.pointQuadtree, store.maxPointRadius)
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null
@@ -596,12 +596,35 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
     }
 
+    // Coalesce pointermove events to one hit test per animation frame.
+    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
+    // wasteful re-renders. Capture latest coords; process in rAF.
+    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
+    const moveRafRef = useRef(0)
+    const flushPendingMove = useCallback(() => {
+      moveRafRef.current = 0
+      const coords = pendingMoveCoordsRef.current
+      pendingMoveCoordsRef.current = null
+      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+    }, [])
     const onMouseMove = useCallback(
-      (e: React.MouseEvent) => hoverHandlerRef.current(e),
-      []
+      (e: React.MouseEvent) => {
+        pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+        if (moveRafRef.current === 0) {
+          moveRafRef.current = requestAnimationFrame(flushPendingMove)
+        }
+      },
+      [flushPendingMove]
     )
     const onMouseLeave = useCallback(
-      () => hoverLeaveRef.current(),
+      () => {
+        pendingMoveCoordsRef.current = null
+        if (moveRafRef.current !== 0) {
+          cancelAnimationFrame(moveRafRef.current)
+          moveRafRef.current = 0
+        }
+        hoverLeaveRef.current()
+      },
       []
     )
 
@@ -684,8 +707,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      hoverHandlerRef.current(e)
-    }, [])
+      onMouseMove(e)
+    }, [onMouseMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -817,6 +840,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
       return () => {
         if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
+        pendingMoveCoordsRef.current = null
+        if (moveRafRef.current !== 0) {
+          cancelAnimationFrame(moveRafRef.current)
+          moveRafRef.current = 0
+        }
       }
     }, [scheduleRender])
 
