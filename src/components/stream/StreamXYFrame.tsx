@@ -1098,6 +1098,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
       return () => {
         if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
+        pendingMoveCoordsRef.current = null
+        if (moveRafRef.current !== 0) {
+          cancelAnimationFrame(moveRafRef.current)
+          moveRafRef.current = 0
+        }
       }
     }, [scheduleRender])
 

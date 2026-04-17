@@ -106,9 +106,13 @@ export function clearCSSColorCache(_canvas?: HTMLCanvasElement): void {
  * observer/matchMedia listeners. Required for test isolation — without it,
  * observers accumulate across files and bump `currentVersion` more than once
  * per real DOM mutation.
+ *
+ * `currentVersion` is *incremented* (not reset to zero) so any WeakMap entries
+ * that survive from a previous test can't accidentally be re-validated by a
+ * version collision.
  */
 export function _resetCSSColorCacheForTest(): void {
-  currentVersion = 0
+  currentVersion++
   if (installedObserver) {
     installedObserver.disconnect()
     installedObserver = null

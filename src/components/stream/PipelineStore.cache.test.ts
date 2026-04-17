@@ -265,7 +265,9 @@ describe("scene rebuilds after config changes", () => {
       { x: 3, y: 30, group: "B", region: "north" },
     ])
     store.computeScene([400, 300])
-    const groupColorB = store.resolveGroupColor("B")
+    // Warm the cache for group "B" so the subsequent colorAccessor swap has
+    // something stale to invalidate. Return value intentionally unused.
+    store.resolveGroupColor("B")
 
     // Switch the colorAccessor — categories change from {A, B} to {north, south},
     // so the cached map is wrong. This must invalidate.

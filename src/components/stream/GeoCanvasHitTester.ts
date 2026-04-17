@@ -2,6 +2,7 @@ import type { GeoAreaSceneNode, GeoSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { getHitRadius } from "./hitTestUtils"
+import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface GeoHitResult {
   node: GeoSceneNode
@@ -31,22 +32,11 @@ export function findNearestGeoNode(
   // ── 1. Point nodes ──────────────────────────────────────────────
 
   if (pointQuadtree) {
-    // Widen the query radius so the quadtree returns candidates that are
-    // farther than maxDistance but still within their own hit radius.
-    // `getHitRadius(r) = max(r + 5, 12, maxDistance)` so we widen to that.
-    const queryRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
-    const candidate = pointQuadtree.find(mouseX, mouseY, queryRadius) ?? null
-    if (candidate) {
-      const dx = candidate.x - mouseX
-      const dy = candidate.y - mouseY
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      const hitRadius = getHitRadius(candidate.r, maxDistance)
-      if (dist <= hitRadius) {
-        return { node: candidate, distance: dist }
-      }
-    }
-    // Quadtree result is authoritative when its query radius covers the
-    // largest possible hit radius — no need for the linear fallback.
+    // Visit every candidate within the widened search radius so variable-size
+    // points don't miss hits (quadtree.find's nearest-only behavior would
+    // shadow a farther, larger point that still contains the cursor).
+    const hit = findHitPointInQuadtree(pointQuadtree, mouseX, mouseY, maxDistance, maxPointRadius)
+    if (hit) return hit
   } else {
     // Linear scan when no spatial index is available
     let bestPoint: PointSceneNode | null = null

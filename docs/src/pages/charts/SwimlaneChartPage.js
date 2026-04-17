@@ -411,7 +411,7 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         so borders always match the surrounding area.
       </p>
 
-      <div ref={null} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16 }}>
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16 }}>
         <SwimlaneChart
           data={STATIC_DATA}
           categoryAccessor="lane"

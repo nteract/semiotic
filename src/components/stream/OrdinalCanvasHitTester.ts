@@ -2,6 +2,7 @@ import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNod
 import type { PointSceneNode, RectSceneNode, HoverData } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface OrdinalHitResult {
   datum: any
@@ -24,15 +25,18 @@ export function findNearestOrdinalNode(
   let pointHitConfirmed = false
 
   // Fast path: quadtree-accelerated point hit test for swarm plots.
+  // Uses `visit()` rather than `find()` so variable-size points (where a
+  // farther point with a larger r can still be a valid hit) aren't missed.
   if (pointQuadtree) {
-    const queryRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
-    const candidate = pointQuadtree.find(px, py, queryRadius) ?? null
-    if (candidate) {
-      const result = hitTestPoint(candidate, px, py, maxDistance)
-      if (result && result.distance < maxDistance) {
-        best = result
-        pointHitConfirmed = true
+    const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
+    if (hit) {
+      best = {
+        datum: hit.node.datum,
+        x: hit.node.x,
+        y: hit.node.y,
+        distance: hit.distance
       }
+      pointHitConfirmed = true
     }
   }
 
