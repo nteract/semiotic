@@ -44,6 +44,7 @@ import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipT
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 
 // Canvas renderers
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
@@ -533,8 +534,9 @@ const StreamNetworkFrame = forwardRef<
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
 
-  // Repaint canvas when ThemeProvider theme changes
+  // Repaint canvas when ThemeProvider theme changes — invalidate CSS var cache
   useEffect(() => {
+    clearCSSColorCache()
     dirtyRef.current = true
     scheduleRender()
   }, [currentTheme, scheduleRender])
@@ -924,12 +926,35 @@ const StreamNetworkFrame = forwardRef<
     }
   }
 
+  // Coalesce pointermove events to one hit test per animation frame.
+  // High-DPI mice fire at 120–240Hz; React state updates per move trigger
+  // wasteful re-renders. Capture latest coords; process in rAF.
+  const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
+  const moveRafRef = useRef(0)
+  const flushPendingMove = useCallback(() => {
+    moveRafRef.current = 0
+    const coords = pendingMoveCoordsRef.current
+    pendingMoveCoordsRef.current = null
+    if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+  }, [])
   const onMouseMove = useCallback(
-    (e: React.MouseEvent) => hoverHandlerRef.current(e),
-    []
+    (e: React.MouseEvent) => {
+      pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+      if (moveRafRef.current === 0) {
+        moveRafRef.current = requestAnimationFrame(flushPendingMove)
+      }
+    },
+    [flushPendingMove]
   )
   const onMouseLeave = useCallback(
-    () => hoverLeaveRef.current(),
+    () => {
+      pendingMoveCoordsRef.current = null
+      if (moveRafRef.current !== 0) {
+        cancelAnimationFrame(moveRafRef.current)
+        moveRafRef.current = 0
+      }
+      hoverLeaveRef.current()
+    },
     []
   )
   const onClick = useCallback(
@@ -1013,8 +1038,8 @@ const StreamNetworkFrame = forwardRef<
   const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
     kbFocusIndexRef.current = -1
     focusedNavPointRef.current = null
-    hoverHandlerRef.current(e)
-  }, [])
+    onMouseMove(e)
+  }, [onMouseMove])
 
   // ── Render function ──────────────────────────────────────────────────
 

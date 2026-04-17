@@ -15,6 +15,7 @@
  * Consumed by: StreamOrdinalFrame (sole consumer).
  */
 import { scaleBand, scaleLinear, type ScaleBand, type ScaleLinear } from "d3-scale"
+import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import type {
@@ -25,7 +26,7 @@ import type {
   OrdinalLayout,
   OrdinalChartType
 } from "./ordinalTypes"
-import type { Changeset, Style, DecayConfig } from "./types"
+import type { Changeset, Style, DecayConfig, PointSceneNode } from "./types"
 import { computeDecayOpacity } from "./pipelineDecay"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -104,6 +105,17 @@ export class OrdinalPipelineStore {
   scene: OrdinalSceneNode[] = []
   columns: Record<string, OrdinalColumn> = {}
   version = 0
+  /** Bumped whenever the buffer is mutated. Used to invalidate per-frame caches. */
+  private _dataVersion = 0
+  // Spatial index for point hit testing (built when point count exceeds threshold)
+  private static readonly QUADTREE_THRESHOLD = 500
+  private _pointQuadtree: Quadtree<PointSceneNode> | null = null
+  /** Largest visual point radius in the current scene. */
+  private _maxPointRadius = 0
+  /** Cached datum→index map for applyDecay/applyPulse. Keyed by `_dataVersion`. */
+  private _datumIndexCache: { version: number; map: Map<any, number> } | null = null
+  /** Cached category→indices map for applyPulse wedge path. Keyed by `_dataVersion`. */
+  private _categoryIndexCache: { version: number; map: Map<string, number[]> } | null = null
   private _hasRenderedOnce = false
 
   constructor(config: OrdinalPipelineConfig) {
@@ -150,6 +162,7 @@ export class OrdinalPipelineStore {
   ingest(changeset: Changeset): boolean {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
+    this._dataVersion++
 
     if (changeset.bounded) {
       this.buffer.clear()
@@ -333,6 +346,7 @@ export class OrdinalPipelineStore {
 
     // 5. Build scene graph
     this.scene = this.buildSceneNodes(expandedData, layout)
+    this.rebuildPointQuadtree()
 
     // Apply decay/pulse to discrete scene nodes
     if (this.config.decay) {
@@ -713,15 +727,99 @@ export class OrdinalPipelineStore {
     return computeDecayOpacity(decay, bufferIndex, bufferSize)
   }
 
+  /**
+   * Build (or return cached) datum→buffer-index map. Cached against
+   * `_dataVersion` so the per-frame applyDecay/applyPulse calls don't
+   * rebuild it during animation when the buffer hasn't changed.
+   */
+  private getDatumIndexMap(data: Record<string, any>[]): Map<any, number> {
+    if (this._datumIndexCache && this._datumIndexCache.version === this._dataVersion) {
+      return this._datumIndexCache.map
+    }
+    const map = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) {
+      map.set(data[i], i)
+    }
+    this._datumIndexCache = { version: this._dataVersion, map }
+    return map
+  }
+
+  /**
+   * Build (or return cached) category→[indices] map used by applyPulse for
+   * wedge nodes. Cached against `_dataVersion` so the per-wedge inner loop
+   * collapses from O(data) to O(matches-for-this-category).
+   */
+  private getCategoryIndexMap(data: Record<string, any>[]): Map<string, number[]> {
+    if (this._categoryIndexCache && this._categoryIndexCache.version === this._dataVersion) {
+      return this._categoryIndexCache.map
+    }
+    const oAcc = this.config.categoryAccessor || this.config.oAccessor
+    const isFn = typeof oAcc === "function"
+    const key = isFn ? null : (oAcc || "category")
+    const map = new Map<string, number[]>()
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i]
+      const cat = isFn ? (oAcc as Function)(d) : d[key as string]
+      let arr = map.get(cat)
+      if (!arr) {
+        arr = []
+        map.set(cat, arr)
+      }
+      arr.push(i)
+    }
+    this._categoryIndexCache = { version: this._dataVersion, map }
+    return map
+  }
+
+  /**
+   * Build (or clear) a quadtree spatial index for point scene nodes.
+   * Useful for swarm plots — other ordinal types (bar/wedge/box/violin) are
+   * not indexed because they're typically few in number or already O(1) hit
+   * tests via bbox checks.
+   */
+  private rebuildPointQuadtree(): void {
+    let pointCount = 0
+    let maxR = 0
+    for (const node of this.scene) {
+      if (node.type === "point") {
+        pointCount++
+        if (node.r > maxR) maxR = node.r
+      }
+    }
+    this._maxPointRadius = maxR
+
+    if (pointCount <= OrdinalPipelineStore.QUADTREE_THRESHOLD) {
+      this._pointQuadtree = null
+      return
+    }
+
+    const points: PointSceneNode[] = new Array(pointCount)
+    let i = 0
+    for (const node of this.scene) {
+      if (node.type === "point") points[i++] = node as PointSceneNode
+    }
+    this._pointQuadtree = d3Quadtree<PointSceneNode>()
+      .x(n => n.x)
+      .y(n => n.y)
+      .addAll(points)
+  }
+
+  /** Quadtree spatial index for point hit testing, or null when below threshold. */
+  get pointQuadtree(): Quadtree<PointSceneNode> | null {
+    return this._pointQuadtree
+  }
+
+  /** Largest visual point radius in the current scene. */
+  get maxPointRadius(): number {
+    return this._maxPointRadius
+  }
+
   private applyDecay(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {
     if (!this.config.decay) return
     const bufferSize = data.length
     if (bufferSize <= 1) return
 
-    const indexMap = new Map<any, number>()
-    for (let i = 0; i < data.length; i++) {
-      indexMap.set(data[i], i)
-    }
+    const indexMap = this.getDatumIndexMap(data)
 
     for (const node of nodes) {
       if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
@@ -742,10 +840,8 @@ export class OrdinalPipelineStore {
     const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
     const glowRadius = this.config.pulse.glowRadius ?? 4
 
-    const indexMap = new Map<any, number>()
-    for (let i = 0; i < data.length; i++) {
-      indexMap.set(data[i], i)
-    }
+    const indexMap = this.getDatumIndexMap(data)
+    let categoryIndex: Map<string, number[]> | null = null
 
     for (const node of nodes) {
       if (node.type === "connector" || node.type === "violin" || node.type === "boxplot") continue
@@ -755,13 +851,12 @@ export class OrdinalPipelineStore {
       if (node.type === "wedge") {
         const cat = node.category
         if (!cat) continue
+        if (!categoryIndex) categoryIndex = this.getCategoryIndexMap(data)
+        const indices = categoryIndex.get(cat)
+        if (!indices) continue
         let bestIntensity = 0
-        for (let i = 0; i < data.length; i++) {
-          const d = data[i]
-          const oAcc = this.config.categoryAccessor || this.config.oAccessor
-          const dCat = typeof oAcc === "function" ? oAcc(d) : d[oAcc || "category"]
-          if (dCat !== cat) continue
-          const insertTime = this.timestampBuffer.get(i)
+        for (let j = 0; j < indices.length; j++) {
+          const insertTime = this.timestampBuffer.get(indices[j])
           if (insertTime == null) continue
           const age = now - insertTime
           if (age < duration) {
@@ -1181,6 +1276,7 @@ export class OrdinalPipelineStore {
     this.categories.clear()
     this.buffer.forEach(d => this.categories.add(this.getO(d)))
 
+    this._dataVersion++
     this.version++
     return removed
   }
@@ -1218,6 +1314,7 @@ export class OrdinalPipelineStore {
       }
     })
 
+    this._dataVersion++
     this.version++
     return previous
   }
@@ -1236,6 +1333,7 @@ export class OrdinalPipelineStore {
     this.scales = null
     this.scene = []
     this.columns = {}
+    this._dataVersion++
     this.version++
   }
 

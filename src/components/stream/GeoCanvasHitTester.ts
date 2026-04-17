@@ -25,16 +25,17 @@ export function findNearestGeoNode(
   mouseY: number,
   maxDistance: number,
   hitCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  pointQuadtree?: Quadtree<PointSceneNode>
+  pointQuadtree?: Quadtree<PointSceneNode> | null,
+  maxPointRadius = 0
 ): GeoHitResult | null {
   // ── 1. Point nodes ──────────────────────────────────────────────
 
-  const pointNodes = nodes.filter(
-    (n): n is PointSceneNode => n.type === "point"
-  )
-
-  if (pointQuadtree && pointNodes.length > 0) {
-    const candidate = pointQuadtree.find(mouseX, mouseY, maxDistance) ?? null
+  if (pointQuadtree) {
+    // Widen the query radius so the quadtree returns candidates that are
+    // farther than maxDistance but still within their own hit radius.
+    // `getHitRadius(r) = max(r + 5, 12, maxDistance)` so we widen to that.
+    const queryRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
+    const candidate = pointQuadtree.find(mouseX, mouseY, queryRadius) ?? null
     if (candidate) {
       const dx = candidate.x - mouseX
       const dy = candidate.y - mouseY
@@ -44,67 +45,67 @@ export function findNearestGeoNode(
         return { node: candidate, distance: dist }
       }
     }
-  }
+    // Quadtree result is authoritative when its query radius covers the
+    // largest possible hit radius — no need for the linear fallback.
+  } else {
+    // Linear scan when no spatial index is available
+    let bestPoint: PointSceneNode | null = null
+    let bestPointDist = maxDistance
 
-  // Linear scan fallback for points
-  let bestPoint: PointSceneNode | null = null
-  let bestPointDist = maxDistance
-
-  for (const node of pointNodes) {
-    const dx = node.x - mouseX
-    const dy = node.y - mouseY
-    const dist = Math.sqrt(dx * dx + dy * dy)
-    const hitRadius = getHitRadius(node.r, maxDistance)
-    if (dist <= hitRadius && dist < bestPointDist) {
-      bestPoint = node
-      bestPointDist = dist
+    for (const node of nodes) {
+      if (node.type !== "point") continue
+      const dx = node.x - mouseX
+      const dy = node.y - mouseY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      const hitRadius = getHitRadius(node.r, maxDistance)
+      if (dist <= hitRadius && dist < bestPointDist) {
+        bestPoint = node
+        bestPointDist = dist
+      }
     }
-  }
 
-  if (bestPoint) {
-    return { node: bestPoint, distance: bestPointDist }
+    if (bestPoint) {
+      return { node: bestPoint, distance: bestPointDist }
+    }
   }
 
   // ── 2. Geo area nodes (reverse order = top layer wins) ─────────
 
-  const geoAreas = nodes.filter(
-    (n): n is GeoAreaSceneNode => n.type === "geoarea" && n.interactive !== false
-  )
-
-  for (let i = geoAreas.length - 1; i >= 0; i--) {
-    const node = geoAreas[i]
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const node = nodes[i]
+    if (node.type !== "geoarea") continue
+    const area = node as GeoAreaSceneNode
+    if (area.interactive === false) continue
 
     // Quick bounds check
-    const [[x0, y0], [x1, y1]] = node.bounds
+    const [[x0, y0], [x1, y1]] = area.bounds
     if (mouseX < x0 || mouseX > x1 || mouseY < y0 || mouseY > y1) continue
 
     // isPointInPath with Path2D (lazily cached to avoid re-parsing per mouse event)
-    if (!node._cachedPath2D) {
-      node._cachedPath2D = new Path2D(node.pathData)
+    if (!area._cachedPath2D) {
+      area._cachedPath2D = new Path2D(area.pathData)
     }
-    if (hitCtx.isPointInPath(node._cachedPath2D, mouseX, mouseY)) {
-      return { node, distance: 0 }
+    if (hitCtx.isPointInPath(area._cachedPath2D, mouseX, mouseY)) {
+      return { node: area, distance: 0 }
     }
   }
 
   // ── 3. Line nodes ──────────────────────────────────────────────
 
-  const lineNodes = nodes.filter(
-    (n): n is LineSceneNode => n.type === "line"
-  )
-
   let bestLine: LineSceneNode | null = null
   let bestLineDist = maxDistance
 
-  for (const node of lineNodes) {
-    const { path } = node
+  for (const node of nodes) {
+    if (node.type !== "line") continue
+    const line = node as LineSceneNode
+    const { path } = line
+    const hitWidth = Math.max((line.style.strokeWidth || 2) + 4, 5)
     for (let j = 0; j < path.length - 1; j++) {
       const [ax, ay] = path[j]
       const [bx, by] = path[j + 1]
       const dist = pointToSegmentDistance(mouseX, mouseY, ax, ay, bx, by)
-      const hitWidth = Math.max((node.style.strokeWidth || 2) + 4, 5)
       if (dist <= hitWidth && dist < bestLineDist) {
-        bestLine = node
+        bestLine = line
         bestLineDist = dist
       }
     }

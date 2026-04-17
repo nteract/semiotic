@@ -5,14 +5,19 @@ import type { Particle, RealtimeEdge, BezierCache, BezierPoint } from "./network
  *
  * Pre-allocates a fixed-size array to avoid GC pressure.
  * Particles travel along bezier paths within link bands.
+ *
+ * `_freeIndices` is a stack of currently-free slot indices. Spawn pops; step
+ * pushes when a particle expires. This makes spawn O(1) instead of O(capacity).
  */
 export class ParticlePool {
   particles: Particle[]
   private capacity: number
+  private _freeIndices: number[]
 
   constructor(capacity: number) {
     this.capacity = capacity
     this.particles = new Array(capacity)
+    this._freeIndices = new Array(capacity)
     for (let i = 0; i < capacity; i++) {
       this.particles[i] = {
         t: 0,
@@ -22,6 +27,8 @@ export class ParticlePool {
         x: 0,
         y: 0
       }
+      // Stack order so popping returns slots in ascending index (purely cosmetic)
+      this._freeIndices[i] = capacity - 1 - i
     }
   }
 
@@ -30,19 +37,16 @@ export class ParticlePool {
    * Returns the particle if a free slot was found, null otherwise.
    */
   spawn(edgeIndex: number): Particle | null {
-    for (let i = 0; i < this.capacity; i++) {
-      const p = this.particles[i]
-      if (!p.active) {
-        p.active = true
-        p.t = 0
-        p.offset = Math.random() - 0.5 // [-0.5, 0.5]
-        p.edgeIndex = edgeIndex
-        p.x = 0
-        p.y = 0
-        return p
-      }
-    }
-    return null // Pool exhausted
+    const idx = this._freeIndices.pop()
+    if (idx === undefined) return null
+    const p = this.particles[idx]
+    p.active = true
+    p.t = 0
+    p.offset = Math.random() - 0.5 // [-0.5, 0.5]
+    p.edgeIndex = edgeIndex
+    p.x = 0
+    p.y = 0
+    return p
   }
 
   /**
@@ -58,6 +62,7 @@ export class ParticlePool {
       const edge = edges[p.edgeIndex]
       if (!edge || !edge.bezier) {
         p.active = false
+        this._freeIndices.push(i)
         continue
       }
 
@@ -69,13 +74,12 @@ export class ParticlePool {
 
       if (p.t >= 1) {
         p.active = false
+        this._freeIndices.push(i)
         continue
       }
 
-      // Evaluate position along the bezier path
-      const pos = evaluateBezier(edge.bezier, p.t, p.offset)
-      p.x = pos.x
-      p.y = pos.y
+      // Evaluate bezier position directly into the particle (no allocation).
+      evaluateBezierInto(edge.bezier, p.t, p.offset, p)
     }
   }
 
@@ -94,6 +98,10 @@ export class ParticlePool {
   clear(): void {
     for (let i = 0; i < this.capacity; i++) {
       this.particles[i].active = false
+    }
+    this._freeIndices.length = 0
+    for (let i = this.capacity - 1; i >= 0; i--) {
+      this._freeIndices.push(i)
     }
   }
 
@@ -114,6 +122,8 @@ export class ParticlePool {
           x: 0,
           y: 0
         }
+        // New slots are free
+        this._freeIndices.push(i)
       }
     }
     this.capacity = newCapacity
@@ -121,25 +131,32 @@ export class ParticlePool {
 }
 
 /**
- * Evaluate a point along a bezier path at parameter t with perpendicular offset.
+ * Evaluate a point along a bezier path at parameter t with perpendicular offset,
+ * writing the result into `out` (no allocation).
  *
  * Uses the chord direction (P0→P3) for perpendicular offset instead of the
  * local tangent. This gives a stable perpendicular across the entire curve,
  * eliminating the pivot/rotation artifact visible on short curves.
  */
-function evaluateBezier(
+function evaluateBezierInto(
   cache: BezierCache,
   t: number,
-  offset: number
-): BezierPoint {
+  offset: number,
+  out: BezierPoint
+): void {
   if (cache.circular && cache.segments) {
-    return evaluateMultiSegment(cache.segments, t, offset, cache.halfWidth)
+    evaluateMultiSegmentInto(cache.segments, t, offset, cache.halfWidth, out)
+    return
   }
 
-  if (!cache.points) return { x: 0, y: 0 }
+  if (!cache.points) {
+    out.x = 0
+    out.y = 0
+    return
+  }
 
   const [p0, p1, p2, p3] = cache.points
-  const pos = cubicBezier(p0, p1, p2, p3, t)
+  cubicBezierInto(p0, p1, p2, p3, t, out)
 
   // Use chord direction (P0→P3) for stable perpendicular offset
   const dx = p3.x - p0.x
@@ -150,11 +167,9 @@ function evaluateBezier(
     // Perpendicular to the chord (rotated 90 degrees)
     const nx = -dy / len
     const ny = dx / len
-    pos.x += nx * offset * cache.halfWidth * 2
-    pos.y += ny * offset * cache.halfWidth * 2
+    out.x += nx * offset * cache.halfWidth * 2
+    out.y += ny * offset * cache.halfWidth * 2
   }
-
-  return pos
 }
 
 /**
@@ -162,19 +177,20 @@ function evaluateBezier(
  * Maps global t [0,1] to the appropriate segment.
  * Uses segment chord direction for stable perpendicular offset.
  */
-function evaluateMultiSegment(
+function evaluateMultiSegmentInto(
   segments: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]>,
   t: number,
   offset: number,
-  halfWidth: number
-): BezierPoint {
+  halfWidth: number,
+  out: BezierPoint
+): void {
   const n = segments.length
   const globalT = t * n
   const segIndex = Math.min(Math.floor(globalT), n - 1)
   const localT = globalT - segIndex
 
   const [p0, p1, p2, p3] = segments[segIndex]
-  const pos = cubicBezier(p0, p1, p2, p3, localT)
+  cubicBezierInto(p0, p1, p2, p3, localT, out)
 
   // Use segment chord direction for stable perpendicular
   const dx = p3.x - p0.x
@@ -184,30 +200,26 @@ function evaluateMultiSegment(
   if (len > 0.001) {
     const nx = -dy / len
     const ny = dx / len
-    pos.x += nx * offset * halfWidth * 2
-    pos.y += ny * offset * halfWidth * 2
+    out.x += nx * offset * halfWidth * 2
+    out.y += ny * offset * halfWidth * 2
   }
-
-  return pos
 }
 
 /** Cubic bezier evaluation: B(t) = (1-t)^3*P0 + 3*(1-t)^2*t*P1 + 3*(1-t)*t^2*P2 + t^3*P3 */
-function cubicBezier(
+function cubicBezierInto(
   p0: BezierPoint,
   p1: BezierPoint,
   p2: BezierPoint,
   p3: BezierPoint,
-  t: number
-): BezierPoint {
+  t: number,
+  out: BezierPoint
+): void {
   const mt = 1 - t
   const mt2 = mt * mt
   const mt3 = mt2 * mt
   const t2 = t * t
   const t3 = t2 * t
 
-  return {
-    x: mt3 * p0.x + 3 * mt2 * t * p1.x + 3 * mt * t2 * p2.x + t3 * p3.x,
-    y: mt3 * p0.y + 3 * mt2 * t * p1.y + 3 * mt * t2 * p2.y + t3 * p3.y
-  }
+  out.x = mt3 * p0.x + 3 * mt2 * t * p1.x + 3 * mt * t2 * p2.x + t3 * p3.x
+  out.y = mt3 * p0.y + 3 * mt2 * t * p1.y + 3 * mt * t2 * p2.y + t3 * p3.y
 }
-

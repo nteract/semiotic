@@ -400,6 +400,59 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
       </div>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Themed Borders */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="themed-borders">Themed Borders</h2>
+
+      <p>
+        Use <code>frameProps.pieceStyle</code> to add a stroke between swimlane
+        items that adapts to dark and light mode. The CSS custom property{" "}
+        <code>var(--semiotic-bg)</code> resolves to the chart background color,
+        so borders always match the surrounding area.
+      </p>
+
+      <div ref={null} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16 }}>
+        <SwimlaneChart
+          data={STATIC_DATA}
+          categoryAccessor="lane"
+          subcategoryAccessor="task"
+          valueAccessor="value"
+          colorBy="task"
+          colorScheme={Object.values(TASK_COLORS)}
+          width={600}
+          height={200}
+          orientation="horizontal"
+          enableHover
+          showGrid
+          margin={{ left: 90 }}
+          frameProps={{
+            pieceStyle: () => ({
+              stroke: "var(--semiotic-bg, #fff)",
+              strokeWidth: 1,
+            }),
+          }}
+        />
+      </div>
+
+      <CodeBlock
+        code={`<SwimlaneChart
+  data={data}
+  categoryAccessor="lane"
+  subcategoryAccessor="task"
+  valueAccessor="value"
+  colorBy="task"
+  orientation="horizontal"
+  frameProps={{
+    pieceStyle: () => ({
+      stroke: "var(--semiotic-bg, #fff)",  // adapts to dark/light mode
+      strokeWidth: 1,
+    }),
+  }}
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>

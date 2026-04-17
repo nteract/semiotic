@@ -179,6 +179,26 @@ function getHitContext(): CanvasRenderingContext2D | null {
   return _hitCtx
 }
 
+/**
+ * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
+ * actually changes — Path2D parsing is the dominant cost in network hit
+ * testing for large sankey/chord scenes.
+ */
+function getEdgePath2D(
+  edge: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string }
+): Path2D | null {
+  if (edge._cachedPath2D && edge._cachedPath2DSource === edge.pathD) {
+    return edge._cachedPath2D
+  }
+  try {
+    edge._cachedPath2D = new Path2D(edge.pathD)
+    edge._cachedPath2DSource = edge.pathD
+    return edge._cachedPath2D
+  } catch {
+    return null
+  }
+}
+
 // ── Edge hit testing ────────────────────────────────────────────────────
 
 function hitTestEdge(
@@ -208,11 +228,11 @@ function hitTestBezierEdge(
   // Use Path2D for approximate point-in-path testing
   if (!edge.pathD) return null
 
-  try {
-    const path = new Path2D(edge.pathD)
-    const ctx = getHitContext()
-    if (!ctx) return null
+  const path = getEdgePath2D(edge)
+  const ctx = getHitContext()
+  if (!path || !ctx) return null
 
+  try {
     // First check isPointInPath for filled/wide bezier bands (sankey ribbons)
     if (ctx.isPointInPath(path, px, py)) {
       // Return midpoint of the band as hover position
@@ -290,17 +310,17 @@ function hitTestLineEdge(
 }
 
 function hitTestPathEdge(
-  edge: { pathD: string; datum: any },
+  edge: { pathD: string; datum: any; _cachedPath2D?: Path2D; _cachedPath2DSource?: string },
   px: number,
   py: number
 ): NetworkHitResult | null {
   if (!edge.pathD) return null
 
-  try {
-    const path = new Path2D(edge.pathD)
-    const ctx = getHitContext()
-    if (!ctx) return null
+  const path = getEdgePath2D(edge)
+  const ctx = getHitContext()
+  if (!path || !ctx) return null
 
+  try {
     // Check filled area first (for wide ribbon edges)
     if (ctx.isPointInPath(path, px, py)) {
       return {

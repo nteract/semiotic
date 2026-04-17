@@ -438,7 +438,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         const hitCtx = (hitCanvasRef.current as any).getContext("2d")
         if (!hitCtx) return
 
-        const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx)
+        const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
 
         if (hit) {
           const node = hit.node
@@ -487,6 +487,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender])
 
     const onMouseLeave = useCallback(() => {
+      // Drop any pending coalesced move so it doesn't fire after leave.
+      pendingMoveCoordsRef.current = null
+      if (moveRafRef.current !== 0) {
+        cancelAnimationFrame(moveRafRef.current)
+        moveRafRef.current = 0
+      }
       hoverRef.current = null
       hoveredNodeRef.current = null
       setHoverPoint(null)
@@ -513,7 +519,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const hitCtx = (hitCanvasRef.current as any).getContext("2d")
       if (!hitCtx) return
 
-      const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx)
+      const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
       if (hit) {
         const datum = hit.node.datum
         const rawData = datum?.properties ? datum : (datum?.data || datum)
@@ -587,12 +593,26 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 
-    // Clear keyboard focus on mouse interaction
+    // Coalesce pointermove events to one hit test per animation frame.
+    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
+    // wasteful re-renders. Capture latest coords; process in rAF.
+    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
+    const moveRafRef = useRef(0)
+    const flushPendingMove = useCallback(() => {
+      moveRafRef.current = 0
+      const coords = pendingMoveCoordsRef.current
+      pendingMoveCoordsRef.current = null
+      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+    }, [])
+    // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced path.
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      hoverHandlerRef.current(e)
-    }, [])
+      pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+      if (moveRafRef.current === 0) {
+        moveRafRef.current = requestAnimationFrame(flushPendingMove)
+      }
+    }, [flushPendingMove])
 
     // ── Main render function ──────────────────────────────────────────
 

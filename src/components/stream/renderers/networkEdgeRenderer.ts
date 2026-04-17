@@ -7,6 +7,22 @@ import type {
 } from "../networkTypes"
 
 /**
+ * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
+ * actually changes. Shared between the renderer and hit tester via the
+ * `_cachedPath2D` / `_cachedPath2DSource` fields on edge nodes.
+ */
+function getOrBuildEdgePath2D(
+  edge: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string }
+): Path2D {
+  if (edge._cachedPath2D && edge._cachedPath2DSource === edge.pathD) {
+    return edge._cachedPath2D
+  }
+  edge._cachedPath2D = new Path2D(edge.pathD)
+  edge._cachedPath2DSource = edge.pathD
+  return edge._cachedPath2D
+}
+
+/**
  * Canvas painter for all network edge types.
  *
  * - bezier: Sankey flow bands (Path2D from SVG path string)
@@ -44,7 +60,7 @@ function renderBezierEdge(
 
   ctx.save()
 
-  const path = new Path2D(edge.pathD)
+  const path = getOrBuildEdgePath2D(edge)
 
   // Fill the band
   if (edge.style.fill && edge.style.fill !== "none") {
@@ -126,7 +142,7 @@ function renderRibbonEdge(
 
   ctx.save()
 
-  const path = new Path2D(edge.pathD)
+  const path = getOrBuildEdgePath2D(edge)
 
   if (edge.style.fill && edge.style.fill !== "none") {
     ctx.fillStyle = edge.style.fill
@@ -159,7 +175,7 @@ function renderCurvedEdge(
 
   ctx.save()
 
-  const path = new Path2D(edge.pathD)
+  const path = getOrBuildEdgePath2D(edge)
 
   ctx.strokeStyle = edge.style.stroke || "#999"
   ctx.lineWidth = edge.style.strokeWidth ?? 1
