@@ -223,6 +223,71 @@ describe("scene rebuilds after config changes", () => {
     // Color should have changed from red to green
     expect(colorAfter).not.toBe(colorBefore)
   })
+
+  it("resolveColorMap invalidates when themeCategorical changes (theme switch)", () => {
+    // resolveColorMap short-circuits on _ingestVersion. A theme change without
+    // a data ingest must still invalidate the cache.
+    const store = makeStore({
+      colorAccessor: "group",
+      themeCategorical: ["#aaa", "#bbb", "#ccc"],
+    })
+    setData(store, [
+      { x: 1, y: 10, group: "A" },
+      { x: 2, y: 20, group: "B" },
+    ])
+    store.computeScene([400, 300])
+    const before = store.resolveGroupColor("A")
+
+    store.updateConfig({
+      xAccessor: "x",
+      yAccessor: "y",
+      chartType: "scatter",
+      windowSize: 100,
+      windowMode: "sliding" as const,
+      extentPadding: 0,
+      colorAccessor: "group",
+      themeCategorical: ["#111", "#222", "#333"],
+    })
+    store.computeScene([400, 300])
+    const after = store.resolveGroupColor("A")
+
+    expect(after).not.toBe(before)
+  })
+
+  it("resolveColorMap invalidates when colorAccessor changes", () => {
+    const store = makeStore({
+      colorAccessor: "group",
+      colorScheme: ["red", "blue", "green"],
+    })
+    setData(store, [
+      { x: 1, y: 10, group: "A", region: "north" },
+      { x: 2, y: 20, group: "B", region: "south" },
+      { x: 3, y: 30, group: "B", region: "north" },
+    ])
+    store.computeScene([400, 300])
+    const groupColorB = store.resolveGroupColor("B")
+
+    // Switch the colorAccessor — categories change from {A, B} to {north, south},
+    // so the cached map is wrong. This must invalidate.
+    store.updateConfig({
+      xAccessor: "x",
+      yAccessor: "y",
+      chartType: "scatter",
+      windowSize: 100,
+      windowMode: "sliding" as const,
+      extentPadding: 0,
+      colorAccessor: "region",
+      colorScheme: ["red", "blue", "green"],
+    })
+    store.computeScene([400, 300])
+    // After the swap, "B" is no longer a valid category in the colorAccessor,
+    // but resolveGroupColor falls back to _groupColorMap which should also have
+    // been reset. The fact that we don't return the stale "B" color is the key.
+    const northColor = store.resolveGroupColor("north")
+    const southColor = store.resolveGroupColor("south")
+    expect(northColor).not.toBe(southColor)
+    expect([northColor, southColor]).toContain("red")
+  })
 })
 
 // ── Edge case: rapid push/clear cycles ───────────────────────────────────

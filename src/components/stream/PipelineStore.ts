@@ -1246,8 +1246,15 @@ export class PipelineStore {
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
 
-    // Invalidate color map caches when relevant config changes
-    if (config.colorScheme !== undefined) {
+    // Invalidate color map caches when any color-relevant config changes.
+    // resolveColorMap short-circuits on _ingestVersion, so we must explicitly
+    // null the cache for changes that don't bump that counter (theme palette
+    // swaps, accessor swaps, scheme overrides).
+    if (
+      config.colorScheme !== undefined
+      || config.themeCategorical !== undefined
+      || config.colorAccessor !== undefined
+    ) {
       this._colorMapCache = null
       this._groupColorMap = new Map()
     }

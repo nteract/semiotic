@@ -24,16 +24,24 @@ const cache = new WeakMap<HTMLCanvasElement, CacheEntry>()
 let currentVersion = 0
 let observerInstalled = false
 
+// Track installed listeners so the test reset can detach them, preventing
+// observer accumulation across test files.
+let installedObserver: MutationObserver | null = null
+let installedMql: MediaQueryList | null = null
+let installedMqlHandler: ((e: MediaQueryListEvent) => void) | null = null
+
 function ensureGlobalObserver(): void {
   if (observerInstalled) return
-  observerInstalled = true
+  // Don't latch the flag in non-DOM environments (SSR/pre-render) — the next
+  // call from a real browser context should still get a chance to install.
   if (typeof window === "undefined" || typeof document === "undefined") return
+  observerInstalled = true
 
   const bumpVersion = () => { currentVersion++ }
 
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
-    const observer = new MutationObserver(bumpVersion)
-    observer.observe(document.documentElement, {
+    installedObserver = new MutationObserver(bumpVersion)
+    installedObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class", "style", "data-theme", "data-semiotic-theme"]
     })
@@ -41,12 +49,13 @@ function ensureGlobalObserver(): void {
 
   if (typeof window.matchMedia === "function") {
     try {
-      const mql = window.matchMedia("(prefers-color-scheme: dark)")
-      if (typeof mql.addEventListener === "function") {
-        mql.addEventListener("change", bumpVersion)
-      } else if (typeof (mql as any).addListener === "function") {
+      installedMql = window.matchMedia("(prefers-color-scheme: dark)")
+      installedMqlHandler = bumpVersion
+      if (typeof installedMql.addEventListener === "function") {
+        installedMql.addEventListener("change", installedMqlHandler)
+      } else if (typeof (installedMql as any).addListener === "function") {
         // Safari 14 fallback
-        (mql as any).addListener(bumpVersion)
+        (installedMql as any).addListener(installedMqlHandler)
       }
     } catch {
       // matchMedia can throw in older browsers / jsdom — safe to ignore
@@ -92,8 +101,26 @@ export function clearCSSColorCache(_canvas?: HTMLCanvasElement): void {
   currentVersion++
 }
 
-/** Test-only: reset all cache state. */
+/**
+ * Test-only: reset all cache state, including disconnecting any installed
+ * observer/matchMedia listeners. Required for test isolation — without it,
+ * observers accumulate across files and bump `currentVersion` more than once
+ * per real DOM mutation.
+ */
 export function _resetCSSColorCacheForTest(): void {
   currentVersion = 0
+  if (installedObserver) {
+    installedObserver.disconnect()
+    installedObserver = null
+  }
+  if (installedMql && installedMqlHandler) {
+    if (typeof installedMql.removeEventListener === "function") {
+      installedMql.removeEventListener("change", installedMqlHandler)
+    } else if (typeof (installedMql as any).removeListener === "function") {
+      (installedMql as any).removeListener(installedMqlHandler)
+    }
+    installedMql = null
+    installedMqlHandler = null
+  }
   observerInstalled = false
 }

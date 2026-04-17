@@ -414,7 +414,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         const store = storeRef.current
         if (!store || !store.scene.length) return
 
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        // Read the rect from canvasRef rather than e.currentTarget so this
+        // handler still works when invoked from the rAF-coalesced path with a
+        // synthetic `{ clientX, clientY }` payload (no currentTarget).
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const rect = canvas.getBoundingClientRect()
         const chartX = e.clientX - rect.left - margin.left
         const chartY = e.clientY - rect.top - margin.top
 
@@ -485,6 +490,20 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
       }
     }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender])
+
+    // Coalesce pointermove events to one hit test per animation frame.
+    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
+    // wasteful re-renders. Capture latest coords; process in rAF.
+    // Declared before onMouseLeave / onMouseMoveWrapped so those callbacks
+    // reference unambiguously-initialized bindings.
+    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
+    const moveRafRef = useRef(0)
+    const flushPendingMove = useCallback(() => {
+      moveRafRef.current = 0
+      const coords = pendingMoveCoordsRef.current
+      pendingMoveCoordsRef.current = null
+      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+    }, [])
 
     const onMouseLeave = useCallback(() => {
       // Drop any pending coalesced move so it doesn't fire after leave.
@@ -593,18 +612,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 
-    // Coalesce pointermove events to one hit test per animation frame.
-    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-    // wasteful re-renders. Capture latest coords; process in rAF.
-    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-    const moveRafRef = useRef(0)
-    const flushPendingMove = useCallback(() => {
-      moveRafRef.current = 0
-      const coords = pendingMoveCoordsRef.current
-      pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
-    }, [])
-    // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced path.
+    // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced path
+    // (pendingMoveCoordsRef / moveRafRef / flushPendingMove are declared above).
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
