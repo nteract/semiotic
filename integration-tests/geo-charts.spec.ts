@@ -1,14 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-// Helper function to wait for canvas-based visualization to render
-// Geo charts may take longer due to projection calculations
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 10000 })
-  await page.waitForTimeout(1000)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
 
 test.describe("Geo Charts - ChoroplethMap", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,7 +7,7 @@ test.describe("Geo Charts - ChoroplethMap", () => {
   })
 
   test("ChoroplethMap renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "geo-choropleth")
+    await waitForChartReady(page, "geo-choropleth")
     const testCase = page.locator('[data-testid="geo-choropleth"]')
     const canvases = testCase.locator("canvas")
     const count = await canvases.count()
@@ -24,7 +15,7 @@ test.describe("Geo Charts - ChoroplethMap", () => {
   })
 
   test("ChoroplethMap has role=group and aria-label", async ({ page }) => {
-    await waitForVisualization(page, "geo-choropleth")
+    await waitForChartReady(page, "geo-choropleth")
     const testCase = page.locator('[data-testid="geo-choropleth"]')
     const frame = testCase.locator(".stream-geo-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -33,7 +24,7 @@ test.describe("Geo Charts - ChoroplethMap", () => {
   })
 
   test("ChoroplethMap with legend renders legend elements", async ({ page }) => {
-    await waitForVisualization(page, "geo-choropleth-legend")
+    await waitForChartReady(page, "geo-choropleth-legend")
     const testCase = page.locator('[data-testid="geo-choropleth-legend"]')
 
     // The chart should render -- canvas is the primary check
@@ -42,7 +33,7 @@ test.describe("Geo Charts - ChoroplethMap", () => {
   })
 
   test("ChoroplethMap with graticule renders", async ({ page }) => {
-    await waitForVisualization(page, "geo-graticule")
+    await waitForChartReady(page, "geo-graticule")
     const testCase = page.locator('[data-testid="geo-graticule"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
@@ -55,14 +46,14 @@ test.describe("Geo Charts - ProportionalSymbolMap", () => {
   })
 
   test("ProportionalSymbolMap renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "geo-proportional")
+    await waitForChartReady(page, "geo-proportional")
     const testCase = page.locator('[data-testid="geo-proportional"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("ProportionalSymbolMap has role=group and aria-label", async ({ page }) => {
-    await waitForVisualization(page, "geo-proportional")
+    await waitForChartReady(page, "geo-proportional")
     const testCase = page.locator('[data-testid="geo-proportional"]')
     const frame = testCase.locator(".stream-geo-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -77,14 +68,14 @@ test.describe("Geo Charts - StreamGeoFrame", () => {
   })
 
   test("StreamGeoFrame renders canvas directly", async ({ page }) => {
-    await waitForVisualization(page, "geo-stream-frame")
+    await waitForChartReady(page, "geo-stream-frame")
     const testCase = page.locator('[data-testid="geo-stream-frame"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("StreamGeoFrame has role=group", async ({ page }) => {
-    await waitForVisualization(page, "geo-stream-frame")
+    await waitForChartReady(page, "geo-stream-frame")
     const testCase = page.locator('[data-testid="geo-stream-frame"]')
     const frame = testCase.locator(".stream-geo-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -97,7 +88,7 @@ test.describe("Geo Charts - No console errors", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/geo-examples/")
-    await page.waitForTimeout(5000)
+    await waitForAllChartsReady(page)
 
     // Filter out known React dev warnings
     const realErrors = errors.filter(
@@ -113,7 +104,7 @@ test.describe("Geo Charts - Hover interaction", () => {
   })
 
   test("hovering over choropleth does not crash", async ({ page }) => {
-    await waitForVisualization(page, "geo-choropleth")
+    await waitForChartReady(page, "geo-choropleth")
     const testCase = page.locator('[data-testid="geo-choropleth"]')
     const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
@@ -121,9 +112,9 @@ test.describe("Geo Charts - Hover interaction", () => {
     if (box) {
       // Move across the canvas to trigger hover events
       await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
-      await page.waitForTimeout(200)
+      await waitForRafs(page)
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6)
-      await page.waitForTimeout(200)
+      await waitForRafs(page)
 
       // Chart should still be visible (no crash)
       await expect(canvas).toBeVisible()

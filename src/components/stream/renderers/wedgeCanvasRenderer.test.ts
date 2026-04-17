@@ -2,7 +2,7 @@ import { vi, describe, it, expect } from "vitest"
 import { wedgeCanvasRenderer } from "./wedgeCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
 import type { WedgeSceneNode, OrdinalSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
-import { createMockCanvasContext } from "../../../test-utils/canvasMock"
+import { createMockCanvasContext, recordCanvasOps } from "../../../test-utils/canvasMock"
 
 function createMockCtx() {
   return createMockCanvasContext() as unknown as CanvasRenderingContext2D
@@ -92,22 +92,32 @@ describe("wedgeCanvasRenderer", () => {
     expect(ctx.fill).toHaveBeenCalled()
   })
 
-  it("renders pulse overlay when _pulseIntensity > 0", () => {
+  it("renders pulse overlay using the pulse color on top of the base fill", () => {
+    // Behavior-level assertion: the render produces two distinct fills —
+    // one with the base wedge color, one with the pulse color. Avoids
+    // asserting on `fill` call counts, which would break on any future
+    // batching refactor that doesn't change what's actually painted.
     const ctx = createMockCtx()
-    const node = makeWedge({ _pulseIntensity: 0.8, _pulseColor: "rgba(255,255,0,0.5)" })
+    const ops = recordCanvasOps(ctx as any)
+    const node = makeWedge({
+      style: { fill: "#e41a1c" },
+      _pulseIntensity: 0.8,
+      _pulseColor: "rgba(255,255,0,0.5)"
+    })
     wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
-    // Should draw the wedge twice: once for fill, once for pulse overlay
-    expect(ctx.fill).toHaveBeenCalledTimes(2)
-    // Two beginPath calls (main + pulse)
-    expect(ctx.beginPath).toHaveBeenCalledTimes(2)
+    expect(ops.fillStyles).toContain("#e41a1c")
+    expect(ops.fillStyles).toContain("rgba(255,255,0,0.5)")
   })
 
   it("skips pulse overlay when _pulseIntensity is 0", () => {
     const ctx = createMockCtx()
-    const node = makeWedge({ _pulseIntensity: 0 })
+    const ops = recordCanvasOps(ctx as any)
+    const node = makeWedge({ style: { fill: "#e41a1c" }, _pulseIntensity: 0 })
     wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
-    expect(ctx.fill).toHaveBeenCalledTimes(1)
+
+    // Only the base color fills the wedge; no pulse overlay appears.
+    expect(ops.fillStyles).toEqual(["#e41a1c"])
   })
 
   it("skips non-wedge nodes", () => {
@@ -117,13 +127,18 @@ describe("wedgeCanvasRenderer", () => {
     expect(ctx.fill).not.toHaveBeenCalled()
   })
 
-  it("renders multiple wedges", () => {
+  it("renders every wedge in the input list with its own fill", () => {
     const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx as any)
     const nodes = [
-      makeWedge({ startAngle: 0, endAngle: Math.PI }),
+      makeWedge({ startAngle: 0, endAngle: Math.PI, style: { fill: "#e41a1c" } }),
       makeWedge({ startAngle: Math.PI, endAngle: 2 * Math.PI, style: { fill: "#377eb8" } })
     ]
     wedgeCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
-    expect(ctx.fill).toHaveBeenCalledTimes(2)
+
+    // Both wedge colors must appear — irrespective of how many fill calls
+    // the renderer emits internally (e.g. if a future refactor batches).
+    expect(ops.fillStyles).toContain("#e41a1c")
+    expect(ops.fillStyles).toContain("#377eb8")
   })
 })

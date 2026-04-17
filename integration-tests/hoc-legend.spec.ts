@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test"
+import { waitForAllChartsReady } from "./helpers"
 
 test.describe("HOC Chart Legend Rendering", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/hoc-legend-examples/")
-    // Wait for page to load and charts to render
-    await page.waitForTimeout(2000)
+    await waitForAllChartsReady(page)
   })
 
   test("BubbleChart renders legend when colorBy is specified", async ({ page }) => {

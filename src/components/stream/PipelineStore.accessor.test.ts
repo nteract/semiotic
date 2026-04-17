@@ -225,4 +225,41 @@ describe("PipelineStore — xIsDate auto-detection", () => {
     })
     expect(store.xIsDate).toBe(false)
   })
+
+  // ── Explicit-clear regression ──────────────────────────────────────
+  //
+  // Conditional props like `xAccessor={toggle ? "time" : undefined}` send
+  // an explicit `undefined` when the toggle flips off. The outer gate used
+  // to be `config.X !== undefined`, which skipped the re-resolution block
+  // for that case — leaving `getX` stuck on the previously-resolved key.
+  // Switched to `"X" in config`.
+
+  it("explicitly clearing xAccessor reverts the resolver to the default key", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "time",
+      yAccessor: "value"
+    }))
+    const d = { time: 99, value: 10, x: 42, y: 5 }
+    expect(store.getXAccessor()(d)).toBe(99)
+
+    store.updateConfig({ xAccessor: undefined })
+    // Bounded line chart falls back to "x" when xAccessor is unset.
+    expect(store.getXAccessor()(d)).toBe(42)
+  })
+
+  it("explicitly clearing yAccessor reverts the resolver to the default key", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "x",
+      yAccessor: "price"
+    }))
+    const d = { x: 1, price: 200, y: 7 }
+    expect(store.getYAccessor()(d)).toBe(200)
+
+    store.updateConfig({ yAccessor: undefined })
+    expect(store.getYAccessor()(d)).toBe(7)
+  })
 })

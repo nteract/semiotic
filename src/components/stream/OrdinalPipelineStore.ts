@@ -280,7 +280,14 @@ export class OrdinalPipelineStore {
     const isHorizontal = projection === "horizontal"
     const isRadial = projection === "radial"
 
-    const padding = config.barPadding != null ? config.barPadding / (isVertical ? layout.width : layout.height) : 0.1
+    // `barPadding` is a raw pixel value (default 40 per HOC). We convert it
+    // to d3-scale-band's 0..1 padding ratio against the content axis. Clamp
+    // the ratio below 1 so degenerate layouts — e.g. a horizontal swimlane
+    // where `showCategoryTicks: false` shrinks the left margin but the
+    // vertical content area is less than `barPadding * 2` — still produce
+    // bands with non-zero bandwidth instead of painting a blank canvas.
+    const rawPadding = config.barPadding != null ? config.barPadding / (isVertical ? layout.width : layout.height) : 0.1
+    const padding = Math.min(0.9, Math.max(0, rawPadding))
 
     let oScale: ScaleBand<string>
     let rScale: ScaleLinear<number, number>
@@ -1333,6 +1340,8 @@ export class OrdinalPipelineStore {
     this.scales = null
     this.scene = []
     this.columns = {}
+    this._pointQuadtree = null
+    this._maxPointRadius = 0
     this._dataVersion++
     this.version++
   }
@@ -1352,9 +1361,27 @@ export class OrdinalPipelineStore {
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
 
-    if (config.colorScheme !== this.config.colorScheme) {
+    // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
+    // via `getColor` (derived from `colorAccessor`) — all three of those must
+    // invalidate the cache alongside `colorScheme`. Use `in config` rather
+    // than `!== undefined` so a caller explicitly clearing a field (e.g. a
+    // theme switch sets `themeCategorical` to undefined) still invalidates.
+    if (
+      ("colorScheme" in config && config.colorScheme !== prev.colorScheme)
+      || ("themeCategorical" in config && config.themeCategorical !== prev.themeCategorical)
+      || ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
+    ) {
       this._colorSchemeMap = null
       this._colorSchemeIndex = 0
+    }
+
+    // `_categoryIndexCache` is keyed only on `_dataVersion`; an accessor swap
+    // without an ingest would leave a stale map. Invalidate explicitly.
+    if (
+      ("categoryAccessor" in config && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor))
+      || ("oAccessor" in config && !accessorsEquivalent(config.oAccessor, prev.oAccessor))
+    ) {
+      this._categoryIndexCache = null
     }
 
     Object.assign(this.config, config)
@@ -1362,7 +1389,9 @@ export class OrdinalPipelineStore {
     // Re-resolve accessors only when the accessor source actually changed.
     // Uses .toString() comparison to skip re-resolution for inline arrow functions
     // that are recreated on every parent render but have identical source code.
-    if (config.categoryAccessor !== undefined || config.oAccessor !== undefined) {
+    // `in config` rather than `!== undefined` so an explicit clear (prop removed
+    // or conditionally rendered `undefined`) still reverts to the fallback.
+    if ("categoryAccessor" in config || "oAccessor" in config) {
       const newO = config.categoryAccessor || config.oAccessor
       const prevO = prev.categoryAccessor || prev.oAccessor
       if (!accessorsEquivalent(newO, prevO)) {
@@ -1373,7 +1402,7 @@ export class OrdinalPipelineStore {
         this.categories.clear()
       }
     }
-    if (config.valueAccessor !== undefined || config.rAccessor !== undefined) {
+    if ("valueAccessor" in config || "rAccessor" in config) {
       const newR = config.valueAccessor || config.rAccessor
       const prevR = prev.valueAccessor || prev.rAccessor
       const newArr = Array.isArray(newR) ? newR : [newR]

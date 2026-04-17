@@ -1,13 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  // Wait for at least one canvas to render (each chart has 2: data + interaction)
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 8000 })
-  await page.waitForTimeout(500)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
 
 test.describe("Coordinated Views", () => {
   test.beforeEach(async ({ page }) => {
@@ -17,7 +9,7 @@ test.describe("Coordinated Views", () => {
   // ── Linked hover cross-highlighting ───────────────────────────────────
 
   test("linked hover dashboard renders both charts", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     // Each chart renders at least 1 canvas; some have a separate interaction canvas
@@ -27,7 +19,7 @@ test.describe("Coordinated Views", () => {
   })
 
   test("linked hover dashboard shows unified legend", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     // CategoryColorProvider + LinkedCharts should produce a unified legend
@@ -37,7 +29,7 @@ test.describe("Coordinated Views", () => {
   })
 
   test("hover on scatter chart triggers interaction", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     // Find the first canvas (scatter data canvas) and hover its center
@@ -46,7 +38,7 @@ test.describe("Coordinated Views", () => {
     expect(box).toBeTruthy()
     if (box) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(500)
+      await waitForRafs(page)
 
       // Verify the interaction canvas exists and is layered on top
       const interactionCanvas = testCase.locator("canvas").nth(1)
@@ -57,7 +49,7 @@ test.describe("Coordinated Views", () => {
   // ── ChartGrid with emphasis ───────────────────────────────────────────
 
   test("grid emphasis renders primary chart spanning 2 columns", async ({ page }) => {
-    await waitForVisualization(page, "grid-emphasis")
+    await waitForChartReady(page, "grid-emphasis")
     const testCase = page.locator('[data-testid="grid-emphasis"]')
 
     // The grid should have a child div with gridColumn: span 2
@@ -68,7 +60,7 @@ test.describe("Coordinated Views", () => {
   })
 
   test("grid emphasis renders all 3 charts", async ({ page }) => {
-    await waitForVisualization(page, "grid-emphasis")
+    await waitForChartReady(page, "grid-emphasis")
     const testCase = page.locator('[data-testid="grid-emphasis"]')
 
     // Each chart renders at least 1 canvas; some have a separate interaction canvas
@@ -95,7 +87,7 @@ test.describe("Coordinated Views", () => {
   // ── Three-way linked charts ───────────────────────────────────────────
 
   test("three-way linked dashboard renders all 3 charts", async ({ page }) => {
-    await waitForVisualization(page, "three-way-linked")
+    await waitForChartReady(page, "three-way-linked")
     const testCase = page.locator('[data-testid="three-way-linked"]')
 
     // Each chart renders at least 1 canvas; some have a separate interaction canvas
@@ -109,7 +101,7 @@ test.describe("Coordinated Views", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/coordinated-examples/")
-    await page.waitForTimeout(3000)
+    await waitForAllChartsReady(page)
 
     // Filter out known React dev warnings
     const realErrors = errors.filter(

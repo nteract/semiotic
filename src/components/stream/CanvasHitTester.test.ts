@@ -113,9 +113,12 @@ describe("CanvasHitTester — findNearestNode", () => {
     expect(result!.distance).toBeLessThan(10)
   })
 
-  it("falls back to linear scan when quadtree candidate fails hitTestPoint", () => {
-    // Point A is closest in Euclidean distance but has r=1 (hit radius = max(6, 12) = 12).
-    // Query at 15px from A → miss. Point B is farther but has r=20 (hit radius = 25) → hit.
+  it("visit-based quadtree path prefers the hitting point over a nearer miss", () => {
+    // A (r=1, hitRadius 12) is geometrically nearest but misses. B (r=20,
+    // hitRadius 25) is farther but actually contains the cursor. With the
+    // older quadtree.find() path this required a linear fallback — the
+    // visit-based path evaluates every candidate in the search region, so
+    // B is returned directly.
     const pointA: PointSceneNode = {
       type: "point", x: 100, y: 100, r: 1, style: { fill: "red" }, datum: { id: "a" }
     }
@@ -130,13 +133,34 @@ describe("CanvasHitTester — findNearestNode", () => {
       .y((d) => d.y)
       .addAll(points)
 
-    // Query at (115, 100): 15px from A (hit radius = 12 → miss),
-    // 5px from B (hit radius = 25 → hit).
-    // Quadtree returns A (nearest center), hitTestPoint rejects A,
-    // so linear scan should find B.
     const result = findNearestNode(points, 115, 100, 30, qt)
     expect(result).not.toBeNull()
     expect(result!.datum.id).toBe("b")
+  })
+
+  it("widens the quadtree query radius when maxPointRadius is provided", () => {
+    // Big point sits 40px from the cursor — beyond the default maxDistance
+    // of 30. Without the widened query radius the quadtree would never
+    // enumerate it. With maxPointRadius=80 the query radius expands to 85,
+    // so the visit sees the big point and confirms the hit against its
+    // own hitRadius (85).
+    const big: PointSceneNode = {
+      type: "point", x: 90, y: 0, r: 80, style: { fill: "green" }, datum: { id: "big" }
+    }
+    const scene: PointSceneNode[] = [big]
+    const qt = quadtree<PointSceneNode>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .addAll(scene)
+
+    // maxPointRadius=0 → query radius = maxDistance = 30 → big at 40 outside → miss
+    const miss = findNearestNode(scene, 50, 0, 30, qt, 0)
+    expect(miss).toBeNull()
+
+    // maxPointRadius=80 → query radius = 85 → big within range → hit
+    const hit = findNearestNode(scene, 50, 0, 30, qt, 80)
+    expect(hit).not.toBeNull()
+    expect(hit!.datum.id).toBe("big")
   })
 
   it("quadtree does not interfere with non-point node types", () => {

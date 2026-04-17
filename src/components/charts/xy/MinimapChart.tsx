@@ -279,17 +279,27 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
   const overviewRef = useRef<any>(null)
   const [overviewScales, setOverviewScales] = useState<StreamScales | null>(null)
 
-  // Poll for scales after mount (overview sets them async via rAF)
+  // Poll for scales after mount (overview sets them async via rAF).
+  // Track the rAF handle so we can cancel on unmount or data change — without
+  // this the polling keeps running and calls setOverviewScales on an unmounted
+  // component (React state-update-on-unmounted warning + leak).
   useEffect(() => {
+    let rafId = 0
+    let cancelled = false
     const check = () => {
+      if (cancelled) return
       const s = overviewRef.current?.getScales?.()
       if (s) {
         setOverviewScales(s)
-      } else {
-        requestAnimationFrame(check)
+        return
       }
+      rafId = requestAnimationFrame(check)
     }
-    requestAnimationFrame(check)
+    rafId = requestAnimationFrame(check)
+    return () => {
+      cancelled = true
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [data])
 
   // ── Data normalization (same as LineChart) ──────────────────────────

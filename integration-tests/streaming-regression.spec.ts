@@ -13,33 +13,9 @@ import { test, expect, Page } from "@playwright/test"
  * 7. No runtime JS errors during streaming
  */
 
-async function waitForStreaming(page: Page, testId: string, ms = 2500) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 8000 })
-  // Wait for streaming data to push and render — use polling to handle slow CI
-  await page.waitForTimeout(ms)
-  // Additionally wait for the canvas to have non-empty content (non-transparent pixels)
-  await page.waitForFunction(
-    (id) => {
-      const container = document.querySelector(`[data-testid="${id}"]`)
-      if (!container) return false
-      const canvas = container.querySelector("canvas") as HTMLCanvasElement
-      if (!canvas || canvas.width === 0 || canvas.height === 0) return false
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return false
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-      let nonEmpty = 0
-      for (let i = 0; i < data.length; i += 64) {
-        if (data[i + 3] > 50 && !(data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240)) nonEmpty++
-      }
-      return nonEmpty > 5
-    },
-    testId,
-    { timeout: 10000 }
-  ).catch(() => { /* proceed to assertion — it will fail with a clear message */ })
-}
+// Thin re-export; the shared helper already does the canvas-visible +
+// pixel-content check this file invented the pattern for.
+import { waitForChartReady as waitForStreaming, waitForAllChartsReady, waitForRafs } from "./helpers"
 
 /**
  * Sample canvas pixels and return unique non-white, non-transparent colors.
@@ -130,17 +106,26 @@ test.describe("Streaming Color Regression", () => {
   for (const { testId, name, minColors } of colorTestCases) {
     test(`${name} streaming uses colored fills, not grey`, async ({ page }) => {
       await waitForStreaming(page, testId)
-      const colors = await getCanvasColors(page, testId)
+      // The streaming examples push a category every 100ms over ~600–1200ms.
+      // `waitForStreaming` returns as soon as ANY pixel content paints (often
+      // after the first push), so poll until enough categories have been
+      // rendered to satisfy `minColors` before sampling.
+      await expect.poll(
+        async () => (await getCanvasColors(page, testId)).uniqueColors,
+        { timeout: 8000, message: `${name}: streaming chart never reached ${minColors} unique colors` }
+      ).toBeGreaterThanOrEqual(minColors)
 
-      // Should have colored pixels, not just grey
-      expect(colors.hasColor, `${name}: expected colored pixels but got coloredPixels=${colors.coloredPixels}, greyPixels=${colors.greyPixels}, canvasSize=${colors.canvasWidth}x${colors.canvasHeight}`).toBe(true)
-      // Should have multiple distinct colors (one per category)
+      const colors = await getCanvasColors(page, testId)
+      expect(
+        colors.hasColor,
+        `${name}: expected colored pixels but got coloredPixels=${colors.coloredPixels}, greyPixels=${colors.greyPixels}, canvasSize=${colors.canvasWidth}x${colors.canvasHeight}`
+      ).toBe(true)
       expect(colors.uniqueColors).toBeGreaterThanOrEqual(minColors)
     })
   }
 
   test("Chord streaming uses multiple colors, not single blue", async ({ page }) => {
-    await waitForStreaming(page, "regression-chord-streaming", 3000)
+    await waitForStreaming(page, "regression-chord-streaming")
     const colors = await getCanvasColors(page, "regression-chord-streaming")
     expect(colors.hasColor).toBe(true)
     // Chord should have distinct colors for different nodes
@@ -185,7 +170,7 @@ test.describe("Area Chart Tooltip Regression", () => {
   })
 
   test("area chart tooltip shows field values, not dashes", async ({ page }) => {
-    await waitForStreaming(page, "regression-area-tooltip", 1000)
+    await waitForStreaming(page, "regression-area-tooltip")
 
     const testCase = page.locator('[data-testid="regression-area-tooltip"]')
     const canvas = testCase.locator("canvas").first()
@@ -194,7 +179,7 @@ test.describe("Area Chart Tooltip Regression", () => {
     if (box) {
       // Hover near the center of the chart where area data should be
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(500)
+      await waitForRafs(page)
 
       // Check if a tooltip appeared with actual values
       const tooltip = testCase.locator(".semiotic-tooltip, [class*='tooltip']")
@@ -222,7 +207,7 @@ test.describe("LineChart Streaming Stability", () => {
     const errors: string[] = []
     page.on("pageerror", (err) => errors.push(err.message))
 
-    await waitForStreaming(page, "regression-line-streaming", 3000)
+    await waitForStreaming(page, "regression-line-streaming")
 
     // Should have no "Maximum update depth exceeded" errors
     const loopErrors = errors.filter((e) => e.includes("Maximum update depth"))
@@ -247,7 +232,7 @@ test.describe("Force Graph Centering Regression", () => {
 
   test("force-directed graph nodes are centered in the canvas", async ({ page }) => {
     // Give the force simulation time to settle
-    await waitForStreaming(page, "regression-force-centering", 4000)
+    await waitForStreaming(page, "regression-force-centering")
 
     const centered = await page.evaluate(() => {
       const container = document.querySelector('[data-testid="regression-force-centering"]')
@@ -305,8 +290,10 @@ test.describe("Streaming Error-Free Regression", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/streaming-regression-examples/")
-    // Wait for all charts to push data and render
-    await page.waitForTimeout(5000)
+    // Every chart must be visibly rendered before we inspect the error log —
+    // any error that would fire during first paint or initial push will have
+    // fired by the time all canvases are non-empty.
+    await waitForAllChartsReady(page)
 
     // Filter out known benign warnings
     const realErrors = errors.filter(
@@ -321,7 +308,7 @@ test.describe("Streaming Error-Free Regression", () => {
 
   test("all streaming charts have visible canvases", async ({ page }) => {
     await page.goto("/streaming-regression-examples/")
-    await page.waitForTimeout(3000)
+    await waitForAllChartsReady(page)
 
     const testIds = [
       "regression-stacked-bar",

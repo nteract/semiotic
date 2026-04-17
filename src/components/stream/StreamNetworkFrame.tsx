@@ -21,7 +21,7 @@ import type {
   ThresholdAlertConfig
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
-import { buildHoverData } from "./hoverUtils"
+import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import {
   DEFAULT_TENSION_CONFIG,
@@ -815,10 +815,10 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Hover handlers ───────────────────────────────────────────────────
 
-  const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+  const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
   const hoverLeaveRef = useRef<() => void>(() => {})
 
-  hoverHandlerRef.current = (e: React.MouseEvent) => {
+  hoverHandlerRef.current = (e: HoverPointerCoords) => {
     if (!enableHover) return
 
     const canvas = canvasRef.current
@@ -935,7 +935,7 @@ const StreamNetworkFrame = forwardRef<
     moveRafRef.current = 0
     const coords = pendingMoveCoordsRef.current
     pendingMoveCoordsRef.current = null
-    if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+    if (coords) hoverHandlerRef.current(coords)
   }, [])
   const onMouseMove = useCallback(
     (e: React.MouseEvent) => {

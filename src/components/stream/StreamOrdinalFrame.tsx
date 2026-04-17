@@ -62,7 +62,7 @@ import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
-import { buildHoverData } from "./hoverUtils"
+import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
@@ -523,10 +523,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
-    const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
     const hoverLeaveRef = useRef<() => void>(() => {})
 
-    hoverHandlerRef.current = (e: React.MouseEvent) => {
+    hoverHandlerRef.current = (e: HoverPointerCoords) => {
       if (!effectiveHoverAnnotation) return
 
       const canvas = canvasRef.current
@@ -605,7 +605,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       moveRafRef.current = 0
       const coords = pendingMoveCoordsRef.current
       pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+      if (coords) hoverHandlerRef.current(coords)
     }, [])
     const onMouseMove = useCallback(
       (e: React.MouseEvent) => {
@@ -846,6 +846,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           cancelAnimationFrame(moveRafRef.current)
           moveRafRef.current = 0
         }
+        // Cancel any in-flight progressive chunking / pending push microtask
+        // so `store.ingest` can't fire after the component is gone.
+        adapterRef.current?.clear()
       }
     }, [scheduleRender])
 
