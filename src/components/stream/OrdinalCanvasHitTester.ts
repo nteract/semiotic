@@ -22,11 +22,13 @@ export function findNearestOrdinalNode(
   maxPointRadius = 0
 ): OrdinalHitResult | null {
   let best: OrdinalHitResult | null = null
-  let pointHitConfirmed = false
 
   // Fast path: quadtree-accelerated point hit test for swarm plots.
   // Uses `visit()` rather than `find()` so variable-size points (where a
   // farther point with a larger r can still be a valid hit) aren't missed.
+  // When a quadtree is provided, it's authoritative for points — whether
+  // it returns a hit or null, the linear point scan below is skipped so
+  // large swarms stay O(log n) for point testing.
   if (pointQuadtree) {
     const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
     if (hit) {
@@ -36,7 +38,6 @@ export function findNearestOrdinalNode(
         y: hit.node.y,
         distance: hit.distance
       }
-      pointHitConfirmed = true
     }
   }
 
@@ -48,8 +49,8 @@ export function findNearestOrdinalNode(
         result = hitTestRect(node, px, py)
         break
       case "point":
-        // Skip linear point scan when the quadtree already gave us an answer
-        if (pointQuadtree && pointHitConfirmed) break
+        // Quadtree visit was authoritative — skip redundant linear scan.
+        if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
         break
       case "wedge":
