@@ -1382,7 +1382,9 @@ export class OrdinalPipelineStore {
     // Re-resolve accessors only when the accessor source actually changed.
     // Uses .toString() comparison to skip re-resolution for inline arrow functions
     // that are recreated on every parent render but have identical source code.
-    if (config.categoryAccessor !== undefined || config.oAccessor !== undefined) {
+    // `in config` rather than `!== undefined` so an explicit clear (prop removed
+    // or conditionally rendered `undefined`) still reverts to the fallback.
+    if ("categoryAccessor" in config || "oAccessor" in config) {
       const newO = config.categoryAccessor || config.oAccessor
       const prevO = prev.categoryAccessor || prev.oAccessor
       if (!accessorsEquivalent(newO, prevO)) {
@@ -1393,7 +1395,7 @@ export class OrdinalPipelineStore {
         this.categories.clear()
       }
     }
-    if (config.valueAccessor !== undefined || config.rAccessor !== undefined) {
+    if ("valueAccessor" in config || "rAccessor" in config) {
       const newR = config.valueAccessor || config.rAccessor
       const prevR = prev.valueAccessor || prev.rAccessor
       const newArr = Array.isArray(newR) ? newR : [newR]

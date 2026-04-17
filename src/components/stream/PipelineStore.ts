@@ -1311,9 +1311,13 @@ export class PipelineStore {
     // changes (which changes which fallback defaults apply: x/y vs time/value).
     const modeChanged = ("chartType" in config && config.chartType !== prev.chartType)
       || ("runtimeMode" in config && config.runtimeMode !== prev.runtimeMode)
+    // Use `in config` rather than `!== undefined` so a caller explicitly
+    // clearing an accessor (`{xAccessor: undefined}` — valid React pattern
+    // when a prop is conditionally rendered) still enters the block. The
+    // inner `accessorsEquivalent` check handles the defined→undefined case.
     if (modeChanged
-      || config.xAccessor !== undefined || config.yAccessor !== undefined
-      || config.timeAccessor !== undefined || config.valueAccessor !== undefined) {
+      || "xAccessor" in config || "yAccessor" in config
+      || "timeAccessor" in config || "valueAccessor" in config) {
       const xChanged = modeChanged || !accessorsEquivalent(config.xAccessor ?? config.timeAccessor, prev.xAccessor ?? prev.timeAccessor)
       const yChanged = modeChanged || !accessorsEquivalent(config.yAccessor ?? config.valueAccessor, prev.yAccessor ?? prev.valueAccessor)
       if (xChanged || yChanged) {

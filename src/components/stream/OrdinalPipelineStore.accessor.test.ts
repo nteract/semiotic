@@ -115,6 +115,39 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     expect(store.getOAccessor()).toBe(originalGetO)
   })
 
+  // ── Explicit-clear regression ──────────────────────────────────────
+  //
+  // Conditional prop patterns like `categoryAccessor={toggle ? "region" : undefined}`
+  // send an explicit `undefined` into updateConfig when the toggle flips off.
+  // The outer gate used to be `config.X !== undefined`, which skipped the
+  // whole block for that case — leaving the previously-resolved accessor
+  // stuck. Switched to `"X" in config` so the defined→undefined transition
+  // reaches the inner equivalence check and triggers re-resolution.
+
+  it("explicitly clearing categoryAccessor reverts the resolver to the fallback key", () => {
+    const store = new OrdinalPipelineStore(makeConfig({ categoryAccessor: "region" }))
+    const beforeAccessor = store.getOAccessor()
+    const d = { region: "west", category: "fallback-value", value: 1 }
+    expect(beforeAccessor(d)).toBe("west")
+
+    store.updateConfig({ categoryAccessor: undefined })
+    const afterAccessor = store.getOAccessor()
+    expect(afterAccessor).not.toBe(beforeAccessor)
+    expect(afterAccessor(d)).toBe("fallback-value")
+  })
+
+  it("explicitly clearing oAccessor reverts the resolver to the fallback key", () => {
+    const store = new OrdinalPipelineStore(makeConfig({ oAccessor: "name" }))
+    const beforeAccessor = store.getOAccessor()
+    const d = { name: "node-1", category: "bucket-a", value: 1 }
+    expect(beforeAccessor(d)).toBe("node-1")
+
+    store.updateConfig({ oAccessor: undefined })
+    const afterAccessor = store.getOAccessor()
+    expect(afterAccessor).not.toBe(beforeAccessor)
+    expect(afterAccessor(d)).toBe("bucket-a")
+  })
+
   // ── Cache invalidation on config changes ───────────────────────────
 
   it("color scheme changes produce different bar colors (cache invalidated)", () => {
