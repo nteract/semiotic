@@ -99,10 +99,17 @@ test.describe("XY Charts - Landmark Ticks", () => {
     await waitForChartReady(page, "xy-landmark-ticks")
     const testCase = page.locator('[data-testid="xy-landmark-ticks"]')
 
-    // Get all text elements in the SVG overlay
-    const texts = await testCase.locator("svg text").allTextContents()
+    // Axis labels are part of the SVG overlay, which lands in a separate
+    // React commit after the canvas paints. Webkit in particular finishes
+    // canvas painting before the first SVG text node is attached, so poll
+    // until at least one Jan/Feb/Mar tick is in the DOM before sampling.
+    await expect.poll(
+      async () => (await testCase.locator("svg text").allTextContents())
+        .filter(t => /Jan|Feb|Mar/.test(t)).length,
+      { timeout: 5000 }
+    ).toBeGreaterThan(2)
 
-    // Should have tick labels containing month names from the Jan-Mar 2024 data
+    const texts = await testCase.locator("svg text").allTextContents()
     const dateLabels = texts.filter(t => /Jan|Feb|Mar/.test(t))
     expect(dateLabels.length).toBeGreaterThan(2)
 
@@ -125,9 +132,15 @@ test.describe("XY Charts - Auto-Rotate Labels", () => {
     await waitForChartReady(page, "xy-auto-rotate")
     const testCase = page.locator('[data-testid="xy-auto-rotate"]')
 
-    const texts = await testCase.locator("svg text").allTextContents()
+    // Wait for the SVG overlay to paint its labels (separate React commit
+    // from the canvas paint that `waitForChartReady` gates on).
+    await expect.poll(
+      async () => (await testCase.locator("svg text").allTextContents())
+        .filter(t => /January|February|March/.test(t)).length,
+      { timeout: 5000 }
+    ).toBeGreaterThan(2)
 
-    // X-axis labels should be long date strings
+    const texts = await testCase.locator("svg text").allTextContents()
     const dateLabels = texts.filter(t => /January|February|March/.test(t))
     expect(dateLabels.length).toBeGreaterThan(2)
 

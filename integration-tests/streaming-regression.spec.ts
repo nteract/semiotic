@@ -106,11 +106,20 @@ test.describe("Streaming Color Regression", () => {
   for (const { testId, name, minColors } of colorTestCases) {
     test(`${name} streaming uses colored fills, not grey`, async ({ page }) => {
       await waitForStreaming(page, testId)
-      const colors = await getCanvasColors(page, testId)
+      // The streaming examples push a category every 100ms over ~600–1200ms.
+      // `waitForStreaming` returns as soon as ANY pixel content paints (often
+      // after the first push), so poll until enough categories have been
+      // rendered to satisfy `minColors` before sampling.
+      await expect.poll(
+        async () => (await getCanvasColors(page, testId)).uniqueColors,
+        { timeout: 8000, message: `${name}: streaming chart never reached ${minColors} unique colors` }
+      ).toBeGreaterThanOrEqual(minColors)
 
-      // Should have colored pixels, not just grey
-      expect(colors.hasColor, `${name}: expected colored pixels but got coloredPixels=${colors.coloredPixels}, greyPixels=${colors.greyPixels}, canvasSize=${colors.canvasWidth}x${colors.canvasHeight}`).toBe(true)
-      // Should have multiple distinct colors (one per category)
+      const colors = await getCanvasColors(page, testId)
+      expect(
+        colors.hasColor,
+        `${name}: expected colored pixels but got coloredPixels=${colors.coloredPixels}, greyPixels=${colors.greyPixels}, canvasSize=${colors.canvasWidth}x${colors.canvasHeight}`
+      ).toBe(true)
       expect(colors.uniqueColors).toBeGreaterThanOrEqual(minColors)
     })
   }

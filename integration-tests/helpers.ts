@@ -17,6 +17,13 @@ export async function waitForRafs(page: Page, count = 2): Promise<void> {
  * Check whether a canvas inside the given container has painted visible
  * content (non-transparent, non-white pixels). Used as the readiness
  * signal for chart mount / streaming update checks.
+ *
+ * Returns true on the first non-white, non-near-transparent pixel found.
+ * Stride samples every 4th pixel and the alpha threshold is intentionally
+ * low (>10) so very sparse charts (a 2-point dumbbell plot, a swimlane
+ * with a few ribbons, anti-aliased thin candlestick wicks) still register
+ * as ready. The previous "≥6 hits at 16-pixel stride" tuning was inherited
+ * from the dense streaming-regression pages and timed out on sparser ones.
  */
 function canvasHasContentEval(id: string): boolean {
   const container = document.querySelector(`[data-testid="${id}"]`)
@@ -31,15 +38,14 @@ function canvasHasContentEval(id: string): boolean {
   } catch {
     return false
   }
-  let nonEmpty = 0
-  // Sample ~every 16th pixel for speed; bail as soon as the threshold is met.
-  for (let i = 0; i < data.length; i += 64) {
+  for (let i = 0; i < data.length; i += 16) {
     const a = data[i + 3]
-    if (a <= 50) continue
-    // Skip near-white pixels (backgrounds, labels on light themes).
+    // Threshold low enough to catch the anti-aliased edges of thin lines
+    // (candlestick wicks, grid ticks) — a 2px stroke at a non-integer
+    // coordinate can land entirely on edge pixels with alpha around 30.
+    if (a <= 10) continue
     if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) continue
-    nonEmpty++
-    if (nonEmpty > 5) return true
+    return true
   }
   return false
 }
@@ -86,12 +92,17 @@ export async function waitForAllChartsReady(
   options: { timeout?: number } = {}
 ): Promise<void> {
   const timeout = options.timeout ?? 15_000
-  await page.waitForLoadState("networkidle", { timeout })
+  // We *don't* wait for `networkidle` — some example pages keep a parcel
+  // HMR socket / dev-server poll open in CI, which delays networkidle past
+  // the timeout on firefox even though every chart is fully painted. The
+  // canvas-content poll below is the actual readiness signal.
+  await page.waitForLoadState("load", { timeout })
   await page.waitForFunction(
     () => {
-      // Data canvases are the ones Stream Frames emit with an aria-label.
-      // Fall back to all canvases if a page has none (e.g. SVG-only charts
-      // that still happen to include a canvas element somewhere).
+      // Data canvases carry an `aria-label` set by `computeCanvasAriaLabel`;
+      // the transparent interaction-canvas overlay does not. Skipping the
+      // overlay avoids hanging on hover-driven blank canvases. Fall back to
+      // every canvas when no aria-label is present (SVG-only pages).
       const labeled = Array.from(
         document.querySelectorAll("canvas[aria-label]")
       ) as HTMLCanvasElement[]
@@ -109,14 +120,14 @@ export async function waitForAllChartsReady(
         } catch {
           return false
         }
-        let nonEmpty = 0
-        for (let i = 0; i < data.length; i += 128) {
-          if (data[i + 3] > 50 && !(data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240)) {
-            nonEmpty++
-            if (nonEmpty > 3) break
+        let hasPixel = false
+        for (let i = 0; i < data.length; i += 16) {
+          if (data[i + 3] > 10 && !(data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240)) {
+            hasPixel = true
+            break
           }
         }
-        if (nonEmpty <= 3) return false
+        if (!hasPixel) return false
       }
       return true
     },
