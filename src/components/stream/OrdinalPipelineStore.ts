@@ -280,7 +280,14 @@ export class OrdinalPipelineStore {
     const isHorizontal = projection === "horizontal"
     const isRadial = projection === "radial"
 
-    const padding = config.barPadding != null ? config.barPadding / (isVertical ? layout.width : layout.height) : 0.1
+    // `barPadding` is a raw pixel value (default 40 per HOC). We convert it
+    // to d3-scale-band's 0..1 padding ratio against the content axis. Clamp
+    // the ratio below 1 so degenerate layouts — e.g. a horizontal swimlane
+    // where `showCategoryTicks: false` shrinks the left margin but the
+    // vertical content area is less than `barPadding * 2` — still produce
+    // bands with non-zero bandwidth instead of painting a blank canvas.
+    const rawPadding = config.barPadding != null ? config.barPadding / (isVertical ? layout.width : layout.height) : 0.1
+    const padding = Math.min(0.9, Math.max(0, rawPadding))
 
     let oScale: ScaleBand<string>
     let rScale: ScaleLinear<number, number>

@@ -658,4 +658,63 @@ describe("OrdinalPipelineStore", () => {
       expect(domain[0]).toBeLessThanOrEqual(0)
     })
   })
+
+  // ── Degenerate layout regression ───────────────────────────────────
+  //
+  // A horizontal swimlane with `showCategoryTicks: false` shrinks the
+  // left margin, which on short heights produces a content area smaller
+  // than `barPadding * 2`. The raw padding ratio (barPadding / height)
+  // lands ≥ 1, and a d3-scale-band with padding(1) has zero bandwidth
+  // — rects paint as invisible 0-width strips and the canvas stays blank.
+  //
+  // Pipeline clamps the padding ratio to ≤ 0.9 so at least 10% of each
+  // band is bandwidth. The concrete symptom this guards against was a
+  // Playwright integration test that saw 0 non-transparent pixels on
+  // the swimlane-no-ticks example (`integration-tests/ordinal-frame.spec.ts`).
+  describe("scaleBand padding clamp (crushed-height swimlane)", () => {
+    it("produces non-zero bandwidth even when barPadding exceeds content area", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swimlane",
+        projection: "horizontal",
+        barPadding: 40,
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 3 },
+          { category: "B", value: 2 },
+          { category: "C", value: 6 },
+        ],
+        bounded: true,
+      })
+      // Content area 275 × 40 — same shape as the failing ord-swimlane-no-ticks
+      // example. barPadding (40) equals the content height → raw ratio 1.0.
+      store.computeScene({ width: 275, height: 40 })
+
+      const bandwidth = store.scales!.o.bandwidth()
+      expect(bandwidth).toBeGreaterThan(0)
+      // Every column should have painted with that bandwidth.
+      for (const col of Object.values(store.columns)) {
+        expect(col.width).toBeGreaterThan(0)
+      }
+    })
+
+    it("does not break normal layouts where barPadding is well under content size", () => {
+      // Sanity check the happy path still behaves the same.
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "bar",
+        projection: "vertical",
+        barPadding: 40,
+      }))
+      store.ingest({
+        inserts: makeData(["A", "B", "C"], [10, 20, 30]),
+        bounded: true,
+      })
+      store.computeScene({ width: 600, height: 400 })
+
+      // With width 600 and barPadding 40, raw ratio is 40/600 ≈ 0.067 —
+      // nowhere near the clamp, so behavior is unchanged.
+      const bandwidth = store.scales!.o.bandwidth()
+      expect(bandwidth).toBeGreaterThan(100) // three bands across ~560 usable px
+    })
+  })
 })
