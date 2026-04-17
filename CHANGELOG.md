@@ -37,6 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **StreamGeoFrame hover via `e.currentTarget`** — handler reads `canvasRef.current` instead so it works under the rAF-coalesced path that passes a synthetic `{clientX, clientY}` payload.
 - **`_resetCSSColorCacheForTest` observer leak** — disconnects the global `MutationObserver` and `matchMedia` listener it installed; bumps `currentVersion` rather than resetting to 0 so any surviving WeakMap entries can't be re-validated.
 
+### Security
+
+- Bumped `hono` 4.12.8 → 4.12.14 and `@hono/node-server` to 1.19.14 (transitive via `scripts/og-server.mjs`). Resolves seven advisories — six in `hono` (cookie validation, IPv4-mapped IPv6 mismatch, path traversal in `toSSG`, `serveStatic` slash bypass, `hono/jsx` HTML injection) and one in `@hono/node-server` (`serveStatic` middleware bypass via repeated slashes). All moderate; reachable only from the OG-image build script, not from the published library.
+
+### Tooling
+
+- `scripts/create-release-branch.sh` now (a) syncs `ai/schema.json` version to the bumped package version, (b) verifies `CHANGELOG.md` has an entry for the new version, and (c) gates on `npm audit --audit-level=moderate`. Override the audit floor with `AUDIT_LEVEL=...` if a release is intentionally shipping with known low-severity transitives.
+- `prettier` 3.8.1 → 3.8.3 (dev-only patch).
+
 ### Removed
 
 - The per-spec `waitForVisualization` helpers in 9 Playwright spec files (consolidated into `integration-tests/helpers.ts`).

@@ -80,7 +80,7 @@ export interface SelectionStyleConfig {
 }
 
 /** Default opacity for unselected (dimmed) elements */
-export const DEFAULT_SELECTION_OPACITY = 0.5
+export const DEFAULT_SELECTION_OPACITY = 0.75
 
 /**
  * Read the --semiotic-selection-opacity CSS variable from a container element.
@@ -101,7 +101,7 @@ export function readSelectionOpacityFromCSS(container: Element | null): number {
  *
  * Dimming opacity is resolved in this order:
  * 1. `config.unselectedOpacity` (explicit prop)
- * 2. `DEFAULT_SELECTION_OPACITY` (0.5)
+ * 2. `DEFAULT_SELECTION_OPACITY` (0.75)
  */
 export function wrapStyleWithSelection(
   baseStyleFn: (d: Record<string, any>) => Record<string, any>,

@@ -59,6 +59,20 @@ if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
 fi
 success "  CHANGELOG.md has an entry for $VERSION"
 
+echo "==> Running npm audit (moderate gate)"
+# Block the release on any moderate/high/critical vulnerability. Low-severity
+# findings are surfaced but don't block — most are transitive dev-only crypto
+# libs reachable via the build chain that can only be cleared with `npm audit
+# fix --force` and a breaking change. To clear those intentionally, edit this
+# line or override the floor with AUDIT_LEVEL=low/high/critical.
+AUDIT_LEVEL="${AUDIT_LEVEL:-moderate}"
+if ! npm audit --audit-level="$AUDIT_LEVEL" >/dev/null 2>&1; then
+  error "npm audit reports vulnerabilities at >= $AUDIT_LEVEL severity. Run 'npm audit' to inspect, then 'npm audit fix' (or 'npm audit fix --force' if a breaking bump is intended) before releasing."
+  npm audit --audit-level="$AUDIT_LEVEL"
+  exit 1
+fi
+success "  npm audit clean at >= $AUDIT_LEVEL"
+
 echo "==> Cleaning Build directory"
 rm -rf ./dist
 
