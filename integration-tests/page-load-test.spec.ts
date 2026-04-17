@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { waitForAllChartsReady } from "./helpers"
 
 test("check xy-examples page for errors", async ({ page }) => {
   const errors: string[] = []
@@ -14,7 +15,7 @@ test("check xy-examples page for errors", async ({ page }) => {
   })
 
   await page.goto("http://localhost:1234/xy-examples/")
-  await page.waitForTimeout(3000)
+  await waitForAllChartsReady(page)
 
   console.log("=== Page Errors ===")
   errors.forEach(e => console.log(e))

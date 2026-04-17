@@ -17,8 +17,13 @@ export interface HitResult {
  * Dispatches to type-specific hit testers for optimal performance.
  *
  * When a quadtree spatial index is provided (for scatter/bubble charts with
- * many points), point hit testing uses O(log n) quadtree.find() instead of
- * iterating all nodes. Non-point node types (line, rect, area, etc.) still
+ * many points), point hit testing routes through `findHitPointInQuadtree`,
+ * which visits every candidate within the widened search radius (using
+ * `maxPointRadius` so variable-size points like BubbleChart can't hide
+ * behind a nearer non-hit). The visit is authoritative — when it returns
+ * null, no point hit exists and the linear point loop is skipped.
+ *
+ * Non-point node types (line, rect, area, heatcell, candlestick) still
  * use the linear scan.
  */
 export function findNearestNode(

@@ -1,13 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-// Helper function to wait for canvas-based visualization to render
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 8000 })
-  await page.waitForTimeout(500)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
 
 test.describe("Brush & Selection - Coordinated hover", () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +7,7 @@ test.describe("Brush & Selection - Coordinated hover", () => {
   })
 
   test("linked hover dashboard renders multiple chart canvases", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     // Each chart should have at least 1 canvas (data + interaction layer)
@@ -25,7 +17,7 @@ test.describe("Brush & Selection - Coordinated hover", () => {
   })
 
   test("hovering over scatter chart does not crash linked charts", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     const canvas = testCase.locator("canvas").first()
@@ -33,11 +25,11 @@ test.describe("Brush & Selection - Coordinated hover", () => {
     if (box) {
       // Hover across the chart area
       await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.25)
-      await page.waitForTimeout(200)
+      await waitForRafs(page)
       await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
-      await page.waitForTimeout(200)
+      await waitForRafs(page)
       await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.75)
-      await page.waitForTimeout(200)
+      await waitForRafs(page)
 
       // All canvases should still be visible (no crash from linked updates)
       const canvases = testCase.locator("canvas")
@@ -47,7 +39,7 @@ test.describe("Brush & Selection - Coordinated hover", () => {
   })
 
   test("moving mouse off chart clears hover state without error", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     const canvas = testCase.locator("canvas").first()
@@ -55,11 +47,11 @@ test.describe("Brush & Selection - Coordinated hover", () => {
     if (box) {
       // Hover into chart
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(300)
+      await waitForRafs(page)
 
       // Move mouse completely away from the chart
       await page.mouse.move(0, 0)
-      await page.waitForTimeout(300)
+      await waitForRafs(page)
 
       // Chart should still be rendered
       await expect(canvas).toBeVisible()
@@ -73,7 +65,7 @@ test.describe("Brush & Selection - Three-way linked charts", () => {
   })
 
   test("three-way linked charts all render canvases", async ({ page }) => {
-    await waitForVisualization(page, "three-way-linked")
+    await waitForChartReady(page, "three-way-linked")
     const testCase = page.locator('[data-testid="three-way-linked"]')
 
     const canvases = testCase.locator("canvas")
@@ -83,7 +75,7 @@ test.describe("Brush & Selection - Three-way linked charts", () => {
   })
 
   test("hover propagation across three linked charts", async ({ page }) => {
-    await waitForVisualization(page, "three-way-linked")
+    await waitForChartReady(page, "three-way-linked")
     const testCase = page.locator('[data-testid="three-way-linked"]')
 
     // Find the first chart canvas and hover it
@@ -91,7 +83,7 @@ test.describe("Brush & Selection - Three-way linked charts", () => {
     const box = await canvas.boundingBox()
     if (box) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(500)
+      await waitForRafs(page)
 
       // All charts should still be rendered (no crash from selection propagation)
       const canvases = testCase.locator("canvas")
@@ -107,7 +99,7 @@ test.describe("Brush & Selection - Legend interaction", () => {
   })
 
   test("unified legend renders in linked hover dashboard", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     // CategoryColorProvider + LinkedCharts should produce a unified legend
@@ -117,7 +109,7 @@ test.describe("Brush & Selection - Legend interaction", () => {
   })
 
   test("clicking legend item does not crash chart", async ({ page }) => {
-    await waitForVisualization(page, "linked-hover")
+    await waitForChartReady(page, "linked-hover")
     const testCase = page.locator('[data-testid="linked-hover"]')
 
     const legendItems = testCase.locator(".legend-item g")
@@ -126,7 +118,7 @@ test.describe("Brush & Selection - Legend interaction", () => {
     if (count > 0) {
       // Click the first legend item
       await legendItems.first().click()
-      await page.waitForTimeout(500)
+      await waitForRafs(page)
 
       // Charts should still render
       const canvases = testCase.locator("canvas")
@@ -141,7 +133,7 @@ test.describe("Brush & Selection - Accessibility examples coordinated views", ()
   })
 
   test("coordinated views in accessibility page render both charts", async ({ page }) => {
-    await waitForVisualization(page, "a11y-coordinated")
+    await waitForChartReady(page, "a11y-coordinated")
     const testCase = page.locator('[data-testid="a11y-coordinated"]')
 
     const canvases = testCase.locator("canvas")
@@ -150,7 +142,7 @@ test.describe("Brush & Selection - Accessibility examples coordinated views", ()
   })
 
   test("hover on coordinated scatter does not crash", async ({ page }) => {
-    await waitForVisualization(page, "a11y-coordinated")
+    await waitForChartReady(page, "a11y-coordinated")
     const testCase = page.locator('[data-testid="a11y-coordinated"]')
 
     const canvas = testCase.locator("canvas").first()
@@ -163,7 +155,7 @@ test.describe("Brush & Selection - Accessibility examples coordinated views", ()
           box.x + box.width * frac,
           box.y + box.height * frac
         )
-        await page.waitForTimeout(100)
+        await waitForRafs(page)
       }
 
       // Chart should still be intact
@@ -197,7 +189,7 @@ test.describe("Brush & Selection - No console errors", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/coordinated-examples/")
-    await page.waitForTimeout(3000)
+    await waitForAllChartsReady(page)
 
     // Trigger some interactions
     const canvases = page.locator("canvas")
@@ -206,9 +198,9 @@ test.describe("Brush & Selection - No console errors", () => {
       const box = await canvases.first().boundingBox()
       if (box) {
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-        await page.waitForTimeout(300)
+        await waitForRafs(page)
         await page.mouse.move(0, 0)
-        await page.waitForTimeout(300)
+        await waitForRafs(page)
       }
     }
 

@@ -429,6 +429,8 @@ export class GeoPipelineStore {
     this._hasRenderedOnce = false
     this.activeTransition = null
     this.prevPositions = null
+    this._quadtree = null
+    this._maxPointRadius = 0
     this.version++
   }
 

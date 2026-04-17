@@ -156,4 +156,36 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     expect(before).toBeDefined()
     expect(after).not.toBe(before)
   })
+
+  it("themeCategorical explicitly cleared (set to undefined) still invalidates", () => {
+    // StreamOrdinalFrame passes `themeCategorical: currentTheme?.colors?.categorical`,
+    // which can legitimately go from defined → undefined when the theme is reset.
+    // The cache key uses `in config` so this case must still invalidate; previously
+    // a `!== undefined` check let the stale palette persist.
+    const store = new OrdinalPipelineStore(makeConfig({
+      themeCategorical: ["#aaaaaa", "#bbbbbb", "#cccccc"]
+    }))
+    store.ingest({
+      inserts: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
+      bounded: true
+    })
+    store.computeScene({ width: 400, height: 300 })
+    const before = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    // Explicitly clear themeCategorical (theme switch path).
+    store.updateConfig({
+      xAccessor: "x",
+      yAccessor: "y",
+      chartType: "scatter" as any,
+      windowSize: 100,
+      windowMode: "sliding" as const,
+      extentPadding: 0,
+      themeCategorical: undefined
+    })
+    store.computeScene({ width: 400, height: 300 })
+    const after = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    expect(before).toBeDefined()
+    expect(after).not.toBe(before)
+  })
 })

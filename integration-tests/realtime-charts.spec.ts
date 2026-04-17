@@ -1,15 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-// Helper function to wait for canvas-based visualization to render
-// Realtime charts need time for data to start pushing
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 8000 })
-  // Give time for streaming data to begin rendering
-  await page.waitForTimeout(1500)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForAllChartsReady, waitForStreamingUpdate } from "./helpers"
 
 test.describe("Realtime Charts - Line Chart", () => {
   test.beforeEach(async ({ page }) => {
@@ -17,14 +7,14 @@ test.describe("Realtime Charts - Line Chart", () => {
   })
 
   test("RealtimeLineChart renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "realtime-line")
+    await waitForChartReady(page, "realtime-line")
     const testCase = page.locator('[data-testid="realtime-line"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("RealtimeLineChart updates over time", async ({ page }) => {
-    await waitForVisualization(page, "realtime-line")
+    await waitForChartReady(page, "realtime-line")
     const testCase = page.locator('[data-testid="realtime-line"]')
     const canvas = testCase.locator("canvas").first()
 
@@ -32,8 +22,10 @@ test.describe("Realtime Charts - Line Chart", () => {
     const screenshot1 = await canvas.screenshot()
     expect(screenshot1.length).toBeGreaterThan(0)
 
-    // Wait for more data to be pushed
-    await page.waitForTimeout(2000)
+    // Wait for the streaming chart to push new data and repaint. Event-driven
+    // so the test proceeds as soon as the canvas pixel hash shifts, instead
+    // of sleeping for a fixed window and hoping.
+    await waitForStreamingUpdate(page, "realtime-line")
 
     // Take another screenshot -- the chart should have new data
     const screenshot2 = await canvas.screenshot()
@@ -51,14 +43,14 @@ test.describe("Realtime Charts - Histogram", () => {
   })
 
   test("RealtimeHistogram renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "realtime-histogram")
+    await waitForChartReady(page, "realtime-histogram")
     const testCase = page.locator('[data-testid="realtime-histogram"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("RealtimeHistogram has a visible chart area", async ({ page }) => {
-    await waitForVisualization(page, "realtime-histogram")
+    await waitForChartReady(page, "realtime-histogram")
     const testCase = page.locator('[data-testid="realtime-histogram"]')
     const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
@@ -74,7 +66,7 @@ test.describe("Realtime Charts - Waterfall", () => {
   })
 
   test("RealtimeWaterfallChart renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "realtime-waterfall")
+    await waitForChartReady(page, "realtime-waterfall")
     const testCase = page.locator('[data-testid="realtime-waterfall"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
@@ -87,7 +79,7 @@ test.describe("Realtime Charts - Swarm", () => {
   })
 
   test("RealtimeSwarmChart renders canvas", async ({ page }) => {
-    await waitForVisualization(page, "realtime-swarm")
+    await waitForChartReady(page, "realtime-swarm")
     const testCase = page.locator('[data-testid="realtime-swarm"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
@@ -100,8 +92,9 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/realtime-examples/")
-    // Wait for all charts to render and push some data
-    await page.waitForTimeout(5000)
+    // Wait for every chart on the page to have rendered visible content —
+    // catches any error that would fire during first paint or initial push.
+    await waitForAllChartsReady(page)
 
     // Filter out known React dev warnings
     const realErrors = errors.filter(
@@ -112,7 +105,7 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
 
   test("all four realtime charts have canvases", async ({ page }) => {
     await page.goto("/realtime-examples/")
-    await page.waitForTimeout(3000)
+    await waitForAllChartsReady(page)
 
     const testIds = [
       "realtime-line",

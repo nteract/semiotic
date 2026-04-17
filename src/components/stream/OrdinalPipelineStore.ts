@@ -1333,6 +1333,8 @@ export class OrdinalPipelineStore {
     this.scales = null
     this.scene = []
     this.columns = {}
+    this._pointQuadtree = null
+    this._maxPointRadius = 0
     this._dataVersion++
     this.version++
   }
@@ -1354,11 +1356,13 @@ export class OrdinalPipelineStore {
 
     // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
     // via `getColor` (derived from `colorAccessor`) — all three of those must
-    // invalidate the cache alongside `colorScheme`.
+    // invalidate the cache alongside `colorScheme`. Use `in config` rather
+    // than `!== undefined` so a caller explicitly clearing a field (e.g. a
+    // theme switch sets `themeCategorical` to undefined) still invalidates.
     if (
-      config.colorScheme !== this.config.colorScheme
-      || (config.themeCategorical !== undefined && config.themeCategorical !== this.config.themeCategorical)
-      || (config.colorAccessor !== undefined && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
+      ("colorScheme" in config && config.colorScheme !== prev.colorScheme)
+      || ("themeCategorical" in config && config.themeCategorical !== prev.themeCategorical)
+      || ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
     ) {
       this._colorSchemeMap = null
       this._colorSchemeIndex = 0
@@ -1367,8 +1371,8 @@ export class OrdinalPipelineStore {
     // `_categoryIndexCache` is keyed only on `_dataVersion`; an accessor swap
     // without an ingest would leave a stale map. Invalidate explicitly.
     if (
-      (config.categoryAccessor !== undefined && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor))
-      || (config.oAccessor !== undefined && !accessorsEquivalent(config.oAccessor, prev.oAccessor))
+      ("categoryAccessor" in config && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor))
+      || ("oAccessor" in config && !accessorsEquivalent(config.oAccessor, prev.oAccessor))
     ) {
       this._categoryIndexCache = null
     }

@@ -1,13 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-// Helper function to wait for canvas-based visualization to render
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 5000 })
-  await page.waitForTimeout(500)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForRafs } from "./helpers"
 
 test.describe("XY Charts - Line Charts", () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +7,7 @@ test.describe("XY Charts - Line Charts", () => {
   })
 
   test("renders line chart", async ({ page }) => {
-    await waitForVisualization(page, "xy-line")
+    await waitForChartReady(page, "xy-line")
     const testCase = page.locator('[data-testid="xy-line"]')
     await expect(testCase).toHaveScreenshot("xy-line.png", {
       maxDiffPixels: 100
@@ -23,7 +15,7 @@ test.describe("XY Charts - Line Charts", () => {
   })
 
   test("renders line chart with points", async ({ page }) => {
-    await waitForVisualization(page, "xy-line-points")
+    await waitForChartReady(page, "xy-line-points")
     const testCase = page.locator('[data-testid="xy-line-points"]')
     await expect(testCase).toHaveScreenshot("xy-line-points.png", {
       maxDiffPixels: 100
@@ -31,7 +23,7 @@ test.describe("XY Charts - Line Charts", () => {
   })
 
   test("renders line chart with fill area", async ({ page }) => {
-    await waitForVisualization(page, "xy-line-fill")
+    await waitForChartReady(page, "xy-line-fill")
     const testCase = page.locator('[data-testid="xy-line-fill"]')
     await expect(testCase).toHaveScreenshot("xy-line-fill.png", {
       maxDiffPixels: 100
@@ -45,7 +37,7 @@ test.describe("XY Charts - Area Charts", () => {
   })
 
   test("renders area chart", async ({ page }) => {
-    await waitForVisualization(page, "xy-area")
+    await waitForChartReady(page, "xy-area")
     const testCase = page.locator('[data-testid="xy-area"]')
     await expect(testCase).toHaveScreenshot("xy-area.png", {
       maxDiffPixels: 100
@@ -59,7 +51,7 @@ test.describe("XY Charts - Scatter and Bubble", () => {
   })
 
   test("renders scatter plot", async ({ page }) => {
-    await waitForVisualization(page, "xy-scatter")
+    await waitForChartReady(page, "xy-scatter")
     const testCase = page.locator('[data-testid="xy-scatter"]')
     await expect(testCase).toHaveScreenshot("xy-scatter.png", {
       maxDiffPixels: 100
@@ -67,7 +59,7 @@ test.describe("XY Charts - Scatter and Bubble", () => {
   })
 
   test("renders bubble chart", async ({ page }) => {
-    await waitForVisualization(page, "xy-bubble")
+    await waitForChartReady(page, "xy-bubble")
     const testCase = page.locator('[data-testid="xy-bubble"]')
     await expect(testCase).toHaveScreenshot("xy-bubble.png", {
       maxDiffPixels: 100
@@ -81,7 +73,7 @@ test.describe("XY Charts - Interactivity", () => {
   })
 
   test("shows tooltip on scatter hover", async ({ page }) => {
-    await waitForVisualization(page, "xy-scatter-hover")
+    await waitForChartReady(page, "xy-scatter-hover")
 
     const testCase = page.locator('[data-testid="xy-scatter-hover"]')
     const canvas = testCase.locator("canvas").first()
@@ -89,7 +81,7 @@ test.describe("XY Charts - Interactivity", () => {
     if (box) {
       // Hover near the center of the chart
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(300)
+      await waitForRafs(page)
 
       await expect(testCase).toHaveScreenshot("xy-scatter-hover-state.png", {
         maxDiffPixels: 150
@@ -104,7 +96,7 @@ test.describe("XY Charts - Landmark Ticks", () => {
   })
 
   test("renders date tick labels with landmark styling, not Dec 31", async ({ page }) => {
-    await waitForVisualization(page, "xy-landmark-ticks")
+    await waitForChartReady(page, "xy-landmark-ticks")
     const testCase = page.locator('[data-testid="xy-landmark-ticks"]')
 
     // Get all text elements in the SVG overlay
@@ -130,7 +122,7 @@ test.describe("XY Charts - Auto-Rotate Labels", () => {
   })
 
   test("renders distinct tick labels when autoRotate is set", async ({ page }) => {
-    await waitForVisualization(page, "xy-auto-rotate")
+    await waitForChartReady(page, "xy-auto-rotate")
     const testCase = page.locator('[data-testid="xy-auto-rotate"]')
 
     const texts = await testCase.locator("svg text").allTextContents()
@@ -151,7 +143,7 @@ test.describe("XY Charts - Range Plot", () => {
   })
 
   test("renders range/dumbbell plot with visible marks", async ({ page }) => {
-    await waitForVisualization(page, "xy-range-plot")
+    await waitForChartReady(page, "xy-range-plot")
     const testCase = page.locator('[data-testid="xy-range-plot"]')
 
     // Take a screenshot for visual verification

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { waitForAllChartsReady } from "./helpers"
 
 test("debug canvas scatter", async ({ page }) => {
   const errors: string[] = []
@@ -10,7 +11,7 @@ test("debug canvas scatter", async ({ page }) => {
   })
 
   await page.goto("http://localhost:1234/xy-examples/")
-  await page.waitForTimeout(2000)
+  await waitForAllChartsReady(page)
 
   // Check the canvas scatter test case
   const testCase = page.locator('[data-testid="xy-scatter-canvas"]')

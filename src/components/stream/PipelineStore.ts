@@ -1238,6 +1238,7 @@ export class PipelineStore {
     this.scales = null
     this.scene = []
     this._quadtree = null
+    this._maxPointRadius = 0
     this._colorMapCache = null
     this._groupColorMap = new Map()
     this._barCategoryCache = null
@@ -1272,27 +1273,29 @@ export class PipelineStore {
     // Invalidate color map caches when any color-relevant config changes.
     // resolveColorMap short-circuits on _ingestVersion, so we must explicitly
     // null the cache for changes that don't bump that counter (theme palette
-    // swaps, accessor swaps, scheme overrides).
+    // swaps, accessor swaps, scheme overrides). Use `in config` rather than
+    // `!== undefined` so a caller explicitly clearing a field (e.g. theme
+    // switch sets themeCategorical to undefined) still invalidates.
     if (
-      config.colorScheme !== undefined
-      || config.themeCategorical !== undefined
-      || config.colorAccessor !== undefined
+      "colorScheme" in config
+      || "themeCategorical" in config
+      || "colorAccessor" in config
     ) {
       this._colorMapCache = null
       this._groupColorMap = new Map()
     }
-    if (config.barColors !== undefined || config.colorScheme !== undefined) {
+    if ("barColors" in config || "colorScheme" in config) {
       this._barCategoryCache = null
     }
     // Invalidate stacked area extent cache on any config change that affects
     // the stacked y-domain. `_stackExtentCache` is keyed by buffer size +
     // _ingestVersion, so config-only changes (accessor swaps, mode changes)
     // must be explicitly invalidated since they don't bump those counters.
-    if (config.normalize !== undefined || config.extentPadding !== undefined
-      || config.xAccessor !== undefined || config.yAccessor !== undefined
-      || config.timeAccessor !== undefined || config.valueAccessor !== undefined
-      || config.groupAccessor !== undefined || config.categoryAccessor !== undefined
-      || config.chartType !== undefined || config.runtimeMode !== undefined) {
+    if ("normalize" in config || "extentPadding" in config
+      || "xAccessor" in config || "yAccessor" in config
+      || "timeAccessor" in config || "valueAccessor" in config
+      || "groupAccessor" in config || "categoryAccessor" in config
+      || "chartType" in config || "runtimeMode" in config) {
       this._stackExtentCache = null
     }
 

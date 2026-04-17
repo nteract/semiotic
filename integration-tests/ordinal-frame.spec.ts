@@ -1,13 +1,5 @@
-import { test, expect, Page } from "@playwright/test"
-
-// Helper function to wait for canvas-based visualization to render
-async function waitForVisualization(page: Page, testId: string) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout: 5000 })
-  await page.waitForTimeout(500)
-}
+import { test, expect } from "@playwright/test"
+import { waitForChartReady, waitForRafs } from "./helpers"
 
 test.describe("Ordinal Charts - Bar Charts", () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +7,7 @@ test.describe("Ordinal Charts - Bar Charts", () => {
   })
 
   test("renders vertical bar chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-bars-vertical")
+    await waitForChartReady(page, "ordinal-bars-vertical")
     const testCase = page.locator('[data-testid="ordinal-bars-vertical"]')
     await expect(testCase).toHaveScreenshot("ordinal-bars-vertical.png", {
       maxDiffPixels: 100
@@ -23,7 +15,7 @@ test.describe("Ordinal Charts - Bar Charts", () => {
   })
 
   test("renders horizontal bar chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-bars-horizontal")
+    await waitForChartReady(page, "ordinal-bars-horizontal")
     const testCase = page.locator('[data-testid="ordinal-bars-horizontal"]')
     await expect(testCase).toHaveScreenshot("ordinal-bars-horizontal.png", {
       maxDiffPixels: 100
@@ -31,7 +23,7 @@ test.describe("Ordinal Charts - Bar Charts", () => {
   })
 
   test("renders stacked bar chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-bars-stacked")
+    await waitForChartReady(page, "ordinal-bars-stacked")
     const testCase = page.locator('[data-testid="ordinal-bars-stacked"]')
     await expect(testCase).toHaveScreenshot("ordinal-bars-stacked.png", {
       maxDiffPixels: 100
@@ -39,7 +31,7 @@ test.describe("Ordinal Charts - Bar Charts", () => {
   })
 
   test("renders grouped bar chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-bars-grouped")
+    await waitForChartReady(page, "ordinal-bars-grouped")
     const testCase = page.locator('[data-testid="ordinal-bars-grouped"]')
     await expect(testCase).toHaveScreenshot("ordinal-bars-grouped.png", {
       maxDiffPixels: 100
@@ -53,7 +45,7 @@ test.describe("Ordinal Charts - Pie and Donut", () => {
   })
 
   test("renders pie chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-pie")
+    await waitForChartReady(page, "ordinal-pie")
     const testCase = page.locator('[data-testid="ordinal-pie"]')
     await expect(testCase).toHaveScreenshot("ordinal-pie.png", {
       maxDiffPixels: 100
@@ -61,7 +53,7 @@ test.describe("Ordinal Charts - Pie and Donut", () => {
   })
 
   test("renders donut chart", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-donut")
+    await waitForChartReady(page, "ordinal-donut")
     const testCase = page.locator('[data-testid="ordinal-donut"]')
     await expect(testCase).toHaveScreenshot("ordinal-donut.png", {
       maxDiffPixels: 100
@@ -75,7 +67,7 @@ test.describe("Ordinal Charts - Statistical", () => {
   })
 
   test("renders swarm plot", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-swarm")
+    await waitForChartReady(page, "ordinal-swarm")
     const testCase = page.locator('[data-testid="ordinal-swarm"]')
     await expect(testCase).toHaveScreenshot("ordinal-swarm.png", {
       maxDiffPixels: 100
@@ -83,7 +75,7 @@ test.describe("Ordinal Charts - Statistical", () => {
   })
 
   test("renders box plot", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-boxplot")
+    await waitForChartReady(page, "ordinal-boxplot")
     const testCase = page.locator('[data-testid="ordinal-boxplot"]')
     await expect(testCase).toHaveScreenshot("ordinal-boxplot.png", {
       maxDiffPixels: 100
@@ -91,7 +83,7 @@ test.describe("Ordinal Charts - Statistical", () => {
   })
 
   test("renders violin plot", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-violin")
+    await waitForChartReady(page, "ordinal-violin")
     const testCase = page.locator('[data-testid="ordinal-violin"]')
     await expect(testCase).toHaveScreenshot("ordinal-violin.png", {
       maxDiffPixels: 100
@@ -99,7 +91,7 @@ test.describe("Ordinal Charts - Statistical", () => {
   })
 
   test("renders histogram", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-histogram")
+    await waitForChartReady(page, "ordinal-histogram")
     const testCase = page.locator('[data-testid="ordinal-histogram"]')
     await expect(testCase).toHaveScreenshot("ordinal-histogram.png", {
       maxDiffPixels: 100
@@ -113,7 +105,7 @@ test.describe("Ordinal Charts - Interactivity", () => {
   })
 
   test("shows tooltip on bar hover", async ({ page }) => {
-    await waitForVisualization(page, "ordinal-bars-hover")
+    await waitForChartReady(page, "ordinal-bars-hover")
 
     const testCase = page.locator('[data-testid="ordinal-bars-hover"]')
     const canvas = testCase.locator("canvas").first()
@@ -121,7 +113,7 @@ test.describe("Ordinal Charts - Interactivity", () => {
     if (box) {
       // Hover near the center of the chart where bars should be
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(300)
+      await waitForRafs(page)
 
       await expect(testCase).toHaveScreenshot("ordinal-bars-hover-state.png", {
         maxDiffPixels: 150
@@ -136,7 +128,7 @@ test.describe("Ordinal Charts - Swimlane", () => {
   })
 
   test("swimlane renders canvas data marks", async ({ page }) => {
-    await waitForVisualization(page, "ord-swimlane")
+    await waitForChartReady(page, "ord-swimlane")
     const testCase = page.locator('[data-testid="ord-swimlane"]')
     const canvas = testCase.locator("canvas").first()
     // Canvas should have non-zero dimensions
@@ -153,7 +145,7 @@ test.describe("Ordinal Charts - Swimlane", () => {
   })
 
   test("swimlane with showCategoryTicks=false renders data but no lane labels", async ({ page }) => {
-    await waitForVisualization(page, "ord-swimlane-no-ticks")
+    await waitForChartReady(page, "ord-swimlane-no-ticks")
     const testCase = page.locator('[data-testid="ord-swimlane-no-ticks"]')
     const canvas = testCase.locator("canvas").first()
     // Canvas should still render data marks
@@ -176,7 +168,7 @@ test.describe("Ordinal Charts - Gauge", () => {
   })
 
   test("180° gauge renders visibly and is vertically centered", async ({ page }) => {
-    await waitForVisualization(page, "ord-gauge-180")
+    await waitForChartReady(page, "ord-gauge-180")
     const testCase = page.locator('[data-testid="ord-gauge-180"]')
     await expect(testCase).toHaveScreenshot("ord-gauge-180.png", {
       maxDiffPixels: 100
@@ -184,7 +176,7 @@ test.describe("Ordinal Charts - Gauge", () => {
   })
 
   test("election needle 180° renders without clipping", async ({ page }) => {
-    await waitForVisualization(page, "ord-gauge-needle")
+    await waitForChartReady(page, "ord-gauge-needle")
     const testCase = page.locator('[data-testid="ord-gauge-needle"]')
     await expect(testCase).toHaveScreenshot("ord-gauge-needle.png", {
       maxDiffPixels: 100
@@ -192,7 +184,7 @@ test.describe("Ordinal Charts - Gauge", () => {
   })
 
   test("240° gauge renders visibly and is centered", async ({ page }) => {
-    await waitForVisualization(page, "ord-gauge-240")
+    await waitForChartReady(page, "ord-gauge-240")
     const testCase = page.locator('[data-testid="ord-gauge-240"]')
     await expect(testCase).toHaveScreenshot("ord-gauge-240.png", {
       maxDiffPixels: 100

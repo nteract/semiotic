@@ -1,14 +1,6 @@
 import { test, expect, Page } from "@playwright/test"
 import AxeBuilder from "@axe-core/playwright"
-
-// Helper function to wait for canvas-based visualization to render
-async function waitForVisualization(page: Page, testId: string, timeout = 8000) {
-  const testCase = page.locator(`[data-testid="${testId}"]`)
-  await expect(testCase).toBeVisible()
-  const canvas = testCase.locator("canvas").first()
-  await expect(canvas).toBeVisible({ timeout })
-  await page.waitForTimeout(500)
-}
+import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
 
 // ─── 1. Canvas aria-labels describe chart type and data shape ─────────────────
 
@@ -18,7 +10,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("XY chart frame has role=group and aria-label from title", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
     const frame = testCase.locator(".stream-xy-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -26,7 +18,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("XY chart frame falls back to default aria-label when no title", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-default")
+    await waitForChartReady(page, "a11y-xy-default")
     const testCase = page.locator('[data-testid="a11y-xy-default"]')
     const frame = testCase.locator(".stream-xy-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -34,7 +26,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("Ordinal chart frame has role=group and aria-label from title", async ({ page }) => {
-    await waitForVisualization(page, "a11y-ordinal")
+    await waitForChartReady(page, "a11y-ordinal")
     const testCase = page.locator('[data-testid="a11y-ordinal"]')
     const frame = testCase.locator(".stream-ordinal-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -42,11 +34,8 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("Network chart frame has role=group and aria-label from title", async ({ page }) => {
+    await waitForChartReady(page, "a11y-network")
     const testCase = page.locator('[data-testid="a11y-network"]')
-    await expect(testCase).toBeVisible()
-    const canvas = testCase.locator("canvas").first()
-    await expect(canvas).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(2000)
 
     const frame = testCase.locator(".stream-network-frame")
     await expect(frame).toHaveAttribute("role", "group")
@@ -54,7 +43,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("canvas element has an aria-label describing the data", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
     const canvas = testCase.locator("canvas").first()
 
@@ -66,7 +55,7 @@ test.describe("Accessibility - Canvas aria-labels", () => {
   })
 
   test("ordinal canvas element has an aria-label", async ({ page }) => {
-    await waitForVisualization(page, "a11y-ordinal")
+    await waitForChartReady(page, "a11y-ordinal")
     const testCase = page.locator('[data-testid="a11y-ordinal"]')
     const canvas = testCase.locator("canvas").first()
 
@@ -84,7 +73,7 @@ test.describe("Accessibility - AriaLiveTooltip region", () => {
   })
 
   test("chart with tooltip has an aria-live='polite' region attached", async ({ page }) => {
-    await waitForVisualization(page, "a11y-tooltip")
+    await waitForChartReady(page, "a11y-tooltip")
     const testCase = page.locator('[data-testid="a11y-tooltip"]')
 
     const liveRegion = testCase.locator("[aria-live='polite']")
@@ -96,7 +85,7 @@ test.describe("Accessibility - AriaLiveTooltip region", () => {
   })
 
   test("aria-live region is visually hidden but present in DOM", async ({ page }) => {
-    await waitForVisualization(page, "a11y-tooltip")
+    await waitForChartReady(page, "a11y-tooltip")
     const testCase = page.locator('[data-testid="a11y-tooltip"]')
 
     const liveRegion = testCase.locator("[aria-live='polite']").first()
@@ -110,14 +99,14 @@ test.describe("Accessibility - AriaLiveTooltip region", () => {
   })
 
   test("hovering the chart canvas does not remove the aria-live region", async ({ page }) => {
-    await waitForVisualization(page, "a11y-tooltip")
+    await waitForChartReady(page, "a11y-tooltip")
     const testCase = page.locator('[data-testid="a11y-tooltip"]')
     const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
 
     if (box) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await page.waitForTimeout(500)
+      await waitForRafs(page)
 
       // Region should still be present after hover
       const liveRegion = testCase.locator("[aria-live='polite']")
@@ -134,7 +123,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("interactive legend items are focusable with tabIndex", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Interactive legend items should have tabindex for keyboard access
@@ -144,7 +133,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("legend items have role='option' and aria-label", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     const legendOptions = testCase.locator("[role='option']")
@@ -160,7 +149,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("legend container has role='listbox' when interactive", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     const listbox = testCase.locator("[role='listbox']")
@@ -172,7 +161,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("legend listbox has aria-multiselectable for isolate mode", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     const listbox = testCase.locator("[role='listbox']")
@@ -181,7 +170,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("Tab key moves focus into legend items", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Focus the chart frame first, then tab into the legend
@@ -207,7 +196,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("Arrow keys navigate between legend items", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Focus the first legend option directly
@@ -228,7 +217,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
   })
 
   test("Enter/Space key activates legend item (isolate mode)", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Focus the first legend option
@@ -237,7 +226,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
 
     // Press Enter to toggle isolation
     await page.keyboard.press("Enter")
-    await page.waitForTimeout(300)
+    await waitForRafs(page)
 
     // After activation, the aria-selected state should change
     const ariaSelected = await firstOption.getAttribute("aria-selected")
@@ -253,7 +242,7 @@ test.describe("Accessibility - Focus rings", () => {
   })
 
   test("chart frames are focusable with tabIndex=0", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
     const frame = testCase.locator(".stream-xy-frame")
 
@@ -261,7 +250,7 @@ test.describe("Accessibility - Focus rings", () => {
   })
 
   test("ordinal chart frame is focusable with tabIndex=0", async ({ page }) => {
-    await waitForVisualization(page, "a11y-ordinal")
+    await waitForChartReady(page, "a11y-ordinal")
     const testCase = page.locator('[data-testid="a11y-ordinal"]')
     const frame = testCase.locator(".stream-ordinal-frame")
 
@@ -271,7 +260,7 @@ test.describe("Accessibility - Focus rings", () => {
   test("legend focus ring becomes visible when legend item receives keyboard focus", async ({
     page,
   }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Focus rings start hidden
@@ -284,7 +273,7 @@ test.describe("Accessibility - Focus rings", () => {
     // Focus a legend item via keyboard
     const firstOption = testCase.locator("[role='option']").first()
     await firstOption.evaluate((el) => (el as any).focus())
-    await page.waitForTimeout(100)
+    await waitForRafs(page)
 
     // After focus, the ring within the focused item should be visible
     const focusedRing = page.locator(":focus .semiotic-legend-focus-ring")
@@ -296,18 +285,18 @@ test.describe("Accessibility - Focus rings", () => {
   })
 
   test("legend focus ring hides when item loses focus", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     // Focus a legend item
     const firstOption = testCase.locator("[role='option']").first()
     await firstOption.evaluate((el) => (el as any).focus())
-    await page.waitForTimeout(100)
+    await waitForRafs(page)
 
     // Blur by focusing something else
     const frame = testCase.locator(".stream-ordinal-frame")
     await frame.focus()
-    await page.waitForTimeout(100)
+    await waitForRafs(page)
 
     // All focus rings should be hidden now
     const focusRings = testCase.locator(".semiotic-legend-focus-ring")
@@ -319,7 +308,7 @@ test.describe("Accessibility - Focus rings", () => {
   })
 
   test("focus ring has proper styling attributes (stroke, no fill)", async ({ page }) => {
-    await waitForVisualization(page, "a11y-legend-keyboard")
+    await waitForChartReady(page, "a11y-legend-keyboard")
     const testCase = page.locator('[data-testid="a11y-legend-keyboard"]')
 
     const focusRing = testCase.locator(".semiotic-legend-focus-ring").first()
@@ -342,7 +331,7 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("XY chart SVG overlay contains a title element with chart title", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
 
     const svgTitle = testCase.locator("svg title")
@@ -353,7 +342,7 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("XY chart SVG overlay contains a desc element", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
 
     const svgDesc = testCase.locator("svg desc")
@@ -365,7 +354,7 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("XY chart SVG title includes custom title text in desc", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-titled")
+    await waitForChartReady(page, "a11y-xy-titled")
     const testCase = page.locator('[data-testid="a11y-xy-titled"]')
 
     const svgDesc = testCase.locator("svg desc")
@@ -375,7 +364,7 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("XY chart without title has fallback SVG title", async ({ page }) => {
-    await waitForVisualization(page, "a11y-xy-default")
+    await waitForChartReady(page, "a11y-xy-default")
     const testCase = page.locator('[data-testid="a11y-xy-default"]')
 
     const svgTitle = testCase.locator("svg title")
@@ -386,7 +375,7 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("Ordinal chart SVG overlay has title and desc", async ({ page }) => {
-    await waitForVisualization(page, "a11y-ordinal")
+    await waitForChartReady(page, "a11y-ordinal")
     const testCase = page.locator('[data-testid="a11y-ordinal"]')
 
     const svgTitle = testCase.locator("svg title")
@@ -401,11 +390,8 @@ test.describe("Accessibility - SVG overlay title/desc elements", () => {
   })
 
   test("Network chart SVG overlay has title and desc", async ({ page }) => {
+    await waitForChartReady(page, "a11y-network")
     const testCase = page.locator('[data-testid="a11y-network"]')
-    await expect(testCase).toBeVisible()
-    const canvas = testCase.locator("canvas").first()
-    await expect(canvas).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(2000)
 
     const svgTitle = testCase.locator("svg title")
     await expect(svgTitle.first()).toBeAttached()
@@ -553,7 +539,7 @@ test.describe("Accessibility - No console errors", () => {
     page.on("pageerror", (err) => errors.push(err.message))
 
     await page.goto("/accessibility-examples/")
-    await page.waitForTimeout(3000)
+    await waitForAllChartsReady(page)
 
     // Filter out known React dev warnings
     const realErrors = errors.filter(
