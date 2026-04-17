@@ -3,6 +3,13 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { BarChart } from "./BarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import {
+  BAR_SAMPLE as sampleData,
+  BAR_INITIAL as initialData,
+  BAR_EXTENDED as newData,
+  BAR_COLORED as coloredData,
+  NAMED_COUNT_DATA as customData,
+} from "../../../test-utils/ordinalFixtures"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
@@ -21,12 +28,6 @@ describe("BarChart", () => {
   beforeEach(() => {
     lastOrdinalFrameProps = null
   })
-
-  const sampleData = [
-    { category: "A", value: 10 },
-    { category: "B", value: 20 },
-    { category: "C", value: 15 }
-  ]
 
   it("renders without crashing with minimal props", () => {
     const { container } = render(
@@ -80,11 +81,6 @@ describe("BarChart", () => {
   })
 
   it("accepts custom accessors", () => {
-    const customData = [
-      { name: "A", count: 10 },
-      { name: "B", count: 20 }
-    ]
-
     const { container } = render(
       <TooltipProvider>
         <BarChart
@@ -212,11 +208,6 @@ describe("BarChart", () => {
   })
 
   it("updates when data changes", () => {
-    const initialData = [
-      { category: "A", value: 10 },
-      { category: "B", value: 20 }
-    ]
-
     const { container, rerender } = render(
       <TooltipProvider>
         <BarChart data={initialData} />
@@ -227,12 +218,6 @@ describe("BarChart", () => {
     expect(initialFrame).toBeTruthy()
 
     // Update with more data
-    const newData = [
-      { category: "A", value: 10 },
-      { category: "B", value: 20 },
-      { category: "C", value: 30 }
-    ]
-
     rerender(
       <TooltipProvider>
         <BarChart data={newData} />
@@ -267,12 +252,6 @@ describe("BarChart", () => {
 
   // Legend Tests
   describe("Legend behavior", () => {
-    const coloredData = [
-      { category: "A", value: 10, type: "X" },
-      { category: "B", value: 20, type: "Y" },
-      { category: "C", value: 15, type: "X" }
-    ]
-
     it("shows legend automatically when colorBy is specified", () => {
       render(
         <TooltipProvider>
@@ -376,11 +355,6 @@ describe("BarChart", () => {
     })
 
     it("default tooltip uses custom accessors", () => {
-      const customData = [
-        { name: "X", count: 42 },
-        { name: "Y", count: 99 }
-      ]
-
       render(
         <TooltipProvider>
           <BarChart data={customData} categoryAccessor="name" valueAccessor="count" />
@@ -388,11 +362,11 @@ describe("BarChart", () => {
       )
 
       const tooltipFn = lastOrdinalFrameProps.tooltipContent
-      const pieceData = { name: "X", count: 42 }
+      const pieceData = customData[0]
       const { container } = render(<>{tooltipFn(pieceData)}</>)
 
-      expect(container.textContent).toContain("X")
-      expect(container.textContent).toContain("42")
+      expect(container.textContent).toContain(pieceData.name)
+      expect(container.textContent).toContain(String(pieceData.count))
     })
 
     it("uses user-provided tooltip instead of default", () => {

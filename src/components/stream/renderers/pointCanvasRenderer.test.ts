@@ -105,18 +105,15 @@ describe("pointCanvasRenderer", () => {
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
-    // Two beginPath calls: one for main circle, one for glow ring
-    expect(ctx.beginPath).toHaveBeenCalledTimes(2)
-    // Two arc calls: main circle and glow ring
-    expect(ctx.arc).toHaveBeenCalledTimes(2)
-    // Glow ring arc: r + glowRadius * intensity = 5 + 4 * 0.8 = 8.2
+    // Behavior assertions: the glow ring is drawn at the expected radius
+    // with the pulse color and intensity-scaled line width. Specific arg
+    // checks carry behavior (radius derived from r + glowRadius * intensity);
+    // we deliberately don't count begin/arc calls since a future batching
+    // refactor could change those without changing what's drawn.
     expect(ctx.arc).toHaveBeenCalledWith(100, 150, 8.2, 0, Math.PI * 2)
-    // Pulse stroke style
     expect(ctx.strokeStyle).toBe("rgba(255,0,0,0.6)")
-    // Pulse lineWidth = 2 * intensity = 1.6
     expect(ctx.lineWidth).toBe(2 * 0.8)
-    // Stroke called for the glow ring
-    expect(ctx.stroke).toHaveBeenCalledTimes(1)
+    expect(ctx.stroke).toHaveBeenCalled()
   })
 
   it("uses default pulse color when _pulseColor is not set", () => {
@@ -134,9 +131,10 @@ describe("pointCanvasRenderer", () => {
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
-    // Only one beginPath (for the main circle), no glow ring
-    expect(ctx.beginPath).toHaveBeenCalledTimes(1)
-    expect(ctx.arc).toHaveBeenCalledTimes(1)
+    // Without a pulse, the renderer never calls stroke — the pulse glow is
+    // the only stroke op in the point path. A structural check that doesn't
+    // depend on exact begin/arc call counts.
+    expect(ctx.stroke).not.toHaveBeenCalled()
   })
 
   it("handles empty node array without crashing", () => {

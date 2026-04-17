@@ -68,6 +68,46 @@ export function createMockCanvasContext(): Record<string, any> {
 }
 
 /**
+ * Record style state at the moment each draw op fires.
+ *
+ * Counting `ctx.fill` / `ctx.stroke` calls is brittle — a refactor that
+ * batches two paths into one stroke changes the count without changing
+ * what's visible. This helper instead captures the style state (`fillStyle`,
+ * `strokeStyle`, `globalAlpha`, `lineWidth`) at each draw call, so tests
+ * can assert on *what was drawn with what appearance* rather than on how
+ * many primitives the renderer emitted to get there.
+ *
+ * Usage:
+ *   const ctx = createMockCanvasContext()
+ *   const ops = recordCanvasOps(ctx)
+ *   someRenderer(ctx, nodes, ...)
+ *   expect(ops.fillStyles).toEqual(["#e41a1c", "rgba(255,255,0,0.5)"])
+ */
+export interface CanvasOpLog {
+  fillStyles: string[]
+  strokeStyles: string[]
+  fillAlphas: number[]
+  strokeAlphas: number[]
+}
+
+export function recordCanvasOps(ctx: Record<string, any>): CanvasOpLog {
+  const log: CanvasOpLog = { fillStyles: [], strokeStyles: [], fillAlphas: [], strokeAlphas: [] }
+  const origFill = ctx.fill as (...args: any[]) => void
+  const origStroke = ctx.stroke as (...args: any[]) => void
+  ctx.fill = ((...args: any[]) => {
+    log.fillStyles.push(String(ctx.fillStyle))
+    log.fillAlphas.push(Number(ctx.globalAlpha))
+    return origFill?.apply(ctx, args)
+  }) as any
+  ctx.stroke = ((...args: any[]) => {
+    log.strokeStyles.push(String(ctx.strokeStyle))
+    log.strokeAlphas.push(Number(ctx.globalAlpha))
+    return origStroke?.apply(ctx, args)
+  }) as any
+  return log
+}
+
+/**
  * Sets up the canvas getContext mock on HTMLCanvasElement.prototype,
  * mocks requestAnimationFrame to execute callbacks synchronously,
  * and mocks cancelAnimationFrame.

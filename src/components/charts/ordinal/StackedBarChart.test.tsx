@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { StackedBarChart } from "./StackedBarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { STACKED_SAMPLE as sampleData } from "../../../test-utils/ordinalFixtures"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
@@ -21,13 +22,6 @@ describe("StackedBarChart", () => {
   beforeEach(() => {
     lastOrdinalFrameProps = null
   })
-
-  const sampleData = [
-    { category: "Q1", product: "A", value: 100 },
-    { category: "Q1", product: "B", value: 150 },
-    { category: "Q2", product: "A", value: 120 },
-    { category: "Q2", product: "B", value: 180 }
-  ]
 
   it("renders without crashing with minimal props", () => {
     const { container } = render(
