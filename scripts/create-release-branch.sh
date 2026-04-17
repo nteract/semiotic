@@ -31,6 +31,34 @@ fi
 echo "==> Bumping version"
 VERSION="$(npm version --no-git-tag-version $BUMP_TYPE | sed 's/v//g')"
 
+echo "==> Syncing ai/schema.json version → $VERSION"
+# `ai/schema.json` is bundled in the npm package and read by the MCP server
+# (ai/mcp-server.ts uses `schema.version` as its advertised version). Keeping
+# it pinned to the package version means MCP doesn't lie about what's running
+# the moment we ship.
+node -e "
+  const fs = require('fs');
+  const path = 'ai/schema.json';
+  const schema = JSON.parse(fs.readFileSync(path, 'utf8'));
+  if (schema.version === '$VERSION') {
+    console.log('  ai/schema.json already at $VERSION');
+  } else {
+    schema.version = '$VERSION';
+    fs.writeFileSync(path, JSON.stringify(schema, null, 2) + '\n');
+    console.log('  ai/schema.json: bumped to $VERSION');
+  }
+"
+
+echo "==> Verifying CHANGELOG.md has an entry for $VERSION"
+# Catches the "shipped without a changelog" mistake — npm page would otherwise
+# show no notes for the new version and users have no way to see what changed.
+if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
+  error "CHANGELOG.md is missing a '## [$VERSION]' entry. Add one before releasing."
+  error "(Existing latest entry: $(grep -E "^## \[" CHANGELOG.md | head -1))"
+  exit 1
+fi
+success "  CHANGELOG.md has an entry for $VERSION"
+
 echo "==> Cleaning Build directory"
 rm -rf ./dist
 

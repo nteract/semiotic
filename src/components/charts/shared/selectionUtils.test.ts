@@ -105,16 +105,16 @@ describe("wrapStyleWithSelection", () => {
     expect(style.opacity).toBeUndefined()
   })
 
-  it("dims non-matching datums with default opacity 0.2", () => {
+  it("dims non-matching datums with default opacity 0.5", () => {
     const hook: SelectionHookResult = {
       isActive: true,
       predicate: (d) => d.category === "A",
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style = wrapped({ color: "red", category: "B" })
-    expect(style.opacity).toBe(0.2)
-    expect(style.fillOpacity).toBe(0.2)
-    expect(style.strokeOpacity).toBe(0.2)
+    expect(style.opacity).toBe(0.5)
+    expect(style.fillOpacity).toBe(0.5)
+    expect(style.strokeOpacity).toBe(0.5)
   })
 
   it("uses custom unselectedOpacity", () => {
@@ -123,12 +123,12 @@ describe("wrapStyleWithSelection", () => {
       predicate: (d) => d.category === "A",
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook, {
-      unselectedOpacity: 0.5,
+      unselectedOpacity: 0.3,
     })
     const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.5)
-    expect(style.fillOpacity).toBe(0.5)
-    expect(style.strokeOpacity).toBe(0.5)
+    expect(style.opacity).toBe(0.3)
+    expect(style.fillOpacity).toBe(0.3)
+    expect(style.strokeOpacity).toBe(0.3)
   })
 
   it("applies selectedStyle overrides for matching datums", () => {
@@ -154,7 +154,7 @@ describe("wrapStyleWithSelection", () => {
       unselectedStyle: { filter: "grayscale(100%)" },
     })
     const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.2)
+    expect(style.opacity).toBe(0.5)
     expect(style.filter).toBe("grayscale(100%)")
   })
 
@@ -169,7 +169,7 @@ describe("wrapStyleWithSelection", () => {
     expect(matchStyle.opacity).toBeUndefined()
 
     const noMatchStyle = wrapped({ region: "North", year: 2023 })
-    expect(noMatchStyle.opacity).toBe(0.2)
+    expect(noMatchStyle.opacity).toBe(0.5)
   })
 
   it("does not mutate the base style object (wrapStyleWithSelection)", () => {
@@ -191,14 +191,14 @@ describe("wrapStyleWithSelection", () => {
 
 describe("readSelectionOpacityFromCSS", () => {
   it("returns default for null container", () => {
-    expect(readSelectionOpacityFromCSS(null)).toBe(0.2)
+    expect(readSelectionOpacityFromCSS(null)).toBe(0.5)
   })
 
   it("returns default when CSS var is unset", () => {
     const el = document.createElement("div")
     document.body.appendChild(el)
     const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0.2)
+    expect(result).toBe(0.5)
     document.body.removeChild(el)
   })
 
@@ -234,7 +234,7 @@ describe("readSelectionOpacityFromCSS", () => {
     el.style.setProperty("--semiotic-selection-opacity", "auto")
     document.body.appendChild(el)
     const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0.2)
+    expect(result).toBe(0.5)
     document.body.removeChild(el)
   })
 })

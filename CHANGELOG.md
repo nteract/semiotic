@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-04-17
+
+### Added
+
+- **`animate` prop on every HOC chart** — `animate?: boolean | { duration?, easing?, intro? }` wired across all XY, ordinal, network, and geo HOCs. Stream Frames resolve `animate` → `transition` internally, with synthesized intro animations: bars from baseline, wedges from collapsed arc, lines/areas clipped from left, points from `r=0`, network nodes from chart center, geo points from center. Wedge angle interpolation for pie/donut data changes. Respects `prefers-reduced-motion`.
+- **Quadtree spatial index** for point hit testing on XY (scatter/bubble), Geo (proportional symbol maps), and Ordinal (swarm plots) when point count exceeds 500. Each store tracks `maxPointRadius` so the hit tester widens its query for variable-size points (BubbleChart, proportional symbols). Shared `findHitPointInQuadtree` (`src/components/stream/quadtreeHitTest.ts`) uses `quadtree.visit()` to enumerate every candidate within the search region, eliminating the nearest-only miss that `quadtree.find()` had on heterogeneous-radius scenes.
+- **`Path2D` cache on network edges** (`NetworkBezierEdge` / `NetworkRibbonEdge` / `NetworkCurvedEdge`) — `_cachedPath2D` + `_cachedPath2DSource` fields invalidate when `pathD` changes. Shared between `NetworkCanvasHitTester` and `networkEdgeRenderer`.
+- **`waitForChartReady` / `waitForAllChartsReady` / `waitForRafs` / `waitForStreamingUpdate`** in `integration-tests/helpers.ts` — event-driven Playwright waits replacing the per-spec `waitForVisualization` + `waitForTimeout(N)` pattern.
+- **`HoverPointerCoords` type** in `hoverUtils.ts` — narrower hover-handler signature replacing the `as unknown as React.MouseEvent` cast that the rAF-coalesced path used to need.
+- **`ordinalFixtures.ts` + `recordCanvasOps` test utilities** — shared sample datasets for bar-chart tests; behavior-level draw-op recorder that replaces brittle `toHaveBeenCalledTimes` assertions in canvas-renderer tests.
+- **`describe.each` combinatorial coverage** for `lineCanvasRenderer` over (curve × decay × thresholds), exercising the path-selection invariants that previously had a single test.
+- **3000+ unit tests passing** (was 2890 in 3.3.x). Added cache-invalidation regressions for `_colorMapCache`, `_colorSchemeMap`, `_categoryIndexCache`, `_stackExtentCache`, accessor explicit-clear, ParticlePool free-list, `findHitPointInQuadtree` variable-radius, `resolveCSSColor` version counter, swimlane bandwidth clamp.
+
+### Changed
+
+- **Stream Frame perf pass** — `OrdinalPipelineStore` decay/pulse no longer rebuild a `Map<datum, index>` every frame (cached against `_dataVersion`); pulse wedge inner loop went from `O(wedges × data)` to `O(matches per category)` via `getCategoryIndexMap`. `PipelineStore` stacked-area extent fused into a single pass; `resolveColorMap` short-circuits on `_ingestVersion`. Geo line projection fused project + filter into one pass.
+- **`ParticlePool.spawn()`** — O(1) free-list (stack of free indices) replaced the O(capacity) linear scan. `evaluateBezier` rewritten as `evaluateBezierInto(out)` so positions write into the particle directly — zero per-particle allocation per frame.
+- **rAF-coalesced pointermove** in all four Stream Frames — caps hit-testing + React re-renders at the display refresh rate (60 Hz) instead of the native pointer rate (often 120–240 Hz). `onMouseLeave` cancels any pending move; latest coords always processed.
+- **CSS-var color cache** (`resolveCSSColor`) — version-counter design plus a singleton `MutationObserver` on `document.documentElement` and a `prefers-color-scheme` `matchMedia` listener. Themes/class toggles/media-query swaps that bypass React still invalidate; per-frame `getComputedStyle` thrashing is gone.
+- **`DEFAULT_SELECTION_OPACITY`: 0.2 → 0.5** — unselected (dimmed) elements stay readable when a selection is active. Override via `unselectedOpacity` prop or `--semiotic-selection-opacity` CSS var.
+- **`barPadding` ratio clamped to ≤ 0.9** in `OrdinalPipelineStore` — degenerate layouts (e.g. horizontal swimlane where `showCategoryTicks: false` shrinks the left margin and the vertical content area is less than `barPadding * 2`) no longer paint zero-bandwidth bands.
+
+### Fixed
+
+- **DataSourceAdapter unmount cleanup** — `StreamXYFrame` and `StreamOrdinalFrame` now call `adapter.clear()` in their lifecycle cleanup so in-flight progressive chunking and pending push microtasks can't fire after unmount.
+- **MinimapChart polling rAF** — tracks its handle and cancels on unmount + data change. Was leaking a recursive `requestAnimationFrame` poll that kept calling `setOverviewScales` on unmounted components.
+- **Cache invalidation completeness** — `PipelineStore._stackExtentCache` now invalidates on `timeAccessor` / `valueAccessor` / `runtimeMode` changes; `OrdinalPipelineStore._colorSchemeMap` on `themeCategorical` / `colorAccessor`; `OrdinalPipelineStore._categoryIndexCache` on `categoryAccessor` / `oAccessor`.
+- **Accessor re-resolution gates** — `updateConfig` blocks for x/y/time/value (`PipelineStore`) and category/o/value/r (`OrdinalPipelineStore`) used `config.X !== undefined`, which silently skipped re-resolution when a caller explicitly cleared an accessor (`{xAccessor: undefined}` — valid React pattern). Switched to `"X" in config` so defined → undefined transitions revert to the fallback key.
+- **GeoCanvasHitTester wasted fallback** — when a quadtree is built, the linear scan after a quadtree miss is now skipped (the visit-based path is authoritative). Per-hit `.filter()` array allocations for areas/lines also removed.
+- **StreamGeoFrame hover via `e.currentTarget`** — handler reads `canvasRef.current` instead so it works under the rAF-coalesced path that passes a synthetic `{clientX, clientY}` payload.
+- **`_resetCSSColorCacheForTest` observer leak** — disconnects the global `MutationObserver` and `matchMedia` listener it installed; bumps `currentVersion` rather than resetting to 0 so any surviving WeakMap entries can't be re-validated.
+
+### Removed
+
+- The per-spec `waitForVisualization` helpers in 9 Playwright spec files (consolidated into `integration-tests/helpers.ts`).
+
 ## [3.3.1] - 2026-04-11
 
 ### Added

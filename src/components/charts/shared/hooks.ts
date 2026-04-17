@@ -453,7 +453,7 @@ export interface LegendInteractionState {
 
 /**
  * Hook managing legend highlight/isolate interaction.
- * - "highlight": hover over legend item dims everything else to 30% opacity
+ * - "highlight": hover over legend item dims everything else to DEFAULT_SELECTION_OPACITY
  * - "isolate": click toggles category visibility; click all to reset
  */
 export function useLegendInteraction(
