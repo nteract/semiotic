@@ -45,7 +45,7 @@ import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
-import { buildHoverData } from "./hoverUtils"
+import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
@@ -685,10 +685,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
-    const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
     const hoverLeaveRef = useRef<() => void>(() => {})
 
-    hoverHandlerRef.current = (e: React.MouseEvent) => {
+    hoverHandlerRef.current = (e: HoverPointerCoords) => {
       if (!effectiveHoverAnnotation) return
 
       const canvas = canvasRef.current
@@ -716,7 +716,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (!store || store.scene.length === 0) return
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
-      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree)
+      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null
@@ -779,7 +779,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       moveRafRef.current = 0
       const coords = pendingMoveCoordsRef.current
       pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+      if (coords) hoverHandlerRef.current(coords)
     }, [])
     const onMouseMove = useCallback(
       (e: React.MouseEvent) => {
@@ -819,7 +819,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
       const store = storeRef.current
       if (!store || store.scene.length === 0) { customClickBehavior(null); return }
-      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree)
+      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
       customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y))
@@ -1104,6 +1104,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           cancelAnimationFrame(moveRafRef.current)
           moveRafRef.current = 0
         }
+        // Cancel any in-flight progressive chunking / pending push microtask
+        // so `store.ingest` can't fire after the component is gone.
+        adapterRef.current?.clear()
       }
     }, [scheduleRender])
 

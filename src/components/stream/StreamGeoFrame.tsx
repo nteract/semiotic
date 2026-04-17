@@ -42,6 +42,7 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
+import type { HoverPointerCoords } from "./hoverUtils"
 import type { LineSceneNode } from "./types"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -406,10 +407,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Hover handler ─────────────────────────────────────────────────
 
-    const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
 
     useEffect(() => {
-      hoverHandlerRef.current = (e: React.MouseEvent) => {
+      hoverHandlerRef.current = (e: HoverPointerCoords) => {
         if (!enableHover) return
         const store = storeRef.current
         if (!store || !store.scene.length) return
@@ -502,7 +503,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       moveRafRef.current = 0
       const coords = pendingMoveCoordsRef.current
       pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords as unknown as React.MouseEvent)
+      if (coords) hoverHandlerRef.current(coords)
     }, [])
 
     const onMouseLeave = useCallback(() => {

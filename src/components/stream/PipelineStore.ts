@@ -240,6 +240,10 @@ export class PipelineStore {
 
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private _quadtree: Quadtree<PointSceneNode> | null = null
+  /** Largest visual point radius in the current scene. The hit tester uses
+   *  this to widen its quadtree query so points with big radii (bubble) don't
+   *  fall outside the search region. */
+  private _maxPointRadius = 0
   private static readonly QUADTREE_THRESHOLD = 500
 
   constructor(config: PipelineConfig) {
@@ -649,22 +653,36 @@ export class PipelineStore {
     const ct = this.config.chartType
     if (ct !== "scatter" && ct !== "bubble") {
       this._quadtree = null
+      this._maxPointRadius = 0
       return
     }
 
-    const pointNodes = this.scene.filter(
-      (n): n is PointSceneNode => n.type === "point"
-    )
+    // Walk once to collect point nodes and track the largest radius so the
+    // hit tester can widen its query radius for variable-size bubble charts.
+    let pointCount = 0
+    let maxR = 0
+    for (const node of this.scene) {
+      if (node.type === "point") {
+        pointCount++
+        if (node.r > maxR) maxR = node.r
+      }
+    }
+    this._maxPointRadius = maxR
 
-    if (pointNodes.length <= PipelineStore.QUADTREE_THRESHOLD) {
+    if (pointCount <= PipelineStore.QUADTREE_THRESHOLD) {
       this._quadtree = null
       return
     }
 
+    const points: PointSceneNode[] = new Array(pointCount)
+    let i = 0
+    for (const node of this.scene) {
+      if (node.type === "point") points[i++] = node as PointSceneNode
+    }
     this._quadtree = d3Quadtree<PointSceneNode>()
       .x(n => n.x)
       .y(n => n.y)
-      .addAll(pointNodes)
+      .addAll(points)
   }
 
   /**
@@ -673,6 +691,11 @@ export class PipelineStore {
    */
   get quadtree(): Quadtree<PointSceneNode> | null {
     return this._quadtree
+  }
+
+  /** Largest visual point radius in the current scene. */
+  get maxPointRadius(): number {
+    return this._maxPointRadius
   }
 
   /**
@@ -1261,11 +1284,15 @@ export class PipelineStore {
     if (config.barColors !== undefined || config.colorScheme !== undefined) {
       this._barCategoryCache = null
     }
-    // Invalidate stacked area extent cache on config changes that affect stacking
+    // Invalidate stacked area extent cache on any config change that affects
+    // the stacked y-domain. `_stackExtentCache` is keyed by buffer size +
+    // _ingestVersion, so config-only changes (accessor swaps, mode changes)
+    // must be explicitly invalidated since they don't bump those counters.
     if (config.normalize !== undefined || config.extentPadding !== undefined
       || config.xAccessor !== undefined || config.yAccessor !== undefined
+      || config.timeAccessor !== undefined || config.valueAccessor !== undefined
       || config.groupAccessor !== undefined || config.categoryAccessor !== undefined
-      || config.chartType !== undefined) {
+      || config.chartType !== undefined || config.runtimeMode !== undefined) {
       this._stackExtentCache = null
     }
 

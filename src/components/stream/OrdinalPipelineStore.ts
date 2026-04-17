@@ -1352,9 +1352,25 @@ export class OrdinalPipelineStore {
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
 
-    if (config.colorScheme !== this.config.colorScheme) {
+    // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
+    // via `getColor` (derived from `colorAccessor`) — all three of those must
+    // invalidate the cache alongside `colorScheme`.
+    if (
+      config.colorScheme !== this.config.colorScheme
+      || (config.themeCategorical !== undefined && config.themeCategorical !== this.config.themeCategorical)
+      || (config.colorAccessor !== undefined && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
+    ) {
       this._colorSchemeMap = null
       this._colorSchemeIndex = 0
+    }
+
+    // `_categoryIndexCache` is keyed only on `_dataVersion`; an accessor swap
+    // without an ingest would leave a stale map. Invalidate explicitly.
+    if (
+      (config.categoryAccessor !== undefined && !accessorsEquivalent(config.categoryAccessor, prev.categoryAccessor))
+      || (config.oAccessor !== undefined && !accessorsEquivalent(config.oAccessor, prev.oAccessor))
+    ) {
+      this._categoryIndexCache = null
     }
 
     Object.assign(this.config, config)

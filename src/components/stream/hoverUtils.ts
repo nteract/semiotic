@@ -9,6 +9,19 @@
 import type { HoverData } from "../realtime/types"
 
 /**
+ * Minimal shape a Stream Frame's internal hover handler needs from a pointer
+ * event. React.MouseEvent satisfies this structurally, as does the plain
+ * `{clientX, clientY}` object the rAF-coalescing path synthesizes. Using this
+ * narrower type on `hoverHandlerRef` (instead of `React.MouseEvent`) prevents
+ * downstream code from reading event fields — `currentTarget`, `target`,
+ * `preventDefault` — that wouldn't survive the coalescing cast.
+ */
+export interface HoverPointerCoords {
+  clientX: number
+  clientY: number
+}
+
+/**
  * Spread raw datum properties onto HoverData if it's a non-null,
  * non-array object. Class instances (Date, etc.) are included —
  * this matches the historical behavior where all datum fields are

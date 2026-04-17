@@ -2,6 +2,7 @@ import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaScene
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
+import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface HitResult {
   node: SceneNode
@@ -25,22 +26,20 @@ export function findNearestNode(
   px: number,
   py: number,
   maxDistance: number = 30,
-  pointQuadtree?: Quadtree<PointSceneNode> | null
+  pointQuadtree?: Quadtree<PointSceneNode> | null,
+  maxPointRadius = 0
 ): HitResult | null {
   let best: HitResult | null = null
-  let quadtreeHitConfirmed = false
 
-  // Fast path: use quadtree for point nodes when available
+  // Fast path: use quadtree for point nodes when available. `findHitPointInQuadtree`
+  // visits every candidate within the widened search radius, so variable-size
+  // points (bubble charts) can't hide behind a nearer non-hit the way they
+  // would with quadtree.find(). The visit is authoritative — if it returns
+  // null, no point hit exists and the linear point scan below is skipped.
   if (pointQuadtree) {
-    // Use maxDistance as the quadtree search radius.
-    // Callers should set maxDistance to account for point radius + hit tolerance.
-    const found = pointQuadtree.find(px, py, maxDistance)
-    if (found) {
-      const result = hitTestPoint(found, px, py, maxDistance)
-      if (result && result.distance < maxDistance) {
-        best = result
-        quadtreeHitConfirmed = true
-      }
+    const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
+    if (hit) {
+      best = { node: hit.node, datum: hit.node.datum, x: hit.node.x, y: hit.node.y, distance: hit.distance }
     }
   }
 
@@ -49,8 +48,8 @@ export function findNearestNode(
 
     switch (node.type) {
       case "point":
-        // Skip linear point scan only when quadtree confirmed a hit
-        if (pointQuadtree && quadtreeHitConfirmed) break
+        // Quadtree visit was authoritative — skip redundant linear scan.
+        if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
         break
       case "line":

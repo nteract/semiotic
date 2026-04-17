@@ -114,4 +114,46 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     store.updateConfig({ categoryAccessor: "region" })
     expect(store.getOAccessor()).toBe(originalGetO)
   })
+
+  // ── Cache invalidation on config changes ───────────────────────────
+
+  it("color scheme changes produce different bar colors (cache invalidated)", () => {
+    const store = new OrdinalPipelineStore(makeConfig({
+      colorScheme: ["#aaaaaa", "#bbbbbb", "#cccccc"]
+    }))
+    store.ingest({
+      inserts: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
+      bounded: true
+    })
+    store.computeScene({ width: 400, height: 300 })
+    const before = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    store.updateConfig({ colorScheme: ["#111111", "#222222", "#333333"] })
+    store.computeScene({ width: 400, height: 300 })
+    const after = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    expect(before).toBeDefined()
+    expect(after).not.toBe(before)
+  })
+
+  it("themeCategorical changes invalidate the color cache", () => {
+    // `_colorSchemeMap` falls back to `themeCategorical` when `colorScheme`
+    // isn't an explicit array — a theme switch must update fill colors.
+    const store = new OrdinalPipelineStore(makeConfig({
+      themeCategorical: ["#aaaaaa", "#bbbbbb", "#cccccc"]
+    }))
+    store.ingest({
+      inserts: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
+      bounded: true
+    })
+    store.computeScene({ width: 400, height: 300 })
+    const before = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    store.updateConfig({ themeCategorical: ["#111111", "#222222", "#333333"] })
+    store.computeScene({ width: 400, height: 300 })
+    const after = (store.scene.find(n => n.type === "rect") as any)?.style?.fill
+
+    expect(before).toBeDefined()
+    expect(after).not.toBe(before)
+  })
 })
