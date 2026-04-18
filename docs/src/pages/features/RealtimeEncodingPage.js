@@ -347,6 +347,47 @@ export default function RealtimeEncodingPage() {
         language="jsx"
       />
 
+      <h3 id="tuning-for-streaming">Tuning for streaming cadence</h3>
+      <p>
+        Transitions run as keyframes: each data change starts a fresh
+        ease-out curve from the current rendered position to the new
+        target. That model has a sweet spot — <strong>set{" "}
+        <code>duration</code> close to your push interval</strong> so the
+        chart is nearly always in motion instead of snap-then-pause.
+      </p>
+      <ul>
+        <li>
+          <strong>Fast streams</strong> (pushes ≪ duration) — each new
+          push cancels the in-flight transition and restarts from the
+          current interpolated position. You still get smooth motion,
+          but older pushes never fully land. Consider a shorter{" "}
+          <code>duration</code> or batching pushes on the producer side.
+        </li>
+        <li>
+          <strong>Pulsed streams</strong> (pushes ~ duration, e.g. 800ms
+          pushes with 750ms transitions) — the best case. Bars
+          essentially never stop moving; the eye reads continuous
+          motion instead of discrete updates.
+        </li>
+        <li>
+          <strong>Slow or irregular streams</strong> (pushes ≫ duration)
+          — transitions finish long before the next push, leaving dead
+          air. A longer <code>duration</code> helps, but if cadence is
+          genuinely unpredictable, keyframe transitions will feel jerky
+          no matter how you tune them. For that shape of data, a
+          continuous-chase interpolation (lerp each frame toward the
+          latest target) would handle irregular arrivals more
+          gracefully — not currently built in.
+        </li>
+      </ul>
+      <p>
+        Aggregating HOCs (LikertChart, future density/bin charts) that
+        re-derive their full dataset from pushes participate in the same
+        transition system as long as they route through the frame's{" "}
+        <code>replace()</code> API — not <code>clear() + pushMany()</code>,
+        which wipes the position snapshot the transition needs.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Combining */}
       {/* ----------------------------------------------------------------- */}

@@ -1055,10 +1055,10 @@ type ChartName =
   | "BarChart" | "StackedBarChart" | "GroupedBarChart"
   | "PieChart" | "DonutChart" | "SwimlaneChart"
   | "Histogram" | "BoxPlot" | "ViolinPlot" | "SwarmPlot"
-  | "DotPlot" | "RidgelinePlot" | "FunnelChart" | "GaugeChart"
+  | "DotPlot" | "RidgelinePlot" | "LikertChart" | "FunnelChart" | "GaugeChart"
   | "ForceDirectedGraph" | "SankeyDiagram" | "ChordDiagram"
   | "TreeDiagram" | "Treemap" | "CirclePack"
-  | "ChoroplethMap" | "ProportionalSymbolMap"
+  | "ChoroplethMap" | "ProportionalSymbolMap" | "FlowMap"
 
 interface RenderChartOptions {
   /** Output format — currently only "svg" is synchronous */

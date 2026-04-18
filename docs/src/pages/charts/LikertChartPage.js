@@ -185,6 +185,7 @@ function StreamingLikertDemo({ width }) {
         showLegend
         legendPosition="bottom"
         tooltip
+        animate={{ duration: 750, intro: false }}
       />
     </div>
   )

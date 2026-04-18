@@ -884,13 +884,14 @@ export const LineChart = forwardRef(
     defaults: directLabelMarginDefaults,
   })
 
-  // Default tooltip showing all configured fields
+  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
+  // cascade from the HOC so the tooltip values read the same way as the axis.
   const groupField = lineBy || colorBy
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
 
   // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates

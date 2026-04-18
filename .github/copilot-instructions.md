@@ -189,6 +189,7 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 - **scalePadding**: Pixel inset on scale ranges. Pass via `frameProps={{ scalePadding: 12 }}`.
 - **categoryFormat/xFormat/yFormat**: Can return ReactNode (renders in `<foreignObject>`).
 - **Tick deduplication**: Adjacent identical labels auto-removed.
+- **Composing overlays**: XY/Ordinal charts paint `--semiotic-bg` across the full canvas by default, hiding anything beneath. When stacking charts (e.g. `position: absolute` overlay on top of a base), pass `frameProps={{ background: "transparent" }}` on the overlay to skip the fill. Network/Geo frames don't paint bg by default, so this only matters for XY/Ordinal.
 
 ## Performance
 

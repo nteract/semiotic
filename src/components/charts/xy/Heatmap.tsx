@@ -382,12 +382,13 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   // showValues is now handled natively by the canvas renderer and SSR SVG path.
   // No SVG summaryRenderMode overlay needed.
 
-  // Default tooltip showing x, y, and value
+  // Default tooltip showing x, y, and value. `xFormat`/`yFormat`/`valueFormat`
+  // cascade from the HOC so the tooltip reads the same way as the axis / cell labels.
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
-    { label: accessorName(valueAccessor), accessor: valueAccessor, role: "value" },
-  ]), [xAccessor, yAccessor, xLabel, yLabel, valueAccessor])
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
+    { label: accessorName(valueAccessor), accessor: valueAccessor, role: "value", format: valueFormat },
+  ]), [xAccessor, yAccessor, xLabel, yLabel, valueAccessor, xFormat, yFormat, valueFormat])
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({

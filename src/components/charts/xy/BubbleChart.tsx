@@ -457,13 +457,14 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     return margin
   }, [margin, streaming.streamingMarginAdjust])
 
-  // Default tooltip showing all configured fields
+  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
+  // cascade from the HOC so the tooltip values read the same way as the axis.
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     { label: accessorName(sizeBy), accessor: sizeBy, role: "size" },
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, sizeBy, colorBy])
+  ]), [xAccessor, yAccessor, xLabel, yLabel, sizeBy, colorBy, xFormat, yFormat])
 
   // Validate data (after all hooks)
   const error = validateArrayData({

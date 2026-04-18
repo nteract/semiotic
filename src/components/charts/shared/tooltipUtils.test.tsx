@@ -253,4 +253,97 @@ describe("buildOrdinalTooltip", () => {
     const { container } = render(<>{node}</>)
     expect(container.querySelector(".semiotic-tooltip")).not.toBeNull()
   })
+
+  // Regression: `valueFormat` set on the chart must reach the default
+  // tooltip — users report "axis shows $450k but tooltip shows 450000".
+  it("applies valueFormat to the value display", () => {
+    const fn = buildOrdinalTooltip({
+      categoryAccessor: "cat",
+      valueAccessor: "val",
+      valueFormat: (v: any) => `$${(v / 1000).toFixed(0)}k`,
+    })
+    const node = fn({ data: { cat: "Product A", val: 450000 } })
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("$450k")
+    expect(container.textContent).not.toContain("450000")
+  })
+
+  it("falls back to formatVal if valueFormat throws", () => {
+    const fn = buildOrdinalTooltip({
+      categoryAccessor: "cat",
+      valueAccessor: "val",
+      valueFormat: () => { throw new Error("boom") },
+    })
+    const node = fn({ data: { cat: "X", val: 42 } })
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("42")
+    // Category still renders — a misbehaving formatter doesn't break the tooltip.
+    expect(container.textContent).toContain("X")
+  })
+})
+
+// ── Format cascade (per-field formatter on buildDefaultTooltip) ──────────
+
+describe("buildDefaultTooltip format cascade", () => {
+  it("applies per-field format to body values (x/y roles)", () => {
+    const fn = buildDefaultTooltip([
+      {
+        label: "Month",
+        accessor: "month",
+        role: "x",
+        format: (v: any) => `M${v}`,
+      },
+      {
+        label: "Revenue",
+        accessor: "revenue",
+        role: "y",
+        format: (v: any) => `$${v.toLocaleString()}`,
+      },
+    ])
+    const node = fn({ data: { month: 3, revenue: 22000 } } as any)
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("M3")
+    expect(container.textContent).toContain("$22,000")
+  })
+
+  it("applies format to the title field", () => {
+    const fn = buildDefaultTooltip([
+      {
+        label: "Name",
+        accessor: "name",
+        role: "title",
+        format: (v: any) => String(v).toUpperCase(),
+      },
+    ])
+    const node = fn({ data: { name: "alice" } } as any)
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("ALICE")
+  })
+
+  it("falls back to formatVal if a field format throws", () => {
+    const fn = buildDefaultTooltip([
+      {
+        label: "Bad",
+        accessor: "v",
+        format: () => { throw new Error("nope") },
+      },
+    ])
+    const node = fn({ data: { v: 7 } } as any)
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("7")
+  })
+
+  it("accepts a formatter returning ReactNode (for parity with xFormat/yFormat)", () => {
+    const fn = buildDefaultTooltip([
+      {
+        label: "Val",
+        accessor: "v",
+        format: (v: any) => <strong data-testid="rn">{v}×</strong>,
+      },
+    ])
+    const node = fn({ data: { v: 5 } } as any)
+    const { container } = render(<>{node}</>)
+    expect(container.querySelector("[data-testid='rn']")).not.toBeNull()
+    expect(container.textContent).toContain("5×")
+  })
 })

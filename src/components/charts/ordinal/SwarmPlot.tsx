@@ -175,8 +175,9 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
       categoryAccessor,
       valueAccessor,
       groupAccessor: colorBy ? colorBy : undefined,
+      valueFormat,
     }),
-    [categoryAccessor, valueAccessor, colorBy]
+    [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
 
   const error = validateArrayData({

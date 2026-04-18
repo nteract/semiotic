@@ -189,15 +189,16 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     [mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
-  // Default tooltip
+  // Default tooltip — pass valueFormat so the tooltip matches the value axis.
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({
       categoryAccessor,
       valueAccessor,
       groupAccessor: colorBy && colorBy !== categoryAccessor ? colorBy : undefined,
-      groupLabel: typeof colorBy === "string" ? colorBy : "group"
+      groupLabel: typeof colorBy === "string" ? colorBy : "group",
+      valueFormat,
     }),
-    [categoryAccessor, valueAccessor, colorBy]
+    [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
 
   // Validate data (after all hooks)

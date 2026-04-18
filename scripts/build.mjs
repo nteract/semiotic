@@ -105,7 +105,13 @@ async function createBundle(options = {}) {
     // Mark world-atlas JSON subpath imports as external so they stay as
     // dynamic imports in the output bundle. The consumer's bundler (webpack,
     // vite, etc.) handles the JSON resolution at app build time.
-    external: (id) => id.startsWith("world-atlas/"),
+    //
+    // react-dom/server is a subpath of react-dom (which auto-external marks
+    // external at the package-root level only). Without this rule, rollup
+    // fails to resolve react-dom/server in the browser, tree-shakes the
+    // unused namespace binding, and leaves `(void 0)(...)` calls wherever
+    // `ReactDOMServer.renderToStaticMarkup` was invoked.
+    external: (id) => id.startsWith("world-atlas/") || id === "react-dom/server",
     onLog(level, log, handler) {
       if (log.message && typeof log.message === 'string') {
         const d3Patterns = ["d3-", "internmap", "delaunator"]

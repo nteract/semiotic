@@ -482,34 +482,46 @@ describe("StreamXYFrame", () => {
     // the full area and hides the base layer. `background="transparent"`
     // must short-circuit the fill so the composition works.
     describe("background paint (overlay composition)", () => {
+      // Capture fillStyle at each fillRect call + restore the original
+      // method so the replacement can't leak into another test if the
+      // mock's lifecycle ever changes.
+      function captureFillRectStyles(ctx: Record<string, any>) {
+        const styles: string[] = []
+        const orig = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          styles.push(String(ctx.fillStyle))
+          return orig?.apply(ctx, args)
+        })
+        return {
+          styles,
+          restore: () => { ctx.fillRect = orig },
+        }
+      }
       const getMockCtx = () =>
         (HTMLCanvasElement.prototype.getContext as any)() as Record<string, any>
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()
-        const fillRectStyles: string[] = []
-        const origFillRect = ctx.fillRect as (...args: any[]) => void
-        ctx.fillRect = vi.fn((...args: any[]) => {
-          fillRectStyles.push(String(ctx.fillStyle))
-          return origFillRect?.apply(ctx, args)
-        })
-        render(<StreamXYFrame chartType="scatter" background="red" />)
-        expect(fillRectStyles).toContain("red")
+        const cap = captureFillRectStyles(ctx)
+        try {
+          render(<StreamXYFrame chartType="scatter" background="red" />)
+          expect(cap.styles).toContain("red")
+        } finally {
+          cap.restore()
+        }
       })
 
       it("skips the background paint when background='transparent'", () => {
         const ctx = getMockCtx()
-        const fillRectStyles: string[] = []
-        const origFillRect = ctx.fillRect as (...args: any[]) => void
-        ctx.fillRect = vi.fn((...args: any[]) => {
-          fillRectStyles.push(String(ctx.fillStyle))
-          return origFillRect?.apply(ctx, args)
-        })
-        render(<StreamXYFrame chartType="scatter" background="transparent" />)
-        // No fillRect call should have been made with a background color
-        // (scatter charts don't emit fillRect for data marks, so any
-        // fillRect here would be the background paint we're opting out of).
-        expect(fillRectStyles).toHaveLength(0)
+        const cap = captureFillRectStyles(ctx)
+        try {
+          render(<StreamXYFrame chartType="scatter" background="transparent" />)
+          // Scatter charts don't emit fillRect for data marks, so any
+          // fillRect here would be the background paint we're opting out of.
+          expect(cap.styles).toHaveLength(0)
+        } finally {
+          cap.restore()
+        }
       })
     })
   })

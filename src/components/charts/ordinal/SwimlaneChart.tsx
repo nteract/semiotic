@@ -196,8 +196,9 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
       categoryAccessor: subcategoryAccessor,
       valueAccessor,
       groupAccessor: categoryAccessor,
+      valueFormat,
     }),
-    [subcategoryAccessor, categoryAccessor, valueAccessor]
+    [subcategoryAccessor, categoryAccessor, valueAccessor, valueFormat]
   )
 
   const validationError = validateArrayData({

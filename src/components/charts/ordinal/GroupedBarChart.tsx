@@ -155,8 +155,9 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
       categoryAccessor: groupBy,
       valueAccessor,
       groupAccessor: categoryAccessor,
+      valueFormat,
     }),
-    [groupBy, categoryAccessor, valueAccessor]
+    [groupBy, categoryAccessor, valueAccessor, valueFormat]
   )
 
   const validationError = validateArrayData({

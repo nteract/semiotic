@@ -389,6 +389,125 @@ describe("Geo SSR", () => {
     expect(typeof svg).toBe("string")
     expect(svg.length).toBeGreaterThan(0)
   })
+
+  // FlowMap-specific: the server config resolves `{flows, nodes}` → the
+  // `lines` shape StreamGeoFrame expects, with width proportional to
+  // `valueAccessor` and edge color driven by `edgeColorBy`/`colorBy`.
+  describe("FlowMap server config", () => {
+    const nodes = [
+      { id: "A", lon: -75, lat: 40, region: "east" },
+      { id: "B", lon: 0, lat: 50, region: "east" },
+      { id: "C", lon: 100, lat: 30, region: "west" },
+    ]
+    const flows = [
+      { source: "A", target: "B", value: 10, region: "east" },
+      { source: "A", target: "C", value: 40, region: "east" },
+      { source: "B", target: "C", value: 100, region: "west" },
+    ]
+
+    it("renders valid SVG with nodes + flows", () => {
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        valueAccessor: "value",
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg).toContain("path")
+    })
+
+    it("accepts flows via the primary `data` arg", () => {
+      const svg = renderChart("FlowMap", {
+        data: flows, nodes,
+        valueAccessor: "value",
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+    })
+
+    it("honors edgeColorBy + colorScheme for discrete edge coloring", () => {
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        valueAccessor: "value",
+        edgeColorBy: "region",
+        colorScheme: ["#ff0000", "#00ff00"],
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      // Both scheme colors should appear on edge strokes since the two
+      // regions each map to a different scheme index.
+      expect(svg.toLowerCase()).toContain("#ff0000")
+      expect(svg.toLowerCase()).toContain("#00ff00")
+    })
+
+    it("honors edgeWidthRange for edge stroke widths", () => {
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        valueAccessor: "value",
+        edgeWidthRange: [2, 20],
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      // The max-value flow (value=100) should render at the upper bound
+      // of edgeWidthRange; the min-value flow (value=10) at the lower.
+      // Stroke widths appear on path elements as `stroke-width="…"`.
+      expect(svg).toMatch(/stroke-width="(?:20|1[89]\.\d+)/)
+      expect(svg).toMatch(/stroke-width="2(?:[^0-9]|$)/)
+    })
+
+    it("function accessors for x/y do not leak into computed property keys", () => {
+      // Regression: a prior version used `{ [xAccessor]: … }` which
+      // turned a function accessor into a stringified-function key and
+      // silently broke line coordinate resolution.
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        xAccessor: (d: any) => d.lon,
+        yAccessor: (d: any) => d.lat,
+        valueAccessor: "value",
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg).not.toContain("d.lon")
+      expect(svg).not.toContain("function")
+    })
+
+    it("function edgeColorBy returning literal CSS colors passes through (not scaled)", () => {
+      // Mirrors the client FlowMap: getColor() detects CSS-color returns
+      // and passes them through instead of mapping the literal string as
+      // a category-domain entry (which would replace it with some other
+      // palette color entirely).
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        valueAccessor: "value",
+        edgeColorBy: (d: any) => d.value > 20 ? "#ff00aa" : "#00aacc",
+        // colorScheme left unset — even with a default scheme, a function
+        // returning CSS colors must bypass the scale.
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg.toLowerCase()).toContain("#ff00aa")
+      expect(svg.toLowerCase()).toContain("#00aacc")
+    })
+
+    it("non-finite flow values don't produce NaN stroke-widths", () => {
+      // Regression: with a mix of numeric + non-numeric values and a
+      // valid valueRange, the non-numeric flows' strokeWidth would
+      // otherwise compute to NaN and land in the SVG as `stroke-width="NaN"`.
+      const mixedFlows = [
+        { source: "A", target: "B", value: 10 },
+        { source: "A", target: "C", value: 50 },
+        { source: "B", target: "C", value: "not-a-number" }, // non-finite
+        { source: "A", target: "B", value: null },           // null → NaN via Number()
+      ]
+      const svg = renderChart("FlowMap", {
+        flows: mixedFlows, nodes,
+        valueAccessor: "value",
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg).not.toContain("NaN")
+      expect(svg).not.toContain("stroke-width=\"NaN\"")
+    })
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════

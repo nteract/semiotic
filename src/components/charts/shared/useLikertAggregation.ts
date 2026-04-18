@@ -249,10 +249,11 @@ export function useLikertAggregation({
       agg = toDivergingValues(agg, levels)
       agg = orderForDiverging(agg, levels)
     }
-    frameRef.current?.clear()
-    if (agg.length > 0) {
-      frameRef.current?.pushMany(agg)
-    }
+    // `replace()` routes through bounded ingest, which preserves the
+    // store's prevPositionMap so the transition system can animate
+    // from the old percentages to the new ones. `clear() + pushMany()`
+    // would wipe prevPositionMap and skip the animation entirely.
+    frameRef.current?.replace(agg)
   }, [levels, getCat, getScore, getLevel, getCount, isDiverging, frameRef])
 
   return { processedData, reAggregate, accumulatorRef }

@@ -359,11 +359,11 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
 
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
     ...(titleField ? [{ label: titleField, accessor: titleField, role: "title" as const }] : []),
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
     ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
-  ]), [titleField, xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy])
+  ]), [titleField, xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({

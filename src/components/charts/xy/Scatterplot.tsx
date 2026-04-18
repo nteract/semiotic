@@ -243,13 +243,14 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     [basePointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
-  // Default tooltip showing all configured fields
+  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
+  // cascade from the HOC so the tooltip values read the same way as the axis.
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
     ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy])
+  ]), [xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
 
   // Validate data (after all hooks)
   const error = validateArrayData({
