@@ -1058,7 +1058,7 @@ type ChartName =
   | "DotPlot" | "RidgelinePlot" | "FunnelChart" | "GaugeChart"
   | "ForceDirectedGraph" | "SankeyDiagram" | "ChordDiagram"
   | "TreeDiagram" | "Treemap" | "CirclePack"
-  | "ChoroplethMap" | "ProportionalSymbolMap"
+  | "ChoroplethMap" | "ProportionalSymbolMap" | "FlowMap"
 
 interface RenderChartOptions {
   /** Output format — currently only "svg" is synchronous */

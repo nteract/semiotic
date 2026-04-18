@@ -538,6 +538,79 @@ const proportionalSymbolMap: ChartConfig = {
   }),
 }
 
+/**
+ * FlowMap expands `flows` (edges with source/target ids) + `nodes` (points
+ * with coordinates) into the `lines` shape StreamGeoFrame expects, where
+ * each line carries a `coordinates` array of two {x,y} endpoints.
+ */
+const flowMap: ChartConfig = {
+  frameType: "geo",
+  buildProps: (_data, _colorBy, colorScheme, common, rest) => {
+    const xAccessor = rest.xAccessor || "lon"
+    const yAccessor = rest.yAccessor || "lat"
+    const nodeIdAccessor = rest.nodeIdAccessor || "id"
+    const valueAccessor = rest.valueAccessor || "value"
+    const flows: Array<Record<string, any>> = rest.flows || []
+    const nodes: Array<Record<string, any>> = rest.nodes || []
+
+    const nodeLookup = new Map<string, Record<string, any>>()
+    for (const node of nodes) nodeLookup.set(String(node[nodeIdAccessor]), node)
+
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
+
+    const lines = flows
+      .map(flow => {
+        if (!flow || flow.source == null || flow.target == null) return null
+        const src = nodeLookup.get(String(flow.source))
+        const tgt = nodeLookup.get(String(flow.target))
+        if (!src || !tgt) return null
+        return {
+          ...flow,
+          coordinates: [
+            { [xAccessor]: xAcc(src), [yAccessor]: yAcc(src) },
+            { [xAccessor]: xAcc(tgt), [yAccessor]: yAcc(tgt) },
+          ],
+        }
+      })
+      .filter(Boolean) as Record<string, any>[]
+
+    return {
+      lines,
+      points: nodes,
+      xAccessor,
+      yAccessor,
+      lineDataAccessor: "coordinates",
+      lineType: rest.lineType || "geo",
+      flowStyle: rest.flowStyle || "basic",
+      areas: rest.areas,
+      areaStyle: rest.areaStyle,
+      projection: rest.projection || "equalEarth",
+      graticule: rest.graticule,
+      fitPadding: rest.fitPadding,
+      colorScheme,
+      // Flow-edge styling: width proportional to value, default stroke
+      lineStyle: (d: any) => {
+        const v = d?.[valueAccessor] ?? 0
+        const vals = lines.map(l => Number(l[valueAccessor] ?? 0)).filter(isFinite)
+        const max = vals.length ? Math.max(...vals) : 1
+        const min = vals.length ? Math.min(...vals) : 0
+        const range = max > min ? (v - min) / (max - min) : 0
+        const width = 1 + range * 7 // [1, 8]
+        return {
+          stroke: rest.edgeColor || "#333",
+          strokeWidth: width,
+          strokeLinecap: "round",
+          opacity: rest.edgeOpacity ?? 0.6,
+          fillOpacity: 0,
+        }
+      },
+      pointStyle: () => ({ fill: "#333", r: 4, fillOpacity: 0.8 }),
+      ...common,
+    }
+  },
+}
+
 // ── Registry ───────────────────────────────────────────────────────────
 
 export const CHART_CONFIGS: Record<string, ChartConfig> = {
@@ -585,4 +658,5 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   CirclePack: circlePack,
   ChoroplethMap: choroplethMap,
   ProportionalSymbolMap: proportionalSymbolMap,
+  FlowMap: flowMap,
 }
