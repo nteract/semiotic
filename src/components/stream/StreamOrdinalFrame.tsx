@@ -44,7 +44,6 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
-import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
@@ -52,9 +51,7 @@ import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
+import { useFrame } from "./useFrame"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
@@ -63,7 +60,6 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -306,21 +302,31 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       summary
     } = props
 
-    // ── Reduced motion ────────────────────────────────────────────────────
-    const reducedMotion = useReducedMotion()
-    const reducedMotionRef = useRef(reducedMotion)
-    reducedMotionRef.current = reducedMotion
-
-    // ── Layout ───────────────────────────────────────────────────────────
-
-    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
-    const margin = useMemo(() => ({ ...DEFAULT_MARGIN, ...userMargin }), [userMargin])
-    const adjustedWidth = size[0] - margin.left - margin.right
-    const adjustedHeight = size[1] - margin.top - margin.bottom
-
-    const resolvedForeground = typeof foregroundGraphics === "function"
-      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : foregroundGraphics
+    // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+    const frame = useFrame({
+      sizeProp,
+      responsiveWidth,
+      responsiveHeight,
+      userMargin,
+      marginDefault: DEFAULT_MARGIN,
+      foregroundGraphics,
+      animate,
+      transitionProp,
+    })
+    const {
+      reducedMotion,
+      reducedMotionRef,
+      responsiveRef,
+      size,
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      resolvedForeground,
+      currentTheme,
+      transition,
+      introEnabled,
+      tableId,
+    } = frame
 
     // Resolve new-style names with legacy fallback
     const oLabel = categoryLabel ?? oLabelLegacy
@@ -332,8 +338,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const dirtyRef = useRef(true)
-    // Theme change tracking (effect added after scheduleRender is defined)
-    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    // Theme change tracking comes from useFrame above; effect is added
+    // below once scheduleRender is defined.
     const rafRef = useRef<number>(0)
     const hoverRef = useRef<HoverData | null>(null)
     const renderFnRef = useRef<() => void>(() => {})
@@ -353,8 +359,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const isStreaming = runtimeMode === "streaming"
 
-    // Resolve animate prop → transition config + intro flag
-    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+    // animate → transition + introEnabled comes from useFrame above.
 
     const pipelineConfig = useMemo((): OrdinalPipelineConfig => ({
       chartType,
@@ -985,7 +990,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId()}`
+    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
 
     return (
       <div

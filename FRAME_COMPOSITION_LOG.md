@@ -165,7 +165,7 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **Click-testing recommended**: none for the scaffold itself. Migrations of each frame are where click-testing applies; see entries 2–5.
 - **Complexity**: hook is 175 LoC (heavy on doc comments); test file is 200 LoC. No frame migration yet.
 - **Status**: extracted, 0/4 frames migrated.
-- **Commit**: pending
+- **Commit**: b37784db
 
 ---
 

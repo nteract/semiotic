@@ -39,7 +39,6 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
-import type { MarginType } from "../types/generalTypes"
 
 // ── Margin handling ─────────────────────────────────────────────────────────
 
@@ -88,8 +87,9 @@ export interface UseFrameInput {
   responsiveWidth: boolean | undefined
   /** Frame's `responsiveHeight` prop. */
   responsiveHeight: boolean | undefined
-  /** Frame's user-supplied margin (may be partial). */
-  userMargin: MarginType | undefined
+  /** Frame's user-supplied margin (always partial — each side optional).
+   *  Matches the `margin?:` prop type on every Stream Frame. */
+  userMargin: Partial<FrameMargin> | undefined
   /** Frame's family-default margin. Shallow-merged with `userMargin`. */
   marginDefault: FrameMargin
   /** Frame's `foregroundGraphics` prop. */
