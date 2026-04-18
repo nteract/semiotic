@@ -208,7 +208,7 @@
   ],
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",
-    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@parcel/transformer-inline-string": "^2.16.4",
     "@playwright/test": "^1.59.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
