@@ -471,10 +471,19 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [scheduleRender])
 
-    // Atomic data replacement. Routes through `setBoundedData` (same path as
-    // the `data` prop), which emits `bounded: true` changesets — those don't
+    // Data replacement. Routes through `setBoundedData` (same path as the
+    // `data` prop), which emits `bounded: true` changesets — those don't
     // wipe the store's `prevPositionMap`, so the transition system can
     // snapshot pre-replacement positions and animate to the new ones.
+    //
+    // Parameter type mirrors `pushPoint`/`pushManyPoints` above: the frame
+    // itself isn't generic (it's typed with the non-generic
+    // `StreamOrdinalFrameHandle`, whose default `T` is `Record<string, any>`),
+    // so all internal callbacks use that concrete shape. The generic `T` on
+    // `StreamOrdinalFrameHandle<T>` still flows to consumers — TS method-
+    // bivariance lets this wider internal callback sit inside a ref typed
+    // with a narrower `T`, so `useRef<StreamOrdinalFrameHandle<MyDatum>>`
+    // sees `replace(data: MyDatum[])` at the call site.
     const replaceData = useCallback((newData: Record<string, any>[]) => {
       adapterRef.current?.clearLastData()
       adapterRef.current?.setBoundedData(newData)

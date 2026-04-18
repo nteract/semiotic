@@ -441,11 +441,18 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 export interface StreamOrdinalFrameHandle<T = Record<string, any>> {
   push(datum: T): void
   pushMany(data: T[]): void
-  /** Atomically replace all data. Unlike `clear() + pushMany()`, `replace()`
-   *  preserves the previous scene's position snapshot so data-change
-   *  transitions fire. Use when you need to swap in a full new dataset
-   *  (e.g. re-aggregated values from streaming input) and want the
-   *  bars/points/etc. to animate between the old and new positions. */
+  /** Replace all data. Unlike `clear() + pushMany()`, `replace()` preserves
+   *  the previous scene's position snapshot so data-change transitions fire.
+   *  Use when you need to swap in a full new dataset (e.g. re-aggregated
+   *  values from streaming input) and want the bars/points/etc. to animate
+   *  between the old and new positions.
+   *
+   *  Note: for datasets within the DataSourceAdapter chunk threshold (the
+   *  common case for aggregator HOCs like LikertChart) the replacement
+   *  lands in a single changeset. Larger datasets fall through to the
+   *  progressive-chunked path used by the `data` prop — the first chunk
+   *  resets + seeds the buffer, subsequent chunks append on successive
+   *  animation frames, so replacement is not instantaneous for large N. */
   replace(data: T[]): void
   /** Remove data items by ID. Requires dataIdAccessor. */
   remove(id: string | string[]): T[]

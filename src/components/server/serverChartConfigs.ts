@@ -8,6 +8,8 @@
  * each chart type independently readable and testable.
  */
 
+import { createColorScale } from "../charts/shared/colorUtils"
+
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
 interface ChartConfig {
@@ -574,21 +576,56 @@ const flowMap: ChartConfig = {
     const nodeLookup = new Map<string, Record<string, any>>()
     for (const node of projectedNodes) nodeLookup.set(String(node[nodeIdAccessor]), node)
 
+    // Edge-color resolution — mirror the FlowMap HOC API. `edgeColorBy`
+    // (domain-specific) wins over top-level `colorBy`; either can be a
+    // string field or an accessor function. Delegates to the shared
+    // `createColorScale` so named schemes ("category10", "blues", …),
+    // scheme arrays, and the default-palette fallback all behave
+    // identically to the client-side FlowMap. Fallback color matches
+    // the HOC's `DEFAULT_COLOR`; kept inline to avoid pulling hook
+    // internals into the server config module.
+    const FLOW_DEFAULT_COLOR = "#007bff"
+    const edgeColorByIn = rest.edgeColorBy ?? colorBy
+    const isFnEdgeColor = typeof edgeColorByIn === "function"
+    // For function accessors, synthesize a stable string field on each
+    // line so `createColorScale` (which requires a string field name)
+    // can scan the data. The field name is unique enough to not collide
+    // with user data.
+    const EDGE_COLOR_FIELD = "__flowMapEdgeColor"
+    const colorByField: string | null = edgeColorByIn
+      ? (isFnEdgeColor ? EDGE_COLOR_FIELD : String(edgeColorByIn))
+      : null
+
     const lines = flows
       .map(flow => {
         if (!flow || flow.source == null || flow.target == null) return null
         const src = nodeLookup.get(String(flow.source))
         const tgt = nodeLookup.get(String(flow.target))
         if (!src || !tgt) return null
-        return {
+        const line: Record<string, any> = {
           ...flow,
           coordinates: [
             { x: src.x, y: src.y },
             { x: tgt.x, y: tgt.y },
           ],
         }
+        if (isFnEdgeColor) {
+          line[EDGE_COLOR_FIELD] = (edgeColorByIn as (d: any) => string)(flow)
+        }
+        return line
       })
       .filter(Boolean) as Record<string, any>[]
+
+    // Build the color scale once using the shared utility, then close
+    // over it in `lineStyle`. Falls back to FLOW_DEFAULT_COLOR when no
+    // edgeColorBy was provided.
+    const colorScale = colorByField
+      ? createColorScale(lines, colorByField, colorScheme || "category10")
+      : null
+    const resolveEdgeColor = (d: any): string => {
+      if (!colorScale || !colorByField) return FLOW_DEFAULT_COLOR
+      return colorScale(String(d?.[colorByField] ?? ""))
+    }
 
     // Precompute min/max value range once per build. Recomputing inside
     // `lineStyle` would be O(n) per line → O(n²) total for rendering.
@@ -601,37 +638,6 @@ const flowMap: ChartConfig = {
       if (v > maxValue) maxValue = v
     }
     const valueRange = maxValue > minValue ? maxValue - minValue : 0
-
-    // Edge-color resolution — mirror the FlowMap HOC API: `edgeColorBy`
-    // (domain-specific) wins over top-level `colorBy`; both accept a
-    // string field name or an accessor function. Values are mapped to
-    // `colorScheme` entries via insertion-order indexing (a simplified
-    // analogue of the HOC's ordinal scale — sufficient for server SVG
-    // output where we don't need the full d3 scale machinery).
-    const edgeColorByIn = rest.edgeColorBy ?? colorBy
-    const edgeColorAcc = edgeColorByIn
-      ? (typeof edgeColorByIn === "function"
-          ? edgeColorByIn
-          : (d: any) => d?.[edgeColorByIn])
-      : null
-    const schemeArray = Array.isArray(colorScheme)
-      ? colorScheme
-      : typeof colorScheme === "string"
-        ? null // named schemes (e.g. "category10") resolved downstream; fall back to default
-        : null
-    // Fallback matches the FlowMap HOC's DEFAULT_COLOR constant. Kept
-    // inline to avoid pulling in runtime-only hook utilities from the
-    // server build graph.
-    const FLOW_DEFAULT_COLOR = "#007bff"
-    const edgeColorCache = new Map<string, string>()
-    const resolveEdgeColor = (d: any): string => {
-      if (!edgeColorAcc || !schemeArray || schemeArray.length === 0) return FLOW_DEFAULT_COLOR
-      const key = String(edgeColorAcc(d) ?? "")
-      if (edgeColorCache.has(key)) return edgeColorCache.get(key)!
-      const color = schemeArray[edgeColorCache.size % schemeArray.length]
-      edgeColorCache.set(key, color)
-      return color
-    }
 
     // Width scale — map value → edgeWidthRange linearly. Mirrors the HOC.
     const [widthMin, widthMax] = rest.edgeWidthRange ?? [1, 8]
