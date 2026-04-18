@@ -47,10 +47,10 @@ Honest snapshot from `npm outdated`. We are meaningfully behind on several deps;
 |---|---|---|
 | `hono` 4.12.8 → 4.12.14 + `@hono/node-server` < 1.19.13 → 1.19.14 | security fix, six advisories | shipped in 3.4.0 |
 | `prettier` 3.8.1 → 3.8.3 | patch / dev-only | shipped in 3.4.0 |
-| `@axe-core/playwright` 4.11.1 → 4.11.2 | patch / test-only | post-3.4.0 |
-| `@vitest/coverage-v8` + `@vitest/ui` + `vitest` 4.1.0 → 4.1.4 | patch / test-only | post-3.4.0 |
-| `@playwright/test` + `playwright-chromium` 1.58.2 → 1.59.1 | minor / test-only — required regenerating 9 darwin baselines (chromium font-rendering shifts in label-heavy charts: ordinal bars, network treemap, network circle pack). No real regressions. | post-3.4.0 |
-| `typedoc` 0.28.17 → 0.28.19 | patch / docs-only | post-3.4.0 |
+| `@axe-core/playwright` `^4.11.1` → `^4.11.2` | patch / test-only | post-3.4.0 |
+| `vitest` + `@vitest/coverage-v8` + `@vitest/ui` `^4.0.18` → `^4.1.4` | minor-range bump (npm-installed went 4.1.0 → 4.1.4 inside the old `^4.0.18` range; this lifts the range floor to lock the patch) | post-3.4.0 |
+| `@playwright/test` + `playwright-chromium` `^1.17.1` → `^1.59.1` | hand-pinned; range was last set in 3.0 era. Required regenerating 9 darwin baselines (chromium font-rendering shifts in label-heavy charts: ordinal bars, network treemap, network circle pack). No real regressions. | post-3.4.0 |
+| `typedoc` `^0.28.17` → `^0.28.19` | patch / docs-only | post-3.4.0 |
 
 ### Tier 2 — single-PR follow-ups (3.4.x)
 
@@ -58,7 +58,7 @@ Honest snapshot from `npm outdated`. We are meaningfully behind on several deps;
 |---|---|---|---|
 | ~~`@modelcontextprotocol/sdk` 1.27.1 → 1.29.0~~ | ~~bundles into shipped MCP server. Smoke test: stdio JSON-RPC `initialize` + `tools/list` round-trip. All 6 tools enumerate correctly under 1.29; tool shape gained additive `execution.taskSupport` field (non-breaking).~~ | DONE post-3.4.0 |
 | ~~`esbuild` 0.27.4 → 0.28.0~~ | ~~pre-1.0; verified by `npm run dist`, `dist:prod`, `build:mcp`, full vitest suite.~~ | DONE post-3.4.0 |
-| `@types/node` 20.19.x → latest 22.x | Volta pins `22.22.1` and CI runs `22.x` (the previous "Node 20 LTS" note in this row was wrong — the runtime moved to 22 a while back; the policy note hadn't caught up). Bump to latest `22.x` patch (currently 22.19.17) to match. **Don't** bump to 25.x — Node 25 isn't an LTS and the runtime is on 22; the dependabot 25.x PR should be closed. (`.node-version` separately needs to move from `18` → `22.22.1` — addressed alongside the @types/node bump in the parallel `deps-types-node-patch` PR.) | bump to 22.x |
+| ~~`@types/node` 20.19.x → 22.19.17~~ | ~~Volta pins `22.22.1` and CI runs `22.x` (the previous "Node 20 LTS" note was wrong). Bumped to latest `22.x` patch to match the actual runtime. **Don't** bump to 25.x — Node 25 isn't an LTS and the runtime is on 22; the dependabot 25.x PR should be closed.~~ Also fixed `.node-version` `18` → `22.22.1` to align with Volta. | DONE post-3.4.0 |
 
 ### Tier 3 — major-version migrations, each gets its own PR
 
