@@ -52,7 +52,10 @@ node -e "
 echo "==> Verifying CHANGELOG.md has an entry for $VERSION"
 # Catches the "shipped without a changelog" mistake — npm page would otherwise
 # show no notes for the new version and users have no way to see what changed.
-if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
+# Use -F (fixed string) so dots in VERSION aren't treated as regex "any char".
+# Otherwise "3.4.0" would match "3X4X0" and the gate could be bypassed by a
+# malformed heading.
+if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
   # Capture before the error call so `set -e` doesn't abort if grep finds
   # nothing (e.g. an empty or malformed CHANGELOG): a non-zero inside a
   # command substitution would short-circuit the whole line.
