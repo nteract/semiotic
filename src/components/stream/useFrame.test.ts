@@ -7,7 +7,7 @@
  */
 import * as React from "react"
 import { renderHook } from "@testing-library/react"
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useFrame } from "./useFrame"
 import type { UseFrameInput } from "./useFrame"
 import { ThemeProvider, DARK_THEME, LIGHT_THEME } from "../store/ThemeStore"
@@ -197,5 +197,108 @@ describe("useFrame — table id", () => {
     const { result: r1 } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     const { result: r2 } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     expect(r1.current.tableId).not.toBe(r2.current.tableId)
+  })
+})
+
+describe("useFrame — scheduleRender (rAF coalescing)", () => {
+  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
+  let nextRafId = 1
+  let cancelledIds: number[] = []
+  const originalRAF = global.requestAnimationFrame
+  const originalCAF = global.cancelAnimationFrame
+
+  beforeEach(() => {
+    rafCallbacks = []
+    nextRafId = 1
+    cancelledIds = []
+    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      const id = nextRafId++
+      rafCallbacks.push({ id, cb })
+      return id
+    }) as any
+    global.cancelAnimationFrame = ((id: number) => {
+      cancelledIds.push(id)
+      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
+    }) as any
+  })
+
+  afterEach(() => {
+    global.requestAnimationFrame = originalRAF
+    global.cancelAnimationFrame = originalCAF
+  })
+
+  function flushRafs() {
+    const pending = rafCallbacks.slice()
+    rafCallbacks = []
+    for (const { cb } of pending) cb(performance.now())
+  }
+
+  it("returns a stable scheduleRender callback", () => {
+    const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const fn1 = result.current.scheduleRender
+    rerender()
+    expect(result.current.scheduleRender).toBe(fn1)
+  })
+
+  it("queues exactly one rAF for a single scheduleRender call", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.scheduleRender()
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("coalesces multiple scheduleRender calls before the rAF fires", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.scheduleRender()
+    result.current.scheduleRender()
+    result.current.scheduleRender()
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("invokes the latest renderFnRef.current when the rAF fires", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let calls = 0
+    result.current.renderFnRef.current = () => {
+      calls++
+      // Frame's render closure resets rafRef so the next scheduleRender works.
+      result.current.rafRef.current = 0
+    }
+    result.current.scheduleRender()
+    flushRafs()
+    expect(calls).toBe(1)
+  })
+
+  it("after the rAF fires + frame resets rafRef, scheduleRender can queue again", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.renderFnRef.current = () => {
+      result.current.rafRef.current = 0
+    }
+    result.current.scheduleRender()
+    flushRafs()
+    result.current.scheduleRender()
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("cancels the pending rAF on unmount", () => {
+    const { result, unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.scheduleRender()
+    expect(rafCallbacks).toHaveLength(1)
+    const queuedId = rafCallbacks[0].id
+    unmount()
+    expect(cancelledIds).toContain(queuedId)
+  })
+
+  it("unmount with no pending rAF is a no-op (no cancel call)", () => {
+    const { unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    unmount()
+    expect(cancelledIds).toHaveLength(0)
+  })
+
+  it("renderFnRef and rafRef identities are stable across renders", () => {
+    const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const renderFn = result.current.renderFnRef
+    const rafRef = result.current.rafRef
+    rerender()
+    expect(result.current.renderFnRef).toBe(renderFn)
+    expect(result.current.rafRef).toBe(rafRef)
   })
 })

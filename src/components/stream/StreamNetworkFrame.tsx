@@ -417,12 +417,16 @@ const StreamNetworkFrame = forwardRef<
   // ── Refs ─────────────────────────────────────────────────────────────
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const rafRef = useRef(0)
+  // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
+  // useFrame (above). Network's previous local scheduleRender had an
+  // isContinuous branch, but the inner `if (!rafRef.current)` guard made
+  // that branch's effect identical to the simple "bail if pending" — so
+  // the shared hook semantics preserve Network's behavior exactly.
+  const { rafRef, renderFnRef, scheduleRender } = frame
   const lastFrameTimeRef = useRef(0)
   const dirtyRef = useRef(true)
   // Theme change tracking comes from useFrame above; effect is added
   // below once scheduleRender is defined.
-  const renderFnRef = useRef<() => void>(() => {})
 
   // ── Store ────────────────────────────────────────────────────────────
 
@@ -520,17 +524,14 @@ const StreamNetworkFrame = forwardRef<
     [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
   )
 
-  // ── Stable scheduleRender ────────────────────────────────────────────
-
+  // scheduleRender comes from useFrame above (the previous Network-local
+  // implementation took an isContinuous flag, but it was effectively
+  // dead — see the comment by the rAF refs above).
+  // isContinuous is still used elsewhere in this file for the render
+  // loop's "should I keep ticking" decision; declared here so the
+  // existing references continue to resolve.
   const isContinuous =
     (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
-
-  const scheduleRender = useCallback(() => {
-    if (rafRef.current && !isContinuous) return
-    if (!rafRef.current) {
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }
-  }, [isContinuous])
 
   // Update config when props change
   useEffect(() => {
@@ -1187,7 +1188,7 @@ const StreamNetworkFrame = forwardRef<
   useEffect(() => {
     scheduleRender()
     return () => {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+      // rafRef cancel-on-unmount is handled by useFrame.
       // Drop any queued pointermove so flushPendingMove can't fire on unmount.
       pendingMoveCoordsRef.current = null
       if (moveRafRef.current !== 0) {

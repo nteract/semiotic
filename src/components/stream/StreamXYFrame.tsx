@@ -458,7 +458,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
-    const rafRef = useRef(0)
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
+    // useFrame (above). Pulled here once for the rest of the frame body.
+    const { rafRef, renderFnRef, scheduleRender } = frame
     const dirtyRef = useRef(false)
 
     // Theme change tracking comes from useFrame above; effect is added
@@ -482,8 +484,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const [marginalYValues, setMarginalYValues] = useState<number[]>([])
 
 
-    // Render function ref (always-fresh closure)
-    const renderFnRef = useRef<() => void>(() => {})
+    // renderFnRef comes from useFrame (above).
 
     // ── Pipeline ─────────────────────────────────────────────────────────
 
@@ -571,12 +572,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       storeRef.current = new PipelineStore(pipelineConfig)
     }
 
-    // ── Stable scheduleRender ────────────────────────────────────────────
-
-    const scheduleRender = useCallback(() => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }, [])
+    // scheduleRender comes from useFrame above.
 
     // Update config when it changes — also schedule re-render since style
     // callbacks (pointStyle, areaStyle, etc.) may have changed.
@@ -1112,7 +1108,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // rafRef cancel-on-unmount is handled by useFrame.
         // Drop any queued pointermove so flushPendingMove can't fire on unmount.
         pendingMoveCoordsRef.current = null
         if (moveRafRef.current !== 0) {

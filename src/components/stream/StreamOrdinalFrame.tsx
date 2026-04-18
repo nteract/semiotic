@@ -340,9 +340,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const dirtyRef = useRef(true)
     // Theme change tracking comes from useFrame above; effect is added
     // below once scheduleRender is defined.
-    const rafRef = useRef<number>(0)
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount also from
+    // useFrame (above).
+    const { rafRef, renderFnRef, scheduleRender } = frame
     const hoverRef = useRef<HoverData | null>(null)
-    const renderFnRef = useRef<() => void>(() => {})
 
     // ── State ────────────────────────────────────────────────────────────
 
@@ -425,12 +426,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       storeRef.current = new OrdinalPipelineStore(pipelineConfig)
     }
 
-    // ── Stable scheduleRender ────────────────────────────────────────────
-
-    const scheduleRender = useCallback(() => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }, [])
+    // scheduleRender comes from useFrame above.
 
     // Update config when it changes
     useEffect(() => {
@@ -844,7 +840,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // rafRef cancel-on-unmount is handled by useFrame.
         // Drop any queued pointermove so flushPendingMove can't fire on unmount.
         pendingMoveCoordsRef.current = null
         if (moveRafRef.current !== 0) {

@@ -283,12 +283,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     if (tileURL && !tileCacheRef.current) {
       tileCacheRef.current = new TileCache(tileCacheSize || 256)
     }
-    const rafRef = useRef(0)
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
+    // useFrame (above).
+    const { rafRef, renderFnRef, scheduleRender } = frame
     const dirtyRef = useRef(true)
     // Theme change tracking comes from useFrame above; effect is added
     // below once scheduleRender is defined.
     const prevAnnotationsRef = useRef(annotations)
-    const renderFnRef = useRef<() => void>(() => {})
 
     // Zoom state
     const zoomBehaviorRef = useRef<ZoomBehavior<Element, unknown> | null>(null)
@@ -318,12 +319,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // Staleness
     const [isStale, setIsStale] = useState(false)
 
-    // ── Schedule render ───────────────────────────────────────────────
-
-    const scheduleRender = useCallback(() => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }, [])
+    // scheduleRender comes from useFrame above.
 
     // ── Theme change → repaint canvas, clear CSS var cache ────────
     useEffect(() => {
@@ -857,7 +853,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
+        // rafRef cancel-on-unmount is handled by useFrame.
         tileCacheRef.current?.clear()
         // Drop any queued pointermove so flushPendingMove can't fire on unmount.
         pendingMoveCoordsRef.current = null

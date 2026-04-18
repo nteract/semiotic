@@ -165,7 +165,7 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **Click-testing recommended**: none for the scaffold itself. Migrations of each frame are where click-testing applies; see entries 2–5.
 - **Complexity**: hook is 175 LoC (heavy on doc comments); test file is 200 LoC. No frame migration yet.
 - **Status**: extracted, 4/4 frames migrated.
-- **Commit**: b37784db (scaffold), ac1a283d (Ordinal), pending (XY/Network/Geo bundle).
+- **Commit**: b37784db (scaffold), ac1a283d (Ordinal), 73e78764 (XY/Network/Geo bundle).
 - **Per-frame notes**:
   - **Ordinal**: clean migration. `dirtyRef = useRef(true)` left untouched per investigation note #3.
   - **XY**: had a complication — XY post-mutates `margin` for marginalGraphics expansion (auto-expands any side with a configured marginal to ≥60px). The hook returns a memoized margin object; mutating it would corrupt the next render's "same" reference. Fix: XY destructures `frame.margin` as the starting point, and when marginalGraphics needs expansion, copies it into a frame-local `margin` and re-resolves `resolvedForeground`/`Background` against the expanded margin. Behavior preserved: function-form graphics callbacks still see the post-expanded margin, same as before.
@@ -178,6 +178,21 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
   4. Reduced motion: toggle OS pref, reload — `animate` should be ignored.
   5. Marginal graphics (XY-specific): scatter with `marginalGraphics={{ top: ..., right: ... }}` — margins should auto-expand to ≥60px on configured sides.
   6. Accessible data table: any chart with `accessibleTable` (default true) — tab should focus the SkipToTableLink and reach the table.
+
+### 2. `scheduleRender` + rAF cancel-on-unmount (Tier B)
+
+- **Category**: lifecycle + event-handling — render scheduling and cleanup.
+- **Pulled from**: ~5 lines in each of XY (575–580), Ordinal (429–434), Network (527–537), Geo (322–327) for `scheduleRender`. Plus 1 line per frame in the unmount effect for the rAF cancel (XY 1111, Ordinal 843, Network 1191, Geo 856).
+- **What it does**: coalesces render requests into one rAF-per-frame; cancels any pending rAF on unmount so a render closure can't fire after the component is gone.
+- **Why share**: identical pattern across 3 frames; Network's variant accepted an `isContinuous` flag whose effect was provably equivalent to the simple version (the inner `if (!rafRef.current)` guard makes the outer `&& !isContinuous` dead code). Documented in the migration commit so the equivalence is on record.
+- **What changed in behavior**: nothing. The hook's scheduleRender uses the simple semantics that all four frames had effectively. The unmount cancel happens in the hook's own useEffect cleanup; the frames' previous unmount-effect cancellations are removed (would have been redundant but harmless).
+- **Risk if wrong**: medium. Render coalescing failures show up as either (a) doubled paints (if the bail check breaks), or (b) silent hangs if scheduleRender stops scheduling. Cleanup failures show up as console errors after unmount in StrictMode — which IS exercised by the existing tests.
+- **Existing tests**: every existing render-cycle test in the four frame test suites — they all rely on this path implicitly.
+- **New tests added**: 8 in `useFrame.test.ts` under "scheduleRender (rAF coalescing)" — single-rAF queue, coalescing, latest-renderFnRef, requeue-after-reset, cancel-on-unmount, no-op-cancel-when-empty, ref identity stability, callback identity stability.
+- **Click-testing recommended**: rapid streaming push (RealtimeLineChart with high-frequency push) — should remain fluid, no flicker. Mount-then-immediately-unmount (e.g., dashboard tab switch during streaming) — no console errors after the unmount.
+- **Complexity**: 4 frames × ~6 LoC removed for scheduleRender; 4 frames × 1 LoC removed for cleanup; +25 LoC in useFrame. Net -4 LoC, but more importantly: one source of truth for rAF coalescing.
+- **Status**: extracted, 4/4 frames migrated, 33 hook tests + 3033 total vitest green.
+- **Commit**: pending
 
 ---
 

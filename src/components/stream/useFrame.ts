@@ -30,7 +30,7 @@
 "use client"
 
 import * as React from "react"
-import { useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -130,6 +130,26 @@ export interface UseFrameResult {
   introEnabled: boolean
   /** Stable id for the AccessibleDataTable region (hash-suffixed). */
   tableId: string
+
+  // ── rAF-coalesced render scheduling ──────────────────────────────────
+  // The frame body assigns its render closure to `renderFnRef.current`;
+  // calling `scheduleRender()` queues a single rAF that invokes it. A
+  // second `scheduleRender()` while a rAF is already pending is a no-op
+  // (coalescing). The frame's render closure should reset
+  // `rafRef.current = 0` at the end so subsequent `scheduleRender()`
+  // calls can queue again.
+  //
+  // The hook installs an unmount effect that cancels any pending rAF —
+  // frames no longer need their own cancel-on-unmount for this ref
+  // (other unmount cleanup like move-coalesce or adapter teardown stays
+  // frame-local).
+
+  /** Token of the pending rAF, or 0 if none. */
+  rafRef: React.MutableRefObject<number>
+  /** Frame assigns its render closure here. */
+  renderFnRef: React.MutableRefObject<() => void>
+  /** Queue a render on the next animation frame. Coalesces. */
+  scheduleRender: () => void
 }
 
 /**
@@ -183,6 +203,29 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   const reactId = React.useId()
   const tableId = `semiotic-table-${reactId}`
 
+  // ── rAF-coalesced render scheduling ──────────────────────────────────
+  // Owned here so any future tweak to the coalescing semantics (deferred
+  // commits, scheduler integration, etc.) is one source of truth.
+  const rafRef = useRef(0)
+  const renderFnRef = useRef<() => void>(() => {})
+  const scheduleRender = useCallback(() => {
+    if (rafRef.current) return
+    rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+  }, [])
+
+  // Cancel any pending rAF on unmount. Frames may still install their own
+  // unmount cleanup for things the hook doesn't own (pointermove
+  // coalescing, DataSourceAdapter teardown), but the rafRef cleanup is
+  // now centralized.
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = 0
+      }
+    }
+  }, [])
+
   return {
     reducedMotion,
     reducedMotionRef,
@@ -197,5 +240,8 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     transition,
     introEnabled,
     tableId,
+    rafRef,
+    renderFnRef,
+    scheduleRender,
   }
 }
