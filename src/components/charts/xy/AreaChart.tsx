@@ -430,13 +430,14 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     defaults: resolved.marginDefaults,
   })
 
-  // Default tooltip showing all configured fields
+  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
+  // cascade from the HOC so the tooltip values read the same way as the axis.
   const groupField = areaBy || colorBy
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({

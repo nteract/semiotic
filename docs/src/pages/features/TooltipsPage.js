@@ -89,6 +89,102 @@ export default function TooltipsPage() {
       </p>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Format cascade */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="format-cascade">Format Cascade</h2>
+
+      <p>
+        When you set an axis formatter on a chart — <code>valueFormat</code>{" "}
+        on ordinal charts (BarChart, StackedBarChart, GroupedBarChart,
+        DotPlot, SwarmPlot, SwimlaneChart) or <code>xFormat</code>/
+        <code>yFormat</code> on XY charts (LineChart, AreaChart,
+        Scatterplot, BubbleChart, etc.) — the same formatter is applied
+        to the default tooltip. One function, both places, so a bar chart
+        that reads "$450k" on its axis also reads "$450k" on hover.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: barData,
+          categoryAccessor: "category",
+          valueAccessor: "sales",
+          valueFormat: (d) => `$${(d / 1000).toFixed(1)}k`,
+          valueLabel: "Sales",
+          showGrid: true,
+        }}
+        type={BarChart}
+        overrideProps={{
+          data: "barData",
+          valueFormat: "d => `$${(d / 1000).toFixed(1)}k`",
+          showGrid: "true",
+        }}
+        hiddenProps={{}}
+        title="valueFormat applies to both axis and tooltip"
+      />
+
+      <h3 id="precedence">Precedence</h3>
+      <p>
+        The cascade only drives the <em>default</em> tooltip. Passing{" "}
+        <code>tooltip</code> explicitly takes over:
+      </p>
+      <ul>
+        <li>
+          <code>tooltip={"{false}"}</code> — no tooltip is rendered.
+        </li>
+        <li>
+          <code>tooltip={"{customFn}"}</code>, <code>{"{\"multi\"}"}</code>,
+          or <code>{"{Tooltip({...})}"}</code>/
+          <code>{"{MultiLineTooltip({...})}"}</code> — your content fully
+          replaces the default. Axis formatters do <strong>not</strong>{" "}
+          apply automatically; re-pass <code>valueFormat</code>/
+          <code>xFormat</code> inside your tooltip if you want them.
+        </li>
+        <li>
+          Default tooltip active — the chart's <code>valueFormat</code>{" "}
+          or <code>xFormat</code>/<code>yFormat</code> is applied to the
+          matching field.
+        </li>
+        <li>
+          A few charts format internally (Histogram, FunnelChart,
+          LikertChart, GaugeChart) and don't participate in the cascade —
+          customize via the <code>tooltip</code> prop if needed.
+        </li>
+      </ul>
+
+      <h3 id="override-examples">Supplementing or overriding</h3>
+      <p>
+        To keep the default tooltip but add a custom format for one
+        field, pass a function and call the formatter yourself:
+      </p>
+      <CodeBlock
+        code={`const money = d => \`$\${(d / 1000).toFixed(1)}k\`
+
+<BarChart
+  data={data}
+  categoryAccessor="category"
+  valueAccessor="sales"
+  valueFormat={money}           // → axis + default tooltip
+/>
+
+// Or override the tooltip entirely — cascade is bypassed, so
+// re-apply the formatter explicitly:
+<BarChart
+  data={data}
+  categoryAccessor="category"
+  valueAccessor="sales"
+  valueFormat={money}           // → axis only (tooltip is custom)
+  tooltip={MultiLineTooltip({
+    title: "category",
+    fields: [
+      { key: "sales", label: "Sales", format: money },
+      { key: "profit", label: "Profit", format: money },
+    ]
+  })}
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* With Charts */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>

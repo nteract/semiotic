@@ -328,10 +328,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   const resolvedOrderLabel = orderLabel || (typeof orderAccessor === "string" ? orderAccessor : "Order")
 
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(orderAccessor ? [{ label: resolvedOrderLabel, accessor: orderAccessor, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, orderAccessor, resolvedOrderLabel])
+  ]), [xAccessor, yAccessor, xLabel, yLabel, orderAccessor, resolvedOrderLabel, xFormat, yFormat])
 
   // ── Validate ──────────────────────────────────────────────────────────
 

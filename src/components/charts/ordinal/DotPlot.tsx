@@ -151,8 +151,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   )
 
   const defaultTooltipContent = useMemo(
-    () => buildOrdinalTooltip({ categoryAccessor, valueAccessor }),
-    [categoryAccessor, valueAccessor]
+    () => buildOrdinalTooltip({ categoryAccessor, valueAccessor, valueFormat }),
+    [categoryAccessor, valueAccessor, valueFormat]
   )
 
   const error = validateArrayData({

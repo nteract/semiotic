@@ -158,8 +158,9 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
       categoryAccessor: stackBy,
       valueAccessor,
       groupAccessor: categoryAccessor,
+      valueFormat,
     }),
-    [stackBy, categoryAccessor, valueAccessor]
+    [stackBy, categoryAccessor, valueAccessor, valueFormat]
   )
 
   const validationError = validateArrayData({
