@@ -16,6 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
  * Heatmap component props
@@ -298,6 +299,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     colorByField: undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for Heatmap since no colorBy categories)
@@ -372,8 +375,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   }, [getValueFn, colorScale, cellBorderColor, cellBorderWidth])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, effectiveSelectionHook, selection),
-    [baseSummaryStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, effectiveSelectionHook, resolvedSelection),
+    [baseSummaryStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // showValues is now handled natively by the canvas renderer and SSR SVG path.

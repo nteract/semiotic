@@ -166,8 +166,8 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Record<str
   }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

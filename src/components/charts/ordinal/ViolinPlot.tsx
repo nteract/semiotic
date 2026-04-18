@@ -149,8 +149,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, selection),
-    [baseSummaryStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip({ valueAccessor }), [valueAccessor])

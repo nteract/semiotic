@@ -239,8 +239,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, setup.effectiveSelectionHook, selection),
-    [basePointStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Default tooltip showing all configured fields

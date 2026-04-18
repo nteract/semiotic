@@ -12,6 +12,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
@@ -151,6 +152,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     chartId
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Compute size domain for scaling
@@ -171,10 +174,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
     })
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, selection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
     }
     return base
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, selection])
+  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, resolvedSelection])
 
   const allCategories = useMemo(() => {
     if (!colorBy) return []

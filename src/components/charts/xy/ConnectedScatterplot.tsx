@@ -12,7 +12,8 @@ import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { interpolateViridis } from "d3-scale-chromatic"
 
 /**
@@ -185,6 +186,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     colorByField: undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
@@ -202,6 +205,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   // Reads PointSceneNodes directly from the scene graph, which is the
   // single source of truth for visible data (respects windowing, eviction,
   // etc.). Computes viridis colors on the fly from scene node order.
+
+  const dimOpacity = resolvedSelection?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
 
   const connectingLineRenderer = useMemo(() => {
     return (ctx: CanvasRenderingContext2D, nodes: any[]) => {
@@ -223,7 +228,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         const segmentSelected = selActive && selPredicate
           ? selPredicate(p0.datum ?? p0) || selPredicate(p1.datum ?? p1)
           : true
-        const segmentOpacity = selActive ? (segmentSelected ? 1 : 0.2) : 1
+        const segmentOpacity = selActive ? (segmentSelected ? 1 : dimOpacity) : 1
 
         if (halo) {
           ctx.beginPath()
@@ -246,7 +251,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
       ctx.globalAlpha = 1
     }
-  }, [pointRadius, effectiveSelectionHook])
+  }, [pointRadius, effectiveSelectionHook, dimOpacity])
 
   const canvasPreRenderers = useMemo(
     () => [connectingLineRenderer],
@@ -310,8 +315,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   }, [pointRadius, orderMap])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
-    [basePointStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
+    [basePointStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // ── Margin ────────────────────────────────────────────────────────────

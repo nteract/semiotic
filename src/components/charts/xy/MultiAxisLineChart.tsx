@@ -381,8 +381,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }, [seriesLabels, seriesColors, lineWidth])
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, setup.effectiveSelectionHook, selection),
-    [baseLineStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(baseLineStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseLineStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // ── Tooltip ───────────────────────────────────────────────────────────

@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 /**
@@ -299,6 +300,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -388,8 +391,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   }, [colorBy, colorScale, areaOpacity, showLine, lineWidth, color])
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, selection),
-    [baseLineStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, resolvedSelection),
+    [baseLineStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

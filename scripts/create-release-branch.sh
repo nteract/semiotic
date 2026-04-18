@@ -31,6 +31,55 @@ fi
 echo "==> Bumping version"
 VERSION="$(npm version --no-git-tag-version $BUMP_TYPE | sed 's/v//g')"
 
+echo "==> Syncing ai/schema.json version → $VERSION"
+# `ai/schema.json` is bundled in the npm package and read by the MCP server
+# (ai/mcp-server.ts uses `schema.version` as its advertised version). Keeping
+# it pinned to the package version means MCP doesn't lie about what's running
+# the moment we ship.
+node -e "
+  const fs = require('fs');
+  const path = 'ai/schema.json';
+  const schema = JSON.parse(fs.readFileSync(path, 'utf8'));
+  if (schema.version === '$VERSION') {
+    console.log('  ai/schema.json already at $VERSION');
+  } else {
+    schema.version = '$VERSION';
+    fs.writeFileSync(path, JSON.stringify(schema, null, 2) + '\n');
+    console.log('  ai/schema.json: bumped to $VERSION');
+  }
+"
+
+echo "==> Verifying CHANGELOG.md has an entry for $VERSION"
+# Catches the "shipped without a changelog" mistake — npm page would otherwise
+# show no notes for the new version and users have no way to see what changed.
+# Use -F (fixed string) so dots in VERSION aren't treated as regex "any char".
+# Otherwise "3.4.0" would match "3X4X0" and the gate could be bypassed by a
+# malformed heading.
+if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
+  # Capture before the error call so `set -e` doesn't abort if grep finds
+  # nothing (e.g. an empty or malformed CHANGELOG): a non-zero inside a
+  # command substitution would short-circuit the whole line.
+  LATEST_CHANGELOG_ENTRY="$(grep -E "^## \[" CHANGELOG.md | head -1 || true)"
+  error "CHANGELOG.md is missing a '## [$VERSION]' entry. Add one before releasing."
+  error "(Existing latest entry: ${LATEST_CHANGELOG_ENTRY:-<none>})"
+  exit 1
+fi
+success "  CHANGELOG.md has an entry for $VERSION"
+
+echo "==> Running npm audit (moderate gate)"
+# Block the release on any moderate/high/critical vulnerability. Low-severity
+# findings are surfaced but don't block — most are transitive dev-only crypto
+# libs reachable via the build chain that can only be cleared with `npm audit
+# fix --force` and a breaking change. To clear those intentionally, edit this
+# line or override the floor with AUDIT_LEVEL=low/high/critical.
+AUDIT_LEVEL="${AUDIT_LEVEL:-moderate}"
+if ! npm audit --audit-level="$AUDIT_LEVEL" >/dev/null 2>&1; then
+  error "npm audit reports vulnerabilities at >= $AUDIT_LEVEL severity. Run 'npm audit' to inspect, then 'npm audit fix' (or 'npm audit fix --force' if a breaking bump is intended) before releasing."
+  npm audit --audit-level="$AUDIT_LEVEL"
+  exit 1
+fi
+success "  npm audit clean at >= $AUDIT_LEVEL"
+
 echo "==> Cleaning Build directory"
 rm -rf ./dist
 

@@ -12,6 +12,8 @@ import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 
 /**
  * Treemap component props
@@ -98,6 +100,8 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     onObservation, onClick, chartType: "Treemap", chartId
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   // Network frame hover: { type, data: sceneNode, x, y }
   // sceneNode.data = original datum for this hierarchy node
   // Pass it as { data: originalDatum } so useChartSelection unwraps correctly
@@ -164,18 +168,18 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
         const datum = d.data || d
         const matches = activeSelectionHook.predicate(datum)
         if (matches) {
-          if (selection?.selectedStyle) Object.assign(style, selection.selectedStyle)
+          if (resolvedSelection?.selectedStyle) Object.assign(style, resolvedSelection.selectedStyle)
         } else {
-          const dimOpacity = selection?.unselectedOpacity ?? 0.2
+          const dimOpacity = resolvedSelection?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
           style.opacity = dimOpacity
           style.fillOpacity = dimOpacity
           style.strokeOpacity = dimOpacity
-          if (selection?.unselectedStyle) Object.assign(style, selection.unselectedStyle)
+          if (resolvedSelection?.unselectedStyle) Object.assign(style, resolvedSelection.unselectedStyle)
         }
       }
       return style
     }
-  }, [nodeStyleFn, activeSelectionHook, selection])
+  }, [nodeStyleFn, activeSelectionHook, resolvedSelection])
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)

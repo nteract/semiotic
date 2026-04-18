@@ -453,7 +453,11 @@ export interface LegendInteractionState {
 
 /**
  * Hook managing legend highlight/isolate interaction.
- * - "highlight": hover over legend item dims everything else to 30% opacity
+ * - "highlight": hover over a legend item produces a selection hook that
+ *   `wrapStyleWithSelection` uses to dim non-matching data. The actual
+ *   dim opacity resolves in this order: per-chart
+ *   `selection.unselectedOpacity` → `theme.colors.selectionOpacity` →
+ *   `DEFAULT_SELECTION_OPACITY` fallback.
  * - "isolate": click toggles category visibility; click all to reset
  */
 export function useLegendInteraction(

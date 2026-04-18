@@ -185,8 +185,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
   }, [basePieceStyle, frameProps])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, selection),
-    [mergedPieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Default tooltip

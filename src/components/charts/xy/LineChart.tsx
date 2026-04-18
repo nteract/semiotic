@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 
@@ -553,6 +554,8 @@ export const LineChart = forwardRef(
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   // Linked crosshair config (x-position mode)
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
@@ -768,8 +771,8 @@ export const LineChart = forwardRef(
   const effectiveLineStyle = segmentAwareStyle || baseLineStyle
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(effectiveLineStyle, effectiveSelectionHook, selection),
-    [effectiveLineStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(effectiveLineStyle, effectiveSelectionHook, resolvedSelection),
+    [effectiveLineStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
  * Quadrant label and color configuration
@@ -221,6 +222,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ──────────────────────────────────────────────────
@@ -321,8 +324,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
-    [basePointStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
+    [basePointStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // Legend + margin

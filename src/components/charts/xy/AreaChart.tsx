@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
  * AreaChart component props
@@ -303,6 +304,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -398,8 +401,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth])
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, selection),
-    [baseLineStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, resolvedSelection),
+    [baseLineStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

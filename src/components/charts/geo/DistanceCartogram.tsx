@@ -11,6 +11,7 @@ import type { LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
@@ -155,6 +156,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     chartId
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   const pointStyleFn = useMemo(() => {
@@ -166,10 +169,10 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       r: pointRadius
     })
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, selection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
     }
     return base
-  }, [colorBy, colorScale, pointRadius, activeSelectionHook, selection])
+  }, [colorBy, colorScale, pointRadius, activeSelectionHook, resolvedSelection])
 
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeData,

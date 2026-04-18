@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest"
 import {
+  DEFAULT_SELECTION_OPACITY,
   normalizeLinkedHover,
   normalizeLinkedBrush,
   wrapStyleWithSelection,
-  readSelectionOpacityFromCSS,
   type SelectionHookResult,
 } from "./selectionUtils"
 
@@ -105,16 +105,16 @@ describe("wrapStyleWithSelection", () => {
     expect(style.opacity).toBeUndefined()
   })
 
-  it("dims non-matching datums with default opacity 0.2", () => {
+  it("dims non-matching datums with default opacity", () => {
     const hook: SelectionHookResult = {
       isActive: true,
       predicate: (d) => d.category === "A",
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style = wrapped({ color: "red", category: "B" })
-    expect(style.opacity).toBe(0.2)
-    expect(style.fillOpacity).toBe(0.2)
-    expect(style.strokeOpacity).toBe(0.2)
+    expect(style.opacity).toBe(DEFAULT_SELECTION_OPACITY)
+    expect(style.fillOpacity).toBe(DEFAULT_SELECTION_OPACITY)
+    expect(style.strokeOpacity).toBe(DEFAULT_SELECTION_OPACITY)
   })
 
   it("uses custom unselectedOpacity", () => {
@@ -123,12 +123,12 @@ describe("wrapStyleWithSelection", () => {
       predicate: (d) => d.category === "A",
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook, {
-      unselectedOpacity: 0.5,
+      unselectedOpacity: 0.3,
     })
     const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.5)
-    expect(style.fillOpacity).toBe(0.5)
-    expect(style.strokeOpacity).toBe(0.5)
+    expect(style.opacity).toBe(0.3)
+    expect(style.fillOpacity).toBe(0.3)
+    expect(style.strokeOpacity).toBe(0.3)
   })
 
   it("applies selectedStyle overrides for matching datums", () => {
@@ -154,7 +154,7 @@ describe("wrapStyleWithSelection", () => {
       unselectedStyle: { filter: "grayscale(100%)" },
     })
     const style = wrapped({ category: "B" })
-    expect(style.opacity).toBe(0.2)
+    expect(style.opacity).toBe(DEFAULT_SELECTION_OPACITY)
     expect(style.filter).toBe("grayscale(100%)")
   })
 
@@ -169,7 +169,7 @@ describe("wrapStyleWithSelection", () => {
     expect(matchStyle.opacity).toBeUndefined()
 
     const noMatchStyle = wrapped({ region: "North", year: 2023 })
-    expect(noMatchStyle.opacity).toBe(0.2)
+    expect(noMatchStyle.opacity).toBe(DEFAULT_SELECTION_OPACITY)
   })
 
   it("does not mutate the base style object (wrapStyleWithSelection)", () => {
@@ -184,57 +184,5 @@ describe("wrapStyleWithSelection", () => {
     expect(style1).not.toBe(style2)
     expect(style1.fill).toBe("red")
     expect(style2.fill).toBe("blue")
-  })
-})
-
-// ── readSelectionOpacityFromCSS ───────────────────────────────────────────
-
-describe("readSelectionOpacityFromCSS", () => {
-  it("returns default for null container", () => {
-    expect(readSelectionOpacityFromCSS(null)).toBe(0.2)
-  })
-
-  it("returns default when CSS var is unset", () => {
-    const el = document.createElement("div")
-    document.body.appendChild(el)
-    const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0.2)
-    document.body.removeChild(el)
-  })
-
-  it("parses a valid CSS var value", () => {
-    const el = document.createElement("div")
-    el.style.setProperty("--semiotic-selection-opacity", "0.5")
-    document.body.appendChild(el)
-    const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0.5)
-    document.body.removeChild(el)
-  })
-
-  it("clamps values above 1 to 1", () => {
-    const el = document.createElement("div")
-    el.style.setProperty("--semiotic-selection-opacity", "1.5")
-    document.body.appendChild(el)
-    const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(1)
-    document.body.removeChild(el)
-  })
-
-  it("clamps negative values to 0", () => {
-    const el = document.createElement("div")
-    el.style.setProperty("--semiotic-selection-opacity", "-0.3")
-    document.body.appendChild(el)
-    const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0)
-    document.body.removeChild(el)
-  })
-
-  it("returns default for non-numeric value", () => {
-    const el = document.createElement("div")
-    el.style.setProperty("--semiotic-selection-opacity", "auto")
-    document.body.appendChild(el)
-    const result = readSelectionOpacityFromCSS(el)
-    expect(result).toBe(0.2)
-    document.body.removeChild(el)
   })
 })
