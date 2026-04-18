@@ -44,7 +44,6 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
-import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
@@ -52,18 +51,14 @@ import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
+import { useFrame } from "./useFrame"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
@@ -306,21 +301,39 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       summary
     } = props
 
-    // ── Reduced motion ────────────────────────────────────────────────────
-    const reducedMotion = useReducedMotion()
-    const reducedMotionRef = useRef(reducedMotion)
-    reducedMotionRef.current = reducedMotion
+    // dirtyRef is declared before useFrame so it can be threaded in for
+    // the theme-change effect. Initial value `true` is family-specific
+    // (Ordinal forces a first paint) — see investigation note #3.
+    const dirtyRef = useRef(true)
 
-    // ── Layout ───────────────────────────────────────────────────────────
-
-    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
-    const margin = useMemo(() => ({ ...DEFAULT_MARGIN, ...userMargin }), [userMargin])
-    const adjustedWidth = size[0] - margin.left - margin.right
-    const adjustedHeight = size[1] - margin.top - margin.bottom
-
-    const resolvedForeground = typeof foregroundGraphics === "function"
-      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : foregroundGraphics
+    // ── Frame composition (Tier A + B concerns; see useFrame.ts) ─────────
+    const frame = useFrame({
+      sizeProp,
+      responsiveWidth,
+      responsiveHeight,
+      userMargin,
+      marginDefault: DEFAULT_MARGIN,
+      foregroundGraphics,
+      animate,
+      transitionProp,
+      themeDirtyRef: dirtyRef,
+    })
+    const {
+      reducedMotionRef,
+      responsiveRef,
+      size,
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      resolvedForeground,
+      currentTheme,
+      transition,
+      introEnabled,
+      tableId,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
+    } = frame
 
     // Resolve new-style names with legacy fallback
     const oLabel = categoryLabel ?? oLabelLegacy
@@ -331,12 +344,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const dirtyRef = useRef(true)
-    // Theme change tracking (effect added after scheduleRender is defined)
-    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-    const rafRef = useRef<number>(0)
     const hoverRef = useRef<HoverData | null>(null)
-    const renderFnRef = useRef<() => void>(() => {})
 
     // ── State ────────────────────────────────────────────────────────────
 
@@ -353,8 +361,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const isStreaming = runtimeMode === "streaming"
 
-    // Resolve animate prop → transition config + intro flag
-    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+    // animate → transition + introEnabled comes from useFrame above.
 
     const pipelineConfig = useMemo((): OrdinalPipelineConfig => ({
       chartType,
@@ -420,12 +427,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       storeRef.current = new OrdinalPipelineStore(pipelineConfig)
     }
 
-    // ── Stable scheduleRender ────────────────────────────────────────────
-
-    const scheduleRender = useCallback(() => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }, [])
+    // scheduleRender comes from useFrame above.
 
     // Update config when it changes
     useEffect(() => {
@@ -434,14 +436,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
-    useEffect(() => {
-      if (canvasRef.current) {
-        clearCSSColorCache(canvasRef.current)
-      }
-      dirtyRef.current = true
-      scheduleRender()
-    }, [currentTheme, scheduleRender])
+    // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+    // is handled by useFrame above when themeDirtyRef is provided.
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
@@ -523,8 +519,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
-    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
-    const hoverLeaveRef = useRef<() => void>(() => {})
+    const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
     hoverHandlerRef.current = (e: HoverPointerCoords) => {
       if (!effectiveHoverAnnotation) return
@@ -596,37 +591,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
     }
 
-    // Coalesce pointermove events to one hit test per animation frame.
-    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-    // wasteful re-renders. Capture latest coords; process in rAF.
-    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-    const moveRafRef = useRef(0)
-    const flushPendingMove = useCallback(() => {
-      moveRafRef.current = 0
-      const coords = pendingMoveCoordsRef.current
-      pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords)
-    }, [])
-    const onMouseMove = useCallback(
-      (e: React.MouseEvent) => {
-        pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-        if (moveRafRef.current === 0) {
-          moveRafRef.current = requestAnimationFrame(flushPendingMove)
-        }
-      },
-      [flushPendingMove]
-    )
-    const onMouseLeave = useCallback(
-      () => {
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
-        hoverLeaveRef.current()
-      },
-      []
-    )
+    // pointermove coalescing (rAF-bounded hit testing) + onMouseLeave
+    // come from useFrame above. Frame still owns the hoverHandlerRef
+    // and hoverLeaveRef closure bodies (assigned earlier in this file).
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
@@ -707,8 +674,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      onMouseMove(e)
-    }, [onMouseMove])
+      onPointerMove(e)
+    }, [onPointerMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -768,14 +735,18 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
       }
 
-      // Background — use explicit prop, or fall back to semiotic theme background
-      const semioticBg = canvas
-        ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-        : ""
-      const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-      if (effectiveBg) {
-        ctx.fillStyle = effectiveBg
-        ctx.fillRect(0, 0, size[0], size[1])
+      // Background — use explicit prop, or fall back to semiotic theme background.
+      // Passing `background="transparent"` is an explicit opt-out so this chart
+      // can be composed as an overlay without painting over the layer beneath.
+      if (background !== "transparent") {
+        const semioticBg = canvas
+          ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+          : ""
+        const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+        if (effectiveBg) {
+          ctx.fillStyle = effectiveBg
+          ctx.fillRect(0, 0, size[0], size[1])
+        }
       }
 
       const isRadial = projection === "radial"
@@ -839,13 +810,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
-        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
+        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+        // is handled by useFrame.
         // Cancel any in-flight progressive chunking / pending push microtask
         // so `store.ingest` can't fire after the component is gone.
         adapterRef.current?.clear()
@@ -985,7 +951,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId()}`
+    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
 
     return (
       <div
@@ -1010,7 +976,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
         >
         {backgroundGraphics && (
           <svg

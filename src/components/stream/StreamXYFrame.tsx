@@ -25,16 +25,13 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, findAllNodesAtX, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
-import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
+import { useFrame } from "./useFrame"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -44,9 +41,7 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -405,35 +400,62 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       linkedCrosshairSourceId
     } = props
 
-    // ── Reduced motion ────────────────────────────────────────────────────
-    const reducedMotion = useReducedMotion()
-    const reducedMotionRef = useRef(reducedMotion)
-    reducedMotionRef.current = reducedMotion
+    // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+    // dirtyRef is declared before useFrame so it can be threaded in for
+    // the theme-change effect. XY is the only frame that inits this to
+    // `false`; Ordinal/Network/Geo init to `true`. See investigation
+    // note #3.
+    const dirtyRef = useRef(false)
 
-    // ── Responsive sizing ──────────────────────────────────────────────────
-    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
+    // XY resolves foreground/background locally (not via useFrame) because
+    // the marginalGraphics branch below may expand margin, and function-form
+    // graphics must be evaluated against the final margin. Having useFrame
+    // resolve them too would double-invoke user functions per render.
+    const frame = useFrame({
+      sizeProp,
+      responsiveWidth,
+      responsiveHeight,
+      userMargin: marginProp,
+      marginDefault: DEFAULT_MARGIN,
+      animate,
+      transitionProp,
+      themeDirtyRef: dirtyRef,
+    })
+    const {
+      reducedMotionRef,
+      responsiveRef,
+      size,
+      currentTheme,
+      transition,
+      introEnabled,
+      tableId,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
+    } = frame
 
-    const margin = { ...DEFAULT_MARGIN, ...marginProp }
-
-    // Auto-expand margins to at least 60px when marginals are configured
+    // XY post-expands margin to at least 60px on any side that has a
+    // configured marginal graphic. Copy the hook's margin before mutating
+    // so the memoized object stays clean for next render.
+    let margin = frame.margin
     if (marginalGraphics) {
       const MIN_MARGINAL = 60
-      if (marginalGraphics.top && margin.top < MIN_MARGINAL) margin.top = MIN_MARGINAL
-      if (marginalGraphics.bottom && margin.bottom < MIN_MARGINAL) margin.bottom = MIN_MARGINAL
-      if (marginalGraphics.left && margin.left < MIN_MARGINAL) margin.left = MIN_MARGINAL
-      if (marginalGraphics.right && margin.right < MIN_MARGINAL) margin.right = MIN_MARGINAL
+      const m = { ...frame.margin }
+      if (marginalGraphics.top && m.top < MIN_MARGINAL) m.top = MIN_MARGINAL
+      if (marginalGraphics.bottom && m.bottom < MIN_MARGINAL) m.bottom = MIN_MARGINAL
+      if (marginalGraphics.left && m.left < MIN_MARGINAL) m.left = MIN_MARGINAL
+      if (marginalGraphics.right && m.right < MIN_MARGINAL) m.right = MIN_MARGINAL
+      margin = m
     }
-
-    const adjustedWidth = size[0] - margin.left - margin.right
-    const adjustedHeight = size[1] - margin.top - margin.bottom
-
-    // Resolve foregroundGraphics / backgroundGraphics — accept ReactNode or function({ size, margin })
     const resolvedForeground = typeof foregroundGraphics === "function"
       ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
       : foregroundGraphics
     const resolvedBackground = typeof backgroundGraphics === "function"
       ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
       : backgroundGraphics
+
+    const adjustedWidth = size[0] - margin.left - margin.right
+    const adjustedHeight = size[1] - margin.top - margin.bottom
 
     // Determine effective hover annotation config
     const effectiveHoverAnnotation = hoverAnnotation ?? enableHover
@@ -442,11 +464,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
-    const rafRef = useRef(0)
-    const dirtyRef = useRef(false)
-
-    // Theme change tracking (effect added after scheduleRender is defined)
-    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount + theme-
+    // change effect all come from useFrame (above).
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
@@ -466,15 +485,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const [marginalYValues, setMarginalYValues] = useState<number[]>([])
 
 
-    // Render function ref (always-fresh closure)
-    const renderFnRef = useRef<() => void>(() => {})
+    // renderFnRef comes from useFrame (above).
 
     // ── Pipeline ─────────────────────────────────────────────────────────
 
     const isStreaming = runtimeMode === "streaming" || ["bar", "swarm", "waterfall"].includes(chartType)
 
-    // Resolve animate prop → transition config + intro flag
-    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+    // animate → transition + introEnabled comes from useFrame above.
 
     const pipelineConfig = useMemo((): PipelineConfig => ({
       chartType,
@@ -556,12 +573,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       storeRef.current = new PipelineStore(pipelineConfig)
     }
 
-    // ── Stable scheduleRender ────────────────────────────────────────────
-
-    const scheduleRender = useCallback(() => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }, [])
+    // scheduleRender comes from useFrame above.
 
     // Update config when it changes — also schedule re-render since style
     // callbacks (pointStyle, areaStyle, etc.) may have changed.
@@ -571,12 +583,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
-    useEffect(() => {
-      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [currentTheme, scheduleRender])
+    // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+    // is handled by useFrame above when themeDirtyRef is provided.
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
@@ -684,9 +692,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }, [data, lineDataAccessor])
 
     // ── Hover handlers ───────────────────────────────────────────────────
-
-    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
-    const hoverLeaveRef = useRef<() => void>(() => {})
+    // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+    // come from useFrame above; frame still owns the closure bodies.
+    const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
     hoverHandlerRef.current = (e: HoverPointerCoords) => {
       if (!effectiveHoverAnnotation) return
@@ -770,38 +778,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
     }
 
-    // Coalesce pointermove events to one hit test per animation frame.
-    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-    // wasteful re-renders. Capture the latest coords and process them in rAF.
-    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-    const moveRafRef = useRef(0)
-    const flushPendingMove = useCallback(() => {
-      moveRafRef.current = 0
-      const coords = pendingMoveCoordsRef.current
-      pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords)
-    }, [])
-    const onMouseMove = useCallback(
-      (e: React.MouseEvent) => {
-        pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-        if (moveRafRef.current === 0) {
-          moveRafRef.current = requestAnimationFrame(flushPendingMove)
-        }
-      },
-      [flushPendingMove]
-    )
-    const onMouseLeave = useCallback(
-      () => {
-        // Drop any pending hover so a queued move doesn't fire after leave.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
-        hoverLeaveRef.current()
-      },
-      []
-    )
+    // pointermove coalescing + onPointerLeave come from useFrame above.
 
     // ── Click handler (for click-to-lock crosshair, etc.) ──────────────
 
@@ -903,8 +880,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      onMouseMove(e)
-    }, [onMouseMove])
+      onPointerMove(e)
+    }, [onPointerMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -953,12 +930,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
           }
 
-          // Background
-          const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-          const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-          if (effectiveBg) {
-            ctx.fillStyle = effectiveBg
-            ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+          // Background. Passing `background="transparent"` is an explicit
+          // opt-out so this chart can be composed as an overlay without
+          // painting over the layer beneath it.
+          if (background !== "transparent") {
+            const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+            const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+            if (effectiveBg) {
+              ctx.fillStyle = effectiveBg
+              ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+            }
           }
 
           // Clip and render data marks
@@ -1097,13 +1078,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
-        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
+        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+        // is handled by useFrame.
         // Cancel any in-flight progressive chunking / pending push microtask
         // so `store.ingest` can't fire after the component is gone.
         adapterRef.current?.clear()
@@ -1301,7 +1277,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId()}`
+    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
 
     return (
       <div
@@ -1327,7 +1303,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (

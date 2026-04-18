@@ -277,35 +277,16 @@ function FilteredLineOverlay({ allData, chartWidth }) {
 
   return (
     <div style={{ position: "relative", "--semiotic-border": "rgba(204,204,204,0.25)", "--semiotic-grid": "rgba(224,224,224,0.25)" }}>
-      {/* Filtered data: gradient-filled area (only when brush is active) */}
-      {hasBrush && filteredData.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
-          <AreaChart
-            data={filteredData}
-            xAccessor="time"
-            yAccessor="value"
-            width={chartWidth}
-            height={200}
-            color="#007bff"
-            areaOpacity={0.5}
-            gradientFill
-            showLine={false}
-            frameProps={{
-              xExtent: timeExtent,
-              yExtent: valueExtent,
-              showAxes: false,
-            }}
-          />
-        </div>
-      )}
-      {/* Unfiltered data: thin gray line (always visible) */}
+      {/* Base layer: the full time series, always visible and always
+          faded. Stable styling across brush on/off so the visual
+          doesn't jump — the brush just adds the overlay on top. */}
       <LineChart
         data={allData}
         xAccessor="time"
         yAccessor="value"
         width={chartWidth}
         height={200}
-        color="#999"
+        color="#c4cdd8"
         lineWidth={1}
         frameProps={{
           xExtent: timeExtent,
@@ -313,6 +294,32 @@ function FilteredLineOverlay({ allData, chartWidth }) {
           showAxes: true,
         }}
       />
+      {/* Overlay: filtered subset as a bold blue line with gradient fill.
+          Absolutely positioned so it lines up pixel-for-pixel with the
+          base chart (same xExtent/yExtent → same data-to-pixel mapping).
+          `pointerEvents: none` keeps tooltip/brush interaction on the base. */}
+      {hasBrush && filteredData.length > 1 && (
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
+          <AreaChart
+            data={filteredData}
+            xAccessor="time"
+            yAccessor="value"
+            width={chartWidth}
+            height={200}
+            color="#007bff"
+            areaOpacity={0.35}
+            gradientFill
+            showLine
+            lineWidth={2}
+            frameProps={{
+              xExtent: timeExtent,
+              yExtent: valueExtent,
+              showAxes: false,
+              background: "transparent",
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -384,12 +391,18 @@ const CATEGORIES = ["errors", "warnings", "info"]
 const CATEGORY_COLORS = { errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }
 
 const CATEGORY_SCHEME = [CATEGORY_COLORS.errors, CATEGORY_COLORS.warnings, CATEGORY_COLORS.info]
+const CATEGORY_SCHEME_FADED = [
+  "rgba(220, 53, 69, 0.25)",
+  "rgba(253, 126, 20, 0.25)",
+  "rgba(0, 123, 255, 0.25)",
+]
 
 /**
  * Consumes the "catBrush" selection and renders:
  * - Faded thin lines per category (unfiltered, always visible) with legend
  * - Bold thick lines per category (filtered subset, overlay, no legend)
- * Both use the same colorBy/colorScheme so colors match.
+ * The base owns the legend so it stays stable across brush on/off; the
+ * overlay is pure visual emphasis with `showLegend={false}`.
  */
 function FilteredMultiLineOverlay({ allData, chartWidth }) {
   const filteredData = useFilteredData(allData, "catBrush")
@@ -405,9 +418,35 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
 
   return (
     <div style={{ position: "relative", "--semiotic-border": "rgba(204,204,204,0.25)", "--semiotic-grid": "rgba(224,224,224,0.25)" }}>
-      {/* Filtered: bold colored lines (only when brush is active) */}
+      {/* Base layer: full time series per category, always rendered with
+          faded category colors. Stable styling across brush on/off so the
+          visual doesn't jump — the brush just adds the bold overlay on top. */}
+      <LineChart
+        data={allData}
+        xAccessor="time"
+        yAccessor="value"
+        lineBy="category"
+        colorBy="category"
+        colorScheme={CATEGORY_SCHEME_FADED}
+        lineWidth={1}
+        width={chartWidth}
+        height={220}
+        margin={sharedMargin}
+        showLegend
+        showGrid
+        frameProps={{
+          xExtent: timeExtent,
+          yExtent: valueExtent,
+          showAxes: true,
+        }}
+      />
+      {/* Overlay: bold lines per category for the filtered subset.
+          `pointerEvents: none` keeps hover/brush on the base chart.
+          `background: "transparent"` in frameProps prevents the overlay
+          canvas from painting a solid theme background that would hide
+          the base layer. */}
       {hasBrush && filteredData.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <LineChart
             data={filteredData}
             xAccessor="time"
@@ -424,30 +463,11 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
               xExtent: timeExtent,
               yExtent: valueExtent,
               showAxes: false,
+              background: "transparent",
             }}
           />
         </div>
       )}
-      {/* Unfiltered: thin colored lines (always visible) + legend */}
-      <LineChart
-        data={allData}
-        xAccessor="time"
-        yAccessor="value"
-        lineBy="category"
-        colorBy="category"
-        colorScheme={CATEGORY_SCHEME}
-        lineWidth={1}
-        width={chartWidth}
-        height={220}
-        margin={sharedMargin}
-        showLegend
-        showGrid
-        frameProps={{
-          xExtent: timeExtent,
-          yExtent: valueExtent,
-          showAxes: true,
-        }}
-      />
     </div>
   )
 }
@@ -762,8 +782,9 @@ useEffect(() => {
         Wrap both charts in <code>&lt;LinkedCharts&gt;</code>. The histogram
         writes its brush extent to the <code>"timeRange"</code> selection via{" "}
         <code>linkedBrush</code>. A child component reads it with{" "}
-        <code>useFilteredData</code> and overlays a gradient-filled area
-        (filtered subset) on a thin gray line (all data).
+        <code>useFilteredData</code>. The base layer always renders all
+        data as a thin faded line; when a brush is active, a bold
+        gradient-filled area for the filtered subset is overlaid on top.
       </p>
 
       <LinkedBrushDemo />
@@ -779,17 +800,21 @@ function FilteredOverlay({ allData, width }) {
 
   return (
     <div style={{ position: "relative" }}>
+      {/* Base: always-faded thin line, stable across brush on/off */}
+      <LineChart data={allData} xAccessor="time" yAccessor="value"
+        color="#c4cdd8" lineWidth={1} width={width} height={200}
+        frameProps={{ xExtent, yExtent, showAxes: true }} />
+      {/* Overlay: bold gradient-filled area for brushed range.
+          background: "transparent" keeps the base layer visible. */}
       {hasBrush && filtered.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <AreaChart data={filtered} xAccessor="time" yAccessor="value"
-            color="#007bff" gradientFill areaOpacity={0.5} showLine={false}
+            color="#007bff" gradientFill areaOpacity={0.35} showLine lineWidth={2}
             width={width} height={200}
-            frameProps={{ xExtent, yExtent, showAxes: false }} />
+            frameProps={{ xExtent, yExtent, showAxes: false,
+                          background: "transparent" }} />
         </div>
       )}
-      <LineChart data={allData} xAccessor="time" yAccessor="value"
-        color="#999" lineWidth={1} width={width} height={200}
-        frameProps={{ xExtent, yExtent, showAxes: true }} />
     </div>
   )
 }
@@ -809,12 +834,11 @@ function FilteredOverlay({ allData, width }) {
       <p>
         A stacked histogram with three categories (<code>errors</code>,{" "}
         <code>warnings</code>, <code>info</code>) drives a line chart
-        that splits into three colored lines. Both layers use the same{" "}
-        <code>colorBy</code>/<code>colorScheme</code>; the unfiltered
-        lines are thin (1px) and the brushed subset is bold (3px). A
-        fixed <code>margin</code> on both charts keeps them aligned, with{" "}
-        <code>showLegend=&#123;false&#125;</code> on the overlay to
-        prevent double legend/margin mismatch.
+        that splits into three colored lines. The base layer always
+        renders all categories with a faded <code>colorScheme</code>;
+        when a brush is active, a bold overlay using the full-opacity
+        scheme is drawn on top. A fixed <code>margin</code> on both
+        charts keeps them aligned.
       </p>
 
       <StackedBrushDemo />
@@ -825,6 +849,11 @@ function FilteredOverlay({ allData, width }) {
 
 const COLORS = { errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }
 const SCHEME = Object.values(COLORS)
+const SCHEME_FADED = [
+  "rgba(220, 53, 69, 0.25)",
+  "rgba(253, 126, 20, 0.25)",
+  "rgba(0, 123, 255, 0.25)",
+]
 const MARGIN = { top: 10, right: 110, bottom: 40, left: 50 }
 
 function FilteredMultiLineOverlay({ allData, width }) {
@@ -833,22 +862,24 @@ function FilteredMultiLineOverlay({ allData, width }) {
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Overlay: bold colored lines for brushed range */}
+      {/* Base: always-faded colored lines + axes + legend */}
+      <LineChart data={allData} xAccessor="time" yAccessor="value"
+        lineBy="category" colorBy="category" colorScheme={SCHEME_FADED}
+        lineWidth={1} width={width} height={220}
+        margin={MARGIN} showLegend showGrid
+        frameProps={{ xExtent, yExtent, showAxes: true }} />
+      {/* Overlay: bold colored lines for brushed range.
+          background: "transparent" keeps the base layer visible. */}
       {hasBrush && filtered.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <LineChart data={filtered} xAccessor="time" yAccessor="value"
             lineBy="category" colorBy="category" colorScheme={SCHEME}
             lineWidth={3} width={width} height={220}
             margin={MARGIN} showLegend={false}
-            frameProps={{ xExtent, yExtent, showAxes: false }} />
+            frameProps={{ xExtent, yExtent, showAxes: false,
+                          background: "transparent" }} />
         </div>
       )}
-      {/* Base: thin colored lines + axes + legend */}
-      <LineChart data={allData} xAccessor="time" yAccessor="value"
-        lineBy="category" colorBy="category" colorScheme={SCHEME}
-        lineWidth={1} width={width} height={220}
-        margin={MARGIN} showLegend showGrid
-        frameProps={{ xExtent, yExtent, showAxes: true }} />
     </div>
   )
 }

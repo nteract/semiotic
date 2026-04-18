@@ -22,7 +22,6 @@ import type {
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
@@ -35,8 +34,7 @@ import {
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useResponsiveSize } from "./useResponsiveSize"
+import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
@@ -44,7 +42,6 @@ import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipT
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 
 // Canvas renderers
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
@@ -56,8 +53,6 @@ import {
   spawnNetworkParticles
 } from "./renderers/networkParticleRenderer"
 import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -269,22 +264,40 @@ const StreamNetworkFrame = forwardRef<
     orbitAnimated
   } = props
 
-  // ── Reduced motion ────────────────────────────────────────────────────
-  const reducedMotion = useReducedMotion()
-  const reducedMotionRef = useRef(reducedMotion)
-  reducedMotionRef.current = reducedMotion
-
-  const tableId = `semiotic-table-${React.useId()}`
-
+  // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+  // Network has two margin defaults — CENTERED for radial chart types, the
+  // standard DEFAULT_MARGIN for everything else. Resolve the family default
+  // before handing it to useFrame.
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
-  const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
-  const margin = { ...baseMargin, ...marginProp }
-  const adjustedWidth = size[0] - margin.left - margin.right
-  const adjustedHeight = size[1] - margin.top - margin.bottom
-
-  const resolvedForeground = typeof foregroundGraphics === "function"
-    ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-    : foregroundGraphics
+  // dirtyRef declared before useFrame so it can be threaded in for the
+  // theme-change effect. Network inits to true (load-bearing).
+  const dirtyRef = useRef(true)
+  const frame = useFrame({
+    sizeProp,
+    responsiveWidth,
+    responsiveHeight,
+    userMargin: marginProp,
+    marginDefault: baseMargin,
+    foregroundGraphics,
+    animate,
+    transitionProp,
+    themeDirtyRef: dirtyRef,
+  })
+  const {
+    reducedMotionRef,
+    responsiveRef,
+    size,
+    margin,
+    adjustedWidth,
+    adjustedHeight,
+    resolvedForeground,
+    transition,
+    introEnabled,
+    tableId,
+    rafRef,
+    renderFnRef,
+    scheduleRender,
+  } = frame
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
@@ -295,10 +308,6 @@ const StreamNetworkFrame = forwardRef<
     () => ({ ...DEFAULT_PARTICLE_STYLE, ...particleStyleProp }),
     [particleStyleProp]
   )
-
-  // ── Animate → transition resolution ──────────────────────────────────
-
-  const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
 
   // ── Pipeline config ──────────────────────────────────────────────────
 
@@ -412,12 +421,14 @@ const StreamNetworkFrame = forwardRef<
   // ── Refs ─────────────────────────────────────────────────────────────
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const rafRef = useRef(0)
+  // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
+  // useFrame (above). Network's previous local scheduleRender had an
+  // isContinuous branch, but the inner `if (!rafRef.current)` guard made
+  // that branch's effect identical to the simple "bail if pending" — so
+  // the shared hook semantics preserve Network's behavior exactly.
+  // rafRef + renderFnRef + scheduleRender + dirtyRef + theme-change
+  // effect all destructured from useFrame above; not redeclared here.
   const lastFrameTimeRef = useRef(0)
-  const dirtyRef = useRef(true)
-  // Theme change tracking (effect added after scheduleRender is defined)
-  const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
-  const renderFnRef = useRef<() => void>(() => {})
 
   // ── Store ────────────────────────────────────────────────────────────
 
@@ -515,17 +526,14 @@ const StreamNetworkFrame = forwardRef<
     [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
   )
 
-  // ── Stable scheduleRender ────────────────────────────────────────────
-
+  // scheduleRender comes from useFrame above (the previous Network-local
+  // implementation took an isContinuous flag, but it was effectively
+  // dead — see the comment by the rAF refs above).
+  // isContinuous is still used elsewhere in this file for the render
+  // loop's "should I keep ticking" decision; declared here so the
+  // existing references continue to resolve.
   const isContinuous =
     (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
-
-  const scheduleRender = useCallback(() => {
-    if (rafRef.current && !isContinuous) return
-    if (!rafRef.current) {
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }
-  }, [isContinuous])
 
   // Update config when props change
   useEffect(() => {
@@ -534,12 +542,8 @@ const StreamNetworkFrame = forwardRef<
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
 
-  // Repaint canvas when ThemeProvider theme changes — invalidate CSS var cache
-  useEffect(() => {
-    clearCSSColorCache()
-    dirtyRef.current = true
-    scheduleRender()
-  }, [currentTheme, scheduleRender])
+  // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+  // is handled by useFrame above when themeDirtyRef is provided.
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -814,9 +818,9 @@ const StreamNetworkFrame = forwardRef<
   )
 
   // ── Hover handlers ───────────────────────────────────────────────────
-
-  const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
-  const hoverLeaveRef = useRef<() => void>(() => {})
+  // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+  // come from useFrame above; frame still owns the closure bodies.
+  const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
   hoverHandlerRef.current = (e: HoverPointerCoords) => {
     if (!enableHover) return
@@ -926,37 +930,7 @@ const StreamNetworkFrame = forwardRef<
     }
   }
 
-  // Coalesce pointermove events to one hit test per animation frame.
-  // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-  // wasteful re-renders. Capture latest coords; process in rAF.
-  const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-  const moveRafRef = useRef(0)
-  const flushPendingMove = useCallback(() => {
-    moveRafRef.current = 0
-    const coords = pendingMoveCoordsRef.current
-    pendingMoveCoordsRef.current = null
-    if (coords) hoverHandlerRef.current(coords)
-  }, [])
-  const onMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-      if (moveRafRef.current === 0) {
-        moveRafRef.current = requestAnimationFrame(flushPendingMove)
-      }
-    },
-    [flushPendingMove]
-  )
-  const onMouseLeave = useCallback(
-    () => {
-      pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
-      }
-      hoverLeaveRef.current()
-    },
-    []
-  )
+  // pointermove coalescing + onPointerLeave come from useFrame above.
   const onClick = useCallback(
     (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
@@ -1038,8 +1012,8 @@ const StreamNetworkFrame = forwardRef<
   const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
     kbFocusIndexRef.current = -1
     focusedNavPointRef.current = null
-    onMouseMove(e)
-  }, [onMouseMove])
+    onPointerMove(e)
+  }, [onPointerMove])
 
   // ── Render function ──────────────────────────────────────────────────
 
@@ -1182,13 +1156,8 @@ const StreamNetworkFrame = forwardRef<
   useEffect(() => {
     scheduleRender()
     return () => {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
-      // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-      pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
-      }
+      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+      // is handled by useFrame.
     }
   }, [scheduleRender])
 
@@ -1330,7 +1299,7 @@ const StreamNetworkFrame = forwardRef<
         aria-label={description || (typeof title === "string" ? title : "Network chart")}
         style={{ position: "relative", width: "100%", height: "100%" }}
         onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
-        onMouseLeave={enableHover ? onMouseLeave : undefined}
+        onMouseLeave={enableHover ? onPointerLeave : undefined}
         onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       >
       {backgroundGraphics && (

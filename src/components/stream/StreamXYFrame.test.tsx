@@ -475,6 +475,43 @@ describe("StreamXYFrame", () => {
       const bgRect = container.querySelector("[data-testid='bg']")
       expect(bgRect).toBeTruthy()
     })
+
+    // Regression: composing one chart as a `position: absolute` overlay on
+    // top of another is an intended pattern (see docs/RealtimeHistogramPage).
+    // Without an opt-out, the overlay canvas paints its background across
+    // the full area and hides the base layer. `background="transparent"`
+    // must short-circuit the fill so the composition works.
+    describe("background paint (overlay composition)", () => {
+      const getMockCtx = () =>
+        (HTMLCanvasElement.prototype.getContext as any)() as Record<string, any>
+
+      it("paints an explicit background color via fillRect", () => {
+        const ctx = getMockCtx()
+        const fillRectStyles: string[] = []
+        const origFillRect = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          fillRectStyles.push(String(ctx.fillStyle))
+          return origFillRect?.apply(ctx, args)
+        })
+        render(<StreamXYFrame chartType="scatter" background="red" />)
+        expect(fillRectStyles).toContain("red")
+      })
+
+      it("skips the background paint when background='transparent'", () => {
+        const ctx = getMockCtx()
+        const fillRectStyles: string[] = []
+        const origFillRect = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          fillRectStyles.push(String(ctx.fillStyle))
+          return origFillRect?.apply(ctx, args)
+        })
+        render(<StreamXYFrame chartType="scatter" background="transparent" />)
+        // No fillRect call should have been made with a background color
+        // (scatter charts don't emit fillRect for data marks, so any
+        // fillRect here would be the background paint we're opting out of).
+        expect(fillRectStyles).toHaveLength(0)
+      })
+    })
   })
 
   // ── Brush overlay ─────────────────────────────────────────────────────
