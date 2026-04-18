@@ -469,6 +469,26 @@ describe("Geo SSR", () => {
       expect(svg).not.toContain("d.lon")
       expect(svg).not.toContain("function")
     })
+
+    it("non-finite flow values don't produce NaN stroke-widths", () => {
+      // Regression: with a mix of numeric + non-numeric values and a
+      // valid valueRange, the non-numeric flows' strokeWidth would
+      // otherwise compute to NaN and land in the SVG as `stroke-width="NaN"`.
+      const mixedFlows = [
+        { source: "A", target: "B", value: 10 },
+        { source: "A", target: "C", value: 50 },
+        { source: "B", target: "C", value: "not-a-number" }, // non-finite
+        { source: "A", target: "B", value: null },           // null → NaN via Number()
+      ]
+      const svg = renderChart("FlowMap", {
+        flows: mixedFlows, nodes,
+        valueAccessor: "value",
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg).not.toContain("NaN")
+      expect(svg).not.toContain("stroke-width=\"NaN\"")
+    })
   })
 })
 

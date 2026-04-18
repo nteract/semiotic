@@ -660,8 +660,16 @@ const flowMap: ChartConfig = {
       fitPadding: rest.fitPadding,
       colorScheme,
       lineStyle: (d: any) => {
-        const v = Number(d?.[valueAccessor] ?? 0)
-        const normalized = valueRange > 0 ? (v - minValue) / valueRange : 0
+        // Guard against non-finite values (NaN from strings, Infinity, etc.)
+        // — they'd otherwise propagate through `normalized` and produce an
+        // invalid `stroke-width="NaN"` in the output SVG. Non-finite inputs
+        // collapse to `minValue`, and the ratio is clamped to [0, 1] as a
+        // belt-and-suspenders against odd (value < minValue, value > maxValue)
+        // inputs.
+        const raw = Number(d?.[valueAccessor])
+        const v = Number.isFinite(raw) ? raw : minValue
+        const ratio = valueRange > 0 ? (v - minValue) / valueRange : 0
+        const normalized = Math.max(0, Math.min(1, ratio))
         const width = widthMin + normalized * widthSpan
         return {
           stroke: resolveEdgeColor(d),
