@@ -396,8 +396,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Hover handler ─────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
-    // come from useFrame above. Geo doesn't define a hoverLeaveRef body
-    // (no hover-leave behavior), so the default no-op is fine.
+    // come from useFrame above. Geo assigns BOTH bodies: the hover-move
+    // body (hit testing on hover) further down via useEffect, and the
+    // hover-leave body (clear hover state + schedule render) inline
+    // where `frame.hoverLeaveRef.current = ...` is set a few lines below.
     const { hoverHandlerRef, onPointerMove, onPointerLeave } = frame
 
     useEffect(() => {
