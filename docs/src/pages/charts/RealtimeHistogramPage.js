@@ -277,9 +277,28 @@ function FilteredLineOverlay({ allData, chartWidth }) {
 
   return (
     <div style={{ position: "relative", "--semiotic-border": "rgba(204,204,204,0.25)", "--semiotic-grid": "rgba(224,224,224,0.25)" }}>
-      {/* Filtered data: gradient-filled area (only when brush is active) */}
+      {/* Base layer: full time series. Fades to light gray when a brush is
+          active so the filtered overlay on top reads as the focus. */}
+      <LineChart
+        data={allData}
+        xAccessor="time"
+        yAccessor="value"
+        width={chartWidth}
+        height={200}
+        color={hasBrush ? "#d0d0d0" : "#007bff"}
+        lineWidth={hasBrush ? 1 : 2}
+        frameProps={{
+          xExtent: timeExtent,
+          yExtent: valueExtent,
+          showAxes: true,
+        }}
+      />
+      {/* Overlay: filtered subset as a bold blue line with gradient fill.
+          Absolutely positioned so it lines up pixel-for-pixel with the
+          base chart (same xExtent/yExtent → same data-to-pixel mapping).
+          `pointerEvents: none` keeps tooltip/brush interaction on the base. */}
       {hasBrush && filteredData.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <AreaChart
             data={filteredData}
             xAccessor="time"
@@ -287,9 +306,10 @@ function FilteredLineOverlay({ allData, chartWidth }) {
             width={chartWidth}
             height={200}
             color="#007bff"
-            areaOpacity={0.5}
+            areaOpacity={0.35}
             gradientFill
-            showLine={false}
+            showLine
+            lineWidth={2}
             frameProps={{
               xExtent: timeExtent,
               yExtent: valueExtent,
@@ -298,21 +318,6 @@ function FilteredLineOverlay({ allData, chartWidth }) {
           />
         </div>
       )}
-      {/* Unfiltered data: thin gray line (always visible) */}
-      <LineChart
-        data={allData}
-        xAccessor="time"
-        yAccessor="value"
-        width={chartWidth}
-        height={200}
-        color="#999"
-        lineWidth={1}
-        frameProps={{
-          xExtent: timeExtent,
-          yExtent: valueExtent,
-          showAxes: true,
-        }}
-      />
     </div>
   )
 }
@@ -405,9 +410,10 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
 
   return (
     <div style={{ position: "relative", "--semiotic-border": "rgba(204,204,204,0.25)", "--semiotic-grid": "rgba(224,224,224,0.25)" }}>
-      {/* Filtered: bold colored lines (only when brush is active) */}
+      {/* Filtered: bold colored lines (only when brush is active).
+          `pointerEvents: none` keeps hover/brush on the base chart. */}
       {hasBrush && filteredData.length > 1 && (
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <LineChart
             data={filteredData}
             xAccessor="time"
