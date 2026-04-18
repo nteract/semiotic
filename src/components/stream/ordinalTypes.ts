@@ -247,8 +247,12 @@ export interface OrdinalPipelineConfig {
   connectorOpacity?: number
   showLabels?: boolean
 
-  // Sort — comparator receives category names (strings)
-  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc"
+  // Sort — comparator receives category names (strings).
+  // "auto" preserves insertion order while streaming and sorts by value
+  // descending on static data. Pass `"asc"` / `"desc"` / a comparator for
+  // explicit ordering, `false` / insertion-order always, or `true` /
+  // undefined for value-desc regardless of source.
+  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
 
   // Connectors
   connectorAccessor?: string | ((d: any) => string)
@@ -332,8 +336,12 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   oExtent?: string[]
   extentPadding?: number
 
-  // Sort — comparator receives category names (strings)
-  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc"
+  // Sort — comparator receives category names (strings).
+  // "auto" preserves insertion order while streaming and sorts by value
+  // descending on static data. Pass `"asc"` / `"desc"` / a comparator for
+  // explicit ordering, `false` / insertion-order always, or `true` /
+  // undefined for value-desc regardless of source.
+  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
 
   // Streaming
   arrowOfTime?: ArrowOfTime

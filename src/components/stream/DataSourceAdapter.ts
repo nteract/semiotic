@@ -110,6 +110,27 @@ export class DataSourceAdapter<T = Record<string, any>> {
   }
 
   /**
+   * Replace the buffer contents without clearing category insertion-order
+   * memory. Intended for aggregator HOCs (e.g. LikertChart) that re-derive
+   * a full dataset from streaming input on every push — the transport is
+   * wholesale replacement, but the user perceives it as a live stream
+   * where categories should stay put across updates.
+   *
+   * Emits a single synchronous changeset (no progressive chunking): the
+   * aggregated dataset size is small and bounded by the category-count,
+   * not the stream length, so chunking buys nothing and would fragment
+   * the transition animation.
+   */
+  setReplacementData(data: T[]): void {
+    this.lastBoundedData = data
+    if (this.chunkTimer) {
+      cancelAnimationFrame(this.chunkTimer)
+      this.chunkTimer = 0
+    }
+    this.callback({ inserts: data, bounded: true, preserveCategoryOrder: true })
+  }
+
+  /**
    * Flush all buffered push data as a single changeset.
    * Called automatically via microtask after push()/pushMany().
    */

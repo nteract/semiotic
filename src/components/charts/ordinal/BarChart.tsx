@@ -29,7 +29,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
-  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: Record<string, any>, b: Record<string, any>) => number)
   barPadding?: number
   /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
   roundedTop?: number

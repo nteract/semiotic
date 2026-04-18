@@ -167,7 +167,18 @@ export class OrdinalPipelineStore {
     if (changeset.bounded) {
       this.buffer.clear()
       this.rExtent.clear()
-      this.categories.clear()
+      // `preserveCategoryOrder` is the escape hatch for aggregator HOCs
+      // that re-derive their full dataset from streaming input on every
+      // push (LikertChart, etc.). Without it, the category insertion
+      // order resets on every replacement and categories appear to
+      // shuffle as values fluctuate. The flag also marks the store as
+      // streaming-sourced so `resolveCategories` takes the preserve
+      // branch.
+      if (!changeset.preserveCategoryOrder) {
+        this.categories.clear()
+      } else {
+        this._hasStreamingData = true
+      }
       if (this.timestampBuffer) this.timestampBuffer.clear()
 
       const targetSize = changeset.totalSize || changeset.inserts.length
@@ -390,11 +401,20 @@ export class OrdinalPipelineStore {
   private resolveCategories(data: Record<string, any>[]): string[] {
     const cats = Array.from(this.categories)
     const sort = this.config.oSort
+    const isStreaming = this.config.runtimeMode === "streaming" || this._hasStreamingData
+
+    // "auto" means "insertion order when streaming, value-desc when
+    // static" — the right default for charts where users want value-sort
+    // on a finished dataset but FIFO stability while data is still
+    // arriving (DotPlot, LikertChart). Both arms collapse to `undefined`
+    // because the streaming-preserve branch fires on `undefined && isStreaming`
+    // and the value-desc fallback fires on `undefined && !isStreaming`.
+    const effectiveSort: typeof sort = sort === "auto" ? undefined : sort
 
     // In streaming mode (explicit runtimeMode or push-API data), preserve
     // insertion order by default to avoid jarring category shuffling as
     // values fluctuate in the sliding window
-    if ((this.config.runtimeMode === "streaming" || this._hasStreamingData) && sort === undefined) {
+    if (isStreaming && effectiveSort === undefined) {
       // Filter to only categories with live data in the buffer, but do NOT
       // delete from the Set — so if a category's data is evicted and later
       // re-pushed, it retains its original FIFO position (no shuffling)
@@ -421,10 +441,10 @@ export class OrdinalPipelineStore {
       return cats.filter(cat => liveCategories.has(cat))
     }
 
-    if (sort === false) return cats
+    if (effectiveSort === false) return cats
 
-    if (typeof sort === "function") {
-      return cats.sort(sort)
+    if (typeof effectiveSort === "function") {
+      return cats.sort(effectiveSort)
     }
 
     // Default: sort by total value descending (unless explicitly "asc")
@@ -434,7 +454,7 @@ export class OrdinalPipelineStore {
       sums.set(cat, (sums.get(cat) || 0) + Math.abs(this.getR(d)))
     }
 
-    if (sort === "asc") {
+    if (effectiveSort === "asc") {
       return cats.sort((a, b) => (sums.get(a) || 0) - (sums.get(b) || 0))
     }
 

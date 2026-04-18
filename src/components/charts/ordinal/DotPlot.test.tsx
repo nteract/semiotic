@@ -86,13 +86,13 @@ describe("DotPlot", () => {
       expect(lastOrdinalFrameProps.projection).toBe("vertical")
     })
 
-    it("defaults sort to true", () => {
+    it("defaults sort to 'auto' (insertion order when streaming, value-desc when static)", () => {
       render(
         <TooltipProvider>
           <DotPlot data={sampleData} />
         </TooltipProvider>
       )
-      expect(lastOrdinalFrameProps.oSort).toBe(true)
+      expect(lastOrdinalFrameProps.oSort).toBe("auto")
     })
 
     it("forwards sort=false as oSort", () => {

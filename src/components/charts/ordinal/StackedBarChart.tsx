@@ -30,7 +30,7 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   colorScheme?: string | string[]
   normalize?: boolean
   /** Category sort order. Default: false (data insertion order). "asc"/"desc" sorts by total stacked value. Custom comparators receive category keys. */
-  sort?: boolean | "asc" | "desc" | ((a: string, b: string) => number)
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
   /** Rounded top corner radius. Only the topmost stacked segment gets rounded. */
   roundedTop?: number

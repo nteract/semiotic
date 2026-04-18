@@ -231,7 +231,11 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       streaming.resetCategories()
       frameRef.current?.clear()
     },
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    // Exposed for debuggability and test verification of streaming
+    // category order. The ordinal scale's domain is the source of truth
+    // for how categories appear in the rendered output.
+    getScales: () => frameRef.current?.getScales() ?? null
   }), [wrappedPush, wrappedPushMany, streaming.resetCategories, accumulatorRef])
 
   // ── Chart setup ──────────────────────────────────────────────────────

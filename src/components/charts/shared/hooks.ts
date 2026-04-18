@@ -138,14 +138,20 @@ export function useColorScale(
 /**
  * Hook to sort data by a value accessor.
  * Used by BarChart and DotPlot.
+ *
+ * `"auto"` is a pass-through here: the frame-level `resolveCategories`
+ * decides whether to preserve insertion order (streaming) or sort by
+ * value (static). The row-level ordering of `data` in the HOC doesn't
+ * actually drive the visual category order — that comes from the store —
+ * so "auto" at the HOC level simply declines to sort.
  */
 export function useSortedData(
   data: Array<Record<string, any>>,
-  sort: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number),
+  sort: boolean | "asc" | "desc" | "auto" | ((a: Record<string, any>, b: Record<string, any>) => number),
   valueAccessor: Accessor<number>
 ): Array<Record<string, any>> {
   return useMemo(() => {
-    if (!sort) return data
+    if (!sort || sort === "auto") return data
     const copy = [...data]
     if (typeof sort === "function") return copy.sort(sort)
     const getValue = resolveAccessor<number>(valueAccessor)

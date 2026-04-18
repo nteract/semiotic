@@ -471,10 +471,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [scheduleRender])
 
-    // Data replacement. Routes through `setBoundedData` (same path as the
-    // `data` prop), which emits `bounded: true` changesets — those don't
-    // wipe the store's `prevPositionMap`, so the transition system can
-    // snapshot pre-replacement positions and animate to the new ones.
+    // Data replacement. Routes through `setReplacementData`, which emits
+    // `{ bounded: true, preserveCategoryOrder: true }`. Two effects:
+    //   1. The store skips `categories.clear()` on ingest so insertion
+    //      order is preserved across replacements (otherwise categories
+    //      would shuffle as their values fluctuate across re-aggregations
+    //      — e.g. LikertChart streaming percentages).
+    //   2. `_hasStreamingData` is flipped so `resolveCategories` picks
+    //      the streaming-preserve branch for `sort: "auto"` / undefined.
+    //   3. Transitions still fire because bounded ingest doesn't wipe
+    //      the store's `prevPositionMap`.
     //
     // Parameter type mirrors `pushPoint`/`pushManyPoints` above: the frame
     // itself isn't generic (it's typed with the non-generic
@@ -486,7 +492,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // sees `replace(data: MyDatum[])` at the call site.
     const replaceData = useCallback((newData: Record<string, any>[]) => {
       adapterRef.current?.clearLastData()
-      adapterRef.current?.setBoundedData(newData)
+      adapterRef.current?.setReplacementData(newData)
     }, [])
 
     useImperativeHandle(ref, () => ({
