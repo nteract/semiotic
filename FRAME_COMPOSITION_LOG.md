@@ -222,7 +222,7 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **Click-testing recommended**: rapid pointer movement across a chart with many points (e.g. Scatterplot with 1K+ points) — should remain fluid. Mouse-out then mouse-in cycle while hovering — leave handler fires, then re-entry produces a new tooltip. Mid-hover unmount (tab switch) — no console errors.
 - **Complexity**: 4 frames × ~25 LoC removed + ~7 LoC each for cleanup; +50 LoC in useFrame. Net -50 LoC, much more maintainable.
 - **Status**: extracted, 4/4 frames migrated, 46 hook tests + 3046 total vitest green.
-- **Commit**: pending
+- **Commit**: 3f777d90
 
 ---
 
@@ -297,6 +297,64 @@ single concern but apply to the migration as a whole.
 
 ---
 
+## Concerns evaluated during extraction and deliberately declined
+
+Mid-extraction, several Tier B/C items in the catalog turned out to have
+less consolidation value than the catalog initially estimated. Documented
+here so future readers know they were considered, not missed.
+
+### Tier B (deferred — cosmetic only)
+
+- **Common state cluster** (`hoverPoint`, `currentScales`, `annotationFrame`):
+  grouping these as declarations doesn't reduce maintenance burden — they're
+  just `useState` calls. The state semantics are family-specific (different
+  scene types, different scales). The only real share is the `setHoverPoint`
+  call inside the hover handler, which already lives behind the
+  hover-coalescing extraction.
+- **Common refs cluster** (`canvasRef`, `dirtyRef`, `hoverRef`, `hoveredNodeRef`,
+  `interactionCanvasRef`): similarly cosmetic. `dirtyRef` IS already
+  threaded through the hook for the theme-change effect; the rest are
+  family-specific (interactionCanvasRef and hoveredNodeRef are XY-only;
+  hoverRef has different element types per family).
+
+### Tier C (declined — reasoning per item)
+
+- **DataSourceAdapter lifecycle (XY + Ordinal only)** — only 2 of 4 frames
+  use it. The pattern is ~15 lines and was just bug-fixed for StrictMode
+  cleanup; the maintenance value of consolidating across just 2 frames
+  doesn't justify the risk of touching a recently-stable lifecycle path.
+- **AccessibleDataTable + SkipToTableLink wiring** — would require a JSX
+  wrapper component (different shape from useFrame). The wiring is 2
+  lines per frame and the family-specific table component (`AccessibleDataTable`
+  vs `NetworkAccessibleDataTable`) would need to be passed as a prop.
+  Net win: ~6 LoC across 4 frames for a new wrapper component. Not worth
+  the abstraction overhead.
+- **AriaLiveTooltip + ScreenReaderSummary wiring** — same rationale. JSX
+  shape, low LoC.
+- **SSR early-return path** — the outer shell is shared (~10 lines: div
+  with role/aria-label, ScreenReaderSummary, SVG container) but the
+  inner content is family-specific (each family has its own SVGOverlay
+  with a wildly different prop bag, and the scene-to-SVG converter is
+  per-family). A render-prop wrapper would save the outer shell's 10
+  lines for substantial complexity. Skip.
+- **Keyboard navigation + FocusRing** — the FocusRing JSX render is 1
+  line per frame; the keyboard handler logic varies meaningfully per
+  family (Geo uses a flat list with `nextIndex`; XY/Ordinal use NavGraph
+  with `nextGraphIndex`; Network uses `nextNetworkIndex`; the navPoint
+  extraction differs per family). Wrapping the state setup (the three
+  refs) is mechanical but the handler body — where bugs live — stays
+  family-specific. Not worth the wrapper.
+
+### What remains genuinely shared but stays in-frame
+
+`renderFnRef.current` body assignment — the render closure itself stays
+family-local because it captures local frame state (storeRef, scales,
+hoverRef contents, etc.) that the hook can't generically thread. The
+hook owns the ref + the rAF coalescing; the frame body owns the closure
+that gets queued.
+
+---
+
 ## Frames not migrated / concerns deliberately left in place
 
 These were considered and deliberately kept frame-specific. Listed here so
@@ -331,18 +389,69 @@ future readers know it was a decision, not an oversight.
 
 ## Final test gate
 
-To be filled in at the end:
+- [x] `npm run typescript` clean
+- [x] `npm run test` (vitest) — **3046 tests passing across 168 files** (was 3004 pre-refactor; +42 from new `useFrame.test.ts`)
+- [x] `npm run dist` + `npm run dist:prod` clean
+- [x] `npm run test:dist` (Playwright, chromium-darwin) — **183 tests passing**
+- [x] Visual snapshot suite green (re-ran after a first-pass parallel flake on 3 geo snapshots; the second run was clean and the geo tests pass in isolation, confirming the failures were parallel-execution flakes inherent to that spec, not refactor regressions)
+- [ ] Click-testing checklist (below) — **awaiting user review**
 
-- [ ] `npm run typescript` clean
-- [ ] `npm run test` (vitest, 3000+ tests)
-- [ ] `npm run dist` + `npm run dist:prod` clean
-- [ ] `npm run test:dist` (Playwright) green on chromium-darwin
-- [ ] Visual snapshot suite green (no diffs beyond tolerance)
-- [ ] Click-testing checklist (below) reviewed
+## Branch state
+
+6 commits on `frame-composition-hook`:
+
+| # | Commit | What |
+|---|---|---|
+| 1 | `b37784db` | Scaffold useFrame + 21 tests for Tier A concerns |
+| 2 | `ac1a283d` | Migrate StreamOrdinalFrame to useFrame Tier A |
+| 3 | `73e78764` | Migrate XY/Network/Geo to useFrame Tier A |
+| 4 | `c5345b6a` | Extract scheduleRender + rAF cancel-on-unmount (Tier B) |
+| 5 | `49311bf1` | Extract theme-change effect (Tier B) |
+| 6 | `3f777d90` | Extract hover handler ref + rAF-coalesced pointermove (Tier C) |
+
+Net diff vs. main:
+- 4 Stream Frames: −360 lines (boilerplate removed)
+- `useFrame.ts`: +351 lines (~half is doc comments)
+- `useFrame.test.ts`: +490 lines (46 behavior tests)
+- `FRAME_COMPOSITION_LOG.md`: +348 lines (this doc)
+
+The Stream Frames each shrunk by 50–80 lines of duplicated boilerplate.
+Per-concern source-of-truth now lives in `useFrame` with explicit unit
+tests around every contract; future bug fixes apply once.
+
+Nothing pushed yet to remote.
 
 ## Click-testing checklist
 
-Items the user should manually verify in a real browser before merging:
+Items to manually verify in a real browser before merging. Aggregated from
+the per-concern entries above. Each one targets behavior the unit suite
+can't catch (timing, visual feedback, accessibility tooling).
 
-(Filled in as concerns get migrated. Each item links back to its per-concern
-entry above.)
+**Theme system** (concerns 1, 3):
+- [ ] Switch ThemeProvider theme cycle: light → dark → tufte → bi-tool-dark → light, on at least one chart per family. Each transition should redraw with the new palette/background; no flash of stale colors.
+
+**Sizing** (concern 1):
+- [ ] Drag a window narrower with a `responsiveWidth` chart in any family — chart tracks size without flicker.
+
+**Animations** (concern 1):
+- [ ] First-mount intro animation on `<BarChart animate>` — bars grow from baseline.
+- [ ] Toggle OS reduced-motion preference, reload — `animate` should be ignored.
+
+**Marginal graphics** (XY-specific):
+- [ ] Scatterplot with `marginalGraphics={{ top: ..., right: ... }}` — margins auto-expand to ≥60px on configured sides.
+
+**Accessible data table** (concern 1):
+- [ ] Tab onto any chart with `accessibleTable` (default true) — should focus the SkipToTableLink, then reach the table.
+
+**Render scheduling** (concern 2):
+- [ ] Rapid streaming push (RealtimeLineChart with high-frequency push) — fluid, no flicker.
+- [ ] Mount-then-immediately-unmount during streaming (e.g. dashboard tab switch) — no console errors after unmount.
+
+**Hover** (concern 4):
+- [ ] Rapid pointer movement across a Scatterplot with 1K+ points — fluid; tooltip follows the pointer.
+- [ ] Mouse-out then mouse-in cycle while hovering — leave handler clears tooltip; re-entry produces a new tooltip.
+- [ ] Mid-hover unmount — no console errors.
+
+If anything in this list misbehaves, capture the failing scenario as a new
+unit/integration test before fixing — that closes the regression hole the
+extraction reopened.
