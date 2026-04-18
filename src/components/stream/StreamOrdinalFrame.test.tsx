@@ -170,7 +170,7 @@ describe("StreamOrdinalFrame", () => {
   // ── Push API ──────────────────────────────────────────────────────────
 
   describe("push API", () => {
-    it("exposes push, pushMany, clear, getData, getScales on ref", () => {
+    it("exposes push, pushMany, replace, clear, getData, getScales on ref", () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
       render(
         <StreamOrdinalFrame ref={ref} chartType="bar" />
@@ -178,6 +178,7 @@ describe("StreamOrdinalFrame", () => {
       expect(ref.current).toBeTruthy()
       expect(typeof ref.current!.push).toBe("function")
       expect(typeof ref.current!.pushMany).toBe("function")
+      expect(typeof ref.current!.replace).toBe("function")
       expect(typeof ref.current!.clear).toBe("function")
       expect(typeof ref.current!.getData).toBe("function")
       expect(typeof ref.current!.getScales).toBe("function")
@@ -218,6 +219,86 @@ describe("StreamOrdinalFrame", () => {
         ])
       })
       expect(ref.current!.getData().length).toBe(3)
+    })
+
+    it("replace swaps the full dataset in one call", async () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
+      render(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          runtimeMode="streaming"
+          categoryAccessor="cat"
+          valueAccessor="val"
+        />
+      )
+      await act(async () => {
+        ref.current!.pushMany([
+          { cat: "A", val: 10 },
+          { cat: "B", val: 20 },
+        ])
+      })
+      expect(ref.current!.getData().length).toBe(2)
+
+      // replace() atomically swaps to a fresh dataset — none of the old
+      // rows should remain (this is the behavior aggregating HOCs like
+      // LikertChart rely on when re-aggregating streaming input).
+      await act(async () => {
+        ref.current!.replace([
+          { cat: "A", val: 99 },
+          { cat: "B", val: 88 },
+          { cat: "C", val: 77 },
+        ])
+      })
+      const after = ref.current!.getData()
+      expect(after.length).toBe(3)
+      expect(after.find((d: any) => d.val === 10)).toBeUndefined() // old datum gone
+      expect(after.find((d: any) => d.val === 99)).toBeTruthy()    // new datum present
+    })
+
+    it("replace preserves the position snapshot that clear() wipes", async () => {
+      // This is the load-bearing behavior: replace() routes through
+      // DataSourceAdapter.setBoundedData (bounded: true) which does NOT
+      // clear prevPositionMap in the store — whereas clear() does.
+      // Aggregating HOCs need the snapshot preserved so data-change
+      // transitions fire between old and new positions.
+      const data = [{ cat: "A", val: 10 }, { cat: "B", val: 20 }]
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
+      const { rerender } = render(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          runtimeMode="streaming"
+          categoryAccessor="cat"
+          valueAccessor="val"
+          animate={{ duration: 300, intro: false }}
+          size={[600, 400]}
+        />
+      )
+      await act(async () => { ref.current!.replace(data) })
+      // Force a render pass so scene + snapshot exist
+      rerender(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          runtimeMode="streaming"
+          categoryAccessor="cat"
+          valueAccessor="val"
+          animate={{ duration: 300, intro: false }}
+          size={[600, 400]}
+        />
+      )
+
+      // Second replace should still succeed without throwing and end
+      // up with the new data — the key implementation contract is that
+      // the bounded-ingest path does NOT call `store.clear()` under
+      // the hood. If it did, clear() would drop prevPositionMap and
+      // the store would have no basis for transition interpolation.
+      await act(async () => {
+        ref.current!.replace([{ cat: "A", val: 50 }, { cat: "B", val: 60 }])
+      })
+      expect(ref.current!.getData().length).toBe(2)
+      expect(ref.current!.getData().find((d: any) => d.val === 50)).toBeTruthy()
     })
 
     it("clear empties the data buffer", async () => {

@@ -470,6 +470,24 @@ describe("Geo SSR", () => {
       expect(svg).not.toContain("function")
     })
 
+    it("function edgeColorBy returning literal CSS colors passes through (not scaled)", () => {
+      // Mirrors the client FlowMap: getColor() detects CSS-color returns
+      // and passes them through instead of mapping the literal string as
+      // a category-domain entry (which would replace it with some other
+      // palette color entirely).
+      const svg = renderChart("FlowMap", {
+        flows, nodes,
+        valueAccessor: "value",
+        edgeColorBy: (d: any) => d.value > 20 ? "#ff00aa" : "#00aacc",
+        // colorScheme left unset — even with a default scheme, a function
+        // returning CSS colors must bypass the scale.
+        width: 400, height: 300,
+      })
+      expect(isValidSVG(svg)).toBe(true)
+      expect(svg.toLowerCase()).toContain("#ff00aa")
+      expect(svg.toLowerCase()).toContain("#00aacc")
+    })
+
     it("non-finite flow values don't produce NaN stroke-widths", () => {
       // Regression: with a mix of numeric + non-numeric values and a
       // valid valueRange, the non-numeric flows' strokeWidth would

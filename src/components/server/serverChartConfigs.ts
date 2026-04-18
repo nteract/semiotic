@@ -8,7 +8,7 @@
  * each chart type independently readable and testable.
  */
 
-import { createColorScale } from "../charts/shared/colorUtils"
+import { createColorScale, getColor } from "../charts/shared/colorUtils"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -578,23 +578,15 @@ const flowMap: ChartConfig = {
 
     // Edge-color resolution — mirror the FlowMap HOC API. `edgeColorBy`
     // (domain-specific) wins over top-level `colorBy`; either can be a
-    // string field or an accessor function. Delegates to the shared
-    // `createColorScale` so named schemes ("category10", "blues", …),
-    // scheme arrays, and the default-palette fallback all behave
+    // string field or an accessor function. Resolution goes through the
+    // shared `getColor` so named schemes ("category10", "blues", …) and
+    // function-accessors that return literal CSS colors both behave
     // identically to the client-side FlowMap. Fallback color matches
     // the HOC's `DEFAULT_COLOR`; kept inline to avoid pulling hook
     // internals into the server config module.
     const FLOW_DEFAULT_COLOR = "#007bff"
     const edgeColorByIn = rest.edgeColorBy ?? colorBy
     const isFnEdgeColor = typeof edgeColorByIn === "function"
-    // For function accessors, synthesize a stable string field on each
-    // line so `createColorScale` (which requires a string field name)
-    // can scan the data. The field name is unique enough to not collide
-    // with user data.
-    const EDGE_COLOR_FIELD = "__flowMapEdgeColor"
-    const colorByField: string | null = edgeColorByIn
-      ? (isFnEdgeColor ? EDGE_COLOR_FIELD : String(edgeColorByIn))
-      : null
 
     const lines = flows
       .map(flow => {
@@ -602,29 +594,37 @@ const flowMap: ChartConfig = {
         const src = nodeLookup.get(String(flow.source))
         const tgt = nodeLookup.get(String(flow.target))
         if (!src || !tgt) return null
-        const line: Record<string, any> = {
+        return {
           ...flow,
           coordinates: [
             { x: src.x, y: src.y },
             { x: tgt.x, y: tgt.y },
           ],
         }
-        if (isFnEdgeColor) {
-          line[EDGE_COLOR_FIELD] = (edgeColorByIn as (d: any) => string)(flow)
-        }
-        return line
       })
       .filter(Boolean) as Record<string, any>[]
 
-    // Build the color scale once using the shared utility, then close
-    // over it in `lineStyle`. Falls back to FLOW_DEFAULT_COLOR when no
-    // edgeColorBy was provided.
-    const colorScale = colorByField
-      ? createColorScale(lines, colorByField, colorScheme || "category10")
-      : null
+    // Build an ordinal scale once so every line reuses the same category →
+    // color mapping. For function accessors we synthesize a scratch field
+    // on a cloned array solely to seed the scale's domain — the lines
+    // themselves aren't mutated. `getColor` calls the user's function
+    // fresh at resolution time and short-circuits for CSS-color returns
+    // (so function accessors that return "#ff0000" or "red" literally
+    // pass through instead of being mapped).
+    const EDGE_COLOR_FIELD = "__flowMapEdgeColor"
+    const colorScale = (() => {
+      if (!edgeColorByIn) return null
+      if (isFnEdgeColor) {
+        const domainSeed = lines.map(l => ({
+          [EDGE_COLOR_FIELD]: (edgeColorByIn as (d: any) => string)(l),
+        }))
+        return createColorScale(domainSeed, EDGE_COLOR_FIELD, colorScheme || "category10")
+      }
+      return createColorScale(lines, edgeColorByIn as string, colorScheme || "category10")
+    })()
     const resolveEdgeColor = (d: any): string => {
-      if (!colorScale || !colorByField) return FLOW_DEFAULT_COLOR
-      return colorScale(String(d?.[colorByField] ?? ""))
+      if (!edgeColorByIn || !colorScale) return FLOW_DEFAULT_COLOR
+      return getColor(d, edgeColorByIn as string | ((d: any) => string), colorScale)
     }
 
     // Precompute min/max value range once per build. Recomputing inside
