@@ -56,7 +56,7 @@ Honest snapshot from `npm outdated`. We are meaningfully behind on several deps;
 
 | Dep | Current → Latest | Risk | Effort |
 |---|---|---|---|
-| `@modelcontextprotocol/sdk` 1.27.1 → 1.29.0 | minor; bundles into `ai/dist/mcp-server.js` shipped in the npm package — a regression breaks Claude Code / Cursor integrations for downstream users. | Run `npx semiotic-mcp` and connect from a real client (Claude Code, Cline) before merging. Skim the release notes between 1.27 and 1.29 for transport / tool-shape changes. | 1 hr |
+| ~~`@modelcontextprotocol/sdk` 1.27.1 → 1.29.0~~ | ~~bundles into shipped MCP server. Smoke test: stdio JSON-RPC `initialize` + `tools/list` round-trip. All 6 tools enumerate correctly under 1.29; tool shape gained additive `execution.taskSupport` field (non-breaking).~~ | DONE post-3.4.0 |
 | `esbuild` 0.27.4 → 0.28.0 | "minor" but esbuild is pre-1.0 so 0.x → 0.x can break. Used by parcel/rollup transitively. | Build + test pass = good enough. | 30 min |
 | `@types/node` 20.19.x → 25.6.0 | We pin Node 20 LTS via Volta — keep the runtime types matched to the runtime version. **Don't** bump types past Node 20.x range or you'll get `process.X` autocompletes for APIs the CI Node doesn't have. The dependabot bump to 25.x is wrong; close it and bump to latest 20.x patch only. | n/a — actively the wrong PR | reject |
 
