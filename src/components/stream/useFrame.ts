@@ -39,6 +39,7 @@ import { useResponsiveSize } from "./useResponsiveSize"
 import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
+import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 
 // ── Margin handling ─────────────────────────────────────────────────────────
 
@@ -100,6 +101,22 @@ export interface UseFrameInput {
   animate?: AnimateProp
   /** Frame's `transition` prop (legacy / explicit form). */
   transitionProp?: TransitionConfig
+  /**
+   * Frame's `dirtyRef` (the flag that forces a full canvas redraw on the
+   * next paint). When provided, useFrame installs a theme-change effect
+   * that bumps it to `true`, clears the CSS-var cache, and queues a
+   * render — the pattern that all four frames duplicated.
+   *
+   * Optional because this is a Tier B add-on; before the migration the
+   * frames installed this themselves. The hook keeps the input optional
+   * so a frame can opt in independently, but in practice all four pass
+   * it.
+   *
+   * `dirtyRef` is owned by the frame (not the hook) because its initial
+   * value differs by family — XY/Geo init to `false`, Ordinal/Network
+   * init to `true` (load-bearing for first-paint timing).
+   */
+  themeDirtyRef?: React.MutableRefObject<boolean>
 }
 
 export interface UseFrameResult {
@@ -225,6 +242,25 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
       }
     }
   }, [])
+
+  // ── Theme-change effect ───────────────────────────────────────────────
+  // When the theme changes (currentTheme reference changes), invalidate
+  // the per-canvas CSS-var color cache, force a full redraw on the next
+  // paint, and schedule that paint. Identical pattern across all four
+  // frames pre-migration; only installed when the frame opts in by
+  // passing themeDirtyRef.
+  //
+  // Note: `clearCSSColorCache` accepts an optional canvas argument that
+  // it doesn't use (the cache is global, keyed on a version counter).
+  // Both the canvas-arg and argless call sites in the four frames
+  // reduced to a single global counter bump; we use the argless form.
+  const themeDirtyRef = input.themeDirtyRef
+  useEffect(() => {
+    if (!themeDirtyRef) return
+    clearCSSColorCache()
+    themeDirtyRef.current = true
+    scheduleRender()
+  }, [currentTheme, scheduleRender, themeDirtyRef])
 
   return {
     reducedMotion,

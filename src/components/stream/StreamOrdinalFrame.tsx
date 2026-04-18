@@ -58,7 +58,6 @@ import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
@@ -302,7 +301,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       summary
     } = props
 
-    // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+    // dirtyRef is declared before useFrame so it can be threaded in for
+    // the theme-change effect. Initial value `true` is family-specific
+    // (Ordinal forces a first paint) — see investigation note #3.
+    const dirtyRef = useRef(true)
+
+    // ── Frame composition (Tier A + B concerns; see useFrame.ts) ─────────
     const frame = useFrame({
       sizeProp,
       responsiveWidth,
@@ -312,6 +316,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       foregroundGraphics,
       animate,
       transitionProp,
+      themeDirtyRef: dirtyRef,
     })
     const {
       reducedMotion,
@@ -326,6 +331,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       transition,
       introEnabled,
       tableId,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
     } = frame
 
     // Resolve new-style names with legacy fallback
@@ -337,12 +345,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const dirtyRef = useRef(true)
-    // Theme change tracking comes from useFrame above; effect is added
-    // below once scheduleRender is defined.
-    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount also from
-    // useFrame (above).
-    const { rafRef, renderFnRef, scheduleRender } = frame
     const hoverRef = useRef<HoverData | null>(null)
 
     // ── State ────────────────────────────────────────────────────────────
@@ -435,14 +437,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
-    useEffect(() => {
-      if (canvasRef.current) {
-        clearCSSColorCache(canvasRef.current)
-      }
-      dirtyRef.current = true
-      scheduleRender()
-    }, [currentTheme, scheduleRender])
+    // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+    // is handled by useFrame above when themeDirtyRef is provided.
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 

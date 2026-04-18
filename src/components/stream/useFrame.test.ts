@@ -7,7 +7,7 @@
  */
 import * as React from "react"
 import { renderHook } from "@testing-library/react"
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { useFrame } from "./useFrame"
 import type { UseFrameInput } from "./useFrame"
 import { ThemeProvider, DARK_THEME, LIGHT_THEME } from "../store/ThemeStore"
@@ -300,5 +300,75 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
     rerender()
     expect(result.current.renderFnRef).toBe(renderFn)
     expect(result.current.rafRef).toBe(rafRef)
+  })
+})
+
+describe("useFrame — theme-change effect", () => {
+  // Reuse the rAF mock from the surrounding scope behavior — beforeEach
+  // installs it, afterEach restores. The theme-change effect both mutates
+  // dirtyRef and calls scheduleRender, so we observe both effects.
+  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
+  let nextRafId = 1
+  const originalRAF = global.requestAnimationFrame
+  const originalCAF = global.cancelAnimationFrame
+
+  beforeEach(() => {
+    rafCallbacks = []
+    nextRafId = 1
+    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      const id = nextRafId++
+      rafCallbacks.push({ id, cb })
+      return id
+    }) as any
+    global.cancelAnimationFrame = ((id: number) => {
+      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
+    }) as any
+  })
+
+  afterEach(() => {
+    global.requestAnimationFrame = originalRAF
+    global.cancelAnimationFrame = originalCAF
+  })
+
+  it("does NOT install the theme-change effect when themeDirtyRef is not provided", () => {
+    renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    // No theme-change effect = no scheduleRender call from it = no rAF queued.
+    expect(rafCallbacks).toHaveLength(0)
+  })
+
+  it("on mount, sets dirtyRef.current = true and queues a render when themeDirtyRef is provided", () => {
+    const dirtyRef = { current: false } as React.MutableRefObject<boolean>
+    renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, themeDirtyRef: dirtyRef }),
+      { wrapper },
+    )
+    expect(dirtyRef.current).toBe(true)
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("preserves the frame's dirtyRef initial value when the ref already starts true", () => {
+    // Ordinal/Network init dirtyRef to true; the theme effect should be
+    // a no-op-with-respect-to-value (still true) rather than flipping it.
+    const dirtyRef = { current: true } as React.MutableRefObject<boolean>
+    renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, themeDirtyRef: dirtyRef }),
+      { wrapper },
+    )
+    expect(dirtyRef.current).toBe(true)
+  })
+
+  it("does NOT re-run on a rerender that doesn't change theme", () => {
+    const dirtyRef = { current: false } as React.MutableRefObject<boolean>
+    const { rerender } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, themeDirtyRef: dirtyRef }),
+      { wrapper },
+    )
+    expect(rafCallbacks).toHaveLength(1) // mount
+    dirtyRef.current = false // simulate a render-path resetting the flag
+    rafCallbacks = [] // ignore the mount queue
+    rerender()
+    // No new theme-change effect fire, no new rAF queued.
+    expect(rafCallbacks).toHaveLength(0)
+    expect(dirtyRef.current).toBe(false)
   })
 })

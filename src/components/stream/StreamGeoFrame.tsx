@@ -34,7 +34,6 @@ import { select } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
@@ -195,10 +194,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       summary
     } = props
 
-    // ── Frame composition (Tier A concerns; see useFrame.ts) ────────
+    // ── Frame composition (Tier A + B concerns; see useFrame.ts) ────────
     // Geo accepts size as either `size: [w, h]` or as separate `width`/
     // `height` props (legacy form). Resolve before handing to useFrame.
     const sizeFromProps: [number, number] = sizeProp || [widthProp || 600, heightProp || 400]
+    // dirtyRef declared before useFrame so it can be threaded in for the
+    // theme-change effect. Geo inits to true (load-bearing for first paint).
+    const dirtyRef = useRef(true)
     const frame = useFrame({
       sizeProp: sizeFromProps,
       responsiveWidth,
@@ -209,6 +211,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       backgroundGraphics,
       animate,
       transitionProp,
+      themeDirtyRef: dirtyRef,
     })
     const {
       reducedMotion,
@@ -224,6 +227,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       transition,
       introEnabled,
       tableId,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
     } = frame
 
     // Resolve dragRotate — defaults to true for orthographic
@@ -283,12 +289,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     if (tileURL && !tileCacheRef.current) {
       tileCacheRef.current = new TileCache(tileCacheSize || 256)
     }
-    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
-    // useFrame (above).
-    const { rafRef, renderFnRef, scheduleRender } = frame
-    const dirtyRef = useRef(true)
-    // Theme change tracking comes from useFrame above; effect is added
-    // below once scheduleRender is defined.
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount + dirtyRef
+    // + theme-change effect all destructured from useFrame above; not
+    // redeclared here.
     const prevAnnotationsRef = useRef(annotations)
 
     // Zoom state
@@ -321,12 +324,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
-    // ── Theme change → repaint canvas, clear CSS var cache ────────
-    useEffect(() => {
-      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [currentTheme, scheduleRender])
+    // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+    // is handled by useFrame above when themeDirtyRef is provided.
 
     // ── Sync config ───────────────────────────────────────────────────
 

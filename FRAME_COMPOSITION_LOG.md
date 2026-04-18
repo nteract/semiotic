@@ -192,6 +192,21 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **Click-testing recommended**: rapid streaming push (RealtimeLineChart with high-frequency push) — should remain fluid, no flicker. Mount-then-immediately-unmount (e.g., dashboard tab switch during streaming) — no console errors after the unmount.
 - **Complexity**: 4 frames × ~6 LoC removed for scheduleRender; 4 frames × 1 LoC removed for cleanup; +25 LoC in useFrame. Net -4 LoC, but more importantly: one source of truth for rAF coalescing.
 - **Status**: extracted, 4/4 frames migrated, 33 hook tests + 3033 total vitest green.
+- **Commit**: c5345b6a
+
+### 3. Theme-change effect (Tier B)
+
+- **Category**: lifecycle — invalidate canvas color cache + force redraw on theme change.
+- **Pulled from**: ~5 lines in each of XY (588–594), Ordinal (438–445), Network (548–553), Geo (328–333). Identical body modulo the `clearCSSColorCache(canvasRef.current)` vs `clearCSSColorCache()` call shape.
+- **What it does**: when `currentTheme` changes (or on mount), calls `clearCSSColorCache()`, sets `dirtyRef.current = true`, and queues a render. Without this, canvas paint keeps drawing with the old theme's colors until the next data-driven repaint.
+- **Why share**: identical pattern. Investigation found the canvas-arg vs argless distinction was cosmetic — `clearCSSColorCache`'s parameter is `_canvas?` (underscore-prefixed = unused; the cache is global, keyed on a version counter). Both call shapes reduce to the same global counter bump.
+- **What changed in behavior**: nothing. The hook installs the effect with the same dependency array (`[currentTheme, scheduleRender, themeDirtyRef]`). Frames pass their own `dirtyRef` to preserve the per-family initial value (XY/Geo init `false`; Ordinal/Network init `true`).
+- **Risk if wrong**: medium. Theme switch failures are visible — chart keeps drawing in old palette. The themed-charts visual snapshot suite (5 themes × 6 charts = 30 baselines) catches palette drift directly.
+- **Existing tests**: themed-charts.spec.ts (Playwright, 30 chromium-darwin baselines), unit tests for `resolveCSSColor` cache invalidation.
+- **New tests added**: 4 in `useFrame.test.ts` under "theme-change effect" — opt-in (no install when `themeDirtyRef` not provided), mount-time invocation (sets dirty + queues render), preserves initial-value-true behavior, no re-fire on irrelevant rerender.
+- **Click-testing recommended**: switch ThemeProvider theme on a live chart in any family — chart should immediately repaint with the new palette/background. Specifically test: light → dark → tufte → bi-tool-dark → light cycle on at least one chart per family.
+- **Complexity**: 4 frames × ~6 LoC removed; +25 LoC in useFrame (mostly comments). Required moving `dirtyRef` declaration above the `useFrame` call in each frame so it can be passed in (mechanical).
+- **Status**: extracted, 4/4 frames migrated, 37 hook tests + 3037 total vitest green.
 - **Commit**: pending
 
 ---

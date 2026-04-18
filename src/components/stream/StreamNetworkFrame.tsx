@@ -42,7 +42,6 @@ import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipT
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 
 // Canvas renderers
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
@@ -270,6 +269,9 @@ const StreamNetworkFrame = forwardRef<
   // standard DEFAULT_MARGIN for everything else. Resolve the family default
   // before handing it to useFrame.
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  // dirtyRef declared before useFrame so it can be threaded in for the
+  // theme-change effect. Network inits to true (load-bearing).
+  const dirtyRef = useRef(true)
   const frame = useFrame({
     sizeProp,
     responsiveWidth,
@@ -279,6 +281,7 @@ const StreamNetworkFrame = forwardRef<
     foregroundGraphics,
     animate,
     transitionProp,
+    themeDirtyRef: dirtyRef,
   })
   const {
     reducedMotion,
@@ -293,6 +296,9 @@ const StreamNetworkFrame = forwardRef<
     transition,
     introEnabled,
     tableId,
+    rafRef,
+    renderFnRef,
+    scheduleRender,
   } = frame
 
   const tensionConfig = useMemo(
@@ -422,11 +428,9 @@ const StreamNetworkFrame = forwardRef<
   // isContinuous branch, but the inner `if (!rafRef.current)` guard made
   // that branch's effect identical to the simple "bail if pending" — so
   // the shared hook semantics preserve Network's behavior exactly.
-  const { rafRef, renderFnRef, scheduleRender } = frame
+  // rafRef + renderFnRef + scheduleRender + dirtyRef + theme-change
+  // effect all destructured from useFrame above; not redeclared here.
   const lastFrameTimeRef = useRef(0)
-  const dirtyRef = useRef(true)
-  // Theme change tracking comes from useFrame above; effect is added
-  // below once scheduleRender is defined.
 
   // ── Store ────────────────────────────────────────────────────────────
 
@@ -540,12 +544,8 @@ const StreamNetworkFrame = forwardRef<
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
 
-  // Repaint canvas when ThemeProvider theme changes — invalidate CSS var cache
-  useEffect(() => {
-    clearCSSColorCache()
-    dirtyRef.current = true
-    scheduleRender()
-  }, [currentTheme, scheduleRender])
+  // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+  // is handled by useFrame above when themeDirtyRef is provided.
 
   // ── Layout execution ─────────────────────────────────────────────────
 

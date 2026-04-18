@@ -41,7 +41,6 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
-import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
@@ -402,6 +401,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     } = props
 
     // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+    // dirtyRef is declared before useFrame so it can be threaded in for
+    // the theme-change effect. XY/Geo init to false; Ordinal/Network init
+    // to true. See investigation note #3.
+    const dirtyRef = useRef(false)
+
     const frame = useFrame({
       sizeProp,
       responsiveWidth,
@@ -412,6 +416,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       backgroundGraphics,
       animate,
       transitionProp,
+      themeDirtyRef: dirtyRef,
     })
     const {
       reducedMotion,
@@ -422,6 +427,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       transition,
       introEnabled,
       tableId,
+      rafRef,
+      renderFnRef,
+      scheduleRender,
     } = frame
 
     // XY post-expands margin to at least 60px on any side that has a
@@ -458,13 +466,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
-    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
-    // useFrame (above). Pulled here once for the rest of the frame body.
-    const { rafRef, renderFnRef, scheduleRender } = frame
-    const dirtyRef = useRef(false)
-
-    // Theme change tracking comes from useFrame above; effect is added
-    // below once scheduleRender is defined.
+    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount + theme-
+    // change effect all come from useFrame (above).
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
@@ -582,12 +585,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender()
     }, [pipelineConfig, scheduleRender])
 
-    // Repaint canvas when ThemeProvider theme changes — clear CSS var cache
-    useEffect(() => {
-      if (canvasRef.current) clearCSSColorCache(canvasRef.current)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [currentTheme, scheduleRender])
+    // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
+    // is handled by useFrame above when themeDirtyRef is provided.
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
