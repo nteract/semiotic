@@ -22,7 +22,6 @@ import type {
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
@@ -35,8 +34,7 @@ import {
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useResponsiveSize } from "./useResponsiveSize"
+import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
@@ -56,8 +54,6 @@ import {
   spawnNetworkParticles
 } from "./renderers/networkParticleRenderer"
 import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -269,22 +265,35 @@ const StreamNetworkFrame = forwardRef<
     orbitAnimated
   } = props
 
-  // ── Reduced motion ────────────────────────────────────────────────────
-  const reducedMotion = useReducedMotion()
-  const reducedMotionRef = useRef(reducedMotion)
-  reducedMotionRef.current = reducedMotion
-
-  const tableId = `semiotic-table-${React.useId()}`
-
+  // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+  // Network has two margin defaults — CENTERED for radial chart types, the
+  // standard DEFAULT_MARGIN for everything else. Resolve the family default
+  // before handing it to useFrame.
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
-  const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
-  const margin = { ...baseMargin, ...marginProp }
-  const adjustedWidth = size[0] - margin.left - margin.right
-  const adjustedHeight = size[1] - margin.top - margin.bottom
-
-  const resolvedForeground = typeof foregroundGraphics === "function"
-    ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-    : foregroundGraphics
+  const frame = useFrame({
+    sizeProp,
+    responsiveWidth,
+    responsiveHeight,
+    userMargin: marginProp,
+    marginDefault: baseMargin,
+    foregroundGraphics,
+    animate,
+    transitionProp,
+  })
+  const {
+    reducedMotion,
+    reducedMotionRef,
+    responsiveRef,
+    size,
+    margin,
+    adjustedWidth,
+    adjustedHeight,
+    resolvedForeground,
+    currentTheme,
+    transition,
+    introEnabled,
+    tableId,
+  } = frame
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
@@ -295,10 +304,6 @@ const StreamNetworkFrame = forwardRef<
     () => ({ ...DEFAULT_PARTICLE_STYLE, ...particleStyleProp }),
     [particleStyleProp]
   )
-
-  // ── Animate → transition resolution ──────────────────────────────────
-
-  const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
 
   // ── Pipeline config ──────────────────────────────────────────────────
 
@@ -415,8 +420,8 @@ const StreamNetworkFrame = forwardRef<
   const rafRef = useRef(0)
   const lastFrameTimeRef = useRef(0)
   const dirtyRef = useRef(true)
-  // Theme change tracking (effect added after scheduleRender is defined)
-  const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+  // Theme change tracking comes from useFrame above; effect is added
+  // below once scheduleRender is defined.
   const renderFnRef = useRef<() => void>(() => {})
 
   // ── Store ────────────────────────────────────────────────────────────

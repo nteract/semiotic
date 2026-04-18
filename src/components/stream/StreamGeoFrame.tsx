@@ -20,16 +20,14 @@ import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
-import { useResponsiveSize } from "./useResponsiveSize"
+import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
 import { select } from "d3-selection"
@@ -44,8 +42,6 @@ import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
 import type { HoverPointerCoords } from "./hoverUtils"
 import type { LineSceneNode } from "./types"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
 import { resolveNodeColor } from "./sceneUtils"
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -199,32 +195,36 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       summary
     } = props
 
-    // ── Reduced motion ────────────────────────────────────────────────
-    const reducedMotion = useReducedMotion()
-    const reducedMotionRef = useRef(reducedMotion)
-    reducedMotionRef.current = reducedMotion
-
-    const tableId = `semiotic-table-${React.useId()}`
-
-    // ── Sizing ────────────────────────────────────────────────────────
-
+    // ── Frame composition (Tier A concerns; see useFrame.ts) ────────
+    // Geo accepts size as either `size: [w, h]` or as separate `width`/
+    // `height` props (legacy form). Resolve before handing to useFrame.
     const sizeFromProps: [number, number] = sizeProp || [widthProp || 600, heightProp || 400]
-    const [responsiveRef, size] = useResponsiveSize(sizeFromProps, responsiveWidth, responsiveHeight)
-
-    const margin = useMemo(() => ({
-      ...DEFAULT_MARGIN,
-      ...marginProp
-    }), [marginProp])
-
-    const adjustedWidth = size[0] - margin.left - margin.right
-    const adjustedHeight = size[1] - margin.top - margin.bottom
-
-    const resolvedForeground = typeof foregroundGraphics === "function"
-      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : foregroundGraphics
-    const resolvedBackground = typeof backgroundGraphics === "function"
-      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : backgroundGraphics
+    const frame = useFrame({
+      sizeProp: sizeFromProps,
+      responsiveWidth,
+      responsiveHeight,
+      userMargin: marginProp,
+      marginDefault: DEFAULT_MARGIN,
+      foregroundGraphics,
+      backgroundGraphics,
+      animate,
+      transitionProp,
+    })
+    const {
+      reducedMotion,
+      reducedMotionRef,
+      responsiveRef,
+      size,
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      resolvedForeground,
+      resolvedBackground,
+      currentTheme,
+      transition,
+      introEnabled,
+      tableId,
+    } = frame
 
     // Resolve dragRotate — defaults to true for orthographic
     const effectiveDragRotate = useMemo(() => {
@@ -236,10 +236,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           : null
       return projName === "orthographic"
     }, [dragRotateProp, projection])
-
-    // ── Animate → transition resolution ─────────────────────────────
-
-    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
 
     // ── Pipeline config ───────────────────────────────────────────────
 
@@ -289,8 +285,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }
     const rafRef = useRef(0)
     const dirtyRef = useRef(true)
-    // Theme change tracking (effect added after scheduleRender is defined)
-    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    // Theme change tracking comes from useFrame above; effect is added
+    // below once scheduleRender is defined.
     const prevAnnotationsRef = useRef(annotations)
     const renderFnRef = useRef<() => void>(() => {})
 

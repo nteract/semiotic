@@ -25,16 +25,13 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, findAllNodesAtX, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
-import { useResponsiveSize } from "./useResponsiveSize"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { useReducedMotion } from "./useMediaPreferences"
-import { useThemeSelector } from "../store/ThemeStore"
-import type { SemioticTheme } from "../store/ThemeStore"
+import { useFrame } from "./useFrame"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -46,7 +43,6 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -405,35 +401,55 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       linkedCrosshairSourceId
     } = props
 
-    // ── Reduced motion ────────────────────────────────────────────────────
-    const reducedMotion = useReducedMotion()
-    const reducedMotionRef = useRef(reducedMotion)
-    reducedMotionRef.current = reducedMotion
+    // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
+    const frame = useFrame({
+      sizeProp,
+      responsiveWidth,
+      responsiveHeight,
+      userMargin: marginProp,
+      marginDefault: DEFAULT_MARGIN,
+      foregroundGraphics,
+      backgroundGraphics,
+      animate,
+      transitionProp,
+    })
+    const {
+      reducedMotion,
+      reducedMotionRef,
+      responsiveRef,
+      size,
+      currentTheme,
+      transition,
+      introEnabled,
+      tableId,
+    } = frame
 
-    // ── Responsive sizing ──────────────────────────────────────────────────
-    const [responsiveRef, size] = useResponsiveSize(sizeProp, responsiveWidth, responsiveHeight)
-
-    const margin = { ...DEFAULT_MARGIN, ...marginProp }
-
-    // Auto-expand margins to at least 60px when marginals are configured
+    // XY post-expands margin to at least 60px on any side that has a
+    // configured marginal graphic, then re-resolves foreground/background
+    // against the expanded margin. The hook can't pre-do this because the
+    // marginalGraphics expansion is XY-specific; copy the hook's margin
+    // before mutating so the memoized object stays clean for next render.
+    let margin = frame.margin
+    let resolvedForeground = frame.resolvedForeground
+    let resolvedBackground = frame.resolvedBackground
     if (marginalGraphics) {
       const MIN_MARGINAL = 60
-      if (marginalGraphics.top && margin.top < MIN_MARGINAL) margin.top = MIN_MARGINAL
-      if (marginalGraphics.bottom && margin.bottom < MIN_MARGINAL) margin.bottom = MIN_MARGINAL
-      if (marginalGraphics.left && margin.left < MIN_MARGINAL) margin.left = MIN_MARGINAL
-      if (marginalGraphics.right && margin.right < MIN_MARGINAL) margin.right = MIN_MARGINAL
+      const m = { ...frame.margin }
+      if (marginalGraphics.top && m.top < MIN_MARGINAL) m.top = MIN_MARGINAL
+      if (marginalGraphics.bottom && m.bottom < MIN_MARGINAL) m.bottom = MIN_MARGINAL
+      if (marginalGraphics.left && m.left < MIN_MARGINAL) m.left = MIN_MARGINAL
+      if (marginalGraphics.right && m.right < MIN_MARGINAL) m.right = MIN_MARGINAL
+      margin = m
+      resolvedForeground = typeof foregroundGraphics === "function"
+        ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+        : foregroundGraphics
+      resolvedBackground = typeof backgroundGraphics === "function"
+        ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+        : backgroundGraphics
     }
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
-
-    // Resolve foregroundGraphics / backgroundGraphics — accept ReactNode or function({ size, margin })
-    const resolvedForeground = typeof foregroundGraphics === "function"
-      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : foregroundGraphics
-    const resolvedBackground = typeof backgroundGraphics === "function"
-      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : backgroundGraphics
 
     // Determine effective hover annotation config
     const effectiveHoverAnnotation = hoverAnnotation ?? enableHover
@@ -445,8 +461,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const rafRef = useRef(0)
     const dirtyRef = useRef(false)
 
-    // Theme change tracking (effect added after scheduleRender is defined)
-    const currentTheme = useThemeSelector((s: { theme: SemioticTheme }) => s.theme)
+    // Theme change tracking comes from useFrame above; effect is added
+    // below once scheduleRender is defined.
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
@@ -473,8 +489,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const isStreaming = runtimeMode === "streaming" || ["bar", "swarm", "waterfall"].includes(chartType)
 
-    // Resolve animate prop → transition config + intro flag
-    const { transition, introEnabled } = resolveAnimateConfig(animate, transitionProp)
+    // animate → transition + introEnabled comes from useFrame above.
 
     const pipelineConfig = useMemo((): PipelineConfig => ({
       chartType,
@@ -1301,7 +1316,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    const tableId = `semiotic-table-${React.useId()}`
+    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
 
     return (
       <div

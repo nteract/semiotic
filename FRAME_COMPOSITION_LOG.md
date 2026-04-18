@@ -164,8 +164,20 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **New tests added**: `src/components/stream/useFrame.test.ts` — 21 tests covering each Tier A concern's contract (sizing, margin merge, graphics resolution, theme tracking, animate, reduced motion, table id).
 - **Click-testing recommended**: none for the scaffold itself. Migrations of each frame are where click-testing applies; see entries 2–5.
 - **Complexity**: hook is 175 LoC (heavy on doc comments); test file is 200 LoC. No frame migration yet.
-- **Status**: extracted, 0/4 frames migrated.
-- **Commit**: b37784db
+- **Status**: extracted, 4/4 frames migrated.
+- **Commit**: b37784db (scaffold), ac1a283d (Ordinal), pending (XY/Network/Geo bundle).
+- **Per-frame notes**:
+  - **Ordinal**: clean migration. `dirtyRef = useRef(true)` left untouched per investigation note #3.
+  - **XY**: had a complication — XY post-mutates `margin` for marginalGraphics expansion (auto-expands any side with a configured marginal to ≥60px). The hook returns a memoized margin object; mutating it would corrupt the next render's "same" reference. Fix: XY destructures `frame.margin` as the starting point, and when marginalGraphics needs expansion, copies it into a frame-local `margin` and re-resolves `resolvedForeground`/`Background` against the expanded margin. Behavior preserved: function-form graphics callbacks still see the post-expanded margin, same as before.
+  - **Network**: clean migration. `CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN` is computed inline and passed to useFrame as `marginDefault` — the hook stays family-agnostic.
+  - **Geo**: clean migration. Geo also accepts legacy `width`/`height` props as fallback; resolved before passing to useFrame so the hook's input contract stays a single `[number, number]`.
+- **Click-testing recommended** (one canonical chart per family is enough — the migration is structurally identical):
+  1. Theme switch (light → dark → tufte): bar chart, scatter, force graph, choropleth — each should redraw with new palette.
+  2. Responsive resize: drag a window narrower with a `responsiveWidth` chart in any family; size should track without flicker.
+  3. Intro animation: `<BarChart animate>` first mount — bars should grow from baseline.
+  4. Reduced motion: toggle OS pref, reload — `animate` should be ignored.
+  5. Marginal graphics (XY-specific): scatter with `marginalGraphics={{ top: ..., right: ... }}` — margins should auto-expand to ≥60px on configured sides.
+  6. Accessible data table: any chart with `accessibleTable` (default true) — tab should focus the SkipToTableLink and reach the table.
 
 ---
 
