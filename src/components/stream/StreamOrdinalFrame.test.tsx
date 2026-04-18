@@ -459,6 +459,40 @@ describe("StreamOrdinalFrame", () => {
       expect(bgRect).toBeTruthy()
     })
 
+    // Regression: overlaying one ordinal chart over another via
+    // `position: absolute` needs a way to skip the background paint
+    // so the base layer stays visible.
+    describe("background paint (overlay composition)", () => {
+      const getMockCtx = () =>
+        (HTMLCanvasElement.prototype.getContext as any)() as Record<string, any>
+
+      it("paints an explicit background color via fillRect", () => {
+        const ctx = getMockCtx()
+        const fillRectStyles: string[] = []
+        const origFillRect = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          fillRectStyles.push(String(ctx.fillStyle))
+          return origFillRect?.apply(ctx, args)
+        })
+        // `point` chartType renders via arc+fill, not fillRect — so any
+        // fillRect call is the background paint.
+        render(<StreamOrdinalFrame chartType="point" background="red" />)
+        expect(fillRectStyles).toContain("red")
+      })
+
+      it("skips the background paint when background='transparent'", () => {
+        const ctx = getMockCtx()
+        const fillRectStyles: string[] = []
+        const origFillRect = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          fillRectStyles.push(String(ctx.fillStyle))
+          return origFillRect?.apply(ctx, args)
+        })
+        render(<StreamOrdinalFrame chartType="point" background="transparent" />)
+        expect(fillRectStyles).toHaveLength(0)
+      })
+    })
+
     it("renders center content for radial projection (donut)", () => {
       const data = [
         { category: "A", value: 30 },

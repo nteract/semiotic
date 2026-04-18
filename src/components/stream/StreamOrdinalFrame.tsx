@@ -735,14 +735,18 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
       }
 
-      // Background — use explicit prop, or fall back to semiotic theme background
-      const semioticBg = canvas
-        ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-        : ""
-      const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-      if (effectiveBg) {
-        ctx.fillStyle = effectiveBg
-        ctx.fillRect(0, 0, size[0], size[1])
+      // Background — use explicit prop, or fall back to semiotic theme background.
+      // Passing `background="transparent"` is an explicit opt-out so this chart
+      // can be composed as an overlay without painting over the layer beneath.
+      if (background !== "transparent") {
+        const semioticBg = canvas
+          ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+          : ""
+        const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+        if (effectiveBg) {
+          ctx.fillStyle = effectiveBg
+          ctx.fillRect(0, 0, size[0], size[1])
+        }
       }
 
       const isRadial = projection === "radial"

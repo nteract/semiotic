@@ -407,14 +407,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // note #3.
     const dirtyRef = useRef(false)
 
+    // XY resolves foreground/background locally (not via useFrame) because
+    // the marginalGraphics branch below may expand margin, and function-form
+    // graphics must be evaluated against the final margin. Having useFrame
+    // resolve them too would double-invoke user functions per render.
     const frame = useFrame({
       sizeProp,
       responsiveWidth,
       responsiveHeight,
       userMargin: marginProp,
       marginDefault: DEFAULT_MARGIN,
-      foregroundGraphics,
-      backgroundGraphics,
       animate,
       transitionProp,
       themeDirtyRef: dirtyRef,
@@ -433,13 +435,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     } = frame
 
     // XY post-expands margin to at least 60px on any side that has a
-    // configured marginal graphic, then re-resolves foreground/background
-    // against the expanded margin. The hook can't pre-do this because the
-    // marginalGraphics expansion is XY-specific; copy the hook's margin
-    // before mutating so the memoized object stays clean for next render.
+    // configured marginal graphic. Copy the hook's margin before mutating
+    // so the memoized object stays clean for next render.
     let margin = frame.margin
-    let resolvedForeground = frame.resolvedForeground
-    let resolvedBackground = frame.resolvedBackground
     if (marginalGraphics) {
       const MIN_MARGINAL = 60
       const m = { ...frame.margin }
@@ -448,13 +446,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (marginalGraphics.left && m.left < MIN_MARGINAL) m.left = MIN_MARGINAL
       if (marginalGraphics.right && m.right < MIN_MARGINAL) m.right = MIN_MARGINAL
       margin = m
-      resolvedForeground = typeof foregroundGraphics === "function"
-        ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-        : foregroundGraphics
-      resolvedBackground = typeof backgroundGraphics === "function"
-        ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-        : backgroundGraphics
     }
+    const resolvedForeground = typeof foregroundGraphics === "function"
+      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : foregroundGraphics
+    const resolvedBackground = typeof backgroundGraphics === "function"
+      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
+      : backgroundGraphics
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
@@ -932,12 +930,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
           }
 
-          // Background
-          const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-          const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-          if (effectiveBg) {
-            ctx.fillStyle = effectiveBg
-            ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+          // Background. Passing `background="transparent"` is an explicit
+          // opt-out so this chart can be composed as an overlay without
+          // painting over the layer beneath it.
+          if (background !== "transparent") {
+            const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+            const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+            if (effectiveBg) {
+              ctx.fillStyle = effectiveBg
+              ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+            }
           }
 
           // Clip and render data marks
