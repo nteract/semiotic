@@ -15,7 +15,7 @@ const {
   Scatterplot,
   BarChart,
   PieChart,
-  ForceDirectedGraph,
+  SankeyDiagram,
   ThemeProvider,
 } = Semiotic
 const { ChoroplethMap } = SemioticGeo
@@ -53,13 +53,19 @@ const pieData = [
   { label: "Fish", value: 16 },
 ]
 
-const networkNodes = Array.from({ length: 8 }, (_, i) => ({ id: `n${i}` }))
-const networkEdges = [
-  { source: "n0", target: "n1" }, { source: "n0", target: "n2" },
-  { source: "n1", target: "n3" }, { source: "n2", target: "n4" },
-  { source: "n3", target: "n5" }, { source: "n4", target: "n6" },
-  { source: "n5", target: "n7" }, { source: "n6", target: "n7" },
-  { source: "n0", target: "n5" }, { source: "n2", target: "n7" },
+// Sankey edges form a small DAG with deterministic d3-sankey layout (no
+// random initialization, no iteration-count sensitivity). ForceDirectedGraph
+// was originally here but force layouts converge to different local minima
+// across JS engines — webkit and chromium produced visually different
+// outputs even at high iteration counts, breaking the cross-browser
+// regression gate. Sankey exercises the same theme dimensions (categorical
+// node fills, edge colors, labels) without the floating-point drift.
+const sankeyEdges = [
+  { source: "Source A", target: "Hub", value: 10 },
+  { source: "Source B", target: "Hub", value: 6 },
+  { source: "Hub", target: "Sink X", value: 8 },
+  { source: "Hub", target: "Sink Y", value: 5 },
+  { source: "Source C", target: "Sink Y", value: 4 },
 ]
 
 const geoAreas = [
@@ -119,12 +125,11 @@ const CHART_BUILDERS = [
     }),
   },
   {
-    id: "force",
-    label: "ForceDirectedGraph",
-    el: () => React.createElement(ForceDirectedGraph, {
-      nodes: networkNodes, edges: networkEdges,
-      nodeIDAccessor: "id", iterations: 60,
-      width: 360, height: 240,
+    id: "sankey",
+    label: "SankeyDiagram",
+    el: () => React.createElement(SankeyDiagram, {
+      edges: sankeyEdges, valueAccessor: "value",
+      showLabels: true, width: 360, height: 240,
     }),
   },
   {
@@ -174,7 +179,10 @@ const App = () =>
 const root = createRoot(document.getElementById("root"))
 root.render(React.createElement(App))
 
-// Expose for the spec to enumerate without re-deriving the matrix.
+// Exposed for ad-hoc inspection in devtools (e.g. listing all rendered
+// test-ids on this page). Not the source of truth for the spec — the spec
+// hard-codes its own CHARTS/THEMES arrays so test discovery happens
+// statically before the page loads.
 window.__SEMIOTIC_THEME_MATRIX__ = THEMES.flatMap((t) =>
   CHART_BUILDERS.map((c) => `themed-${c.id}-${t}`),
 )

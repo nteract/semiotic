@@ -9,10 +9,18 @@ import { waitForChartReady } from "./helpers"
  * background colors, gridline colors, selectionOpacity, typography) only
  * shows up visually. Unit tests check structure; this catches the colors.
  *
- * Updating baselines: see VISUAL_TESTING.md.
+ * Update baselines after intentional rendering changes:
+ *   npx playwright test integration-tests/themed-charts.spec.ts --update-snapshots
+ * For Linux baselines (the CI regression gate), see TESTING_BASELINE.md.
+ *
+ * Each chart picked here has deterministic layout — `sankey` (analytic
+ * d3-sankey) replaced an earlier `force` (ForceDirectedGraph) because
+ * force-layout's floating-point math drifts across JS engines, breaking
+ * the cross-browser regression gate even at high iteration counts. Layout
+ * coverage for force-directed graphs lives in network-frame.spec.ts.
  */
 
-const CHARTS = ["line", "scatter", "bar", "pie", "force", "choropleth"] as const
+const CHARTS = ["line", "scatter", "bar", "pie", "sankey", "choropleth"] as const
 const THEMES = ["light", "dark", "tufte", "pastels", "bi-tool-dark"] as const
 
 test.describe("Themed charts — visual matrix", () => {
