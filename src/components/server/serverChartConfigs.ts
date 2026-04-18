@@ -545,7 +545,7 @@ const proportionalSymbolMap: ChartConfig = {
  */
 const flowMap: ChartConfig = {
   frameType: "geo",
-  buildProps: (data, _colorBy, colorScheme, common, rest) => {
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Accept flows either via the primary `data` arg (matches how
     // ProportionalSymbolMap / ChoroplethMap consume their data) or via
     // the explicit `rest.flows` escape hatch. `data` wins when both are
@@ -602,6 +602,43 @@ const flowMap: ChartConfig = {
     }
     const valueRange = maxValue > minValue ? maxValue - minValue : 0
 
+    // Edge-color resolution — mirror the FlowMap HOC API: `edgeColorBy`
+    // (domain-specific) wins over top-level `colorBy`; both accept a
+    // string field name or an accessor function. Values are mapped to
+    // `colorScheme` entries via insertion-order indexing (a simplified
+    // analogue of the HOC's ordinal scale — sufficient for server SVG
+    // output where we don't need the full d3 scale machinery).
+    const edgeColorByIn = rest.edgeColorBy ?? colorBy
+    const edgeColorAcc = edgeColorByIn
+      ? (typeof edgeColorByIn === "function"
+          ? edgeColorByIn
+          : (d: any) => d?.[edgeColorByIn])
+      : null
+    const schemeArray = Array.isArray(colorScheme)
+      ? colorScheme
+      : typeof colorScheme === "string"
+        ? null // named schemes (e.g. "category10") resolved downstream; fall back to default
+        : null
+    // Fallback matches the FlowMap HOC's DEFAULT_COLOR constant. Kept
+    // inline to avoid pulling in runtime-only hook utilities from the
+    // server build graph.
+    const FLOW_DEFAULT_COLOR = "#007bff"
+    const edgeColorCache = new Map<string, string>()
+    const resolveEdgeColor = (d: any): string => {
+      if (!edgeColorAcc || !schemeArray || schemeArray.length === 0) return FLOW_DEFAULT_COLOR
+      const key = String(edgeColorAcc(d) ?? "")
+      if (edgeColorCache.has(key)) return edgeColorCache.get(key)!
+      const color = schemeArray[edgeColorCache.size % schemeArray.length]
+      edgeColorCache.set(key, color)
+      return color
+    }
+
+    // Width scale — map value → edgeWidthRange linearly. Mirrors the HOC.
+    const [widthMin, widthMax] = rest.edgeWidthRange ?? [1, 8]
+    const widthSpan = widthMax - widthMin
+    const edgeOpacity = rest.edgeOpacity ?? 0.6
+    const edgeLinecap = rest.edgeLinecap ?? "round"
+
     return {
       lines,
       points: projectedNodes,
@@ -616,16 +653,15 @@ const flowMap: ChartConfig = {
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
       colorScheme,
-      // Flow-edge styling: width proportional to value, default stroke
       lineStyle: (d: any) => {
         const v = Number(d?.[valueAccessor] ?? 0)
         const normalized = valueRange > 0 ? (v - minValue) / valueRange : 0
-        const width = 1 + normalized * 7 // [1, 8]
+        const width = widthMin + normalized * widthSpan
         return {
-          stroke: rest.edgeColor || "#333",
+          stroke: resolveEdgeColor(d),
           strokeWidth: width,
-          strokeLinecap: "round",
-          opacity: rest.edgeOpacity ?? 0.6,
+          strokeLinecap: edgeLinecap,
+          opacity: edgeOpacity,
           fillOpacity: 0,
         }
       },
