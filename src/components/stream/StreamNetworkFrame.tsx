@@ -284,7 +284,6 @@ const StreamNetworkFrame = forwardRef<
     themeDirtyRef: dirtyRef,
   })
   const {
-    reducedMotion,
     reducedMotionRef,
     responsiveRef,
     size,
@@ -292,7 +291,6 @@ const StreamNetworkFrame = forwardRef<
     adjustedWidth,
     adjustedHeight,
     resolvedForeground,
-    currentTheme,
     transition,
     introEnabled,
     tableId,

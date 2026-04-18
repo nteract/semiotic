@@ -21,9 +21,17 @@
  * 3. **Frame-supplied defaults.** Anything that varies across frames
  *    (margin defaults, dirtyRef initial value, table component) is passed
  *    in as input; the hook doesn't pick its own.
- * 4. **Output stability.** Every returned value is either a stable ref or
- *    a useMemo'd derivation, so frame consumers can use it safely as a
- *    dependency without triggering needless re-renders.
+ * 4. **Output stability, where practical.** Refs and callback outputs
+ *    (`rafRef`, `renderFnRef`, `hoverHandlerRef`, `scheduleRender`,
+ *    `onPointerMove`, `onPointerLeave`) are stable across renders.
+ *    `margin` is useMemo'd. But some outputs can change identity per
+ *    render: `size` is whatever `useResponsiveSize` returns (stable
+ *    only when the measured size hasn't changed); `resolvedForeground`
+ *    / `resolvedBackground` are recomputed each render (and call the
+ *    user's function-form graphics prop fresh each time); `transition`
+ *    is derived inline from `animate`. Callers that use these as
+ *    useMemo/useEffect deps should memoize the upstream props
+ *    themselves where stability matters.
  *
  * See `useFrame.test.ts` for the behavior contracts.
  */
@@ -114,8 +122,9 @@ export interface UseFrameInput {
    * it.
    *
    * `dirtyRef` is owned by the frame (not the hook) because its initial
-   * value differs by family — XY/Geo init to `false`, Ordinal/Network
-   * init to `true` (load-bearing for first-paint timing).
+   * value differs — only `StreamXYFrame` inits to `false`; Ordinal,
+   * Network, and Geo all init to `true` (load-bearing for first-paint
+   * timing on those three).
    */
   themeDirtyRef?: React.MutableRefObject<boolean>
 }

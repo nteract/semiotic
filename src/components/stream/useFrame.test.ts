@@ -6,11 +6,11 @@
  * BEFORE migrating any frame to use it.
  */
 import * as React from "react"
-import { renderHook } from "@testing-library/react"
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { act, renderHook } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useFrame } from "./useFrame"
 import type { UseFrameInput } from "./useFrame"
-import { ThemeProvider, DARK_THEME, LIGHT_THEME } from "../store/ThemeStore"
+import { ThemeProvider, LIGHT_THEME, useThemeSelector } from "../store/ThemeStore"
 
 const DEFAULT_INPUT: UseFrameInput = {
   sizeProp: [800, 600],
@@ -114,19 +114,28 @@ describe("useFrame — theme tracking", () => {
     expect(result.current.currentTheme).toEqual(LIGHT_THEME)
   })
 
-  it("re-renders when the theme changes", () => {
-    const StoreCapture: { setTheme?: (t: any) => void } = {}
-    const Wrapper = ({ children }: { children: React.ReactNode }) => {
-      // ThemeProvider gives each test a fresh store; capture setTheme
-      // by rendering a child that grabs it from useThemeSelector.
-      return React.createElement(ThemeProvider, null, children)
-    }
-    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper: Wrapper })
-    // Default LIGHT_THEME baseline.
-    expect(result.current.currentTheme.mode).toBe("light")
-    // The theme-switch round-trip is exercised in the integration tests
-    // (themed-charts.spec.ts) — here we just verify the value flows.
-    expect(result.current.currentTheme.colors.background).toBe(LIGHT_THEME.colors.background)
+  it("re-renders with the new theme when setTheme fires on the store", () => {
+    // Mount useFrame alongside a useThemeSelector that captures setTheme,
+    // so the test can drive a theme change on the shared ThemeStore and
+    // verify useFrame's currentTheme output updates to match.
+    const { result } = renderHook(
+      () => ({
+        frame: useFrame(DEFAULT_INPUT),
+        setTheme: useThemeSelector(
+          (s: { setTheme: (t: "light" | "dark" | "high-contrast") => void }) => s.setTheme,
+        ),
+      }),
+      { wrapper },
+    )
+    // Baseline: default ThemeStore state is LIGHT_THEME.
+    expect(result.current.frame.currentTheme.mode).toBe("light")
+    expect(result.current.frame.currentTheme.colors.background).toBe(LIGHT_THEME.colors.background)
+    // Drive a theme change and verify the hook's currentTheme flips.
+    act(() => {
+      result.current.setTheme("dark")
+    })
+    expect(result.current.frame.currentTheme.mode).toBe("dark")
+    expect(result.current.frame.currentTheme.colors.background).not.toBe(LIGHT_THEME.colors.background)
   })
 })
 

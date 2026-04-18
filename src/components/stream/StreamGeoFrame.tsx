@@ -214,7 +214,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       themeDirtyRef: dirtyRef,
     })
     const {
-      reducedMotion,
       reducedMotionRef,
       responsiveRef,
       size,
@@ -223,7 +222,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       adjustedHeight,
       resolvedForeground,
       resolvedBackground,
-      currentTheme,
       transition,
       introEnabled,
       tableId,

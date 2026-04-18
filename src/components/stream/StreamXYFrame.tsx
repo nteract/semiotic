@@ -402,8 +402,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
     // dirtyRef is declared before useFrame so it can be threaded in for
-    // the theme-change effect. XY/Geo init to false; Ordinal/Network init
-    // to true. See investigation note #3.
+    // the theme-change effect. XY is the only frame that inits this to
+    // `false`; Ordinal/Network/Geo init to `true`. See investigation
+    // note #3.
     const dirtyRef = useRef(false)
 
     const frame = useFrame({
@@ -419,7 +420,6 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       themeDirtyRef: dirtyRef,
     })
     const {
-      reducedMotion,
       reducedMotionRef,
       responsiveRef,
       size,

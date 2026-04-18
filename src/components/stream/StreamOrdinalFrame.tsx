@@ -319,7 +319,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       themeDirtyRef: dirtyRef,
     })
     const {
-      reducedMotion,
       reducedMotionRef,
       responsiveRef,
       size,
