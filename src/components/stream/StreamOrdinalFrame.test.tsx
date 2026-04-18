@@ -463,33 +463,46 @@ describe("StreamOrdinalFrame", () => {
     // `position: absolute` needs a way to skip the background paint
     // so the base layer stays visible.
     describe("background paint (overlay composition)", () => {
+      // Capture fillStyle at each fillRect call + restore the original
+      // method so the replacement can't leak into another test if the
+      // mock's lifecycle ever changes.
+      function captureFillRectStyles(ctx: Record<string, any>) {
+        const styles: string[] = []
+        const orig = ctx.fillRect as (...args: any[]) => void
+        ctx.fillRect = vi.fn((...args: any[]) => {
+          styles.push(String(ctx.fillStyle))
+          return orig?.apply(ctx, args)
+        })
+        return {
+          styles,
+          restore: () => { ctx.fillRect = orig },
+        }
+      }
       const getMockCtx = () =>
         (HTMLCanvasElement.prototype.getContext as any)() as Record<string, any>
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()
-        const fillRectStyles: string[] = []
-        const origFillRect = ctx.fillRect as (...args: any[]) => void
-        ctx.fillRect = vi.fn((...args: any[]) => {
-          fillRectStyles.push(String(ctx.fillStyle))
-          return origFillRect?.apply(ctx, args)
-        })
-        // `point` chartType renders via arc+fill, not fillRect — so any
-        // fillRect call is the background paint.
-        render(<StreamOrdinalFrame chartType="point" background="red" />)
-        expect(fillRectStyles).toContain("red")
+        const cap = captureFillRectStyles(ctx)
+        try {
+          // `point` chartType renders via arc+fill, not fillRect — so any
+          // fillRect call is the background paint.
+          render(<StreamOrdinalFrame chartType="point" background="red" />)
+          expect(cap.styles).toContain("red")
+        } finally {
+          cap.restore()
+        }
       })
 
       it("skips the background paint when background='transparent'", () => {
         const ctx = getMockCtx()
-        const fillRectStyles: string[] = []
-        const origFillRect = ctx.fillRect as (...args: any[]) => void
-        ctx.fillRect = vi.fn((...args: any[]) => {
-          fillRectStyles.push(String(ctx.fillStyle))
-          return origFillRect?.apply(ctx, args)
-        })
-        render(<StreamOrdinalFrame chartType="point" background="transparent" />)
-        expect(fillRectStyles).toHaveLength(0)
+        const cap = captureFillRectStyles(ctx)
+        try {
+          render(<StreamOrdinalFrame chartType="point" background="transparent" />)
+          expect(cap.styles).toHaveLength(0)
+        } finally {
+          cap.restore()
+        }
       })
     })
 
