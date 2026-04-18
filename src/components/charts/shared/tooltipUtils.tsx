@@ -74,7 +74,7 @@ export function buildDefaultTooltip(
 
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {titleValue && (
+        {titleValue != null && (
           <div style={{ fontWeight: "bold", marginBottom: bodyFields.length > 0 ? 4 : 0 }}>
             {titleValue}
           </div>

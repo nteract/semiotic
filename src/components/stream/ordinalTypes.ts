@@ -441,6 +441,12 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 export interface StreamOrdinalFrameHandle<T = Record<string, any>> {
   push(datum: T): void
   pushMany(data: T[]): void
+  /** Atomically replace all data. Unlike `clear() + pushMany()`, `replace()`
+   *  preserves the previous scene's position snapshot so data-change
+   *  transitions fire. Use when you need to swap in a full new dataset
+   *  (e.g. re-aggregated values from streaming input) and want the
+   *  bars/points/etc. to animate between the old and new positions. */
+  replace(data: T[]): void
   /** Remove data items by ID. Requires dataIdAccessor. */
   remove(id: string | string[]): T[]
   /** Update data items by ID in place. Requires dataIdAccessor. Returns previous values. */

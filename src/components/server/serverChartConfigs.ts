@@ -545,19 +545,34 @@ const proportionalSymbolMap: ChartConfig = {
  */
 const flowMap: ChartConfig = {
   frameType: "geo",
-  buildProps: (_data, _colorBy, colorScheme, common, rest) => {
-    const xAccessor = rest.xAccessor || "lon"
-    const yAccessor = rest.yAccessor || "lat"
+  buildProps: (data, _colorBy, colorScheme, common, rest) => {
+    // Accept flows either via the primary `data` arg (matches how
+    // ProportionalSymbolMap / ChoroplethMap consume their data) or via
+    // the explicit `rest.flows` escape hatch. `data` wins when both are
+    // present so callers using the standard renderChart(_, { data }) shape
+    // behave consistently with the rest of the registry.
+    const flows: Array<Record<string, any>> =
+      (Array.isArray(data) ? data : null) || rest.flows || []
+    const nodes: Array<Record<string, any>> = rest.nodes || []
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
     const valueAccessor = rest.valueAccessor || "value"
-    const flows: Array<Record<string, any>> = rest.flows || []
-    const nodes: Array<Record<string, any>> = rest.nodes || []
+    const xAccessorIn = rest.xAccessor || "lon"
+    const yAccessorIn = rest.yAccessor || "lat"
 
+    // Resolve accessors locally. Both strings and functions are valid per
+    // the public FlowMap typings. Downstream StreamGeoFrame reads coords
+    // via `xAccessor`/`yAccessor`, so we normalize everything (both the
+    // synthesized line coordinates AND the passthrough points) into
+    // canonical `{ x, y }` shape and hand the frame fixed string accessors.
+    // That avoids the function-as-computed-key bug (where the key became
+    // the stringified function source) and keeps line + point
+    // accessor-resolution consistent.
+    const xAcc = typeof xAccessorIn === "function" ? xAccessorIn : (d: any) => d[xAccessorIn]
+    const yAcc = typeof yAccessorIn === "function" ? yAccessorIn : (d: any) => d[yAccessorIn]
+
+    const projectedNodes: Array<Record<string, any>> = nodes.map(n => ({ ...n, x: xAcc(n), y: yAcc(n) }))
     const nodeLookup = new Map<string, Record<string, any>>()
-    for (const node of nodes) nodeLookup.set(String(node[nodeIdAccessor]), node)
-
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
+    for (const node of projectedNodes) nodeLookup.set(String(node[nodeIdAccessor]), node)
 
     const lines = flows
       .map(flow => {
@@ -568,18 +583,30 @@ const flowMap: ChartConfig = {
         return {
           ...flow,
           coordinates: [
-            { [xAccessor]: xAcc(src), [yAccessor]: yAcc(src) },
-            { [xAccessor]: xAcc(tgt), [yAccessor]: yAcc(tgt) },
+            { x: src.x, y: src.y },
+            { x: tgt.x, y: tgt.y },
           ],
         }
       })
       .filter(Boolean) as Record<string, any>[]
 
+    // Precompute min/max value range once per build. Recomputing inside
+    // `lineStyle` would be O(n) per line → O(n²) total for rendering.
+    let minValue = Infinity
+    let maxValue = -Infinity
+    for (const line of lines) {
+      const v = Number(line[valueAccessor] ?? 0)
+      if (!isFinite(v)) continue
+      if (v < minValue) minValue = v
+      if (v > maxValue) maxValue = v
+    }
+    const valueRange = maxValue > minValue ? maxValue - minValue : 0
+
     return {
       lines,
-      points: nodes,
-      xAccessor,
-      yAccessor,
+      points: projectedNodes,
+      xAccessor: "x",
+      yAccessor: "y",
       lineDataAccessor: "coordinates",
       lineType: rest.lineType || "geo",
       flowStyle: rest.flowStyle || "basic",
@@ -591,12 +618,9 @@ const flowMap: ChartConfig = {
       colorScheme,
       // Flow-edge styling: width proportional to value, default stroke
       lineStyle: (d: any) => {
-        const v = d?.[valueAccessor] ?? 0
-        const vals = lines.map(l => Number(l[valueAccessor] ?? 0)).filter(isFinite)
-        const max = vals.length ? Math.max(...vals) : 1
-        const min = vals.length ? Math.min(...vals) : 0
-        const range = max > min ? (v - min) / (max - min) : 0
-        const width = 1 + range * 7 // [1, 8]
+        const v = Number(d?.[valueAccessor] ?? 0)
+        const normalized = valueRange > 0 ? (v - minValue) / valueRange : 0
+        const width = 1 + normalized * 7 // [1, 8]
         return {
           stroke: rest.edgeColor || "#333",
           strokeWidth: width,

@@ -471,9 +471,19 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       scheduleRender()
     }, [scheduleRender])
 
+    // Atomic data replacement. Routes through `setBoundedData` (same path as
+    // the `data` prop), which emits `bounded: true` changesets — those don't
+    // wipe the store's `prevPositionMap`, so the transition system can
+    // snapshot pre-replacement positions and animate to the new ones.
+    const replaceData = useCallback((newData: Record<string, any>[]) => {
+      adapterRef.current?.clearLastData()
+      adapterRef.current?.setBoundedData(newData)
+    }, [])
+
     useImperativeHandle(ref, () => ({
       push: pushPoint,
       pushMany: pushManyPoints,
+      replace: replaceData,
       remove: (id: string | string[]) => {
         adapterRef.current?.flush()
         const removed = storeRef.current?.remove(id) ?? []
@@ -508,7 +518,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null
-    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
+    }), [pushPoint, pushManyPoints, replaceData, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 
