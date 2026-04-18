@@ -305,13 +305,19 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   const resolvedSelection = useResolvedSelection(selection)
 
   // Wrap line style with selection awareness so non-matching flows dim.
-  // Use custom unselectedStyle that avoids setting fillOpacity — the line
-  // renderer interprets fillOpacity > 0 as "fill area under the line".
+  // `fillOpacity: 0` is load-bearing — the line renderer interprets
+  // fillOpacity > 0 as "fill area under the line", which is wrong for flows.
+  // opacity / strokeOpacity are left to wrapStyleWithSelection so the
+  // per-chart `selection.unselectedOpacity` or theme value takes effect.
   const lineStyleFn = useMemo(() => {
     if (!activeSelectionHook) return baseLineStyleFn
+    const mergedUnselectedStyle = {
+      ...(resolvedSelection?.unselectedStyle || {}),
+      fillOpacity: 0,
+    }
     return wrapStyleWithSelection(baseLineStyleFn, activeSelectionHook, {
       ...((resolvedSelection as any) || {}),
-      unselectedStyle: { opacity: 0.15, strokeOpacity: 0.15, fillOpacity: 0 },
+      unselectedStyle: mergedUnselectedStyle,
     }) as (d: any) => Style
   }, [baseLineStyleFn, activeSelectionHook, resolvedSelection])
 

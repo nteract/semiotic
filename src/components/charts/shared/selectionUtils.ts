@@ -90,20 +90,6 @@ export interface SelectionStyleConfig {
 export const DEFAULT_SELECTION_OPACITY = 0.5
 
 /**
- * Read the --semiotic-selection-opacity CSS variable from a container element.
- * Returns the numeric value or `DEFAULT_SELECTION_OPACITY` if not set or not
- * parseable. Kept as a utility for non-theming consumers (e.g. raw CSS themes).
- */
-export function readSelectionOpacityFromCSS(container: Element | null): number {
-  if (!container) return DEFAULT_SELECTION_OPACITY
-  const raw = getComputedStyle(container).getPropertyValue("--semiotic-selection-opacity").trim()
-  if (!raw) return DEFAULT_SELECTION_OPACITY
-  const val = parseFloat(raw)
-  if (!Number.isFinite(val)) return DEFAULT_SELECTION_OPACITY
-  return Math.min(1, Math.max(0, val))
-}
-
-/**
  * Wrap a base style function with selection awareness.
  * When a selection is active, non-matching datums get dimmed.
  *

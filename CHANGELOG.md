@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ParticlePool.spawn()`** — O(1) free-list (stack of free indices) replaced the O(capacity) linear scan. `evaluateBezier` rewritten as `evaluateBezierInto(out)` so positions write into the particle directly — zero per-particle allocation per frame.
 - **rAF-coalesced pointermove** in all four Stream Frames — caps hit-testing + React re-renders at the display refresh rate (60 Hz) instead of the native pointer rate (often 120–240 Hz). `onMouseLeave` cancels any pending move; latest coords always processed.
 - **CSS-var color cache** (`resolveCSSColor`) — version-counter design plus a singleton `MutationObserver` on `document.documentElement` and a `prefers-color-scheme` `matchMedia` listener. Themes/class toggles/media-query swaps that bypass React still invalidate; per-frame `getComputedStyle` thrashing is gone.
-- **`DEFAULT_SELECTION_OPACITY`: 0.2 → 0.5** — unselected (dimmed) elements stay readable when a selection is active. Override via `unselectedOpacity` prop or `--semiotic-selection-opacity` CSS var.
+- **`DEFAULT_SELECTION_OPACITY`: 0.2 → 0.5** — unselected (dimmed) elements stay readable when a selection is active. Override via `selection.unselectedOpacity` (per-chart) or `theme.colors.selectionOpacity` (via `ThemeProvider`, applies to every chart). Built-in theme presets set this to 0.1–0.15.
 - **`barPadding` ratio clamped to ≤ 0.9** in `OrdinalPipelineStore` — degenerate layouts (e.g. horizontal swimlane where `showCategoryTicks: false` shrinks the left margin and the vertical content area is less than `barPadding * 2`) no longer paint zero-bandwidth bands.
 
 ### Fixed
