@@ -38,6 +38,18 @@ test.describe("Geo Charts - ChoroplethMap", () => {
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
+
+  test("ChoroplethMap matches snapshot", async ({ page }) => {
+    await waitForChartReady(page, "geo-choropleth")
+    const testCase = page.locator('[data-testid="geo-choropleth"]')
+    await expect(testCase).toHaveScreenshot("geo-choropleth.png", { maxDiffPixels: 200 })
+  })
+
+  test("ChoroplethMap with legend matches snapshot", async ({ page }) => {
+    await waitForChartReady(page, "geo-choropleth-legend")
+    const testCase = page.locator('[data-testid="geo-choropleth-legend"]')
+    await expect(testCase).toHaveScreenshot("geo-choropleth-legend.png", { maxDiffPixels: 200 })
+  })
 })
 
 test.describe("Geo Charts - ProportionalSymbolMap", () => {
@@ -59,6 +71,12 @@ test.describe("Geo Charts - ProportionalSymbolMap", () => {
     await expect(frame).toHaveAttribute("role", "group")
     const ariaLabel = await frame.getAttribute("aria-label")
     expect(ariaLabel).toBe("City Magnitudes")
+  })
+
+  test("ProportionalSymbolMap matches snapshot", async ({ page }) => {
+    await waitForChartReady(page, "geo-proportional")
+    const testCase = page.locator('[data-testid="geo-proportional"]')
+    await expect(testCase).toHaveScreenshot("geo-proportional.png", { maxDiffPixels: 200 })
   })
 })
 
