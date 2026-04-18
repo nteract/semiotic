@@ -146,8 +146,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
   }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

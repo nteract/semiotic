@@ -24,6 +24,7 @@ import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { MarginType } from "../../types/generalTypes"
 import type { SelectionHookResult } from "./selectionUtils"
+import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
 import type { ReactElement, ReactNode } from "react"
 
@@ -111,6 +112,14 @@ export interface ChartSetupResult {
   legendBehaviorProps: Record<string, any>
   /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
   crosshairProps: { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
+  /**
+   * Selection config merged with theme-level defaults. HOCs should pass this
+   * to `wrapStyleWithSelection` instead of the raw `selection` prop so that
+   * the current theme's `colors.selectionOpacity` becomes the effective
+   * unselected-opacity fallback. Per-chart `selection.unselectedOpacity`
+   * still takes priority over the theme value.
+   */
+  resolvedSelection: SelectionConfig | undefined
 }
 
 /**
@@ -196,6 +205,10 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     return activeSelectionHook
   }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
+  // ── Merge theme's selection opacity into the selection config ──────────
+  // Per-chart `selection.unselectedOpacity` wins; theme supplies the default.
+  const resolvedSelection = useResolvedSelection(selection)
+
   // ── Legend & margin ────────────────────────────────────────────────────
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data,
@@ -242,6 +255,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     earlyReturn,
     legendBehaviorProps,
     crosshairProps,
+    resolvedSelection,
   }
 }
 

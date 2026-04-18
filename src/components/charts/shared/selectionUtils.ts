@@ -79,12 +79,20 @@ export interface SelectionStyleConfig {
   selectedStyle?: Record<string, any>
 }
 
-/** Default opacity for unselected (dimmed) elements */
-export const DEFAULT_SELECTION_OPACITY = 0.75
+/**
+ * Library fallback opacity for unselected (dimmed) elements.
+ *
+ * This is the last-resort value when nothing else supplies one. Clients
+ * control the effective default declaratively through `ThemeProvider`'s
+ * `colors.selectionOpacity` (built-in presets set this). Per-chart
+ * `selection.unselectedOpacity` still overrides the theme value.
+ */
+export const DEFAULT_SELECTION_OPACITY = 0.5
 
 /**
  * Read the --semiotic-selection-opacity CSS variable from a container element.
- * Returns the numeric value or the default if not set or not parseable.
+ * Returns the numeric value or `DEFAULT_SELECTION_OPACITY` if not set or not
+ * parseable. Kept as a utility for non-theming consumers (e.g. raw CSS themes).
  */
 export function readSelectionOpacityFromCSS(container: Element | null): number {
   if (!container) return DEFAULT_SELECTION_OPACITY
@@ -100,8 +108,8 @@ export function readSelectionOpacityFromCSS(container: Element | null): number {
  * When a selection is active, non-matching datums get dimmed.
  *
  * Dimming opacity is resolved in this order:
- * 1. `config.unselectedOpacity` (explicit prop)
- * 2. `DEFAULT_SELECTION_OPACITY` (0.75)
+ * 1. `config.unselectedOpacity` (explicit, usually per-chart or theme-merged)
+ * 2. `DEFAULT_SELECTION_OPACITY`
  */
 export function wrapStyleWithSelection(
   baseStyleFn: (d: Record<string, any>) => Record<string, any>,

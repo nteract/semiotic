@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { useBrushSelection } from "../../store/useSelection"
 
 /**
@@ -346,6 +347,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -422,8 +425,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
-    [basePointStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
+    [basePointStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // Legend + margin

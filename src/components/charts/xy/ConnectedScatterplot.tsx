@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { interpolateViridis } from "d3-scale-chromatic"
 
 /**
@@ -185,6 +186,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     colorByField: undefined,
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
@@ -310,8 +313,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   }, [pointRadius, orderMap])
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, selection),
-    [basePointStyle, effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
+    [basePointStyle, effectiveSelectionHook, resolvedSelection]
   )
 
   // ── Margin ────────────────────────────────────────────────────────────

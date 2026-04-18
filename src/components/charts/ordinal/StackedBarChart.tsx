@@ -149,8 +149,8 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   }, [basePieceStyle, frameProps])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, selection),
-    [mergedPieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

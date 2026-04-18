@@ -296,8 +296,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levelColorMap, neutralColor, fpPieceStyle])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // ── Tooltip ──────────────────────────────────────────────────────────

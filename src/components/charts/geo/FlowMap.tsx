@@ -9,6 +9,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { SelectionHookResult } from "../shared/selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
 import { useObservationSelector } from "../../store/ObservationStore"
@@ -301,16 +302,18 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     opacity: edgeOpacity
   }), [edgeColorBy, colorScale, widthScale, valueAccessor, edgeOpacity, edgeLinecap])
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   // Wrap line style with selection awareness so non-matching flows dim.
   // Use custom unselectedStyle that avoids setting fillOpacity — the line
   // renderer interprets fillOpacity > 0 as "fill area under the line".
   const lineStyleFn = useMemo(() => {
     if (!activeSelectionHook) return baseLineStyleFn
     return wrapStyleWithSelection(baseLineStyleFn, activeSelectionHook, {
-      ...((selection as any) || {}),
+      ...((resolvedSelection as any) || {}),
       unselectedStyle: { opacity: 0.15, strokeOpacity: 0.15, fillOpacity: 0 },
     }) as (d: any) => Style
-  }, [baseLineStyleFn, activeSelectionHook, selection])
+  }, [baseLineStyleFn, activeSelectionHook, resolvedSelection])
 
   // Point style — not selection-wrapped because node datums lack flow
   // fields (source/target). Flow lines carry the selection visual signal.

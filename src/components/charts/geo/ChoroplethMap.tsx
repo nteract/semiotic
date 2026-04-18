@@ -10,6 +10,7 @@ import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import { extent } from "d3-array"
@@ -142,6 +143,8 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     chartId
   })
 
+  const resolvedSelection = useResolvedSelection(selection)
+
   // Area style
   const areaStyleFn = useMemo(() => {
     const base = (d: any): Style => {
@@ -154,10 +157,10 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
       }
     }
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, selection) as (d: any) => Style
+      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style
     }
     return base
-  }, [valAcc, colorScale, activeSelectionHook, selection, areaOpacity])
+  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)

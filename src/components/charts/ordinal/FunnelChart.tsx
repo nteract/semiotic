@@ -207,8 +207,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
   }, [uniformFill, effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, selection),
-    [basePieceStyle, setup.effectiveSelectionHook, selection]
+    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Default tooltip showing step, value, and percentage
