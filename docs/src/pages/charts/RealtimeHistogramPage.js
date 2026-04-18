@@ -410,7 +410,32 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
 
   return (
     <div style={{ position: "relative", "--semiotic-border": "rgba(204,204,204,0.25)", "--semiotic-grid": "rgba(224,224,224,0.25)" }}>
-      {/* Filtered: bold colored lines (only when brush is active).
+      {/* Base layer: full time series per category.
+          When a brush is active, the category colors collapse to a
+          muted gray so the bold filtered overlay on top reads as the
+          focus. When no brush, the base keeps category coloring +
+          legend so the demo is useful both brushed and unbrushed. */}
+      <LineChart
+        data={allData}
+        xAccessor="time"
+        yAccessor="value"
+        lineBy="category"
+        colorBy={hasBrush ? undefined : "category"}
+        color={hasBrush ? "#d0d0d0" : undefined}
+        colorScheme={CATEGORY_SCHEME}
+        lineWidth={1}
+        width={chartWidth}
+        height={220}
+        margin={sharedMargin}
+        showLegend={!hasBrush}
+        showGrid
+        frameProps={{
+          xExtent: timeExtent,
+          yExtent: valueExtent,
+          showAxes: true,
+        }}
+      />
+      {/* Overlay: bold lines per category for the filtered subset.
           `pointerEvents: none` keeps hover/brush on the base chart. */}
       {hasBrush && filteredData.length > 1 && (
         <div style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
@@ -425,7 +450,7 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
             width={chartWidth}
             height={220}
             margin={sharedMargin}
-            showLegend={false}
+            showLegend
             frameProps={{
               xExtent: timeExtent,
               yExtent: valueExtent,
@@ -434,26 +459,6 @@ function FilteredMultiLineOverlay({ allData, chartWidth }) {
           />
         </div>
       )}
-      {/* Unfiltered: thin colored lines (always visible) + legend */}
-      <LineChart
-        data={allData}
-        xAccessor="time"
-        yAccessor="value"
-        lineBy="category"
-        colorBy="category"
-        colorScheme={CATEGORY_SCHEME}
-        lineWidth={1}
-        width={chartWidth}
-        height={220}
-        margin={sharedMargin}
-        showLegend
-        showGrid
-        frameProps={{
-          xExtent: timeExtent,
-          yExtent: valueExtent,
-          showAxes: true,
-        }}
-      />
     </div>
   )
 }
