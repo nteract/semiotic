@@ -55,14 +55,14 @@ describe("useFrame — margin merge", () => {
 
   it("shallow-merges userMargin over default", () => {
     const { result } = renderHook(
-      () => useFrame({ ...DEFAULT_INPUT, userMargin: { top: 100 } as any }),
+      () => useFrame({ ...DEFAULT_INPUT, userMargin: { top: 100 } }),
       { wrapper },
     )
     expect(result.current.margin).toEqual({ top: 100, right: 30, bottom: 40, left: 50 })
   })
 
   it("returns the same margin object across renders when inputs are referentially stable", () => {
-    const userMargin = { top: 100 } as any
+    const userMargin = { top: 100 }
     const marginDefault = { top: 20, right: 30, bottom: 40, left: 50 }
     const { result, rerender } = renderHook(
       () => useFrame({ ...DEFAULT_INPUT, userMargin, marginDefault }),
