@@ -57,8 +57,8 @@ Honest snapshot from `npm outdated`. We are meaningfully behind on several deps;
 | Dep | Current → Latest | Risk | Effort |
 |---|---|---|---|
 | ~~`@modelcontextprotocol/sdk` 1.27.1 → 1.29.0~~ | ~~bundles into shipped MCP server. Smoke test: stdio JSON-RPC `initialize` + `tools/list` round-trip. All 6 tools enumerate correctly under 1.29; tool shape gained additive `execution.taskSupport` field (non-breaking).~~ | DONE post-3.4.0 |
-| `esbuild` 0.27.4 → 0.28.0 | "minor" but esbuild is pre-1.0 so 0.x → 0.x can break. Used by parcel/rollup transitively. | Build + test pass = good enough. | 30 min |
-| `@types/node` 20.19.x → 25.6.0 | We pin Node 20 LTS via Volta — keep the runtime types matched to the runtime version. **Don't** bump types past Node 20.x range or you'll get `process.X` autocompletes for APIs the CI Node doesn't have. The dependabot bump to 25.x is wrong; close it and bump to latest 20.x patch only. | n/a — actively the wrong PR | reject |
+| ~~`esbuild` 0.27.4 → 0.28.0~~ | ~~pre-1.0; verified by `npm run dist`, `dist:prod`, `build:mcp`, full vitest suite.~~ | DONE post-3.4.0 |
+| `@types/node` 20.19.x → latest 22.x | Volta pins `22.22.1` and CI runs `22.x` (the previous "Node 20 LTS" note in this row was wrong — the runtime moved to 22 a while back; the policy note hadn't caught up). Bump to latest `22.x` patch (currently 22.19.17) to match. **Don't** bump to 25.x — Node 25 isn't an LTS and the runtime is on 22; the dependabot 25.x PR should be closed. (`.node-version` separately needs to move from `18` → `22.22.1` — addressed alongside the @types/node bump in the parallel `deps-types-node-patch` PR.) | bump to 22.x |
 
 ### Tier 3 — major-version migrations, each gets its own PR
 
