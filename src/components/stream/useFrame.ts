@@ -163,8 +163,11 @@ export interface UseFrameResult {
   // calling `scheduleRender()` queues a single rAF that invokes it. A
   // second `scheduleRender()` while a rAF is already pending is a no-op
   // (coalescing). The frame's render closure should reset
-  // `rafRef.current = 0` at the end so subsequent `scheduleRender()`
-  // calls can queue again.
+  // `rafRef.current = 0` at the start (before doing render work) so
+  // subsequent `scheduleRender()` calls can queue again. Resetting at
+  // the start lets a render closure call `scheduleRender()` itself —
+  // e.g. to continue an animation — without being silently coalesced
+  // into the frame that's already running.
   //
   // The hook installs an unmount effect that cancels any pending rAF —
   // frames no longer need their own cancel-on-unmount for this ref

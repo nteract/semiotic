@@ -267,16 +267,19 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     let calls = 0
     result.current.renderFnRef.current = () => {
-      calls++
-      // Frame's render closure resets rafRef so the next scheduleRender works.
+      // Stream*Frame render closures clear rafRef at the start, before
+      // doing render work, so a render that triggers another
+      // scheduleRender() (e.g. to continue an animation) can queue
+      // instead of being silently coalesced.
       result.current.rafRef.current = 0
+      calls++
     }
     result.current.scheduleRender()
     flushRafs()
     expect(calls).toBe(1)
   })
 
-  it("after the rAF fires + frame resets rafRef, scheduleRender can queue again", () => {
+  it("after the rAF fires + frame clears rafRef at render start, scheduleRender can queue again", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     result.current.renderFnRef.current = () => {
       result.current.rafRef.current = 0
