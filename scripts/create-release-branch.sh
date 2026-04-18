@@ -53,8 +53,12 @@ echo "==> Verifying CHANGELOG.md has an entry for $VERSION"
 # Catches the "shipped without a changelog" mistake — npm page would otherwise
 # show no notes for the new version and users have no way to see what changed.
 if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
+  # Capture before the error call so `set -e` doesn't abort if grep finds
+  # nothing (e.g. an empty or malformed CHANGELOG): a non-zero inside a
+  # command substitution would short-circuit the whole line.
+  LATEST_CHANGELOG_ENTRY="$(grep -E "^## \[" CHANGELOG.md | head -1 || true)"
   error "CHANGELOG.md is missing a '## [$VERSION]' entry. Add one before releasing."
-  error "(Existing latest entry: $(grep -E "^## \[" CHANGELOG.md | head -1))"
+  error "(Existing latest entry: ${LATEST_CHANGELOG_ENTRY:-<none>})"
   exit 1
 fi
 success "  CHANGELOG.md has an entry for $VERSION"
