@@ -694,9 +694,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     }, [data, lineDataAccessor])
 
     // ── Hover handlers ───────────────────────────────────────────────────
-
-    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
-    const hoverLeaveRef = useRef<() => void>(() => {})
+    // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+    // come from useFrame above; frame still owns the closure bodies.
+    const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
     hoverHandlerRef.current = (e: HoverPointerCoords) => {
       if (!effectiveHoverAnnotation) return
@@ -780,38 +780,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
     }
 
-    // Coalesce pointermove events to one hit test per animation frame.
-    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-    // wasteful re-renders. Capture the latest coords and process them in rAF.
-    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-    const moveRafRef = useRef(0)
-    const flushPendingMove = useCallback(() => {
-      moveRafRef.current = 0
-      const coords = pendingMoveCoordsRef.current
-      pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords)
-    }, [])
-    const onMouseMove = useCallback(
-      (e: React.MouseEvent) => {
-        pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-        if (moveRafRef.current === 0) {
-          moveRafRef.current = requestAnimationFrame(flushPendingMove)
-        }
-      },
-      [flushPendingMove]
-    )
-    const onMouseLeave = useCallback(
-      () => {
-        // Drop any pending hover so a queued move doesn't fire after leave.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
-        hoverLeaveRef.current()
-      },
-      []
-    )
+    // pointermove coalescing + onPointerLeave come from useFrame above.
 
     // ── Click handler (for click-to-lock crosshair, etc.) ──────────────
 
@@ -913,8 +882,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      onMouseMove(e)
-    }, [onMouseMove])
+      onPointerMove(e)
+    }, [onPointerMove])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -1107,13 +1076,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        // rafRef cancel-on-unmount is handled by useFrame.
-        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
+        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+        // is handled by useFrame.
         // Cancel any in-flight progressive chunking / pending push microtask
         // so `store.ingest` can't fire after the component is gone.
         adapterRef.current?.clear()
@@ -1337,7 +1301,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (

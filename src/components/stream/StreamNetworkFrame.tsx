@@ -820,9 +820,9 @@ const StreamNetworkFrame = forwardRef<
   )
 
   // ── Hover handlers ───────────────────────────────────────────────────
-
-  const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
-  const hoverLeaveRef = useRef<() => void>(() => {})
+  // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+  // come from useFrame above; frame still owns the closure bodies.
+  const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
   hoverHandlerRef.current = (e: HoverPointerCoords) => {
     if (!enableHover) return
@@ -932,37 +932,7 @@ const StreamNetworkFrame = forwardRef<
     }
   }
 
-  // Coalesce pointermove events to one hit test per animation frame.
-  // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-  // wasteful re-renders. Capture latest coords; process in rAF.
-  const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-  const moveRafRef = useRef(0)
-  const flushPendingMove = useCallback(() => {
-    moveRafRef.current = 0
-    const coords = pendingMoveCoordsRef.current
-    pendingMoveCoordsRef.current = null
-    if (coords) hoverHandlerRef.current(coords)
-  }, [])
-  const onMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-      if (moveRafRef.current === 0) {
-        moveRafRef.current = requestAnimationFrame(flushPendingMove)
-      }
-    },
-    [flushPendingMove]
-  )
-  const onMouseLeave = useCallback(
-    () => {
-      pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
-      }
-      hoverLeaveRef.current()
-    },
-    []
-  )
+  // pointermove coalescing + onPointerLeave come from useFrame above.
   const onClick = useCallback(
     (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
@@ -1044,8 +1014,8 @@ const StreamNetworkFrame = forwardRef<
   const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
     kbFocusIndexRef.current = -1
     focusedNavPointRef.current = null
-    onMouseMove(e)
-  }, [onMouseMove])
+    onPointerMove(e)
+  }, [onPointerMove])
 
   // ── Render function ──────────────────────────────────────────────────
 
@@ -1188,13 +1158,8 @@ const StreamNetworkFrame = forwardRef<
   useEffect(() => {
     scheduleRender()
     return () => {
-      // rafRef cancel-on-unmount is handled by useFrame.
-      // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-      pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
-      }
+      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+      // is handled by useFrame.
     }
   }, [scheduleRender])
 
@@ -1336,7 +1301,7 @@ const StreamNetworkFrame = forwardRef<
         aria-label={description || (typeof title === "string" ? title : "Network chart")}
         style={{ position: "relative", width: "100%", height: "100%" }}
         onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
-        onMouseLeave={enableHover ? onMouseLeave : undefined}
+        onMouseLeave={enableHover ? onPointerLeave : undefined}
         onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       >
       {backgroundGraphics && (

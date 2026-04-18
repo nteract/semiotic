@@ -372,3 +372,119 @@ describe("useFrame — theme-change effect", () => {
     expect(dirtyRef.current).toBe(false)
   })
 })
+
+describe("useFrame — hover coalescing", () => {
+  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
+  let nextRafId = 1
+  let cancelledIds: number[] = []
+  const originalRAF = global.requestAnimationFrame
+  const originalCAF = global.cancelAnimationFrame
+
+  beforeEach(() => {
+    rafCallbacks = []
+    nextRafId = 1
+    cancelledIds = []
+    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      const id = nextRafId++
+      rafCallbacks.push({ id, cb })
+      return id
+    }) as any
+    global.cancelAnimationFrame = ((id: number) => {
+      cancelledIds.push(id)
+      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
+    }) as any
+  })
+
+  afterEach(() => {
+    global.requestAnimationFrame = originalRAF
+    global.cancelAnimationFrame = originalCAF
+  })
+
+  function flushRafs() {
+    const pending = rafCallbacks.slice()
+    rafCallbacks = []
+    for (const { cb } of pending) cb(performance.now())
+  }
+
+  it("coalesces multiple pointermove events into one rAF", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.onPointerMove({ clientX: 10, clientY: 20 })
+    result.current.onPointerMove({ clientX: 11, clientY: 21 })
+    result.current.onPointerMove({ clientX: 12, clientY: 22 })
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("invokes hoverHandlerRef.current with the LATEST coords on flush", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let lastSeen: { clientX: number; clientY: number } | null = null
+    result.current.hoverHandlerRef.current = (coords) => { lastSeen = coords }
+    result.current.onPointerMove({ clientX: 10, clientY: 20 })
+    result.current.onPointerMove({ clientX: 99, clientY: 88 })
+    flushRafs()
+    expect(lastSeen).toEqual({ clientX: 99, clientY: 88 })
+  })
+
+  it("does not fire hoverHandlerRef when pointermove was never called", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let calls = 0
+    result.current.hoverHandlerRef.current = () => { calls++ }
+    flushRafs()
+    expect(calls).toBe(0)
+  })
+
+  it("after flush + frame logic, a subsequent pointermove queues a new rAF", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.onPointerMove({ clientX: 1, clientY: 2 })
+    flushRafs()
+    result.current.onPointerMove({ clientX: 3, clientY: 4 })
+    expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("onPointerLeave cancels any pending pointermove rAF and invokes hoverLeaveRef", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let leaveCalls = 0
+    result.current.hoverLeaveRef.current = () => { leaveCalls++ }
+    result.current.onPointerMove({ clientX: 5, clientY: 6 })
+    expect(rafCallbacks).toHaveLength(1)
+    const queuedId = rafCallbacks[0].id
+    result.current.onPointerLeave()
+    expect(cancelledIds).toContain(queuedId)
+    expect(leaveCalls).toBe(1)
+  })
+
+  it("onPointerLeave with no pending move still invokes hoverLeaveRef", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let leaveCalls = 0
+    result.current.hoverLeaveRef.current = () => { leaveCalls++ }
+    result.current.onPointerLeave()
+    expect(leaveCalls).toBe(1)
+  })
+
+  it("after onPointerLeave, the dropped pointermove does NOT fire its handler when flushed", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    let hoverCalls = 0
+    result.current.hoverHandlerRef.current = () => { hoverCalls++ }
+    result.current.onPointerMove({ clientX: 5, clientY: 6 })
+    result.current.onPointerLeave() // cancels the rAF
+    flushRafs() // any leftovers (should be none)
+    expect(hoverCalls).toBe(0)
+  })
+
+  it("cancels pending pointermove rAF on unmount", () => {
+    const { result, unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    result.current.onPointerMove({ clientX: 5, clientY: 6 })
+    expect(rafCallbacks).toHaveLength(1)
+    const queuedId = rafCallbacks[0].id
+    unmount()
+    expect(cancelledIds).toContain(queuedId)
+  })
+
+  it("onPointerMove and onPointerLeave callback identities are stable across renders", () => {
+    const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const move = result.current.onPointerMove
+    const leave = result.current.onPointerLeave
+    rerender()
+    expect(result.current.onPointerMove).toBe(move)
+    expect(result.current.onPointerLeave).toBe(leave)
+  })
+})

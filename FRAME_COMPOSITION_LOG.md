@@ -207,6 +207,21 @@ After 19: full Playwright + visual regression sweep. Then Task #62.
 - **Click-testing recommended**: switch ThemeProvider theme on a live chart in any family — chart should immediately repaint with the new palette/background. Specifically test: light → dark → tufte → bi-tool-dark → light cycle on at least one chart per family.
 - **Complexity**: 4 frames × ~6 LoC removed; +25 LoC in useFrame (mostly comments). Required moving `dirtyRef` declaration above the `useFrame` call in each frame so it can be passed in (mechanical).
 - **Status**: extracted, 4/4 frames migrated, 37 hook tests + 3037 total vitest green.
+- **Commit**: 49311bf1
+
+### 4. Hover handler ref + rAF-coalesced pointermove (Tier C)
+
+- **Category**: event-handling — pointer event coalescing.
+- **Pulled from**: ~25 lines per frame across 4 frames. Pattern: `pendingMoveCoordsRef`, `moveRafRef`, `flushPendingMove` callback, `onMouseMove` callback, `onMouseLeave` callback. Identical infrastructure; only the body of `hoverHandlerRef.current` and (sometimes) `hoverLeaveRef.current` was family-specific.
+- **What it does**: at-most-one pointer hit-test per animation frame regardless of how fast the pointer moves. Without this, a 240Hz mouse triggers 240 hit tests per second, each with React state updates and possible canvas repaints.
+- **Why share**: the recently-stabilized `HoverPointerCoords` contract (3.4.x) made every frame's coalescing implementation literally identical. Future tweaks (e.g. switching to `requestIdleCallback` or scheduler integration) are now one source of truth.
+- **What changed in behavior**: nothing. The hook's onPointerMove/onPointerLeave callbacks have the same semantics; the hook's cleanup effect cancels pending hover-rAFs on unmount (frames previously did this themselves).
+- **Risk if wrong**: high. The pointermove path is exercised by every interactive Playwright test; broken coalescing or missed cleanup would surface as test failures or zombie hit tests post-unmount.
+- **Existing tests**: every Playwright spec that hovers (xy-frame.spec, ordinal-frame.spec, network-frame.spec, themed-charts.spec via tooltips). Vitest hover tests in each frame's `.test.tsx`.
+- **New tests added**: 9 in `useFrame.test.ts` under "hover coalescing" — single-rAF queueing for multi-call, latest-coords-on-flush, no-op-when-never-called, requeue-after-flush, leave-cancels-pending-and-invokes-leave-ref, leave-without-pending-still-invokes-leave-ref, dropped-move-doesnt-fire-after-leave, cleanup-on-unmount, callback identity stability.
+- **Click-testing recommended**: rapid pointer movement across a chart with many points (e.g. Scatterplot with 1K+ points) — should remain fluid. Mouse-out then mouse-in cycle while hovering — leave handler fires, then re-entry produces a new tooltip. Mid-hover unmount (tab switch) — no console errors.
+- **Complexity**: 4 frames × ~25 LoC removed + ~7 LoC each for cleanup; +50 LoC in useFrame. Net -50 LoC, much more maintainable.
+- **Status**: extracted, 4/4 frames migrated, 46 hook tests + 3046 total vitest green.
 - **Commit**: pending
 
 ---

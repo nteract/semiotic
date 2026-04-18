@@ -397,8 +397,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }), [pushPoint, pushMany, clearAll, scheduleRender])
 
     // ── Hover handler ─────────────────────────────────────────────────
-
-    const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
+    // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+    // come from useFrame above. Geo doesn't define a hoverLeaveRef body
+    // (no hover-leave behavior), so the default no-op is fine.
+    const { hoverHandlerRef, onPointerMove, onPointerLeave } = frame
 
     useEffect(() => {
       hoverHandlerRef.current = (e: HoverPointerCoords) => {
@@ -483,33 +485,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
     }, [enableHover, adjustedWidth, adjustedHeight, margin, customHoverBehavior, scheduleRender])
 
-    // Coalesce pointermove events to one hit test per animation frame.
-    // High-DPI mice fire at 120–240Hz; React state updates per move trigger
-    // wasteful re-renders. Capture latest coords; process in rAF.
-    // Declared before onMouseLeave / onMouseMoveWrapped so those callbacks
-    // reference unambiguously-initialized bindings.
-    const pendingMoveCoordsRef = useRef<{ clientX: number; clientY: number } | null>(null)
-    const moveRafRef = useRef(0)
-    const flushPendingMove = useCallback(() => {
-      moveRafRef.current = 0
-      const coords = pendingMoveCoordsRef.current
-      pendingMoveCoordsRef.current = null
-      if (coords) hoverHandlerRef.current(coords)
-    }, [])
-
-    const onMouseLeave = useCallback(() => {
-      // Drop any pending coalesced move so it doesn't fire after leave.
-      pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
-      }
+    // pointermove coalescing + onPointerLeave come from useFrame above.
+    // Geo's family-specific leave behavior goes into hoverLeaveRef.current,
+    // which the hook's onPointerLeave invokes after cancelling any pending
+    // coalesced move.
+    frame.hoverLeaveRef.current = () => {
       hoverRef.current = null
       hoveredNodeRef.current = null
       setHoverPoint(null)
       customHoverBehavior?.(null)
       scheduleRender()
-    }, [customHoverBehavior, scheduleRender])
+    }
 
     const onClick = useCallback((e: React.MouseEvent) => {
       if (!customClickBehavior) return
@@ -604,16 +590,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       scheduleRender()
     }, [customHoverBehavior, scheduleRender])
 
-    // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced path
-    // (pendingMoveCoordsRef / moveRafRef / flushPendingMove are declared above).
+    // Clear keyboard focus on mouse interaction; reuses useFrame's
+    // rAF-coalesced pointermove path.
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
-      if (moveRafRef.current === 0) {
-        moveRafRef.current = requestAnimationFrame(flushPendingMove)
-      }
-    }, [flushPendingMove])
+      onPointerMove(e)
+    }, [onPointerMove])
 
     // ── Main render function ──────────────────────────────────────────
 
@@ -852,14 +835,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     useEffect(() => {
       scheduleRender()
       return () => {
-        // rafRef cancel-on-unmount is handled by useFrame.
+        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+        // is handled by useFrame.
         tileCacheRef.current?.clear()
-        // Drop any queued pointermove so flushPendingMove can't fire on unmount.
-        pendingMoveCoordsRef.current = null
-        if (moveRafRef.current !== 0) {
-          cancelAnimationFrame(moveRafRef.current)
-          moveRafRef.current = 0
-        }
       }
     }, [scheduleRender])
 
@@ -1190,7 +1168,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (

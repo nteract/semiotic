@@ -40,6 +40,7 @@ import { resolveAnimateConfig } from "./pipelineTransitionUtils"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
+import type { HoverPointerCoords } from "./hoverUtils"
 
 // ── Margin handling ─────────────────────────────────────────────────────────
 
@@ -167,6 +168,32 @@ export interface UseFrameResult {
   renderFnRef: React.MutableRefObject<() => void>
   /** Queue a render on the next animation frame. Coalesces. */
   scheduleRender: () => void
+
+  // ── Hover / pointer event coalescing ─────────────────────────────────
+  // Pointer events fire faster than the display refreshes — sometimes
+  // 240Hz on hi-fi mice. Each pointermove triggers a hit test and a
+  // tooltip re-render; coalescing into one-per-rAF keeps the hover path
+  // bounded at the display refresh rate.
+  //
+  // Frame body assigns the family-specific handler bodies to
+  // `hoverHandlerRef.current` (called with HoverPointerCoords on each
+  // coalesced event) and `hoverLeaveRef.current` (called on
+  // pointerleave; e.g. clears tooltip state). Wire the canvas to
+  // `onPointerMove` and `onPointerLeave` returned here.
+  //
+  // The hook owns: rAF coalescing, cleanup of the pending move on
+  // unmount, and the pendingMoveCoordsRef nullification on leave.
+
+  /** Frame assigns its hover handler closure here. */
+  hoverHandlerRef: React.MutableRefObject<(coords: HoverPointerCoords) => void>
+  /** Frame assigns its pointer-leave closure here. */
+  hoverLeaveRef: React.MutableRefObject<() => void>
+  /** Stable callback to attach to canvas's onPointerMove (or onMouseMove).
+   *  Captures the coords and queues a single rAF to drain into hoverHandlerRef. */
+  onPointerMove: (e: { clientX: number; clientY: number }) => void
+  /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
+   *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
+  onPointerLeave: () => void
 }
 
 /**
@@ -243,6 +270,43 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     }
   }, [])
 
+  // ── Pointer event coalescing (hover handler) ──────────────────────────
+  const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
+  const hoverLeaveRef = useRef<() => void>(() => {})
+  const pendingMoveCoordsRef = useRef<HoverPointerCoords | null>(null)
+  const moveRafRef = useRef(0)
+  const flushPendingMove = useCallback(() => {
+    moveRafRef.current = 0
+    const coords = pendingMoveCoordsRef.current
+    pendingMoveCoordsRef.current = null
+    if (coords) hoverHandlerRef.current(coords)
+  }, [])
+  const onPointerMove = useCallback((e: { clientX: number; clientY: number }) => {
+    pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+    if (moveRafRef.current === 0) {
+      moveRafRef.current = requestAnimationFrame(flushPendingMove)
+    }
+  }, [flushPendingMove])
+  const onPointerLeave = useCallback(() => {
+    pendingMoveCoordsRef.current = null
+    if (moveRafRef.current !== 0) {
+      cancelAnimationFrame(moveRafRef.current)
+      moveRafRef.current = 0
+    }
+    hoverLeaveRef.current()
+  }, [])
+
+  // Cleanup pending hover rAF on unmount alongside the render-rAF cancel.
+  useEffect(() => {
+    return () => {
+      pendingMoveCoordsRef.current = null
+      if (moveRafRef.current !== 0) {
+        cancelAnimationFrame(moveRafRef.current)
+        moveRafRef.current = 0
+      }
+    }
+  }, [])
+
   // ── Theme-change effect ───────────────────────────────────────────────
   // When the theme changes (currentTheme reference changes), invalidate
   // the per-canvas CSS-var color cache, force a full redraw on the next
@@ -279,5 +343,9 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     rafRef,
     renderFnRef,
     scheduleRender,
+    hoverHandlerRef,
+    hoverLeaveRef,
+    onPointerMove,
+    onPointerLeave,
   }
 }
