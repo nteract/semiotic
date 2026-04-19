@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react"
 import {
-  LineChart, BarChart, Scatterplot, DonutChart, Treemap,
+  LineChart, BarChart, Scatterplot, DonutChart, Treemap, SankeyDiagram,
   LinkedCharts, CategoryColorProvider,
 } from "semiotic"
 import { RealtimeLineChart, RealtimeTemporalHistogram } from "semiotic"
@@ -162,6 +162,48 @@ function useForecastSparkData() {
 }
 
 // ---------------------------------------------------------------------------
+// Streaming Sankey sparkline helpers
+// ---------------------------------------------------------------------------
+
+// Fixed node definitions: 2 sources → 3 middle processors → 3 sinks.
+// Two middles both feed one shared sink (M1, M2 → Out1); the third
+// middle splits into the remaining two sinks (M3 → Out2, M3 → Out3).
+const SANKEY_NODES = [
+  { id: "S1" }, { id: "S2" },
+  { id: "M1" }, { id: "M2" }, { id: "M3" },
+  { id: "Out1" }, { id: "Out2" }, { id: "Out3" },
+]
+
+// Build a fresh edge array with smoothly varying values at time `t`.
+// Source emission oscillates with a slow sine + small noise; middles
+// forward proportionally so widths stay conservation-consistent.
+function buildSankeyEdges(t) {
+  const noise = () => 1 + (Math.random() - 0.5) * 0.1
+  const s1 = (18 + Math.sin(t * 0.018) * 4) * noise()
+  const s2 = (16 + Math.cos(t * 0.021) * 4) * noise()
+  // Source → middle split
+  const s1_m1 = s1 * 0.55
+  const s1_m2 = s1 * 0.45
+  const s2_m2 = s2 * 0.50
+  const s2_m3 = s2 * 0.50
+  // Middle → sink
+  const m1_out1 = s1_m1
+  const m2_out1 = s1_m2 + s2_m2
+  const m3_out2 = s2_m3 * 0.55
+  const m3_out3 = s2_m3 * 0.45
+  return [
+    { source: "S1", target: "M1", value: s1_m1 },
+    { source: "S1", target: "M2", value: s1_m2 },
+    { source: "S2", target: "M2", value: s2_m2 },
+    { source: "S2", target: "M3", value: s2_m3 },
+    { source: "M1", target: "Out1", value: m1_out1 },
+    { source: "M2", target: "Out1", value: m2_out1 },
+    { source: "M3", target: "Out2", value: m3_out2 },
+    { source: "M3", target: "Out3", value: m3_out3 },
+  ]
+}
+
+// ---------------------------------------------------------------------------
 // Streaming spark chart
 // ---------------------------------------------------------------------------
 
@@ -193,6 +235,20 @@ function StreamingSparkRow() {
       })
     }, 120)
     return () => clearInterval(id2)
+  }, [])
+
+  // Streaming Sankey: re-derive edge values on a tick so the ribbons
+  // shift subtly without ever reshuffling node positions. Slow cadence
+  // (500ms) keeps it legible at sparkline size — we're showing flow
+  // drift, not frantic motion.
+  const [sankeyEdges, setSankeyEdges] = useState(() => buildSankeyEdges(0))
+  useEffect(() => {
+    let t = 0
+    const id3 = setInterval(() => {
+      t += 1
+      setSankeyEdges(buildSankeyEdges(t))
+    }, 500)
+    return () => clearInterval(id3)
   }, [])
 
   const metrics = [
@@ -264,6 +320,28 @@ function StreamingSparkRow() {
                 upperBounds: "upper",
                 lowerBounds: "lower",
               }}
+            />
+          </td>
+        </tr>
+        <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
+          <td style={tdStyle}>Pipeline flow</td>
+          <td style={{ ...tdStyle, fontWeight: 600, fontFamily: "var(--font-code, monospace)" }}>34 u/s</td>
+          <td style={tdStyle}>
+            <SankeyDiagram
+              nodes={SANKEY_NODES}
+              edges={sankeyEdges}
+              sourceAccessor="source"
+              targetAccessor="target"
+              valueAccessor="value"
+              mode="sparkline"
+              width={140}
+              height={28}
+              edgeColorBy="source"
+              colorScheme={["#6366f1", "#f59e0b", "#8b5cf6", "#10b981", "#ec4899", "#06b6d4", "#f97316", "#84cc16"]}
+              nodePaddingRatio={0.35}
+              nodeWidth={3}
+              edgeOpacity={0.55}
+              animate={{ duration: 450, intro: false }}
             />
           </td>
         </tr>
@@ -641,10 +719,14 @@ export default function ChartModesPage() {
 
       <div style={{ marginTop: 12, fontSize: 13, color: "var(--text-secondary, #666)" }}>
         The first four rows use live streaming charts with{" "}
-        <code>mode="sparkline"</code> — 140x28px, no axes, no hover. The last
-        row is a static <code>LineChart</code> sparkline with{" "}
+        <code>mode="sparkline"</code> — 140x28px, no axes, no hover. The
+        fifth row is a static <code>LineChart</code> sparkline with{" "}
         <code>forecast</code> and <code>anomaly</code> decoration, showing
-        training data, predicted values with confidence bands, and flagged anomalies.
+        training data, predicted values with confidence bands, and flagged
+        anomalies. The last row is a streaming{" "}
+        <code>SankeyDiagram</code> — two sources fan into three middle
+        processors, which merge/split into three sinks; edge widths drift
+        smoothly as the upstream volumes oscillate.
       </div>
 
       <CodeBlock
