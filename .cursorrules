@@ -86,13 +86,13 @@ Most HOCs support push via `forwardRef`. **Omit** `data` — do NOT pass `data={
 const ref = useRef()
 ref.current.push({ id: "p1", x: 1, y: 2 })
 ref.current.pushMany([...points])
-ref.current.replace([...points])                   // ordinal only — atomic data swap, preserves category order + transitions
+ref.current.replace([...points])                   // ordinal only — full dataset replacement, preserves category order + transitions (progressively chunks large datasets)
 ref.current.remove("p1")                          // by ID — requires pointIdAccessor
 ref.current.remove(["p1", "p2"])                   // batch remove
 ref.current.update("p1", d => ({ ...d, y: 99 }))  // in-place update — requires pointIdAccessor
 ref.current.clear()
 ref.current.getData()
-ref.current.getScales()                            // returns {o, r} (ordinal) / {x, y} (XY) — null if not yet computed
+ref.current.getScales()                            // returns {o, r, projection} (ordinal) / {x, y} (XY) — null if not yet computed
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
 `remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. `replace()` is ordinal-only and routes through a bounded-ingest path that preserves category insertion-order memory and the transition position snapshot — what aggregator HOCs like LikertChart use under the hood to re-aggregate streaming input without shuffling categories or losing animations. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
