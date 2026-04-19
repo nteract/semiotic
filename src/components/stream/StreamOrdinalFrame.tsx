@@ -314,6 +314,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       userMargin,
       marginDefault: DEFAULT_MARGIN,
       foregroundGraphics,
+      backgroundGraphics,
       animate,
       transitionProp,
       themeDirtyRef: dirtyRef,
@@ -326,6 +327,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       adjustedWidth,
       adjustedHeight,
       resolvedForeground,
+      resolvedBackground,
       currentTheme,
       transition,
       introEnabled,
@@ -916,9 +918,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {backgroundGraphics && (
+            {resolvedBackground && (
               <g transform={`translate(${margin.left},${margin.top})`}>
-                {backgroundGraphics}
+                {resolvedBackground}
               </g>
             )}
             <g transform={`translate(${translateX},${translateY})`}>
@@ -1006,7 +1008,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
         >
-        {backgroundGraphics && (
+        {resolvedBackground && (
           <svg
             style={{
               position: "absolute",
@@ -1018,7 +1020,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             }}
           >
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {backgroundGraphics}
+              {resolvedBackground}
             </g>
           </svg>
         )}

@@ -279,6 +279,7 @@ const StreamNetworkFrame = forwardRef<
     userMargin: marginProp,
     marginDefault: baseMargin,
     foregroundGraphics,
+    backgroundGraphics,
     animate,
     transitionProp,
     themeDirtyRef: dirtyRef,
@@ -291,6 +292,7 @@ const StreamNetworkFrame = forwardRef<
     adjustedWidth,
     adjustedHeight,
     resolvedForeground,
+    resolvedBackground,
     transition,
     introEnabled,
     tableId,
@@ -1234,9 +1236,9 @@ const StreamNetworkFrame = forwardRef<
           height={size[1]}
           style={{ position: "absolute", left: 0, top: 0 }}
         >
-          {backgroundGraphics && (
+          {resolvedBackground && (
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {backgroundGraphics}
+              {resolvedBackground}
             </g>
           )}
           <g transform={`translate(${margin.left},${margin.top})`}>
@@ -1302,7 +1304,7 @@ const StreamNetworkFrame = forwardRef<
         onMouseLeave={enableHover ? onPointerLeave : undefined}
         onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
       >
-      {backgroundGraphics && (
+      {resolvedBackground && (
         <svg
           overflow="visible"
           style={{
@@ -1316,7 +1318,7 @@ const StreamNetworkFrame = forwardRef<
           }}
         >
           <g transform={`translate(${margin.left},${margin.top})`}>
-            {backgroundGraphics}
+            {resolvedBackground}
           </g>
         </svg>
       )}

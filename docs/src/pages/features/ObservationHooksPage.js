@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react"
-import { LineChart, Scatterplot, BarChart, LinkedCharts, CategoryColorProvider, useChartObserver } from "semiotic"
+import { Scatterplot, BarChart, LinkedCharts, CategoryColorProvider, useChartObserver } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"

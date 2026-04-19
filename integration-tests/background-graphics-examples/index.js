@@ -86,7 +86,7 @@ function App() {
       TestCase,
       { title: "StreamXYFrame line with backgroundGraphics", testId: "xy-background" },
       React.createElement(StreamXYFrame, {
-        lines: xyData,
+        data: xyData,
         lineDataAccessor: "coordinates",
         chartType: "line",
         xAccessor: "x",
