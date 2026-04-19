@@ -463,6 +463,59 @@ describe("OrdinalPipelineStore", () => {
       // Insertion order, not value-desc
       expect(Object.keys(store.columns)).toEqual(["Small", "Big", "Medium"])
     })
+
+    it("drops stale categories from the axis after a replace that removes them (even with explicit sort)", () => {
+      // Regression: the preserve-order mechanism retains ghost categories in
+      // `this.categories` for FIFO stability across re-appearances, but
+      // every resolveCategories branch must filter against the live data
+      // set. Without this, `oSort: "desc"` or a comparator would render
+      // empty ticks for categories whose data was dropped by a replace().
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: "desc" }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 10 },
+          { category: "B", value: 20 },
+          { category: "C", value: 30 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns).sort()).toEqual(["A", "B", "C"])
+
+      // B gets dropped by the replacement.
+      store.ingest({
+        inserts: [
+          { category: "A", value: 5 },
+          { category: "C", value: 40 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns).sort()).toEqual(["A", "C"])
+    })
+
+    it("drops stale categories even when sort is false (insertion-order)", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: false }))
+      store.ingest({
+        inserts: [{ category: "A", value: 1 }, { category: "B", value: 2 }],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A", "B"])
+
+      store.ingest({
+        inserts: [{ category: "B", value: 99 }],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // A is evicted from the current dataset; the axis should not render
+      // a ghost column for it even though A stays in the category Set.
+      expect(Object.keys(store.columns)).toEqual(["B"])
+    })
   })
 
   // ── sort: "auto" ────────────────────────────────────────────────────

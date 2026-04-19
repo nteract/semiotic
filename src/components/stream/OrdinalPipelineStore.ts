@@ -406,7 +406,6 @@ export class OrdinalPipelineStore {
   // ── Category resolution ──────────────────────────────────────────────
 
   private resolveCategories(data: Record<string, any>[]): string[] {
-    const cats = Array.from(this.categories)
     const sort = this.config.oSort
     const isStreaming = this.config.runtimeMode === "streaming" || this._hasStreamingData
 
@@ -418,34 +417,45 @@ export class OrdinalPipelineStore {
     // and the value-desc fallback fires on `undefined && !isStreaming`.
     const effectiveSort: typeof sort = sort === "auto" ? undefined : sort
 
+    // Under streaming, `this.categories` is an insertion-ordered memory
+    // of every category we've ever seen (including ones whose data was
+    // evicted or dropped by a `replace()`). That's load-bearing for FIFO
+    // stability across re-appearances, but we don't want axis ticks or
+    // columns for categories that aren't in the current dataset — every
+    // branch below should filter against `liveCategories` so explicit
+    // sorts (`"desc"`, comparator, `false`) don't render ghost columns
+    // after a replacement drops a category.
+    let liveCategories: Set<string> | null = null
+    if (isStreaming) {
+      liveCategories = new Set<string>()
+      for (const d of data) {
+        liveCategories.add(this.getO(d))
+      }
+    }
+    const cats = liveCategories
+      ? Array.from(this.categories).filter(cat => liveCategories!.has(cat))
+      : Array.from(this.categories)
+
     // In streaming mode (explicit runtimeMode or push-API data), preserve
     // insertion order by default to avoid jarring category shuffling as
     // values fluctuate in the sliding window
     if (isStreaming && effectiveSort === undefined) {
-      // Filter to only categories with live data in the buffer, but do NOT
-      // delete from the Set — so if a category's data is evicted and later
-      // re-pushed, it retains its original FIFO position (no shuffling)
-      const liveCategories = new Set<string>()
-      for (const d of data) {
-        liveCategories.add(this.getO(d))
-      }
-
       // Cap the retained history to prevent unbounded growth in high-cardinality
       // streams. Prune dead categories from the front (oldest first) when the
       // Set exceeds 3x the live count, keeping recent evictions for FIFO stability.
-      const maxRetained = Math.max(50, liveCategories.size * 3)
+      const maxRetained = Math.max(50, liveCategories!.size * 3)
       if (this.categories.size > maxRetained) {
         let toRemove = this.categories.size - maxRetained
         for (const cat of this.categories) {
           if (toRemove <= 0) break
-          if (!liveCategories.has(cat)) {
+          if (!liveCategories!.has(cat)) {
             this.categories.delete(cat)
             toRemove--
           }
         }
       }
 
-      return cats.filter(cat => liveCategories.has(cat))
+      return cats
     }
 
     if (effectiveSort === false) return cats
