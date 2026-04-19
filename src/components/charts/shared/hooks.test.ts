@@ -172,6 +172,17 @@ describe("useSortedData", () => {
     renderHook(() => useSortedData(data, "asc", "value"))
     expect(data).toEqual(original)
   })
+
+  // `"auto"` is a pass-through at the HOC level: the frame's
+  // resolveCategories decides between insertion-order (streaming) and
+  // value-desc (static) based on the store's streaming state. HOCs
+  // shouldn't pre-sort their row array under "auto", or they'd fight
+  // the store's decision.
+  it("returns the same array reference when sort is 'auto'", () => {
+    const { result } = renderHook(() => useSortedData(data, "auto", "value"))
+    expect(result.current).toBe(data)
+    expect(result.current.map((d) => d.name)).toEqual(["C", "A", "B"])
+  })
 })
 
 // ── useChartSelection ─────────────────────────────────────────────────────

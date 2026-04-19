@@ -115,11 +115,20 @@ export interface LikertChartProps<TDatum extends Record<string, any> = Record<st
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+// Ref handle for LikertChart — extends the shared RealtimeFrameHandle
+// with `getScales()` so TS consumers can introspect the rendered
+// category order (e.g. `ref.current?.getScales()?.o.domain()`) without
+// casting. Useful for debug overlays, streaming-order assertions, and
+// anyone wiring custom interactions on top of the chart.
+export interface LikertChartHandle extends RealtimeFrameHandle {
+  getScales(): ReturnType<NonNullable<StreamOrdinalFrameHandle["getScales"]>>
+}
+
 // ── Component ────────────────────────────────────────────────────────────
 
 export const LikertChart = forwardRef(function LikertChart<TDatum extends Record<string, any> = Record<string, any>>(
   props: LikertChartProps<TDatum>,
-  ref: React.Ref<RealtimeFrameHandle>
+  ref: React.Ref<LikertChartHandle>
 ) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

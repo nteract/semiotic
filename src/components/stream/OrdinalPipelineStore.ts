@@ -166,7 +166,14 @@ export class OrdinalPipelineStore {
 
     if (changeset.bounded) {
       this.buffer.clear()
+      // Clear all per-accessor extents — in multiAxis (rAccessor is an
+      // array), `rExtents` holds distinct IncrementalExtent instances
+      // that aren't aliased by `rExtent`, so only clearing `rExtent`
+      // leaves stale min/max on the other axes. In the single-accessor
+      // case `rExtents[0]` *is* `rExtent`, so the two-line sequence is
+      // still correct (the second clear is a no-op).
       this.rExtent.clear()
+      for (const ext of this.rExtents) ext.clear()
       // `preserveCategoryOrder` is the escape hatch for aggregator HOCs
       // that re-derive their full dataset from streaming input on every
       // push (LikertChart, etc.). Without it, the category insertion

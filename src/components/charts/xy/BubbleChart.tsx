@@ -333,7 +333,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
       setSizeDomainVersion(v => v + 1)
       frameRef.current?.clear()
     },
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
   }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   // ── Selection hooks (always called, conditional logic inside) ──────────

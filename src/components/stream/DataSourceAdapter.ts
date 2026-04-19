@@ -116,10 +116,14 @@ export class DataSourceAdapter<T = Record<string, any>> {
    * wholesale replacement, but the user perceives it as a live stream
    * where categories should stay put across updates.
    *
-   * Emits a single synchronous changeset (no progressive chunking): the
-   * aggregated dataset size is small and bounded by the category-count,
-   * not the stream length, so chunking buys nothing and would fragment
-   * the transition animation.
+   * Small datasets (≤ chunkThreshold) emit a single synchronous
+   * changeset — the common aggregator case. Larger datasets fall
+   * through to progressive chunking so an unexpectedly-huge replacement
+   * doesn't block the main thread. Only the first chunk carries
+   * `preserveCategoryOrder: true` (it's the one that resets the
+   * buffer and seeds the category Set); subsequent chunks are plain
+   * append-only streaming changesets, which preserve order anyway via
+   * the streaming-mode branch.
    */
   setReplacementData(data: T[]): void {
     this.lastBoundedData = data
@@ -127,7 +131,39 @@ export class DataSourceAdapter<T = Record<string, any>> {
       cancelAnimationFrame(this.chunkTimer)
       this.chunkTimer = 0
     }
-    this.callback({ inserts: data, bounded: true, preserveCategoryOrder: true })
+    // Drop any pending push microtask state so replacement is atomic —
+    // otherwise a buffered push()/pushMany() from just before this call
+    // can flush after the replacement and append stale points onto the
+    // fresh dataset.
+    this.pushBuffer = []
+    this.flushScheduled = false
+
+    if (data.length <= this.chunkThreshold) {
+      this.callback({ inserts: data, bounded: true, preserveCategoryOrder: true })
+      return
+    }
+
+    this.callback({
+      inserts: data.slice(0, this.chunkSize),
+      bounded: true,
+      preserveCategoryOrder: true,
+      totalSize: data.length,
+    })
+
+    let offset = this.chunkSize
+    const scheduleNext = () => {
+      if (offset >= data.length) return
+      if (data !== this.lastBoundedData) return
+      const end = Math.min(offset + this.chunkSize, data.length)
+      this.callback({ inserts: data.slice(offset, end), bounded: false })
+      offset = end
+      if (offset < data.length) {
+        this.chunkTimer = requestAnimationFrame(scheduleNext)
+      } else {
+        this.chunkTimer = 0
+      }
+    }
+    this.chunkTimer = requestAnimationFrame(scheduleNext)
   }
 
   /**
