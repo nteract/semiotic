@@ -91,9 +91,17 @@ export class DataSourceAdapter<T = Record<string, any>> {
 
     let offset = this.chunkSize
     const scheduleNext = () => {
-      if (offset >= data.length) return
+      // Clear on every exit path so `chunkTimer === 0 iff no rAF
+      // scheduled` holds. See matching note in `setReplacementData`.
+      if (offset >= data.length) {
+        this.chunkTimer = 0
+        return
+      }
       // Check that this is still the active dataset
-      if (data !== this.lastBoundedData) return
+      if (data !== this.lastBoundedData) {
+        this.chunkTimer = 0
+        return
+      }
 
       const end = Math.min(offset + this.chunkSize, data.length)
       this.callback({ inserts: data.slice(offset, end), bounded: false })
@@ -152,8 +160,20 @@ export class DataSourceAdapter<T = Record<string, any>> {
 
     let offset = this.chunkSize
     const scheduleNext = () => {
-      if (offset >= data.length) return
-      if (data !== this.lastBoundedData) return
+      // Clear the timer on ANY exit path — the adapter-state invariant
+      // is "chunkTimer is 0 iff no rAF is scheduled". Without these
+      // explicit resets, an already-complete chunk sequence (or a
+      // superseded dataset) could leave chunkTimer non-zero and
+      // `setBoundedData` / `clearLastData` would needlessly call
+      // `cancelAnimationFrame` on a stale token.
+      if (offset >= data.length) {
+        this.chunkTimer = 0
+        return
+      }
+      if (data !== this.lastBoundedData) {
+        this.chunkTimer = 0
+        return
+      }
       const end = Math.min(offset + this.chunkSize, data.length)
       this.callback({ inserts: data.slice(offset, end), bounded: false })
       offset = end

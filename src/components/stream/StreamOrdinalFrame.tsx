@@ -472,7 +472,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     }, [scheduleRender])
 
     // Data replacement. Routes through `setReplacementData`, which emits
-    // `{ bounded: true, preserveCategoryOrder: true }`. Two effects:
+    // `{ bounded: true, preserveCategoryOrder: true }`. Three effects:
     //   1. The store skips `categories.clear()` on ingest so insertion
     //      order is preserved across replacements (otherwise categories
     //      would shuffle as their values fluctuate across re-aggregations

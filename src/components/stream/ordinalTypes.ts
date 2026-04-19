@@ -257,7 +257,7 @@ export interface OrdinalPipelineConfig {
   //   • `false` — insertion order always.
   //   • function — custom category comparator; receives the two category
   //     name strings, returns a negative/positive number for ordering.
-  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
+  oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc" | "auto"
 
   // Connectors
   connectorAccessor?: string | ((d: any) => string)
@@ -351,7 +351,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   //   • `false` — insertion order always.
   //   • function — custom category comparator; receives the two category
   //     name strings, returns a negative/positive number for ordering.
-  oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
+  oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc" | "auto"
 
   // Streaming
   arrowOfTime?: ArrowOfTime
