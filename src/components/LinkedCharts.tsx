@@ -190,16 +190,67 @@ function LinkedLegend({
     [interaction, allCategories.length]
   )
 
+  // Measure the SVG's actual laid-out width so we can tell <Legend> how
+  // much room it has. Without this, the `width` prop defaults to 100
+  // (fallback in Legend), which `renderLegendGroupHorizontal` treats as
+  // `maxWidth` — so any label over ~100px causes the items to wrap one
+  // per row. The <svg> itself is height=30, so the wrapped rows clip
+  // into whatever sits below (the first chart in the composed layout).
+  //
+  // The ROW_HEIGHT_H used by Legend's horizontal renderer is 22; with
+  // standard rendering + a 4px breathing margin the single-row height
+  // comfortably fits in 30. If the container is narrow enough that the
+  // legend genuinely needs to wrap, we grow the SVG to the computed
+  // number of rows so nothing clips.
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [measuredWidth, setMeasuredWidth] = useState<number>(0)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    // ResizeObserver absent in jsdom / old SSR environments — skip the
+    // dynamic measurement and fall back to the large-width sentinel
+    // below (Legend.width = 10000 effectively disables horizontal wrap).
+    if (typeof ResizeObserver === "undefined") return
+    const ro = new ResizeObserver(entries => {
+      for (const e of entries) setMeasuredWidth(e.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Rough estimate of how many rows the horizontal legend will need at
+  // this width, mirroring the wrap logic in `renderLegendGroupHorizontal`
+  // (itemWidth = SWATCH(16) + 10 + label.length * 7, wrap when offset +
+  // itemWidth > maxWidth). Used only to size the SVG — the authoritative
+  // layout still happens inside <Legend>.
+  const rowCount = useMemo(() => {
+    if (!measuredWidth) return 1
+    let offset = 0
+    let rows = 1
+    for (const [label] of entries) {
+      const itemWidth = 16 + 10 + label.length * 7
+      if (offset > 0 && offset + itemWidth > measuredWidth) {
+        rows++
+        offset = 0
+      }
+      offset += itemWidth
+    }
+    return rows
+  }, [entries, measuredWidth])
+  const svgHeight = Math.max(30, rowCount * 22 + 8)
+
   return (
     <svg
+      ref={svgRef}
       width="100%"
-      height={30}
+      height={svgHeight}
       style={{ display: "block", overflow: "visible" }}
     >
       <Legend
         legendGroups={legendGroups}
         title={false as any}
         orientation="horizontal"
+        width={measuredWidth || 10000}
         height={20}
         customHoverBehavior={interaction === "highlight" ? handleHover : undefined}
         customClickBehavior={interaction === "isolate" ? handleClick : undefined}
