@@ -34,7 +34,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with all 38 chart components, optimized for LLM code generation
+- **`semiotic/ai`** — a single import with 35 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
