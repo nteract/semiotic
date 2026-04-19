@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react"
-import { LineChart, Scatterplot, BarChart, LinkedCharts, useChartObserver } from "semiotic"
+import { LineChart, Scatterplot, BarChart, LinkedCharts, CategoryColorProvider, useChartObserver } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
@@ -173,36 +173,42 @@ function ObserverInsightPanel() {
 }
 
 function LinkedObserverDemo() {
+  // Wrap in CategoryColorProvider so LinkedCharts renders a single
+  // unified legend for the shared `region` categories and child charts
+  // suppress their own legends. Also guarantees consistent colors
+  // (North is the same blue in the scatter and the bar).
   return (
-    <LinkedCharts>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <Scatterplot
-          data={scatterData}
-          xAccessor="x"
-          yAccessor="y"
-          colorBy="region"
-          width={360}
-          height={250}
-          onObservation={() => {}}
-          chartId="linked-scatter"
-          linkedHover={{ name: "obs-hl", fields: ["region"] }}
-          selection={{ name: "obs-hl" }}
-        />
-        <BarChart
-          data={barData}
-          categoryAccessor="region"
-          valueAccessor="sales"
-          colorBy="region"
-          width={360}
-          height={250}
-          onObservation={() => {}}
-          chartId="linked-bar"
-          linkedHover={{ name: "obs-hl", fields: ["region"] }}
-          selection={{ name: "obs-hl" }}
-        />
-      </div>
-      <ObserverInsightPanel />
-    </LinkedCharts>
+    <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+      <LinkedCharts>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <Scatterplot
+            data={scatterData}
+            xAccessor="x"
+            yAccessor="y"
+            colorBy="region"
+            width={360}
+            height={250}
+            onObservation={() => {}}
+            chartId="linked-scatter"
+            linkedHover={{ name: "obs-hl", fields: ["region"] }}
+            selection={{ name: "obs-hl" }}
+          />
+          <BarChart
+            data={barData}
+            categoryAccessor="region"
+            valueAccessor="sales"
+            colorBy="region"
+            width={360}
+            height={250}
+            onObservation={() => {}}
+            chartId="linked-bar"
+            linkedHover={{ name: "obs-hl", fields: ["region"] }}
+            selection={{ name: "obs-hl" }}
+          />
+        </div>
+        <ObserverInsightPanel />
+      </LinkedCharts>
+    </CategoryColorProvider>
   )
 }
 
@@ -366,7 +372,7 @@ export default function ObservationHooksPage() {
       <LinkedObserverDemo />
 
       <CodeBlock
-        code={`import { LinkedCharts, Scatterplot, BarChart, useChartObserver } from "semiotic"
+        code={`import { CategoryColorProvider, LinkedCharts, Scatterplot, BarChart, useChartObserver } from "semiotic"
 
 function InsightPanel() {
   const { observations, latest, clear } = useChartObserver({
@@ -386,18 +392,23 @@ function InsightPanel() {
 }
 
 function Dashboard() {
+  // CategoryColorProvider is what makes LinkedCharts render a single
+  // unified legend (and gives every chart the same color for each
+  // category). Without it, each chart renders its own legend.
   return (
-    <LinkedCharts>
-      <Scatterplot data={d} xAccessor="x" yAccessor="y" colorBy="region"
-        onObservation={() => {}} chartId="scatter"
-        linkedHover={{ name: "hl", fields: ["region"] }}
-        selection={{ name: "hl" }} />
-      <BarChart data={agg} categoryAccessor="region" valueAccessor="total"
-        onObservation={() => {}} chartId="bar"
-        linkedHover={{ name: "hl", fields: ["region"] }}
-        selection={{ name: "hl" }} />
-      <InsightPanel />
-    </LinkedCharts>
+    <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+      <LinkedCharts>
+        <Scatterplot data={d} xAccessor="x" yAccessor="y" colorBy="region"
+          onObservation={() => {}} chartId="scatter"
+          linkedHover={{ name: "hl", fields: ["region"] }}
+          selection={{ name: "hl" }} />
+        <BarChart data={agg} categoryAccessor="region" valueAccessor="total"
+          onObservation={() => {}} chartId="bar"
+          linkedHover={{ name: "hl", fields: ["region"] }}
+          selection={{ name: "hl" }} />
+        <InsightPanel />
+      </LinkedCharts>
+    </CategoryColorProvider>
   )
 }`}
         language="jsx"

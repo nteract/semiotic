@@ -761,9 +761,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
 
       // Background — use explicit prop, or fall back to semiotic theme background.
-      // Passing `background="transparent"` is an explicit opt-out so this chart
-      // can be composed as an overlay without painting over the layer beneath.
-      if (background !== "transparent") {
+      // Skip the fill when:
+      //   • `background="transparent"` — explicit opt-out for overlay composition.
+      //   • `backgroundGraphics` is provided — user supplied their own SVG
+      //     background behind the canvas; painting a themed fill would hide it.
+      const shouldPaintBg = background !== "transparent" && !backgroundGraphics
+      if (shouldPaintBg) {
         const semioticBg = canvas
           ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
           : ""

@@ -625,6 +625,25 @@ describe("StreamOrdinalFrame", () => {
           cap.restore()
         }
       })
+
+      // Regression: user-supplied `backgroundGraphics` live in an SVG
+      // behind the canvas. A full-area theme-bg fillRect would cover
+      // them. See the matching XY-frame test for the bug history.
+      it("skips the canvas theme-bg fill when backgroundGraphics is provided", () => {
+        const ctx = getMockCtx()
+        const cap = captureFillRectStyles(ctx)
+        try {
+          render(
+            <StreamOrdinalFrame
+              chartType="point"
+              backgroundGraphics={<rect x={0} y={0} width={10} height={10} fill="red" />}
+            />
+          )
+          expect(cap.styles).toHaveLength(0)
+        } finally {
+          cap.restore()
+        }
+      })
     })
 
     it("renders center content for radial projection (donut)", () => {

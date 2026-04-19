@@ -2,6 +2,18 @@
 
 import "@testing-library/jest-dom/vitest"
 
+// jsdom doesn't implement ResizeObserver. Components that measure their
+// container (useResponsiveSize, LinkedLegend) need it to exist even if
+// it never fires in tests. Individual tests that need to drive resize
+// events typically install a richer mock on top of this no-op.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  ;(globalThis as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 // JSDOM does not implement a full Canvas 2D context. Provide stubs for
 // the methods used by Stream Frames so that component tests can render
 // without "ctx.setTransform is not a function" errors.

@@ -1,7 +1,7 @@
 import React from "react"
-import { render, fireEvent } from "@testing-library/react"
+import { render, fireEvent, act as rtlAct } from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
-import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression } from "./LinkedCharts"
+import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, estimateLegendRowCount } from "./LinkedCharts"
 import { CategoryColorProvider } from "./CategoryColors"
 
 describe("LinkedCharts", () => {
@@ -257,5 +257,107 @@ describe("LinkedCharts", () => {
     })
 
     expect(consumerActive).toBe(false)
+  })
+
+  // Regression: the unified LinkedLegend measures its container and
+  // passes the actual width to <Legend> so horizontal items don't wrap
+  // one-per-row at the default-100 fallback. When they DO need to wrap
+  // (narrow container, lots of categories), the SVG height grows so
+  // wrapped rows don't clip into charts below. This block exercises
+  // both paths.
+  describe("unified legend sizing (regression: clipped legend)", () => {
+    // Lightweight ResizeObserver controller — lets tests drive the
+    // measured size instead of relying on jsdom layout (which reports
+    // 0 for everything).
+    type Entry = { target: Element; cb: ResizeObserverCallback }
+    let captured: Entry[] = []
+    let originalRO: typeof ResizeObserver
+
+    beforeEach(() => {
+      captured = []
+      originalRO = (globalThis as any).ResizeObserver
+      ;(globalThis as any).ResizeObserver = class {
+        constructor(private cb: ResizeObserverCallback) {}
+        observe(target: Element) { captured.push({ target, cb: this.cb }) }
+        unobserve() {}
+        disconnect() {}
+      }
+    })
+    afterEach(() => {
+      ;(globalThis as any).ResizeObserver = originalRO
+    })
+
+    const fireResize = (w: number, h = 30) => {
+      rtlAct(() => {
+        for (const { target, cb } of captured) {
+          cb(
+            [{ target, contentRect: { width: w, height: h } } as unknown as ResizeObserverEntry],
+            {} as ResizeObserver
+          )
+        }
+      })
+    }
+
+    it("keeps the SVG at 30px when the container is wide enough for one row", () => {
+      const { container } = render(
+        <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+          <LinkedCharts>
+            <div>child</div>
+          </LinkedCharts>
+        </CategoryColorProvider>
+      )
+      // Wide container — all four items fit on a single row
+      fireResize(800)
+      const svg = container.querySelector("svg")!
+      expect(svg.getAttribute("height")).toBe("30")
+    })
+
+    it("grows the SVG height when the container is narrow enough to wrap", () => {
+      const { container } = render(
+        <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+          <LinkedCharts>
+            <div>child</div>
+          </LinkedCharts>
+        </CategoryColorProvider>
+      )
+      // Narrow container — each category label is ~63px wide, so 4
+      // labels at 120px container → wraps across rows → SVG grows.
+      fireResize(120)
+      const svg = container.querySelector("svg")!
+      const height = parseInt(svg.getAttribute("height") || "0", 10)
+      expect(height).toBeGreaterThan(30)
+    })
+  })
+})
+
+// `estimateLegendRowCount` mirrors the wrap logic in Legend's
+// horizontal renderer. Exporting + testing it directly gives a
+// millisecond-fast check that catches the "single item per row"
+// regression without needing a full render tree.
+describe("estimateLegendRowCount", () => {
+  it("returns 1 row for an empty label list", () => {
+    expect(estimateLegendRowCount([], 800)).toBe(1)
+  })
+
+  it("returns 1 row when width is unknown (0 / undefined)", () => {
+    // 0 is what <LinkedLegend> passes before the first ResizeObserver
+    // measurement — we want a conservative single-row SVG until we
+    // know better, not a wildly over-sized reservation.
+    expect(estimateLegendRowCount(["North", "South", "East", "West"], 0)).toBe(1)
+  })
+
+  it("keeps all items on one row when the container is wide enough", () => {
+    expect(estimateLegendRowCount(["A", "B", "C", "D"], 500)).toBe(1)
+  })
+
+  it("wraps items across rows when the container is narrow", () => {
+    // Labels of length 6 at 7px/char + 26 swatch/pad ≈ 68px each.
+    // 120px container only fits one item per row → 4 labels → 4 rows.
+    expect(estimateLegendRowCount(["North!", "South!", "East!!", "West!!"], 120)).toBe(4)
+  })
+
+  it("wraps partially for medium-width containers", () => {
+    // 280px fits ~4 items per row of ~68px (4*68 = 272). 6 items wrap to 2 rows.
+    expect(estimateLegendRowCount(["A1", "B2", "C3", "D4", "E5", "F6"], 100)).toBeGreaterThan(1)
   })
 })
