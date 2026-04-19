@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, LineChart, BarChart, StackedBarChart } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, LineChart, BarChart, StackedBarChart } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"

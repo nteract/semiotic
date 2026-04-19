@@ -207,12 +207,20 @@ function LinkedLegend({
   useEffect(() => {
     const el = svgRef.current
     if (!el) return
-    // ResizeObserver absent in jsdom / old SSR environments — skip the
-    // dynamic measurement and fall back to the large-width sentinel
-    // below (Legend.width = 10000 effectively disables horizontal wrap).
+    // ResizeObserver absent in jsdom / older SSR environments — skip the
+    // dynamic measurement and let measuredWidth stay 0. Passing 0 to
+    // <Legend> disables wrap (the `maxWidth > 0` guard in
+    // renderLegendGroupHorizontal) and leaves items left-aligned, which
+    // is a graceful fallback.
     if (typeof ResizeObserver === "undefined") return
     const ro = new ResizeObserver(entries => {
-      for (const e of entries) setMeasuredWidth(e.contentRect.width)
+      // Only re-render if the width actually changed — ResizeObserver
+      // can fire for unrelated layout shifts (e.g. scrollbar changes)
+      // with the same contentRect width.
+      for (const e of entries) {
+        const next = e.contentRect.width
+        setMeasuredWidth(prev => (prev === next ? prev : next))
+      }
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -250,7 +258,7 @@ function LinkedLegend({
         legendGroups={legendGroups}
         title={false as any}
         orientation="horizontal"
-        width={measuredWidth || 10000}
+        width={measuredWidth}
         height={20}
         customHoverBehavior={interaction === "highlight" ? handleHover : undefined}
         customClickBehavior={interaction === "isolate" ? handleClick : undefined}
