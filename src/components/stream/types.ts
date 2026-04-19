@@ -325,6 +325,15 @@ export interface Changeset<T = Record<string, any>> {
   bounded: boolean
   /** Hint: total dataset size when progressively chunking bounded data */
   totalSize?: number
+  /** When true on a bounded changeset, the store replaces the buffer
+   *  contents but does NOT clear its category insertion-order memory
+   *  and marks itself as having received streaming-sourced data. Used
+   *  by aggregator HOCs (LikertChart, future density/bin charts) that
+   *  re-derive their full dataset from streaming input on every push —
+   *  the user perceives it as a stream even though the transport is
+   *  a wholesale replacement. Without this, re-aggregation would wipe
+   *  the category order and categories would shuffle on every tick. */
+  preserveCategoryOrder?: boolean
 }
 
 // ── Scales ─────────────────────────────────────────────────────────────

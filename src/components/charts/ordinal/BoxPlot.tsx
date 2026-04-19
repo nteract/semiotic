@@ -66,7 +66,8 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
   }))
 
   const {

@@ -28,8 +28,8 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
-  /** Category sort order. Default: false (data insertion order). "asc"/"desc" sorts by total grouped value. Custom comparators receive category keys. */
-  sort?: boolean | "asc" | "desc" | ((a: string, b: string) => number)
+  /** Category sort order. Default: `false` (data insertion order). `"asc"`/`"desc"` sorts by total grouped value. `"auto"` preserves insertion order while streaming and falls through to value-desc on static data. Custom comparators receive category keys. */
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
   /** Rounded corner radius on bar ends (away from baseline). */
   roundedTop?: number

@@ -169,6 +169,18 @@ export interface RealtimeFrameHandle {
   update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[]
   clear(): void
   getData(): Record<string, any>[]
+  /** Returns the frame's resolved scales, or null if unavailable.
+   *
+   *  The concrete scales object differs by frame type — XY charts
+   *  expose `{ x, y }`, ordinal charts expose `{ o, r, projection }`,
+   *  network/geo don't have a meaningful scale concept and may not
+   *  implement this method at all.
+   *
+   *  Typed as `unknown` so the shared handle stays compatible across
+   *  chart families. HOCs that want a narrower return type should
+   *  export a chart-specific handle (e.g. `LikertChartHandle`) that
+   *  extends this interface and narrows `getScales()`. */
+  getScales?(): unknown | null
 }
 
 export interface RealtimeScales {

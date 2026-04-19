@@ -380,6 +380,176 @@ describe("OrdinalPipelineStore", () => {
     })
   })
 
+  // ── preserveCategoryOrder (aggregator-HOC path) ─────────────────────
+
+  describe("bounded ingest with preserveCategoryOrder", () => {
+    // Regression: aggregator HOCs (LikertChart, future density/bin charts)
+    // re-derive their full dataset from streaming input on every push.
+    // They route through bounded ingest for atomic replacement, but the
+    // user perceives a live stream and expects categories to stay in
+    // place. Without `preserveCategoryOrder`, each replacement clears
+    // the category memory and re-sorts — producing visible shuffling.
+
+    it("preserves category insertion order across multiple replacements", () => {
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [
+          { category: "Q1", value: 10 },
+          { category: "Q2", value: 20 },
+          { category: "Q3", value: 15 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["Q1", "Q2", "Q3"])
+
+      // Replacement: Q2 now has the largest value. With ordinary bounded
+      // ingest this would re-sort to ["Q2", "Q3", "Q1"] (value-desc), but
+      // the preserve flag should keep FIFO order.
+      store.ingest({
+        inserts: [
+          { category: "Q1", value: 5 },
+          { category: "Q2", value: 99 },
+          { category: "Q3", value: 40 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["Q1", "Q2", "Q3"])
+    })
+
+    it("appends newly-arriving categories at the end without shuffling existing ones", () => {
+      const store = new OrdinalPipelineStore(makeConfig())
+      store.ingest({
+        inserts: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A", "B"])
+
+      // New category C arrives with a larger value than A/B — should
+      // still appear last (insertion order), not first (value-desc).
+      store.ingest({
+        inserts: [
+          { category: "A", value: 10 },
+          { category: "B", value: 20 },
+          { category: "C", value: 999 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A", "B", "C"])
+    })
+
+    it("flips the store into streaming mode so sort='auto' preserves order", () => {
+      // `sort: "auto"` means "insertion-order-when-streaming, value-desc-when-
+      // static". preserveCategoryOrder ingest should flip the streaming flag
+      // so auto → preserve.
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: "auto" }))
+      store.ingest({
+        inserts: [
+          { category: "Small", value: 1 },
+          { category: "Big", value: 100 },
+          { category: "Medium", value: 50 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // Insertion order, not value-desc
+      expect(Object.keys(store.columns)).toEqual(["Small", "Big", "Medium"])
+    })
+
+    it("drops stale categories from the axis after a replace that removes them (even with explicit sort)", () => {
+      // Regression: the preserve-order mechanism retains ghost categories in
+      // `this.categories` for FIFO stability across re-appearances, but
+      // every resolveCategories branch must filter against the live data
+      // set. Without this, `oSort: "desc"` or a comparator would render
+      // empty ticks for categories whose data was dropped by a replace().
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: "desc" }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 10 },
+          { category: "B", value: 20 },
+          { category: "C", value: 30 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns).sort()).toEqual(["A", "B", "C"])
+
+      // B gets dropped by the replacement.
+      store.ingest({
+        inserts: [
+          { category: "A", value: 5 },
+          { category: "C", value: 40 },
+        ],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns).sort()).toEqual(["A", "C"])
+    })
+
+    it("drops stale categories even when sort is false (insertion-order)", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: false }))
+      store.ingest({
+        inserts: [{ category: "A", value: 1 }, { category: "B", value: 2 }],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["A", "B"])
+
+      store.ingest({
+        inserts: [{ category: "B", value: 99 }],
+        bounded: true,
+        preserveCategoryOrder: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // A is evicted from the current dataset; the axis should not render
+      // a ghost column for it even though A stays in the category Set.
+      expect(Object.keys(store.columns)).toEqual(["B"])
+    })
+  })
+
+  // ── sort: "auto" ────────────────────────────────────────────────────
+
+  describe("sort='auto' mode", () => {
+    it("preserves insertion order for streaming push data", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: "auto" }))
+      store.ingest({
+        inserts: [
+          { category: "Gamma", value: 5 },
+          { category: "Alpha", value: 100 },
+          { category: "Beta", value: 50 },
+        ],
+        bounded: false,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["Gamma", "Alpha", "Beta"])
+    })
+
+    it("falls through to value-descending for static bounded data", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ oSort: "auto" }))
+      store.ingest({
+        inserts: [
+          { category: "Small", value: 1 },
+          { category: "Big", value: 100 },
+          { category: "Medium", value: 50 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      expect(Object.keys(store.columns)).toEqual(["Big", "Medium", "Small"])
+    })
+  })
+
   // ── Window/eviction behavior ────────────────────────────────────────
 
   describe("window/eviction behavior", () => {

@@ -26,7 +26,15 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
-  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
+  /** Category ordering. Default (`undefined`) resolves to `"auto"`, which
+   *  preserves insertion order while streaming and falls through to
+   *  value-desc on static data — the recommended choice when using the
+   *  push API so categories don't jump around as values fluctuate.
+   *  `true` forces value-desc regardless of source. `"asc"` / `"desc"`
+   *  sorts by total value. `false` for insertion order regardless of
+   *  source. Function comparators receive category name strings (not
+   *  row objects) and run against the category list on the axis. */
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   dotRadius?: number
   categoryPadding?: number
   enableHover?: boolean
@@ -66,14 +74,15 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
   }))
 
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
-    colorBy, colorScheme, sort = true, dotRadius = 5,
+    colorBy, colorScheme, sort = "auto", dotRadius = 5,
     categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,

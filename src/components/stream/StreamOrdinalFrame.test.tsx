@@ -301,6 +301,46 @@ describe("StreamOrdinalFrame", () => {
       expect(ref.current!.getData().find((d: any) => d.val === 50)).toBeTruthy()
     })
 
+    it("replace preserves category insertion order across value-swapping updates", async () => {
+      // Regression: aggregator-HOC pattern. Rapid replacements where the
+      // rank-by-value flips between each call must NOT shuffle columns,
+      // because the user sees it as a live stream. Without the
+      // preserveCategoryOrder path, each replace would clear the
+      // category Set and re-sort value-desc, producing visible jumps.
+      //
+      // Using default oAccessor="category" / rAccessor="value" since this
+      // test exercises the non-runtimeMode="streaming" path that
+      // aggregator HOCs actually use — LikertChart doesn't set that
+      // prop; it routes through replace() which flips the streaming
+      // state internally via `preserveCategoryOrder`.
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
+      render(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          size={[600, 400]}
+        />
+      )
+      await act(async () => {
+        ref.current!.replace([
+          { category: "Q1", value: 10 },
+          { category: "Q2", value: 20 },
+          { category: "Q3", value: 15 },
+        ])
+      })
+      // First replacement seeds order Q1 → Q2 → Q3.
+      await act(async () => {
+        ref.current!.replace([
+          { category: "Q1", value: 5 },
+          { category: "Q2", value: 99 },  // biggest — would sort first under value-desc
+          { category: "Q3", value: 40 },
+        ])
+      })
+      const scales = ref.current!.getScales()
+      // Ordinal scale domain reflects category order used by the scene.
+      expect(scales?.o.domain()).toEqual(["Q1", "Q2", "Q3"])
+    })
+
     it("clear empties the data buffer", async () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
       render(

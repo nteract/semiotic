@@ -29,7 +29,13 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
-  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
+  /** Category ordering. `false` (default) = insertion order. `"asc"` /
+   *  `"desc"` sorts by total value. `"auto"` preserves insertion order
+   *  while streaming and falls through to value-desc on static data.
+   *  `true` = value-desc regardless of source. Function comparators
+   *  receive category name strings (not row objects) and run against
+   *  the category list on the axis. */
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   barPadding?: number
   /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
   roundedTop?: number
@@ -75,7 +81,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
   }))
 
   const {

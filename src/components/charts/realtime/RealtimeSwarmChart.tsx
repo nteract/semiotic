@@ -202,7 +202,8 @@ export const RealtimeSwarmChart = forwardRef(
       remove: (id) => frameRef.current?.remove(id) ?? [],
       update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
       clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? []
+      getData: () => frameRef.current?.getData() ?? [],
+      getScales: () => frameRef.current?.getScales() ?? null
     }))
 
     // ── Loading / empty states (computed early, returned after all hooks) ───

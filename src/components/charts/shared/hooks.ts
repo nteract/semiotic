@@ -138,16 +138,24 @@ export function useColorScale(
 /**
  * Hook to sort data by a value accessor.
  * Used by BarChart and DotPlot.
+ *
+ * `"auto"` and function comparators are pass-through here. The frame-
+ * level `resolveCategories` decides the visual category order:
+ *   • `"auto"` → insertion order when streaming, value-desc when static.
+ *   • function → runs as a category-key comparator on the axis list.
+ * The HOC's row-level `data` order only seeds insertion order via the
+ * store's category Set; rearranging rows with a category comparator
+ * makes no sense (it would call the comparator with row objects instead
+ * of strings), so we decline to sort in both cases.
  */
 export function useSortedData(
   data: Array<Record<string, any>>,
-  sort: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number),
+  sort: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number),
   valueAccessor: Accessor<number>
 ): Array<Record<string, any>> {
   return useMemo(() => {
-    if (!sort) return data
+    if (!sort || sort === "auto" || typeof sort === "function") return data
     const copy = [...data]
-    if (typeof sort === "function") return copy.sort(sort)
     const getValue = resolveAccessor<number>(valueAccessor)
     return sort === "asc"
       ? copy.sort((a, b) => getValue(a) - getValue(b))
