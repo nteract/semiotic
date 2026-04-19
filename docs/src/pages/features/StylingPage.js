@@ -59,10 +59,12 @@ const multiLineData = [
 ]
 
 const barData = [
-  { region: "North", quarter: "Q1", revenue: 120, target: 100 },
-  { region: "South", quarter: "Q1", revenue: 90, target: 100 },
-  { region: "East", quarter: "Q1", revenue: 145, target: 130 },
-  { region: "West", quarter: "Q1", revenue: 110, target: 120 },
+  // Q1 — mix of solid, close-to-target, and far-below-target so the
+  // Multi-Hatch demo actually exercises all three piece styles.
+  { region: "North", quarter: "Q1", revenue: 120, target: 100 }, // solid
+  { region: "South", quarter: "Q1", revenue: 62, target: 100 },  // < 90% → red hatch
+  { region: "East", quarter: "Q1", revenue: 145, target: 130 },  // solid
+  { region: "West", quarter: "Q1", revenue: 111, target: 120 },  // ≥ 90% → blue hatch
   { region: "North", quarter: "Q2", revenue: 135, target: 110 },
   { region: "South", quarter: "Q2", revenue: 88, target: 105 },
   { region: "East", quarter: "Q2", revenue: 160, target: 140 },

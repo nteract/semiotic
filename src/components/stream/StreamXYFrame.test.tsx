@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act, fireEvent } from "@testing-library/react"
-import StreamXYFrame from "./StreamXYFrame"
+import StreamXYFrame, { withAlpha } from "./StreamXYFrame"
 import type { StreamXYFrameHandle } from "./types"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 
@@ -13,6 +13,39 @@ if (typeof globalThis.ResizeObserver === "undefined") {
     disconnect() {}
   }
 }
+
+// Regression: /cookbook/marginal-graphics (and anywhere else using the
+// crosshair hover annotation) rendered a near-invisible crosshair
+// because the theme resolver appended a 2-char hex alpha to a CSS
+// variable like `--semiotic-text-secondary: "#aaa"`, producing the
+// invalid 5-char `#aaa66`. Canvas `strokeStyle` silently rejects
+// invalid colors and leaves strokeStyle at the previous (or default
+// `#000000`) value — which on a dark-theme background is effectively
+// black on black. `withAlpha` must expand 3-char hex and handle
+// `rgb(...)` before appending alpha.
+describe("withAlpha (theme color + alpha concatenation)", () => {
+  it("appends alpha to a 6-char hex color", () => {
+    expect(withAlpha("#aabbcc", "66")).toBe("#aabbcc66")
+  })
+
+  it("expands a 3-char hex color before appending alpha", () => {
+    expect(withAlpha("#aaa", "66")).toBe("#aaaaaa66")
+    expect(withAlpha("#abc", "4D")).toBe("#aabbcc4D")
+  })
+
+  it("tolerates whitespace", () => {
+    expect(withAlpha("  #aaa  ", "66")).toBe("#aaaaaa66")
+  })
+
+  it("converts rgb() to rgba() with numeric alpha", () => {
+    expect(withAlpha("rgb(170, 170, 170)", "66")).toMatch(/^rgba\(170, 170, 170, 0\.4/)
+  })
+
+  it("falls back to the raw color when the form isn't recognized", () => {
+    expect(withAlpha("red", "66")).toBe("red")
+    expect(withAlpha("hsl(0, 100%, 50%)", "66")).toBe("hsl(0, 100%, 50%)")
+  })
+})
 
 describe("StreamXYFrame", () => {
   let cleanup: () => void
@@ -518,6 +551,29 @@ describe("StreamXYFrame", () => {
           render(<StreamXYFrame chartType="scatter" background="transparent" />)
           // Scatter charts don't emit fillRect for data marks, so any
           // fillRect here would be the background paint we're opting out of.
+          expect(cap.styles).toHaveLength(0)
+        } finally {
+          cap.restore()
+        }
+      })
+
+      // Regression: user-provided `backgroundGraphics` live in an SVG
+      // behind the canvas. If the canvas paints `--semiotic-bg` across
+      // its full area, the SVG is completely covered — which is why
+      // the `/theming/styling` DRAFT watermark and
+      // `/cookbook/homerun-map` field diagram went blank until this
+      // fix. The canvas must skip its auto theme-bg fill when the
+      // caller has supplied their own background SVG.
+      it("skips the canvas theme-bg fill when backgroundGraphics is provided", () => {
+        const ctx = getMockCtx()
+        const cap = captureFillRectStyles(ctx)
+        try {
+          render(
+            <StreamXYFrame
+              chartType="scatter"
+              backgroundGraphics={<rect x={0} y={0} width={10} height={10} fill="red" />}
+            />
+          )
           expect(cap.styles).toHaveLength(0)
         } finally {
           cap.restore()

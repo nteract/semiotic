@@ -102,6 +102,7 @@ Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, Scatter
 
 **LinkedCharts** — `selections`, **CategoryColorProvider** — `colors`|`categories` + `colorScheme`
 Chart props: `selection`, `linkedHover`, `linkedBrush`. Hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`
+**Shared categories inside LinkedCharts → wrap in `CategoryColorProvider`.** When two or more charts encode the same categorical field (e.g. both `colorBy="region"`), wrapping in `CategoryColorProvider` gives every chart identical colors per category AND makes `LinkedCharts` render one unified legend (and suppress individual chart legends). Without it, each chart renders its own legend independently — often with mismatched colors.
 **Linked crosshair**: `linkedHover={{ name: "sync", mode: "x-position", xField: "time" }}`. Click-to-lock: click locks crosshair (dashed white), click/Escape unlocks.
 **ScatterplotMatrix**, **ChartContainer** (`title`, `subtitle`, `actions`), **ChartGrid** (`columns`, `gap`), **ContextLayout**
 

@@ -8,6 +8,7 @@ import { useLinkedHover, useSelection } from "./store/useSelection"
 import { useCategoryColors } from "./CategoryColors"
 import Legend from "./Legend"
 import type { LegendGroup } from "./types/legendTypes"
+import { useResponsiveSize } from "./stream/useResponsiveSize"
 
 type LegendInteractionMode = "highlight" | "isolate" | "none"
 
@@ -190,24 +191,71 @@ function LinkedLegend({
     [interaction, allCategories.length]
   )
 
-  return (
-    <svg
-      width="100%"
-      height={30}
-      style={{ display: "block", overflow: "visible" }}
-    >
-      <Legend
-        legendGroups={legendGroups}
-        title={false as any}
-        orientation="horizontal"
-        height={20}
-        customHoverBehavior={interaction === "highlight" ? handleHover : undefined}
-        customClickBehavior={interaction === "isolate" ? handleClick : undefined}
-        highlightedCategory={highlightedCategory}
-        isolatedCategories={isolatedCategories}
-      />
-    </svg>
+  // Measure the container's actual laid-out width so we can tell <Legend>
+  // how much room it has. Without this, the `width` prop defaults to 100
+  // (fallback in Legend), which `renderLegendGroupHorizontal` treats as
+  // `maxWidth` — so any label over ~100px causes the items to wrap one
+  // per row. With the SVG at height=30, wrapped rows clip into whatever
+  // sits below (the first chart in the composed layout).
+  //
+  // `useResponsiveSize` is the same hook Stream Frames use to measure
+  // their container — reusing it keeps ResizeObserver wiring
+  // centralized (single source of cleanup + change-debouncing).
+  //
+  // The ROW_HEIGHT_H used by Legend's horizontal renderer is 22; with
+  // a 4px breathing margin the single-row height comfortably fits in
+  // 30. If the container is narrow enough that the legend genuinely
+  // needs to wrap, we grow the SVG height so nothing clips.
+  const [containerRef, [measuredWidth]] = useResponsiveSize([0, 0], true, false)
+  const rowCount = useMemo(
+    () => estimateLegendRowCount(entries.map(([label]) => label), measuredWidth),
+    [entries, measuredWidth]
   )
+  const svgHeight = Math.max(30, rowCount * 22 + 8)
+
+  return (
+    <div ref={containerRef} style={{ width: "100%", display: "block" }}>
+      <svg
+        width="100%"
+        height={svgHeight}
+        style={{ display: "block", overflow: "visible" }}
+      >
+        <Legend
+          legendGroups={legendGroups}
+          title={false as any}
+          orientation="horizontal"
+          width={measuredWidth}
+          height={20}
+          customHoverBehavior={interaction === "highlight" ? handleHover : undefined}
+          customClickBehavior={interaction === "isolate" ? handleClick : undefined}
+          highlightedCategory={highlightedCategory}
+          isolatedCategories={isolatedCategories}
+        />
+      </svg>
+    </div>
+  )
+}
+
+/**
+ * Mirror of the wrap logic in Legend's renderLegendGroupHorizontal:
+ * itemWidth = SWATCH(16) + 10 + label.length * 7, wrap when the cursor
+ * would exceed maxWidth. Used only to size the container SVG — the
+ * authoritative layout still happens inside <Legend>. When width is
+ * unknown (e.g. first paint, SSR), return 1 so we don't pre-grow.
+ */
+export function estimateLegendRowCount(labels: string[], width: number): number {
+  if (!width || labels.length === 0) return 1
+  let offset = 0
+  let rows = 1
+  for (const label of labels) {
+    const itemWidth = 16 + 10 + label.length * 7
+    if (offset > 0 && offset + itemWidth > width) {
+      rows++
+      offset = 0
+    }
+    offset += itemWidth
+  }
+  return rows
 }
 
 // ── LinkedCharts component ─────────────────────────────────────────────────

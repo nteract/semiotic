@@ -219,6 +219,19 @@ export default function SmallMultiplesPage() {
         <code>linkedBrush</code> props.
       </p>
 
+      <p style={{ background: "var(--surface-2)", padding: "12px 16px", borderRadius: 6, fontSize: 14 }}>
+        <strong>Shared categories →{" "}
+        <code>CategoryColorProvider</code>.</strong> When two or more charts
+        inside <code>LinkedCharts</code> encode the same categorical field
+        (e.g. both use <code>colorBy="region"</code>), wrap the whole block in{" "}
+        <code>CategoryColorProvider</code>. That gives every chart the same
+        color for each category and tells <code>LinkedCharts</code> to render
+        one unified legend — otherwise each chart renders its own, which is
+        both visually redundant and can use different colors for the same
+        category. See{" "}
+        <a href="#unified-legend"><code>Unified Legend</code></a> below.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Live example */}
       {/* ----------------------------------------------------------------- */}
@@ -230,34 +243,36 @@ export default function SmallMultiplesPage() {
       </p>
 
       <div style={{ marginBottom: 32 }}>
-        <LinkedCharts>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            <Scatterplot
-              data={salesData}
-              xAccessor="revenue"
-              yAccessor="spend"
-              colorBy="region"
-              pointRadius={6}
-              width={360}
-              height={300}
-              xLabel="Revenue"
-              yLabel="Spend"
-              linkedHover={{ name: "hl", fields: ["region"] }}
-              selection={{ name: "hl" }}
-            />
-            <BarChart
-              data={regionTotals}
-              categoryAccessor="region"
-              valueAccessor="total"
-              colorBy="region"
-              width={320}
-              height={300}
-              valueLabel="Total Revenue"
-              linkedHover={{ name: "hl", fields: ["region"] }}
-              selection={{ name: "hl" }}
-            />
-          </div>
-        </LinkedCharts>
+        <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+          <LinkedCharts>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <Scatterplot
+                data={salesData}
+                xAccessor="revenue"
+                yAccessor="spend"
+                colorBy="region"
+                pointRadius={6}
+                width={360}
+                height={300}
+                xLabel="Revenue"
+                yLabel="Spend"
+                linkedHover={{ name: "hl", fields: ["region"] }}
+                selection={{ name: "hl" }}
+              />
+              <BarChart
+                data={regionTotals}
+                categoryAccessor="region"
+                valueAccessor="total"
+                colorBy="region"
+                width={320}
+                height={300}
+                valueLabel="Total Revenue"
+                linkedHover={{ name: "hl", fields: ["region"] }}
+                selection={{ name: "hl" }}
+              />
+            </div>
+          </LinkedCharts>
+        </CategoryColorProvider>
       </div>
 
       <CodeBlock
@@ -338,24 +353,26 @@ linkedBrush="selectionName" // shorthand`}
       </p>
 
       <div style={{ marginBottom: 32 }}>
-        <LinkedCharts>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            <Scatterplot
-              data={salesData}
-              xAccessor="revenue"
-              yAccessor="spend"
-              colorBy="region"
-              pointRadius={6}
-              width={360}
-              height={300}
-              xLabel="Revenue"
-              yLabel="Spend"
-              linkedBrush={{ name: "brush", xField: "revenue", yField: "spend" }}
-              selection={{ name: "brush" }}
-            />
-            <FilteredBarChart data={salesData} />
-          </div>
-        </LinkedCharts>
+        <CategoryColorProvider categories={["North", "South", "East", "West"]}>
+          <LinkedCharts>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <Scatterplot
+                data={salesData}
+                xAccessor="revenue"
+                yAccessor="spend"
+                colorBy="region"
+                pointRadius={6}
+                width={360}
+                height={300}
+                xLabel="Revenue"
+                yLabel="Spend"
+                linkedBrush={{ name: "brush", xField: "revenue", yField: "spend" }}
+                selection={{ name: "brush" }}
+              />
+              <FilteredBarChart data={salesData} />
+            </div>
+          </LinkedCharts>
+        </CategoryColorProvider>
       </div>
 
       <CodeBlock

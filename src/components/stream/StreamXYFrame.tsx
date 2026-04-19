@@ -121,6 +121,39 @@ const LIGHT_THEME: ThemeColors = {
   pointRing: "white"
 }
 
+/**
+ * Append a 2-char hex alpha to an existing CSS color, returning a valid
+ * CSS color string. The naive `${color}${alpha}` concatenation only works
+ * when `color` is a 6-char `#rrggbb`; shorthand `#rgb` produces the
+ * invalid 5-char `#rgbXX`, which `ctx.strokeStyle`/`fillStyle` silently
+ * rejects (falling back to `#000000` — black, invisible on dark themes).
+ * The /cookbook/marginal-graphics crosshair invisibility was caused
+ * precisely by `--semiotic-text-secondary: "#aaa"` hitting this path.
+ *
+ * Handles:
+ *   • 3-char hex (`#abc`) → expanded to 6-char then concatenated
+ *   • 6-char hex (`#aabbcc`) → concatenated directly
+ *   • `rgb(...)` → repacked as `rgba(..., a)` with numeric alpha
+ * Any other form (named colors, hsl(), oklch(), etc.) falls back to the
+ * raw color without alpha — degrades gracefully.
+ */
+export function withAlpha(color: string, alphaHex: string): string {
+  const trimmed = color.trim()
+  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+    const r = trimmed[1], g = trimmed[2], b = trimmed[3]
+    return `#${r}${r}${g}${g}${b}${b}${alphaHex}`
+  }
+  if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
+    return `${trimmed}${alphaHex}`
+  }
+  const rgbMatch = trimmed.match(/^rgb\s*\(\s*([^)]+?)\s*\)$/i)
+  if (rgbMatch) {
+    const alpha = parseInt(alphaHex, 16) / 255
+    return `rgba(${rgbMatch[1]}, ${alpha.toFixed(3)})`
+  }
+  return trimmed
+}
+
 function resolveThemeColors(el: HTMLElement | null): ThemeColors {
   if (!el) return LIGHT_THEME
   const style = getComputedStyle(el)
@@ -141,9 +174,9 @@ function resolveThemeColors(el: HTMLElement | null): ThemeColors {
   return {
     axisStroke: surface3 || LIGHT_THEME.axisStroke,
     tickText: textSecondary || LIGHT_THEME.tickText,
-    crosshair: textSecondary ? `${textSecondary}66` : LIGHT_THEME.crosshair,
-    hoverFill: surface0 ? `${surface0}4D` : LIGHT_THEME.hoverFill,
-    hoverStroke: textSecondary ? `${textSecondary}99` : LIGHT_THEME.hoverStroke,
+    crosshair: textSecondary ? withAlpha(textSecondary, "66") : LIGHT_THEME.crosshair,
+    hoverFill: surface0 ? withAlpha(surface0, "4D") : LIGHT_THEME.hoverFill,
+    hoverStroke: textSecondary ? withAlpha(textSecondary, "99") : LIGHT_THEME.hoverStroke,
     pointRing: surface0 || LIGHT_THEME.pointRing
   }
 }
@@ -930,10 +963,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
           }
 
-          // Background. Passing `background="transparent"` is an explicit
-          // opt-out so this chart can be composed as an overlay without
-          // painting over the layer beneath it.
-          if (background !== "transparent") {
+          // Background.
+          //   • `background="transparent"` — explicit opt-out so this chart
+          //     can be composed as an overlay without painting over the
+          //     layer beneath.
+          //   • `backgroundGraphics` — user supplied their own SVG
+          //     background (rendered as a DOM sibling behind the canvas).
+          //     The canvas fills the full size[0] × size[1] area opaquely,
+          //     which would cover the SVG. Skip the fill so the user's
+          //     background shows through. If the user also wants a themed
+          //     color behind their graphics, they can apply it in the SVG
+          //     they render.
+          const shouldPaintBg = background !== "transparent" && !backgroundGraphics
+          if (shouldPaintBg) {
             const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
             const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
             if (effectiveBg) {

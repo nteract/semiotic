@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, LineChart, BarChart } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, LineChart, BarChart, StackedBarChart } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -372,6 +372,140 @@ export default function LegendsPage() {
         startHidden
       />
 
+      <h2 id="legend-positioning">Legend Positioning</h2>
+      <p>
+        Chart components accept a <code>legendPosition</code> prop to place the
+        legend on any side of the chart: <code>"right"</code> (default),{" "}
+        <code>"left"</code>, <code>"top"</code>, or <code>"bottom"</code>. Top
+        and bottom legends are laid out horizontally and the chart margin adjusts
+        automatically to make room.
+      </p>
+
+      <h3 id="top-legend">Top Legend</h3>
+
+      <LiveExample
+        frameProps={{
+          data: flatLineData,
+          xAccessor: "month",
+          yAccessor: "value",
+          lineBy: "label",
+          colorBy: "label",
+          showLegend: true,
+          legendPosition: "top",
+          xLabel: "Month",
+          yLabel: "Value",
+          title: "Legend on Top",
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { month: 1, value: 12, label: "Revenue" },
+  { month: 2, value: 18, label: "Revenue" },
+  // ...flat data with label field
+]`,
+          legendPosition: '"top"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="bottom-legend">Bottom Legend</h3>
+
+      <LiveExample
+        frameProps={{
+          data: barData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          colorBy: "region",
+          showLegend: true,
+          legendPosition: "bottom",
+          title: "Legend on Bottom",
+        }}
+        type={BarChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { category: "Q1", value: 35, region: "North" },
+  { category: "Q2", value: 42, region: "North" },
+  // ...data with region field
+]`,
+          legendPosition: '"bottom"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h2 id="legend-interaction">Legend Interaction (Charts)</h2>
+      <p>
+        Chart components support built-in legend interaction via the{" "}
+        <code>legendInteraction</code> prop. This provides two interaction modes
+        inspired by the Carbon Design System.
+      </p>
+
+      <h3 id="highlight-on-hover">Highlight on Hover</h3>
+      <p>
+        Hover over a legend item to dim all other categories to 30% opacity:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: flatLineData,
+          xAccessor: "month",
+          yAccessor: "value",
+          lineBy: "label",
+          colorBy: "label",
+          legendInteraction: "highlight",
+          xLabel: "Month",
+          yLabel: "Value",
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { month: 1, value: 12, label: "Revenue" },
+  { month: 2, value: 18, label: "Revenue" },
+  // ...flat data with label field
+]`,
+          legendInteraction: '"highlight"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="isolate-on-click">Isolate on Click</h3>
+      <p>
+        Click legend items to toggle category visibility. A checkmark indicates
+        active categories. When all categories are re-selected, the legend resets.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: barData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          stackBy: "region",
+          colorBy: "region",
+          legendInteraction: "isolate",
+        }}
+        type={StackedBarChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { category: "Q1", value: 35, region: "North" },
+  { category: "Q2", value: 42, region: "North" },
+  // ...data with region field
+]`,
+          stackBy: '"region"',
+          legendInteraction: '"isolate"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        Legend interaction integrates with the selection system, so it composes
+        naturally with <code>LinkedCharts</code> cross-highlighting. Both the
+        legend interaction and linked hover predicates are merged — a datum must
+        satisfy both to remain at full opacity.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Configuration */}
       {/* ----------------------------------------------------------------- */}
@@ -526,138 +660,6 @@ import { Heatmap } from "semiotic"
 />`}
         language="jsx"
       />
-
-      <h2 id="legend-positioning">Legend Positioning</h2>
-      <p>
-        Chart components accept a <code>legendPosition</code> prop to place the
-        legend on any side of the chart: <code>"right"</code> (default),{" "}
-        <code>"left"</code>, <code>"top"</code>, or <code>"bottom"</code>. Top
-        and bottom legends are laid out horizontally and the chart margin adjusts
-        automatically to make room.
-      </p>
-
-      <h3 id="top-legend">Top Legend</h3>
-
-      <LiveExample
-        frameProps={{
-          data: flatLineData,
-          xAccessor: "month",
-          yAccessor: "value",
-          lineBy: "label",
-          colorBy: "label",
-          showLegend: true,
-          legendPosition: "top",
-          xLabel: "Month",
-          yLabel: "Value",
-          title: "Legend on Top",
-        }}
-        type={LineChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { month: 1, value: 12, label: "Revenue" },
-  { month: 2, value: 18, label: "Revenue" },
-  // ...flat data with label field
-]`,
-          legendPosition: '"top"',
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="bottom-legend">Bottom Legend</h3>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          colorBy: "region",
-          showLegend: true,
-          legendPosition: "bottom",
-          title: "Legend on Bottom",
-        }}
-        type={BarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { category: "Q1", value: 35, region: "North" },
-  { category: "Q2", value: 42, region: "North" },
-  // ...data with region field
-]`,
-          legendPosition: '"bottom"',
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="legend-interaction">Legend Interaction (Charts)</h3>
-      <p>
-        Chart components support built-in legend interaction via the{" "}
-        <code>legendInteraction</code> prop. This provides two interaction modes
-        inspired by the Carbon Design System.
-      </p>
-
-      <h4>Highlight on Hover</h4>
-      <p>
-        Hover over a legend item to dim all other categories to 30% opacity:
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: flatLineData,
-          xAccessor: "month",
-          yAccessor: "value",
-          lineBy: "label",
-          colorBy: "label",
-          legendInteraction: "highlight",
-          xLabel: "Month",
-          yLabel: "Value",
-        }}
-        type={LineChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { month: 1, value: 12, label: "Revenue" },
-  { month: 2, value: 18, label: "Revenue" },
-  // ...flat data with label field
-]`,
-          legendInteraction: '"highlight"',
-        }}
-        hiddenProps={{}}
-      />
-
-      <h4>Isolate on Click</h4>
-      <p>
-        Click legend items to toggle category visibility. A checkmark indicates
-        active categories. When all categories are re-selected, the legend resets.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          colorBy: "region",
-          legendInteraction: "isolate",
-        }}
-        type={BarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { category: "Q1", value: 35, region: "North" },
-  { category: "Q2", value: 42, region: "North" },
-  // ...data with region field
-]`,
-          legendInteraction: '"isolate"',
-        }}
-        hiddenProps={{}}
-      />
-
-      <p>
-        Legend interaction integrates with the selection system, so it composes
-        naturally with <code>LinkedCharts</code> cross-highlighting. Both the
-        legend interaction and linked hover predicates are merged — a datum must
-        satisfy both to remain at full opacity.
-      </p>
 
       <h3 id="click-behavior">Custom Interactive Legends (Frames)</h3>
       <p>
