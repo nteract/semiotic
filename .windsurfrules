@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- **Use sub-path imports** — `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB), `semiotic/server` (100KB), `semiotic/utils` (31KB), `semiotic/themes` (5KB), `semiotic/data` (5KB). Full `semiotic` is 278KB gz.
+- **Use sub-path imports** — `semiotic/xy` (78KB gz), `semiotic/ordinal` (65KB), `semiotic/network` (54KB), `semiotic/geo` (53KB), `semiotic/realtime` (77KB), `semiotic/server` (58KB), `semiotic/utils` (19KB), `semiotic/themes` (3KB), `semiotic/data` (3KB). Full `semiotic` is 158KB gz.
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
@@ -40,7 +40,7 @@
 **Histogram** — + `bins` (25), `relative`. Always horizontal.
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **RidgelinePlot** — + `bins`, `amplitude` (1.5)
-**DotPlot** — + `sort` (true), `dotRadius`, `showGrid` default true
+**DotPlot** — + `sort` ("auto" — insertion order when streaming, value-desc on static), `dotRadius`, `showGrid` default true
 **PieChart** — `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent`
 **FunnelChart** — `stepAccessor`, `valueAccessor`, `categoryAccessor` (optional), `connectorOpacity`, `orientation`
@@ -86,14 +86,16 @@ Most HOCs support push via `forwardRef`. **Omit** `data` — do NOT pass `data={
 const ref = useRef()
 ref.current.push({ id: "p1", x: 1, y: 2 })
 ref.current.pushMany([...points])
+ref.current.replace([...points])                   // ordinal only — atomic data swap, preserves category order + transitions
 ref.current.remove("p1")                          // by ID — requires pointIdAccessor
 ref.current.remove(["p1", "p2"])                   // batch remove
 ref.current.update("p1", d => ({ ...d, y: 99 }))  // in-place update — requires pointIdAccessor
 ref.current.clear()
 ref.current.getData()
+ref.current.getScales()                            // returns {o, r} (ordinal) / {x, y} (XY) — null if not yet computed
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
-`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
+`remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. `replace()` is ordinal-only and routes through a bounded-ingest path that preserves category insertion-order memory and the transition position snapshot — what aggregator HOCs like LikertChart use under the hood to re-aggregate streaming input without shuffling categories or losing animations. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Coordinated Views
@@ -177,6 +179,8 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 - **Log scale**: Domain min clamped to 1e-6.
 - **barPadding**: Pixel value (40/60 default). Reduce for small charts.
 - **sort on StackedBarChart/GroupedBarChart**: Default `false` preserves insertion order. The underlying frame defaults to value-descending if `oSort` is undefined, so always pass `sort` explicitly if order matters.
+- **sort `"auto"`** (BarChart/StackedBarChart/GroupedBarChart/DotPlot): insertion order while streaming, value-desc on static data. The right choice when using the push API — avoids categories shuffling as values fluctuate. DotPlot's default; opt-in on others.
+- **Tooltip format cascade**: `valueFormat` (ordinal) / `xFormat` / `yFormat` (XY) / `valueFormat` on Heatmap flow to the default tooltip automatically, so axis and tooltip read identically. Only applies to the default tooltip — a custom `tooltip` prop fully overrides; re-pass the formatter inside `Tooltip({format})` / `MultiLineTooltip({fields:[{format}]})` if you want it there. Bespoke-tooltip charts (Histogram, FunnelChart, LikertChart, GaugeChart) don't participate; customize via `tooltip`.
 - **Horizontal bars**: Need wider left margin: `margin={{ left: 120 }}`.
 - **Push API**: Omit `data` entirely. `data={[]}` clears on every render.
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead.
