@@ -248,10 +248,15 @@ export interface OrdinalPipelineConfig {
   showLabels?: boolean
 
   // Sort — comparator receives category names (strings).
-  // "auto" preserves insertion order while streaming and sorts by value
-  // descending on static data. Pass `"asc"` / `"desc"` / a comparator for
-  // explicit ordering, `false` / insertion-order always, or `true` /
-  // undefined for value-desc regardless of source.
+  //   • `"auto"` / `undefined` — preserve insertion order while streaming,
+  //     fall through to value-desc on static data.
+  //   • `"asc"` / `"desc"` — sort by total value, ascending / descending.
+  //   • `true` — legacy alias for value-desc regardless of source (used
+  //     as the default on some HOCs pre-"auto"; new HOCs should prefer
+  //     `"auto"`).
+  //   • `false` — insertion order always.
+  //   • function — custom category comparator; receives the two category
+  //     name strings, returns a negative/positive number for ordering.
   oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
 
   // Connectors
@@ -337,10 +342,15 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   extentPadding?: number
 
   // Sort — comparator receives category names (strings).
-  // "auto" preserves insertion order while streaming and sorts by value
-  // descending on static data. Pass `"asc"` / `"desc"` / a comparator for
-  // explicit ordering, `false` / insertion-order always, or `true` /
-  // undefined for value-desc regardless of source.
+  //   • `"auto"` / `undefined` — preserve insertion order while streaming,
+  //     fall through to value-desc on static data.
+  //   • `"asc"` / `"desc"` — sort by total value, ascending / descending.
+  //   • `true` — legacy alias for value-desc regardless of source (used
+  //     as the default on some HOCs pre-"auto"; new HOCs should prefer
+  //     `"auto"`).
+  //   • `false` — insertion order always.
+  //   • function — custom category comparator; receives the two category
+  //     name strings, returns a negative/positive number for ordering.
   oSort?: ((a: any, b: any) => number) | boolean | "asc" | "desc" | "auto"
 
   // Streaming

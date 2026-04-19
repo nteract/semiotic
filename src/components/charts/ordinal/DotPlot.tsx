@@ -26,12 +26,15 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[]
-  /** Category ordering. `true` / `undefined` → value-desc. `"auto"` preserves
-   *  insertion order while streaming, then switches to value-desc on static
-   *  data — the recommended default when using the push API so categories
-   *  don't jump around as values fluctuate. `"asc"` / `"desc"` / comparator
-   *  for explicit control. `false` for insertion order regardless of source. */
-  sort?: boolean | "asc" | "desc" | "auto" | ((a: Record<string, any>, b: Record<string, any>) => number)
+  /** Category ordering. Default (`undefined`) resolves to `"auto"`, which
+   *  preserves insertion order while streaming and falls through to
+   *  value-desc on static data — the recommended choice when using the
+   *  push API so categories don't jump around as values fluctuate.
+   *  `true` forces value-desc regardless of source. `"asc"` / `"desc"`
+   *  sorts by total value. `false` for insertion order regardless of
+   *  source. Function comparators receive category name strings (not
+   *  row objects) and run against the category list on the axis. */
+  sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
   dotRadius?: number
   categoryPadding?: number
   enableHover?: boolean

@@ -470,7 +470,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   )
 }) as unknown as {
   <TDatum extends Record<string, any> = Record<string, any>>(
-    props: LikertChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>
+    props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>
   ): React.ReactElement | null
   displayName?: string
 }
