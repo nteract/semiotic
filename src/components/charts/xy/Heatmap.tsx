@@ -83,14 +83,12 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   yFormat?: (d: any) => string
 
   /**
-   * Color scheme for the heatmap
-   * @default "blues"
-   */
-  /**
-   * d3-scale-chromatic sequential scheme name, "custom" (paired with
-   * `customColorScale`), or any scheme name emitted by a SemioticTheme's
-   * `colors.sequential`. When unset, falls back to the active theme's
-   * sequential scheme, then to "blues".
+   * Color scheme for the heatmap — any d3-scale-chromatic sequential scheme
+   * name, `"custom"` (paired with `customColorScale`), or any scheme name
+   * emitted by a SemioticTheme's `colors.sequential`. When unset, falls back
+   * to the active theme's sequential scheme, then to `"blues"`.
+   *
+   * @default `theme.colors.sequential` (or `"blues"` when no ThemeProvider)
    */
   colorScheme?: "blues" | "reds" | "greens" | "viridis" | "oranges" | "purples" | "greys" | "plasma" | "inferno" | "magma" | "cividis" | "turbo" | "custom" | (string & {})
 

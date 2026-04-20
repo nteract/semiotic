@@ -76,7 +76,7 @@ export interface HoverData {
 
   // ── XY-specific ──────────────────────────────────────────────────────
   /** All series values at hovered X (multi-point tooltip mode) */
-  allSeries?: Array<{ group: string; value: number; valuePx?: number; color: string; datum: any }>
+  allSeries?: Array<{ group: string; value: number; valuePx?: number; color?: string; datum: any }>
   /** Pixel X of hover position (may differ from x for multi-point snap) */
   xPx?: number
   /** Raw X domain value at hover position */

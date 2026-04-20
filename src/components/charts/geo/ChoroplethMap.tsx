@@ -5,23 +5,49 @@ import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { scaleSequential } from "d3-scale"
-import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+import {
+  interpolateBlues,
+  interpolateReds,
+  interpolateGreens,
+  interpolateViridis,
+  interpolateOranges,
+  interpolatePurples,
+  interpolateGreys,
+  interpolatePlasma,
+  interpolateInferno,
+  interpolateMagma,
+  interpolateCividis,
+  interpolateTurbo,
+} from "d3-scale-chromatic"
 import { extent } from "d3-array"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
+// Sequential d3-scale-chromatic schemes. Covers every scheme name that a
+// built-in SemioticTheme preset emits via `colors.sequential` (tufte →
+// "oranges", pastels → "purples", playful → "viridis", etc.) so the theme
+// fallback actually produces a different palette instead of silently
+// reverting to `interpolateBlues`.
 const SCHEME_MAP: Record<string, (t: number) => string> = {
   blues: interpolateBlues,
   reds: interpolateReds,
   greens: interpolateGreens,
-  viridis: interpolateViridis
+  viridis: interpolateViridis,
+  oranges: interpolateOranges,
+  purples: interpolatePurples,
+  greys: interpolateGreys,
+  plasma: interpolatePlasma,
+  inferno: interpolateInferno,
+  magma: interpolateMagma,
+  cividis: interpolateCividis,
+  turbo: interpolateTurbo,
 }
 
 export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {

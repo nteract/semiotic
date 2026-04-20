@@ -792,7 +792,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             group: h.group || "",
             value: yInvert ? yInvert(h.y) : h.y,
             valuePx: h.y,
-            color: h.color || "#007bff",
+            // Leave color undefined when the hit has no color — drawCrosshair
+            // then falls back to theme.primary (which reads from --semiotic-primary).
+            // A hardcoded fallback here would shadow that theme-aware path.
+            color: h.color,
             datum: h.datum,
           }))
         }
