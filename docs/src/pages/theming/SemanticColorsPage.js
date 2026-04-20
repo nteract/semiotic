@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import {
+  ThemeProvider,
   RealtimeHistogram,
   BarChart,
   StackedBarChart,
@@ -7,6 +8,41 @@ import {
 
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+
+// ---------------------------------------------------------------------------
+// Docs-theme tracker
+// ---------------------------------------------------------------------------
+//
+// The docs site's own CSS only defines a handful of --semiotic-* vars
+// (bg / text / text-secondary / border / grid — see docs/src/index.css).
+// The semantic roles we describe on this page (--semiotic-primary,
+// --semiotic-danger, success, warning, error, info, secondary, surface)
+// aren't in the docs stylesheet, so the Swatch grid and live examples
+// below would render with unresolved vars without a SemioticTheme wrapping.
+//
+// Solution: wrap the page content in a `<ThemeProvider>` tied to the docs
+// site's current `data-theme` attribute. ThemeProvider emits every
+// `--semiotic-{role}` CSS var for its subtree, so everything renders
+// deterministically regardless of what the docs CSS declares.
+function useDocsThemeName() {
+  const [name, setName] = useState(() =>
+    typeof document !== "undefined"
+      ? document.documentElement.getAttribute("data-theme") || "dark"
+      : "dark"
+  )
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined
+    const observer = new MutationObserver(() => {
+      setName(document.documentElement.getAttribute("data-theme") || "dark")
+    })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    })
+    return () => observer.disconnect()
+  }, [])
+  return name
+}
 
 // ---------------------------------------------------------------------------
 // Sample data
@@ -108,6 +144,14 @@ function RoleGrid() {
 // ---------------------------------------------------------------------------
 
 export default function SemanticColorsPage() {
+  // The docs site toggles between `data-theme="light"` and `data-theme="dark"`
+  // on the root. Mirror that into the semiotic ThemeProvider so every
+  // --semiotic-{role} CSS var (primary, success, danger, secondary, surface…)
+  // is defined for the subtree — without this, swatches and live charts
+  // below would render with unresolved vars.
+  const docsThemeName = useDocsThemeName()
+  const semioticPreset = docsThemeName === "light" ? "light" : "dark"
+
   return (
     <PageLayout
       title="Semantic Colors"
@@ -118,6 +162,7 @@ export default function SemanticColorsPage() {
       prevPage={{ title: "Theme Provider", path: "/theming/theme-provider" }}
       nextPage={{ title: "Theme Explorer", path: "/theming/theme-explorer" }}
     >
+      <ThemeProvider theme={semioticPreset}>
       <p>
         Semiotic's theme layer owns four color dimensions. Three you already
         know — <strong>primary</strong>, <strong>categorical</strong>,{" "}
@@ -556,6 +601,7 @@ export default function SemanticColorsPage() {
         role with a CSS property, or swap a scale with a nested provider —
         each cleanly scoped, each without reaching for a per-chart override.
       </p>
+      </ThemeProvider>
     </PageLayout>
   )
 }

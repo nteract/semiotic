@@ -286,7 +286,7 @@ export default function RealtimeLineChartPage() {
         { label: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
       ]}
       prevPage={{ title: "Multi-Axis Line Chart", path: "/charts/multi-axis-line-chart" }}
-      nextPage={{ title: "Realtime Bar Chart", path: "/charts/realtime-histogram" }}
+      nextPage={{ title: "Realtime Histogram", path: "/charts/realtime-histogram" }}
     >
       <ComponentMeta
         componentName="RealtimeLineChart"

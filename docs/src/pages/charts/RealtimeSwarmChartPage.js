@@ -195,7 +195,7 @@ export default function RealtimeSwarmChartPage() {
         { label: "Realtime", path: "/charts" },
         { label: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
       ]}
-      prevPage={{ title: "Realtime Bar Chart", path: "/charts/realtime-histogram" }}
+      prevPage={{ title: "Realtime Histogram", path: "/charts/realtime-histogram" }}
       nextPage={{ title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" }}
     >
       <ComponentMeta
