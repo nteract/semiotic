@@ -284,7 +284,7 @@ describe("LinkedCharts", () => {
       }
     })
     afterEach(() => {
-      ;(globalThis as any).ResizeObserver = originalRO
+      (globalThis as any).ResizeObserver = originalRO
     })
 
     const fireResize = (w: number, h = 30) => {
