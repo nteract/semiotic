@@ -767,9 +767,12 @@ export function themeToTokens(theme: SemioticTheme): Record<string, any> {
       ...(theme.typography.tickFontFamily != null ? {
         "tick-font-family": { $value: theme.typography.tickFontFamily, $type: "fontFamily" },
       } : {}),
-      // Semantic status roles — only emit when the preset defines them.
-      ...(theme.colors.secondary ? { secondary: { $value: theme.colors.secondary, $type: "color" } } : {}),
-      ...(theme.colors.surface ? { surface: { $value: theme.colors.surface, $type: "color" } } : {}),
+      // secondary/surface mirror the documented-fallback semantics in
+      // themeToCSS + ThemeProvider — always emitted so DTCG token consumers
+      // see the same canonical values as CSS-var consumers.
+      secondary: { $value: theme.colors.secondary || theme.colors.primary, $type: "color" },
+      surface: { $value: theme.colors.surface || theme.colors.background, $type: "color" },
+      // Status roles — emitted only when declared; no documented fallback.
       ...(theme.colors.success ? { success: { $value: theme.colors.success, $type: "color" } } : {}),
       ...(theme.colors.danger ? { danger: { $value: theme.colors.danger, $type: "color" } } : {}),
       ...(theme.colors.warning ? { warning: { $value: theme.colors.warning, $type: "color" } } : {}),

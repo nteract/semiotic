@@ -52,8 +52,11 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
   const [domainMin, domainMax] = scales.x.domain() as [number, number]
 
   // ── Resolve style inputs once per scene build ────────────────────────
-  // Precedence for stacked fill:   barColors[cat] > themeSemantic.primary > #4e79a7
-  // Precedence for unstacked fill: barStyle.fill  > themeSemantic.primary > #007bff
+  // Precedence for stacked fill:   barColors[cat] > barStyle.fill > themeSemantic.primary > #4e79a7
+  //   (barStyle.fill is the user's "default fill for categories not in the
+  //    colors map" — matches the intent when a user passes both colors={} and
+  //    a fill/stroke object on the same chart)
+  // Precedence for unstacked fill: barStyle.fill > themeSemantic.primary > #007bff
   // Stroke/strokeWidth flow from barStyle directly (no hardcoded stroke).
   const barStyle = ctx.config.barStyle
   const themePrimary = ctx.config.themeSemantic?.primary
@@ -86,7 +89,7 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
         const rectY = Math.min(yBottom, yTop)
         const rectH = Math.abs(yBottom - yTop)
 
-        const fill = ctx.config.barColors?.[cat] || themePrimary || "#4e79a7"
+        const fill = ctx.config.barColors?.[cat] || barStyle?.fill || themePrimary || "#4e79a7"
         nodes.push(buildRectNode(
           x0, rectY, barWidth, rectH,
           { fill, ...strokeStyle },

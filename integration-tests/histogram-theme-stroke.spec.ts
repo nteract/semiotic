@@ -64,7 +64,6 @@ test.describe("RealtimeHistogram — theme-aware stroke", () => {
       if (!canvas) return 0
       const ctx = canvas.getContext("2d")
       if (!ctx) return 0
-      const { width, height } = canvas
 
       // The fixture sets margin={{ top: 20, right: 20, bottom: 30, left: 50 }}
       // on a 520×200 chart. The plot area excludes axis labels/ticks.

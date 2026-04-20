@@ -298,6 +298,25 @@ describe("buildBarScene", () => {
     expect((result.nodes[0] as any).style.fill).toBe("#ff00aa")
   })
 
+  it("barStyle.fill wins over themeSemantic.primary for stacked fall-through", () => {
+    // A category not listed in barColors should prefer the user's barStyle.fill
+    // ("my default bar color") over the theme's primary, matching the intent
+    // when both `colors` and a generic fill are supplied on the same chart.
+    const data = [{ x: 5, y: 1, cat: "Z" }]
+    const ctx = makeCtx({
+      config: {
+        binSize: 10,
+        barColors: { A: "red" },
+        barStyle: { fill: "#ff00aa" },
+        themeSemantic: { primary: "#0f62fe" },
+      },
+      getCategory: (d) => d.cat,
+    })
+    const result = buildBarScene(ctx, data)
+    // Z is not in barColors → next in precedence is barStyle.fill
+    expect((result.nodes[0] as any).style.fill).toBe("#ff00aa")
+  })
+
   it("hardcoded hex fallback remains when no theme or user color", () => {
     const data = [{ x: 5, y: 2 }]
     const ctx = makeCtx({ config: { binSize: 10 } })

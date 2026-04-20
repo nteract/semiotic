@@ -38,7 +38,8 @@ import type {
   TransitionConfig,
   StalenessConfig,
   CurveType,
-  BarStyle
+  BarStyle,
+  ThemeSemanticColors
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -156,20 +157,7 @@ export interface PipelineConfig {
    * canvas renderer at paint time (see `resolveCSSColor.ts`). The theme
    * defaults in this field don't read CSS.
    */
-  themeSemantic?: {
-    primary?: string
-    secondary?: string
-    success?: string
-    danger?: string
-    warning?: string
-    error?: string
-    info?: string
-    text?: string
-    textSecondary?: string
-    border?: string
-    grid?: string
-    surface?: string
-  }
+  themeSemantic?: ThemeSemanticColors
   barColors?: Record<string, string>
   /** Histogram bar style — fill/stroke/strokeWidth/gap. Accepted by RealtimeHistogram and routed through to the bar scene builder. */
   barStyle?: BarStyle

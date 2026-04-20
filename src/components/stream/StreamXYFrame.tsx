@@ -589,7 +589,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       themeCategorical: currentTheme?.colors?.categorical,
       themeSemantic: currentTheme?.colors ? {
         primary: currentTheme.colors.primary,
-        secondary: currentTheme.colors.secondary,
+        // secondary/surface mirror the documented-fallback semantics the CSS
+        // emitter uses (ThemeProvider + themeToCSS), so scene builders and
+        // CSS consumers see the same values when a theme omits these.
+        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
+        surface: currentTheme.colors.surface || currentTheme.colors.background,
         success: currentTheme.colors.success,
         danger: currentTheme.colors.danger,
         warning: currentTheme.colors.warning,
@@ -599,7 +603,6 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         textSecondary: currentTheme.colors.textSecondary,
         border: currentTheme.colors.border,
         grid: currentTheme.colors.grid,
-        surface: currentTheme.colors.surface,
       } : undefined,
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,

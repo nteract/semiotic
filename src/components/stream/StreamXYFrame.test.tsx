@@ -743,37 +743,41 @@ describe("StreamXYFrame", () => {
       const PipelineStoreModule = await import("./PipelineStore")
       const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
 
-      render(
-        <StreamXYFrame
-          chartType="line"
-          lineStyle={lineStyle}
-          pointStyle={pointStyle}
-          areaStyle={areaStyle}
-          barStyle={barStyle}
-          swarmStyle={swarmStyle}
-          waterfallStyle={waterfallStyle}
-          candlestickStyle={candlestickStyle}
-          boundsStyle={boundsStyle}
-        />
-      )
+      try {
+        render(
+          <StreamXYFrame
+            chartType="line"
+            lineStyle={lineStyle}
+            pointStyle={pointStyle}
+            areaStyle={areaStyle}
+            barStyle={barStyle}
+            swarmStyle={swarmStyle}
+            waterfallStyle={waterfallStyle}
+            candlestickStyle={candlestickStyle}
+            boundsStyle={boundsStyle}
+          />
+        )
 
-      // The PipelineStore is instantiated once per mount AND updateConfig is
-      // called at least once on first useLayoutEffect. Either surface exposes
-      // the merged config.
-      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
-      expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
+        // The PipelineStore is instantiated once per mount AND updateConfig is
+        // called at least once on first useLayoutEffect. Either surface exposes
+        // the merged config.
+        const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+        expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
 
-      // Each *Style value must have reached the store config.
-      expect(lastConfig.lineStyle).toBe(lineStyle)
-      expect(lastConfig.pointStyle).toBe(pointStyle)
-      expect(lastConfig.areaStyle).toBe(areaStyle)
-      expect(lastConfig.barStyle).toBe(barStyle)
-      expect(lastConfig.swarmStyle).toBe(swarmStyle)
-      expect(lastConfig.waterfallStyle).toBe(waterfallStyle)
-      expect(lastConfig.candlestickStyle).toBe(candlestickStyle)
-      expect(lastConfig.boundsStyle).toBe(boundsStyle)
-
-      updateSpy.mockRestore()
+        // Each *Style value must have reached the store config.
+        expect(lastConfig.lineStyle).toBe(lineStyle)
+        expect(lastConfig.pointStyle).toBe(pointStyle)
+        expect(lastConfig.areaStyle).toBe(areaStyle)
+        expect(lastConfig.barStyle).toBe(barStyle)
+        expect(lastConfig.swarmStyle).toBe(swarmStyle)
+        expect(lastConfig.waterfallStyle).toBe(waterfallStyle)
+        expect(lastConfig.candlestickStyle).toBe(candlestickStyle)
+        expect(lastConfig.boundsStyle).toBe(boundsStyle)
+      } finally {
+        // Guarantee cleanup even if an assertion throws — a stuck spy would
+        // pollute unrelated tests in the same run.
+        updateSpy.mockRestore()
+      }
     })
   })
 })
