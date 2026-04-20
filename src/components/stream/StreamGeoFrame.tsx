@@ -257,7 +257,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       pointStyle,
       lineStyle,
       colorScheme,
-      themeCategorical: currentTheme?.colors?.categorical,
       themeSemantic: currentTheme?.colors ? {
         primary: currentTheme.colors.primary,
         secondary: currentTheme.colors.secondary || currentTheme.colors.primary,

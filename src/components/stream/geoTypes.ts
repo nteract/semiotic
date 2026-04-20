@@ -118,8 +118,6 @@ export interface GeoPipelineConfig {
   pointStyle?: (d: any) => Style & { r?: number }
   lineStyle?: Style | ((d: any, group?: string) => Style)
   colorScheme?: string | string[]
-  /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
-  themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
 

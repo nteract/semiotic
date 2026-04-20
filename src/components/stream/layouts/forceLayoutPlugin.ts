@@ -258,10 +258,11 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       nodes
     )
 
-    // Auto-color palette for when no nodeStyle is provided
+    // Auto-color palette for when no nodeStyle is provided.
+    // Priority: explicit array colorScheme > theme categorical > schemeCategory10.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : (schemeCategory10 as readonly string[])
+      : config.themeCategorical || (schemeCategory10 as readonly string[])
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
       nodeColorMap.set(n.id, palette[i % palette.length])

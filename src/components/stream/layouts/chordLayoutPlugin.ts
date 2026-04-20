@@ -161,10 +161,11 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const edgeStyleFn = config.edgeStyle
     const edgeColorBy = config.edgeColorBy || "source"
 
-    // Auto-color palette: used when no nodeStyle is provided
+    // Auto-color palette: used when no nodeStyle is provided.
+    // Priority: explicit array colorScheme > theme categorical > DEFAULT_PALETTE.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : DEFAULT_PALETTE
+      : config.themeCategorical || DEFAULT_PALETTE
     // Build a node-id → color map for consistent coloring
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {

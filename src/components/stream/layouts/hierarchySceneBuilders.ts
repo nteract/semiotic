@@ -27,15 +27,24 @@ import type { Style } from "../types"
 import { DEPTH_PALETTE, contrastTextColor, resolveLabelFn, resolveDefaultNodeSize } from "./hierarchyUtils"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 
-/** Resolve depth palette from config.colorScheme, falling back to DEPTH_PALETTE */
+/**
+ * Resolve depth palette. Priority: explicit array colorScheme > theme
+ * categorical > built-in DEPTH_PALETTE.
+ */
 function resolveDepthPalette(config: NetworkPipelineConfig): readonly string[] {
   if (Array.isArray(config.colorScheme)) return config.colorScheme
+  if (config.themeCategorical && config.themeCategorical.length > 0) return config.themeCategorical
   return DEPTH_PALETTE
 }
 
-/** Resolve default fill from config.colorScheme (first color) or hardcoded fallback */
+/**
+ * Resolve default fill. Priority: first color of explicit array colorScheme >
+ * theme primary > first color of theme categorical > hardcoded fallback.
+ */
 function resolveDefaultFill(config: NetworkPipelineConfig): string {
   if (Array.isArray(config.colorScheme) && config.colorScheme.length > 0) return config.colorScheme[0]
+  if (config.themeSemantic?.primary) return config.themeSemantic.primary
+  if (config.themeCategorical && config.themeCategorical.length > 0) return config.themeCategorical[0]
   return "#4d430c"
 }
 

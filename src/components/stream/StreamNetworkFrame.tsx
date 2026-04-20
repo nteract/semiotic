@@ -505,10 +505,14 @@ const StreamNetworkFrame = forwardRef<
   )
 
   // Fallback color for edges/particles when no source or target is resolvable.
-  // Prefer theme border (chart chrome) over secondary; hardcoded #999 last.
+  // Chain mirrors the secondary→primary fallback used when building
+  // themeSemantic: chart border > secondary > primary > hardcoded #999.
+  // A custom theme that omits border+secondary still falls back to the
+  // theme's accent rather than the hardcoded gray.
   const edgeFallbackColor =
     currentTheme?.colors?.border ||
     currentTheme?.colors?.secondary ||
+    currentTheme?.colors?.primary ||
     "#999"
 
   const getEdgeColor = useCallback(

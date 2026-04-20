@@ -88,7 +88,10 @@ function resolveStyle(
   datum: any,
   defaults: Style
 ): Style {
-  if (!styleProp) return defaults
+  // Always return a fresh object. Transition / decay mutate `node.style.opacity`
+  // in place on a specific scene node; without a per-call copy, a shared defaults
+  // object would leak that mutation across every node that had no user style.
+  if (!styleProp) return { ...defaults }
   if (typeof styleProp === "function") return { ...defaults, ...styleProp(datum) }
   return { ...defaults, ...styleProp }
 }
@@ -804,6 +807,12 @@ export class GeoPipelineStore {
     const xAcc = makeAccessor(config.xAccessor, "lon")
     const yAcc = makeAccessor(config.yAccessor, "lat")
 
+    // Resolve themed defaults once per scene build. Cheap to precompute,
+    // expensive to rebuild per-feature for large GeoJSON inputs.
+    const areaDefault = themedDefaultArea(config)
+    const lineDefault = themedDefaultLine(config)
+    const pointDefault = themedDefaultPoint(config)
+
     // Graticule (drawn first, behind everything)
     if (config.graticule) {
       const gratConfig: GraticuleConfig = config.graticule === true
@@ -841,7 +850,7 @@ export class GeoPipelineStore {
       const featureBounds = path.bounds(feature)
       const featureArea = path.area(feature)
 
-      const style = resolveStyle(config.areaStyle, feature, themedDefaultArea(config))
+      const style = resolveStyle(config.areaStyle, feature, areaDefault)
 
       nodes.push({
         type: "geoarea",
@@ -896,7 +905,7 @@ export class GeoPipelineStore {
 
       if (screenPath.length < 2) continue
 
-      const style = resolveStyle(config.lineStyle, line, themedDefaultLine(config)) as Style
+      const style = resolveStyle(config.lineStyle, line, lineDefault) as Style
       const resolvedStrokeWidth =
         typeof style.strokeWidth === "number" ? style.strokeWidth : 1
 
@@ -979,7 +988,7 @@ export class GeoPipelineStore {
 
       const baseStyle = config.pointStyle
         ? config.pointStyle(d)
-        : themedDefaultPoint(config)
+        : { ...pointDefault }
 
       const r = (baseStyle as any).r || 4
 
