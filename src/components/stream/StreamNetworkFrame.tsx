@@ -561,7 +561,26 @@ const StreamNetworkFrame = forwardRef<
   }, [pipelineConfig, scheduleRender])
 
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
-  // is handled by useFrame above when themeDirtyRef is provided.
+  // is handled by useFrame above when themeDirtyRef is provided. But there's
+  // a second surface to refresh: `nodeColorMap` caches the palette color per
+  // node id and is only resynced inside `runLayout`. Theme changes hit
+  // `updateConfig` + the useFrame repaint, but not `runLayout` — without the
+  // resync below, particle/hover colors (which read from nodeColorMap) would
+  // stay on the previous theme's palette. Rebuild the scene (cheap — just
+  // re-runs the layout plugin's scene-emit step against existing node
+  // positions) and copy the fresh fills into the map.
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store) return
+    store.buildScene([adjustedWidth, adjustedHeight])
+    for (const sceneNode of store.sceneNodes) {
+      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
+      }
+    }
+    dirtyRef.current = true
+    scheduleRender()
+  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 

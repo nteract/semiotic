@@ -259,10 +259,14 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     const edgeColorBy = config.edgeColorBy || "source"
 
     // Auto-color palette for when no nodeStyle is provided.
-    // Priority: explicit array colorScheme > theme categorical > schemeCategory10.
+    // Priority: explicit array colorScheme > theme categorical (non-empty) > schemeCategory10.
+    // Guard length: an empty categorical array would yield undefined fills
+    // from the modulo lookup below.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : config.themeCategorical || (schemeCategory10 as readonly string[])
+      : (config.themeCategorical && config.themeCategorical.length > 0
+          ? config.themeCategorical
+          : (schemeCategory10 as readonly string[]))
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
       nodeColorMap.set(n.id, palette[i % palette.length])

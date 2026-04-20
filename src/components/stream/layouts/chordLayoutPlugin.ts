@@ -162,10 +162,14 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const edgeColorBy = config.edgeColorBy || "source"
 
     // Auto-color palette: used when no nodeStyle is provided.
-    // Priority: explicit array colorScheme > theme categorical > DEFAULT_PALETTE.
+    // Priority: explicit array colorScheme > theme categorical (non-empty) > DEFAULT_PALETTE.
+    // Guard length: an empty categorical array would yield undefined fills
+    // from the modulo lookup below.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : config.themeCategorical || DEFAULT_PALETTE
+      : (config.themeCategorical && config.themeCategorical.length > 0
+          ? config.themeCategorical
+          : DEFAULT_PALETTE)
     // Build a node-id → color map for consistent coloring
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
