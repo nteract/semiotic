@@ -516,6 +516,151 @@ export default function SemanticColorsPage() {
       </p>
 
       {/* ------------------------------------------------------------- */}
+      <h2 id="primitive-props">Primitive styling props</h2>
+
+      <p>
+        Every shape-drawing chart accepts four primitive styling props at
+        the top level:{" "}
+        <code>color</code>, <code>stroke</code>, <code>strokeWidth</code>,{" "}
+        <code>opacity</code>. They apply to whatever shape the chart draws —
+        bars, circles, lines, wedges, rects — so a designer uses one
+        vocabulary regardless of chart type.
+      </p>
+
+      <p>
+        <strong>The lens:</strong> "all bars are bars, all circles are
+        circles." A designer shouldn't have to learn{" "}
+        <code>pieceStyle</code> vs. <code>pointStyle</code> vs.{" "}
+        <code>lineStyle</code> vs. <code>nodeStyle</code> just to put a
+        1-pixel border on a shape. These four props are the
+        designer-facing API; the <code>*Style</code> function-form props
+        remain as the power-user escape hatch for per-datum customization.
+      </p>
+
+      <div style={{ margin: "16px 0" }}>
+        <BarChart
+          data={[
+            { cat: "Jan", value: 32 },
+            { cat: "Feb", value: 44 },
+            { cat: "Mar", value: 28 },
+            { cat: "Apr", value: 51 },
+          ]}
+          categoryAccessor="cat"
+          valueAccessor="value"
+          width={520}
+          height={200}
+          showLegend={false}
+          stroke="var(--semiotic-border)"
+          strokeWidth={1}
+        />
+      </div>
+
+      <CodeBlock
+        code={`{/* BarChart */}
+<BarChart
+  data={monthlyRevenue}
+  categoryAccessor="month"
+  valueAccessor="total"
+  stroke="var(--semiotic-border)"
+  strokeWidth={1}
+/>
+
+{/* Scatterplot — same props, same effect */}
+<Scatterplot
+  data={points}
+  xAccessor="x" yAccessor="y"
+  stroke="var(--semiotic-border)"
+  strokeWidth={1}
+/>
+
+{/* LineChart — same props again */}
+<LineChart
+  data={series}
+  xAccessor="x" yAccessor="y"
+  stroke="var(--semiotic-danger)"
+  strokeWidth={3}
+/>`}
+      />
+
+      <h3>Precedence</h3>
+
+      <p>
+        When the same style field could come from multiple sources, the
+        resolution order is:
+      </p>
+
+      <ol>
+        <li>
+          <strong>Top-level primitive prop</strong> (e.g.{" "}
+          <code>stroke="red"</code>) — the designer-facing knob, wins over
+          everything else for the specific field it sets.
+        </li>
+        <li>
+          <strong>User-supplied{" "}
+            <code>frameProps.*Style</code> function return</strong> — the
+          power-user escape hatch for per-datum styling. Still wins over
+          HOC base defaults, only shadowed by the top-level prop.
+        </li>
+        <li>
+          <strong>HOC base style</strong> — categorical color resolution,
+          theme fallbacks, chart-specific defaults (like LineChart's{" "}
+          <code>lineWidth</code>).
+        </li>
+        <li>
+          <strong>Theme semantic / categorical / sequential / diverging</strong>{" "}
+          fallbacks, in that order.
+        </li>
+        <li>
+          <strong>Hardcoded hex</strong> — the ultimate fallback when no
+          theme and no user color are present.
+        </li>
+      </ol>
+
+      <p>
+        Rationale for "top-level wins over function": explicit {" "}
+        <code>stroke="red"</code> is the broad stroke. The per-datum
+        function handles exceptions. When both are set, the designer's
+        global choice should win by default; the user can always override
+        per-datum inside the function if they want granular control.
+      </p>
+
+      <h3>When to reach for which</h3>
+
+      <ul>
+        <li>
+          <strong><code>color</code></strong> — Uniform fill color for
+          all data marks (only applies when no <code>colorBy</code> is
+          set). Overrides theme categorical and colorScheme.
+        </li>
+        <li>
+          <strong><code>stroke</code></strong> — Uniform stroke color.
+          Accepts a CSS variable; CSS cascade works. Common use: bar
+          separator strokes, scatter point outlines, line charts.
+        </li>
+        <li>
+          <strong><code>strokeWidth</code></strong> — Uniform stroke
+          thickness in pixels. For LineChart, wins over the legacy{" "}
+          <code>lineWidth</code> prop when both are set.
+        </li>
+        <li>
+          <strong><code>opacity</code></strong> — Uniform opacity (0–1)
+          on all marks. Distinct from{" "}
+          <code>--semiotic-selection-opacity</code>, which only dims
+          non-selected marks during linked hover / brush.
+        </li>
+      </ul>
+
+      <p>
+        For per-datum / per-category customization (e.g. conditional
+        stroke widths or hatch patterns on specific bars), use the
+        function-form{" "}
+        <code>frameProps.pieceStyle</code> /{" "}
+        <code>frameProps.pointStyle</code> / etc. The top-level prop and
+        the function compose: the function runs first, then the top-level
+        prop overlays last for whatever fields it sets.
+      </p>
+
+      {/* ------------------------------------------------------------- */}
       <h2 id="css-var-reference">CSS variable reference</h2>
 
       <p>

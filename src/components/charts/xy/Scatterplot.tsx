@@ -10,6 +10,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -127,7 +128,10 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -239,9 +243,16 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
     }
   }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color])
 
+  // Overlay top-level primitive style props (stroke/strokeWidth/opacity) last
+  // so they win over the HOC base style and any per-datum color resolution.
+  const pointStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
+    [basePointStyle, stroke, strokeWidth, opacity]
+  )
+
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(pointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [pointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`

@@ -5,7 +5,27 @@ import { Scatterplot } from "./Scatterplot"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
+// Mock StreamXYFrame so we can inspect the props Scatterplot forwards —
+// particularly `pointStyle`, which is the output of the merge chain that
+// combines HOC color resolution + top-level primitive props.
+let lastXYFrameProps: any = null
+vi.mock("../../stream/StreamXYFrame", () => {
+  const React = require("react")
+  return {
+    __esModule: true,
+    default: React.forwardRef((props: any, _ref: any) => {
+      lastXYFrameProps = props
+      // Match the real frame's DOM shape (canvas inside frame div) so the
+      // pre-existing smoke tests that check for <canvas> continue to pass.
+      return <div className="stream-xy-frame"><canvas /><svg /></div>
+    })
+  }
+})
+
 describe("Scatterplot", () => {
+  beforeEach(() => {
+    lastXYFrameProps = null
+  })
   const sampleData = [
     { x: 1, y: 10 },
     { x: 2, y: 20 },
@@ -237,5 +257,69 @@ describe("Scatterplot", () => {
 
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
+  })
+
+  // ── Top-level primitive style props (Phase B) ─────────────────────────
+  describe("primitive style props", () => {
+    it("top-level stroke + strokeWidth reach pointStyle output", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} stroke="#ff00aa" strokeWidth={3} />
+        </TooltipProvider>
+      )
+      const pointStyleFn = lastXYFrameProps.pointStyle
+      const style = pointStyleFn({ x: 1, y: 10 })
+      expect(style.stroke).toBe("#ff00aa")
+      expect(style.strokeWidth).toBe(3)
+    })
+
+    it("top-level opacity reaches pointStyle output", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} opacity={0.3} />
+        </TooltipProvider>
+      )
+      const pointStyleFn = lastXYFrameProps.pointStyle
+      const style = pointStyleFn({ x: 1, y: 10 })
+      expect(style.opacity).toBe(0.3)
+    })
+
+    it("does not add primitive keys when none of the three props are set", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} />
+        </TooltipProvider>
+      )
+      const pointStyleFn = lastXYFrameProps.pointStyle
+      const style = pointStyleFn({ x: 1, y: 10 })
+      expect(style).not.toHaveProperty("stroke")
+      expect(style).not.toHaveProperty("strokeWidth")
+      expect(style).not.toHaveProperty("opacity")
+    })
+
+    it("point-level fill from colorBy still resolves alongside the top-level primitives", () => {
+      const dataWithCat = [
+        { x: 1, y: 10, cat: "A" },
+        { x: 2, y: 20, cat: "B" },
+      ]
+      render(
+        <TooltipProvider>
+          <Scatterplot
+            data={dataWithCat}
+            colorBy="cat"
+            colorScheme={["#aaa111", "#bbb222"]}
+            stroke="#strokeOverride"
+          />
+        </TooltipProvider>
+      )
+      const pointStyleFn = lastXYFrameProps.pointStyle
+      const styleA = pointStyleFn(dataWithCat[0])
+      const styleB = pointStyleFn(dataWithCat[1])
+      // Per-category fills preserved; stroke comes from the top-level prop for both.
+      expect(styleA.fill).toBe("#aaa111")
+      expect(styleB.fill).toBe("#bbb222")
+      expect(styleA.stroke).toBe("#strokeOverride")
+      expect(styleB.stroke).toBe("#strokeOverride")
+    })
   })
 })

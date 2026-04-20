@@ -788,14 +788,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           const xValue = xInvert ? xInvert(hit.x) : hit.x
           hover.xValue = xValue
           hover.xPx = hit.x
+          // Resolve the theme primary once for this hover event so each
+          // hit without its own color falls back to --semiotic-primary
+          // (not a hardcoded #007bff). Required by downstream consumers
+          // like MultiPointTooltip that render a color swatch from s.color.
+          const fallbackColor = resolveThemeColors(canvas).primary
           hover.allSeries = allHits.map(h => ({
             group: h.group || "",
             value: yInvert ? yInvert(h.y) : h.y,
             valuePx: h.y,
-            // Leave color undefined when the hit has no color — drawCrosshair
-            // then falls back to theme.primary (which reads from --semiotic-primary).
-            // A hardcoded fallback here would shadow that theme-aware path.
-            color: h.color,
+            color: h.color || fallbackColor,
             datum: h.datum,
           }))
         }

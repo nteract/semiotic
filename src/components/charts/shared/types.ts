@@ -84,6 +84,25 @@ export interface BaseChartProps {
    * For per-category coloring, use `colorBy` + `colorScheme` instead. */
   color?: string
 
+  // ── Primitive styling (Phase B — designer-facing top-level props) ──
+  //
+  // These apply to whatever shape the chart draws — bars, circles, lines,
+  // rects, arcs — following the "any shape uses the same props" lens.
+  // Precedence: top-level prop > `frameProps.*Style` function return >
+  // HOC base style > theme fallback.
+  //
+  // Pass a CSS variable for theme-awareness:
+  //   <BarChart stroke="var(--semiotic-border)" strokeWidth={1} />
+  // CSS cascade works too — override `--semiotic-border` on any ancestor DOM
+  // node and every chart beneath picks up the new value, canvas included.
+
+  /** Uniform stroke color for all data marks. Accepts a CSS variable. */
+  stroke?: string
+  /** Uniform stroke width in pixels. */
+  strokeWidth?: number
+  /** Uniform opacity for all data marks (0–1). Distinct from `--semiotic-selection-opacity` which only dims non-selected marks. */
+  opacity?: number
+
   /** Accessible description overriding the auto-generated aria-label on the chart container.
    * Should describe the chart's purpose or content for screen reader users. */
   description?: string
