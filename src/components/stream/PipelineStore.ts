@@ -37,7 +37,8 @@ import type {
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  CurveType
+  CurveType,
+  BarStyle
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -139,7 +140,30 @@ export interface PipelineConfig {
   colorScheme?: string | string[]
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
+  /**
+   * Theme-resolved semantic role colors. Scene builders use these as the
+   * default before falling back to hardcoded hex. Wired in by the Stream
+   * Frame from the active `SemioticTheme.colors`. Users override globally
+   * via `ThemeProvider` or per-scope via `--semiotic-{role}` CSS custom
+   * properties on any ancestor DOM node.
+   */
+  themeSemantic?: {
+    primary?: string
+    secondary?: string
+    success?: string
+    danger?: string
+    warning?: string
+    error?: string
+    info?: string
+    text?: string
+    textSecondary?: string
+    border?: string
+    grid?: string
+    surface?: string
+  }
   barColors?: Record<string, string>
+  /** Histogram bar style — fill/stroke/strokeWidth/gap. Accepted by RealtimeHistogram and routed through to the bar scene builder. */
+  barStyle?: BarStyle
 
   // Annotations (threshold coloring uses these)
   annotations?: Record<string, any>[]

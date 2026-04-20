@@ -218,7 +218,7 @@ export default function RealtimeHeatmapPage() {
         related={[
           { name: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
-          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-histogram" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
           { name: "Heatmap", path: "/charts/heatmap" },
           { name: "StreamXYFrame", path: "/frames/realtime-frame" },
@@ -442,7 +442,7 @@ chartRef.current?.push({
           streaming scatter/swarm for individual data points
         </li>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
+          <Link to="/charts/realtime-histogram">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>

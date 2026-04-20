@@ -713,4 +713,75 @@ describe("StreamXYFrame", () => {
       expect(envelopePath).toBeTruthy()
     })
   })
+
+  // ── Regression: every declared *Style prop reaches pipelineConfig ──────
+  //
+  // Spies on the PipelineStore constructor to capture its config argument,
+  // then renders StreamXYFrame with a sentinel value for each declared
+  // style prop. Any future refactor that drops a prop at the Frame↔Store
+  // seam (like the 3.4-era `barStyle` bug) will fail this test.
+  //
+  // When you add a new `*Style` prop to StreamXYFrameProps:
+  //   1. Add a `fooStyle` to `PipelineConfig` in PipelineStore.ts
+  //   2. Thread it into the pipelineConfig memo in StreamXYFrame.tsx
+  //   3. Add a sentinel entry here so the regression test covers it
+  describe("regression: all declared *Style props reach pipelineConfig", () => {
+    it("forwards every *Style prop to the PipelineStore config", async () => {
+      // Sentinels — identity-checkable, so drops are obvious.
+      const lineStyle = { stroke: "__LINE_STYLE__" }
+      const pointStyle = () => ({ fill: "__POINT_STYLE__", r: 5 })
+      const areaStyle = () => ({ fill: "__AREA_STYLE__" })
+      const barStyle = { fill: "__BAR_STYLE__", stroke: "__BAR_STROKE__", strokeWidth: 3 }
+      const swarmStyle = { fill: "__SWARM_STYLE__", radius: 4 }
+      const waterfallStyle = { positiveColor: "__WF_POS__", negativeColor: "__WF_NEG__" }
+      const candlestickStyle = { upColor: "__CS_UP__", downColor: "__CS_DOWN__" }
+      const boundsStyle = { fill: "__BOUNDS_STYLE__" }
+
+      // Spy on PipelineStore's updateConfig (called on every memo change, including mount).
+      const PipelineStoreModule = await import("./PipelineStore")
+      const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
+      const ctorSpy = vi.fn()
+      const origCtor = PipelineStoreModule.PipelineStore
+      // Patch the constructor to capture the initial config.
+      const PatchedCtor = function (this: any, config: any) {
+        ctorSpy(config)
+        return new origCtor(config)
+      } as unknown as typeof origCtor
+      // Preserve prototype chain for instanceof / method calls
+      Object.setPrototypeOf(PatchedCtor, origCtor)
+      PatchedCtor.prototype = origCtor.prototype
+
+      render(
+        <StreamXYFrame
+          chartType="line"
+          lineStyle={lineStyle}
+          pointStyle={pointStyle}
+          areaStyle={areaStyle}
+          barStyle={barStyle}
+          swarmStyle={swarmStyle}
+          waterfallStyle={waterfallStyle}
+          candlestickStyle={candlestickStyle}
+          boundsStyle={boundsStyle}
+        />
+      )
+
+      // The PipelineStore is instantiated once per mount AND updateConfig is
+      // called at least once on first useLayoutEffect. Either surface exposes
+      // the merged config.
+      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+      expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
+
+      // Each *Style value must have reached the store config.
+      expect(lastConfig.lineStyle).toBe(lineStyle)
+      expect(lastConfig.pointStyle).toBe(pointStyle)
+      expect(lastConfig.areaStyle).toBe(areaStyle)
+      expect(lastConfig.barStyle).toBe(barStyle)
+      expect(lastConfig.swarmStyle).toBe(swarmStyle)
+      expect(lastConfig.waterfallStyle).toBe(waterfallStyle)
+      expect(lastConfig.candlestickStyle).toBe(candlestickStyle)
+      expect(lastConfig.boundsStyle).toBe(boundsStyle)
+
+      updateSpy.mockRestore()
+    })
+  })
 })

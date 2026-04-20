@@ -286,7 +286,7 @@ export default function RealtimeLineChartPage() {
         { label: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
       ]}
       prevPage={{ title: "Multi-Axis Line Chart", path: "/charts/multi-axis-line-chart" }}
-      nextPage={{ title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" }}
+      nextPage={{ title: "Realtime Bar Chart", path: "/charts/realtime-histogram" }}
     >
       <ComponentMeta
         componentName="RealtimeLineChart"
@@ -295,7 +295,7 @@ export default function RealtimeLineChartPage() {
         wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
-          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-histogram" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
           { name: "StreamXYFrame", path: "/frames/realtime-frame" },
@@ -530,7 +530,7 @@ function StreamingLine() {
 
       <ul>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
+          <Link to="/charts/realtime-histogram">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>

@@ -50,7 +50,18 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
   const nodes: SceneNode[] = []
   const scales = ctx.scales
   const [domainMin, domainMax] = scales.x.domain() as [number, number]
-  const gap = 1
+
+  // ── Resolve style inputs once per scene build ────────────────────────
+  // Precedence for stacked fill:   barColors[cat] > themeSemantic.primary > #4e79a7
+  // Precedence for unstacked fill: barStyle.fill  > themeSemantic.primary > #007bff
+  // Stroke/strokeWidth flow from barStyle directly (no hardcoded stroke).
+  const barStyle = ctx.config.barStyle
+  const themePrimary = ctx.config.themeSemantic?.primary
+  const userGap = barStyle?.gap
+  const gap = typeof userGap === "number" && userGap >= 0 ? userGap : 1
+  const strokeStyle: { stroke?: string; strokeWidth?: number } = {}
+  if (barStyle?.stroke) strokeStyle.stroke = barStyle.stroke
+  if (typeof barStyle?.strokeWidth === "number") strokeStyle.strokeWidth = barStyle.strokeWidth
 
   for (const bin of bins.values()) {
     const clampedStart = Math.max(bin.start, domainMin)
@@ -75,9 +86,10 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
         const rectY = Math.min(yBottom, yTop)
         const rectH = Math.abs(yBottom - yTop)
 
+        const fill = ctx.config.barColors?.[cat] || themePrimary || "#4e79a7"
         nodes.push(buildRectNode(
           x0, rectY, barWidth, rectH,
-          { fill: ctx.config.barColors?.[cat] || "#4e79a7" },
+          { fill, ...strokeStyle },
           { binStart: bin.start, binEnd: bin.end, total: bin.total, category: cat, categoryValue: catVal },
           cat
         ))
@@ -89,9 +101,10 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
       const rectY = Math.min(yZero, yTop)
       const rectH = Math.abs(yZero - yTop)
 
+      const fill = barStyle?.fill || themePrimary || "#007bff"
       nodes.push(buildRectNode(
         x0, rectY, barWidth, rectH,
-        { fill: "#007bff" },
+        { fill, ...strokeStyle },
         { binStart: bin.start, binEnd: bin.end, total: bin.total }
       ))
     }

@@ -47,7 +47,7 @@
 ## Charts — Realtime
 
 - [RealtimeLineChart](/charts/realtime-line-chart): Streaming line on canvas
-- [RealtimeHistogram](/charts/realtime-bar-chart): Streaming temporal histogram
+- [RealtimeHistogram](/charts/realtime-histogram): Streaming temporal histogram
 - [RealtimeSwarmChart](/charts/realtime-swarm-chart): Streaming scatter
 - [RealtimeWaterfallChart](/charts/realtime-waterfall-chart): Streaming waterfall
 - [RealtimeHeatmap](/charts/realtime-heatmap): Streaming 2D heatmap

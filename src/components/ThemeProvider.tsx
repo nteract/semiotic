@@ -122,6 +122,15 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.typography.legendSize != null ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
     ...(theme.typography.titleFontSize != null ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
     ...(theme.typography.tickFontFamily != null ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
+    // Semantic status roles — emit every declared role so `stroke="var(--semiotic-danger)"` resolves
+    // and a parent DOM node can override any single role via `style={{ "--semiotic-danger": "..." }}`.
+    ...(theme.colors.secondary ? { "--semiotic-secondary": theme.colors.secondary } : {}),
+    ...(theme.colors.surface ? { "--semiotic-surface": theme.colors.surface } : {}),
+    ...(theme.colors.success ? { "--semiotic-success": theme.colors.success } : {}),
+    ...(theme.colors.danger ? { "--semiotic-danger": theme.colors.danger } : {}),
+    ...(theme.colors.warning ? { "--semiotic-warning": theme.colors.warning } : {}),
+    ...(theme.colors.error ? { "--semiotic-error": theme.colors.error } : {}),
+    ...(theme.colors.info ? { "--semiotic-info": theme.colors.info } : {}),
   }
 
   const themeName = React.useContext(ThemeNameContext)

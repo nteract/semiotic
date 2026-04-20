@@ -66,6 +66,25 @@ export interface XYSceneConfig {
   // Bar (realtime histogram)
   binSize?: number
   barColors?: Record<string, string>
+  /** Bar fill/stroke/strokeWidth/gap. Threaded through from RealtimeHistogram. */
+  barStyle?: { fill?: string; stroke?: string; strokeWidth?: number; gap?: number }
+
+  // Theme-resolved semantic role colors — default fallbacks when no user
+  // color is set. Populated by the Stream Frame from active SemioticTheme.
+  themeSemantic?: {
+    primary?: string
+    secondary?: string
+    success?: string
+    danger?: string
+    warning?: string
+    error?: string
+    info?: string
+    text?: string
+    textSecondary?: string
+    border?: string
+    grid?: string
+    surface?: string
+  }
 
   // Swarm
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }

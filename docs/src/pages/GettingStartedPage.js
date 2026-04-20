@@ -488,7 +488,7 @@ export default function GettingStartedPage() {
           <tr>
             <td style={styles.td}>Live aggregates</td>
             <td style={styles.td}>
-              <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link>,{" "}
+              <Link to="/charts/realtime-histogram">RealtimeHistogram</Link>,{" "}
               <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link>
             </td>
           </tr>
