@@ -8,7 +8,20 @@
  * Dependencies: SceneGraph (buildHeatcellNode), d3-scale/chromatic, accessorUtils
  * Consumed by: PipelineStore.buildSceneNodes (chartType "heatmap")
  */
-import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+import {
+  interpolateBlues,
+  interpolateReds,
+  interpolateGreens,
+  interpolateViridis,
+  interpolateOranges,
+  interpolatePurples,
+  interpolateGreys,
+  interpolatePlasma,
+  interpolateInferno,
+  interpolateMagma,
+  interpolateCividis,
+  interpolateTurbo,
+} from "d3-scale-chromatic"
 import type { SceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor } from "../accessorUtils"
@@ -19,6 +32,14 @@ const HEAT_INTERPOLATORS: Record<string, (t: number) => string> = {
   reds: interpolateReds,
   greens: interpolateGreens,
   viridis: interpolateViridis,
+  oranges: interpolateOranges,
+  purples: interpolatePurples,
+  greys: interpolateGreys,
+  plasma: interpolatePlasma,
+  inferno: interpolateInferno,
+  magma: interpolateMagma,
+  cividis: interpolateCividis,
+  turbo: interpolateTurbo,
 }
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
@@ -131,7 +152,12 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   }
   if (!isFinite(minVal) || !isFinite(maxVal)) return []
 
-  const schemeName = typeof ctx.config.colorScheme === "string" ? ctx.config.colorScheme : "blues"
+  // Scheme priority: explicit string colorScheme > theme sequential > "blues".
+  // d3-scale-chromatic scheme names (e.g. "blues", "viridis") are what the LUT
+  // expects, and SemioticTheme.colors.sequential is already a scheme name.
+  const schemeName = typeof ctx.config.colorScheme === "string"
+    ? ctx.config.colorScheme
+    : ctx.config.themeSequential || "blues"
   const lut = getColorLut(schemeName)
   const valRange = maxVal - minVal || 1
   const lutScale = (COLOR_LUT_SIZE - 1) / valRange

@@ -111,6 +111,8 @@ interface ThemeColors {
   hoverFill: string
   hoverStroke: string
   pointRing: string
+  /** Primary accent color — crosshair dots and line-highlight strokes fall back here when the hovered datum has no color of its own. */
+  primary: string
 }
 
 const LIGHT_THEME: ThemeColors = {
@@ -119,7 +121,8 @@ const LIGHT_THEME: ThemeColors = {
   crosshair: "rgba(0, 0, 0, 0.25)",
   hoverFill: "rgba(255, 255, 255, 0.3)",
   hoverStroke: "rgba(0, 0, 0, 0.4)",
-  pointRing: "white"
+  pointRing: "white",
+  primary: "#007bff"
 }
 
 /**
@@ -163,6 +166,7 @@ function resolveThemeColors(el: HTMLElement | null): ThemeColors {
   const semioticBorder = style.getPropertyValue("--semiotic-border").trim()
   const semioticTextSecondary = style.getPropertyValue("--semiotic-text-secondary").trim()
   const semioticBg = style.getPropertyValue("--semiotic-bg").trim()
+  const semioticPrimary = style.getPropertyValue("--semiotic-primary").trim()
 
   // Fall back to docs shell CSS vars
   const textSecondary = semioticTextSecondary || style.getPropertyValue("--text-secondary").trim()
@@ -170,7 +174,7 @@ function resolveThemeColors(el: HTMLElement | null): ThemeColors {
   const surface3 = semioticBorder || style.getPropertyValue("--surface-3").trim()
   const surface0 = semioticBg || style.getPropertyValue("--surface-0").trim()
 
-  if (!textSecondary && !textPrimary && !semioticBorder) return LIGHT_THEME
+  if (!textSecondary && !textPrimary && !semioticBorder && !semioticPrimary) return LIGHT_THEME
 
   return {
     axisStroke: surface3 || LIGHT_THEME.axisStroke,
@@ -178,7 +182,8 @@ function resolveThemeColors(el: HTMLElement | null): ThemeColors {
     crosshair: textSecondary ? withAlpha(textSecondary, "66") : LIGHT_THEME.crosshair,
     hoverFill: surface0 ? withAlpha(surface0, "4D") : LIGHT_THEME.hoverFill,
     hoverStroke: textSecondary ? withAlpha(textSecondary, "99") : LIGHT_THEME.hoverStroke,
-    pointRing: surface0 || LIGHT_THEME.pointRing
+    pointRing: surface0 || LIGHT_THEME.pointRing,
+    primary: semioticPrimary || LIGHT_THEME.primary
   }
 }
 
@@ -264,19 +269,15 @@ function drawCrosshair(
       if (s.valuePx == null) continue
       ctx.beginPath()
       ctx.arc(xPx, s.valuePx, 4, 0, Math.PI * 2)
-      ctx.fillStyle = s.color || "#007bff"
+      ctx.fillStyle = s.color || theme.primary
       ctx.fill()
       ctx.stroke()
     }
   } else {
-    // Single-point mode: one dot at the hovered datum
-    let semioticPrimary = ""
-    try {
-      if (ctx.canvas?.parentElement) {
-        semioticPrimary = getComputedStyle(ctx.canvas).getPropertyValue("--semiotic-primary").trim()
-      }
-    } catch { /* jsdom or SSR — fall through to hardcoded default */ }
-    const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || semioticPrimary || "#007bff"
+    // Single-point mode: one dot at the hovered datum.
+    // `theme.primary` already resolves from `--semiotic-primary`; the
+    // previous inline getComputedStyle call duplicated that lookup.
+    const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || theme.primary
     ctx.beginPath()
     ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
     ctx.fillStyle = pointColor
@@ -293,7 +294,8 @@ function drawLineHighlight(
   ctx: CanvasRenderingContext2D,
   scene: SceneNode[],
   hoveredNode: SceneNode | null,
-  highlightConfig: { style?: Record<string, any> | ((d: any) => Record<string, any>) }
+  highlightConfig: { style?: Record<string, any> | ((d: any) => Record<string, any>) },
+  theme: ThemeColors
 ) {
   if (!hoveredNode) return
 
@@ -318,7 +320,7 @@ function drawLineHighlight(
     for (let i = 1; i < node.path.length; i++) {
       ctx.lineTo(node.path[i][0], node.path[i][1])
     }
-    ctx.strokeStyle = rawStyle.stroke || node.style.stroke || "#007bff"
+    ctx.strokeStyle = rawStyle.stroke || node.style.stroke || theme.primary
     ctx.lineWidth = rawStyle.strokeWidth || (node.style.strokeWidth || 2) + 2
     ctx.globalAlpha = rawStyle.opacity ?? 1
     ctx.stroke()
@@ -589,6 +591,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       curve,
       themeCategorical: currentTheme?.colors?.categorical,
       themeSemantic: resolveThemeSemanticColors(currentTheme),
+      themeSequential: currentTheme?.colors?.sequential,
+      themeDiverging: currentTheme?.colors?.diverging,
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -1053,7 +1057,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               (a: any) => a && typeof a === "object" && a.type === "highlight"
             )
             if (highlightEntry) {
-              drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry)
+              drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry, theme)
             }
           }
         }

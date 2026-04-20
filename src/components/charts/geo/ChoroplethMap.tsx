@@ -5,7 +5,7 @@ import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -80,10 +80,15 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     summary: props.summary,
   })
 
+  // Color scheme resolution priority:
+  //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"
+  // The destructure default is deliberately undefined so the theme hook's value
+  // can still win over the fallback string below.
+  const themeSequential = useThemeSequential()
   const {
     areas,
     valueAccessor,
-    colorScheme = "blues",
+    colorScheme: colorSchemeProp,
     projection = "equalEarth",
     graticule,
     fitPadding,
@@ -123,6 +128,8 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
       : (d: any) => d?.properties?.[valueAccessor] ?? d?.[valueAccessor],
     [valueAccessor]
   )
+
+  const colorScheme = colorSchemeProp ?? themeSequential ?? "blues"
 
   // Build sequential color scale
   const colorScale = useMemo(() => {

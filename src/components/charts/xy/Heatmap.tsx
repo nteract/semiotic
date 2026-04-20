@@ -2,11 +2,24 @@
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import { scaleSequential } from "d3-scale"
-import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
+import {
+  interpolateBlues,
+  interpolateReds,
+  interpolateGreens,
+  interpolateViridis,
+  interpolateOranges,
+  interpolatePurples,
+  interpolateGreys,
+  interpolatePlasma,
+  interpolateInferno,
+  interpolateMagma,
+  interpolateCividis,
+  interpolateTurbo,
+} from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
+import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -73,7 +86,13 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
    * Color scheme for the heatmap
    * @default "blues"
    */
-  colorScheme?: "blues" | "reds" | "greens" | "viridis" | "custom"
+  /**
+   * d3-scale-chromatic sequential scheme name, "custom" (paired with
+   * `customColorScale`), or any scheme name emitted by a SemioticTheme's
+   * `colors.sequential`. When unset, falls back to the active theme's
+   * sequential scheme, then to "blues".
+   */
+  colorScheme?: "blues" | "reds" | "greens" | "viridis" | "oranges" | "purples" | "greys" | "plasma" | "inferno" | "magma" | "cividis" | "turbo" | "custom" | (string & {})
 
   /**
    * Custom color scale (used when colorScheme is "custom")
@@ -241,7 +260,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     valueAccessor = "value",
     xFormat,
     yFormat,
-    colorScheme = "blues",
+    colorScheme: colorSchemeProp,
     customColorScale,
     showValues = false,
     valueFormat,
@@ -278,6 +297,12 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
+
+  // Color scheme resolution priority:
+  //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"
+  // Matches ChoroplethMap's pattern for theme-driven magnitude encoding.
+  const themeSequential = useThemeSequential()
+  const colorScheme = colorSchemeProp ?? themeSequential ?? "blues"
 
   const showLegend = showLegendProp ?? false
   const legendPosition = legendPositionProp ?? "right"
@@ -335,14 +360,26 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
       return customColorScale
     }
 
-    const interpolators = {
+    // Sequential d3-scale-chromatic schemes. Covers every scheme name
+    // declared by the built-in SemioticTheme presets — tufte ("oranges"),
+    // pastels ("purples"), playful ("viridis"), etc. — so theme-driven
+    // colorScheme resolution always finds an interpolator.
+    const interpolators: Record<string, (t: number) => string> = {
       blues: interpolateBlues,
       reds: interpolateReds,
       greens: interpolateGreens,
-      viridis: interpolateViridis
+      viridis: interpolateViridis,
+      oranges: interpolateOranges,
+      purples: interpolatePurples,
+      greys: interpolateGreys,
+      plasma: interpolatePlasma,
+      inferno: interpolateInferno,
+      magma: interpolateMagma,
+      cividis: interpolateCividis,
+      turbo: interpolateTurbo,
     }
 
-    const interpolator = interpolators[colorScheme as keyof typeof interpolators] || interpolateBlues
+    const interpolator = interpolators[colorScheme as string] || interpolateBlues
 
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])

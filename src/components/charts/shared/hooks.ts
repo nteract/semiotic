@@ -30,6 +30,25 @@ export function useThemeCategorical(): string[] | undefined {
 }
 
 /**
+ * Return the ambient theme's sequential scheme name (e.g. "blues", "viridis")
+ * for magnitude encodings. Safe to call outside a ThemeProvider (returns undefined).
+ */
+export function useThemeSequential(): string | undefined {
+  const theme = useTheme()
+  return theme?.colors?.sequential || undefined
+}
+
+/**
+ * Return the ambient theme's diverging scheme name (e.g. "RdBu", "PiYG")
+ * for midpoint encodings (likert, ±deviation). Safe to call outside a
+ * ThemeProvider (returns undefined).
+ */
+export function useThemeDiverging(): string | undefined {
+  const theme = useTheme()
+  return theme?.colors?.diverging || undefined
+}
+
+/**
  * Resolve the effective color for a data element when no colorBy is specified.
  * Priority: color prop > theme categorical > colorScheme > DEFAULT_COLOR.
  * When a palette is available, cycles through colors by category name.

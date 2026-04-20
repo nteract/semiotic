@@ -174,8 +174,11 @@ describe("LikertChart", () => {
     const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
     expect(typeof pieceStyleFn).toBe("function")
 
-    // Test that the first level (negative) gets the expected default color
-    const defaultColors = defaultDivergingScheme(5)
+    // With no explicit colorScheme prop, LikertChart now falls back to the
+    // ambient theme's `colors.diverging` scheme (LIGHT_THEME declares "RdBu").
+    // The scheme name is resolved to concrete colors inside
+    // defaultDivergingScheme — pass it here to match the chart's computation.
+    const defaultColors = defaultDivergingScheme(5, "RdBu")
 
     // Strongly Disagree (first level) should get the first default color
     const styleNeg = pieceStyleFn({ __likertLevelLabel: "Strongly Disagree", __likertLevel: "Strongly Disagree" })
@@ -223,7 +226,8 @@ describe("LikertChart", () => {
     )
 
     const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
-    const defaultColors = defaultDivergingScheme(5)
+    // Ambient theme (LIGHT_THEME) declares diverging: "RdBu".
+    const defaultColors = defaultDivergingScheme(5, "RdBu")
     const style = pieceStyleFn({ __likertLevelLabel: "Strongly Disagree", __likertLevel: "Strongly Disagree" })
     expect(style.fill).toBe(defaultColors[0])
   })
@@ -238,7 +242,8 @@ describe("LikertChart", () => {
     )
 
     const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
-    const defaultColors = defaultDivergingScheme(5)
+    // Ambient theme (LIGHT_THEME) declares diverging: "RdBu".
+    const defaultColors = defaultDivergingScheme(5, "RdBu")
     const neutralColor = defaultColors[2] // middle color for 5-level
 
     const styleNeg = pieceStyleFn({ __likertLevel: NEUTRAL_NEG, __likertLevelLabel: "Neutral" })
@@ -527,5 +532,49 @@ describe("LikertChart", () => {
     )
 
     expect(lastOrdinalFrameProps.legendPosition).toBe("right")
+  })
+})
+
+// ── defaultDivergingScheme — theme fallback path (Phase A milestone 3) ──
+
+describe("defaultDivergingScheme", () => {
+  it("returns Carbon hardcoded palette when no scheme name is passed", () => {
+    const palette = defaultDivergingScheme(5)
+    // With n=5, halfSize=2 and only indexes 0,1 are sampled from the pos/neg
+    // arrays — so `#0043ce` (posColors[2]) isn't reached at this cardinality.
+    expect(palette[0]).toBe("#da1e28")  // Carbon red
+    expect(palette[2]).toBe("#a8a8a8")  // Carbon gray (neutral)
+    expect(palette[4]).toBe("#4589ff")  // posColors[1]
+  })
+
+  it("samples d3-scale-chromatic interpolator when a theme scheme name is passed", () => {
+    const rdBu5 = defaultDivergingScheme(5, "RdBu")
+    expect(rdBu5).toHaveLength(5)
+    // Not the Carbon palette — values come from interpolateRdBu.
+    expect(rdBu5[0]).not.toBe("#da1e28")
+    expect(rdBu5[0]).toMatch(/^(rgb|#)/)
+  })
+
+  it("different scheme names produce different palettes at the same level count", () => {
+    const rdBu = defaultDivergingScheme(5, "RdBu")
+    const piYG = defaultDivergingScheme(5, "PiYG")
+    expect(rdBu[0]).not.toBe(piYG[0])
+  })
+
+  it("falls back to Carbon palette when scheme name is unknown", () => {
+    const palette = defaultDivergingScheme(5, "NotARealScheme" as any)
+    expect(palette[0]).toBe("#da1e28")
+  })
+
+  it("handles n=1 for both paths", () => {
+    expect(defaultDivergingScheme(1)).toEqual(["#a8a8a8"])
+    const themed1 = defaultDivergingScheme(1, "RdBu")
+    expect(themed1).toHaveLength(1)
+    expect(themed1[0]).toMatch(/^(rgb|#)/)
+  })
+
+  it("handles n=0 gracefully", () => {
+    expect(defaultDivergingScheme(0)).toEqual([])
+    expect(defaultDivergingScheme(0, "RdBu")).toEqual([])
   })
 })

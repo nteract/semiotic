@@ -12,7 +12,8 @@ export function buildSwarmScene(ctx: XYSceneContext, data: Record<string, any>[]
   const nodes: SceneNode[] = []
   const swarm = ctx.config.swarmStyle || {}
   const radius = swarm.radius ?? 3
-  const defaultFill = swarm.fill ?? "#007bff"
+  // Default swarm fill: user swarmStyle.fill > theme primary > hardcoded #007bff.
+  const defaultFill = swarm.fill ?? ctx.config.themeSemantic?.primary ?? "#007bff"
   const opacity = swarm.opacity ?? 0.7
   const stroke = swarm.stroke
   const strokeWidth = swarm.strokeWidth

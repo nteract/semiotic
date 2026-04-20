@@ -492,4 +492,54 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(3)
   })
+
+  // ── Theme sequential scheme fallback (Phase A milestone 3) ────────────
+  //
+  // When no explicit colorScheme is set, the heatmap falls back to the
+  // active theme's `sequential` scheme name. The resulting fill hex comes
+  // from the LUT (d3-scale-chromatic), so we compare the cell fill across
+  // two different scheme names to verify the theme value flows through.
+  it("uses themeSequential when colorScheme is not set explicitly", () => {
+    const data = [
+      { x: 0, y: 0, value: 10 },
+      { x: 1, y: 1, value: 50 },
+    ]
+    const ctxBlues = makeCtx({
+      config: { themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const ctxViridis = makeCtx({
+      config: { themeSequential: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodesBlues = buildHeatmapScene(ctxBlues, data, defaultLayout) as any[]
+    const nodesViridis = buildHeatmapScene(ctxViridis, data, defaultLayout) as any[]
+
+    // Cell fills resolve through getColorLut — so different scheme names
+    // should produce different hex values at the same data value.
+    expect(nodesBlues[1].fill).toBeDefined()
+    expect(nodesViridis[1].fill).toBeDefined()
+    expect(nodesBlues[1].fill).not.toBe(nodesViridis[1].fill)
+  })
+
+  it("explicit colorScheme wins over themeSequential", () => {
+    const data = [{ x: 0, y: 0, value: 10 }, { x: 1, y: 1, value: 50 }]
+    const ctxA = makeCtx({
+      config: { colorScheme: "viridis", themeSequential: "blues", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const ctxB = makeCtx({
+      config: { colorScheme: "viridis", xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodesA = buildHeatmapScene(ctxA, data, defaultLayout) as any[]
+    const nodesB = buildHeatmapScene(ctxB, data, defaultLayout) as any[]
+    // themeSequential is shadowed by explicit colorScheme, so both runs
+    // produce identical fills even with different themeSequential values.
+    expect(nodesA[1].fill).toBe(nodesB[1].fill)
+  })
 })

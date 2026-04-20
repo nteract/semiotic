@@ -158,6 +158,10 @@ export interface PipelineConfig {
    * defaults in this field don't read CSS.
    */
   themeSemantic?: ThemeSemanticColors
+  /** Theme sequential scheme name (e.g. "blues") — fallback when `colorScheme` is not explicitly set for magnitude encodings (heatmap, choropleth, size). */
+  themeSequential?: string
+  /** Theme diverging scheme name (e.g. "RdBu") — fallback when `colorScheme` is not explicitly set for midpoint encodings (likert, bivariate, ± deviation). */
+  themeDiverging?: string
   barColors?: Record<string, string>
   /** Histogram bar style — fill/stroke/strokeWidth/gap. Accepted by RealtimeHistogram and routed through to the bar scene builder. */
   barStyle?: BarStyle
@@ -862,7 +866,7 @@ export class PipelineStore {
     // Default: match line color with low opacity
     const lineStyle = this.resolveLineStyle(group, sampleDatum)
     return {
-      fill: lineStyle.stroke || "#4e79a7",
+      fill: lineStyle.stroke || this.config.themeSemantic?.primary || "#4e79a7",
       fillOpacity: 0.2,
       stroke: "none"
     }
@@ -1038,9 +1042,12 @@ export class PipelineStore {
       }
       return style
     }
+    // Theme primary is the designer-facing default; hardcoded #007bff stays
+    // as the ultimate fallback when no theme is in scope.
+    const themePrimary = this.config.themeSemantic?.primary
     if (ls && typeof ls === "object") {
       return {
-        stroke: ls.stroke || "#007bff",
+        stroke: ls.stroke || themePrimary || "#007bff",
         strokeWidth: ls.strokeWidth || 2,
         strokeDasharray: ls.strokeDasharray,
         fill: ls.fill,
@@ -1048,7 +1055,7 @@ export class PipelineStore {
         opacity: ls.opacity
       }
     }
-    const color = this.resolveGroupColor(group) || "#007bff"
+    const color = this.resolveGroupColor(group) || themePrimary || "#007bff"
     return { stroke: color, strokeWidth: 2 }
   }
 
@@ -1073,15 +1080,16 @@ export class PipelineStore {
       }
       return style
     }
+    const themePrimary = this.config.themeSemantic?.primary
     if (ls && typeof ls === "object") {
       return {
-        fill: ls.fill || ls.stroke || "#4e79a7",
+        fill: ls.fill || ls.stroke || themePrimary || "#4e79a7",
         fillOpacity: ls.fillOpacity ?? 0.7,
-        stroke: ls.stroke || "#4e79a7",
+        stroke: ls.stroke || themePrimary || "#4e79a7",
         strokeWidth: ls.strokeWidth || 2
       }
     }
-    const color = this.resolveGroupColor(group) || "#4e79a7"
+    const color = this.resolveGroupColor(group) || themePrimary || "#4e79a7"
     return { fill: color, fillOpacity: 0.7, stroke: color, strokeWidth: 2 }
   }
 

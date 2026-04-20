@@ -73,6 +73,10 @@ export interface XYSceneConfig {
   // color is set. Populated by the Stream Frame from active SemioticTheme.
   // See `ThemeSemanticColors` in ../types for the canonical definition.
   themeSemantic?: ThemeSemanticColors
+  /** Theme sequential scheme name — fallback when colorScheme is not set (heatmap). */
+  themeSequential?: string
+  /** Theme diverging scheme name — fallback when colorScheme is not set. */
+  themeDiverging?: string
 
   // Swarm
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }

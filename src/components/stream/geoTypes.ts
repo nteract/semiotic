@@ -120,6 +120,10 @@ export interface GeoPipelineConfig {
   colorScheme?: string | string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
+  /** Theme sequential scheme name — fallback for ChoroplethMap when colorScheme is not set. */
+  themeSequential?: string
+  /** Theme diverging scheme name — available for geo consumers that need midpoint encodings. */
+  themeDiverging?: string
 
   graticule?: boolean | GraticuleConfig
 
