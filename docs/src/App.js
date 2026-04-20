@@ -76,6 +76,7 @@ import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
 import ThemeExplorerPage from "./pages/theming/ThemeExplorerPage"
+import SemanticColorsPage from "./pages/theming/SemanticColorsPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
 import ChartContainersPage from "./pages/features/ChartContainersPage"
@@ -283,6 +284,7 @@ export default function DocsApp() {
             <Route path="theming" element={<Outlet />}>
               <Route path="styling" element={<StylingPage />} />
               <Route path="theme-provider" element={<ThemingPage />} />
+              <Route path="semantic-colors" element={<SemanticColorsPage />} />
               <Route path="theme-explorer" element={<ThemeExplorerPage />} />
             </Route>
 
@@ -440,7 +442,7 @@ export default function DocsApp() {
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
               <Route path="funnel-chart" element={<FunnelChartPage />} />
               <Route path="swimlane-chart" element={<SwimlaneChartPage />} />
-              <Route path="realtime-bar-chart" element={<RealtimeHistogramPage />} />
+              <Route path="realtime-histogram" element={<RealtimeHistogramPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
               <Route path="chord-diagram" element={<ChordDiagramPage />} />

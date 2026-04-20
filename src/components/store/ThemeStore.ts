@@ -30,11 +30,15 @@ export interface SemioticTheme {
   mode: "light" | "dark" | "auto"
   colors: {
     primary: string
+    /** Secondary accent color. Falls back to `primary` when unset. */
+    secondary?: string
     categorical: string[]
     sequential: string
     /** d3-scale-chromatic diverging scheme name, e.g. "RdBu", "PiYG" */
     diverging?: string
     background: string
+    /** Elevated surface fill (e.g. card/tooltip bg). Falls back to `background`. */
+    surface?: string
     text: string
     textSecondary: string
     grid: string
@@ -46,6 +50,21 @@ export interface SemioticTheme {
     selectionOpacity?: number
     /** Default annotation text/marker color. Falls back to `text` if unset. */
     annotation?: string
+    // ── Semantic status roles ────────────────────────────────────────────
+    // Used for status-driven charts (swimlane, waterfall ±, alerts) and
+    // annotations. All optional — scene builders fall back to `primary` or
+    // hardcoded hex when unset. Override per-theme for brand consistency,
+    // or per-scope via `--semiotic-{role}` CSS custom properties.
+    /** Positive outcomes, gains, "ok" states. */
+    success?: string
+    /** Negative outcomes, losses, destructive actions. */
+    danger?: string
+    /** Cautionary states, degraded but not failed. */
+    warning?: string
+    /** Failed states, blocking errors. Typically more intense than `danger`. */
+    error?: string
+    /** Neutral informational callouts, tips, help content. */
+    info?: string
   }
   typography: {
     fontFamily: string
@@ -97,6 +116,7 @@ export const LIGHT_THEME: SemioticTheme = {
   mode: "light",
   colors: {
     primary: "#00a2ce",
+    secondary: "#6c757d",
     categorical: [
       "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
       "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
@@ -104,12 +124,18 @@ export const LIGHT_THEME: SemioticTheme = {
     sequential: "blues",
     diverging: "RdBu",
     background: "transparent",
+    surface: "#ffffff",
     text: "#333",
     textSecondary: "#666",
     grid: "#e0e0e0",
     border: "#ccc",
     selection: "#00a2ce",
     selectionOpacity: 0.15,
+    success: "#2ca02c",
+    danger: "#d62728",
+    warning: "#f0ad4e",
+    error: "#b4181b",
+    info: "#00a2ce",
   },
   typography: {
     fontFamily: "sans-serif",
@@ -123,6 +149,7 @@ export const DARK_THEME: SemioticTheme = {
   mode: "dark",
   colors: {
     primary: "#4fc3f7",
+    secondary: "#90a4ae",
     categorical: [
       "#4fc3f7", "#ffb74d", "#81c784", "#ef5350", "#ba68c8",
       "#a1887f", "#f06292", "#90a4ae", "#dce775", "#4dd0e1"
@@ -130,12 +157,18 @@ export const DARK_THEME: SemioticTheme = {
     sequential: "blues",
     diverging: "RdBu",
     background: "#1a1a2e",
+    surface: "#252540",
     text: "#e0e0e0",
     textSecondary: "#aaa",
     grid: "#333",
     border: "#555",
     selection: "#4fc3f7",
     selectionOpacity: 0.15,
+    success: "#81c784",
+    danger: "#ef5350",
+    warning: "#ffb74d",
+    error: "#d84848",
+    info: "#4fc3f7",
   },
   typography: {
     fontFamily: "sans-serif",
@@ -149,10 +182,12 @@ export const HIGH_CONTRAST_THEME: SemioticTheme = {
   mode: "light",
   colors: {
     primary: "#0000cc",
+    secondary: "#333333",
     categorical: COLOR_BLIND_SAFE_CATEGORICAL,
     sequential: "blues",
     diverging: "RdBu",
     background: "#ffffff",
+    surface: "#ffffff",
     text: "#000000",
     textSecondary: "#333333",
     grid: "#999999",
@@ -160,6 +195,11 @@ export const HIGH_CONTRAST_THEME: SemioticTheme = {
     focus: "#0000cc",
     selection: "#0000cc",
     selectionOpacity: 0.1,
+    success: "#006400",
+    danger: "#cc0000",
+    warning: "#b15a00",
+    error: "#8b0000",
+    info: "#0000cc",
   },
   typography: {
     fontFamily: "system-ui, sans-serif",

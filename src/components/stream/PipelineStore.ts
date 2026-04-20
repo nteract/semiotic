@@ -37,7 +37,9 @@ import type {
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  CurveType
+  CurveType,
+  BarStyle,
+  ThemeSemanticColors
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -139,7 +141,26 @@ export interface PipelineConfig {
   colorScheme?: string | string[]
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
+  /**
+   * Theme-resolved semantic role colors. Scene builders use these as the
+   * default before falling back to hardcoded hex. Populated by the Stream
+   * Frame from the in-memory `SemioticTheme.colors` object at render time
+   * — the values are concrete hex (or whatever the preset declares), not
+   * `var(...)` strings, and so this channel does NOT participate in the
+   * DOM CSS cascade. Changing the ambient theme (`<ThemeProvider>`) or
+   * swapping to a nested provider is how you override these values.
+   *
+   * Per-scope overrides via CSS custom properties
+   * (e.g. `<div style={{ "--semiotic-danger": "#c00" }}>`) work only for
+   * values a user explicitly passes through as `var(--...)` strings in
+   * chart props — those are resolved via `getComputedStyle` in the
+   * canvas renderer at paint time (see `resolveCSSColor.ts`). The theme
+   * defaults in this field don't read CSS.
+   */
+  themeSemantic?: ThemeSemanticColors
   barColors?: Record<string, string>
+  /** Histogram bar style — fill/stroke/strokeWidth/gap. Accepted by RealtimeHistogram and routed through to the bar scene builder. */
+  barStyle?: BarStyle
 
   // Annotations (threshold coloring uses these)
   annotations?: Record<string, any>[]

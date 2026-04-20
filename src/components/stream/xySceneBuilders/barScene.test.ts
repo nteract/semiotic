@@ -252,4 +252,134 @@ describe("buildBarScene", () => {
     expect(result.nodes).toHaveLength(0)
     expect(result.binBoundaries).toHaveLength(0)
   })
+
+  // ── Theme semantic + barStyle consumption (Phase A) ────────────────────
+
+  it("unstacked bars use themeSemantic.primary when no barStyle.fill", () => {
+    const data = [{ x: 5, y: 2 }]
+    const ctx = makeCtx({
+      config: { binSize: 10, themeSemantic: { primary: "#0f62fe" } },
+    })
+    const result = buildBarScene(ctx, data)
+    expect((result.nodes[0] as any).style.fill).toBe("#0f62fe")
+  })
+
+  it("stacked bars use themeSemantic.primary when category not in barColors", () => {
+    const data = [{ x: 5, y: 1, cat: "Z" }]
+    const ctx = makeCtx({
+      config: { binSize: 10, barColors: { A: "red" }, themeSemantic: { primary: "#0f62fe" } },
+      getCategory: (d) => d.cat,
+    })
+    const result = buildBarScene(ctx, data)
+    // Z isn't in barColors, so falls through to themeSemantic.primary
+    expect((result.nodes[0] as any).style.fill).toBe("#0f62fe")
+  })
+
+  it("barColors wins over themeSemantic.primary for listed categories", () => {
+    const data = [{ x: 5, y: 1, cat: "A" }]
+    const ctx = makeCtx({
+      config: { binSize: 10, barColors: { A: "#ff00aa" }, themeSemantic: { primary: "#0f62fe" } },
+      getCategory: (d) => d.cat,
+    })
+    const result = buildBarScene(ctx, data)
+    expect((result.nodes[0] as any).style.fill).toBe("#ff00aa")
+  })
+
+  it("barStyle.fill wins over themeSemantic.primary for unstacked bars", () => {
+    const data = [{ x: 5, y: 2 }]
+    const ctx = makeCtx({
+      config: {
+        binSize: 10,
+        barStyle: { fill: "#ff00aa" },
+        themeSemantic: { primary: "#0f62fe" },
+      },
+    })
+    const result = buildBarScene(ctx, data)
+    expect((result.nodes[0] as any).style.fill).toBe("#ff00aa")
+  })
+
+  it("barStyle.fill wins over themeSemantic.primary for stacked fall-through", () => {
+    // A category not listed in barColors should prefer the user's barStyle.fill
+    // ("my default bar color") over the theme's primary, matching the intent
+    // when both `colors` and a generic fill are supplied on the same chart.
+    const data = [{ x: 5, y: 1, cat: "Z" }]
+    const ctx = makeCtx({
+      config: {
+        binSize: 10,
+        barColors: { A: "red" },
+        barStyle: { fill: "#ff00aa" },
+        themeSemantic: { primary: "#0f62fe" },
+      },
+      getCategory: (d) => d.cat,
+    })
+    const result = buildBarScene(ctx, data)
+    // Z is not in barColors → next in precedence is barStyle.fill
+    expect((result.nodes[0] as any).style.fill).toBe("#ff00aa")
+  })
+
+  it("hardcoded hex fallback remains when no theme or user color", () => {
+    const data = [{ x: 5, y: 2 }]
+    const ctx = makeCtx({ config: { binSize: 10 } })
+    const result = buildBarScene(ctx, data)
+    expect((result.nodes[0] as any).style.fill).toBe("#007bff")
+  })
+
+  it("barStyle.stroke + strokeWidth thread into rect style", () => {
+    const data = [{ x: 5, y: 2 }]
+    const ctx = makeCtx({
+      config: {
+        binSize: 10,
+        barStyle: { stroke: "var(--semiotic-border)", strokeWidth: 2 },
+      },
+    })
+    const result = buildBarScene(ctx, data)
+    const node = result.nodes[0] as any
+    expect(node.style.stroke).toBe("var(--semiotic-border)")
+    expect(node.style.strokeWidth).toBe(2)
+  })
+
+  it("barStyle.stroke applies to stacked category bars as well", () => {
+    const data = [
+      { x: 5, y: 3, cat: "A" },
+      { x: 5, y: 2, cat: "B" },
+    ]
+    const ctx = makeCtx({
+      config: {
+        binSize: 10,
+        barColors: { A: "red", B: "blue" },
+        barStyle: { stroke: "#111", strokeWidth: 1 },
+      },
+      getCategory: (d) => d.cat,
+    })
+    const result = buildBarScene(ctx, data)
+    expect(result.nodes).toHaveLength(2)
+    for (const node of result.nodes) {
+      expect((node as any).style.stroke).toBe("#111")
+      expect((node as any).style.strokeWidth).toBe(1)
+    }
+  })
+
+  it("barStyle.gap override narrows bar width", () => {
+    // gap=3 instead of default 1
+    const data = [{ x: 5, y: 1 }]
+    const ctx = makeCtx({
+      config: { binSize: 10, barStyle: { gap: 3 } },
+    })
+    const result = buildBarScene(ctx, data)
+    const node = result.nodes[0] as any
+    // rawWidth=10, effectiveGap=3, barWidth = 10 - 3 = 7
+    expect(node.w).toBe(7)
+    expect(node.x).toBe(1.5)
+  })
+
+  it("barStyle.gap=0 removes inter-bar gap", () => {
+    const data = [{ x: 5, y: 1 }]
+    const ctx = makeCtx({
+      config: { binSize: 10, barStyle: { gap: 0 } },
+    })
+    const result = buildBarScene(ctx, data)
+    const node = result.nodes[0] as any
+    expect(node.w).toBe(10)
+    expect(node.x).toBe(0)
+  })
 })

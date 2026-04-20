@@ -203,7 +203,7 @@ export default function RealtimeWaterfallChartPage() {
         wrapsPath="/frames/realtime-frame"
         related={[
           { name: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
-          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-histogram" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
           { name: "StreamXYFrame", path: "/frames/realtime-frame" },
         ]}
@@ -396,7 +396,7 @@ function StreamingWaterfall() {
           streaming continuous line for time-series data
         </li>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
+          <Link to="/charts/realtime-histogram">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>

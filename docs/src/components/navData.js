@@ -30,7 +30,7 @@ const navData = [
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
           { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" },
-          { title: "Realtime Histogram", path: "/charts/realtime-bar-chart" }
+          { title: "Realtime Histogram", path: "/charts/realtime-histogram" }
         ]
       },
       {
@@ -122,6 +122,7 @@ const navData = [
     children: [
       { title: "Styling", path: "/theming/styling" },
       { title: "Theme Provider", path: "/theming/theme-provider" },
+      { title: "Semantic Colors", path: "/theming/semantic-colors" },
       { title: "Theme Explorer", path: "/theming/theme-explorer" }
     ]
   },

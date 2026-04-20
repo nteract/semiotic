@@ -475,7 +475,7 @@ const chartCategories = [
       },
       {
         name: "RealtimeHistogram",
-        slug: "realtime-bar-chart",
+        slug: "realtime-histogram",
         importStatement: 'import { RealtimeHistogram } from "semiotic"',
         description: "Binned bar chart that updates as new data arrives.",
         keyProps: RealtimeHistogramKeyProps,

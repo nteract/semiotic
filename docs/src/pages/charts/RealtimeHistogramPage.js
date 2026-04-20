@@ -583,7 +583,7 @@ export default function RealtimeHistogramPage() {
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
         { label: "Realtime", path: "/charts" },
-        { label: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
+        { label: "RealtimeHistogram", path: "/charts/realtime-histogram" },
       ]}
       prevPage={{ title: "Realtime Line Chart", path: "/charts/realtime-line-chart" }}
       nextPage={{ title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" }}

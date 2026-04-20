@@ -505,8 +505,8 @@ const galleryItems = [
     },
   },
   {
-    title: "Realtime Bar Chart",
-    path: "/charts/realtime-bar-chart",
+    title: "Realtime Histogram",
+    path: "/charts/realtime-histogram",
     render: (w, h) => <GalleryRealtimeBars width={w} height={h} />,
   },
 ]

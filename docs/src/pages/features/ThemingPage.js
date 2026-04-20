@@ -394,7 +394,7 @@ export default function ThemingPage() {
         { label: "Theme Provider", path: "/theming/theme-provider" },
       ]}
       prevPage={{ title: "Styling", path: "/theming/styling" }}
-      nextPage={{ title: "Theme Explorer", path: "/theming/theme-explorer" }}
+      nextPage={{ title: "Semantic Colors", path: "/theming/semantic-colors" }}
     >
       <p>
         <code>ThemeProvider</code> applies consistent colors, typography,

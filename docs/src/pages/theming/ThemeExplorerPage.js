@@ -424,7 +424,7 @@ ${overrideLines.join("\n")}
         { label: "Theming", path: "/theming" },
         { label: "Theme Explorer", path: "/theming/theme-explorer" },
       ]}
-      prevPage={{ title: "Theme Provider", path: "/theming/theme-provider" }}
+      prevPage={{ title: "Semantic Colors", path: "/theming/semantic-colors" }}
       nextPage={{ title: "Cookbook", path: "/cookbook" }}
     >
       <p>

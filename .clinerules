@@ -155,7 +155,7 @@ All HOCs accept `annotations` (array). Coordinates use data field names.
 
 ## Theming
 
-CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-secondary`, `--semiotic-border`, `--semiotic-grid`, `--semiotic-primary`, `--semiotic-focus`, `--semiotic-font-family`, `--semiotic-annotation-color`, `--semiotic-legend-font-size`, `--semiotic-title-font-size`, `--semiotic-tick-font-family`, `--semiotic-tooltip-bg`/`text`/`radius`/`font-size`/`shadow`.
+CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-secondary`, `--semiotic-border`, `--semiotic-grid`, `--semiotic-primary`, `--semiotic-secondary`, `--semiotic-surface`, `--semiotic-success`, `--semiotic-danger`, `--semiotic-warning`, `--semiotic-error`, `--semiotic-info`, `--semiotic-focus`, `--semiotic-font-family`, `--semiotic-annotation-color`, `--semiotic-legend-font-size`, `--semiotic-title-font-size`, `--semiotic-tick-font-family`, `--semiotic-tooltip-bg`/`text`/`radius`/`font-size`/`shadow`.
 
 ```jsx
 <ThemeProvider theme="tufte">       {/* Named preset */}
@@ -165,6 +165,16 @@ CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-seco
 **Color priority** (with `colorBy`): explicit `colorScheme` > ThemeProvider `colors.categorical` > `"category10"`.
 Presets: `light`, `dark`, `high-contrast`, `pastels`(-dark), `bi-tool`(-dark), `italian`(-dark), `tufte`(-dark), `journalist`(-dark), `playful`(-dark), `carbon`(-dark).
 Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
+
+**Semantic status roles** (on every preset): `colors.success`, `colors.danger`, `colors.warning`, `colors.error`, `colors.info`, plus `colors.secondary` and `colors.surface`. Each emits as a `--semiotic-{role}` CSS custom property. Use for status-driven charts: `<Waterfall positiveColor="var(--semiotic-success)" negativeColor="var(--semiotic-danger)" />`, `<Swimlane color="var(--semiotic-warning)" />`, bar stroke delineation `<RealtimeHistogram stroke="var(--semiotic-border)" />`, status annotations.
+
+**Scoped CSS cascade override** (per-subtree, no ThemeProvider needed):
+```jsx
+<div style={{ "--semiotic-danger": "#4b0082" }}>
+  {/* every chart below inherits this danger color via canvas CSS-var lookup */}
+</div>
+```
+Canvas scene builders read CSS variables via `getComputedStyle` on the canvas DOM ancestor, so standard CSS cascade rules apply even though rendering is canvas-based. Use CSS vars for **single-role** overrides; use a nested `ThemeProvider` for **array/scale** overrides (categorical palette, sequential/diverging scheme name).
 
 ## AI Features
 `onObservation`/`useChartObserver`, `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`, `validateProps(component, props)`, `diagnoseConfig(component, props)`, `exportChart(div, { format })`, `npx semiotic-ai --doctor`

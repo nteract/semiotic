@@ -5,7 +5,7 @@
  * Scene builders are pure functions that receive this context instead of
  * accessing PipelineStore instance fields directly.
  */
-import type { StreamScales, SceneNode, Style, CurveType, StreamLayout } from "../types"
+import type { StreamScales, SceneNode, Style, CurveType, StreamLayout, BarStyle, ThemeSemanticColors } from "../types"
 
 export interface XYSceneContext {
   scales: StreamScales
@@ -66,6 +66,13 @@ export interface XYSceneConfig {
   // Bar (realtime histogram)
   binSize?: number
   barColors?: Record<string, string>
+  /** Bar fill/stroke/strokeWidth/gap. Threaded through from RealtimeHistogram. */
+  barStyle?: BarStyle
+
+  // Theme-resolved semantic role colors — default fallbacks when no user
+  // color is set. Populated by the Stream Frame from active SemioticTheme.
+  // See `ThemeSemanticColors` in ../types for the canonical definition.
+  themeSemantic?: ThemeSemanticColors
 
   // Swarm
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }

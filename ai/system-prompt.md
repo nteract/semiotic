@@ -109,6 +109,10 @@ Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"t
 
 `semiotic/themes` entry point: `themeToCSS(theme, selector)` generates CSS string, `themeToTokens(theme)` generates DTCG design tokens, `resolveThemePreset("tufte")` returns theme object by name. Theme objects: `TUFTE_LIGHT`, `TUFTE_DARK`, `PASTELS_LIGHT`, `BI_TOOL_LIGHT`, `ITALIAN_LIGHT`, `JOURNALIST_LIGHT`, `PLAYFUL_LIGHT`, etc.
 
+**Semantic status roles**: Every preset defines `colors.success`, `colors.danger`, `colors.warning`, `colors.error`, `colors.info`, plus `colors.secondary` and `colors.surface`. Each emits as a `--semiotic-{role}` CSS custom property via ThemeProvider. Use for status-driven charts: `<Waterfall positiveColor="var(--semiotic-success)" negativeColor="var(--semiotic-danger)" />`, bar stroke delineation `<RealtimeHistogram stroke="var(--semiotic-border)" />`, status annotations.
+
+**Scoped CSS cascade override** (per-subtree, no ThemeProvider needed): wrap in `<div style={{ "--semiotic-danger": "#c00" }}>` — every chart beneath inherits the override via canvas CSS-var lookup (`getComputedStyle` on the canvas's DOM ancestor). Use CSS vars for **single-role** overrides, nested `ThemeProvider` for **array/scale** overrides.
+
 `COLOR_BLIND_SAFE_CATEGORICAL` — 8-color accessible palette (Wong 2011). Import from `semiotic`.
 
 ## Key Patterns
