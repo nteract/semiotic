@@ -21,6 +21,7 @@ import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
@@ -257,20 +258,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       pointStyle,
       lineStyle,
       colorScheme,
-      themeSemantic: currentTheme?.colors ? {
-        primary: currentTheme.colors.primary,
-        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
-        surface: currentTheme.colors.surface || currentTheme.colors.background,
-        success: currentTheme.colors.success,
-        danger: currentTheme.colors.danger,
-        warning: currentTheme.colors.warning,
-        error: currentTheme.colors.error,
-        info: currentTheme.colors.info,
-        text: currentTheme.colors.text,
-        textSecondary: currentTheme.colors.textSecondary,
-        border: currentTheme.colors.border,
-        grid: currentTheme.colors.grid,
-      } : undefined,
+      themeSemantic: resolveThemeSemanticColors(currentTheme),
       graticule,
       projectionTransform,
       decay,

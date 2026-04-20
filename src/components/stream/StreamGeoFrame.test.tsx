@@ -4,14 +4,7 @@ import { render } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createMockCanvasContext } from "../../test-utils/canvasMock"
 
-// Mock ResizeObserver for jsdom (Stream Frames use it via useResponsiveSize)
-if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-}
+// ResizeObserver is polyfilled globally in src/setupTests.ts.
 
 describe("StreamGeoFrame", () => {
   // Same rationale as StreamNetworkFrame.test.tsx: bespoke mock setup with

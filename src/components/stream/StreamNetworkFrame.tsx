@@ -35,6 +35,7 @@ import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkInd
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
@@ -349,20 +350,7 @@ const StreamNetworkFrame = forwardRef<
       colorBy,
       colorScheme,
       themeCategorical: currentTheme?.colors?.categorical,
-      themeSemantic: currentTheme?.colors ? {
-        primary: currentTheme.colors.primary,
-        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
-        surface: currentTheme.colors.surface || currentTheme.colors.background,
-        success: currentTheme.colors.success,
-        danger: currentTheme.colors.danger,
-        warning: currentTheme.colors.warning,
-        error: currentTheme.colors.error,
-        info: currentTheme.colors.info,
-        text: currentTheme.colors.text,
-        textSecondary: currentTheme.colors.textSecondary,
-        border: currentTheme.colors.border,
-        grid: currentTheme.colors.grid,
-      } : undefined,
+      themeSemantic: resolveThemeSemanticColors(currentTheme),
       edgeColorBy,
       edgeOpacity,
       colorByDepth,

@@ -234,8 +234,10 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 
       // Resolve edge fill — use edgeStyle if provided, otherwise
       // inherit from source or target node color.
-      // Fallback prefers theme secondary (muted chrome) over hardcoded #999.
-      let fill = config.themeSemantic?.secondary || config.themeSemantic?.border || "#999"
+      // Fallback order matches other Network edge defaults (tree / force /
+      // sankey / connector): theme border first, then secondary, then
+      // hardcoded #999.
+      let fill = config.themeSemantic?.border || config.themeSemantic?.secondary || "#999"
       if (edgeStyleFn) {
         const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
         fill = userStyle.fill || fill
