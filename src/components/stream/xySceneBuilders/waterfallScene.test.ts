@@ -277,4 +277,60 @@ describe("buildWaterfallScene", () => {
     // All bars have barWidth <= 0 (gap too large for the spacing)
     expect(nodes).toHaveLength(0)
   })
+
+  // ── Status-aware defaults (Phase A milestone 3) ──────────────────────
+  //
+  // Positive/negative bars default to the theme's success/danger roles
+  // when waterfallStyle doesn't override them.
+  describe("themeSemantic.success/.danger defaults", () => {
+    it("positive bar uses themeSemantic.success when waterfallStyle.positiveColor absent", () => {
+      const data = [{ x: 0, y: 10 }]
+      const ctx = makeCtx({
+        config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
+      })
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      expect(nodes[0].style.fill).toBe("#0b8457")
+    })
+
+    it("negative bar uses themeSemantic.danger when waterfallStyle.negativeColor absent", () => {
+      const data = [{ x: 0, y: -10 }]
+      const ctx = makeCtx({
+        config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
+      })
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      expect(nodes[0].style.fill).toBe("#c23030")
+    })
+
+    it("waterfallStyle.positiveColor wins over themeSemantic.success", () => {
+      const data = [{ x: 0, y: 10 }]
+      const ctx = makeCtx({
+        config: {
+          waterfallStyle: { positiveColor: "#ff00aa" },
+          themeSemantic: { success: "#0b8457" },
+        },
+      })
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      expect(nodes[0].style.fill).toBe("#ff00aa")
+    })
+
+    it("waterfallStyle.negativeColor wins over themeSemantic.danger", () => {
+      const data = [{ x: 0, y: -10 }]
+      const ctx = makeCtx({
+        config: {
+          waterfallStyle: { negativeColor: "#ff00aa" },
+          themeSemantic: { danger: "#c23030" },
+        },
+      })
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      expect(nodes[0].style.fill).toBe("#ff00aa")
+    })
+
+    it("hardcoded status green/red fallbacks remain when no theme is present", () => {
+      const dataPos = [{ x: 0, y: 10 }]
+      const dataNeg = [{ x: 0, y: -10 }]
+      const ctx = makeCtx()
+      expect((buildWaterfallScene(ctx, dataPos, defaultLayout)[0] as any).style.fill).toBe("#28a745")
+      expect((buildWaterfallScene(ctx, dataNeg, defaultLayout)[0] as any).style.fill).toBe("#dc3545")
+    })
+  })
 })

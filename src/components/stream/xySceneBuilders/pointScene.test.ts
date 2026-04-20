@@ -323,4 +323,35 @@ describe("buildPointScene", () => {
     expect(nodes[0].r).toBe(5)
     expect(nodes[1].r).toBe(12)
   })
+
+  // ── Theme-aware default fill (Phase A milestone 4) ────────────────────
+
+  it("uses themeSemantic.primary as default fill when pointStyle is absent", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({
+      config: { chartType: "scatter", themeSemantic: { primary: "#0f62fe" } },
+    })
+    const nodes = buildPointScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#0f62fe")
+  })
+
+  it("hardcoded hex fallback remains when no theme is in scope", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({ config: { chartType: "scatter" } })
+    const nodes = buildPointScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#4e79a7")
+  })
+
+  it("explicit pointStyle wins over themeSemantic.primary", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({
+      config: {
+        chartType: "scatter",
+        pointStyle: () => ({ fill: "#ff00aa" }),
+        themeSemantic: { primary: "#0f62fe" },
+      },
+    })
+    const nodes = buildPointScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#ff00aa")
+  })
 })

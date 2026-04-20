@@ -3,7 +3,7 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { useChartMode } from "../shared/hooks"
+import { useChartMode, useThemeDiverging } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -178,12 +178,16 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   const isRawMode = !levelAccessor
 
   // ── Color scheme ─────────────────────────────────────────────────────
+  // Priority: explicit array colorScheme prop > theme diverging scheme name
+  // > Carbon-inspired hardcoded palette. The theme scheme name (e.g. "RdBu")
+  // is resolved to concrete colors inside defaultDivergingScheme.
+  const themeDivergingScheme = useThemeDiverging()
   const colorScheme = useMemo(() => {
     if (colorSchemeProp && Array.isArray(colorSchemeProp) && colorSchemeProp.length >= levels.length) {
       return colorSchemeProp
     }
-    return defaultDivergingScheme(levels.length)
-  }, [colorSchemeProp, levels.length])
+    return defaultDivergingScheme(levels.length, themeDivergingScheme)
+  }, [colorSchemeProp, levels.length, themeDivergingScheme])
 
   const levelColorMap = useMemo(() => {
     const m = new Map<string, string>()

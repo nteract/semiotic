@@ -39,8 +39,12 @@ export function buildPointScene(ctx: XYSceneContext, data: Record<string, any>[]
     ? ctx.resolveColorMap(data)
     : null
 
+  // Default point fill: theme primary > hardcoded #4e79a7. Resolved once
+  // per scene build so it isn't rebuilt for every datum.
+  const themedDefaultFill = ctx.config.themeSemantic?.primary || "#4e79a7"
+
   for (const d of data) {
-    let style = ctx.config.pointStyle ? ctx.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
+    let style = ctx.config.pointStyle ? ctx.config.pointStyle(d) : { fill: themedDefaultFill, opacity: 0.8 }
 
     let r = style.r || defaultR
     if (sizeScale && ctx.getSize) {

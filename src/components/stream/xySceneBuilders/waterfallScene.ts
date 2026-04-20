@@ -23,8 +23,10 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Record<string, an
   })
   if (arr.length === 0) return nodes
 
-  const positiveColor = ws?.positiveColor ?? "#28a745"
-  const negativeColor = ws?.negativeColor ?? "#dc3545"
+  // Status-aware defaults: gains/losses map to the theme's success/danger
+  // roles. A custom theme that omits them keeps the hardcoded status green/red.
+  const positiveColor = ws?.positiveColor ?? ctx.config.themeSemantic?.success ?? "#28a745"
+  const negativeColor = ws?.negativeColor ?? ctx.config.themeSemantic?.danger ?? "#dc3545"
   const gap = ws?.gap ?? 1
   const barStroke = ws?.stroke
   const barStrokeWidth = ws?.strokeWidth

@@ -259,6 +259,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       lineStyle,
       colorScheme,
       themeSemantic: resolveThemeSemanticColors(currentTheme),
+      themeSequential: currentTheme?.colors?.sequential,
+      themeDiverging: currentTheme?.colors?.diverging,
       graticule,
       projectionTransform,
       decay,

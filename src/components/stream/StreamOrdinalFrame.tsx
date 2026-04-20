@@ -408,6 +408,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       colorScheme,
       themeCategorical: currentTheme?.colors?.categorical,
       themeSemantic: resolveThemeSemanticColors(currentTheme),
+      themeSequential: currentTheme?.colors?.sequential,
+      themeDiverging: currentTheme?.colors?.diverging,
       barColors,
       decay,
       pulse,

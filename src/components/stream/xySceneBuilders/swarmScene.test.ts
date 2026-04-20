@@ -245,4 +245,47 @@ describe("buildSwarmScene", () => {
     expect(nodes[0].style.stroke).toBe("#333")
     expect(nodes[0].style.strokeWidth).toBe(1)
   })
+
+  // ── Theme-aware default fill (Phase A milestone 4) ────────────────────
+
+  it("uses themeSemantic.primary as default fill when neither swarmStyle.fill nor barColors resolve", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({
+      config: { themeSemantic: { primary: "#0f62fe" } },
+    })
+    const nodes = buildSwarmScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#0f62fe")
+  })
+
+  it("hardcoded hex fallback remains when no theme is in scope", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({ config: {} })
+    const nodes = buildSwarmScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#007bff")
+  })
+
+  it("swarmStyle.fill wins over themeSemantic.primary", () => {
+    const data = [{ x: 10, y: 20 }]
+    const ctx = makeCtx({
+      config: {
+        swarmStyle: { fill: "#ff00aa" },
+        themeSemantic: { primary: "#0f62fe" },
+      },
+    })
+    const nodes = buildSwarmScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#ff00aa")
+  })
+
+  it("barColors category wins over themeSemantic.primary", () => {
+    const data = [{ x: 10, y: 20, category: "A" }]
+    const ctx = makeCtx({
+      config: {
+        barColors: { A: "#ff00aa" },
+        themeSemantic: { primary: "#0f62fe" },
+      },
+      getCategory: (d) => d.category,
+    })
+    const nodes = buildSwarmScene(ctx, data) as any[]
+    expect(nodes[0].style.fill).toBe("#ff00aa")
+  })
 })

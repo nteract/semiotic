@@ -274,6 +274,10 @@ export interface OrdinalPipelineConfig {
   themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
+  /** Theme sequential scheme name — fallback for magnitude encodings. */
+  themeSequential?: string
+  /** Theme diverging scheme name — fallback for midpoint encodings (LikertChart). */
+  themeDiverging?: string
   barColors?: Record<string, string>
 
   /** ID accessor for remove() — extracts a unique identifier from each datum */

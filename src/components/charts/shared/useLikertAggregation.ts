@@ -3,6 +3,26 @@
 import type { RefObject, MutableRefObject } from "react"
 import { useMemo, useCallback, useRef } from "react"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import {
+  interpolateRdBu,
+  interpolatePiYG,
+  interpolatePRGn,
+  interpolateBrBG,
+  interpolateRdYlBu,
+  interpolateRdYlGn,
+  interpolateSpectral,
+} from "d3-scale-chromatic"
+
+/** Map d3-scale-chromatic diverging interpolator keys → interpolator fn. */
+const DIVERGING_INTERPOLATORS: Record<string, (t: number) => string> = {
+  RdBu: interpolateRdBu,
+  PiYG: interpolatePiYG,
+  PRGn: interpolatePRGn,
+  BrBG: interpolateBrBG,
+  RdYlBu: interpolateRdYlBu,
+  RdYlGn: interpolateRdYlGn,
+  Spectral: interpolateSpectral,
+}
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -36,14 +56,40 @@ export function resolveAccessorFn<T>(
 
 /**
  * Generate a diverging color scheme for N levels.
+ *
+ * Two paths:
+ *   • `themeDivergingSchemeName` supplied → sample the named d3-scale-chromatic
+ *     diverging interpolator at N evenly-spaced positions. Gives consumers the
+ *     ability to change the palette by changing the active theme's
+ *     `colors.diverging` string, without touching chart code.
+ *   • No scheme name → the original Carbon-inspired hardcoded palette
+ *     (preserves exact pre-theming behavior for consumers without a
+ *     ThemeProvider, and for custom themes that don't declare `diverging`).
+ *
  * Interpolates from red → gray → blue for odd, red → blue for even.
  */
-export function defaultDivergingScheme(n: number): string[] {
+export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: string): string[] {
+  if (n <= 0) return []
+
+  // Path A: named diverging scheme from the theme.
+  if (themeDivergingSchemeName) {
+    const interp = DIVERGING_INTERPOLATORS[themeDivergingSchemeName]
+    if (interp) {
+      if (n === 1) return [interp(0.5)]
+      const result: string[] = []
+      for (let i = 0; i < n; i++) {
+        result.push(interp(i / (n - 1)))
+      }
+      return result
+    }
+    // Unknown scheme name → fall through to hardcoded palette.
+  }
+
+  // Path B: Carbon-inspired hardcoded palette.
   const negColors = ["#da1e28", "#ff8389", "#ffb3b8"]
   const posColors = ["#a6c8ff", "#4589ff", "#0043ce"]
   const neutral = "#a8a8a8"
 
-  if (n <= 0) return []
   if (n === 1) return [neutral]
 
   const isOdd = n % 2 !== 0
