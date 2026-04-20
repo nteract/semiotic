@@ -13,7 +13,8 @@ import type {
   DecayConfig,
   PulseConfig,
   TransitionConfig,
-  StalenessConfig
+  StalenessConfig,
+  ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { LegendGroup } from "../types/legendTypes"
@@ -271,6 +272,8 @@ export interface OrdinalPipelineConfig {
   summaryStyle?: (d: any, category?: string) => Style
   colorScheme?: string | string[]
   themeCategorical?: string[]
+  /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
+  themeSemantic?: ThemeSemanticColors
   barColors?: Record<string, string>
 
   /** ID accessor for remove() — extracts a unique identifier from each datum */

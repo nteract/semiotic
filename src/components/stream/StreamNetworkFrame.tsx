@@ -299,6 +299,7 @@ const StreamNetworkFrame = forwardRef<
     rafRef,
     renderFnRef,
     scheduleRender,
+    currentTheme,
   } = frame
 
   const tensionConfig = useMemo(
@@ -347,6 +348,21 @@ const StreamNetworkFrame = forwardRef<
       labelMode,
       colorBy,
       colorScheme,
+      themeCategorical: currentTheme?.colors?.categorical,
+      themeSemantic: currentTheme?.colors ? {
+        primary: currentTheme.colors.primary,
+        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
+        surface: currentTheme.colors.surface || currentTheme.colors.background,
+        success: currentTheme.colors.success,
+        danger: currentTheme.colors.danger,
+        warning: currentTheme.colors.warning,
+        error: currentTheme.colors.error,
+        info: currentTheme.colors.info,
+        text: currentTheme.colors.text,
+        textSecondary: currentTheme.colors.textSecondary,
+        border: currentTheme.colors.border,
+        grid: currentTheme.colors.grid,
+      } : undefined,
       edgeColorBy,
       edgeOpacity,
       colorByDepth,
@@ -416,7 +432,8 @@ const StreamNetworkFrame = forwardRef<
       orbitRevolutionStyle,
       orbitEccentricity,
       orbitShowRings,
-      orbitAnimated
+      orbitAnimated,
+      currentTheme
     ]
   )
 
@@ -487,6 +504,13 @@ const StreamNetworkFrame = forwardRef<
     [colorBy, colorScheme]
   )
 
+  // Fallback color for edges/particles when no source or target is resolvable.
+  // Prefer theme border (chart chrome) over secondary; hardcoded #999 last.
+  const edgeFallbackColor =
+    currentTheme?.colors?.border ||
+    currentTheme?.colors?.secondary ||
+    "#999"
+
   const getEdgeColor = useCallback(
     (edge: RealtimeEdge): string => {
       if (typeof edgeColorBy === "function") return edgeColorBy(edge)
@@ -501,9 +525,9 @@ const StreamNetworkFrame = forwardRef<
       if (sourceNode) {
         return getNodeColor(sourceNode)
       }
-      return "#999"
+      return edgeFallbackColor
     },
-    [edgeColorBy, getNodeColor]
+    [edgeColorBy, getNodeColor, edgeFallbackColor]
   )
 
   const getParticleColor = useCallback(
@@ -523,9 +547,9 @@ const StreamNetworkFrame = forwardRef<
       if (sourceNode) {
         return getNodeColor(sourceNode)
       }
-      return "#999"
+      return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
+    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local

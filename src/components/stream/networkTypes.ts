@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 
 // ── Tension configuration ──────────────────────────────────────────────
@@ -446,6 +446,10 @@ export interface NetworkPipelineConfig {
   // ── Color ────────────────────────────────────────
   colorBy?: string | ((d: any) => string | number)
   colorScheme?: string | string[]
+  /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
+  themeCategorical?: string[]
+  /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
+  themeSemantic?: ThemeSemanticColors
   edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
   edgeOpacity?: number
   colorByDepth?: boolean

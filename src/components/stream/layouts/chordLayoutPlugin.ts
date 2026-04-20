@@ -232,8 +232,9 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const pathD = translateSvgPath(rawPath, cx, cy)
 
       // Resolve edge fill — use edgeStyle if provided, otherwise
-      // inherit from source or target node color
-      let fill = "#999"
+      // inherit from source or target node color.
+      // Fallback prefers theme secondary (muted chrome) over hardcoded #999.
+      let fill = config.themeSemantic?.secondary || config.themeSemantic?.border || "#999"
       if (edgeStyleFn) {
         const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
         fill = userStyle.fill || fill

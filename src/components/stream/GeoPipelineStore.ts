@@ -94,24 +94,40 @@ function resolveStyle(
 }
 
 // ── Default styles ───────────────────────────────────────────────────
+//
+// Each `themedDefault*` reads from `config.themeSemantic` so the scene
+// builders inherit the active theme's colors before falling back to the
+// hardcoded literals. When no theme is present (renderer used headless
+// or in a test fixture without a ThemeProvider), the hardcoded values
+// are retained as the ultimate fallback.
 
-const DEFAULT_AREA_STYLE: Style = {
-  fill: "#e0e0e0",
-  stroke: "#999",
-  strokeWidth: 0.5,
-  fillOpacity: 1
+function themedDefaultArea(config: GeoPipelineConfig): Style {
+  return {
+    // Area fill: theme surface (elevated chart region) > hardcoded light gray.
+    fill: config.themeSemantic?.surface || "#e0e0e0",
+    // Area stroke: theme border (chart chrome) > hardcoded #999.
+    stroke: config.themeSemantic?.border || "#999",
+    strokeWidth: 0.5,
+    fillOpacity: 1
+  }
 }
 
-const DEFAULT_POINT_STYLE: Style & { r?: number } = {
-  fill: "#4e79a7",
-  r: 4,
-  fillOpacity: 0.8
+function themedDefaultPoint(config: GeoPipelineConfig): Style & { r?: number } {
+  return {
+    // Point fill: theme primary > hardcoded #4e79a7.
+    fill: config.themeSemantic?.primary || "#4e79a7",
+    r: 4,
+    fillOpacity: 0.8
+  }
 }
 
-const DEFAULT_LINE_STYLE: Style = {
-  stroke: "#4e79a7",
-  strokeWidth: 1.5,
-  fill: "none"
+function themedDefaultLine(config: GeoPipelineConfig): Style {
+  return {
+    // Line stroke: theme primary > hardcoded #4e79a7.
+    stroke: config.themeSemantic?.primary || "#4e79a7",
+    strokeWidth: 1.5,
+    fill: "none"
+  }
 }
 
 // ── Anti-meridian line splitting ─────────────────────────────────
@@ -825,7 +841,7 @@ export class GeoPipelineStore {
       const featureBounds = path.bounds(feature)
       const featureArea = path.area(feature)
 
-      const style = resolveStyle(config.areaStyle, feature, DEFAULT_AREA_STYLE)
+      const style = resolveStyle(config.areaStyle, feature, themedDefaultArea(config))
 
       nodes.push({
         type: "geoarea",
@@ -880,7 +896,7 @@ export class GeoPipelineStore {
 
       if (screenPath.length < 2) continue
 
-      const style = resolveStyle(config.lineStyle, line, DEFAULT_LINE_STYLE) as Style
+      const style = resolveStyle(config.lineStyle, line, themedDefaultLine(config)) as Style
       const resolvedStrokeWidth =
         typeof style.strokeWidth === "number" ? style.strokeWidth : 1
 
@@ -963,7 +979,7 @@ export class GeoPipelineStore {
 
       const baseStyle = config.pointStyle
         ? config.pointStyle(d)
-        : { ...DEFAULT_POINT_STYLE }
+        : themedDefaultPoint(config)
 
       const r = (baseStyle as any).r || 4
 

@@ -801,4 +801,49 @@ describe("StreamOrdinalFrame", () => {
       expect(brushG).toBeFalsy()
     })
   })
+
+  // ── Regression: every declared *Style prop reaches pipelineConfig ──────
+  //
+  // Mirrors StreamXYFrame.test.tsx's guard: spies on OrdinalPipelineStore's
+  // updateConfig method, renders StreamOrdinalFrame with a sentinel value
+  // for each declared `*Style` prop, asserts each sentinel makes it through.
+  // Catches future drops at the Frame↔Store seam.
+  //
+  // When adding a new `*Style` prop:
+  //   1. Add `fooStyle` to OrdinalPipelineConfig in ordinalTypes.ts
+  //   2. Thread it into the pipelineConfig memo in StreamOrdinalFrame.tsx
+  //   3. Add a sentinel entry below
+  describe("regression: all declared *Style props reach pipelineConfig", () => {
+    it("forwards every *Style prop to the OrdinalPipelineStore config", async () => {
+      const pieceStyle = () => ({ fill: "__PIECE_STYLE__" })
+      const summaryStyle = () => ({ fill: "__SUMMARY_STYLE__" })
+      const connectorStyle = { stroke: "__CONNECTOR_STYLE__", strokeWidth: 2 }
+
+      const StoreModule = await import("./OrdinalPipelineStore")
+      const updateSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "updateConfig")
+
+      try {
+        render(
+          <StreamOrdinalFrame
+            chartType="bar"
+            data={[{ cat: "A", val: 1 }]}
+            oAccessor="cat"
+            rAccessor="val"
+            pieceStyle={pieceStyle}
+            summaryStyle={summaryStyle}
+            connectorStyle={connectorStyle}
+          />
+        )
+
+        const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+        expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
+
+        expect(lastConfig.pieceStyle).toBe(pieceStyle)
+        expect(lastConfig.summaryStyle).toBe(summaryStyle)
+        expect(lastConfig.connectorStyle).toBe(connectorStyle)
+      } finally {
+        updateSpy.mockRestore()
+      }
+    })
+  })
 })

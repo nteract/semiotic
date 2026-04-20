@@ -335,7 +335,8 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       // Resolve edge fill.
       // For source/target coloring, use the ACTUAL rendered node fill (resolvedNodeFills)
       // so edges inherit colors even when frameProps.nodeStyle overrides the HOC's nodeStyle.
-      let fill = "#999"
+      // Fallback prefers theme secondary (muted chrome) over hardcoded #999.
+      let fill = config.themeSemantic?.secondary || config.themeSemantic?.border || "#999"
       if (typeof edgeColorBy === "function") {
         fill = edgeColorBy(edge) || fill
       } else if (edgeColorBy === "target") {

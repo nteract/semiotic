@@ -228,6 +228,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       rafRef,
       renderFnRef,
       scheduleRender,
+      currentTheme,
     } = frame
 
     // Resolve dragRotate — defaults to true for orthographic
@@ -256,6 +257,21 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       pointStyle,
       lineStyle,
       colorScheme,
+      themeCategorical: currentTheme?.colors?.categorical,
+      themeSemantic: currentTheme?.colors ? {
+        primary: currentTheme.colors.primary,
+        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
+        surface: currentTheme.colors.surface || currentTheme.colors.background,
+        success: currentTheme.colors.success,
+        danger: currentTheme.colors.danger,
+        warning: currentTheme.colors.warning,
+        error: currentTheme.colors.error,
+        info: currentTheme.colors.info,
+        text: currentTheme.colors.text,
+        textSecondary: currentTheme.colors.textSecondary,
+        border: currentTheme.colors.border,
+        grid: currentTheme.colors.grid,
+      } : undefined,
       graticule,
       projectionTransform,
       decay,
@@ -267,7 +283,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor
+      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, currentTheme
     ])
 
     // ── Store ─────────────────────────────────────────────────────────

@@ -83,7 +83,8 @@ export function buildTreeScene(
 
     const style: Style = {
       fill,
-      stroke: userStyle.stroke || "#fff",
+      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
+      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
       opacity: userStyle.opacity
     }
@@ -125,7 +126,8 @@ export function buildTreeScene(
     const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
     const style: Style = {
       fill: "none",
-      stroke: userStyle.stroke || "#999",
+      // Edge stroke: user > theme border (chart chrome) > theme secondary > #999.
+      stroke: userStyle.stroke || config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
       strokeWidth: userStyle.strokeWidth ?? 1.5,
       opacity: userStyle.opacity ?? edgeOpacity
     }
@@ -231,7 +233,8 @@ export function buildRectScene(
 
     const style: Style = {
       fill,
-      stroke: userStyle.stroke || "#fff",
+      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
+      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
       opacity: userStyle.opacity
     }
@@ -341,7 +344,8 @@ export function buildCircleScene(
 
     const style: Style = {
       fill,
-      stroke: userStyle.stroke || "#fff",
+      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
+      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
       opacity: userStyle.opacity ?? circleOpacity
     }
@@ -399,8 +403,9 @@ export function buildCircleScene(
           anchor: "middle",
           baseline: "hanging",
           fontSize: Math.min(11, Math.max(8, r / 3)),
-          fill: "#000",
-          stroke: "#fff",
+          // Label + halo: theme text/surface for dark-mode legibility; hardcoded pair as fallback.
+          fill: config.themeSemantic?.text || "#000",
+          stroke: config.themeSemantic?.surface || "#fff",
           strokeWidth: 3,
           paintOrder: "stroke"
         })

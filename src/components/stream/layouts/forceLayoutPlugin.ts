@@ -278,8 +278,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
       const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
-        fill: userStyle.fill || nodeColorMap.get(node.id) || "#007bff",
-        stroke: userStyle.stroke || "#fff",
+        // Node fill: user > categorical > theme primary > hardcoded fallback.
+        fill: userStyle.fill || nodeColorMap.get(node.id) || config.themeSemantic?.primary || "#007bff",
+        // Halo stroke against neighbor overlaps: user > theme surface (contrasts with chart bg) > #fff.
+        stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
         strokeWidth: userStyle.strokeWidth ?? 2,
         opacity: userStyle.opacity
       }
@@ -312,7 +314,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
       const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
       const style: Style = {
-        stroke: userStyle.stroke || "#999",
+        // Edge stroke: user > theme border (chart chrome) > theme secondary > #999.
+        stroke: userStyle.stroke || config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
         strokeWidth: userStyle.strokeWidth ?? 1,
         opacity: userStyle.opacity ?? 0.6
       }

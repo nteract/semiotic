@@ -339,8 +339,10 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
       const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
       const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
-        fill: userStyle.fill || "#6366f1",
-        stroke: userStyle.stroke || "#fff",
+        // Node fill: user > theme primary > hardcoded indigo fallback.
+        fill: userStyle.fill || config.themeSemantic?.primary || "#6366f1",
+        // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
+        stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
         strokeWidth: userStyle.strokeWidth ?? 1,
         opacity: userStyle.opacity ?? ((node.depth ?? 0) === 0 ? 1 : 0.85)
       }
