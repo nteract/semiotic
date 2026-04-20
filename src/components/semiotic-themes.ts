@@ -677,15 +677,15 @@ export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
     vars.push(`  --semiotic-tick-font-family: ${theme.typography.tickFontFamily};`)
   }
 
-  // ── Semantic status roles ────────────────────────────────────────────
-  // Cascade-overridable per-scope via a parent DOM node style.
-  // `<div style={{ "--semiotic-danger": "#c00" }}>` affects all descendant charts.
-  if (theme.colors.secondary) {
-    vars.push(`  --semiotic-secondary: ${theme.colors.secondary};`)
-  }
-  if (theme.colors.surface) {
-    vars.push(`  --semiotic-surface: ${theme.colors.surface};`)
-  }
+  // ── Semantic role CSS variables ──────────────────────────────────────
+  // `secondary` and `surface` have documented fallback semantics (→ primary
+  // / background) on SemioticTheme — always emitted so the CSS vars resolve
+  // even on custom themes that omit them. Mirrors ThemeProvider emission.
+  vars.push(`  --semiotic-secondary: ${theme.colors.secondary || theme.colors.primary};`)
+  vars.push(`  --semiotic-surface: ${theme.colors.surface || theme.colors.background};`)
+  // Status roles (success/danger/warning/error/info) are emitted only when
+  // the preset declares them. All built-in presets do; custom themes that
+  // don't will leave `var(--semiotic-{role})` unresolved.
   if (theme.colors.success) {
     vars.push(`  --semiotic-success: ${theme.colors.success};`)
   }

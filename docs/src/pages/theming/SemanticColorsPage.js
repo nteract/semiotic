@@ -1,6 +1,5 @@
 import React from "react"
 import {
-  ThemeProvider,
   RealtimeHistogram,
   BarChart,
   StackedBarChart,
@@ -28,14 +27,6 @@ const histogramData = Array.from({ length: 16 }, (_, idx) => [
     category: "warnings",
   },
 ]).flat()
-
-const waterfallData = [
-  { category: "Q1", value: 120 },
-  { category: "Q2", value: -40 },
-  { category: "Q3", value: 85 },
-  { category: "Q4", value: -25 },
-  { category: "Q5", value: 60 },
-]
 
 const statusBarData = [
   { category: "Service A", value: 98, status: "success" },

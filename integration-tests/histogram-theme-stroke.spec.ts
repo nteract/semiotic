@@ -47,36 +47,52 @@ test.describe("RealtimeHistogram — theme-aware stroke", () => {
   test("strokes actually paint (pixel check — no stroke = snapshot unstable)", async ({ page }) => {
     // Extra guard beyond the snapshots: if the CSS-cascade-read of the role
     // value ever returns "none" or an empty string on first paint, the canvas
-    // will rasterize without any strokes and the snapshots will lock to a
-    // blank state. Verify non-zero non-fill pixels directly.
+    // will rasterize without any strokes and the snapshots will lock to that
+    // blank state forever.
+    //
+    // Check: count pixels within tight tolerance of the expected resolved
+    // stroke color (#ccc → rgb(204,204,204)), restricted to the plot area
+    // so axis labels, titles, ticks, etc. can't satisfy the assertion.
+    // Anti-aliasing at bar edges produces partial-opacity intermediates
+    // (mixes of bar fill + transparent bg), not #ccc, so those don't count.
     await waitForChartReady(page, "histogram-stroke-light")
 
-    const hasStrokePixels = await page.evaluate(() => {
+    const strokePixelCount = await page.evaluate(() => {
       const cell = document.querySelector('[data-testid="histogram-stroke-light"]') as HTMLElement | null
-      if (!cell) return false
+      if (!cell) return 0
       const canvas = cell.querySelector("canvas") as HTMLCanvasElement | null
-      if (!canvas) return false
+      if (!canvas) return 0
       const ctx = canvas.getContext("2d")
-      if (!ctx) return false
+      if (!ctx) return 0
       const { width, height } = canvas
-      const img = ctx.getImageData(0, 0, width, height).data
-      // Count pixels that are neither transparent nor the two bar fills
-      // (#C43B42 = 196,59,66 and #E8A838 = 232,168,56). Stroke is #ccc = 204,204,204.
-      let strokey = 0
+
+      // The fixture sets margin={{ top: 20, right: 20, bottom: 30, left: 50 }}
+      // on a 520×200 chart. The plot area excludes axis labels/ticks.
+      // Margin is in CSS pixels; canvas backing store may be device-pixel-scaled
+      // (devicePixelRatio). Read dpr off the canvas style vs backing size.
+      const dpr = canvas.width / parseFloat(canvas.style.width || String(canvas.width))
+      const x0 = Math.floor(50 * dpr)
+      const y0 = Math.floor(20 * dpr)
+      const x1 = Math.floor((520 - 20) * dpr)
+      const y1 = Math.floor((200 - 30) * dpr)
+
+      const img = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data
+      // Stroke color is resolved from --semiotic-border which is #ccc in LIGHT_THEME → rgb(204,204,204).
+      let strokePx = 0
       for (let i = 0; i < img.length; i += 4) {
         const [r, g, b, a] = [img[i], img[i + 1], img[i + 2], img[i + 3]]
         if (a === 0) continue
-        const isBarFill =
-          (Math.abs(r - 196) < 20 && Math.abs(g - 59) < 20 && Math.abs(b - 66) < 20) ||
-          (Math.abs(r - 232) < 20 && Math.abs(g - 168) < 20 && Math.abs(b - 56) < 20)
-        if (isBarFill) continue
-        const nearGray = Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && r > 150 && r < 240
-        if (nearGray) strokey++
+        // Tight ±6 tolerance — loose enough for sub-pixel anti-aliasing along
+        // a pure stroke segment, tight enough to exclude mixed fill+bg pixels.
+        if (Math.abs(r - 204) < 6 && Math.abs(g - 204) < 6 && Math.abs(b - 204) < 6) {
+          strokePx++
+        }
       }
-      // Even a minimal 1px stroke on 20 bars should paint hundreds of gray pixels.
-      return strokey > 100
+      return strokePx
     })
 
-    expect(hasStrokePixels).toBe(true)
+    // 20 bars × ~1px stroke along their outline paints well more than 20 strokes worth
+    // of #ccc pixels even restricted to the plot area. <20 would mean stroke isn't painting.
+    expect(strokePixelCount).toBeGreaterThan(50)
   })
 })

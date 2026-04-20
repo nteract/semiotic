@@ -737,19 +737,11 @@ describe("StreamXYFrame", () => {
       const candlestickStyle = { upColor: "__CS_UP__", downColor: "__CS_DOWN__" }
       const boundsStyle = { fill: "__BOUNDS_STYLE__" }
 
-      // Spy on PipelineStore's updateConfig (called on every memo change, including mount).
+      // Spy on PipelineStore.updateConfig — it's invoked on every pipelineConfig
+      // memo change, including on first-mount useLayoutEffect, so the captured
+      // argument is the merged config the store actually saw.
       const PipelineStoreModule = await import("./PipelineStore")
       const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
-      const ctorSpy = vi.fn()
-      const origCtor = PipelineStoreModule.PipelineStore
-      // Patch the constructor to capture the initial config.
-      const PatchedCtor = function (this: any, config: any) {
-        ctorSpy(config)
-        return new origCtor(config)
-      } as unknown as typeof origCtor
-      // Preserve prototype chain for instanceof / method calls
-      Object.setPrototypeOf(PatchedCtor, origCtor)
-      PatchedCtor.prototype = origCtor.prototype
 
       render(
         <StreamXYFrame

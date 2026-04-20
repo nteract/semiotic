@@ -122,10 +122,17 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.typography.legendSize != null ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
     ...(theme.typography.titleFontSize != null ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
     ...(theme.typography.tickFontFamily != null ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
-    // Semantic status roles — emit every declared role so `stroke="var(--semiotic-danger)"` resolves
-    // and a parent DOM node can override any single role via `style={{ "--semiotic-danger": "..." }}`.
-    ...(theme.colors.secondary ? { "--semiotic-secondary": theme.colors.secondary } : {}),
-    ...(theme.colors.surface ? { "--semiotic-surface": theme.colors.surface } : {}),
+    // ── Semantic role CSS variables ────────────────────────────────────
+    // `secondary` and `surface` are documented on SemioticTheme as falling
+    // back to `primary` / `background` when unset — always emitted so
+    // `var(--semiotic-secondary)` and `var(--semiotic-surface)` reliably
+    // resolve, even on custom themes that omit them.
+    "--semiotic-secondary": theme.colors.secondary || theme.colors.primary,
+    "--semiotic-surface": theme.colors.surface || theme.colors.background,
+    // Status roles (success/danger/warning/error/info) have no documented
+    // fallback — emitted only when declared. All built-in presets declare
+    // them; custom themes that don't will leave `var(--semiotic-danger)`
+    // etc. unresolved. Document this on the theme type if that changes.
     ...(theme.colors.success ? { "--semiotic-success": theme.colors.success } : {}),
     ...(theme.colors.danger ? { "--semiotic-danger": theme.colors.danger } : {}),
     ...(theme.colors.warning ? { "--semiotic-warning": theme.colors.warning } : {}),

@@ -5,7 +5,7 @@
 //   1. LIGHT_THEME — stroke resolves to --semiotic-border from the active
 //      ThemeProvider.
 //   2. DARK_THEME — same prop, different cascaded value.
-//   3. Scoped override — a parent <div style={{ "--semiotic-danger": "#c00" }}>
+//   3. Scoped override — a parent <div style={{ "--semiotic-border": "#c00" }}>
 //      overrides the role on a single subtree, proving CSS cascade reach
 //      into canvas rendering.
 //
