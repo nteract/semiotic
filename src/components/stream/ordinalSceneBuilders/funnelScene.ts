@@ -246,7 +246,8 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
             [curr.x, curr.y],
           ],
           style: {
-            fill: style.fill || "#999",
+            // Funnel connector body: step fill > theme secondary > hardcoded #999.
+            fill: style.fill || ctx.config.themeSemantic?.secondary || "#999",
             opacity: connectorOpacity,
           },
           datum: step.groups.get(key)?.pieces[0] ?? col.pieceData[0],

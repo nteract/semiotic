@@ -35,6 +35,7 @@ import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkInd
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
@@ -299,6 +300,7 @@ const StreamNetworkFrame = forwardRef<
     rafRef,
     renderFnRef,
     scheduleRender,
+    currentTheme,
   } = frame
 
   const tensionConfig = useMemo(
@@ -347,6 +349,8 @@ const StreamNetworkFrame = forwardRef<
       labelMode,
       colorBy,
       colorScheme,
+      themeCategorical: currentTheme?.colors?.categorical,
+      themeSemantic: resolveThemeSemanticColors(currentTheme),
       edgeColorBy,
       edgeOpacity,
       colorByDepth,
@@ -416,7 +420,8 @@ const StreamNetworkFrame = forwardRef<
       orbitRevolutionStyle,
       orbitEccentricity,
       orbitShowRings,
-      orbitAnimated
+      orbitAnimated,
+      currentTheme
     ]
   )
 
@@ -487,6 +492,17 @@ const StreamNetworkFrame = forwardRef<
     [colorBy, colorScheme]
   )
 
+  // Fallback color for edges/particles when no source or target is resolvable.
+  // Chain mirrors the secondary→primary fallback used when building
+  // themeSemantic: chart border > secondary > primary > hardcoded #999.
+  // A custom theme that omits border+secondary still falls back to the
+  // theme's accent rather than the hardcoded gray.
+  const edgeFallbackColor =
+    currentTheme?.colors?.border ||
+    currentTheme?.colors?.secondary ||
+    currentTheme?.colors?.primary ||
+    "#999"
+
   const getEdgeColor = useCallback(
     (edge: RealtimeEdge): string => {
       if (typeof edgeColorBy === "function") return edgeColorBy(edge)
@@ -501,9 +517,9 @@ const StreamNetworkFrame = forwardRef<
       if (sourceNode) {
         return getNodeColor(sourceNode)
       }
-      return "#999"
+      return edgeFallbackColor
     },
-    [edgeColorBy, getNodeColor]
+    [edgeColorBy, getNodeColor, edgeFallbackColor]
   )
 
   const getParticleColor = useCallback(
@@ -523,9 +539,9 @@ const StreamNetworkFrame = forwardRef<
       if (sourceNode) {
         return getNodeColor(sourceNode)
       }
-      return "#999"
+      return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
+    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local
@@ -545,7 +561,26 @@ const StreamNetworkFrame = forwardRef<
   }, [pipelineConfig, scheduleRender])
 
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
-  // is handled by useFrame above when themeDirtyRef is provided.
+  // is handled by useFrame above when themeDirtyRef is provided. But there's
+  // a second surface to refresh: `nodeColorMap` caches the palette color per
+  // node id and is only resynced inside `runLayout`. Theme changes hit
+  // `updateConfig` + the useFrame repaint, but not `runLayout` — without the
+  // resync below, particle/hover colors (which read from nodeColorMap) would
+  // stay on the previous theme's palette. Rebuild the scene (cheap — just
+  // re-runs the layout plugin's scene-emit step against existing node
+  // positions) and copy the fresh fills into the map.
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store) return
+    store.buildScene([adjustedWidth, adjustedHeight])
+    for (const sceneNode of store.sceneNodes) {
+      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
+      }
+    }
+    dirtyRef.current = true
+    scheduleRender()
+  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 

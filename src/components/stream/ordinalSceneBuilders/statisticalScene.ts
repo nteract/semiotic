@@ -77,7 +77,11 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, layout: OrdinalLayou
           x: o.px,
           y: o.py,
           r: 3,
-          style: { fill: style.fill || "#999", opacity: 0.6 },
+          // Outlier fill: box fill > theme secondary > hardcoded #999.
+          style: {
+            fill: style.fill || ctx.config.themeSemantic?.secondary || "#999",
+            opacity: 0.6
+          },
           datum: o.datum
         })
       }

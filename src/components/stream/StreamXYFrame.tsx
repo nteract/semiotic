@@ -22,6 +22,7 @@ import type {
 } from "./types"
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, findAllNodesAtX, type HitResult } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
@@ -587,23 +588,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointIdAccessor,
       curve,
       themeCategorical: currentTheme?.colors?.categorical,
-      themeSemantic: currentTheme?.colors ? {
-        primary: currentTheme.colors.primary,
-        // secondary/surface mirror the documented-fallback semantics the CSS
-        // emitter uses (ThemeProvider + themeToCSS), so scene builders and
-        // CSS consumers see the same values when a theme omits these.
-        secondary: currentTheme.colors.secondary || currentTheme.colors.primary,
-        surface: currentTheme.colors.surface || currentTheme.colors.background,
-        success: currentTheme.colors.success,
-        danger: currentTheme.colors.danger,
-        warning: currentTheme.colors.warning,
-        error: currentTheme.colors.error,
-        info: currentTheme.colors.info,
-        text: currentTheme.colors.text,
-        textSecondary: currentTheme.colors.textSecondary,
-        border: currentTheme.colors.border,
-        grid: currentTheme.colors.grid,
-      } : undefined,
+      themeSemantic: resolveThemeSemanticColors(currentTheme),
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,

@@ -52,7 +52,12 @@ export function buildConnectors(
       const to = points[i + 1]
       const style: Style = typeof resolveConnStyle === "function"
         ? resolveConnStyle(from.datum)
-        : (resolveConnStyle || { stroke: "#999", strokeWidth: 1, opacity: 0.5 })
+        : (resolveConnStyle || {
+          // Connector stroke: theme border > secondary > hardcoded #999 fallback.
+          stroke: ctx.config.themeSemantic?.border || ctx.config.themeSemantic?.secondary || "#999",
+          strokeWidth: 1,
+          opacity: 0.5
+        })
 
       connectors.push({
         type: "connector",

@@ -161,10 +161,15 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const edgeStyleFn = config.edgeStyle
     const edgeColorBy = config.edgeColorBy || "source"
 
-    // Auto-color palette: used when no nodeStyle is provided
+    // Auto-color palette: used when no nodeStyle is provided.
+    // Priority: explicit array colorScheme > theme categorical (non-empty) > DEFAULT_PALETTE.
+    // Guard length: an empty categorical array would yield undefined fills
+    // from the modulo lookup below.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : DEFAULT_PALETTE
+      : (config.themeCategorical && config.themeCategorical.length > 0
+          ? config.themeCategorical
+          : DEFAULT_PALETTE)
     // Build a node-id → color map for consistent coloring
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
@@ -232,8 +237,11 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const pathD = translateSvgPath(rawPath, cx, cy)
 
       // Resolve edge fill — use edgeStyle if provided, otherwise
-      // inherit from source or target node color
-      let fill = "#999"
+      // inherit from source or target node color.
+      // Fallback order matches other Network edge defaults (tree / force /
+      // sankey / connector): theme border first, then secondary, then
+      // hardcoded #999.
+      let fill = config.themeSemantic?.border || config.themeSemantic?.secondary || "#999"
       if (edgeStyleFn) {
         const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
         fill = userStyle.fill || fill

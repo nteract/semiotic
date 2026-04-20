@@ -258,10 +258,15 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     const edgeOpacity = config.edgeOpacity ?? 0.5
     const edgeColorBy = config.edgeColorBy || "source"
 
-    // Auto-color palette for when no nodeStyle is provided
+    // Auto-color palette for when no nodeStyle is provided.
+    // Priority: explicit array colorScheme > theme categorical (non-empty) > schemeCategory10.
+    // Guard length: an empty categorical array would yield undefined fills
+    // from the modulo lookup below.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : (schemeCategory10 as readonly string[])
+      : (config.themeCategorical && config.themeCategorical.length > 0
+          ? config.themeCategorical
+          : (schemeCategory10 as readonly string[]))
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
       nodeColorMap.set(n.id, palette[i % palette.length])
@@ -335,7 +340,10 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       // Resolve edge fill.
       // For source/target coloring, use the ACTUAL rendered node fill (resolvedNodeFills)
       // so edges inherit colors even when frameProps.nodeStyle overrides the HOC's nodeStyle.
-      let fill = "#999"
+      // Fallback order matches other Network edge defaults (tree / force /
+      // connector): theme border (chart chrome) first, then secondary, then
+      // hardcoded #999.
+      let fill = config.themeSemantic?.border || config.themeSemantic?.secondary || "#999"
       if (typeof edgeColorBy === "function") {
         fill = edgeColorBy(edge) || fill
       } else if (edgeColorBy === "target") {

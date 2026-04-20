@@ -52,6 +52,7 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
@@ -406,6 +407,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       summaryStyle,
       colorScheme,
       themeCategorical: currentTheme?.colors?.categorical,
+      themeSemantic: resolveThemeSemanticColors(currentTheme),
       barColors,
       decay,
       pulse,

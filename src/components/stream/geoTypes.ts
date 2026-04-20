@@ -8,7 +8,8 @@ import type {
   StalenessConfig,
   MarginalGraphicsConfig,
   PointSceneNode,
-  LineSceneNode
+  LineSceneNode,
+  ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
@@ -117,6 +118,8 @@ export interface GeoPipelineConfig {
   pointStyle?: (d: any) => Style & { r?: number }
   lineStyle?: Style | ((d: any, group?: string) => Style)
   colorScheme?: string | string[]
+  /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
+  themeSemantic?: ThemeSemanticColors
 
   graticule?: boolean | GraticuleConfig
 

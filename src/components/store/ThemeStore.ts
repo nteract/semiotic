@@ -1,5 +1,42 @@
 "use client"
 import { createStore } from "./createStore"
+import type { ThemeSemanticColors } from "../stream/types"
+
+/**
+ * Extract the semantic-role subset of a `SemioticTheme` into the flat
+ * `ThemeSemanticColors` shape that Stream Frames thread through to
+ * scene builders via `pipelineConfig.themeSemantic`.
+ *
+ * Centralizes two fallback rules documented on `SemioticTheme.colors`:
+ *   - `secondary` falls back to `primary` when unset
+ *   - `surface`   falls back to `background` when unset
+ *
+ * Called from every Stream Frame (XY / Ordinal / Network / Geo) so role
+ * additions and fallback tweaks land in exactly one place.
+ *
+ * Returns `undefined` when no theme is available so scene builders can
+ * skip the theme-default path and use their hardcoded fallbacks.
+ */
+export function resolveThemeSemanticColors(
+  theme: SemioticTheme | null | undefined
+): ThemeSemanticColors | undefined {
+  if (!theme?.colors) return undefined
+  const c = theme.colors
+  return {
+    primary: c.primary,
+    secondary: c.secondary || c.primary,
+    surface: c.surface || c.background,
+    success: c.success,
+    danger: c.danger,
+    warning: c.warning,
+    error: c.error,
+    info: c.info,
+    text: c.text,
+    textSecondary: c.textSecondary,
+    border: c.border,
+    grid: c.grid,
+  }
+}
 
 /** Apply accessibility flags to a resolved theme. Shared by ThemeStore and server themeResolver. */
 export function applyThemeAccessibility(theme: SemioticTheme): SemioticTheme {
