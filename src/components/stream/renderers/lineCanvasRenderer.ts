@@ -128,7 +128,11 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.clip()
     }
 
-    const baseColor = node.style.stroke || "#007bff"
+    // Resolve CSS variable-valued strokes (e.g. `stroke="var(--semiotic-primary)"`)
+    // via getComputedStyle on the canvas element. Without this, canvas silently
+    // rejects `var(...)` strings and falls back to #000000.
+    const rawStroke = node.style.stroke || "#007bff"
+    const baseColor = resolveCSSColor(ctx, rawStroke) || rawStroke
     const lineWidth = node.style.strokeWidth || 2
     const thresholds = node.colorThresholds
     const rawValues = node.rawValues

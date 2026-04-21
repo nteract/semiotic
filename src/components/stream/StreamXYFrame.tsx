@@ -513,6 +513,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const hoveredNodeRef = useRef<SceneNode | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
 
+    // Cached theme primary — updated by the render loop (which already calls
+    // resolveThemeColors on every frame). The hover handler reads from here
+    // instead of re-invoking resolveThemeColors (which calls getComputedStyle)
+    // on every pointermove. Initialized to LIGHT_THEME.primary so the first
+    // hover before a paint still returns a valid color.
+    const themePrimaryRef = useRef<string>(LIGHT_THEME.primary)
+
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
 
@@ -788,14 +795,17 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           const xValue = xInvert ? xInvert(hit.x) : hit.x
           hover.xValue = xValue
           hover.xPx = hit.x
+          // Read the cached theme primary (updated from the render loop)
+          // so each hit without its own color falls back to --semiotic-primary.
+          // Avoids re-invoking resolveThemeColors (getComputedStyle) on every
+          // pointermove. Required by downstream consumers like MultiPointTooltip
+          // that render a color swatch from s.color.
+          const fallbackColor = themePrimaryRef.current
           hover.allSeries = allHits.map(h => ({
             group: h.group || "",
             value: yInvert ? yInvert(h.y) : h.y,
             valuePx: h.y,
-            // Leave color undefined when the hit has no color — drawCrosshair
-            // then falls back to theme.primary (which reads from --semiotic-primary).
-            // A hardcoded fallback here would shadow that theme-aware path.
-            color: h.color,
+            color: h.color || fallbackColor,
             datum: h.datum,
           }))
         }
@@ -957,6 +967,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       const dpr = getDevicePixelRatio()
       const theme = resolveThemeColors(canvas)
+      // Cache the theme primary for the hover handler — avoids re-running
+      // getComputedStyle on every pointermove event at high pointer rates.
+      themePrimaryRef.current = theme.primary
 
       // Staleness check (used by both canvases)
       const staleThreshold = staleness?.threshold ?? 5000

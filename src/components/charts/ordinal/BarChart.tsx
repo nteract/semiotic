@@ -6,6 +6,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import { getColor } from "../shared/colorUtils"
 import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -112,6 +113,9 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
     showCategoryTicks,
     categoryFormat,
     dataIdAccessor,
@@ -184,12 +188,16 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
 
   const mergedPieceStyle = useMemo(() => {
     const userPieceStyle = frameProps?.pieceStyle
-    if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
-    return (d: Record<string, any>, category?: string) => ({
-      ...basePieceStyle(d, category),
-      ...((userPieceStyle as Function)(d, category) || {}),
-    })
-  }, [basePieceStyle, frameProps])
+    const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
+      ? basePieceStyle
+      : (d: Record<string, any>, category?: string) => ({
+        ...basePieceStyle(d, category),
+        ...((userPieceStyle as Function)(d, category) || {}),
+      })
+    // Top-level primitive props (stroke/strokeWidth/opacity) applied LAST so
+    // they win over both HOC base style and user-supplied frameProps.pieceStyle.
+    return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
+  }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),

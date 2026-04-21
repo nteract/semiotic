@@ -434,4 +434,78 @@ describe("BarChart", () => {
       expect(lastOrdinalFrameProps.tooltipContent({ category: "A", value: 10 })).toBeNull()
     })
   })
+
+  // ── Top-level primitive style props (Phase B) ─────────────────────────
+  //
+  // `stroke` / `strokeWidth` / `opacity` on BaseChartProps should reach
+  // every rect rendered by BarChart. Precedence test confirms the top-level
+  // prop wins over frameProps.pieceStyle for matching keys.
+  describe("primitive style props", () => {
+    it("top-level stroke + strokeWidth reach pieceStyle output", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} stroke="#ff00aa" strokeWidth={3} />
+        </TooltipProvider>
+      )
+      const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
+      const style = pieceStyleFn({ category: "A", value: 10 })
+      expect(style.stroke).toBe("#ff00aa")
+      expect(style.strokeWidth).toBe(3)
+    })
+
+    it("top-level opacity reaches pieceStyle output", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} opacity={0.4} />
+        </TooltipProvider>
+      )
+      const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
+      const style = pieceStyleFn({ category: "A", value: 10 })
+      expect(style.opacity).toBe(0.4)
+    })
+
+    it("top-level stroke wins over frameProps.pieceStyle stroke", () => {
+      render(
+        <TooltipProvider>
+          <BarChart
+            data={sampleData}
+            stroke="#topLevel"
+            frameProps={{ pieceStyle: () => ({ stroke: "#fromFrameProps" }) }}
+          />
+        </TooltipProvider>
+      )
+      const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
+      const style = pieceStyleFn({ category: "A", value: 10 })
+      expect(style.stroke).toBe("#topLevel")
+    })
+
+    it("frameProps.pieceStyle still controls fields the top-level props don't override", () => {
+      render(
+        <TooltipProvider>
+          <BarChart
+            data={sampleData}
+            stroke="#topLevel"
+            frameProps={{ pieceStyle: () => ({ stroke: "#fromFrameProps", strokeDasharray: "4,2" }) }}
+          />
+        </TooltipProvider>
+      )
+      const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
+      const style = pieceStyleFn({ category: "A", value: 10 })
+      expect(style.stroke).toBe("#topLevel")
+      expect(style.strokeDasharray).toBe("4,2")
+    })
+
+    it("does not add primitive keys when none of the three props are set", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+      const pieceStyleFn = lastOrdinalFrameProps.pieceStyle
+      const style = pieceStyleFn({ category: "A", value: 10 })
+      expect(style).not.toHaveProperty("stroke")
+      expect(style).not.toHaveProperty("strokeWidth")
+      expect(style).not.toHaveProperty("opacity")
+    })
+  })
 })

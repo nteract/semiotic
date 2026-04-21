@@ -7,6 +7,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -366,7 +367,10 @@ export const LineChart = forwardRef(
     legendPosition: legendPositionProp,
     xScaleType,
     yScaleType,
-    color
+    color,
+    stroke,
+    strokeWidth: topLevelStrokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -771,9 +775,19 @@ export const LineChart = forwardRef(
 
   const effectiveLineStyle = segmentAwareStyle || baseLineStyle
 
+  // Overlay top-level primitive props (stroke / strokeWidth / opacity) last.
+  // Note: `lineWidth` is a LineChart-specific alias for strokeWidth that
+  // predates Phase B. When both are set, the top-level `strokeWidth` wins
+  // via mergeShapeStyle — consistent with "top-level primitive > chart-
+  // specific" precedence.
+  const lineStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(effectiveLineStyle, { stroke, strokeWidth: topLevelStrokeWidth, opacity }),
+    [effectiveLineStyle, stroke, topLevelStrokeWidth, opacity]
+  )
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(effectiveLineStyle, effectiveSelectionHook, resolvedSelection),
-    [effectiveLineStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(lineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [lineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

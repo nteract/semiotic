@@ -195,75 +195,6 @@ Curated categorical sequences maximizing neighbor contrast, and per-role typogra
 
 ---
 
-## Primitive Theming & Semantic Colors [PLANNED — 3.5.0]
-
-Designer-facing theming cleanup. Outcome: one vocabulary across the library for `stroke` / `strokeWidth` / `fill` / `opacity` on any shape; theme-layer semantic colors that cascade via CSS custom properties; dead props honored.
-
-Motivating example: `RealtimeHistogram` declares `stroke` / `strokeWidth` props but `barStyle` is destructured in `StreamXYFrame` and dropped before reaching the scene builder. `StackedBarChart` supports theme-aware stroke only via `frameProps.pieceStyle` — a power-user escape hatch that shouldn't be designer-visible.
-
-### Theme layer — four color dimensions
-
-All owned by the theme, all overridable per-scope, all with light/dark variants:
-
-1. **Semantic roles** (scalars): `primary`, `secondary`, `success`, `danger`, `warning`, `error`, `info`, `text`, `textSecondary`, `border`, `grid`, `surface`. Default fills/strokes, status-driven charts (swimlane, waterfall), annotations.
-2. **Categorical scale** (array): existing `themeCategorical`. Distinct-category encodings.
-3. **Sequential scale** (array, magnitude): heatmap, choropleth, size encoding.
-4. **Diverging scale** (array, midpoint): likert, bivariate, ±deviation.
-
-### Override model
-
-- **Scalar roles via CSS custom properties.** `ThemeProvider` emits `--semiotic-success: #...` etc. at its mount root. Canvas scene builders read the resolved values via `getComputedStyle(frameEl)` once per theme change. Scoped override is CSS-native: `<div style={{ "--semiotic-danger": "#c00" }}>...charts...</div>` cascades through the React tree; canvas respects it via DOM-cascade read.
-- **Array scales via nested `ThemeProvider`.** CSS custom properties don't ergonomically carry arrays. A nested provider with a partial theme merges on top of the ambient one. Scoped by React subtree.
-
-### Semantic role vocabulary
-
-| Role | Default use |
-|---|---|
-| `primary`, `secondary` | Default fill/stroke when no color encoding |
-| `success`, `danger`, `warning`, `error`, `info` | Status-driven semantics — swimlane states, waterfall ±, annotation severity |
-| `text`, `textSecondary` | Labels, tick text, axis titles |
-| `border`, `grid`, `surface` | Chart chrome — bar outlines, grid lines, background fills |
-
-### Phase A — Foundations (invisible to users)
-
-Pure additive plumbing. One PR.
-
-1. `themeSemantic` + `themeSequential` + `themeDiverging` added to pipelineConfig; threaded ThemeProvider → StreamFrame → PipelineStore → scene context, parallel to the existing `themeCategorical`.
-2. Scene builders read roles from `ctx.config.themeSemantic.primary` (etc.) instead of hardcoded hex. Hardcoded literals remain as ultimate fallback when no theme is present.
-3. Fix `barStyle` end-to-end routing — land it in pipelineConfig, consume in `barScene.ts`. `RealtimeHistogram`'s declared `stroke` / `strokeWidth` / `fill` props start working.
-4. Audit every `*Style` prop across all 4 Stream Frames. Any dropped prop is either routed (preferred) or removed from the public type (breaking — defer to 4.0 if any are affected).
-5. Waterfall `positiveColor` / `negativeColor` default to `themeSemantic.success` / `.danger`.
-6. Heatmap / Choropleth default `colorScheme` falls back to `themeSequential` when unset. Likert falls back to `themeDiverging`.
-7. Regression test: for every HOC-declared `*Style` prop, assert presence in the memoized pipelineConfig. Prevents the next drop.
-
-### Phase B — Designer-facing API (visible, additive)
-
-Ships per chart-type group (XY, Ordinal, Network, Geo). No breakage.
-
-1. `stroke`, `strokeWidth`, `opacity` added to `BaseChartProps` (joining the existing `color`).
-2. Every shape-drawing HOC merges these into its internal `*Style` function via a shared `mergeShapeStyle(userFn, topLevel)` helper.
-3. **Decided:** top-level prop wins over `*Style` function return for matching keys. Explicit > generic. Single helper prevents drift across HOCs.
-4. Docs: per-primitive (bar / circle / line / area / rect) with light/dark + scoped-div-override examples.
-5. Playwright: one snapshot per primitive × light/dark × with/without scoped override.
-
-### Phase C — Consolidation (contingent)
-
-Evaluate once Phase B is stable. Hypothesis: a shared `resolveShapeStyle(config, datum, primitive)` used by bar / point / line / area / rect scene builders reduces per-primitive variance enough to justify migration. Defer until Phase B makes the shared logic visible.
-
-### Non-goals
-
-- Renaming `pieceStyle` / `pointStyle` / `nodeStyle` to a single name. Top-level primitive props cover the designer case; existing function-form names remain for power users.
-- Replacing `colorBy` / `colorScheme` machinery.
-- Touching hover / focus / selected visual states. Related but separable.
-
-### Risks
-
-- **Canvas cascade timing.** `getComputedStyle` on the frame element resolves `--semiotic-*` from ancestors but requires the DOM node to exist. First paint may fall back to preset defaults, then re-resolve on next render. Verify no visible flash.
-- **SSR role resolution.** Server renderer has no DOM to query. Falls back to theme-object JS values directly — already how `themeCategorical` works, same pattern applies.
-- **Precedence drift.** "Top-level wins over function" is simple in principle but easy to break per-HOC. Single `mergeShapeStyle` helper applied everywhere, one decision point.
-
----
-
 ## Push API
 
 ### Undo
@@ -411,9 +342,9 @@ Open extensions, ranked by leverage:
 
 ---
 
-## Open Maintainer Anxieties
+## Future work
 
-Five load-bearing concerns from a recent honest audit. Listed with the plan for each — none urgent individually; each has a way to decay the library silently if ignored. Captured here so the thinking survives session boundaries.
+Five load-bearing concerns from a recent audit. Listed with the plan for each — none urgent individually; each has a way to decay the library silently if ignored.
 
 ### 1. Canvas vs. SVG rendering divergence [YELLOW]
 
@@ -456,3 +387,165 @@ Plan:
 - Review gate or lint rule: flag new tests that assert only existence.
 - Expand HOC-level Playwright snapshots (Architecture → Visual regression → HOC-level snapshots). ~25 new baselines catches HOC-layer prop-resolution regressions — the most common source of visual bugs.
 - Shift `validateProps`-adjacent tests from "prop accepted" to "prop produces expected rendered output on fixture."
+
+---
+
+## Primitive Theming & Semantic Colors [PLANNED — 3.5.0]
+
+Designer-facing theming cleanup. Outcome: one vocabulary across the library for `stroke` / `strokeWidth` / `fill` / `opacity` on any shape; theme-layer semantic colors that cascade via CSS custom properties; dead props honored.
+
+Motivating example: `RealtimeHistogram` declares `stroke` / `strokeWidth` props but `barStyle` is destructured in `StreamXYFrame` and dropped before reaching the scene builder. `StackedBarChart` supports theme-aware stroke only via `frameProps.pieceStyle` — a power-user escape hatch that shouldn't be designer-visible.
+
+### Theme layer — four color dimensions
+
+All owned by the theme, all overridable per-scope, all with light/dark variants:
+
+1. **Semantic roles** (scalars): `primary`, `secondary`, `success`, `danger`, `warning`, `error`, `info`, `text`, `textSecondary`, `border`, `grid`, `surface`. Default fills/strokes, status-driven charts (swimlane, waterfall), annotations.
+2. **Categorical scale** (array): existing `themeCategorical`. Distinct-category encodings.
+3. **Sequential scale** (array, magnitude): heatmap, choropleth, size encoding.
+4. **Diverging scale** (array, midpoint): likert, bivariate, ±deviation.
+
+### Override model
+
+- **Scalar roles via CSS custom properties.** `ThemeProvider` emits `--semiotic-success: #...` etc. at its mount root. Canvas scene builders read the resolved values via `getComputedStyle(frameEl)` once per theme change. Scoped override is CSS-native: `<div style={{ "--semiotic-danger": "#c00" }}>...charts...</div>` cascades through the React tree; canvas respects it via DOM-cascade read.
+- **Array scales via nested `ThemeProvider`.** CSS custom properties don't ergonomically carry arrays. A nested provider with a partial theme merges on top of the ambient one. Scoped by React subtree.
+
+### Semantic role vocabulary
+
+| Role | Default use |
+|---|---|
+| `primary`, `secondary` | Default fill/stroke when no color encoding |
+| `success`, `danger`, `warning`, `error`, `info` | Status-driven semantics — swimlane states, waterfall ±, annotation severity |
+| `text`, `textSecondary` | Labels, tick text, axis titles |
+| `border`, `grid`, `surface` | Chart chrome — bar outlines, grid lines, background fills |
+
+### Phase A — Foundations (invisible to users)
+
+Pure additive plumbing. Landing in milestones so each is reviewable in isolation.
+
+#### Milestone 1 — XY primitive proof-of-pattern [LANDED]
+
+The canonical end-to-end fix. Proves the architecture by fixing the known dead prop (`barStyle`) through the full chain, with tests and docs that establish the pattern for remaining milestones.
+
+- Extended `SemioticTheme.colors` with semantic status scalars: `success`, `danger`, `warning`, `error`, `info`, plus `secondary` and `surface`. All optional on the interface; populated on every preset.
+- All 17 presets updated with brand-appropriate semantic values (LIGHT/DARK/HIGH_CONTRAST + 7 branded × 2 modes).
+- `themeToCSS`, `themeToTokens`, and `ThemeProvider` inline-style all emit `--semiotic-{role}` CSS custom properties for every declared scalar role.
+- `PipelineConfig` extended with `themeSemantic` (object of scalars) and `barStyle`. Threaded through StreamXYFrame → PipelineStore → `XYSceneConfig` → `barScene.ts`.
+- `barScene.ts` consumes both. Precedence for stacked fill: `barColors[cat]` > `themeSemantic.primary` > `#4e79a7`. Unstacked: `barStyle.fill` > `themeSemantic.primary` > `#007bff`. `barStyle.stroke` / `.strokeWidth` / `.gap` thread into every rect node. Canvas renderer + SceneToSVG already honored stroke/strokeWidth on `RectSceneNode` — no change needed there.
+- Unit coverage in `barScene.test.ts` (9 new cases): theme-semantic fallbacks, barStyle precedence, gap override, hardcoded last-resort, stroke propagation through stacked + unstacked paths.
+- Regression guard in `StreamXYFrame.test.tsx` (spies on `PipelineStore.updateConfig` and asserts every declared `*Style` prop identity reaches the config). Any future drop at the Frame↔Store seam fails this test.
+- Playwright: `histogram-theme-stroke.spec.ts` — 3 snapshots (light / dark / scoped CSS-var override) + a pixel check that strokes actually paint.
+- Docs: `/theming/semantic-colors` page — four theme dimensions, role vocabulary with live swatches, using roles on charts, CSS cascade override with side-by-side live example, nested ThemeProvider for scale overrides, status-semantics worked examples, full CSS-var reference, how-it-works.
+- `CLAUDE.md` theming section expanded with semantic-role inventory + scoped CSS-var override pattern; mirrored to `.clinerules`, `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md`, `docs/public/llms-full.txt`, `ai/system-prompt.md`.
+
+#### Milestone 2 — Ordinal / Network / Geo frame parity [LANDED]
+
+The same pattern applied to the other three Stream Frames:
+
+- **StreamOrdinalFrame**: added `themeSemantic: ThemeSemanticColors` to `OrdinalPipelineConfig` and threaded it through `StreamOrdinalFrame`'s `pipelineConfig` memo (`themeCategorical` was already threaded). `pieceStyle` / `summaryStyle` / `connectorStyle` all confirmed routed to config — no dead props. Scene builders updated:
+  - `ordinalSceneBuilders/connectorScene.ts` — connector default stroke `#999` → `themeSemantic.border || themeSemantic.secondary || #999`.
+  - `ordinalSceneBuilders/statisticalScene.ts` — boxplot outlier default `#999` → theme secondary fallback.
+  - `ordinalSceneBuilders/funnelScene.ts` — funnel connector body default `#999` → theme secondary fallback.
+- **StreamNetworkFrame**: had NO theme threading at all before — added both `themeCategorical` AND `themeSemantic` to `NetworkPipelineConfig`, threaded through the memo. `nodeStyle` / `edgeStyle` / `particleStyle` confirmed routed. Scene builders updated:
+  - `layouts/forceLayoutPlugin.ts` — force node fill `#007bff` → `themeSemantic.primary`, halo stroke `#fff` → `themeSemantic.surface`, edge stroke `#999` → `themeSemantic.border`.
+  - `layouts/hierarchySceneBuilders.ts` — 5 sites: tree node halos, tree edge strokes, treemap rect strokes, circlepack node halos, and label text `#000` / halo `#fff` → `themeSemantic.text` / `.surface` (dark-mode legibility fix).
+  - `layouts/orbitLayoutPlugin.ts` — orbit node fill `#6366f1` → theme primary, halo stroke `#fff` → theme surface.
+  - `layouts/sankeyLayoutPlugin.ts` + `layouts/chordLayoutPlugin.ts` — edge-fill `#999` fallback → theme secondary/border.
+  - `StreamNetworkFrame.tsx` — `getEdgeColor` / `getParticleColor` `#999` fallback → `edgeFallbackColor` from resolved theme.
+- **StreamGeoFrame**: also had no theme threading before — added `themeCategorical` + `themeSemantic` to `GeoPipelineConfig`, threaded through the memo. `areaStyle` / `pointStyle` / `lineStyle` confirmed routed. The module-level `DEFAULT_AREA_STYLE` / `DEFAULT_POINT_STYLE` / `DEFAULT_LINE_STYLE` constants were converted to `themedDefaultArea(config)` / `themedDefaultPoint(config)` / `themedDefaultLine(config)` helper functions so the area fill (`#e0e0e0`), area stroke (`#999`), and point/line colors (`#4e79a7`) all resolve from the theme.
+
+Regression tests ported to all three frames (`StreamOrdinalFrame.test.tsx`, new `StreamNetworkFrame.test.tsx`, new `StreamGeoFrame.test.tsx`) — each spies on its respective `updateConfig` method and asserts every declared `*Style` prop reaches the merged config. Network + Geo required a bespoke canvas-mock setup (no-op `requestAnimationFrame`) to avoid the continuous-render loop recursing on the shared mock's synchronous rAF invocation.
+
+Playwright: new spec `primitive-theme-matrix.spec.ts` covers one chart per frame family (FunnelChart, TreeDiagram, ChoroplethMap) in light + dark — 6 snapshots total. Dark / light pairs visually differ where unstyled defaults pick up the theme (funnel bars, tree node fills, etc.), proving the plumbing works end-to-end.
+
+#### Milestone 3 — Status-aware defaults + theme scales [LANDED]
+
+Drives value off the semantic roles + sequential/diverging scales for the obvious candidates. All inventoried below.
+
+- **PipelineConfig extensions** (`PipelineConfig`, `XYSceneConfig`, `OrdinalPipelineConfig`, `GeoPipelineConfig`): new top-level fields `themeSequential?: string` and `themeDiverging?: string` carry d3-scale-chromatic scheme names through the pipeline alongside `themeSemantic`. All four Stream Frames thread them from `currentTheme.colors.sequential` / `.diverging`.
+- **Waterfall** positive/negative bar defaults in `waterfallScene.ts` — `ws?.positiveColor ?? config.themeSemantic?.success ?? "#28a745"` (same for negative → `.danger` → `#dc3545`). Unit coverage in `waterfallScene.test.ts` for both the theme path and hardcoded-fallback path.
+- **Heatmap HOC** (`src/components/charts/xy/Heatmap.tsx`) — destructure-default dropped, priority now `colorScheme prop > useThemeSequential() > "blues"`. Local interpolator map expanded from 4 schemes to 12 so every sequential scheme name a preset might emit (`oranges` for tufte, `purples` for pastels, etc.) resolves correctly. Prop type widened to accept any sequential scheme name.
+- **Heatmap scene builder** (`xySceneBuilders/heatmapScene.ts`) — matching interpolator-map expansion so the cell-color LUT covers the same 12 schemes. Unit coverage in `heatmapScene.test.ts` verifying `themeSequential` flows through and explicit `colorScheme` still wins.
+- **ChoroplethMap HOC** (`src/components/charts/geo/ChoroplethMap.tsx`) — same pattern. Priority: explicit `colorScheme` > `useThemeSequential()` > `"blues"`.
+- **LikertChart HOC** (`src/components/charts/ordinal/LikertChart.tsx`) — reads `useThemeDiverging()` and passes through to `defaultDivergingScheme(n, themeName)`. When a theme name is provided, the function samples the named d3 diverging interpolator at N evenly-spaced positions (supports `RdBu`, `PiYG`, `PRGn`, `BrBG`, `RdYlBu`, `RdYlGn`, `Spectral`). Without one, the Carbon palette remains. Unit coverage in `LikertChart.test.tsx` — new `defaultDivergingScheme` describe block covers the theme path, unknown-scheme fallback, and edge cases (n=0, n=1).
+- **Shared hooks** — new `useThemeSequential()` and `useThemeDiverging()` in `src/components/charts/shared/hooks.ts`, matching the existing `useThemeCategorical` pattern.
+- **Playwright** — new `integration-tests/status-scale-theme-matrix.spec.ts` with 6 baseline snapshots: waterfall (light / dark), heatmap (tufte / bi-tool — visibly oranges vs blues), likert (light / dark — RdBu diverging visible).
+
+**Behavior change for existing consumers:** LikertChart without an explicit `colorScheme` prop now renders in the active theme's diverging scheme (LIGHT_THEME/DARK_THEME both declare `"RdBu"`). Prior behavior used a Carbon-inspired hardcoded palette regardless of theme. LikertChart tests updated to call `defaultDivergingScheme(n, "RdBu")` to match the new path.
+
+#### Milestone 4 — Dead-prop sweep finish [PARTIAL — XY leftovers landed]
+
+XY-side scene builder + store fallbacks landed. Renderer-level fallbacks deliberately deferred — see note at the end.
+
+**Landed:**
+
+- `xySceneBuilders/pointScene.ts` — default point fill now `ctx.config.themeSemantic?.primary || "#4e79a7"`. Resolved once per scene build, not per-datum. Unit coverage in `pointScene.test.ts`.
+- `xySceneBuilders/swarmScene.ts` — same pattern. Unit coverage in `swarmScene.test.ts`.
+- `PipelineStore.resolveLineStyle` — three `#007bff` fallbacks and the `#4e79a7` bounds-fill fallback all consult `this.config.themeSemantic?.primary` first. The pattern: `user > resolveGroupColor() > themeSemantic.primary > hardcoded`.
+- `StreamXYFrame.tsx` crosshair + hover-point + line-highlight — `ThemeColors` interface gained a `primary: string` field (populated from `--semiotic-primary` in `resolveThemeColors`). The three `#007bff` hex fallbacks at lines 266/279/321 are now `theme.primary`. Inline `getComputedStyle(…).getPropertyValue("--semiotic-primary")` call removed — it duplicated the theme resolver that already runs upstream.
+
+**Still pending (renderer-level fallbacks, deferred):**
+
+- `renderers/barCanvasRenderer.ts:24,72` — `#007bff` fallback when `node.style.fill` is missing.
+- `renderers/boxplotCanvasRenderer.ts` — `#333` / `#007bff` fallbacks.
+- `renderers/heatmapCanvasRenderer.ts:40,74` — `#000` / `#fff` text-contrast + cell-stroke (semantic — pairs with `themeSemantic.text` / `.surface` but the contrast calculation is data-dependent).
+- `renderers/connectorCanvasRenderer.ts:48` — `#999` default.
+- `renderers/networkParticleRenderer.ts:31` — `#666` particle color fallback.
+- `renderers/barFunnelCanvasRenderer.ts:51,166,170,175` — `#999` + `#333` / `#666` shadow colors.
+
+These are all renderer-level `||` fallbacks that only fire when the upstream scene builder didn't set the style field. Post-milestones 1–3, scene builders DO set style from theme, so these fallbacks are effectively unreachable in practice. Fixing them requires threading resolved theme defaults through the renderer's argument list — worth doing as defensive cleanup but not a functional blocker. Treat as a follow-up PR.
+
+### Phase B — Designer-facing API (visible, additive)
+
+Ships per chart-type group (XY, Ordinal, Network, Geo). No breakage.
+
+#### B1 — Foundations + reference implementations [LANDED]
+
+Proof-of-pattern with three representative HOCs — one per primitive family.
+
+- **`BaseChartProps`** extended with `stroke?: string`, `strokeWidth?: number`, `opacity?: number`. Full JSDoc documenting precedence (top-level > `frameProps.*Style` > HOC base > theme > hardcoded).
+- **`mergeShapeStyle(styleFn, overrides)` helper** in `src/components/charts/shared/mergeShapeStyle.ts`. Returns the input function unchanged when no overrides are set (preserves useMemo identity for the common case). Applies overrides last so top-level primitive props win over both HOC base style and user-supplied `*Style` returns. 16 unit tests cover the common patterns plus edge cases (falsy overrides, unset args, mutation isolation).
+- **BarChart / Scatterplot / LineChart** wired via the helper. Each destructures the three new props, invokes `mergeShapeStyle` in its existing merged-style useMemo chain. LineChart's legacy `lineWidth` prop remains; the top-level `strokeWidth` wins when both are set.
+- **Test coverage per HOC**: 5 BarChart + 4 Scatterplot + 6 LineChart tests covering precedence, non-interaction with other style resolution paths, and the "no override keys when unset" invariant.
+- **Renderer fix surfaced by the matrix**: `lineCanvasRenderer.ts:131` now routes `node.style.stroke` through `resolveCSSColor`. Without this, `stroke="var(--semiotic-primary)"` on a LineChart would land as a `var(...)` string on the canvas, silently rejected (falling back to `#000000`). Same bug pattern as the original crosshair-invisibility fix from 3.4 — same one-line fix.
+- **Playwright** — 9 snapshots across 3 charts × 3 states (default / stroked / translucent). Confirms primitive props visibly reach every rendered shape: BarChart gets stroked rects, Scatterplot gets 0.4-opacity circles with grid lines showing through, LineChart renders red (`var(--semiotic-danger)` → `#d62728`) at strokeWidth 3.
+- **Docs** — new "Primitive styling props" section in SemanticColorsPage covering the four first-class props, precedence ladder, when-to-reach-for-which, composition with `frameProps.*Style`. CLAUDE.md Common Props updated with the three new props + a paragraph explaining the precedence rules, synced to all AI mirror files.
+
+#### B2 — Remaining HOC rollout [PENDING]
+
+Mechanical application of the helper to every remaining shape-drawing HOC. Each is one-line `mergeShapeStyle` overlay on the existing style-merge chain; template is BarChart/Scatterplot/LineChart from B1.
+
+- **Ordinal** — StackedBarChart, GroupedBarChart, PieChart, DonutChart, FunnelChart, SwimlaneChart, LikertChart, GaugeChart, DotPlot, BoxPlot, SwarmPlot, Histogram, ViolinPlot, RidgelinePlot
+- **XY** — AreaChart, StackedAreaChart, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap, MultiAxisLineChart, ScatterplotMatrix, MinimapChart
+- **Network** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
+- **Geo** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
+- **Realtime** — RealtimeLineChart, RealtimeSwarmChart, RealtimeHeatmap, RealtimeHistogram, RealtimeWaterfallChart
+
+Each rollout PR should add test coverage matching B1's pattern (5–6 assertions per HOC: stroke, strokeWidth, opacity, precedence over frameProps style, "no override keys when unset"). Playwright coverage: one stroke + one opacity snapshot per HOC, ideally in the primitive-props matrix fixture.
+
+**Per-renderer audit needed**: `lineCanvasRenderer.ts` already routes stroke through `resolveCSSColor`. Audit the other canvas renderers (`pointCanvasRenderer`, `barCanvasRenderer`, `areaCanvasRenderer`, `wedgeCanvasRenderer`, `boxplotCanvasRenderer`, etc.) for the same bug pattern — any renderer that reads `node.style.stroke` or `.fill` without `resolveCSSColor` will silently reject `var(...)` values. Most fill paths already route through `resolveCSSColor` (checked during theming milestones); stroke paths are the new hot surface since Phase B makes top-level stroke ubiquitous.
+
+### Phase C — Consolidation (contingent)
+
+Evaluate once Phase B is stable. Hypothesis: a shared `resolveShapeStyle(config, datum, primitive)` used by bar / point / line / area / rect scene builders reduces per-primitive variance enough to justify migration. Defer until Phase B makes the shared logic visible.
+
+### Non-goals
+
+- Renaming `pieceStyle` / `pointStyle` / `nodeStyle` to a single name. Top-level primitive props cover the designer case; existing function-form names remain for power users.
+- Replacing `colorBy` / `colorScheme` machinery.
+- Touching hover / focus / selected visual states. Related but separable.
+
+### Risks
+
+- **Canvas cascade timing.** `getComputedStyle` on the frame element resolves `--semiotic-*` from ancestors but requires the DOM node to exist. First paint may fall back to preset defaults, then re-resolve on next render. Verify no visible flash. Milestone 1 snapshots didn't exhibit flash, but further milestones should spot-check.
+- **SSR role resolution.** Server renderer has no DOM to query. Falls back to theme-object JS values directly — already how `themeCategorical` works, same pattern applies.
+- **Precedence drift.** "Top-level wins over function" is simple in principle but easy to break per-HOC. Single `mergeShapeStyle` helper applied everywhere, one decision point.
+
+### Notes from milestone 1 (for future milestones)
+
+- `themeSequential` / `themeDiverging` were *not* plumbed into `PipelineConfig` yet — only `themeSemantic`. Milestone 3 needs to add them. Current sequential/diverging values on `SemioticTheme` are still named d3-scale-chromatic scheme strings (not arrays), so the thread is a string copy, not a palette expansion.
+- The `*Style`-prop regression test (`StreamXYFrame.test.tsx:716+`) uses `vi.spyOn(PipelineStore.prototype, "updateConfig")`. Pattern transfers cleanly to `OrdinalPipelineStore`, `NetworkPipelineStore`, `GeoPipelineStore`.
+- The CSS-cascade-override pattern was verified against a real render (the "scoped" snapshot in `histogram-theme-stroke.spec.ts-snapshots/`). Extending the harness to cover other shape primitives is straightforward copy-paste-edit.
+- `barStyle.gap` override was added opportunistically (existed on the `BarStyle` type but was ignored by `barScene`). Worth auditing other style objects for similarly-ignored fields when touching each scene builder.
+
+---

@@ -477,4 +477,70 @@ describe("LineChart", () => {
       expect(style.stroke).toBe("#ff0000")
     })
   })
+
+  // ── Top-level primitive style props (Phase B) ─────────────────────────
+  describe("primitive style props", () => {
+    it("top-level stroke reaches lineStyle output", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} stroke="#ff00aa" />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.stroke).toBe("#ff00aa")
+    })
+
+    it("top-level strokeWidth wins over lineWidth when both are set", () => {
+      // `lineWidth` is the LineChart-specific alias; the general-purpose
+      // `strokeWidth` is the primitive-level top-level prop. When both,
+      // top-level wins via mergeShapeStyle precedence.
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} lineWidth={10} strokeWidth={3} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.strokeWidth).toBe(3)
+    })
+
+    it("lineWidth still drives strokeWidth when top-level strokeWidth is unset", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} lineWidth={5} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.strokeWidth).toBe(5)
+    })
+
+    it("top-level opacity reaches lineStyle output", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} opacity={0.4} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.opacity).toBe(0.4)
+    })
+
+    it("top-level stroke wins over color-derived stroke for default coloring", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} color="#fromColorProp" stroke="#fromStrokeProp" />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style.stroke).toBe("#fromStrokeProp")
+    })
+
+    it("does not add primitive keys when none of the three props are set", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      const style = lastXYFrameProps.lineStyle({}, "default")
+      expect(style).not.toHaveProperty("opacity")
+    })
+  })
 })
