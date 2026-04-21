@@ -1117,9 +1117,18 @@ export class PipelineStore {
     const existing = this._groupColorMap.get(group)
     if (existing) return existing
 
-    const palette = Array.isArray(this.config.colorScheme)
+    // Palette selection with empty-array guards — an explicit `colorScheme: []`
+    // (or empty `themeCategorical`) would otherwise index `palette[NaN]` → undefined
+    // and poison the cached color.
+    const userScheme = Array.isArray(this.config.colorScheme) && this.config.colorScheme.length > 0
       ? this.config.colorScheme
-      : this.config.themeCategorical || STREAMING_PALETTE
+      : null
+    const themePalette = Array.isArray(this.config.themeCategorical) && this.config.themeCategorical.length > 0
+      ? this.config.themeCategorical
+      : null
+    const palette = userScheme || themePalette || STREAMING_PALETTE
+    if (palette.length === 0) return null
+
     const color = palette[this._groupColorCounter % palette.length]
     this._groupColorCounter++
     this._groupColorMap.set(group, color)

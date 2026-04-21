@@ -108,8 +108,8 @@
     "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
     "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html integration-tests/accessibility-examples/index.html integration-tests/geo-examples/index.html integration-tests/realtime-examples/index.html integration-tests/streaming-regression-examples/index.html integration-tests/themed-examples/index.html integration-tests/background-graphics-examples/index.html integration-tests/histogram-theme-stroke-examples/index.html integration-tests/primitive-theme-matrix-examples/index.html integration-tests/status-scale-theme-examples/index.html integration-tests/primitive-props-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "serve-examples:ci": "parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/hoc-legend-examples/index.html integration-tests/coordinated-examples/index.html integration-tests/accessibility-examples/index.html integration-tests/geo-examples/index.html integration-tests/realtime-examples/index.html integration-tests/streaming-regression-examples/index.html integration-tests/themed-examples/index.html integration-tests/background-graphics-examples/index.html integration-tests/histogram-theme-stroke-examples/index.html integration-tests/primitive-theme-matrix-examples/index.html integration-tests/status-scale-theme-examples/index.html integration-tests/primitive-props-examples/index.html --dist-dir .parcel-cache/integration-tests",
-    "dist": "node scripts/build.mjs",
-    "dist:prod": "node scripts/build.mjs --production",
+    "dist": "node --max-old-space-size=8192 scripts/build.mjs",
+    "dist:prod": "node --max-old-space-size=8192 scripts/build.mjs --production",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
@@ -145,7 +145,8 @@
   "alias": {
     "semiotic": "./src/components/semiotic.ts",
     "semiotic/geo": "./src/components/semiotic-geo.ts",
-    "semiotic/utils": "./src/components/semiotic-utils.ts"
+    "semiotic/utils": "./src/components/semiotic-utils.ts",
+    "react-router-dom": "react-router"
   },
   "repository": {
     "type": "git",
@@ -183,15 +184,15 @@
   "size-limit": [
     {
       "path": "dist/semiotic.module.min.js",
-      "limit": "230 KB"
+      "limit": "240 KB"
     },
     {
       "path": "dist/xy.module.min.js",
-      "limit": "125 KB"
+      "limit": "135 KB"
     },
     {
       "path": "dist/ordinal.module.min.js",
-      "limit": "95 KB"
+      "limit": "110 KB"
     },
     {
       "path": "dist/network.module.min.js",
@@ -203,7 +204,7 @@
     },
     {
       "path": "dist/realtime.module.min.js",
-      "limit": "130 KB"
+      "limit": "140 KB"
     }
   ],
   "devDependencies": {
@@ -214,7 +215,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@size-limit/file": "^11.0.0",
+    "@size-limit/file": "^12.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.0",
     "@types/d3-array": "^3.2.0",
@@ -243,14 +244,14 @@
     "@vitest/ui": "^4.1.4",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.1",
-    "d3-dsv": "1.0.5",
+    "d3-dsv": "^3.0.1",
     "d3-flextree-v4": "^1.0.1",
     "esbuild": "^0.28.0",
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.27.1",
     "events": "^3.3.0",
     "jsdom": "^26.1.0",
-    "marked": "4.0.10",
+    "marked": "^18.0.2",
     "os-browserify": "^0.3.0",
     "parcel": "^2.16.4",
     "path-browserify": "^1.0.1",
@@ -259,16 +260,16 @@
     "process": "^0.11.10",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "react-router-dom": "^6.2.1",
+    "react-router-dom": "^7.0.0",
     "rollup": "^4.59.0",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-visualizer": "^7.0.0",
     "seedrandom": "^3.0.5",
-    "size-limit": "^11.0.0",
+    "size-limit": "^12.0.0",
     "stream-browserify": "^3.0.0",
     "tslib": "^2.8.1",
     "typedoc": "^0.28.19",
-    "typescript": "~5.9.3",
+    "typescript": "~6.0.3",
     "util": "^0.12.5",
     "vitest": "^4.1.4",
     "vm-browserify": "^1.1.2"
@@ -298,6 +299,8 @@
     "d3-tile": "^1.0.0",
     "d3-time-format": "^4.1.0",
     "d3-zoom": "^3.0.0",
+    "marked-gfm-heading-id": "^4.1.4",
+    "react-router": "^7.14.1",
     "regression": "^2.0.1",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"

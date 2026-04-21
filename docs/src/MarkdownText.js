@@ -1,12 +1,18 @@
 import React from "react"
 import { marked } from "marked"
+import { gfmHeadingId } from "marked-gfm-heading-id"
+
+// marked v12 dropped the built-in `headerIds` option; this extension restores
+// the pre-v5 behavior of emitting slug ids on every heading, which the regex
+// below relies on to wrap each heading in a self-linking anchor.
+marked.use(gfmHeadingId())
 
 export default class MarkdownText extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       marked: props.text
-        ? marked(props.text, { headerIds: true })
+        ? marked.parse(props.text)
             .replace(
               /<h(\d) id="(.*?)"/g,
               `<a class="heading-link" href="#$2">$&`

@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-17.
+Last updated 2026-04-20.
 
 ---
 
@@ -101,31 +101,34 @@ ESLint 8 is in maintenance through October 2026, so we can defer without immedia
 
 Risk surface is large but mostly cosmetic — the perf-pass code we just landed is React-version-agnostic. The likely landmines are in legacy components (BarChart class definitions if any, ChartContainer's HOC composition). Recommend a feature branch + a CI matrix test.
 
-#### 4. TypeScript 5.9 → 6.0 — couple of days
+#### 4. ~~TypeScript 5.9 → 6.0~~ — landed 2026-04-20
 
-TypeScript 6 is brand new. Project is `strict: true` already so most of the migration friction is around new rule defaults (e.g. stricter inference on `as const`, narrower `unknown` propagation). Pairs with the **`as any` reduction** initiative — 6.0's tighter inference is what makes some of those `any`s unnecessary.
+Bumped to `~6.0.3`. Strict-mode inference changes were a non-event for us — zero source-code errors. Three build-system adjustments were required:
+- **`moduleResolution: "node"` → `"bundler"`** in `tsconfig.json`. TS 6 deprecates the legacy "node10" resolver (the one TS treats plain `"node"` as) and warns that it'll stop working in TS 7. `"bundler"` is the correct choice for a library built by rollup/esbuild/parcel — it supports package.json `exports` subpath resolution without enforcing Node's stricter ESM rules (explicit `.js` extensions, etc.).
+- **Added `rootDir: "./src"`** to `tsconfig.json`. TS 6 now errors on TS5011 (`rootDir must be explicitly set`) where 5.x silently inferred it. The rollup-plugin-typescript invocations for every bundle surfaced the same error; setting `rootDir` once in the base config fixed all call sites.
+- **Bumped Node heap to 8 GB** in the `dist` / `dist:prod` npm scripts (`node --max-old-space-size=8192 scripts/build.mjs`). TS 6's compiler allocates more memory per rollup bundle than 5.9 did — with 11 bundles built sequentially, the default 4 GB heap hit OOM on the 9th. 8 GB leaves comfortable headroom; if future growth pushes past it, the next step is switching the rollup TS plugin to `@rollup/plugin-esbuild` (much smaller memory footprint, already used for the MCP build).
 
-Don't do this *during* React 19 migration (compounding type churn). Either before or after, isolated.
+`"as any"` reduction work deferred — the `strict` posture didn't surface new opportunities from 6.0's tighter inference; the remaining ~140 `as any` sites mostly trace to `node.style.fill` / `CanvasPattern` duck-typing paths that TS would need actual union narrowing to resolve.
 
-#### 5. `react-router-dom` 6 → 7 — docs-only, half a day
+#### 5. ~~`react-router-dom` 6 → 7~~ — landed 2026-04-20
 
-Used only in `docs/src/`. v7 unifies Remix + Router; lots of import path changes (`react-router-dom` exports moved to `react-router`). Mechanical but touch-everything. Doesn't affect the published library.
+Bumped to `^7.14.1`. `react-router-dom` v7 is a thin compatibility shim over `react-router`; its internal `import { HydratedRouter, RouterProvider } from "react-router/dom"` uses subpath exports that Parcel 2.16's default resolver doesn't handle. Fix: aliased `react-router-dom` → `react-router` in `package.json`'s `alias` block so Parcel never touches the thin-shim module. All 98 docs files that import from `react-router-dom` keep their existing imports unchanged — the alias routes them to `react-router`, which re-exports everything the docs use (`Link`, `Routes`, `Route`, `Outlet`, `Navigate`, `BrowserRouter`, `NavLink`, `useLocation`, `useNavigationType`). `HydratedRouter` / `RouterProvider` are SSR-only and not referenced by the docs. `react-router` also added as an explicit devDependency so Parcel resolves it from a stable location.
 
-#### 6. `marked` 4 → 18 — docs-only, **fourteen majors behind**
+#### 6. ~~`marked` 4 → 18~~ — landed 2026-04-20
 
-Used only in `docs/src/MarkdownText.js`. Marked went ESM-only at v5, restructured the API at v8, dropped sync rendering at v12. Honest take: probably easier to swap to a different library (`micromark`, `remark`) than to walk through the migration, but walk-through is a few hours' work too.
+Bumped to `^18.0.2`. v5 removed the built-in `headerIds` option that `docs/src/MarkdownText.js`'s heading-link hack relies on. Migrated to `marked.use(gfmHeadingId())` from the official `marked-gfm-heading-id` extension (~2 KB, maintained by the marked team) — restores the `<h{n} id="slug">` output shape the existing regex-replace expects, so the "click a heading to copy its URL" UX survived the upgrade unchanged. Switched from `marked(text, { headerIds: true })` to `marked.parse(text)` since v12 removed the legacy option and made the default call ambiguous between sync/async.
 
-#### 7. `d3-dsv` 1 → 3 — docs-only, 30 min
+#### 7. ~~`d3-dsv` 1 → 3~~ — landed 2026-04-20
 
-Used in one docs example (`CanvasInteraction.js`). v2 went ESM-only, v3 is otherwise compatible. Mechanical bump.
+Bumped to `^3.0.1`. v2 went ESM-only; the one consumer (`docs/src/examples/CanvasInteraction.js`) was already using ESM `import { csvParse }`, so the upgrade was a pure version bump. `csvParse` signature unchanged across v1–v3.
 
 #### 8. `@testing-library/react` 14 → 16 — depends on React 19
 
 Don't bump independently; v16 requires React 19. Slot into the React 19 PR.
 
-#### 9. `size-limit` + `@size-limit/file` 11 → 12 — dev-only, ~1 hr
+#### 9. ~~`size-limit` + `@size-limit/file` 11 → 12~~ — landed 2026-04-20
 
-Bundle-size CI tool. v12 changed the config schema. Run `npx size-limit` after to verify the limits still fire correctly.
+Bumped both to `^12.0.0`. Config schema is compatible — the existing `"size-limit": [{path, limit}]` entries ran unchanged. Four bundles were over their pre-theming budgets (semiotic 234 / xy 128 / ordinal 105 / realtime 132 KB brotli), so budgets were bumped to give ~5 KB headroom over current: semiotic 240, xy 135, ordinal 110, realtime 140, network+geo unchanged. The over-budget state was pre-existing from the theming PRs — CI's `npx size-limit` step had been failing silently or was being overridden on the theming merges.
 
 ### Standing recommendation
 

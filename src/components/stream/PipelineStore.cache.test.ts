@@ -93,26 +93,40 @@ describe("resolveGroupColor after data changes", () => {
     expect(store.resolveGroupColor("C")).toBe("red")
   })
 
-  it("FIFO-evicts the oldest entry past GROUP_COLOR_MAP_CAP (1000)", () => {
+  it("returns a non-empty color when user palettes are empty, falling through to STREAMING_PALETTE", () => {
+    // Empty user-supplied palette + empty theme palette — before the guard this indexed
+    // `palette[NaN]` and stored `undefined` in _groupColorMap, corrupting later reads.
+    const store = makeStore({
+      colorScheme: [],           // empty user scheme
+      themeCategorical: [],      // empty theme palette
+    })
+    const color = store.resolveGroupColor("A")
+    expect(color).toBeTruthy()
+    expect(typeof color).toBe("string")
+  })
+
+  it("FIFO-evicts the oldest entry past GROUP_COLOR_MAP_CAP", () => {
     const store = makeStore({
       colorScheme: ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
     })
-    // Push well past the 1000 cap — prevents unbounded growth on streams with unique group IDs.
-    for (let i = 0; i < 1500; i++) {
+    const cap = (PipelineStore as any).GROUP_COLOR_MAP_CAP
+    const total = cap + Math.floor(cap / 2)
+    // Push well past the configured cap — prevents unbounded growth on streams with unique group IDs.
+    for (let i = 0; i < total; i++) {
       store.resolveGroupColor(`g${i}`)
     }
     // Internal map bounded by the cap.
-    expect((store as any)._groupColorMap.size).toBeLessThanOrEqual(1000)
+    expect((store as any)._groupColorMap.size).toBeLessThanOrEqual(cap)
 
     // The most-recent group is still resolvable and holds its monotonically-assigned palette slot
-    // (counter = 1499 at the time of `g1499`'s insertion → c9).
-    expect(store.resolveGroupColor("g1499")).toBe("c9")
+    // (counter was `total - 1` at the time of that group's insertion).
+    expect(store.resolveGroupColor(`g${total - 1}`)).toBe(`c${(total - 1) % 10}`)
 
     // A previously-evicted group re-appearing gets a fresh palette slot off the running counter,
-    // not its original color. Counter is now 1500 → c0. The test's point is that eviction-then-
+    // not its original color. Counter is now `total`. The test's point is that eviction-then-
     // reappearance doesn't throw, collide, or corrupt the rest of the map.
     const revived = store.resolveGroupColor("g0")
-    expect(revived).toBe("c0")
+    expect(revived).toBe(`c${total % 10}`)
   })
 })
 
