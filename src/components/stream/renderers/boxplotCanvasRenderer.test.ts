@@ -1,7 +1,7 @@
 import { vi, describe, it, expect } from "vitest"
 import { boxplotCanvasRenderer } from "./boxplotCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
-import type { BoxplotSceneNode, OrdinalSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
+import type { BoxplotSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
 
 function createMockCtx() {
   return {

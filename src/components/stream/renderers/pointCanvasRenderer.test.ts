@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+
 import { pointCanvasRenderer } from "./pointCanvasRenderer"
 import { scaleLinear } from "d3-scale"
 import type { PointSceneNode, SceneNode, StreamScales, StreamLayout } from "../types"

@@ -78,7 +78,15 @@ Migration steps that actually mattered:
 - `typescript-eslint` unified meta-package added for the mapped `.configs.recommended` usage.
 - `eslint --fix` cleared ~13 auto-fixable violations (prefer-const, unused eslint-disable directives).
 - Three real bug fixes surfaced in `StreamGeoFrame.tsx`: `foo?.bar!` pattern (optional chain + non-null assertion is contradictory) replaced with early-return guards in the three `onZoom` callback sites.
-- Seven typescript-eslint rules disabled as codebase-wide tech debt — each its own follow-up sweep, reasoning in the config file's comments: `no-explicit-any` (~140 sites), `no-unused-vars`, `no-unused-expressions`, `ban-ts-comment`, `no-empty-object-type`, `no-require-imports`, `no-unsafe-function-type` (~15 bare `Function` types), `no-this-alias` (one RingBuffer site).
+- Seven typescript-eslint rules disabled initially as codebase-wide tech debt. Follow-up sweep landed 2026-04-21 — seven of the eight rules now enabled as errors:
+  - `no-this-alias` — 1 site (RingBuffer iterator), converted to arrow function.
+  - `no-unsafe-function-type` — 71 sites across 15 files. Replaced bare `Function` type with `(...args: any[]) => any` via batch regex; equivalent semantics, satisfies the rule.
+  - `no-empty-object-type` — 1 site (`RawPoint<T>` empty interface), converted to type alias.
+  - `ban-ts-comment` — 1 site (`@ts-nocheck` on legacy `sankeyLinks.ts`). Rule configured with `allow-with-description` for `@ts-nocheck` / `@ts-expect-error`; file comment extended to document the rewrite debt.
+  - `no-require-imports` — 41 sites across 33 test files + 3 server-rendering files. Deleted `const React = require("react")` from vi.mock factories (top-level React import works in vitest mock factories). Server-side optional-dep loaders (sharp/gifenc) kept the `require(variable)` indirection with inline-disable comments — dynamic `import()` would async-ify the whole call chain.
+  - `no-unused-vars` — 184 sites → 0. Configured with `_`-prefix allowance (`argsIgnorePattern: "^_"`). Batch-removed 50+ unused imports, alias-renamed 10+ unused destructured props (`name: _name` form), prefixed 43 unused function parameters, deleted several dead local declarations and one stale useMemo block.
+  - `no-unused-expressions` — 1 site in legacy `sankeyLinks.ts` comma-sequence pattern, inline-disabled with a reason.
+  - **`no-explicit-any` — 2871 warnings, kept at `warn` level.** The original "~140" estimate was off by a factor of 20; genuine `any` reduction is a design exercise (type-level modeling of d3 boundaries, data-point discriminated unions), not a mechanical sweep. Left as a warning so the count is visible without blocking CI; reducing it is its own multi-PR initiative.
 
 Fresh `npm install` was required because the old `@typescript-eslint/eslint-plugin@6.21.0` peer-gated against eslint 9 and npm refused to upgrade in place — `rm -rf node_modules package-lock.json` then `npm install`.
 

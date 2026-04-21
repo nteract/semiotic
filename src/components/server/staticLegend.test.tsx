@@ -3,8 +3,7 @@ import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
- 
-const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (el: React.ReactElement) => string }
+import * as ReactDOMServer from "react-dom/server"
 import { renderStaticLegend, extractCategories } from "./staticLegend"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 

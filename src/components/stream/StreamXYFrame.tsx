@@ -17,14 +17,13 @@ import type {
   HoverAnnotationConfig,
   SceneNode,
   PointSceneNode,
-  StreamScales,
-  MarginalGraphicsConfig
+  StreamScales
 } from "./types"
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
-import { findNearestNode, findAllNodesAtX, type HitResult } from "./CanvasHitTester"
+import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"

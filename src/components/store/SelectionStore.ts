@@ -91,8 +91,8 @@ function ensureSelection(
   return sel
 }
 
-export const [SelectionProvider, useSelectionSelector] = createStore(
-  (set: Function) => ({
+export const [SelectionProvider, useSelectionSelector] = createStore<SelectionStoreState>(
+  (set) => ({
     selections: new Map<string, Selection>(),
 
     setClause(selectionName: string, clause: SelectionClause) {

@@ -9,8 +9,7 @@ import {
   resolvePosition,
   nextGraphIndex,
   nextNetworkIndex,
-  type NavPoint,
-  type NavPosition
+  type NavPoint
 } from "./keyboardNav"
 
 describe("extractXYNavPoints", () => {

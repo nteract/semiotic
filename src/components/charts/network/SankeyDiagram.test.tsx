@@ -7,7 +7,6 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps: any = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -267,7 +266,7 @@ describe("SankeyDiagram", () => {
 
   describe("tooltip", () => {
     it("renders with tooltip prop without crashing", () => {
-      const customTooltip = (d: any) => <div>custom tooltip</div>
+      const customTooltip = (_d: any) => <div>custom tooltip</div>
       const { container } = render(
         <TooltipProvider>
           <SankeyDiagram edges={sampleEdges} tooltip={customTooltip} />

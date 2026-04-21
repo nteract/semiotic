@@ -10,8 +10,7 @@ import {
   useChartMode,
   useLegendInteraction,
   getCrosshairProps,
-  DEFAULT_COLOR,
-} from "./hooks"
+  } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
@@ -391,7 +390,7 @@ describe("useChartLegendAndMargin", () => {
   })
 
   it("expands right margin to 110 when legend is present and right < 110", () => {
-    const colorScale = (v: string) => "#ccc"
+    const colorScale = (_v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
         data,
@@ -405,7 +404,7 @@ describe("useChartLegendAndMargin", () => {
   })
 
   it("preserves right margin when already >= 110", () => {
-    const colorScale = (v: string) => "#ccc"
+    const colorScale = (_v: string) => "#ccc"
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
         data,

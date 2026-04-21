@@ -358,7 +358,7 @@ const renderVerticalGroup = ({
 
 const renderHorizontalGroup = ({
   legendGroups,
-  title,
+  title: _title,
   height,
   width,
   customClickBehavior,

@@ -73,7 +73,7 @@ interface CellBrushOverlayProps {
   onBrush: (extent: [number, number][] | null) => void
 }
 
-function CellBrushOverlay({ frameRef, cellSize, xField, yField, onBrush }: CellBrushOverlayProps) {
+function CellBrushOverlay({ frameRef, cellSize, xField: _xField, yField: _yField, onBrush }: CellBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   const chartW = cellSize - CELL_MARGIN.left - CELL_MARGIN.right
@@ -155,7 +155,7 @@ function ScatterplotCell({
   data,
   xField,
   yField,
-  fieldLabels,
+  fieldLabels: _fieldLabels,
   cellSize,
   pointRadius,
   pointOpacity,
@@ -164,8 +164,8 @@ function ScatterplotCell({
   brushSelectionName,
   hoverSelectionName,
   unselectedOpacity,
-  showGrid,
-  tooltip,
+  showGrid: _showGrid,
+  tooltip: _tooltip,
   mode,
   onPointHover
 }: CellProps) {
@@ -315,7 +315,7 @@ function DiagonalCell({
   colorScale,
   brushSelectionName,
   hoverSelectionName,
-  unselectedOpacity,
+  unselectedOpacity: _unselectedOpacity,
   mode
 }: DiagonalCellProps) {
   const brushHook = useSelection({
@@ -547,8 +547,8 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     tooltip,
     showLegend,
     idAccessor,
-    width,
-    height,
+    width: _width,
+    height: _height,
     className,
     onObservation,
     chartId
@@ -590,7 +590,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
 
   const colorScale = useColorScale(indexedData, colorBy, colorScheme)
 
-  const n = fields.length
+  const _n = fields.length
   const labelWidth = 40
 
   // Legend
@@ -756,11 +756,11 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
         const xFieldLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
         const yFieldLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
         const colorLabel = colorBy
-          ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
+          ? typeof colorBy === "function" ? (colorBy as ((...args: any[]) => any))(d) : d[colorBy as string]
           : null
         // Resolve ID for header
         const idLabel = idAccessor
-          ? (typeof idAccessor === "function" ? (idAccessor as Function)(d) : d[idAccessor as string])
+          ? (typeof idAccessor === "function" ? (idAccessor as ((...args: any[]) => any))(d) : d[idAccessor as string])
           : `Row ${d[SPLOM_IDX]}`
         // Cell origin in grid coordinates
         const cellLeft = labelWidth + hoveredInfo.colIndex * (cellSize + cellGap)

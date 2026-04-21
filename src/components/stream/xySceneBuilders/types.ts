@@ -5,7 +5,7 @@
  * Scene builders are pure functions that receive this context instead of
  * accessing PipelineStore instance fields directly.
  */
-import type { StreamScales, SceneNode, Style, CurveType, StreamLayout, BarStyle, ThemeSemanticColors } from "../types"
+import type { StreamScales, Style, CurveType, BarStyle, ThemeSemanticColors } from "../types"
 
 export interface XYSceneContext {
   scales: StreamScales

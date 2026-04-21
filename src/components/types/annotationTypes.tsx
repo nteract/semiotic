@@ -38,9 +38,9 @@ export type AnnotationType = {
 
 export type CustomHoverType =
   | boolean
-  | Array<AnnotationType | Function>
+  | Array<AnnotationType | ((...args: any[]) => any)>
   | object
-  | Function
+  | ((...args: any[]) => any)
   | "all"
   | "edge"
   | "node"
@@ -52,14 +52,14 @@ interface AnnotationLayout {
   type: AnnotationTypes
   orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>
   characterWidth?: number
-  noteHeight?: Function | number
-  noteWidth?: Function | number
+  noteHeight?: ((...args: any[]) => any) | number
+  noteWidth?: ((...args: any[]) => any) | number
   lineWidth?: number
   lineHeight?: number
   padding?: number
   iterations?: number
-  pointSizeFunction?: Function
-  labelSizeFunction?: Function
+  pointSizeFunction?: ((...args: any[]) => any)
+  labelSizeFunction?: ((...args: any[]) => any)
   marginOffset?: number
   axisMarginOverride?: {
     top?: number
@@ -83,8 +83,8 @@ export interface AnnotationProps {
     // What is this type supposed to be? It gets used only in a boolean context
     // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
     coordinates?: boolean
-    noteHeight?: Function | number
-    noteWidth?: Function | number
+    noteHeight?: ((...args: any[]) => any) | number
+    noteWidth?: ((...args: any[]) => any) | number
     x: number | number[]
     y: number | number[]
     nx?: number
@@ -125,13 +125,13 @@ export interface AxisProps {
   dynamicLabelPosition?: boolean
   position?: number[]
   rotate?: number
-  tickFormat?: Function
+  tickFormat?: ((...args: any[]) => any)
   size?: number[]
   width?: number
   height?: number
   className?: string
   padding?: number
-  tickValues?: number[] | Function
+  tickValues?: number[] | ((...args: any[]) => any)
   scale?: ScaleLinear<number, number>
   ticks?: number
   footer?: boolean

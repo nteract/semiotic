@@ -9,7 +9,7 @@ import type {
 } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
-export function buildBoxplotScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, resolveSummaryStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
@@ -102,7 +102,7 @@ function computeDistributionStats(sortedValues: number[]): DistributionStats {
   return { n, min, q1, median, q3, max, mean }
 }
 
-export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, resolveSummaryStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
@@ -206,7 +206,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
   return nodes
 }
 
-export function buildHistogramScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, resolveSummaryStyle } = ctx
   const { r: rScale } = scales
   const nodes: OrdinalSceneNode[] = []
@@ -272,7 +272,7 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, layout: OrdinalLay
   return nodes
 }
 
-export function buildRidgelineScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, resolveSummaryStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []

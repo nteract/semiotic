@@ -30,7 +30,7 @@ export function renderNetworkParticles(
     if (typeof style.color === "function") {
       const sourceNode = typeof edge.source === "object" ? edge.source : null
       ctx.fillStyle = sourceNode
-        ? (style.color as Function)(edge, sourceNode)
+        ? (style.color as ((...args: any[]) => any))(edge, sourceNode)
         : resolveCSSColor(ctx, "var(--semiotic-secondary, #666)")!
     } else if (style.color && style.color !== "inherit") {
       ctx.fillStyle = style.color as string

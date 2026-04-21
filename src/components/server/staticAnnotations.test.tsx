@@ -3,8 +3,7 @@ import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
- 
-const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (el: React.ReactElement) => string }
+import * as ReactDOMServer from "react-dom/server"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 import { scaleLinear } from "d3-scale"

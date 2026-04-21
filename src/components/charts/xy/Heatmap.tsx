@@ -19,7 +19,7 @@ import {
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
+import { useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -28,8 +28,6 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
@@ -263,8 +261,11 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     customColorScale,
     showValues = false,
     valueFormat,
-    cellBorderColor = "#fff",
-    cellBorderWidth = 1,
+    // cellBorderColor/cellBorderWidth are accepted on HeatmapProps for API
+    // completeness; the heatmap canvas renderer draws cell borders via the
+    // theme surface fallback and doesn't consume these fields yet.
+    cellBorderColor: _cellBorderColor = "#fff",
+    cellBorderWidth: _cellBorderWidth = 1,
     tooltip,
     annotations,
     frameProps = {},
@@ -279,9 +280,13 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     showLegend: showLegendProp,
     legendPosition: legendPositionProp,
     legendInteraction,
-    stroke,
-    strokeWidth,
-    opacity,
+    // Primitive styling props (BaseChartProps) — accepted-but-not-wired for
+    // Heatmap. Cell fills come from the sequential LUT, and cell strokes use
+    // the theme surface fallback; there's no per-primitive style surface for
+    // user overrides to flow through.
+    stroke: _stroke,
+    strokeWidth: _strokeWidth,
+    opacity: _opacity,
   } = props
 
   const width = resolved.width
@@ -318,7 +323,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
     fallbackFields: [],
@@ -327,19 +332,15 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     colorByField: undefined,
   })
 
-  const resolvedSelection = useResolvedSelection(selection)
+  // `useResolvedSelection` is still called so the selection store subscribes
+  // to Heatmap — consumers can read the active selection from `selection` even
+  // though Heatmap itself has no per-cell selection-driven dim state.
+  useResolvedSelection(selection)
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // Legend interaction (no-op for Heatmap since no colorBy categories)
-  const legendState = useLegendInteraction(legendInteraction, undefined, [])
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
+  useLegendInteraction(legendInteraction, undefined, [])
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -386,46 +387,10 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])
 
-  // Get unique x and y values for bin sizing
-  const { xBinCount, yBinCount } = useMemo(() => {
-    const getX = resolveAccessor(xAccessor)
-    const getY = resolveAccessor(yAccessor)
-
-    return {
-      xBinCount: new Set(safeData.map(getX)).size,
-      yBinCount: new Set(safeData.map(getY)).size
-    }
-  }, [safeData, xAccessor, yAccessor])
-
-  // Transform data to summary format for StreamXYFrame
-  const summaryData = useMemo(() => {
-    return { coordinates: safeData }
-  }, [safeData])
-
-  // Summary style function
-  const baseSummaryStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const value = getValueFn(d)
-      return {
-        fill: colorScale(value),
-        stroke: cellBorderColor,
-        strokeWidth: cellBorderWidth
-      }
-    }
-  }, [getValueFn, colorScale, cellBorderColor, cellBorderWidth])
-
-  const baseSummaryStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(baseSummaryStyle, { stroke, strokeWidth, opacity }),
-    [baseSummaryStyle, stroke, strokeWidth, opacity]
-  )
-
-  const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
-  )
-
-  // showValues is now handled natively by the canvas renderer and SSR SVG path.
-  // No SVG summaryRenderMode overlay needed.
+  // showValues is handled natively by the canvas renderer and SSR SVG path.
+  // No SVG summaryRenderMode overlay needed — the previous `summaryStyle` /
+  // `summaryData` useMemos were never wired into StreamXYFrame props and were
+  // removed as dead code.
 
   // Default tooltip showing x, y, and value. `xFormat`/`yFormat`/`valueFormat`
   // cascade from the HOC so the tooltip reads the same way as the axis / cell labels.

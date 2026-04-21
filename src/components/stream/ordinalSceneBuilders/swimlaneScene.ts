@@ -11,7 +11,7 @@ import type { OrdinalSceneContext } from "./types"
  * multiple items with the same subcategory can appear in the same lane —
  * they simply stack sequentially.
  */
-export function buildSwimlaneScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, getR, getStack, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []

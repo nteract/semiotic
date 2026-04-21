@@ -345,28 +345,8 @@ export function MarginalGraphics({
 
   if (!content) return null
 
-  // Position the <g> at the margin edge
-  let transform: string
-  switch (orient) {
-    case "top":
-      transform = `translate(0, 0)` // top edge of chart area
-      break
-    case "bottom":
-      transform = `translate(0, ${length})` // wait — length is chart width for top/bottom
-      break
-    case "left":
-      transform = `translate(0, 0)` // left edge of chart area
-      break
-    case "right":
-      transform = `translate(${length}, 0)` // length is chart width for left/right? No.
-      break
-  }
-
-  // For top/bottom: length = chart width. The g is already inside the margin-translated group.
-  // For left/right: length = chart height.
-  // orient=bottom means we're at y=chartHeight (bottom of chart area)
-  // orient=right means we're at x=chartWidth (right of chart area)
-  // Actually, let the parent handle positioning. This component just draws relative to origin.
+  // Parent handles positioning via its own margin-translated group; this
+  // component renders relative to origin.
 
   return (
     <g className={`marginal-${orient}`} data-testid={`marginal-${orient}`}>

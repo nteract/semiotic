@@ -26,7 +26,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { extractGeoNavPoints, nextIndex, navPointToHover } from "./keyboardNav"
+import { extractGeoNavPoints, nextIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
@@ -154,7 +154,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       margin: marginProp,
       className,
       background,
-      runtimeMode,
+      runtimeMode: _runtimeMode,
 
       // Style
       areaStyle,

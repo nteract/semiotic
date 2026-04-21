@@ -127,7 +127,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
       ? basePieceStyle
       : (d: Record<string, any>, category?: string) => ({
         ...basePieceStyle(d, category),
-        ...((userPieceStyle as Function)(d, category) || {}),
+        ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
       })
     return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
   }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])

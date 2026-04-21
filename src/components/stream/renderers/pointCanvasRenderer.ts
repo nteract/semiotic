@@ -1,4 +1,4 @@
-import type { SceneNode, PointSceneNode } from "../types"
+import type { PointSceneNode } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { renderCirclePulse } from "./renderPulse"
@@ -9,7 +9,7 @@ import { renderCirclePulse } from "./renderPulse"
  * and showPoints on LineChart, AreaChart, and StackedAreaChart.
  * Supports pulse glow effect via _pulseIntensity/_pulseColor fields.
  */
-export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
+export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const pointNodes = nodes.filter((n): n is PointSceneNode => n.type === "point")
   if (pointNodes.length === 0) return
 

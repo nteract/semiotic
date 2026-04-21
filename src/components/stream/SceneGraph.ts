@@ -7,7 +7,7 @@ import type {
   HeatcellSceneNode,
   Style,
   StreamScales,
-  StreamLayout,
+  
   CurveType
 } from "./types"
 

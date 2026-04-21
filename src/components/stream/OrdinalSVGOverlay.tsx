@@ -199,7 +199,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     foregroundGraphics,
     annotations,
     svgAnnotationRules,
-    annotationFrame,
+    annotationFrame: _annotationFrame,
     xAccessor: annXAccessor,
     yAccessor: annYAccessor,
     annotationData,

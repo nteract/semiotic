@@ -1,4 +1,4 @@
-import { scaleOrdinal, scaleSequential } from "d3-scale"
+import { scaleOrdinal } from "d3-scale"
 import {
   schemeCategory10,
   schemeTableau10,

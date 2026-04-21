@@ -5,13 +5,13 @@ import { MarginType } from "./generalTypes"
 
 export interface AdvancedInteractionSettings {
   voronoiClipping?: boolean | number
-  voronoiFilter?: Function
+  voronoiFilter?: ((...args: any[]) => any)
 }
 
 export interface Interactivity {
-  start?: Function
-  during?: Function
-  end?: Function
+  start?: ((...args: any[]) => any)
+  during?: ((...args: any[]) => any)
+  end?: ((...args: any[]) => any)
   brush?: string
   extent?: Array<number[]> | number[]
   columnsBrush?: boolean
@@ -45,9 +45,9 @@ export type InteractionLayerProps = {
   enabled?: boolean
   margin: MarginType
   projection?: string
-  customDoubleClickBehavior?: Function
-  customClickBehavior?: Function
-  customHoverBehavior?: Function
+  customDoubleClickBehavior?: ((...args: any[]) => any)
+  customClickBehavior?: ((...args: any[]) => any)
+  customHoverBehavior?: ((...args: any[]) => any)
   canvasRendering?: boolean
   disableCanvasInteraction: boolean
   showLinePoints?: string

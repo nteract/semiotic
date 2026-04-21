@@ -138,8 +138,6 @@ export const RealtimeHeatmap = forwardRef(
 
     const {
       size,
-      width,
-      height,
       margin: userMargin,
       className,
       arrowOfTime = "right",

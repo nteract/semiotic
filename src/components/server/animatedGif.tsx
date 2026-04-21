@@ -431,10 +431,13 @@ export async function renderToAnimatedGif(
   }
 
   // Load sharp dynamically — these are optional deps, loaded at call time.
-   
+  // The string-variable indirection defeats static bundler resolution so sharp
+  // stays out of the main chunk. Dynamic `import()` would force this function
+  // (and its callers) to become async, a much bigger refactor.
   let sharp: any
   try {
     const sharpModule = "sharp"
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     sharp = require(sharpModule)
   } catch {
     throw new Error(
@@ -442,11 +445,11 @@ export async function renderToAnimatedGif(
     )
   }
 
-  // Load gifenc
+  // Load gifenc — same optional-dep pattern as sharp above.
   let GIFEncoder: any, quantize: any, applyPalette: any
   try {
-     
     const gifencModule = "gifenc"
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const gifenc = require(gifencModule)
     GIFEncoder = gifenc.GIFEncoder
     quantize = gifenc.quantize

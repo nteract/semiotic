@@ -164,7 +164,7 @@ describe("buildPointScene", () => {
       config: {
         chartType: "scatter",
         sizeRange: [4, 20] as [number, number],
-        pointStyle: (d: any) => ({ fill: "red", r: 7 }),
+        pointStyle: (_d: any) => ({ fill: "red", r: 7 }),
       },
       getSize: (d) => d.size,
     })

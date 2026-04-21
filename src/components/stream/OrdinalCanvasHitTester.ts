@@ -1,5 +1,5 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
-import type { PointSceneNode, RectSceneNode, HoverData } from "./types"
+import type { PointSceneNode, RectSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"

@@ -1,4 +1,4 @@
-import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode, StreamScales } from "./types"
+import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"

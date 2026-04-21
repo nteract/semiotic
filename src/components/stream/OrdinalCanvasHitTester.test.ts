@@ -1,5 +1,5 @@
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
-import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
+import type { WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode } from "./types"
 
 describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {

@@ -7,7 +7,6 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Mock XYFrame to capture props
 let lastXYFrameProps: any = null
 vi.mock("../../stream/StreamXYFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {

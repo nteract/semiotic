@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -140,8 +140,6 @@ export const RealtimeLineChart = forwardRef(
 
     const {
       size,
-      width,
-      height,
       margin: userMargin,
       className,
       arrowOfTime = "right",

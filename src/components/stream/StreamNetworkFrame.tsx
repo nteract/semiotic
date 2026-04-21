@@ -12,13 +12,11 @@ import {
 import type {
   StreamNetworkFrameProps,
   StreamNetworkFrameHandle,
-  NetworkChartType,
+  
   NetworkPipelineConfig,
   RealtimeNode,
   RealtimeEdge,
-  EdgePush,
-  ParticleStyle,
-  ThresholdAlertConfig
+  EdgePush
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
@@ -27,10 +25,7 @@ import {
   DEFAULT_PARTICLE_STYLE
 } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
-import {
-  findNearestNetworkNode,
-  type NetworkHitResult
-} from "./NetworkCanvasHitTester"
+import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -447,7 +442,7 @@ const StreamNetworkFrame = forwardRef<
   // ── State ────────────────────────────────────────────────────────────
 
   const [hoverData, setHoverData] = useState<HoverData | null>(null)
-  const [layoutVersion, setLayoutVersion] = useState(0)
+  const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
 

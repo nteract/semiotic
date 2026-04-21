@@ -331,7 +331,7 @@ export function advanceTransition(
   transition: TransitionConfig,
   state: TransitionState,
   prevPositionMap: Map<string, PrevPosition>,
-  prevPathMap: Map<string, PrevPath>
+  _prevPathMap: Map<string, PrevPath>
 ): boolean {
   if (!state.activeTransition) return false
 

@@ -90,7 +90,7 @@ describe("waterfallRenderer", () => {
     waterfallRenderer(ctx, data, makeScales("x"), layoutX, style, accessors, undefined, { waterfallStyle: {} })
 
     expect((ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
-    const [x, y, w, h] = (ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls[0]
+    const [_x, y, _w, h] = (ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls[0]
     // Bar from baseline (0) to cumulative (10): y should be above the baseline
     const yBaseline = makeScales("x").value(0)
     const yTop = makeScales("x").value(10)
@@ -104,7 +104,7 @@ describe("waterfallRenderer", () => {
     waterfallRenderer(ctx, data, makeScales("x"), layoutX, style, accessors, undefined, { waterfallStyle: {} })
 
     expect((ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
-    const [x, y, w, h] = (ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls[0]
+    const [_x, y, _w, h] = (ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls[0]
     const yBaseline = makeScales("x").value(0)
     const yBottom = makeScales("x").value(-10)
     expect(y).toBeCloseTo(Math.min(yBaseline, yBottom), 1)

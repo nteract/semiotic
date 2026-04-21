@@ -135,8 +135,6 @@ export const RealtimeWaterfallChart = forwardRef(
 
     const {
       size,
-      width,
-      height,
       margin: userMargin,
       className,
       arrowOfTime = "right",

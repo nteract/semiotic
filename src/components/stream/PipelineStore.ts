@@ -506,7 +506,7 @@ export class PipelineStore {
 
     // Determine if extents are fully user-specified (no padding needed)
     const yFullySpecified = config.yExtent && config.yExtent[0] != null && config.yExtent[1] != null
-    const xFullySpecified = config.xExtent && config.xExtent[0] != null && config.xExtent[1] != null
+    const _xFullySpecified = config.xExtent && config.xExtent[0] != null && config.xExtent[1] != null
 
     // Chart-type specific extent adjustments
     if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {

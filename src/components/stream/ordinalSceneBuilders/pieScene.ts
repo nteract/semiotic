@@ -2,7 +2,7 @@ import type { WedgeSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
 export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): WedgeSceneNode[] {
-  const { scales, columns, config, resolvePieceStyle } = ctx
+  const { scales: _scales, columns, config, resolvePieceStyle } = ctx
   const nodes: WedgeSceneNode[] = []
   // cx/cy are 0 because StreamOrdinalFrame translates the canvas
   // to the center of the chart area for radial projection

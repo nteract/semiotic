@@ -12,7 +12,6 @@ import { ThemeProvider } from "../../ThemeProvider"
 // Mock StreamOrdinalFrame to capture props
 let lastFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {

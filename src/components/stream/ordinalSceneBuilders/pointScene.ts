@@ -1,7 +1,7 @@
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
-export function buildPointScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildPointScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, getR, multiScales, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
@@ -43,7 +43,7 @@ export function buildPointScene(ctx: OrdinalSceneContext, layout: OrdinalLayout)
   return nodes
 }
 
-export function buildSwarmScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildSwarmScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, getR, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []

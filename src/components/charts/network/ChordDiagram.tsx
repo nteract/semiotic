@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -201,7 +201,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       edgeColorBy,
       colorBy,
       colorScale,
-      nodeStyleFn: nodeStyle || ((d: Record<string, any>) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
+      nodeStyleFn: nodeStyle || ((_d: Record<string, any>) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
       edgeOpacity,
       baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
     })
