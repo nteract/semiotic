@@ -1191,7 +1191,7 @@ export async function renderToImage(
   }
 
   // Load sharp dynamically — optional dep, loaded at call time only.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   let sharp: any
   try {
     const sharpModule = "sharp"

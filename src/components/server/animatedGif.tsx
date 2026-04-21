@@ -26,7 +26,7 @@ import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
 import { renderChart } from "./renderToStaticSVG"
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 // ReactDOMServer imported at top of file via ESM
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -431,7 +431,7 @@ export async function renderToAnimatedGif(
   }
 
   // Load sharp dynamically — these are optional deps, loaded at call time.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   let sharp: any
   try {
     const sharpModule = "sharp"
@@ -445,7 +445,7 @@ export async function renderToAnimatedGif(
   // Load gifenc
   let GIFEncoder: any, quantize: any, applyPalette: any
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const gifencModule = "gifenc"
     const gifenc = require(gifencModule)
     GIFEncoder = gifenc.GIFEncoder

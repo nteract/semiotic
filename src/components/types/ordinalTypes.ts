@@ -104,7 +104,7 @@ export interface OrdinalFrameState<TDatum = Record<string, any>> extends General
   pieceDataXY: Array<object>
   axisData?: AxisProps[]
   axes?: React.ReactNode[]
-  axesTickLines?: Object[]
+  axesTickLines?: object[]
   oLabels: { labels: React.ReactNode }
   columnOverlays: Array<object>
   oAccessor: Array<Function>

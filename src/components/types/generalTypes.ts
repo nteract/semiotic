@@ -1,3 +1,4 @@
+import type { JSX } from "react"
 import { CustomHoverType, AnnotationHandling } from "./annotationTypes"
 import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
 

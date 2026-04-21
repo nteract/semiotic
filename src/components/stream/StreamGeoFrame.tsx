@@ -905,10 +905,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             store.applyZoomScale(currentK, layout)
             dirtyRef.current = false
             scheduleRender()
-            onZoom?.({
-              projection: store.scales?.projection!,
-              zoom: store.currentZoom
-            })
+            if (store.scales?.projection) {
+              onZoom?.({
+                projection: store.scales.projection,
+                zoom: store.currentZoom
+              })
+            }
           }
         }
 
@@ -988,9 +990,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           }
 
           const store = storeRef.current
-          if (store) {
+          if (store?.scales?.projection) {
             onZoom?.({
-              projection: store.scales?.projection!,
+              projection: store.scales.projection,
               zoom: store.currentZoom
             })
           }
@@ -1035,9 +1037,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           isZoomingRef.current = false
 
           const store = storeRef.current
-          if (store) {
+          if (store?.scales?.projection) {
             onZoom?.({
-              projection: store.scales?.projection!,
+              projection: store.scales.projection,
               zoom: store.currentZoom
             })
           }

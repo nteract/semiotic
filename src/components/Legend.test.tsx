@@ -47,8 +47,10 @@ describe("Legend — categorical items", () => {
       (r) => r.getAttribute("width") === "16" && r.getAttribute("height") === "16"
     )
     expect(swatches.length).toBe(3)
-    expect(swatches[0].style.fill).toBe("#e41a1c")
-    expect(swatches[1].style.fill).toBe("#377eb8")
+    // jsdom 29+ normalizes inline style colors to `rgb(...)` on readback to match
+    // browser behavior — #e41a1c → rgb(228, 26, 28). Match either form.
+    expect(swatches[0].style.fill).toMatch(/^(#e41a1c|rgb\(228,\s*26,\s*28\))$/)
+    expect(swatches[1].style.fill).toMatch(/^(#377eb8|rgb\(55,\s*126,\s*184\))$/)
   })
 
   it("renders the title when orientation is vertical", () => {

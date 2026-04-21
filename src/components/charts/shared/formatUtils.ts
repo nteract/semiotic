@@ -100,7 +100,7 @@ export function createTooltip(
   fields: string[],
   formatters?: Record<string, (v: any) => string>,
   labels?: Record<string, string>
-): (d: any) => JSX.Element {
+): (d: any) => React.JSX.Element {
   return (d: any) => {
     return React.createElement(
       "div",

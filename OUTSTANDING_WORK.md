@@ -64,42 +64,32 @@ Honest snapshot from `npm outdated`. We are meaningfully behind on several deps;
 
 These are all **legitimately big** and the previous "no big deal" framing was wrong. Each line below is roughly the order I'd tackle them.
 
-#### 1. Test environment: `jsdom` 26 → 29 — multi-week or revisit env choice
+#### 1. ~~Test environment: `jsdom` 26 → 29~~ — landed 2026-04-20
 
-**Three majors behind.** Every jsdom major has historically broken at least one chunk of canvas, `getComputedStyle`, or observer behavior — exactly the surfaces the recent perf-pass fixes lean on (`resolveCSSColor`, `MutationObserver` in helpers, `ResizeObserver` polyfills). Risk is high and concentrated in the test suite.
+Bumped to `^29.0.2`. The feared breakage around canvas / `getComputedStyle` / observers never materialized — exactly **one** test needed updating: `Legend.test.tsx`'s inline-style assertion expected a hex literal (`#e41a1c`), but jsdom 29 now normalizes inline `style.fill` reads to `rgb(228, 26, 28)` to match every real browser. Assertion updated to `toMatch(/^(#e41a1c|rgb\(228,\s*26,\s*28\))$/)` so it works under either jsdom version. No changes to `resolveCSSColor`, `MutationObserver`, or observer polyfills were needed.
 
-Options:
-- **Bump in place** and chase breakage: probably 1–3 days of test repair, plus likely follow-on Copilot/CI feedback rounds.
-- **Switch to `happy-dom`** or `@vitest/browser` (real Chromium): faster tests and avoids the migration treadmill. ~1 week including audit of jsdom-specific assumptions in `setupTests.ts` and the per-frame canvas mocks.
+#### 2. ~~ESLint 8 → 10 + `@typescript-eslint` 6 → 8~~ — landed 2026-04-20 (ESLint 9, not 10)
 
-Either way, do this **before** the eslint-9 work below — eslint migration adds churn to the same test files.
+Landed ESLint `^9.39.4` + `@typescript-eslint/*` `^8.59.0`. **Couldn't go all the way to ESLint 10**: `eslint-plugin-react@7.37.5` peer range caps at `^9.7`, and no plugin fork covers 10 yet. ESLint 9 was the real goal (flat-config support landed there); 10 is a patch release that the plugin ecosystem hasn't caught up with.
 
-#### 2. ESLint 8 → 10 + `@typescript-eslint` 6 → 8 — flat-config migration, ~1 week
+Migration steps that actually mattered:
+- `.eslintrc.json` deleted, `eslint.config.mjs` written (~70 lines). Flat-config import order: `@eslint/js` recommended → react plugin with manual `reactPlugin.configs.recommended.rules` spread → `typescript-eslint.configs.recommended` mapped to `.ts`/`.tsx` only → local rule overrides. `.mjs` extension avoids the `MODULE_TYPELESS_PACKAGE_JSON` warning without forcing the whole package to `"type": "module"`.
+- `globals` package added for the `browser`/`node`/`jest` globals (flat config requires explicit declaration; no more `env` shorthand).
+- `typescript-eslint` unified meta-package added for the mapped `.configs.recommended` usage.
+- `eslint --fix` cleared ~13 auto-fixable violations (prefer-const, unused eslint-disable directives).
+- Three real bug fixes surfaced in `StreamGeoFrame.tsx`: `foo?.bar!` pattern (optional chain + non-null assertion is contradictory) replaced with early-return guards in the three `onZoom` callback sites.
+- Seven typescript-eslint rules disabled as codebase-wide tech debt — each its own follow-up sweep, reasoning in the config file's comments: `no-explicit-any` (~140 sites), `no-unused-vars`, `no-unused-expressions`, `ban-ts-comment`, `no-empty-object-type`, `no-require-imports`, `no-unsafe-function-type` (~15 bare `Function` types), `no-this-alias` (one RingBuffer site).
 
-**ESLint 9 dropped legacy `.eslintrc.json` support.** Our `.eslintrc.json` will be silently ignored after the upgrade — every file passes lint because no rules apply. Need to migrate to `eslint.config.js` flat config, which means:
+Fresh `npm install` was required because the old `@typescript-eslint/eslint-plugin@6.21.0` peer-gated against eslint 9 and npm refused to upgrade in place — `rm -rf node_modules package-lock.json` then `npm install`.
 
-- Rewrite `.eslintrc.json` → `eslint.config.js` (~50 lines, mostly mechanical)
-- Bump `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` together (they share a major) and switch to the new exported `tseslint.configs.recommendedTypeChecked` patterns
-- Audit `eslint-plugin-react` and any other plugins for flat-config compatibility (most have `*-x` or `9.x` packages)
-- Re-run `eslint src` and triage the new violations from `tseslint` 8's stricter `no-explicit-any` defaults — we still have ~140 `as any` per the TypeScript section below
+#### 3. ~~React + types 18 → 19~~ — landed 2026-04-20
 
-ESLint 8 is in maintenance through October 2026, so we can defer without immediate security pressure, but it should be 3.5.0 work at the latest. Pairs naturally with the **`as any` reduction** initiative already on this list.
+Bumped `react` + `react-dom` to `^19.2.5`, `@types/react` + `@types/react-dom` to `^19`, and `@testing-library/react` to `^16.3.2` (v16 is the React-19-compatible major). Feared 2–4 week migration, actual friction: **four TS errors, no runtime breakage**.
 
-#### 3. React + types 18 → 19 — multi-PR effort, 2–4 weeks
-
-**React 19 GA shipped.** `peerDependencies` already declares `^18.1.0 || ^19.0.0` so we *say* we support 19, but we don't test against it. Concrete migration work:
-
-- Bump `react`, `react-dom`, `@types/react`, `@types/react-dom` together
-- React 19 changes:
-  - Refs can be passed as props (deprecates `forwardRef` for new components — Stream Frames + every HOC use `forwardRef` extensively, but `forwardRef` still works in 19, just with a deprecation warning)
-  - New `use()` hook for promises / context
-  - Stricter `useMemo`/`useEffect` rules (one-render guarantee for refs assigned during render)
-  - `useId` behavior change in concurrent rendering
-  - Removed: legacy context API, string refs, `findDOMNode`, defaultProps for function components
-- Test it under React 19 in CI before bumping the peer-dep floor to 19-only
-- `@testing-library/react` must bump to 16.x for React 19 support
-
-Risk surface is large but mostly cosmetic — the perf-pass code we just landed is React-version-agnostic. The likely landmines are in legacy components (BarChart class definitions if any, ChartContainer's HOC composition). Recommend a feature branch + a CI matrix test.
+- **`JSX` namespace** — React 19's types moved `JSX` from a global namespace to a named export on `react`. Three call sites referenced `JSX.Element` without importing: `formatUtils.ts` (used `React.JSX.Element` since `* as React` was already imported), `generalTypes.ts` + `networkTypes.ts` (added `import type { JSX } from "react"`).
+- **`useRef<T>()` signature** — React 19 requires an initial value; `useRef<ReturnType<typeof setTimeout>>()` in `DetailsPanel.tsx` became `useRef<ReturnType<typeof setTimeout> | undefined>(undefined)`. `undefined` specifically (not `null`) because `clearTimeout` rejects `null`.
+- Every test passes against React 19 + @testing-library/react 16 + jsdom 29. `forwardRef` still works (with a deprecation warning in v19 that we haven't seen fire in tests). The Stream Frames' + HOCs' extensive `forwardRef` usage is untouched; migrating to plain-prop refs is a future cleanup, not a migration requirement.
+- `peerDependencies` still declares `^18.1.0 || ^19.0.0` — keeps the library usable by consumers on either React.
 
 #### 4. ~~TypeScript 5.9 → 6.0~~ — landed 2026-04-20
 
@@ -122,9 +112,9 @@ Bumped to `^18.0.2`. v5 removed the built-in `headerIds` option that `docs/src/M
 
 Bumped to `^3.0.1`. v2 went ESM-only; the one consumer (`docs/src/examples/CanvasInteraction.js`) was already using ESM `import { csvParse }`, so the upgrade was a pure version bump. `csvParse` signature unchanged across v1–v3.
 
-#### 8. `@testing-library/react` 14 → 16 — depends on React 19
+#### 8. ~~`@testing-library/react` 14 → 16~~ — landed 2026-04-20 alongside React 19
 
-Don't bump independently; v16 requires React 19. Slot into the React 19 PR.
+Bumped to `^16.3.2` as part of item #3. No test changes required.
 
 #### 9. ~~`size-limit` + `@size-limit/file` 11 → 12~~ — landed 2026-04-20
 
