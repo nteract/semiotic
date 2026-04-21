@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { useBrushSelection } from "../../store/useSelection"
 
@@ -256,7 +257,10 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -425,9 +429,14 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
     }
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
 
+  const basePointStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
+    [basePointStyle, stroke, strokeWidth, opacity]
+  )
+
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
-    [basePointStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // Legend + margin

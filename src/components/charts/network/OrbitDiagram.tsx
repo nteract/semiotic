@@ -8,6 +8,7 @@ import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
@@ -138,6 +139,9 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     selection,
     linkedHover,
     loading,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -177,7 +181,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
     return Array.isArray(resolved) ? (resolved as readonly string[]) : DEFAULT_COLORS
   }, [colorScheme])
 
-  const nodeStyleFn = useMemo(() => {
+  const baseNodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { stroke: "#fff", strokeWidth: 1 }
       const isRoot = (d.depth ?? 0) === 0
@@ -195,6 +199,11 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
       return baseStyle
     }
   }, [colorBy, colorByDepth, colorScale, schemeColors, themeCategorical, colorScheme, categoryIndexMap])
+
+  const nodeStyleFn = useMemo(
+    () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
+    [baseNodeStyleFn, stroke, strokeWidth, opacity]
+  )
 
   // Edge style — use semi-transparent grey that works in both light and dark mode
   // (canvas cannot resolve "currentColor")

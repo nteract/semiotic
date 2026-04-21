@@ -30,6 +30,7 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Record<string, an
   const gap = ws?.gap ?? 1
   const barStroke = ws?.stroke
   const barStrokeWidth = ws?.strokeWidth
+  const barOpacity = ws?.opacity
   let baseline = 0
 
   for (let i = 0; i < arr.length; i++) {
@@ -63,9 +64,11 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Record<string, an
     const rectH = Math.abs(yBaseline - yTop)
 
     const fill = delta >= 0 ? positiveColor : negativeColor
+    const rectStyle: Record<string, any> = { fill, stroke: barStroke, strokeWidth: barStrokeWidth }
+    if (barOpacity != null) rectStyle.opacity = barOpacity
     nodes.push(buildRectNode(
       x0, rectY, barWidth, rectH,
-      { fill, stroke: barStroke, strokeWidth: barStrokeWidth },
+      rectStyle,
       { ...d, baseline, cumEnd, delta, _connectorStroke: ws?.connectorStroke, _connectorWidth: ws?.connectorWidth }
     ))
 

@@ -11,6 +11,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
@@ -159,6 +160,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     legendInteraction,
     legendPosition: legendPositionProp,
     categoryFormat,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -312,9 +316,14 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     }
   }, [levelColorMap, neutralColor, fpPieceStyle])
 
+  const basePieceStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
+    [basePieceStyle, stroke, strokeWidth, opacity]
+  )
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // ── Tooltip ──────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import type { ParticlePool } from "../ParticlePool"
 import type { RealtimeEdge, ParticleStyle } from "../networkTypes"
 import { DEFAULT_PARTICLE_STYLE } from "../networkTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas particle renderer for sankey — ported directly from realtime-network.
@@ -28,7 +29,9 @@ export function renderNetworkParticles(
     // Resolve color
     if (typeof style.color === "function") {
       const sourceNode = typeof edge.source === "object" ? edge.source : null
-      ctx.fillStyle = sourceNode ? (style.color as Function)(edge, sourceNode) : "#666"
+      ctx.fillStyle = sourceNode
+        ? (style.color as Function)(edge, sourceNode)
+        : resolveCSSColor(ctx, "var(--semiotic-secondary, #666)")!
     } else if (style.color && style.color !== "inherit") {
       ctx.fillStyle = style.color as string
     } else {

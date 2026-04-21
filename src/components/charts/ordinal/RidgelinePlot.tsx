@@ -12,6 +12,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useChartSetup } from "../shared/useChartSetup"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
@@ -89,6 +90,9 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
+    stroke,
+    strokeWidth,
+    opacity,
     showCategoryTicks,
     categoryFormat
   } = props
@@ -144,9 +148,14 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
     }
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
+  const baseSummaryStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseSummaryStyle, { stroke, strokeWidth, opacity }),
+    [baseSummaryStyle, stroke, strokeWidth, opacity]
+  )
+
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])

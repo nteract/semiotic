@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
@@ -79,6 +80,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     chartId,
     loading,
     legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -159,11 +163,18 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     }
   }, [colorBy, colorByDepth, colorScale, themeCategorical, colorScheme, categoryIndexMap])
 
+  // Overlay top-level primitive props (stroke/strokeWidth/opacity) on nodeStyleFn
+  // before selection wrapping, so they land on every node.
+  const nodeStyleFnWithPrimitives = useMemo(
+    () => mergeShapeStyle(nodeStyleFn, { stroke, strokeWidth, opacity }),
+    [nodeStyleFn, stroke, strokeWidth, opacity]
+  )
+
   // Wrap node style with selection — unwrap hierarchy .data for predicate matching
   const nodeStyle = useMemo(() => {
-    if (!activeSelectionHook) return nodeStyleFn
+    if (!activeSelectionHook) return nodeStyleFnWithPrimitives
     return (d: Record<string, any>) => {
-      const style = { ...nodeStyleFn(d) }
+      const style = { ...nodeStyleFnWithPrimitives(d) }
       if (activeSelectionHook.isActive) {
         const datum = d.data || d
         const matches = activeSelectionHook.predicate(datum)
@@ -179,7 +190,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       }
       return style
     }
-  }, [nodeStyleFn, activeSelectionHook, resolvedSelection])
+  }, [nodeStyleFnWithPrimitives, activeSelectionHook, resolvedSelection])
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)

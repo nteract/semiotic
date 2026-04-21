@@ -1,4 +1,5 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, BoxplotSceneNode } from "../ordinalTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 export const boxplotCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -12,8 +13,20 @@ export const boxplotCanvasRenderer = (
     const halfWidth = node.columnWidth / 2
     const isVert = node.projection === "vertical"
 
-    const fillColor = node.style.fill || "#007bff"
-    const strokeColor = node.style.stroke || "#333"
+    // Theme fallbacks resolved once per node, hex literal trails the CSS-var fallback.
+    const themePrimary = resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+    const themeText = resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
+
+    // Preserve non-string fills (CanvasPattern/CanvasGradient) unchanged — only
+    // string fills go through CSS-var resolution.
+    const userFill = node.style.fill
+    const fillColor: string | CanvasPattern | CanvasGradient = typeof userFill === "string"
+      ? (resolveCSSColor(ctx, userFill) || userFill)
+      : (userFill ?? themePrimary)
+    const userStroke = node.style.stroke
+    const strokeColor = typeof userStroke === "string"
+      ? (resolveCSSColor(ctx, userStroke) || userStroke)
+      : themeText
     const lineWidth = node.style.strokeWidth || 1
     const opacity = node.style.fillOpacity ?? node.style.opacity ?? 0.6
 

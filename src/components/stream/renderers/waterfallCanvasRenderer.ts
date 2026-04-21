@@ -1,5 +1,6 @@
 import type { StreamRendererFn } from "./types"
 import { barCanvasRenderer } from "./barCanvasRenderer"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas waterfall renderer.
@@ -21,7 +22,7 @@ export const waterfallCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, la
   if (!connectorStroke) return // No connector lines requested
 
   ctx.save()
-  ctx.strokeStyle = connectorStroke
+  ctx.strokeStyle = resolveCSSColor(ctx, connectorStroke) || connectorStroke
   ctx.lineWidth = firstDatum?._connectorWidth ?? 1
   ctx.setLineDash([])
 

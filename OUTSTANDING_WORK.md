@@ -473,27 +473,27 @@ Drives value off the semantic roles + sequential/diverging scales for the obviou
 
 **Behavior change for existing consumers:** LikertChart without an explicit `colorScheme` prop now renders in the active theme's diverging scheme (LIGHT_THEME/DARK_THEME both declare `"RdBu"`). Prior behavior used a Carbon-inspired hardcoded palette regardless of theme. LikertChart tests updated to call `defaultDivergingScheme(n, "RdBu")` to match the new path.
 
-#### Milestone 4 — Dead-prop sweep finish [PARTIAL — XY leftovers landed]
+#### Milestone 4 — Dead-prop sweep finish [LANDED]
 
-XY-side scene builder + store fallbacks landed. Renderer-level fallbacks deliberately deferred — see note at the end.
-
-**Landed:**
+**XY-side scene builder + store fallbacks (original M4 scope):**
 
 - `xySceneBuilders/pointScene.ts` — default point fill now `ctx.config.themeSemantic?.primary || "#4e79a7"`. Resolved once per scene build, not per-datum. Unit coverage in `pointScene.test.ts`.
 - `xySceneBuilders/swarmScene.ts` — same pattern. Unit coverage in `swarmScene.test.ts`.
 - `PipelineStore.resolveLineStyle` — three `#007bff` fallbacks and the `#4e79a7` bounds-fill fallback all consult `this.config.themeSemantic?.primary` first. The pattern: `user > resolveGroupColor() > themeSemantic.primary > hardcoded`.
 - `StreamXYFrame.tsx` crosshair + hover-point + line-highlight — `ThemeColors` interface gained a `primary: string` field (populated from `--semiotic-primary` in `resolveThemeColors`). The three `#007bff` hex fallbacks at lines 266/279/321 are now `theme.primary`. Inline `getComputedStyle(…).getPropertyValue("--semiotic-primary")` call removed — it duplicated the theme resolver that already runs upstream.
 
-**Still pending (renderer-level fallbacks, deferred):**
+**Renderer-level fallback sweep (deferred follow-up, landed 2026-04-20):**
 
-- `renderers/barCanvasRenderer.ts:24,72` — `#007bff` fallback when `node.style.fill` is missing.
-- `renderers/boxplotCanvasRenderer.ts` — `#333` / `#007bff` fallbacks.
-- `renderers/heatmapCanvasRenderer.ts:40,74` — `#000` / `#fff` text-contrast + cell-stroke (semantic — pairs with `themeSemantic.text` / `.surface` but the contrast calculation is data-dependent).
-- `renderers/connectorCanvasRenderer.ts:48` — `#999` default.
-- `renderers/networkParticleRenderer.ts:31` — `#666` particle color fallback.
-- `renderers/barFunnelCanvasRenderer.ts:51,166,170,175` — `#999` + `#333` / `#666` shadow colors.
+Rather than threading resolved theme defaults through every renderer's argument list, the sweep uses `resolveCSSColor(ctx, "var(--semiotic-role, #hex)")` — the existing `resolveCSSColor` helper already handles inline var() fallbacks via its regex's second capture group, so the renderer reads `--semiotic-*` from the canvas's computed style and falls back to the hardcoded hex when the var isn't set. No API change, no extra plumbing.
 
-These are all renderer-level `||` fallbacks that only fire when the upstream scene builder didn't set the style field. Post-milestones 1–3, scene builders DO set style from theme, so these fallbacks are effectively unreachable in practice. Fixing them requires threading resolved theme defaults through the renderer's argument list — worth doing as defensive cleanup but not a functional blocker. Treat as a follow-up PR.
+- `renderers/barCanvasRenderer.ts:24,74` — `#007bff` → `var(--semiotic-primary, #007bff)`.
+- `renderers/boxplotCanvasRenderer.ts` — `#007bff` / `#333` fallbacks → `var(--semiotic-primary)` / `var(--semiotic-text)` with inline hex fallbacks.
+- `renderers/heatmapCanvasRenderer.ts:74` — cell border `#fff` → `var(--semiotic-surface, #fff)`. The `#000` / `#fff` pair at line 40 (`contrastTextColor`) stays hardcoded — contrast is driven by cell luminance, not theme.
+- `renderers/connectorCanvasRenderer.ts:48` — `#999` → `var(--semiotic-border, #999)`.
+- `renderers/networkParticleRenderer.ts:31` — `#666` → `var(--semiotic-secondary, #666)`.
+- `renderers/barFunnelCanvasRenderer.ts:51,166,170,175` — hatch base `#999` → `var(--semiotic-border, #999)`; label text pair `#333`/`#666` → `var(--semiotic-text, #333)` / `var(--semiotic-text-secondary, #666)`, resolved once per frame and hoisted above the label loop.
+
+Test note: existing unit tests (e.g. `heatmapCanvasRenderer.test.ts`'s `"#fff"` cell-border assertion) remain green — in the jsdom test environment the canvas has no root with `--semiotic-*` set, so the inline var() fallback path produces the old hex literals. Assertion names updated to document the themed-fallback semantics.
 
 ### Phase B — Designer-facing API (visible, additive)
 
@@ -511,19 +511,17 @@ Proof-of-pattern with three representative HOCs — one per primitive family.
 - **Playwright** — 9 snapshots across 3 charts × 3 states (default / stroked / translucent). Confirms primitive props visibly reach every rendered shape: BarChart gets stroked rects, Scatterplot gets 0.4-opacity circles with grid lines showing through, LineChart renders red (`var(--semiotic-danger)` → `#d62728`) at strokeWidth 3.
 - **Docs** — new "Primitive styling props" section in SemanticColorsPage covering the four first-class props, precedence ladder, when-to-reach-for-which, composition with `frameProps.*Style`. CLAUDE.md Common Props updated with the three new props + a paragraph explaining the precedence rules, synced to all AI mirror files.
 
-#### B2 — Remaining HOC rollout [PENDING]
+#### B2 — Remaining HOC rollout [LANDED — 2026-04-19]
 
-Mechanical application of the helper to every remaining shape-drawing HOC. Each is one-line `mergeShapeStyle` overlay on the existing style-merge chain; template is BarChart/Scatterplot/LineChart from B1.
+Mechanical application of the helper to every remaining shape-drawing HOC. Each one-line `mergeShapeStyle` overlay on the existing style-merge chain, templated on BarChart/Scatterplot/LineChart from B1.
 
-- **Ordinal** — StackedBarChart, GroupedBarChart, PieChart, DonutChart, FunnelChart, SwimlaneChart, LikertChart, GaugeChart, DotPlot, BoxPlot, SwarmPlot, Histogram, ViolinPlot, RidgelinePlot
-- **XY** — AreaChart, StackedAreaChart, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap, MultiAxisLineChart, ScatterplotMatrix, MinimapChart
-- **Network** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
-- **Geo** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
-- **Realtime** — RealtimeLineChart, RealtimeSwarmChart, RealtimeHeatmap, RealtimeHistogram, RealtimeWaterfallChart
-
-Each rollout PR should add test coverage matching B1's pattern (5–6 assertions per HOC: stroke, strokeWidth, opacity, precedence over frameProps style, "no override keys when unset"). Playwright coverage: one stroke + one opacity snapshot per HOC, ideally in the primitive-props matrix fixture.
-
-**Per-renderer audit needed**: `lineCanvasRenderer.ts` already routes stroke through `resolveCSSColor`. Audit the other canvas renderers (`pointCanvasRenderer`, `barCanvasRenderer`, `areaCanvasRenderer`, `wedgeCanvasRenderer`, `boxplotCanvasRenderer`, etc.) for the same bug pattern — any renderer that reads `node.style.stroke` or `.fill` without `resolveCSSColor` will silently reject `var(...)` values. Most fill paths already route through `resolveCSSColor` (checked during theming milestones); stroke paths are the new hot surface since Phase B makes top-level stroke ubiquitous.
+- **Ordinal** — StackedBarChart, GroupedBarChart, PieChart, DonutChart, FunnelChart, SwimlaneChart, LikertChart, GaugeChart, DotPlot, BoxPlot, SwarmPlot, Histogram, ViolinPlot, RidgelinePlot (14/14 wired). BoxPlot/Histogram/ViolinPlot/RidgelinePlot wrap `summaryStyle`; the rest wrap `pieceStyle`. GaugeChart is the outlier — the primitive-merge happens around its useMemo-returned `pieceStyle` before it's passed to `streamProps`.
+- **XY** — AreaChart, StackedAreaChart, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap, MultiAxisLineChart (7/7 wired; ScatterplotMatrix and MinimapChart compose other HOCs and inherit by delegation — no separate wire-up needed).
+- **Network** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram (7/7 wired). ForceDirectedGraph and SankeyDiagram wrap both `nodeStyle` and `edgeStyle`. Treemap inserts `nodeStyleFnWithPrimitives` before the selection-aware wrapper. ChordDiagram preserves its conditional-undefined return.
+- **Geo** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram (4/4 wired). FlowMap wraps both `lineStyleFn` and `pointStyleFn`.
+- **Realtime** — RealtimeLineChart, RealtimeSwarmChart (already had the props pre-B), RealtimeHistogram, RealtimeWaterfallChart (4/5 wired). RealtimeHeatmap deferred — no user-facing style surface; fills come from the heatmap LUT. Opacity added to `BarStyle` / `LineStyle` / `WaterfallStyle` interfaces in `realtime/types.ts`; scene builders (`barScene`, `waterfallScene`) consume the new field and thread it into the rect node style. `XYSceneConfig.waterfallStyle` inline type extended to match.
+- **Renderer CSS-var audit** — Wrapped every user-facing stroke/fill path through `resolveCSSColor` in `networkRectRenderer`, `networkArcRenderer`, `networkCircleRenderer`, `networkEdgeRenderer` (all four edge types: bezier / line / ribbon / curved), `boxplotCanvasRenderer` (fillColor + strokeColor), `candlestickCanvasRenderer` (wickColor + body up/down colors), and `waterfallCanvasRenderer` (connector stroke). `lineCanvasRenderer` / `pointCanvasRenderer` / `barCanvasRenderer` / `areaCanvasRenderer` / `wedgeCanvasRenderer` / `connectorCanvasRenderer` / `trapezoidCanvasRenderer` / `violinCanvasRenderer` / `geoCanvasRenderer` already wrapped their user-facing stroke paths (from prior milestones or B1).
+- **Playwright** — Matrix extended from 9 → 18 fixtures. Added BoxPlot (ordinal summary), SankeyDiagram (network nodes + edges), and RealtimeLineChart (realtime `lineStyle.opacity`), each in default / stroked / translucent states. `integration-tests/primitive-props-examples/index.js` grew deterministic fixtures for each new family (hand-picked boxplot values, three-node A→B→C sankey, 20-point sinusoidal realtime buffer).
 
 ### Phase C — Consolidation (contingent)
 

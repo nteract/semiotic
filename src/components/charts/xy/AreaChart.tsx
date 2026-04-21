@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
@@ -270,6 +271,9 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -401,9 +405,14 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
     }
   }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth])
 
+  const baseLineStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
+    [baseLineStyle, stroke, strokeWidth, opacity]
+  )
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, resolvedSelection),
-    [baseLineStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

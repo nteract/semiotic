@@ -7,6 +7,7 @@ import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useChartMode } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
@@ -95,6 +96,9 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     annotations,
     frameProps = {},
     className,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -182,6 +186,13 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
 
     return { gaugeData: data, pieceStyle: styleFn, gaugeAnnotations: scaleAnnotations }
   }, [value, min, max, thresholds, fillColor, backgroundColor, pct, range, showScaleLabels, fillZones])
+
+  // Overlay top-level primitive props (stroke/strokeWidth/opacity) so each
+  // zone arc respects them without the user needing a per-zone pieceStyle.
+  const pieceStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(pieceStyle, { stroke, strokeWidth, opacity }),
+    [pieceStyle, stroke, strokeWidth, opacity]
+  )
 
   // ── Start angle ─────────────────────────────────────────────────────────
   // pieScene.ts: 0° = 12 o'clock, positive = clockwise. Adds startAngle (degrees→radians).
@@ -339,7 +350,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     rAccessor: "value",
     oSort: false,  // preserve threshold zone order (don't sort by value)
     projection: "radial",
-    pieceStyle,
+    pieceStyle: pieceStyleWithPrimitives,
     innerRadius,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,

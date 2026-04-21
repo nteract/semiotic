@@ -10,6 +10,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
 import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -109,6 +110,9 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     loading,
     emptyContent,
     legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -165,7 +169,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   const hasColorData = inferredNodes.length > 0
 
   // Node style function — d is a RealtimeNode, user data on d.data
-  const nodeStyle = useMemo(() => {
+  const baseNodeStyle = useMemo(() => {
     if (!hasColorData) return undefined
     return (d: Record<string, any>, i?: number) => {
       const baseStyle: Record<string, string | number> = {
@@ -184,8 +188,14 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     }
   }, [hasColorData, colorBy, colorScale, colorScheme])
 
+  // Overlay top-level primitive props (stroke/strokeWidth/opacity) last.
+  const nodeStyle = useMemo(
+    () => baseNodeStyle ? mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }) : undefined,
+    [baseNodeStyle, stroke, strokeWidth, opacity]
+  )
+
   // Edge style function — d is a RealtimeEdge
-  const edgeStyle = useMemo(() => {
+  const baseEdgeStyle = useMemo(() => {
     if (!hasColorData) return undefined
     return createEdgeStyleFn({
       edgeColorBy,
@@ -196,6 +206,11 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
     })
   }, [hasColorData, edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity, themeCategorical, colorScheme, categoryIndexMap])
+
+  const edgeStyle = useMemo(
+    () => baseEdgeStyle ? mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }) : undefined,
+    [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {

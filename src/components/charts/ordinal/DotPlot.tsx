@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 
@@ -89,6 +90,9 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
     categoryFormat
   } = props
 
@@ -154,9 +158,14 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Record<string,
     }
   }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
+  const basePieceStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
+    [basePieceStyle, stroke, strokeWidth, opacity]
+  )
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

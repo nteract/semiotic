@@ -29,6 +29,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
@@ -277,7 +278,10 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     emptyContent,
     showLegend: showLegendProp,
     legendPosition: legendPositionProp,
-    legendInteraction
+    legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -410,9 +414,14 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     }
   }, [getValueFn, colorScale, cellBorderColor, cellBorderWidth])
 
+  const baseSummaryStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseSummaryStyle, { stroke, strokeWidth, opacity }),
+    [baseSummaryStyle, stroke, strokeWidth, opacity]
+  )
+
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, effectiveSelectionHook, resolvedSelection),
-    [baseSummaryStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // showValues is now handled natively by the canvas renderer and SSR SVG path.

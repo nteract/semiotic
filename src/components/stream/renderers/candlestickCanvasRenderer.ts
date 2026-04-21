@@ -1,5 +1,6 @@
 import type { SceneNode, StreamScales, StreamLayout, CandlestickSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 export const candlestickCanvasRenderer: StreamRendererFn = (
   ctx: CanvasRenderingContext2D,
@@ -19,18 +20,20 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       ctx.globalAlpha = decayOpacity
     }
 
+    const wickColor = resolveCSSColor(ctx, n.wickColor) || n.wickColor
+
     // Draw wick (high-low line)
     ctx.beginPath()
     ctx.moveTo(n.x, n.highY)
     ctx.lineTo(n.x, n.lowY)
-    ctx.strokeStyle = n.wickColor
+    ctx.strokeStyle = wickColor
     ctx.lineWidth = n.wickWidth
     ctx.stroke()
 
     if (n.isRange) {
       // Range/dumbbell mode: draw endpoint dots instead of body
       const dotRadius = Math.max(n.wickWidth * 2, 4)
-      ctx.fillStyle = n.wickColor
+      ctx.fillStyle = wickColor
       ctx.beginPath()
       ctx.arc(n.x, n.highY, dotRadius, 0, Math.PI * 2)
       ctx.fill()
@@ -41,7 +44,8 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       // Candlestick mode: draw body rect
       const bodyTop = Math.min(n.openY, n.closeY)
       const bodyHeight = Math.abs(n.openY - n.closeY)
-      const bodyColor = n.isUp ? n.upColor : n.downColor
+      const rawBodyColor = n.isUp ? n.upColor : n.downColor
+      const bodyColor = resolveCSSColor(ctx, rawBodyColor) || rawBodyColor
 
       ctx.fillStyle = bodyColor
       ctx.fillRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))

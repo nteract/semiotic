@@ -1,6 +1,7 @@
 import type { SceneNode, HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Parse a CSS color string to [R, G, B] (0–255).
@@ -70,8 +71,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layo
     ctx.fillStyle = node.fill
     ctx.fillRect(node.x, node.y, node.w, node.h)
 
-    // Cell border
-    ctx.strokeStyle = "#fff"
+    // Cell border — falls back to theme surface so dark themes don't get stark white gridlines
+    ctx.strokeStyle = resolveCSSColor(ctx, "var(--semiotic-surface, #fff)")!
     ctx.lineWidth = 1
     ctx.strokeRect(node.x, node.y, node.w, node.h)
 

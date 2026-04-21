@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { interpolateViridis } from "d3-scale-chromatic"
 
@@ -122,7 +123,10 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     chartId,
     loading,
     emptyContent,
-    legendInteraction
+    legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -315,9 +319,14 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     }
   }, [pointRadius, orderMap])
 
+  const basePointStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
+    [basePointStyle, stroke, strokeWidth, opacity]
+  )
+
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
-    [basePointStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // ── Margin ────────────────────────────────────────────────────────────

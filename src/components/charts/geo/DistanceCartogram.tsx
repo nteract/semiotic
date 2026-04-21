@@ -8,6 +8,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -136,7 +137,10 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     loading,
     emptyContent,
     legendPosition: legendPositionProp,
-    frameProps = {}
+    frameProps = {},
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -168,11 +172,12 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       strokeWidth: 1,
       r: pointRadius
     })
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style & { r?: number }
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
     }
-    return base
-  }, [colorBy, colorScale, pointRadius, activeSelectionHook, resolvedSelection])
+    return withPrimitives
+  }, [colorBy, colorScale, pointRadius, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
 
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data: safeData,
