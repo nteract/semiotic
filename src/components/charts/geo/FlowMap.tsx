@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -20,7 +21,7 @@ import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
 import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
-export interface FlowMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
   flows?: { source: string; target: string; value?: number; [key: string]: any }[]
   /** Geographic nodes with coordinates */
@@ -83,12 +84,12 @@ export interface FlowMapProps<TDatum extends Record<string, any> = Record<string
   /** Max cached tiles @default 256 */
   tileCacheSize?: number
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Passthrough */
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export function FlowMap<TDatum extends Record<string, any> = Record<string, any>>(props: FlowMapProps<TDatum>) {
+export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -174,13 +175,13 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     : null
 
   const safeFlows = flows || []
-  const safeNodes = (nodes || []) as Record<string, any>[]
+  const safeNodes = (nodes || []) as Datum[]
 
   const colorScale = useColorScale(safeFlows, edgeColorBy, colorScheme)
 
   // Build node lookup
   const nodeLookup = useMemo(() => {
-    const map = new Map<string, Record<string, any>>()
+    const map = new Map<string, Datum>()
     for (const node of safeNodes) {
       map.set(String(node[nodeIdAccessor]), node)
     }
@@ -202,7 +203,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   // Custom hover behavior: when a point is hovered, emit the associated
   // flow's datum so that source/target fields are available for selection
   const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
+    (d: Datum | null) => {
       if (linkedHover) {
         if (d) {
           let datum = d.data || d.datum || d
@@ -247,7 +248,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   )
 
   const customClickBehavior = useCallback(
-    (d: Record<string, any> | null) => {
+    (d: Datum | null) => {
       if (d && onClick) {
         let datum = d.data || d.datum || d
         if (Array.isArray(datum)) datum = datum[0]
@@ -272,8 +273,8 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   // Convert flows to line data
   const lineData = useMemo(() => {
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor as string]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
 
     return safeFlows.map(flow => {
       if (!flow || typeof flow !== "object" || flow.source == null || flow.target == null) return null
@@ -287,7 +288,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
           { [xAccessor as string]: xAcc(tgt), [yAccessor as string]: yAcc(tgt) }
         ]
       }
-    }).filter(Boolean) as Record<string, any>[]
+    }).filter(Boolean) as Datum[]
   }, [safeFlows, nodeLookup, xAccessor, yAccessor])
 
   // Edge width scale
@@ -299,7 +300,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
       .range(edgeWidthRange)
   }, [safeFlows, valueAccessor, edgeWidthRange])
 
-  const baseLineStyleFn = useMemo(() => (d: any): Style => ({
+  const baseLineStyleFn = useMemo(() => (d: Datum): Style => ({
     stroke: edgeColorBy ? getColor(d, edgeColorBy, colorScale) : DEFAULT_COLOR,
     strokeWidth: widthScale(d[valueAccessor] ?? 0),
     strokeLinecap: edgeLinecap,
@@ -314,7 +315,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   // opacity / strokeOpacity are left to wrapStyleWithSelection so the
   // per-chart `selection.unselectedOpacity` or theme value takes effect.
   const lineStyleFn = useMemo(() => {
-    const withPrimitives = mergeShapeStyle(baseLineStyleFn, { stroke, strokeWidth, opacity }) as (d: any) => Style
+    const withPrimitives = mergeShapeStyle(baseLineStyleFn, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
     if (!activeSelectionHook) return withPrimitives
     const mergedUnselectedStyle = {
       ...(resolvedSelection?.unselectedStyle || {}),
@@ -323,7 +324,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     return wrapStyleWithSelection(withPrimitives, activeSelectionHook, {
       ...((resolvedSelection as any) || {}),
       unselectedStyle: mergedUnselectedStyle,
-    }) as (d: any) => Style
+    }) as (d: Datum) => Style
   }, [baseLineStyleFn, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
 
   // Point style — not selection-wrapped because node datums lack flow
@@ -332,11 +333,11 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     () => mergeShapeStyle(
       () => ({ fill: "#333", r: 5, fillOpacity: 0.8 } as Style & { r?: number }),
       { stroke, strokeWidth, opacity }
-    ) as (d: any) => Style & { r?: number },
+    ) as (d: Datum) => Style & { r?: number },
     [stroke, strokeWidth, opacity]
   )
 
-  const defaultTooltip = useMemo(() => (d: any) => {
+  const defaultTooltip = useMemo(() => (d: Datum) => {
     // Area hover (country/region from background geography)
     if (d?.geometry || d?.properties || d?.data?.geometry) {
       const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || d?.data?.properties?.name || d?.data?.properties?.NAME
@@ -375,7 +376,7 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
 
   const margin = useMemo(() => ({
     top: 10, right: 10, bottom: 10, left: 10,
-    ...userMargin
+    ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin)
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───

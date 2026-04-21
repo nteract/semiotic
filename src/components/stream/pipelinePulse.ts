@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Pulse encoding for XY pipeline scene nodes.
  *
@@ -27,7 +28,7 @@ export function computePulseIntensity(pulse: PulseConfig, insertTime: number, no
 export function applyPulse(
   pulse: PulseConfig,
   nodes: SceneNode[],
-  data: Record<string, any>[],
+  data: Datum[],
   timestampBuffer: RingBuffer<number>
 ): void {
   const now = typeof performance !== "undefined" ? performance.now() : Date.now()

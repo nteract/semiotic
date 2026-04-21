@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * Coordinate resolution helpers for annotations.
  *
@@ -11,7 +12,7 @@
 import type { AnnotationContext } from "../../realtime/types"
 
 export function resolveX(
-  ann: Record<string, any>,
+  ann: Datum,
   context: AnnotationContext
 ): number | null {
   const scaleX = context.scales?.x ?? context.scales?.time
@@ -25,7 +26,7 @@ export function resolveX(
 }
 
 export function resolveY(
-  ann: Record<string, any>,
+  ann: Datum,
   context: AnnotationContext
 ): number | null {
   const scaleY = context.scales?.y ?? context.scales?.value
@@ -70,7 +71,7 @@ function resolveLatest(
  * - "sticky": resolve from annotation fields; if not found, use cached position
  */
 export function resolveAnchoredPosition(
-  ann: Record<string, any>,
+  ann: Datum,
   index: number,
   context: AnnotationContext
 ): { x: number; y: number } | null {

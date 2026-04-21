@@ -19,8 +19,9 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import type { Datum } from "../shared/datumTypes"
 
-export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Record<string, any>> {
+export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Chart dimensions as [width, height] */
@@ -42,7 +43,7 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Record<string, any>[]
+  data?: Datum[]
   /** Time/x value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value/y accessor */
@@ -72,9 +73,9 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
   /** Callback on hover */
   onHover?: (d: HoverData | null) => void
   /** Annotation objects */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
@@ -104,7 +105,7 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: any) => string)
+  pointIdAccessor?: string | ((d: Datum) => string)
 }
 
 /**
@@ -129,7 +130,7 @@ export interface RealtimeHeatmapProps<TDatum extends Record<string, any> = Recor
  * ```
  */
 export const RealtimeHeatmap = forwardRef(
-  function RealtimeHeatmap<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  function RealtimeHeatmap<TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -257,7 +258,7 @@ export const RealtimeHeatmap = forwardRef(
     )
   }
 ) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 RealtimeHeatmap.displayName = "RealtimeHeatmap"

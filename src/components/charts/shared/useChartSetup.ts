@@ -16,13 +16,14 @@
  * Consumed by: all HOC charts (BarChart, LineChart, Scatterplot, etc.)
  */
 "use client"
+import type { Datum } from "./datumTypes"
 
 import { useMemo } from "react"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import type { MarginType } from "../../types/generalTypes"
+import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
@@ -37,7 +38,7 @@ import type { ReactElement, ReactNode } from "react"
  */
 export interface ChartSetupInput {
   /** The data array used for color scale and category extraction */
-  data: Array<Record<string, any>>
+  data: Array<Datum>
   /** The original data prop (may be undefined) — used for empty-state check */
   rawData: unknown[] | undefined
   /** The color-by accessor (may be an "actual" colorBy derived from stackBy/groupBy/categoryAccessor) */
@@ -65,7 +66,7 @@ export interface ChartSetupInput {
   /** Show legend override */
   showLegend: boolean | undefined
   /** User-provided margin */
-  userMargin: MarginType | undefined
+  userMargin: PartialMargin | undefined
   /** Mode-resolved margin defaults */
   marginDefaults: { top: number; bottom: number; left: number; right: number }
   /** onClick callback */
@@ -97,9 +98,9 @@ export interface ChartSetupResult {
   /** The active cross-chart selection hook (before legend merge) */
   activeSelectionHook: SelectionHookResult | null
   /** Custom hover behavior callback for the frame */
-  customHoverBehavior: (d: Record<string, any> | null) => void
+  customHoverBehavior: (d: Datum | null) => void
   /** Custom click behavior callback for the frame */
-  customClickBehavior: (d: Record<string, any> | null) => void
+  customClickBehavior: (d: Datum | null) => void
   /** Legend config (or undefined if no legend) */
   legend: ReturnType<typeof useChartLegendAndMargin>["legend"]
   /** Computed margin with legend-aware adjustments */
@@ -109,7 +110,7 @@ export interface ChartSetupResult {
   /** If non-null, the HOC should return this element (loading or empty state) */
   earlyReturn: ReactElement | null
   /** Props to spread into the stream frame for legend behavior */
-  legendBehaviorProps: Record<string, any>
+  legendBehaviorProps: Datum
   /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
   crosshairProps: { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
   /**
@@ -188,7 +189,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of data as Record<string, any>[]) {
+    for (const d of data as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -222,7 +223,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   // ── Legend behavior props (to spread into frame) ───────────────────────
   const legendBehaviorProps = useMemo(() => {
-    const props: Record<string, any> = {}
+    const props: Record<string, unknown> = {}
     if (legend) {
       props.legend = legend
       props.legendPosition = legendPosition

@@ -10,9 +10,10 @@ import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlo
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
-import type { MarginType } from "../../types/generalTypes"
+import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
+import type { Datum } from "./datumTypes"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -94,11 +95,11 @@ export function resolveDefaultFill(
  * Used across chart components to normalize `valueAccessor`, `categoryAccessor`, etc.
  */
 export function resolveAccessor<T = any>(
-  accessor: string | ((d: Record<string, any>, i?: number) => T)
-): (d: Record<string, any>) => T {
+  accessor: string | ((d: Datum, i?: number) => T)
+): (d: Datum) => T {
   return typeof accessor === "function"
     ? accessor
-    : (d: Record<string, any>) => d[accessor]
+    : (d: Datum) => d[accessor]
 }
 
 /**
@@ -107,7 +108,7 @@ export function resolveAccessor<T = any>(
  * Supports both string and function accessors for colorBy.
  */
 export function useColorScale(
-  data: Array<Record<string, any>>,
+  data: Array<Datum>,
   colorBy: string | ((d: any, i?: number) => any) | undefined,
   colorScheme?: string | string[]
 ): ((v: string) => string) | undefined {
@@ -168,10 +169,10 @@ export function useColorScale(
  * of strings), so we decline to sort in both cases.
  */
 export function useSortedData(
-  data: Array<Record<string, any>>,
+  data: Array<Datum>,
   sort: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number),
   valueAccessor: Accessor<number>
-): Array<Record<string, any>> {
+): Array<Datum> {
   return useMemo(() => {
     if (!sort || sort === "auto" || typeof sort === "function") return data
     const copy = [...data]
@@ -215,8 +216,8 @@ export function useChartSelection({
 }): {
   activeSelectionHook: SelectionHookResult | null
   hoverSelectionHook: SelectionHookResult | null
-  customHoverBehavior: (d: Record<string, any> | null) => void
-  customClickBehavior: (d: Record<string, any> | null) => void
+  customHoverBehavior: (d: Datum | null) => void
+  customClickBehavior: (d: Datum | null) => void
   /** Stable ID for this chart instance, used to suppress linked crosshair on source chart */
   crosshairSourceId: string
 } {
@@ -255,7 +256,7 @@ export function useChartSelection({
     const field = seriesField
     return {
       isActive: true,
-      predicate: (d: Record<string, any>) => {
+      predicate: (d: Datum) => {
         const val = typeof d[field] === "string" ? d[field] : String(d[field] ?? "")
         return val === key
       }
@@ -263,7 +264,7 @@ export function useChartSelection({
   }, [hoverHighlight, hoveredSeriesKey, seriesField])
 
   const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
+    (d: Datum | null) => {
       // Linked hover: produce selection on hover, clear on hover-end
       if (linkedHover) {
         if (d) {
@@ -333,7 +334,7 @@ export function useChartSelection({
   )
 
   const customClickBehavior = useCallback(
-    (d: Record<string, any> | null) => {
+    (d: Datum | null) => {
       // Click-to-lock crosshair (x-position mode)
       if (hoverConfig?.mode === "x-position" && hoverConfig.xField && d) {
         let datum = d.data || d.datum || d
@@ -425,17 +426,17 @@ export function useChartLegendAndMargin({
   defaults = { top: 50, bottom: 60, left: 70, right: 40 },
   categories,
 }: {
-  data: Array<Record<string, any>>
+  data: Array<Datum>
   colorBy: Accessor<string> | undefined
   colorScale: ((v: string) => string) | undefined
   showLegend: boolean | undefined
   legendPosition?: LegendPosition
-  userMargin: MarginType | undefined
-  defaults?: { top: number; bottom: number; left: number; right: number }
+  userMargin: PartialMargin | undefined
+  defaults?: MarginType
   categories?: string[]
 }): {
   legend: ReturnType<typeof createLegend> | undefined
-  margin: { top: number; bottom: number; left: number; right: number }
+  margin: MarginType
   legendPosition: LegendPosition
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
@@ -449,8 +450,11 @@ export function useChartLegendAndMargin({
     return createLegend({ data, colorBy, colorScale, getColor, categories })
   }, [shouldShowLegend, colorBy, data, colorScale, categories])
 
-  const margin = useMemo(() => {
-    const finalMargin = { ...defaults, ...userMargin }
+  const margin = useMemo<MarginType>(() => {
+    const userSides: Partial<MarginType> = typeof userMargin === "number"
+      ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
+      : (userMargin ?? {})
+    const finalMargin: MarginType = { ...defaults, ...userSides }
     if (legend) {
       if (legendPosition === "right" && finalMargin.right < 110) finalMargin.right = 110
       else if (legendPosition === "left" && finalMargin.left < 110) finalMargin.left = 110
@@ -475,7 +479,7 @@ export interface LegendInteractionState {
   onLegendHover: (item: { label: string } | null) => void
   onLegendClick: (item: { label: string }) => void
   /** Selection predicate that dims non-matching data — use with wrapStyleWithSelection */
-  legendSelectionHook: { isActive: boolean; predicate: (d: Record<string, any>) => boolean } | null
+  legendSelectionHook: { isActive: boolean; predicate: (d: Datum) => boolean } | null
 }
 
 /**
@@ -489,7 +493,7 @@ export interface LegendInteractionState {
  */
 export function useLegendInteraction(
   mode: LegendInteractionMode | undefined,
-  colorBy: string | ((d: any) => string) | undefined,
+  colorBy: string | ((d: Datum) => string) | undefined,
   allCategories: string[]
 ): LegendInteractionState {
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null)
@@ -531,7 +535,7 @@ export function useLegendInteraction(
     if (mode === "highlight" && highlightedCategory != null) {
       return {
         isActive: true,
-        predicate: (d: Record<string, any>) => {
+        predicate: (d: Datum) => {
           const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
           return val === highlightedCategory
         }
@@ -541,7 +545,7 @@ export function useLegendInteraction(
     if (mode === "isolate" && isolatedCategories.size > 0) {
       return {
         isActive: true,
-        predicate: (d: Record<string, any>) => {
+        predicate: (d: Datum) => {
           const val = colorField ? d[colorField] : typeof colorBy === "function" ? colorBy(d) : null
           return isolatedCategories.has(val)
         }

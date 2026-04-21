@@ -1,5 +1,6 @@
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeConfig(overrides: Partial<OrdinalPipelineConfig> = {}): OrdinalPipelineConfig {
   return {
@@ -34,22 +35,22 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
 
   it("does not re-resolve oAccessor for equivalent inline arrows", () => {
     const store = new OrdinalPipelineStore(makeConfig({
-      oAccessor: (d: any) => d.name
+      oAccessor: (d: Datum) => d.name
     }))
     const originalGetO = store.getOAccessor()
 
     // Simulate React re-render: new function, same source
-    store.updateConfig({ oAccessor: (d: any) => d.name })
+    store.updateConfig({ oAccessor: (d: Datum) => d.name })
     expect(store.getOAccessor()).toBe(originalGetO)
   })
 
   it("re-resolves oAccessor when function source changes", () => {
     const store = new OrdinalPipelineStore(makeConfig({
-      oAccessor: (d: any) => d.name
+      oAccessor: (d: Datum) => d.name
     }))
     const originalGetO = store.getOAccessor()
 
-    store.updateConfig({ oAccessor: (d: any) => d.label })
+    store.updateConfig({ oAccessor: (d: Datum) => d.label })
     expect(store.getOAccessor()).not.toBe(originalGetO)
   })
 
@@ -63,11 +64,11 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
 
   it("does not re-resolve rAccessor for equivalent function", () => {
     const store = new OrdinalPipelineStore(makeConfig({
-      rAccessor: (d: any) => d.count
+      rAccessor: (d: Datum) => d.count
     }))
     const originalGetR = store.getRAccessor()
 
-    store.updateConfig({ rAccessor: (d: any) => d.count })
+    store.updateConfig({ rAccessor: (d: Datum) => d.count })
     expect(store.getRAccessor()).toBe(originalGetR)
   })
 
@@ -89,11 +90,11 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
 
   it("does not re-resolve colorAccessor for equivalent function", () => {
     const store = new OrdinalPipelineStore(makeConfig({
-      colorAccessor: (d: any) => d.type
+      colorAccessor: (d: Datum) => d.type
     }))
 
     // Simulate re-render
-    store.updateConfig({ colorAccessor: (d: any) => d.type })
+    store.updateConfig({ colorAccessor: (d: Datum) => d.type })
 
     // Verify store still works
     store.ingest({

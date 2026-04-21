@@ -13,6 +13,7 @@ import type {
   AnnotationContext,
   AnnotationAnchorMode
 } from "../realtime/types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Theme-resolved semantic role colors ──────────────────────────────
 //
@@ -345,7 +346,7 @@ export interface CandlestickStyle {
 
 // ── Changeset ──────────────────────────────────────────────────────────
 
-export interface Changeset<T = Record<string, any>> {
+export interface Changeset<T = Datum> {
   inserts: T[]
   bounded: boolean
   /** Hint: total dataset size when progressively chunking bounded data */
@@ -394,7 +395,7 @@ export type CurveType =
 
 // ── StreamXYFrame props ────────────────────────────────────────────────
 
-export interface StreamXYFrameProps<T = Record<string, any>> {
+export interface StreamXYFrameProps<T = Datum> {
   // ── Chart type ───────────────────────────────────
   chartType: StreamChartType
   runtimeMode?: RuntimeMode
@@ -518,8 +519,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
-  yFormat?: (d: any) => string | ReactNode
+  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: number | Date | string) => string | ReactNode
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string
 
@@ -554,9 +555,9 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   pointIdAccessor?: string | ((d: T) => string)
 
   // ── Annotations ──────────────────────────────────
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: AnnotationContext
   ) => ReactNode
@@ -637,7 +638,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────
 
-export interface StreamXYFrameHandle<T = Record<string, any>> {
+export interface StreamXYFrameHandle<T = Datum> {
   push(datum: T): void
   pushMany(data: T[]): void
   /** Remove data points by ID. Requires pointIdAccessor. */

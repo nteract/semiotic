@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -19,7 +20,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 /**
  * SankeyDiagram component props
  */
-export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
   nodes?: TNode[]
   edges?: TEdge[]
   sourceAccessor?: ChartAccessor<TEdge, string>
@@ -28,7 +29,7 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
   colorScheme?: string | string[]
-  edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
+  edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   orientation?: "horizontal" | "vertical"
   nodeAlign?: "justify" | "left" | "right" | "center"
   nodePaddingRatio?: number
@@ -48,7 +49,7 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
  *
  * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
  */
-export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
@@ -56,7 +57,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     remove: (id) => {
       const ids = Array.isArray(id) ? id : [id]
       const nodes = frameRef.current?.getTopology()?.nodes ?? []
-      const results: Record<string, any>[] = []
+      const results: Datum[] = []
       for (const nodeId of ids) {
         const node = nodes.find(n => n.id === nodeId)
         if (node) results.push({ ...(node.data ?? {}), id: nodeId })
@@ -149,7 +150,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of inferredNodes as Record<string, any>[]) {
+    for (const d of inferredNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -176,7 +177,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
   // Node style function
   // d is a RealtimeNode — user data lives on d.data
   const baseNodeStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "black",
         strokeWidth: 1
@@ -220,11 +221,11 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     const accessor = nodeLabel || nodeIdAccessor
     if (typeof accessor === "function") return accessor
     // d is a RealtimeNode — user data lives at d.data, fall back to d.id
-    return (d: Record<string, any>) => d.data?.[accessor] ?? d[accessor] ?? d.id
+    return (d: Datum) => d.data?.[accessor] ?? d[accessor] ?? d.id
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Margin
-  const margin = { ...resolved.marginDefaults, ...userMargin }
+  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,
@@ -297,7 +298,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     />
   </SafeRender>)
 }) as unknown as {
-  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 SankeyDiagram.displayName = "SankeyDiagram"

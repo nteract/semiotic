@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * Shared utilities for network and hierarchy chart HOCs.
  *
@@ -11,12 +12,12 @@ import type { Accessor } from "./types"
  * by recursively traversing children.
  */
 export function flattenHierarchy(
-  data: Record<string, any> | null,
-  childrenAccessor: string | ((d: any) => any[])
-): Array<Record<string, any>> {
+  data: Datum | null,
+  childrenAccessor: string | ((d: Datum) => any[])
+): Array<Datum> {
   if (!data) return []
-  const nodes: Array<Record<string, any>> = []
-  const traverse = (node: Record<string, any>) => {
+  const nodes: Array<Datum> = []
+  const traverse = (node: Datum) => {
     nodes.push(node)
     const children =
       typeof childrenAccessor === "function"
@@ -36,8 +37,8 @@ export function flattenHierarchy(
 export function inferNodesFromEdges(
   nodes: any[] | undefined,
   edges: any[],
-  sourceAccessor: string | ((d: any) => string),
-  targetAccessor: string | ((d: any) => string)
+  sourceAccessor: string | ((d: Datum) => string),
+  targetAccessor: string | ((d: Datum) => string)
 ): Array<{ id: string }> {
   if (nodes && nodes.length > 0) return nodes
 
@@ -63,10 +64,10 @@ export function inferNodesFromEdges(
  * Used by TreeDiagram, Treemap, and CirclePack for d3-hierarchy's `.sum()`.
  */
 export function resolveHierarchySum(
-  valueAccessor: string | ((d: any) => number)
-): (d: Record<string, any>) => number {
+  valueAccessor: string | ((d: Datum) => number)
+): (d: Datum) => number {
   if (typeof valueAccessor === "function") return valueAccessor
-  return (d: Record<string, any>) => d[valueAccessor] || 1
+  return (d: Datum) => d[valueAccessor] || 1
 }
 
 /**
@@ -81,14 +82,14 @@ export function createEdgeStyleFn({
   edgeOpacity,
   baseStyle = {},
 }: {
-  edgeColorBy: "source" | "target" | "gradient" | ((d: any) => string)
+  edgeColorBy: "source" | "target" | "gradient" | ((d: Datum) => string)
   colorBy: Accessor<string> | undefined
   colorScale: ((v: string) => string) | undefined
-  nodeStyleFn: (d: any, index?: number) => Record<string, any>
+  nodeStyleFn: (d: any, index?: number) => Datum
   edgeOpacity: number
   baseStyle?: Record<string, string | number>
-}): (d: Record<string, any>) => Record<string, any> {
-  return (d: Record<string, any>) => {
+}): (d: Datum) => Datum {
+  return (d: Datum) => {
     const style: Record<string, string | number> = {
       fillOpacity: edgeOpacity,
       ...baseStyle,

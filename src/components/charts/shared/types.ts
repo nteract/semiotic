@@ -1,7 +1,8 @@
 import type React from "react"
-import type { MarginType } from "../../types/generalTypes"
+import type { PartialMargin } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
+import type { Datum } from "./datumTypes"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -12,9 +13,9 @@ export interface SelectionConfig {
   /** Opacity for unselected elements (default 0.2) */
   unselectedOpacity?: number
   /** Style overrides for unselected elements */
-  unselectedStyle?: Record<string, any>
+  unselectedStyle?: Datum
   /** Style overrides for selected elements */
-  selectedStyle?: Record<string, any>
+  selectedStyle?: Datum
 }
 
 /**
@@ -53,8 +54,10 @@ export interface BaseChartProps {
   width?: number
   /** Chart height in pixels. Default: 400 */
   height?: number
-  /** Margin around the chart. Can be number (same on all sides) or object specifying each side */
-  margin?: MarginType
+  /** Margin around the chart. Accepts a number (same on all sides) or an object
+   *  with any subset of `top`/`bottom`/`left`/`right`. Missing sides fall back
+   *  to the chart-mode defaults. */
+  margin?: PartialMargin
   /** Auto-match width to parent container. Default: false */
   responsiveWidth?: boolean
   /** Auto-match height to parent container (requires parent with explicit height). Default: false */
@@ -124,9 +127,9 @@ export interface BaseChartProps {
   hoverRadius?: number
 
   /** ID accessor for remove()/update() on XY charts. Extracts a unique identifier from each datum. */
-  pointIdAccessor?: string | ((d: any) => string)
+  pointIdAccessor?: string | ((d: Datum) => string)
   /** ID accessor for remove()/update() on ordinal charts. Extracts a unique identifier from each datum. */
-  dataIdAccessor?: string | ((d: any) => string)
+  dataIdAccessor?: string | ((d: Datum) => string)
 
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
@@ -146,9 +149,9 @@ export interface AxisConfig {
   /** Label for the y-axis */
   yLabel?: string
   /** Format function for x-axis tick labels. Return string or ReactNode for custom rendering. */
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | React.ReactNode
+  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | React.ReactNode
   /** Format function for y-axis tick labels. Return string or ReactNode for custom rendering. */
-  yFormat?: (d: any) => string | React.ReactNode
+  yFormat?: (d: number | Date | string) => string | React.ReactNode
 }
 
 /**
@@ -165,17 +168,17 @@ export type Accessor<T = any> = string | ((d: any, i?: number) => T)
 
 /**
  * Generic accessor type that provides autocomplete when TDatum is specified.
- * Uses Record<string, any> in the function param so HOC charts can pass
+ * Uses Datum in the function param so HOC charts can pass
  * accessors to Stream Frames without contravariance errors under strict mode.
  */
 export type ChartAccessor<TDatum, T> =
   | (keyof TDatum & string)
-  | ((d: Record<string, any>, i?: number) => T)
+  | ((d: Datum, i?: number) => T)
 
 /**
  * Color configuration
  */
-export interface ColorConfig<TDatum = Record<string, any>> {
+export interface ColorConfig<TDatum = Datum> {
   /** Field name or function to determine color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme name (e.g., "blues", "category10") */
@@ -187,7 +190,7 @@ export interface ColorConfig<TDatum = Record<string, any>> {
 /**
  * Size configuration
  */
-export interface SizeConfig<TDatum = Record<string, any>> {
+export interface SizeConfig<TDatum = Datum> {
   /** Field name or function to determine size */
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max size range */

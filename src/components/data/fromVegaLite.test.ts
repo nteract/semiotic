@@ -1,5 +1,6 @@
 import { fromVegaLite } from "./fromVegaLite"
 import { configToJSX } from "../export/chartConfig"
+import type { Datum } from "../charts/shared/datumTypes"
 
 describe("fromVegaLite", () => {
   // ── Bar Chart ────────────────────────────────────────────────────────
@@ -409,7 +410,7 @@ describe("fromVegaLite", () => {
     expect(config.component).toBe("BarChart")
     expect(config.props.valueAccessor).toBe("value")
     expect(config.props.data).toHaveLength(2)
-    const aRow = config.props.data.find((d: any) => d.cat === "A")
+    const aRow = config.props.data.find((d: Datum) => d.cat === "A")
     expect(aRow.value).toBe(30) // 10 + 20
   })
 

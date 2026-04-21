@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useState, useEffect, useCallback, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -16,7 +17,7 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
-export interface DistanceCartogramProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
   points?: TDatum[]
   /** Route/edge data with source/target fields */
@@ -30,7 +31,7 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   /** ID of the center point */
   center: string
   /** Cost/distance accessor — numeric field or function */
-  costAccessor: string | ((d: any) => number)
+  costAccessor: string | ((d: Datum) => number)
   /** Interpolation between geographic (0) and cartogram (1) @default 1 */
   strength?: number
   /** Line rendering mode @default "straight" */
@@ -81,12 +82,12 @@ export interface DistanceCartogramProps<TDatum extends Record<string, any> = Rec
   /** Label for cost units shown on rings (e.g. "hrs", "km") */
   costLabel?: string
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Passthrough */
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
-export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum extends Record<string, any> = Record<string, any>>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -165,16 +166,16 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   const pointStyleFn = useMemo(() => {
-    const base = (d: Record<string, any>): Style & { r?: number } => ({
+    const base = (d: Datum): Style & { r?: number } => ({
       fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR,
       fillOpacity: 0.8,
       stroke: "#fff",
       strokeWidth: 1,
       r: pointRadius
     })
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style & { r?: number }
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
   }, [colorBy, colorScale, pointRadius, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
@@ -201,11 +202,11 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   // Convert lines to format StreamGeoFrame expects
   const lineData = useMemo(() => {
     if (!lines) return undefined
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor as string]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor as string]
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
 
     // Build node lookup for edge coordinates
-    const nodeLookup = new Map<string, Record<string, any>>()
+    const nodeLookup = new Map<string, Datum>()
     for (const node of safeData) {
       nodeLookup.set(String(node[nodeIdAccessor]), node)
     }
@@ -222,11 +223,11 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
           { [xAccessor as string]: xAcc(tgt), [yAccessor as string]: yAcc(tgt) }
         ]
       }
-    }).filter(Boolean) as Record<string, any>[]
+    }).filter(Boolean) as Datum[]
   }, [lines, safeData, xAccessor, yAccessor, nodeIdAccessor])
 
-  const defaultTooltip = useMemo(() => (d: any) => {
-    const costAcc = typeof costAccessor === "function" ? costAccessor : (datum: any) => datum[costAccessor as string]
+  const defaultTooltip = useMemo(() => (d: Datum) => {
+    const costAcc = typeof costAccessor === "function" ? costAccessor : (datum: Datum) => datum[costAccessor as string]
     const cost = costAcc(d)
     const name = d[nodeIdAccessor] || d.name || d.id || "Point"
     return (
@@ -432,7 +433,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 DistanceCartogram.displayName = "DistanceCartogram"

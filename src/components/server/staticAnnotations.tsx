@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Static annotation rendering for server-side SVG.
  *
@@ -9,7 +10,7 @@ import * as React from "react"
 import type { SemioticTheme } from "../store/ThemeStore"
 
 /** Resolve annotation color: explicit > theme annotation > theme text */
-function resolveAnnotationColor(ann: Record<string, any>, theme: SemioticTheme): string {
+function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
   return ann.color || theme.colors.annotation || theme.colors.text
 }
 
@@ -28,7 +29,7 @@ interface AnnotationLayout {
 }
 
 export interface StaticAnnotationConfig {
-  annotations: Record<string, any>[]
+  annotations: Datum[]
   scales: AnnotationScales
   layout: AnnotationLayout
   theme: SemioticTheme
@@ -41,7 +42,7 @@ export interface StaticAnnotationConfig {
 }
 
 function resolveXPixel(
-  ann: Record<string, any>,
+  ann: Datum,
   scales: AnnotationScales,
   xAccessor?: string
 ): number | null {
@@ -51,7 +52,7 @@ function resolveXPixel(
 }
 
 function resolveYPixel(
-  ann: Record<string, any>,
+  ann: Datum,
   scales: AnnotationScales,
   yAccessor?: string
 ): number | null {
@@ -79,7 +80,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
 }
 
 function renderAnnotation(
-  ann: Record<string, any>,
+  ann: Datum,
   index: number,
   config: StaticAnnotationConfig,
 ): React.ReactNode | null {

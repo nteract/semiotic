@@ -6,6 +6,7 @@ import {
   wrapStyleWithSelection,
   type SelectionHookResult,
 } from "./selectionUtils"
+import type { Datum } from "./datumTypes"
 
 // ── normalizeLinkedHover ──────────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ describe("normalizeLinkedBrush", () => {
 // ── wrapStyleWithSelection ────────────────────────────────────────────────
 
 describe("wrapStyleWithSelection", () => {
-  const baseStyleFn = (d: Record<string, any>) => ({
+  const baseStyleFn = (d: Datum) => ({
     fill: d.color || "blue",
     stroke: "black",
   })

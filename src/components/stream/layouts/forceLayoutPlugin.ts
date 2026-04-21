@@ -22,6 +22,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /**
  * Force-directed layout plugin — uses d3-force for physics-based node positioning.
@@ -152,33 +153,40 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       config.nodeSizeRange,
       nodes
     )
-    const nodeRadius = (d: any) => nodeSizeFn(d)
+    const nodeRadius = (d: RealtimeNode) => nodeSizeFn(d)
 
     // Skip simulation entirely when iterations=0 (pinned layout mode).
     // d3-force's simulation.nodes() modifies positions during setup, so
     // we must avoid calling it when positions are pre-set.
     if (iterations > 0) {
-      // Configure link force
-      const linkForce = forceLink()
-        .strength((d: any) =>
-          Math.min(2.5, d.weight ? d.weight * forceStrength : forceStrength)
-        )
-        .id((d: any) => d.id)
+      // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
+      // d3-force's internal typing knows the shape of source/target.
+      // `weight` isn't in the RealtimeEdge interface but duck-typed input may
+      // set it; widen the callback's parameter to read the optional field
+      // without losing the generic signatures everywhere else.
+      const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
+        .strength((d) => {
+          const weight = (d as RealtimeEdge & { weight?: number }).weight
+          return Math.min(2.5, weight ? weight * forceStrength : forceStrength)
+        })
+        .id((d) => d.id)
 
-      // Build simulation
-      const simulation = forceSimulation()
+      // Build simulation — parameterizing forceSimulation + forceManyBody with
+      // RealtimeNode lets d3-force thread the node type through charge callbacks
+      // without per-call casts.
+      const simulation = forceSimulation<RealtimeNode>()
         .force(
           "charge",
-          forceManyBody().strength((d: any) => -25 * nodeRadius(d))
+          forceManyBody<RealtimeNode>().strength((d) => -25 * nodeRadius(d))
         )
         // forceCenter shifts the center of mass to the target on every tick,
         // ensuring the graph as a whole stays centered in the chart area
         .force("center", forceCenter(cx, cy).strength(0.8))
         // forceX/forceY pull individual nodes toward center, preventing outliers
-        .force("x", forceX(cx).strength(0.15))
-        .force("y", forceY(cy).strength(0.15))
+        .force("x", forceX<RealtimeNode>(cx).strength(0.15))
+        .force("y", forceY<RealtimeNode>(cy).strength(0.15))
 
-      simulation.nodes(nodes as any)
+      simulation.nodes(nodes)
 
       if (edges.length > 0) {
         // Resolve edge source/target to id strings for d3-force linking
@@ -407,11 +415,11 @@ function simpleHash(str: string): number {
 }
 
 function resolveLabelFn(
-  nodeLabel: string | ((d: any) => string) | undefined
-): ((d: any) => string) | null {
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
   if (typeof nodeLabel === "function") return nodeLabel
-  return (d: any) => d[nodeLabel] || d.id
+  return (d: Datum) => d[nodeLabel] || d.id
 }
 
 /**
@@ -421,7 +429,7 @@ function resolveLabelFn(
  * Falls back to a default radius of 8.
  */
 function resolveNodeSizeFn(
-  nodeSize: number | string | ((d: any) => number) | undefined,
+  nodeSize: number | string | ((d: Datum) => number) | undefined,
   nodeSizeRange: [number, number] | undefined,
   allNodes: RealtimeNode[]
 ): (node: RealtimeNode) => number {

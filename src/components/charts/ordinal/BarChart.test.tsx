@@ -10,6 +10,7 @@ import {
   BAR_COLORED as coloredData,
   NAMED_COUNT_DATA as customData,
 } from "../../../test-utils/ordinalFixtures"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
@@ -369,7 +370,7 @@ describe("BarChart", () => {
     })
 
     it("uses user-provided tooltip instead of default", () => {
-      const customTooltip = (d: any) => <div>custom: {d.category}</div>
+      const customTooltip = (d: Datum) => <div>custom: {d.category}</div>
 
       render(
         <TooltipProvider>

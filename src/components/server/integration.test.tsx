@@ -6,6 +6,7 @@
  */
 
 import { TextEncoder, TextDecoder } from "util"
+import type { Datum } from "../charts/shared/datumTypes"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import {
@@ -366,7 +367,7 @@ describe("Geo SSR", () => {
   it("renderChart produces valid SVG for ChoroplethMap with pre-resolved features", () => {
     const svg = renderChart("ChoroplethMap", {
       areas: geoFeatures,
-      valueAccessor: (d: any) => d.properties.value,
+      valueAccessor: (d: Datum) => d.properties.value,
       width: 400, height: 300,
     })
     expect(isValidSVG(svg)).toBe(true)
@@ -460,8 +461,8 @@ describe("Geo SSR", () => {
       // silently broke line coordinate resolution.
       const svg = renderChart("FlowMap", {
         flows, nodes,
-        xAccessor: (d: any) => d.lon,
-        yAccessor: (d: any) => d.lat,
+        xAccessor: (d: Datum) => d.lon,
+        yAccessor: (d: Datum) => d.lat,
         valueAccessor: "value",
         width: 400, height: 300,
       })
@@ -478,7 +479,7 @@ describe("Geo SSR", () => {
       const svg = renderChart("FlowMap", {
         flows, nodes,
         valueAccessor: "value",
-        edgeColorBy: (d: any) => d.value > 20 ? "#ff00aa" : "#00aacc",
+        edgeColorBy: (d: Datum) => d.value > 20 ? "#ff00aa" : "#00aacc",
         // colorScheme left unset — even with a default scheme, a function
         // returning CSS colors must bypass the scale.
         width: 400, height: 300,

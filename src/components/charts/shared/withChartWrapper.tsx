@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./datumTypes"
 import * as React from "react"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
@@ -26,7 +27,7 @@ export function SafeRender({ componentName, width, height, chartProps, children 
         let diagnosticHint = ""
         if (IS_DEV && chartProps) {
           try {
-            const result: DiagnosisResult = diagnoseConfig(componentName, chartProps as Record<string, any>)
+            const result: DiagnosisResult = diagnoseConfig(componentName, chartProps as Datum)
             if (!result.ok) {
               diagnosticHint = result.diagnoses
                 .map(d => `${d.severity === "error" ? "✗" : "⚠"} ${d.message}${d.fix ? ` — Fix: ${d.fix}` : ""}`)

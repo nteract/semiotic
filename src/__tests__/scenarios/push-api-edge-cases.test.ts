@@ -1,3 +1,4 @@
+import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * Push API edge case scenarios.
  *
@@ -9,7 +10,7 @@ import { PipelineStore } from "../../components/stream/PipelineStore"
 import { OrdinalPipelineStore } from "../../components/stream/OrdinalPipelineStore"
 import { NetworkPipelineStore } from "../../components/stream/NetworkPipelineStore"
 
-function makeXYStore(overrides: Record<string, any> = {}) {
+function makeXYStore(overrides: Datum = {}) {
   return new PipelineStore({
     chartType: "scatter",
     windowSize: 100,
@@ -22,7 +23,7 @@ function makeXYStore(overrides: Record<string, any> = {}) {
   })
 }
 
-function makeOrdinalStore(overrides: Record<string, any> = {}) {
+function makeOrdinalStore(overrides: Datum = {}) {
   return new OrdinalPipelineStore({
     chartType: "bar",
     windowSize: 100,

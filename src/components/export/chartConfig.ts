@@ -1,5 +1,6 @@
 import { VALIDATION_MAP } from "../charts/shared/validateProps"
 import type { SerializedSelections } from "./selectionSerializer"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -9,7 +10,7 @@ export interface ChartConfig {
   /** Component name, e.g. "LineChart", "SankeyDiagram" */
   component: string
   /** Serializable props only — functions and React elements stripped */
-  props: Record<string, any>
+  props: Datum
   /** Config schema version */
   version: string
   /** ISO 8601 timestamp */
@@ -52,7 +53,7 @@ const deepClone = typeof structuredClone === "function"
 
 export function toConfig(
   componentName: string,
-  props: Record<string, any>,
+  props: Datum,
   options?: ToConfigOptions
 ): ChartConfig {
   const spec = VALIDATION_MAP[componentName]
@@ -61,7 +62,7 @@ export function toConfig(
   }
 
   const includeData = options?.includeData !== false
-  const serializedProps: Record<string, any> = {}
+  const serializedProps: Datum = {}
 
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
@@ -86,7 +87,7 @@ export function toConfig(
 
 export function fromConfig(config: ChartConfig): {
   componentName: string
-  props: Record<string, any>
+  props: Datum
 } {
   if (!config.component || !config.props) {
     throw new Error("Invalid chart config: missing component or props")

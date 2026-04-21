@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
@@ -46,9 +47,9 @@ interface OrdinalSVGOverlayProps {
   foregroundGraphics?: ReactNode
 
   // Annotations
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: AnnotationContext
   ) => ReactNode
@@ -57,7 +58,7 @@ interface OrdinalSVGOverlayProps {
   // Annotation context enrichment
   xAccessor?: string
   yAccessor?: string
-  annotationData?: Record<string, any>[]
+  annotationData?: Datum[]
 
   /** When true, grid lines and axis baselines are skipped (rendered by OrdinalSVGUnderlay instead) */
   underlayRendered?: boolean

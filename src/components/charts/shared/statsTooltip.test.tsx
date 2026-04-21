@@ -2,6 +2,7 @@ import * as React from "react"
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { buildStatsTooltip } from "./statsTooltip"
+import type { Datum } from "./datumTypes"
 
 describe("buildStatsTooltip", () => {
   it("renders full stats when d.stats is present", () => {
@@ -71,7 +72,7 @@ describe("buildStatsTooltip", () => {
   })
 
   it("works with function valueAccessor", () => {
-    const tooltip = buildStatsTooltip({ valueAccessor: (d: any) => d.nested.val })
+    const tooltip = buildStatsTooltip({ valueAccessor: (d: Datum) => d.nested.val })
     const { container } = render(
       tooltip({
         category: "Fn",

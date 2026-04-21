@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Realtime histogram bar scene builder.
  *
@@ -19,7 +20,7 @@ export interface BarSceneResult {
   binBoundaries: number[]
 }
 
-export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]): BarSceneResult {
+export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResult {
   if (!ctx.config.binSize) return { nodes: [], binBoundaries: [] }
 
   const bins = computeBins(data, ctx.getX, ctx.getY, ctx.config.binSize, ctx.getCategory)

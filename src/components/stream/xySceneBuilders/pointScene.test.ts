@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildPointScene } from "./pointScene"
 import type { XYSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -276,7 +277,7 @@ describe("buildPointScene", () => {
     const ctx = makeCtx({
       config: {
         chartType: "scatter",
-        pointStyle: (d: any) => ({
+        pointStyle: (d: Datum) => ({
           fill: d.importance === "high" ? "red" : "gray",
           opacity: d.importance === "high" ? 1 : 0.3,
           r: d.importance === "high" ? 8 : 4,

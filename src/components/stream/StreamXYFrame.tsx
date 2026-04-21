@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import {
   useRef,
@@ -293,7 +294,7 @@ function drawLineHighlight(
   ctx: CanvasRenderingContext2D,
   scene: SceneNode[],
   hoveredNode: SceneNode | null,
-  highlightConfig: { style?: Record<string, any> | ((d: any) => Record<string, any>) },
+  highlightConfig: { style?: Datum | ((d: Datum) => Datum) },
   theme: ThemeColors
 ) {
   if (!hoveredNode) return
@@ -654,11 +655,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Push API (ref handle) ────────────────────────────────────────────
 
-    const pushPoint = useCallback((datum: Record<string, any>) => {
+    const pushPoint = useCallback((datum: Datum) => {
       adapterRef.current?.push(datum)
     }, [])
 
-    const pushManyPoints = useCallback((data: Record<string, any>[]) => {
+    const pushManyPoints = useCallback((data: Datum[]) => {
       adapterRef.current?.pushMany(data)
     }, [])
 
@@ -686,7 +687,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
         return removed
       },
-      update: (id: string | string[], updater: (d: any) => any) => {
+      update: (id: string | string[], updater: (d: Datum) => any) => {
         adapterRef.current?.flush()
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
@@ -1090,7 +1091,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
         // Use valueOf() for domain comparison — scaleTime.domain() returns new Date objects each call
-        const v = (d: any) => typeof d === "object" && d !== null && typeof d.valueOf === "function" ? d.valueOf() : d
+        const v = (d: number | Date) => typeof d === "object" && d !== null && typeof d.valueOf === "function" ? d.valueOf() : d
         const scalesChanged = !currentScales ||
           v(currentScales.x.domain()[0]) !== v(store.scales.x.domain()[0]) ||
           v(currentScales.x.domain()[1]) !== v(store.scales.x.domain()[1]) ||
@@ -1109,10 +1110,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           const rawData = store.getData()
           const getX = typeof xAccessor === "function"
             ? xAccessor
-            : (d: Record<string, any>) => d[xAccessor || "x"]
+            : (d: Datum) => d[xAccessor || "x"]
           const getY = typeof yAccessor === "function"
             ? yAccessor
-            : (d: Record<string, any>) => d[yAccessor || "y"]
+            : (d: Datum) => d[yAccessor || "y"]
           setMarginalXValues(rawData.map(d => getX(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
           setMarginalYValues(rawData.map(d => getY(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
         }
@@ -1168,7 +1169,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       return makeDateTickFormatter(domain)
     }, [xFormat, tickFormatTime, currentScales])
 
-    const effectiveXFormat = xFormat || tickFormatTime || autoDateXFormat
+    const effectiveXFormat: StreamXYFrameProps["xFormat"] = xFormat || (tickFormatTime as StreamXYFrameProps["xFormat"]) || (autoDateXFormat as StreamXYFrameProps["xFormat"])
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
@@ -1211,7 +1212,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // (timeAccessor/valueAccessor) → function fallback (resolved) → undefined.
     const resolveAnnAccessor = (
       primary: any, fallback: any, resolvedKey: string, fallbackKey: string
-    ): { key: string | undefined; fn: ((d: any) => any) | null } => {
+    ): { key: string | undefined; fn: ((d: Datum) => any) | null } => {
       if (typeof primary === "string") return { key: primary, fn: null }
       if (typeof primary === "function") return { key: resolvedKey, fn: primary }
       if (typeof fallback === "string") return { key: fallback, fn: null }
@@ -1225,7 +1226,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const annYAccessor = yResolved.key
     const hasAnnotations = annotations && annotations.length > 0
 
-    const enrichAnnotationData = (rawData: Record<string, any>[] | undefined): Record<string, any>[] | undefined => {
+    const enrichAnnotationData = (rawData: Datum[] | undefined): Datum[] | undefined => {
       if (!rawData || !hasAnnotations || (!xResolved.fn && !yResolved.fn)) return rawData
       let didChange = false
       const result = rawData.map(d => {
@@ -1255,10 +1256,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const scales = store?.scales ?? null
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
-      const ssrXFormat = effectiveXFormat || (() => {
+      const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
         if (store?.xIsDate && scales) {
           const domain = scales.x.domain() as [number, number]
-          return makeDateTickFormatter(domain)
+          return makeDateTickFormatter(domain) as StreamXYFrameProps["xFormat"]
         }
         return undefined
       })()
@@ -1309,7 +1310,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             yLabel={yLabel}
             yLabelRight={yLabelRight}
             xFormat={ssrXFormat}
-            yFormat={yFormat || tickFormatValue}
+            yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
             showGrid={showGrid}
             title={title}
             legend={legend}
@@ -1397,7 +1398,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           axes={axesConfig}
           showGrid={showGrid}
           xFormat={effectiveXFormat}
-          yFormat={yFormat || tickFormatValue}
+          yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
         />
         <canvas
           ref={canvasRef}
@@ -1431,7 +1432,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           yLabel={yLabel}
           yLabelRight={yLabelRight}
           xFormat={effectiveXFormat}
-          yFormat={yFormat || tickFormatValue}
+          yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
           showGrid={showGrid}
           title={title}
           legend={legend}

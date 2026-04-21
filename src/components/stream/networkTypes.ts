@@ -4,6 +4,7 @@ import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ export interface RealtimeNode {
   _targetY1?: number
   value: number
   depth?: number
-  data?: Record<string, any>
+  data?: Datum
   createdByFrame?: boolean
   sourceLinks?: RealtimeEdge[]
   targetLinks?: RealtimeEdge[]
@@ -73,7 +74,7 @@ export interface RealtimeEdge {
   circular?: boolean
   circularPathData?: any
   bezier?: BezierCache
-  data?: Record<string, any>
+  data?: Datum
   /** Unique key for this edge (supports parallel edges between same node pair) */
   _edgeKey?: string
   _pulseIntensity?: number
@@ -396,16 +397,16 @@ export interface NetworkPipelineConfig {
   chartType: NetworkChartType
 
   // ── Accessors ────────────────────────────────────
-  nodeIDAccessor?: string | ((d: any) => string)
-  sourceAccessor?: string | ((d: any) => string)
-  targetAccessor?: string | ((d: any) => string)
-  valueAccessor?: string | ((d: any) => number)
+  nodeIDAccessor?: string | ((d: Datum) => string)
+  sourceAccessor?: string | ((d: Datum) => string)
+  targetAccessor?: string | ((d: Datum) => string)
+  valueAccessor?: string | ((d: Datum) => number)
   /** Edge ID accessor for removeEdge(edgeId) — enables single-ID edge removal */
-  edgeIdAccessor?: string | ((d: any) => string)
+  edgeIdAccessor?: string | ((d: Datum) => string)
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
-  childrenAccessor?: string | ((d: any) => any[])
-  hierarchySum?: string | ((d: any) => number)
+  childrenAccessor?: string | ((d: Datum) => any[])
+  hierarchySum?: string | ((d: Datum) => number)
 
   // ── Sankey layout ────────────────────────────────
   orientation?: "horizontal" | "vertical"
@@ -437,23 +438,23 @@ export interface NetworkPipelineConfig {
   particleStyle?: ParticleStyle
 
   // ── Style functions ──────────────────────────────
-  nodeStyle?: (d: any) => Record<string, any>
-  edgeStyle?: (d: any) => Record<string, any>
-  nodeLabel?: string | ((d: any) => string)
+  nodeStyle?: (d: Datum) => Datum
+  edgeStyle?: (d: Datum) => Datum
+  nodeLabel?: string | ((d: Datum) => string)
   showLabels?: boolean
   labelMode?: "leaf" | "parent" | "all"
 
   // ── Color ────────────────────────────────────────
-  colorBy?: string | ((d: any) => string | number)
+  colorBy?: string | ((d: Datum) => string | number)
   colorScheme?: string | string[]
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
-  edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
+  edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   edgeOpacity?: number
   colorByDepth?: boolean
-  nodeSize?: number | string | ((d: any) => number)
+  nodeSize?: number | string | ((d: Datum) => number)
   nodeSizeRange?: [number, number]
 
   // ── Realtime encoding ─────────────────────────────
@@ -504,7 +505,7 @@ export interface NetworkPipelineConfig {
 
 // ── Component props ─────────────────────────────────────────────────
 
-export interface StreamNetworkFrameProps<T = Record<string, any>> {
+export interface StreamNetworkFrameProps<T = Datum> {
   // ── Chart type ───────────────────────────────────
   chartType: NetworkChartType
 
@@ -523,7 +524,7 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   targetAccessor?: string | ((d: T) => string)
   valueAccessor?: string | ((d: T) => number)
   /** Edge ID accessor for removeEdge(edgeId) single-ID removal */
-  edgeIdAccessor?: string | ((d: any) => string)
+  edgeIdAccessor?: string | ((d: Datum) => string)
 
   // ── Hierarchy ────────────────────────────────────
   childrenAccessor?: string | ((d: T) => T[])
@@ -553,18 +554,18 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   particleStyle?: ParticleStyle
 
   // ── Style ────────────────────────────────────────
-  nodeStyle?: (d: any) => Record<string, any>
-  edgeStyle?: (d: any) => Record<string, any>
-  colorBy?: string | ((d: any) => string | number)
+  nodeStyle?: (d: Datum) => Datum
+  edgeStyle?: (d: Datum) => Datum
+  colorBy?: string | ((d: Datum) => string | number)
   colorScheme?: string | string[]
-  edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
+  edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   edgeOpacity?: number
   colorByDepth?: boolean
-  nodeSize?: number | string | ((d: any) => number)
+  nodeSize?: number | string | ((d: Datum) => number)
   nodeSizeRange?: [number, number]
 
   // ── Labels ───────────────────────────────────────
-  nodeLabel?: string | ((d: any) => string)
+  nodeLabel?: string | ((d: Datum) => string)
   showLabels?: boolean
   labelMode?: "leaf" | "parent" | "all"
 
@@ -588,9 +589,9 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
 
   // ── Annotations ──────────────────────────────────
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: AnnotationContext
   ) => ReactNode
@@ -648,9 +649,9 @@ export interface StreamNetworkFrameHandle {
   /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
   removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
   /** Update a node's data by ID. Returns previous data. */
-  updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null
+  updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
   /** Update all edges between source+target. Returns array of previous data. */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any>[]
+  updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
   clear(): void
   getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
   getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }

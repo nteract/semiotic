@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -20,7 +21,7 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 /**
  * AreaChart component props
  */
-export interface AreaChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points, grouped by category.
    * @example
@@ -178,7 +179,7 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
   /**
    * Annotation objects to render on the chart
    */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   /**
    * Additional StreamXYFrame props for advanced customization
@@ -212,7 +213,7 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
  * />
  * ```
  */
-export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -330,7 +331,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof areaBy === "function" ? areaBy(d) : d[areaBy]
         if (!acc[key]) {
-          const areaObj: Record<string, any> = { [lineDataAccessor]: [] }
+          const areaObj: Datum = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof areaBy === "string") {
             areaObj[areaBy] = key
@@ -339,7 +340,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, any>>)
+      }, {} as Record<string, Datum>)
 
       return Object.values(grouped)
     }
@@ -355,7 +356,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
+    for (const d of safeData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -373,7 +374,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {}
 
       // Apply color — skip fill/stroke when colorScale unavailable (push API)
@@ -418,7 +419,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   // Point style function (if showPoints is true)
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
@@ -462,10 +463,10 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
   // Flatten area data into a single array for StreamXYFrame
   const flattenedData = useMemo(() => {
     if (isAreaObjectFormat || areaBy) {
-      return areaData.flatMap((area: Record<string, any>) => {
+      return areaData.flatMap((area: Datum) => {
         const coords = area[lineDataAccessor] || []
         if (areaBy && typeof areaBy === "string") {
-          return coords.map((c: Record<string, any>) => ({ ...c, [areaBy]: area[areaBy] }))
+          return coords.map((c: Datum) => ({ ...c, [areaBy]: area[areaBy] }))
         }
         return coords
       })
@@ -528,7 +529,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Record<str
 
   return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 AreaChart.displayName = "AreaChart"

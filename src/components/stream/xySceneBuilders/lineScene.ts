@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Line scene builder — produces LineSceneNode[] from grouped data.
  *
@@ -13,7 +14,7 @@ import type { XYSceneContext } from "./types"
 import { buildBoundsForGroup } from "./boundsScene"
 import { emitPointNodes } from "./emitPointNodes"
 
-export function buildLineScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   const nodes: SceneNode[] = []
 

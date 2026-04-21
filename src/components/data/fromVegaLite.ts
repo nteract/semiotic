@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Vega-Lite to Semiotic translator.
  * Converts a Vega-Lite spec into a Semiotic ChartConfig.
@@ -36,7 +37,7 @@ export interface VegaLiteSpec {
 
 function normalizeMark(mark: string | { type: string; [key: string]: any }): {
   type: string
-  markProps: Record<string, any>
+  markProps: Datum
 } {
   if (typeof mark === "string") {
     return { type: mark, markProps: {} }
@@ -145,7 +146,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   }
 
   // Determine component and build props
-  const props: Record<string, any> = {}
+  const props: Datum = {}
 
   // Layout
   if (spec.width) props.width = spec.width
@@ -361,7 +362,7 @@ function resolveBarComponent(
   x: VegaLiteEncoding | undefined,
   y: VegaLiteEncoding | undefined,
   color: VegaLiteEncoding | undefined,
-  props: Record<string, any>,
+  props: Datum,
   data: any[] | undefined,
   xAgg?: string,
   yAgg?: string,
@@ -410,7 +411,7 @@ function resolveBarComponent(
 function setXYAccessors(
   x: VegaLiteEncoding | undefined,
   y: VegaLiteEncoding | undefined,
-  props: Record<string, any>,
+  props: Datum,
   xAgg?: string,
   yAgg?: string,
 ): void {
@@ -422,7 +423,7 @@ function setXYAccessors(
 
 function buildConfig(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   warnings: string[],
 ): ChartConfig & { warnings?: string[] } {
   const config: ChartConfig & { warnings?: string[] } = {

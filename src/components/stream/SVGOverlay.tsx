@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useEffect } from "react"
 import type { StreamScales, MarginalGraphicsConfig } from "./types"
@@ -92,8 +93,8 @@ interface SVGOverlayProps {
   yLabel?: string
   /** Label for the right Y axis (dual-axis charts) */
   yLabelRight?: string
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
-  yFormat?: (d: any) => string | ReactNode
+  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: number | Date | string) => string | ReactNode
 
   // Grid
   showGrid?: boolean
@@ -123,9 +124,9 @@ interface SVGOverlayProps {
   yValues?: number[]
 
   // Annotations
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: AnnotationContext
   ) => ReactNode
@@ -134,7 +135,7 @@ interface SVGOverlayProps {
   // Annotation context enrichment
   xAccessor?: string
   yAccessor?: string
-  annotationData?: Record<string, any>[]
+  annotationData?: Datum[]
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
   /** Curve interpolation type for envelope annotations */
   curve?: string
@@ -163,8 +164,8 @@ interface SVGUnderlayProps {
   showAxes?: boolean
   axes?: AxisConfig[]
   showGrid?: boolean
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
-  yFormat?: (d: any) => string | ReactNode
+  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
+  yFormat?: (d: number | Date | string) => string | ReactNode
 }
 
 export function SVGUnderlay(props: SVGUnderlayProps) {

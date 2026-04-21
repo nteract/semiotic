@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -20,7 +21,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 /**
  * BarChart component props
  */
-export interface BarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -49,7 +50,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -58,7 +59,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
 /**
  * BarChart - Visualize categorical data with bars.
  */
-export const BarChart = forwardRef(function BarChart<TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -175,7 +176,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, _category?: string) => {
+    return (d: Datum, _category?: string) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, setup.colorScale)
@@ -190,7 +191,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
     const userPieceStyle = frameProps?.pieceStyle
     const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
       ? basePieceStyle
-      : (d: Record<string, any>, category?: string) => ({
+      : (d: Datum, category?: string) => ({
         ...basePieceStyle(d, category),
         ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
       })
@@ -268,7 +269,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
 
   return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 BarChart.displayName = "BarChart"

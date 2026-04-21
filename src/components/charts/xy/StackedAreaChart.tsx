@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -21,7 +22,7 @@ import { useStreamingLegend } from "../shared/useStreamingLegend"
 /**
  * StackedAreaChart component props
  */
-export interface StackedAreaChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points, grouped by category.
    * @example
@@ -158,7 +159,7 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
   /**
    * Annotation objects to render on the chart
    */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   /**
    * Additional StreamXYFrame props for advanced customization
@@ -192,7 +193,7 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
  * />
  * ```
  */
-export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -273,7 +274,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   })
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    streaming.wrapPush((d: Datum) => frameRef.current?.push(d)),
     [streaming.wrapPush]
   )
   const wrappedPushMany = useCallback(
@@ -326,7 +327,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof areaBy === "function" ? areaBy(d) : d[areaBy]
         if (!acc[key]) {
-          const areaObj: Record<string, any> = { [lineDataAccessor]: [] }
+          const areaObj: Datum = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof areaBy === "string") {
             areaObj[areaBy] = key
@@ -335,7 +336,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, any>>)
+      }, {} as Record<string, Datum>)
 
       return Object.values(grouped)
     }
@@ -351,7 +352,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
+    for (const d of safeData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -369,7 +370,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {}
 
       // Apply color — skip when colorScale unavailable (push API)
@@ -408,7 +409,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   // Point style function (if showPoints is true)
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
@@ -469,10 +470,10 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   // Flatten area data into a single array for StreamXYFrame
   const flattenedData = useMemo(() => {
     if (isAreaObjectFormat || areaBy) {
-      return areaData.flatMap((area: Record<string, any>) => {
+      return areaData.flatMap((area: Datum) => {
         const coords = area[lineDataAccessor] || []
         if (areaBy && typeof areaBy === "string") {
-          return coords.map((c: Record<string, any>) => ({ ...c, [areaBy]: area[areaBy] }))
+          return coords.map((c: Datum) => ({ ...c, [areaBy]: area[areaBy] }))
         }
         return coords
       })
@@ -532,7 +533,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 StackedAreaChart.displayName = "StackedAreaChart"

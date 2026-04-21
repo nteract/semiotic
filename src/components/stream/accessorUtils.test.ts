@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { accessorsEquivalent, resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import type { Datum } from "../charts/shared/datumTypes"
 
 describe("accessorsEquivalent", () => {
   it("returns true for identical string accessors", () => {
@@ -11,24 +12,24 @@ describe("accessorsEquivalent", () => {
   })
 
   it("returns true for the same function reference", () => {
-    const fn = (d: any) => d.x
+    const fn = (d: Datum) => d.x
     expect(accessorsEquivalent(fn, fn)).toBe(true)
   })
 
   it("returns true for functions with identical source (inline arrow)", () => {
-    const fn1 = (d: any) => d.value
-    const fn2 = (d: any) => d.value
+    const fn1 = (d: Datum) => d.value
+    const fn2 = (d: Datum) => d.value
     expect(accessorsEquivalent(fn1, fn2)).toBe(true)
   })
 
   it("returns false for functions with different source", () => {
-    const fn1 = (d: any) => d.x
-    const fn2 = (d: any) => d.y
+    const fn1 = (d: Datum) => d.x
+    const fn2 = (d: Datum) => d.y
     expect(accessorsEquivalent(fn1, fn2)).toBe(false)
   })
 
   it("returns false for string vs function", () => {
-    expect(accessorsEquivalent("value", (d: any) => d.value)).toBe(false)
+    expect(accessorsEquivalent("value", (d: Datum) => d.value)).toBe(false)
   })
 
   it("returns true for both undefined", () => {
@@ -40,7 +41,7 @@ describe("accessorsEquivalent", () => {
   })
 
   it("returns false for undefined vs function", () => {
-    expect(accessorsEquivalent(undefined, (d: any) => d.x)).toBe(false)
+    expect(accessorsEquivalent(undefined, (d: Datum) => d.x)).toBe(false)
   })
 })
 
@@ -56,7 +57,7 @@ describe("resolveAccessor", () => {
   })
 
   it("wraps a function accessor with numeric coercion", () => {
-    const get = resolveAccessor((d: any) => d.val, "x")
+    const get = resolveAccessor((d: Datum) => d.val, "x")
     expect(get({ val: "5" })).toBe(5)
   })
 })
@@ -77,7 +78,7 @@ describe("resolveStringAccessor", () => {
   })
 
   it("passes through a function accessor", () => {
-    const fn = (d: any) => d.label
+    const fn = (d: Datum) => d.label
     const get = resolveStringAccessor(fn)
     expect(get).toBe(fn)
   })

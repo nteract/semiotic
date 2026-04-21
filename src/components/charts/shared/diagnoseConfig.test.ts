@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { diagnoseConfig } from "./diagnoseConfig"
+import type { Datum } from "./datumTypes"
 
 describe("diagnoseConfig", () => {
   it("returns ok for a valid configuration", () => {
@@ -213,8 +214,8 @@ describe("diagnoseConfig", () => {
   it("warns about function accessors", () => {
     const result = diagnoseConfig("LineChart", {
       data: [{ x: 1, y: 2 }],
-      xAccessor: (d: any) => d.x,
-      yAccessor: (d: any) => d.y,
+      xAccessor: (d: Datum) => d.x,
+      yAccessor: (d: Datum) => d.y,
     })
     const codes = result.diagnoses.map(d => d.code)
     expect(codes).toContain("FUNCTION_ACCESSOR")
@@ -240,7 +241,7 @@ describe("diagnoseConfig", () => {
     const result = diagnoseConfig("BarChart", {
       data: [{ category: "A", value: 10 }],
       categoryAccessor: "category",
-      valueAccessor: (d: any) => d.value,
+      valueAccessor: (d: Datum) => d.value,
     })
     const codes = result.diagnoses.map(d => d.code)
     expect(codes).toContain("FUNCTION_ACCESSOR")

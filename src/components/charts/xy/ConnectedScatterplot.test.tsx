@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { ConnectedScatterplot } from "./ConnectedScatterplot"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock XYFrame to capture props
 let lastXYFrameProps: any = null
@@ -63,8 +64,8 @@ describe("ConnectedScatterplot", () => {
     })
 
     it("forwards function accessors", () => {
-      const xFn = (d: any) => d.x * 2
-      const yFn = (d: any) => d.y + 1
+      const xFn = (d: Datum) => d.x * 2
+      const yFn = (d: Datum) => d.y + 1
       render(
         <TooltipProvider>
           <ConnectedScatterplot data={sampleData} xAccessor={xFn} yAccessor={yFn} />

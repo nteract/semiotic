@@ -1,4 +1,5 @@
 import { IncrementalExtent } from "./IncrementalExtent"
+import type { Datum } from "../charts/shared/datumTypes"
 
 describe("IncrementalExtent", () => {
   describe("empty state", () => {
@@ -96,7 +97,7 @@ describe("IncrementalExtent", () => {
       ext.push(20)
       ext.evict(10)
       const data = [{ v: 15 }, { v: 25 }]
-      ext.recalculate(data, (d: any) => d.v)
+      ext.recalculate(data, (d: Datum) => d.v)
       expect(ext.min).toBe(15)
       expect(ext.max).toBe(25)
       expect(ext.dirty).toBe(false)

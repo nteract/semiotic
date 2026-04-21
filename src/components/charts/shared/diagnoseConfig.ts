@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * diagnoseConfig — anti-pattern detector for Semiotic chart configurations.
  *
@@ -37,7 +38,7 @@ const NETWORK_COMPONENTS = new Set([
 
 function checkEmptyData(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const spec = VALIDATION_MAP[component]
@@ -69,7 +70,7 @@ function checkEmptyData(
 
 function checkBadDimensions(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const w = props.width
@@ -106,7 +107,7 @@ function checkBadDimensions(
 
 function checkAccessorFieldMissing(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const spec = VALIDATION_MAP[component]
@@ -134,7 +135,7 @@ function checkAccessorFieldMissing(
 
 function checkHierarchyDataAsArray(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!HIERARCHY_COMPONENTS.has(component)) return
@@ -150,7 +151,7 @@ function checkHierarchyDataAsArray(
 
 function checkNetworkMissingEdges(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!NETWORK_COMPONENTS.has(component)) return
@@ -166,7 +167,7 @@ function checkNetworkMissingEdges(
 
 function checkDateWithoutFormat(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const spec = VALIDATION_MAP[component]
@@ -191,7 +192,7 @@ function checkDateWithoutFormat(
 
 function checkLinkedChartsWithoutSelection(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   // If linkedHover is set but selection is not, the highlight won't apply
@@ -216,7 +217,7 @@ const XY_COMPONENTS = new Set([
 
 function checkDataGaps(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!XY_COMPONENTS.has(component)) return
@@ -227,7 +228,7 @@ function checkDataGaps(
   const yAcc = props.yAccessor || "y"
   if (typeof yAcc !== "string") return
 
-  const hasGap = data.some((d: Record<string, any>) => {
+  const hasGap = data.some((d: Datum) => {
     const v = d[yAcc]
     return v == null || Number.isNaN(v)
   })
@@ -244,7 +245,7 @@ function checkDataGaps(
 
 function checkNonZeroBaseline(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!BAR_AREA_COMPONENTS.has(component)) return
@@ -267,7 +268,7 @@ const ORDINAL_BAR_COMPONENTS = new Set([
 
 function checkDegenerateExtent(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const spec = VALIDATION_MAP[component]
@@ -309,7 +310,7 @@ function checkDegenerateExtent(
 
 function checkBarPaddingInvisible(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!ORDINAL_BAR_COMPONENTS.has(component)) return
@@ -326,7 +327,7 @@ function checkBarPaddingInvisible(
 
 function checkBottomMarginWithLegend(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (props.legendPosition !== "bottom") return
@@ -345,7 +346,7 @@ function checkBottomMarginWithLegend(
 
 function checkLegendMarginTight(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (!props.showLegend) return
@@ -366,7 +367,7 @@ function checkLegendMarginTight(
 
 function checkHeatmapStringAccessor(
   component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   if (component !== "Heatmap") return
@@ -412,7 +413,7 @@ function contrastRatio(hex1: string, hex2: string): number | null {
 
 function checkColorContrast(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   // Check categorical colors against background if both are hex
@@ -444,7 +445,7 @@ function checkColorContrast(
 
 function checkMarginOverflow(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const w = props.width ?? 600
@@ -482,7 +483,7 @@ const ACCESSOR_PROPS = [
 
 function checkMissingDescription(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   // Chartability critical: charts should have a title, description, or summary
@@ -502,7 +503,7 @@ function checkMissingDescription(
 
 function checkAdjacentCategoryContrast(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const colors = props.colorScheme
@@ -532,7 +533,7 @@ function checkAdjacentCategoryContrast(
 
 function checkFunctionAccessors(
   _component: string,
-  props: Record<string, any>,
+  props: Datum,
   out: Diagnosis[]
 ): void {
   const fnAccessors: string[] = []
@@ -563,7 +564,7 @@ function checkFunctionAccessors(
  */
 export function diagnoseConfig(
   componentName: string,
-  props: Record<string, any>
+  props: Datum
 ): DiagnosisResult {
   const diagnoses: Diagnosis[] = []
 

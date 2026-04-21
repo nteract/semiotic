@@ -10,6 +10,7 @@
  */
 
 import { TextEncoder, TextDecoder } from "util"
+import type { Datum } from "../../components/charts/shared/datumTypes"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import { renderChart, renderDashboard } from "../../components/server/renderToStaticSVG"
@@ -257,7 +258,7 @@ describe("hierarchy charts with colorByDepth", () => {
     const svg = renderChart("Treemap", {
       data: treeData,
       childrenAccessor: "children",
-      valueAccessor: (d: any) => d.children ? 0 : 1,
+      valueAccessor: (d: Datum) => d.children ? 0 : 1,
       colorByDepth: true,
       width: 400, height: 300,
     })

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./charts/shared/datumTypes"
 import * as React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useChartObserver } from "./store/useObservation"
@@ -10,7 +11,7 @@ export interface DetailsPanelProps {
    * Return null to hide the panel for a given datum.
    */
   children: (
-    datum: Record<string, any>,
+    datum: Datum,
     observation: ClickObservation
   ) => React.ReactNode
 
@@ -64,7 +65,7 @@ export function DetailsPanel({
   className,
   style,
 }: DetailsPanelProps) {
-  const [selectedDatum, setSelectedDatum] = useState<Record<string, any> | null>(null)
+  const [selectedDatum, setSelectedDatum] = useState<Datum | null>(null)
   const [selectedObservation, setSelectedObservation] = useState<ClickObservation | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)

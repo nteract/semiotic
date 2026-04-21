@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { GaugeChart } from "./GaugeChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
@@ -47,8 +48,8 @@ describe("GaugeChart", () => {
       </TooltipProvider>
     )
     const data = lastOrdinalFrameProps.data
-    const fillSegment = data.find((d: any) => d._isFill)
-    const bgSegment = data.find((d: any) => !d._isFill)
+    const fillSegment = data.find((d: Datum) => d._isFill)
+    const bgSegment = data.find((d: Datum) => !d._isFill)
     expect(fillSegment).toBeTruthy()
     expect(bgSegment).toBeTruthy()
     // Data sums to 1.0 — pieScene uses sweepAngle to limit the arc
@@ -75,8 +76,8 @@ describe("GaugeChart", () => {
     const data = lastOrdinalFrameProps.data
     // value=60 fills all of zone 1 (0-50) and part of zone 2 (50-80)
     // Plus gap segment
-    const fills = data.filter((d: any) => d._isFill)
-    const bgs = data.filter((d: any) => !d._isFill)
+    const fills = data.filter((d: Datum) => d._isFill)
+    const bgs = data.filter((d: Datum) => !d._isFill)
     expect(fills.length).toBe(2) // zones 0 and 1 have fill
     expect(bgs.length).toBe(2) // zones 1 and 2 have background
   })
@@ -89,8 +90,8 @@ describe("GaugeChart", () => {
     )
     const data = lastOrdinalFrameProps.data
     // All filled, no background
-    const fills = data.filter((d: any) => d._isFill)
-    const bgs = data.filter((d: any) => !d._isFill)
+    const fills = data.filter((d: Datum) => d._isFill)
+    const bgs = data.filter((d: Datum) => !d._isFill)
     expect(fills.length).toBe(1)
     expect(bgs.length).toBe(0)
   })
@@ -103,8 +104,8 @@ describe("GaugeChart", () => {
     )
     const data = lastOrdinalFrameProps.data
     // All background, no fill
-    const fills = data.filter((d: any) => d._isFill)
-    const bgs = data.filter((d: any) => !d._isFill)
+    const fills = data.filter((d: Datum) => d._isFill)
+    const bgs = data.filter((d: Datum) => !d._isFill)
     expect(fills.length).toBe(0)
     expect(bgs.length).toBe(1)
   })

@@ -13,6 +13,7 @@ import {
   fromURL,
   configToJSX,
 } from "../../components/export/chartConfig"
+import type { Datum } from "../../components/charts/shared/datumTypes"
 
 // ── Tests ───────────────────────────────────────────────────────────────
 
@@ -226,7 +227,7 @@ describe("Serialization Safety", () => {
   it("function props are excluded from serialized config", () => {
     const config = toConfig("Scatterplot", {
       data: [{ x: 1, y: 2 }],
-      xAccessor: (d: any) => d.x,
+      xAccessor: (d: Datum) => d.x,
       yAccessor: "y",
       customHoverBehavior: () => {},
     })

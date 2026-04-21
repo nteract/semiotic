@@ -12,6 +12,7 @@ import {
   interpolateRdYlGn,
   interpolateSpectral,
 } from "d3-scale-chromatic"
+import type { Datum } from "./datumTypes"
 
 /** Map d3-scale-chromatic diverging interpolator keys → interpolator fn. */
 const DIVERGING_INTERPOLATORS: Record<string, (t: number) => string> = {
@@ -44,12 +45,12 @@ export const NEUTRAL_POS = "__likert_neutral_pos"
 // ── Accessor helper ───────────────────────────────────────────────────
 
 export function resolveAccessorFn<T>(
-  accessor: string | ((d: any) => T) | undefined,
+  accessor: string | ((d: Datum) => T) | undefined,
   fallback: string,
-): (d: any) => T {
+): (d: Datum) => T {
   if (typeof accessor === "function") return accessor
   const key = (accessor as string) || fallback
-  return (d: any) => d[key]
+  return (d: Datum) => d[key]
 }
 
 // ── Color scheme ──────────────────────────────────────────────────────
@@ -112,10 +113,10 @@ export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: str
 export function aggregateData(
   data: any[],
   levels: string[],
-  getCat: (d: any) => string,
-  getScore: ((d: any) => number) | null,
-  getLevel: ((d: any) => string) | null,
-  getCount: ((d: any) => number) | null,
+  getCat: (d: Datum) => string,
+  getScore: ((d: Datum) => number) | null,
+  getLevel: ((d: Datum) => string) | null,
+  getCount: ((d: Datum) => number) | null,
 ): AggregatedRow[] {
   const counts = new Map<string, Map<string, number>>()
   const levelSet = new Set(levels)
@@ -236,10 +237,10 @@ export function orderForDiverging(rows: AggregatedRow[], levels: string[]): Aggr
 interface UseLikertAggregationConfig {
   data: any[] | undefined
   levels: string[]
-  categoryAccessor?: string | ((d: any) => string)
-  valueAccessor?: string | ((d: any) => number)
-  levelAccessor?: string | ((d: any) => string)
-  countAccessor?: string | ((d: any) => number)
+  categoryAccessor?: string | ((d: Datum) => string)
+  valueAccessor?: string | ((d: Datum) => number)
+  levelAccessor?: string | ((d: Datum) => string)
+  countAccessor?: string | ((d: Datum) => number)
   isDiverging: boolean
   frameRef: RefObject<StreamOrdinalFrameHandle | null>
 }

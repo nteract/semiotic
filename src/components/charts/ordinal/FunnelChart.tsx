@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -19,7 +20,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 /**
  * FunnelChart component props
  */
-export interface FunnelChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   /** Accessor for funnel step names (e.g., "Awareness", "Interest", "Purchase") */
   stepAccessor?: ChartAccessor<TDatum, string>
@@ -48,7 +49,7 @@ export interface FunnelChartProps<TDatum extends Record<string, any> = Record<st
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -64,7 +65,7 @@ export interface FunnelChartProps<TDatum extends Record<string, any> = Record<st
  * dropoff stacking. Each bar shows retained (solid) + dropoff from
  * previous step (hatched). Multi-category renders grouped bars.
  */
-export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record<string, any> = Record<string, any>>(props: FunnelChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -188,10 +189,10 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
     return "#4e79a7"
   }, [isSingleColor, color, themeCategorical, colorScheme])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
+    return (d: Datum, category?: string) => {
       const base: Record<string, string | number> = {}
       if (uniformFill) {
         // Single-category: every step gets the same color
@@ -223,7 +224,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
 
   // Default tooltip showing step, value, and percentage
   const defaultTooltipContent = useMemo(() => {
-    return (d: any) => {
+    return (d: Datum) => {
       const datum = d?.data || d
       // Support both horizontal (__funnelStep) and vertical (__barFunnelStep) metadata
       const step = datum?.__funnelStep || datum?.__barFunnelStep || datum?.step || ""
@@ -296,7 +297,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Record
 
   return <SafeRender componentName="FunnelChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 FunnelChart.displayName = "FunnelChart"

@@ -1,3 +1,4 @@
+import type { Datum } from "../components/charts/shared/datumTypes"
 /**
  * Prop Permutation Smoke Tests
  *
@@ -170,7 +171,7 @@ const W = ({ children }: { children: React.ReactNode }) => (
 
 // ── Helper: render every prop combination without throwing ───────────────
 
-type PropSet = Record<string, any>
+type PropSet = Datum
 
 /**
  * Renders a single HOC with all individual variations and all non-conflicting
@@ -214,7 +215,7 @@ const tooltipVariations: PropSet[] = [
   { tooltip: true },
   { tooltip: false },
   { tooltip: undefined },
-  { tooltip: (d: any) => <span>{JSON.stringify(d)}</span> },
+  { tooltip: (d: Datum) => <span>{JSON.stringify(d)}</span> },
 ]
 
 const legendVariations: PropSet[] = [
@@ -571,7 +572,7 @@ smokeTest("ForceDirectedGraph", ForceDirectedGraph, {
   { colorBy: "group" },
   { nodeSize: "weight" },
   { nodeSize: 10 },
-  { nodeSize: (d: any) => d.weight || 5 },
+  { nodeSize: (d: Datum) => d.weight || 5 },
   { showLabels: true },
   { showLabels: false },
   { iterations: 1 },

@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
  *
@@ -64,7 +65,7 @@ import type { SemioticTheme } from "../store/ThemeStore"
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
 /** Generate a short stable ID from chart props for unique SVG element IDs */
-function chartUID(props: Record<string, any>): string {
+function chartUID(props: Datum): string {
   // Prefer _idPrefix (set by renderDashboard), then chartId, then hash
   const raw = props._idPrefix || props.chartId
   if (raw) {
@@ -84,7 +85,7 @@ interface ThemeAwareProps {
   theme?: ThemeInput
   showLegend?: boolean
   showGrid?: boolean
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   title?: string | React.ReactNode
   description?: string
   background?: string
@@ -444,12 +445,12 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
 // ── Helper functions for building RealtimeNodes/Edges from props ────────
 
 function resolveAccessor(
-  accessor: string | ((d: any) => any) | undefined,
+  accessor: string | ((d: Datum) => any) | undefined,
   defaultKey: string
-): (d: any) => any {
-  if (!accessor) return (d: any) => d[defaultKey]
+): (d: Datum) => any {
+  if (!accessor) return (d: Datum) => d[defaultKey]
   if (typeof accessor === "function") return accessor
-  return (d: any) => d[accessor]
+  return (d: Datum) => d[accessor]
 }
 
 function buildRealtimeNodes(
@@ -1073,7 +1074,7 @@ interface RenderChartOptions {
  */
 export function renderChart(
   component: ChartName,
-  props: Record<string, any>,
+  props: Datum,
   _options?: RenderChartOptions
 ): string {
   // Extract common props
@@ -1171,7 +1172,7 @@ export interface RenderToImageOptions {
  */
 export async function renderToImage(
   frameTypeOrComponent: FrameType | ChartName,
-  props: Record<string, any>,
+  props: Datum,
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
   const { format = "png", scale = 1, background } = options
@@ -1229,7 +1230,7 @@ export interface DashboardChart {
   component?: ChartName
   frameType?: FrameType
   /** Chart props (data, accessors, etc.) */
-  props: Record<string, any>
+  props: Datum
   /** Span multiple columns (for emphasis="primary") */
   colSpan?: number
 }

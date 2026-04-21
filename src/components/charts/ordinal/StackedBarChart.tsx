@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -18,7 +19,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
-export interface StackedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface StackedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   stackBy: ChartAccessor<TDatum, string>
@@ -43,13 +44,13 @@ export interface StackedBarChartProps<TDatum extends Record<string, any> = Recor
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -132,7 +133,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
+    return (d: Datum, category?: string) => {
       if (effectiveColorBy) {
         if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
         return {} // Let frame use its own color scheme (push API)
@@ -147,7 +148,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     const userPieceStyle = frameProps?.pieceStyle
     const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
       ? basePieceStyle
-      : (d: Record<string, any>, category?: string) => {
+      : (d: Datum, category?: string) => {
         const base = basePieceStyle(d, category)
         const user = (userPieceStyle as ((...args: any[]) => any))(d, category) || {}
         return { ...base, ...user }
@@ -230,7 +231,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
 
   return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 StackedBarChart.displayName = "StackedBarChart"

@@ -55,8 +55,8 @@ export function buildTreeScene(
   edges: RealtimeEdge[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>,
-  edgeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: RealtimeNode) => Style,
+  edgeStyleFn: (d: RealtimeEdge) => Style
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]
@@ -218,7 +218,7 @@ export function buildRectScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: RealtimeNode) => Style
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]
@@ -293,7 +293,9 @@ export function buildRectScene(
         const palette = resolveDepthPalette(config)
         fill = palette[node.depth % palette.length]
       }
-      const textColor = contrastTextColor(fill)
+      // contrastTextColor works on hex/rgb strings; fall back to the theme
+      // primary text on CanvasPattern fills where no luminance can be computed.
+      const textColor = typeof fill === "string" ? contrastTextColor(fill) : "#000"
 
       if (isLeaf) {
         labels.push({
@@ -329,7 +331,7 @@ export function buildCircleScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: RealtimeNode) => Style
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]
@@ -394,7 +396,9 @@ export function buildCircleScene(
       }
 
       if (isLeaf) {
-        const textColor = contrastTextColor(fill)
+        // contrastTextColor works on hex/rgb strings; fall back to the theme
+      // primary text on CanvasPattern fills where no luminance can be computed.
+      const textColor = typeof fill === "string" ? contrastTextColor(fill) : "#000"
         labels.push({
           x: node.x,
           y: node.y,

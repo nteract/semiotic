@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -18,7 +19,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
-export interface PieChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -33,11 +34,11 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const PieChart = forwardRef(function PieChart<TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -112,7 +113,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
+    return (d: Datum, category?: string) => {
       if (effectiveColorBy) {
         if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
         return {} // Let frame use its own color scheme (push API)
@@ -125,7 +126,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     const userPieceStyle = frameProps?.pieceStyle
     const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
       ? basePieceStyle
-      : (d: Record<string, any>, category?: string) => ({
+      : (d: Datum, category?: string) => ({
         ...basePieceStyle(d, category),
         ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
       })
@@ -199,7 +200,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
 
   return <SafeRender componentName="PieChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 PieChart.displayName = "PieChart"

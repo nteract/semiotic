@@ -1,6 +1,7 @@
 import * as React from "react"
 import { timeFormat } from "d3-time-format"
 import { format as d3Format } from "d3-format"
+import type { Datum } from "./datumTypes"
 
 /**
  * Format number with specified format string
@@ -60,22 +61,22 @@ export function formatAxis(
     format?: string
     currency?: string
   }
-): (d: any) => string {
+): (d: number | string | Date) => string {
   const { decimals = 0, format: customFormat, currency = "$" } = options || {}
 
   switch (type) {
     case "date":
-      return (d) => formatDate(d, customFormat || "%b %d")
+      return (d) => formatDate(d as number | string | Date, customFormat || "%b %d")
 
     case "percent":
-      return (d) => formatNumber(d, customFormat || `.${decimals}%`)
+      return (d) => formatNumber(d as number, customFormat || `.${decimals}%`)
 
     case "currency":
-      return (d) => `${currency}${formatNumber(d, customFormat || `,.${decimals}f`)}`
+      return (d) => `${currency}${formatNumber(d as number, customFormat || `,.${decimals}f`)}`
 
     case "number":
     default:
-      return (d) => formatNumber(d, customFormat || `,.${decimals}f`)
+      return (d) => formatNumber(d as number, customFormat || `,.${decimals}f`)
   }
 }
 
@@ -100,8 +101,8 @@ export function createTooltip(
   fields: string[],
   formatters?: Record<string, (v: any) => string>,
   labels?: Record<string, string>
-): (d: any) => React.JSX.Element {
-  return (d: any) => {
+): (d: Datum) => React.JSX.Element {
+  return (d: Datum) => {
     return React.createElement(
       "div",
       { className: "tooltip-content", style: { padding: "8px" } },

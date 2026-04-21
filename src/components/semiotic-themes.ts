@@ -1,3 +1,4 @@
+import type { Datum } from "./charts/shared/datumTypes"
 /**
  * semiotic/themes — Named theme presets for Semiotic charts.
  *
@@ -715,7 +716,7 @@ export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
  * // { semiotic: { bg: { $value: "#fffff8", $type: "color" }, ... } }
  * ```
  */
-export function themeToTokens(theme: SemioticTheme): Record<string, any> {
+export function themeToTokens(theme: SemioticTheme): Datum {
   return {
     semiotic: {
       bg: { $value: theme.colors.background, $type: "color" },

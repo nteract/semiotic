@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * OrdinalPipelineStore — stateful pipeline for ordinal chart data.
  *
@@ -62,21 +63,21 @@ const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
 export class OrdinalPipelineStore {
-  private buffer: RingBuffer<Record<string, any>>
+  private buffer: RingBuffer<Datum>
   private rExtent = new IncrementalExtent()
   /** Per-accessor extents for multiAxis mode */
   private rExtents: IncrementalExtent[] = []
   private config: OrdinalPipelineConfig
 
-  private getO: (d: any) => string
-  private getR: (d: any) => number
+  private getO: (d: Datum) => string
+  private getR: (d: Datum) => number
   /** All resolved rAccessors (length > 1 when multiAxis) */
-  private rAccessors: ((d: any) => number)[] = []
-  private getStack: ((d: any) => string) | undefined
-  private getGroup: ((d: any) => string) | undefined
-  private getColor: ((d: any) => string) | undefined
-  private getConnector: ((d: any) => string) | undefined
-  private getDataId: ((d: any) => string) | undefined
+  private rAccessors: ((d: Datum) => number)[] = []
+  private getStack: ((d: Datum) => string) | undefined
+  private getGroup: ((d: Datum) => string) | undefined
+  private getColor: ((d: Datum) => string) | undefined
+  private getConnector: ((d: Datum) => string) | undefined
+  private getDataId: ((d: Datum) => string) | undefined
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
@@ -125,7 +126,7 @@ export class OrdinalPipelineStore {
     this.getO = resolveStringAccessor(
       config.categoryAccessor || config.oAccessor,
       "category"
-    ) as (d: any) => string
+    ) as (d: Datum) => string
 
     const isStreaming = config.runtimeMode === "streaming"
 
@@ -137,7 +138,7 @@ export class OrdinalPipelineStore {
       this.rExtents = rawR.map(() => new IncrementalExtent())
     } else {
       if (isStreaming && (config.timeAccessor || rawR)) {
-        this.getR = resolveAccessor(rawR as string | ((d: any) => number) | undefined, "value")
+        this.getR = resolveAccessor(rawR as string | ((d: Datum) => number) | undefined, "value")
       } else {
         this.getR = resolveAccessor(rawR, "value")
       }
@@ -219,7 +220,7 @@ export class OrdinalPipelineStore {
     return true
   }
 
-  private pushValueExtent(d: any): void {
+  private pushValueExtent(d: Datum): void {
     if (this.config.chartType === "timeline") {
       const range = this.getRawRange(d)
       if (range) {
@@ -238,7 +239,7 @@ export class OrdinalPipelineStore {
     }
   }
 
-  private evictValueExtent(d: any): void {
+  private evictValueExtent(d: Datum): void {
     if (this.config.chartType === "timeline") {
       const range = this.getRawRange(d)
       if (range) {
@@ -256,7 +257,7 @@ export class OrdinalPipelineStore {
   }
 
   /** For timeline type: resolve rAccessor as a [start, end] pair */
-  private getRawRange(d: any): [number, number] | null {
+  private getRawRange(d: Datum): [number, number] | null {
     const acc = this.config.valueAccessor || this.config.rAccessor
     if (!acc) return null
     const result = typeof acc === "function" ? (acc as ((...args: any[]) => any))(d) : d[acc as string]
@@ -404,7 +405,7 @@ export class OrdinalPipelineStore {
 
   // ── Category resolution ──────────────────────────────────────────────
 
-  private resolveCategories(data: Record<string, any>[]): string[] {
+  private resolveCategories(data: Datum[]): string[] {
     const sort = this.config.oSort
     const isStreaming = this.config.runtimeMode === "streaming" || this._hasStreamingData
 
@@ -480,7 +481,7 @@ export class OrdinalPipelineStore {
 
   // ── Value domain computation ─────────────────────────────────────────
 
-  private computeValueDomain(data: Record<string, any>[], _oExtent: string[]): [number, number] {
+  private computeValueDomain(data: Datum[], _oExtent: string[]): [number, number] {
     const chartType = this.config.chartType
     const pad = this.config.extentPadding ?? 0.05
 
@@ -585,7 +586,7 @@ export class OrdinalPipelineStore {
   // ── Column projection ────────────────────────────────────────────────
 
   private buildColumns(
-    data: Record<string, any>[],
+    data: Datum[],
     oExtent: string[],
     oScale: ScaleBand<string>,
     projection: string,
@@ -594,7 +595,7 @@ export class OrdinalPipelineStore {
     const columns: Record<string, OrdinalColumn> = {}
 
     // Group data by category
-    const grouped = new Map<string, Record<string, any>[]>()
+    const grouped = new Map<string, Datum[]>()
     for (const d of data) {
       const cat = this.getO(d)
       if (!grouped.has(cat)) grouped.set(cat, [])
@@ -691,11 +692,11 @@ export class OrdinalPipelineStore {
       rAccessors: this.rAccessors,
       resolvePieceStyle: (d: any, category?: string) => this.resolvePieceStyle(d, category),
       resolveSummaryStyle: (d: any, category?: string) => this.resolveSummaryStyle(d, category),
-      getRawRange: (d: any) => this.getRawRange(d)
+      getRawRange: (d: Datum) => this.getRawRange(d)
     }
   }
 
-  private buildSceneNodes(data: Record<string, any>[], layout: OrdinalLayout): OrdinalSceneNode[] {
+  private buildSceneNodes(data: Datum[], layout: OrdinalLayout): OrdinalSceneNode[] {
     if (!this.scales) return []
 
     const ctx = this.getSceneContext()
@@ -775,7 +776,7 @@ export class OrdinalPipelineStore {
    * `_dataVersion` so the per-frame applyDecay/applyPulse calls don't
    * rebuild it during animation when the buffer hasn't changed.
    */
-  private getDatumIndexMap(data: Record<string, any>[]): Map<any, number> {
+  private getDatumIndexMap(data: Datum[]): Map<any, number> {
     if (this._datumIndexCache && this._datumIndexCache.version === this._dataVersion) {
       return this._datumIndexCache.map
     }
@@ -792,7 +793,7 @@ export class OrdinalPipelineStore {
    * wedge nodes. Cached against `_dataVersion` so the per-wedge inner loop
    * collapses from O(data) to O(matches-for-this-category).
    */
-  private getCategoryIndexMap(data: Record<string, any>[]): Map<string, number[]> {
+  private getCategoryIndexMap(data: Datum[]): Map<string, number[]> {
     if (this._categoryIndexCache && this._categoryIndexCache.version === this._dataVersion) {
       return this._categoryIndexCache.map
     }
@@ -857,7 +858,7 @@ export class OrdinalPipelineStore {
     return this._maxPointRadius
   }
 
-  private applyDecay(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {
+  private applyDecay(nodes: OrdinalSceneNode[], data: Datum[]): void {
     if (!this.config.decay) return
     const bufferSize = data.length
     if (bufferSize <= 1) return
@@ -876,7 +877,7 @@ export class OrdinalPipelineStore {
 
   // ── Pulse ───────────────────────────────────────────────────────────
 
-  private applyPulse(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {
+  private applyPulse(nodes: OrdinalSceneNode[], data: Datum[]): void {
     if (!this.config.pulse || !this.timestampBuffer) return
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     const duration = this.config.pulse.duration ?? 500
@@ -1279,7 +1280,7 @@ export class OrdinalPipelineStore {
 
   // ── Public accessors ─────────────────────────────────────────────────
 
-  getData(): Record<string, any>[] {
+  getData(): Datum[] {
     return this.buffer.toArray()
   }
 
@@ -1287,7 +1288,7 @@ export class OrdinalPipelineStore {
    * Remove data items by ID. Requires dataIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
    */
-  remove(id: string | string[]): Record<string, any>[] {
+  remove(id: string | string[]): Datum[] {
     if (!this.getDataId) {
       throw new Error("remove() requires dataIdAccessor to be configured")
     }
@@ -1298,7 +1299,7 @@ export class OrdinalPipelineStore {
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getDataId = this.getDataId
     // Compact timestamp buffer in lockstep with data removal
-    const predicate = (item: Record<string, any>) => ids.has(getDataId(item))
+    const predicate = (item: Datum) => ids.has(getDataId(item))
     if (this.timestampBuffer && this.timestampBuffer.size > 0) {
       const oldTimestamps = this.timestampBuffer.toArray()
       const removeSet = new Set<number>()
@@ -1328,7 +1329,7 @@ export class OrdinalPipelineStore {
    * Update data items by ID. Requires dataIdAccessor.
    * Returns the previous values. Categories and extents are rebuilt.
    */
-  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+  update(id: string | string[], updater: (d: Datum) => Datum): Datum[] {
     if (!this.getDataId) {
       throw new Error("update() requires dataIdAccessor to be configured")
     }
@@ -1386,11 +1387,11 @@ export class OrdinalPipelineStore {
     return this.buffer.size
   }
 
-  getOAccessor(): (d: any) => string {
+  getOAccessor(): (d: Datum) => string {
     return this.getO
   }
 
-  getRAccessor(): (d: any) => number {
+  getRAccessor(): (d: Datum) => number {
     return this.getR
   }
 
@@ -1434,7 +1435,7 @@ export class OrdinalPipelineStore {
         this.getO = resolveStringAccessor(
           this.config.categoryAccessor || this.config.oAccessor,
           "category"
-        ) as (d: any) => string
+        ) as (d: Datum) => string
         this.categories.clear()
       }
     }

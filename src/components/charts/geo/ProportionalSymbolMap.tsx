@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -17,7 +18,7 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
-export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
   points?: TDatum[]
   /** Longitude accessor @default "lon" */
@@ -68,12 +69,12 @@ export interface ProportionalSymbolMapProps<TDatum extends Record<string, any> =
   /** Max cached tiles @default 256 */
   tileCacheSize?: number
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Passthrough */
   frameProps?: Partial<Omit<StreamGeoFrameProps, "points" | "projection">>
 }
 
-export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Record<string, any> = Record<string, any>>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point),
@@ -163,30 +164,30 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   // Compute size domain for scaling
   const sizeDomain = useMemo(() => {
     if (!sizeBy) return undefined
-    const acc = typeof sizeBy === "function" ? sizeBy : (d: any) => d?.[sizeBy as string]
+    const acc = typeof sizeBy === "function" ? sizeBy : (d: Datum) => d?.[sizeBy as string]
     const vals = safeData.filter(Boolean).map(d => acc(d)).filter(v => v != null && isFinite(v))
     if (vals.length === 0) return undefined
     return [Math.min(...vals), Math.max(...vals)] as [number, number]
   }, [safeData, sizeBy])
 
   const pointStyleFn = useMemo(() => {
-    const base = (d: Record<string, any>): Style & { r?: number } => ({
+    const base = (d: Datum): Style & { r?: number } => ({
       fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR,
       fillOpacity: 0.7,
       stroke: "#fff",
       strokeWidth: 0.5,
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
     })
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style & { r?: number }
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
 
   const allCategories = useMemo(() => {
     if (!colorBy) return []
-    const acc = typeof colorBy === "function" ? colorBy : (d: any) => d?.[colorBy as string]
+    const acc = typeof colorBy === "function" ? colorBy : (d: Datum) => d?.[colorBy as string]
     const vals = new Set<string>()
     for (const d of safeData) {
       if (!d) continue
@@ -208,11 +209,11 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     defaults: { top: 10, bottom: 10, left: 10, right: 10 }
   })
 
-  const defaultTooltip = useMemo(() => (d: any) => {
+  const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point
     const name = d?.name || d?.label || d?.NAME || d?.id
     const sizeField = typeof sizeBy === "string" ? sizeBy : null
-    const sizeAcc = typeof sizeBy === "function" ? sizeBy : (datum: any) => datum[sizeBy as string]
+    const sizeAcc = typeof sizeBy === "function" ? sizeBy : (datum: Datum) => datum[sizeBy as string]
     const sizeVal = sizeAcc(d)
 
     // Format numbers: use toLocaleString for large integers, limit decimals for floats
@@ -304,7 +305,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 ProportionalSymbolMap.displayName = "ProportionalSymbolMap"

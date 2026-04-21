@@ -8,6 +8,7 @@ import { loess } from "./loess"
 // @ts-expect-error — no type declarations for regression
 import regression from "regression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
+import type { Datum } from "./datumTypes"
 
 const CURVE_FACTORIES: Record<string, CurveFactory> = {
   linear: curveLinear,
@@ -26,12 +27,12 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
 export function createDefaultAnnotationRules(
   _frameType: "xy" | "ordinal" | "network"
 ): (
-  annotation: Record<string, any>,
+  annotation: Datum,
   index: number,
   context: AnnotationContext
 ) => React.ReactNode | null {
   return function defaultAnnotationRules(
-    ann: Record<string, any>,
+    ann: Datum,
     index: number,
     context: AnnotationContext
   ): React.ReactNode | null {
@@ -176,7 +177,7 @@ export function createDefaultAnnotationRules(
       // ── Enclose (circle enclosure) ────────────────────────────────────
       case "enclose": {
         const coords = (ann.coordinates || [])
-          .map((c: Record<string, any>) => ({
+          .map((c: Datum) => ({
             x: resolveX({ ...c, type: "point" }, context),
             y: resolveY({ ...c, type: "point" }, context),
             r: 1
@@ -218,7 +219,7 @@ export function createDefaultAnnotationRules(
       // ── Rect-enclose (bounding rectangle) ─────────────────────────────
       case "rect-enclose": {
         const coords = (ann.coordinates || [])
-          .map((c: Record<string, any>) => ({
+          .map((c: Datum) => ({
             x: resolveX({ ...c, type: "point" }, context),
             y: resolveY({ ...c, type: "point" }, context)
           }))
@@ -422,7 +423,7 @@ export function createDefaultAnnotationRules(
 
         const upperAcc = ann.upperAccessor || "upperBounds"
         const lowerAcc = ann.lowerAccessor || "lowerBounds"
-        const filterFn = ann.filter as ((d: Record<string, any>) => boolean) | undefined
+        const filterFn = ann.filter as ((d: Datum) => boolean) | undefined
 
         // Collect points that have bounds
         const bounded = data
@@ -436,7 +437,7 @@ export function createDefaultAnnotationRules(
 
         // Build envelope area using d3-shape area generator with curve interpolation
         const curveFn = CURVE_FACTORIES[context.curve || "linear"] || curveLinear
-        const envelopeArea = d3Area<Record<string, any>>()
+        const envelopeArea = d3Area<Datum>()
           .x((d) => scaleX(d[xAcc]))
           .y0((d) => scaleY(d[lowerAcc]))
           .y1((d) => scaleY(d[upperAcc]))

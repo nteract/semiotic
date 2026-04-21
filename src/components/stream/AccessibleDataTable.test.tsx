@@ -3,6 +3,7 @@ import {
   computeCanvasAriaLabel,
   computeNetworkAriaLabel,
 } from "./AccessibleDataTable"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Test helpers ────────────────────────────────────────────────────────
 
@@ -263,7 +264,7 @@ describe("extractAllRows — data shape resilience", () => {
 
 describe("computeFieldStats resilience", () => {
   // Replicate the production logic for direct testing
-  function computeFieldStats(rows: Array<{ values: Record<string, any> } | null>): any[] {
+  function computeFieldStats(rows: Array<{ values: Datum } | null>): any[] {
     if (!rows || rows.length === 0) return []
     const fieldNames = new Set<string>()
     for (const r of rows) {

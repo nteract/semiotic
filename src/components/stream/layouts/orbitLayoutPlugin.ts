@@ -12,6 +12,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 // ── Orbit-specific node metadata ──────────────────────────────────────
 
@@ -49,16 +50,16 @@ function resolveMode(mode: string | number[] | undefined): number[] {
   }
 }
 
-function resolveChildrenAccessor(acc: string | ((d: any) => any[]) | undefined): (d: any) => any[] | null {
+function resolveChildrenAccessor(acc: string | ((d: Datum) => any[]) | undefined): (d: Datum) => any[] | null {
   if (typeof acc === "function") return acc
   const field = acc || "children"
-  return (d: any) => d[field] || null
+  return (d: Datum) => d[field] || null
 }
 
-function resolveNodeIdAccessor(acc: string | ((d: any) => string) | undefined): (d: any) => string {
+function resolveNodeIdAccessor(acc: string | ((d: Datum) => string) | undefined): (d: Datum) => string {
   if (typeof acc === "function") return acc
   const field = acc || "name"
-  return (d: any) => String(d[field] ?? "")
+  return (d: Datum) => String(d[field] ?? "")
 }
 
 function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefined): (n: any) => number {

@@ -1,3 +1,4 @@
+import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * Scenario tests: Systematic validation and diagnostic coverage.
  *
@@ -14,7 +15,7 @@ import { diagnoseConfig } from "../../components/charts/shared/diagnoseConfig"
 
 // ── Minimal valid props for every component type ─────────────────────────
 
-const MINIMAL_VALID_PROPS: Record<string, Record<string, any>> = {
+const MINIMAL_VALID_PROPS: Record<string, Datum> = {
   // XY charts
   LineChart: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
   AreaChart: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
@@ -180,7 +181,7 @@ describe("Validation — Edge Cases", () => {
   it("accepts function accessor for xAccessor", () => {
     const result = validateProps("LineChart", {
       data: [{ x: 1, y: 2 }],
-      xAccessor: (d: any) => d.x,
+      xAccessor: (d: Datum) => d.x,
       yAccessor: "y",
     })
     expect(result.valid).toBe(true)

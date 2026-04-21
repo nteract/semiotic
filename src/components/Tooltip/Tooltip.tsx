@@ -1,5 +1,6 @@
 import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 /**
  * Configuration for a single tooltip field
@@ -396,14 +397,14 @@ export type TooltipProp =
  * The function signature that Stream Frames expect for tooltipContent.
  * Compatible with HoverData and any Record-based hover object.
  */
-export type TooltipContentFn = (d: Record<string, any>) => React.ReactNode
+export type TooltipContentFn = (d: Datum) => React.ReactNode
 
 /**
  * Multi-point tooltip: shows all series values at the hovered X position
  * with color swatches (legend-style). Used when tooltipMode="multi".
  */
 export function MultiPointTooltip(): TooltipContentFn {
-  return (d: Record<string, any>) => {
+  return (d: Datum) => {
     const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: any }> | undefined
     if (!allSeries || allSeries.length === 0) {
       // Fallback to single-datum display — prefer data-space values from datum
@@ -455,7 +456,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     // 2. Returning a plain string/number renders as an unstyled text node.
     //    We wrap all results in the standard tooltip chrome.
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
-    return (hoverData: Record<string, any>) => {
+    return (hoverData: Datum) => {
       // Unwrap HoverData → raw datum so user functions receive the data they expect.
       // Only unwrap when hoverData matches the HoverData shape from Stream Frames
       // (has .type of "node"/"edge" AND .data object). This avoids mis-unwrapping

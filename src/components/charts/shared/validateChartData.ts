@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * Validates chart data and accessors at render time.
  * Returns null if data is valid, or an error message string if not.
@@ -35,7 +36,7 @@ interface ArrayDataValidation {
   componentName: string
   data: any[] | undefined | null
   accessors?: Record<string, AccessorLike | undefined>
-  requiredProps?: Record<string, any>
+  requiredProps?: Datum
 }
 
 interface ObjectDataValidation {

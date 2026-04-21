@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { StackedBarChart } from "./StackedBarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { STACKED_SAMPLE as sampleData } from "../../../test-utils/ordinalFixtures"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
@@ -212,7 +213,7 @@ describe("StackedBarChart", () => {
     })
 
     it("uses user-provided tooltip instead of default", () => {
-      const customTooltip = (d: any) => <div>custom: {d.product}</div>
+      const customTooltip = (d: Datum) => <div>custom: {d.product}</div>
 
       render(
         <TooltipProvider>

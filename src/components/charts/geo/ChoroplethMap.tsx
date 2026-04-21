@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -51,7 +52,7 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
   turbo: interpolateTurbo,
 }
 
-export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** GeoJSON features or a reference string ("world-110m", "world-50m", "land-110m", "land-50m") */
   areas: AreasProp
   /** Accessor for the numeric value to encode as color */
@@ -90,12 +91,12 @@ export interface ChoroplethMapProps<TDatum extends Record<string, any> = Record<
   /** Fill opacity for area polygons. Useful for layering over tile basemaps. @default 1 */
   areaOpacity?: number
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Passthrough to StreamGeoFrame */
   frameProps?: Partial<Omit<StreamGeoFrameProps, "areas" | "projection">>
 }
 
-export function ChoroplethMap<TDatum extends Record<string, any> = Record<string, any>>(props: ChoroplethMapProps<TDatum>) {
+export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -155,7 +156,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
   const valAcc = useMemo(() =>
     typeof valueAccessor === "function"
       ? valueAccessor
-      : (d: any) => d?.properties?.[valueAccessor] ?? d?.[valueAccessor],
+      : (d: Datum) => d?.properties?.[valueAccessor] ?? d?.[valueAccessor],
     [valueAccessor]
   )
 
@@ -184,7 +185,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
 
   // Area style
   const areaStyleFn = useMemo(() => {
-    const base = (d: any): Style => {
+    const base = (d: Datum): Style => {
       const val = valAcc(d)
       return {
         fill: val != null && isFinite(val) ? colorScale(val) : "#ccc",
@@ -195,16 +196,16 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     }
     // Overlay top-level primitive props before selection wrap so they apply
     // to every region regardless of selection state.
-    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style
     }
     return withPrimitives
   }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)
-  const defaultTooltip = useMemo(() => (d: any) => {
+  const defaultTooltip = useMemo(() => (d: Datum) => {
     const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || "Feature"
     const val = valAcc(d)
 
@@ -224,7 +225,7 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
 
   const margin = useMemo(() => ({
     top: 10, right: 10, bottom: 10, left: 10,
-    ...userMargin
+    ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin)
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───

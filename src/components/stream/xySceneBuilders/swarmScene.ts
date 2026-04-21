@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Realtime swarm chart scene builder.
  *
@@ -8,7 +9,7 @@
 import type { SceneNode, PointSceneNode } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildSwarmScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const nodes: SceneNode[] = []
   const swarm = ctx.config.swarmStyle || {}
   const radius = swarm.radius ?? 3

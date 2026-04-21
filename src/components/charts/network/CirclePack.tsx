@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -17,7 +18,7 @@ import { validateObjectData } from "../shared/validateChartData"
 /**
  * CirclePack component props
  */
-export interface CirclePackProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartProps {
   data: TNode
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
   valueAccessor?: ChartAccessor<TNode, number>
@@ -40,7 +41,7 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
  *
  * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
-export function CirclePack<TNode extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode>) {
+export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -93,7 +94,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   const loadingEl = renderLoadingState(loading, width, height)
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -102,14 +103,14 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   const allCategories = useMemo(() => {
     if (!colorBy || colorByDepth) return []
     const vals = new Set<string>()
-    for (const d of allNodes as Record<string, any>[]) {
+    for (const d of allNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)
   }, [allNodes, colorBy, colorByDepth])
 
-  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: any) => string) | undefined, allCategories)
+  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: Datum) => string) | undefined, allCategories)
 
   // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
   const themeCategorical = useThemeCategorical()
@@ -123,7 +124,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   }, [colorScheme, themeCategorical])
 
   const baseNodeStyleFn = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "currentColor",
         strokeWidth: 1,
@@ -133,7 +134,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
       } else {
         baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
@@ -151,7 +152,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   }, [valueAccessor])
 
   // Margin
-  const margin = { ...resolved.marginDefaults, ...userMargin }
+  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection, linkedHover,

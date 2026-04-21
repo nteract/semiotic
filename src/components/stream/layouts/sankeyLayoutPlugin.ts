@@ -21,13 +21,14 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
-const sankeyOrientHash: Record<string, any> = {
+const sankeyOrientHash = {
   left: sankeyLeft,
   right: sankeyRight,
   center: sankeyCenter,
-  justify: sankeyJustify
-}
+  justify: sankeyJustify,
+} as const
 
 /**
  * Sankey layout plugin — uses d3-sankey-circular for layout computation.
@@ -78,7 +79,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       .links(sankeyEdges)
       .nodes(sankeyNodes)
       .nodeAlign(sankeyOrientHash[orient] || sankeyJustify)
-      .nodeId((d: any) => d.id)
+      .nodeId((d: Datum) => d.id)
       .nodeWidth(nodeWidth)
       .iterations(iterations)
 
@@ -474,9 +475,9 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 function resolveLabelFn(
-  nodeLabel: string | ((d: any) => string) | undefined
-): ((d: any) => string) | null {
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
   if (typeof nodeLabel === "function") return nodeLabel
-  return (d: any) => d[nodeLabel] || d.id
+  return (d: Datum) => d[nodeLabel] || d.id
 }

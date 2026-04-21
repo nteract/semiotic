@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
@@ -33,9 +34,9 @@ export interface NetworkSVGOverlayProps {
   sceneNodes?: Array<{ type: string; datum: any; id?: string; x?: number; y?: number; cx?: number; cy?: number; w?: number; h?: number }>
 
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: any
   ) => ReactNode

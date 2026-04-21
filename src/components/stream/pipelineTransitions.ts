@@ -21,6 +21,7 @@ import type {
 } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -30,9 +31,9 @@ export type PrevPath = { topPath?: [number, number][]; bottomPath?: [number, num
 /** Context needed from PipelineStore for identity resolution */
 export interface TransitionContext {
   runtimeMode?: "streaming" | "bounded"
-  getX: (d: any) => number
-  getY: (d: any) => number
-  getCategory?: (d: any) => string
+  getX: (d: Datum) => number
+  getY: (d: Datum) => number
+  getCategory?: (d: Datum) => string
 }
 
 // ── Identity ───────────────────────────────────────────────────────────

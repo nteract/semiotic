@@ -1,6 +1,7 @@
 import { buildLineNode, buildAreaNode, buildStackedAreaNodes } from "./SceneGraph"
 import type { StreamScales } from "./types"
 import { scaleLinear } from "d3-scale"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeScales(w = 100, h = 100): StreamScales {
   return {
@@ -44,7 +45,7 @@ describe("SceneGraph — buildLineNode", () => {
     )
 
     // datum[i] should correspond to path[i]
-    const sortedDatum = node.datum as Record<string, any>[]
+    const sortedDatum = node.datum as Datum[]
     expect(sortedDatum[0].id).toBe("a") // x=1 is smallest
     expect(sortedDatum[1].id).toBe("b") // x=5
     expect(sortedDatum[2].id).toBe("c") // x=9

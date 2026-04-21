@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * Static props validation for AI code-generation pipelines.
  *
@@ -67,7 +68,7 @@ import { closestMatch } from "./stringDistance"
  */
 export function validateProps(
   componentName: string,
-  props: Record<string, any>
+  props: Datum
 ): ValidationResult {
   const errors: string[] = []
 

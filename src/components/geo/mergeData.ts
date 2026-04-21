@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Merge external data into GeoJSON features by joining on a key field.
  *
@@ -12,7 +13,7 @@
  * Cross-pollination: This pattern (key-based data join) could be extracted
  * to a shared utility for any data merge operation in Semiotic.
  */
-export function mergeData<T extends Record<string, any>>(
+export function mergeData<T extends Datum>(
   features: GeoJSON.Feature[],
   data: T[],
   options: {

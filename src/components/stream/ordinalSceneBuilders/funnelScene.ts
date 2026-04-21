@@ -2,6 +2,7 @@ import { scaleLinear } from "d3-scale"
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout, TrapezoidSceneNode } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /**
  * Funnel scene builder.
@@ -54,14 +55,14 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
   // Compute per-step, per-category aggregated values
   interface StepData {
     col: typeof orderedColumns[0]
-    groups: Map<string, { total: number; pieces: Record<string, any>[] }>
+    groups: Map<string, { total: number; pieces: Datum[] }>
     stepTotal: number
   }
   const steps: StepData[] = []
   let globalMax = 0
 
   for (const col of orderedColumns) {
-    const groups = new Map<string, { total: number; pieces: Record<string, any>[] }>()
+    const groups = new Map<string, { total: number; pieces: Datum[] }>()
     let stepTotal = 0
     for (const d of col.pieceData) {
       const key = getStack ? getStack(d) : "_default"
@@ -143,7 +144,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
       const style = resolvePieceStyle(datum, styleKey)
       const pct = firstStepTotal > 0 ? (val / firstStepTotal * 100) : 0
 
-      const labelData: Record<string, any> = {
+      const labelData: Datum = {
         ...datum,
         __funnelValue: val,
         __funnelPercent: pct,
@@ -192,7 +193,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
         const catFirstTotal = catFirstTotals.get(catKey) ?? group.total
         const pct = catFirstTotal > 0 ? (group.total / catFirstTotal * 100) : 0
 
-        const labelData: Record<string, any> = {
+        const labelData: Datum = {
           ...group.pieces[0],
           __funnelValue: group.total,
           __funnelPercent: pct,

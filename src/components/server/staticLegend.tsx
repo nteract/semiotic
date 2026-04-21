@@ -9,6 +9,7 @@ import * as React from "react"
 import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "d3-scale-chromatic"
 import type { SemioticTheme } from "../store/ThemeStore"
+import type { Datum } from "../charts/shared/datumTypes"
 
 const SWATCH = 14
 const ROW_HEIGHT = 20
@@ -131,10 +132,10 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
  */
 export function extractCategories(
   data: any[],
-  accessor: string | ((d: any) => string) | undefined
+  accessor: string | ((d: Datum) => string) | undefined
 ): string[] {
   if (!accessor || !data || data.length === 0) return []
-  const fn = typeof accessor === "function" ? accessor : (d: any) => d[accessor]
+  const fn = typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
   const seen = new Set<string>()
   for (const d of data) {
     const val = fn(d)

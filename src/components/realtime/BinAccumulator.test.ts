@@ -1,7 +1,8 @@
 import { computeBins, computeBinExtent } from "./BinAccumulator"
+import type { Datum } from "../charts/shared/datumTypes"
 
-const getTime = (d: any) => d.time
-const getValue = (d: any) => d.value
+const getTime = (d: Datum) => d.time
+const getValue = (d: Datum) => d.value
 
 describe("computeBins", () => {
   it("places a single point in the correct bin", () => {
@@ -60,7 +61,7 @@ describe("computeBins", () => {
       { time: 2, value: 3, cat: "warnings" },
       { time: 3, value: 7, cat: "errors" }
     ]
-    const getCat = (d: any) => d.cat
+    const getCat = (d: Datum) => d.cat
     const bins = computeBins(data, getTime, getValue, 10, getCat)
 
     const bin = bins.get(0)!
@@ -100,7 +101,7 @@ describe("computeBinExtent", () => {
       { time: 2, value: 10, cat: "b" },
       { time: 15, value: 20, cat: "a" }
     ]
-    const getCat = (d: any) => d.cat
+    const getCat = (d: Datum) => d.cat
     const extent = computeBinExtent(data, getTime, getValue, 10, getCat)
 
     // bin 0 total = 15, bin 10 total = 20

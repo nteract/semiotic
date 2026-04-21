@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import {
   useRef,
@@ -704,7 +705,7 @@ const StreamNetworkFrame = forwardRef<
             if (targetId !== undefined) {
               matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
             } else if (edgeIdAccessor && hoveredEdge) {
-              const getEid = typeof edgeIdAccessor === "function" ? edgeIdAccessor : (d: any) => d?.[edgeIdAccessor]
+              const getEid = typeof edgeIdAccessor === "function" ? edgeIdAccessor : (d: Datum) => d?.[edgeIdAccessor]
               matches = getEid(hoveredEdge) === sourceIdOrEdgeId
             } else {
               matches = true // no accessor to compare — conservatively clear
@@ -720,7 +721,7 @@ const StreamNetworkFrame = forwardRef<
         }
         return removed
       },
-      updateNode: (id: string, updater: (data: Record<string, any>) => Record<string, any>) => {
+      updateNode: (id: string, updater: (data: Datum) => Datum) => {
         const previous = storeRef.current?.updateNode(id, updater) ?? null
         if (previous) {
           dirtyRef.current = true
@@ -728,7 +729,7 @@ const StreamNetworkFrame = forwardRef<
         }
         return previous
       },
-      updateEdge: (sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>) => {
+      updateEdge: (sourceId: string, targetId: string, updater: (data: Datum) => Datum) => {
         const previous = storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
         if (previous.length > 0) {
           runLayout()

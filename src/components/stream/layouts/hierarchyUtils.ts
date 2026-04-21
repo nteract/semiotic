@@ -7,6 +7,7 @@
  * Consumed by: hierarchyLayoutPlugin.ts, hierarchySceneBuilders.ts
  */
 import type { NetworkPipelineConfig } from "../networkTypes"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Depth-based color palette shared across all hierarchy scene builders */
 export const DEPTH_PALETTE = [
@@ -42,11 +43,11 @@ export function contrastTextColor(bgColor: string): string {
 }
 
 export function resolveChildrenAccessor(
-  accessor: string | ((d: any) => any[]) | undefined
-): ((d: any) => any[]) | undefined {
+  accessor: string | ((d: Datum) => any[]) | undefined
+): ((d: Datum) => any[]) | undefined {
   if (!accessor) return undefined
   if (typeof accessor === "function") return accessor
-  return (d: any) => d[accessor]
+  return (d: Datum) => d[accessor]
 }
 
 export function resolveNodeId(
@@ -67,15 +68,15 @@ export function resolveNodeId(
 }
 
 export function resolveLabelFn(
-  nodeLabel: string | ((d: any) => string) | undefined
-): ((d: any) => string) | null {
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
   if (typeof nodeLabel === "function") return nodeLabel
-  return (d: any) => d.data?.[nodeLabel] || d[nodeLabel] || d.id
+  return (d: Datum) => d.data?.[nodeLabel] || d[nodeLabel] || d.id
 }
 
 export function resolveDefaultNodeSize(
-  nodeSize: number | string | ((d: any) => number) | undefined
+  nodeSize: number | string | ((d: Datum) => number) | undefined
 ): number {
   if (typeof nodeSize === "number") return nodeSize
   return 5

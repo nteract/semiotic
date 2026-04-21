@@ -2,6 +2,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { Tooltip, MultiLineTooltip, MultiPointTooltip, normalizeTooltip } from "./Tooltip"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
+import type { Datum } from "../charts/shared/datumTypes"
 
 describe("Tooltip", () => {
   const sampleData = { x: 1, y: 5, category: "A", size: 10 }
@@ -186,7 +187,7 @@ describe("normalizeTooltip", () => {
   })
 
   it("wraps user tooltip functions with standard chrome", () => {
-    const fn = (d: any) => <div>{d.name}</div>
+    const fn = (d: Datum) => <div>{d.name}</div>
     const result = normalizeTooltip(fn)
     expect(typeof result).toBe("function")
     // Should NOT be the same identity — it's wrapped for styling
@@ -194,7 +195,7 @@ describe("normalizeTooltip", () => {
   })
 
   it("unwraps HoverData for user tooltip functions", () => {
-    const fn = (d: any) => d.task
+    const fn = (d: Datum) => d.task
     const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
     // Simulate HoverData wrapper from StreamNetworkFrame (has type + data)
     const hoverData = { type: "node", data: { task: "Fix bug" }, x: 10, y: 20 }
@@ -205,7 +206,7 @@ describe("normalizeTooltip", () => {
   })
 
   it("does not unwrap user data that happens to have a .data property", () => {
-    const fn = (d: any) => d.data?.nested
+    const fn = (d: Datum) => d.data?.nested
     const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
     // User datum has .data but no .type — should NOT be unwrapped
     const datum = { data: { nested: "hello" }, x: 10, y: 20 }

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -20,7 +21,7 @@ import { interpolateViridis } from "d3-scale-chromatic"
 /**
  * ConnectedScatterplot component props
  */
-export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /** Array of data points. Each point needs x and y properties. Omit when using push API. */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
@@ -48,7 +49,7 @@ export interface ConnectedScatterplotProps<TDatum extends Record<string, any> = 
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** Annotation objects to render on the chart */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -77,7 +78,7 @@ function viridisColor(i: number, n: number): string {
  * />
  * ```
  */
-export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -140,18 +141,18 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  const rawData = (data || []) as Record<string, any>[]
+  const rawData = (data || []) as Datum[]
 
   // Sort by orderAccessor if provided, and build a WeakMap of ordering
   // metadata so pointStyle can read the index directly without mutating user data.
   const { safeData, orderMap } = useMemo(() => {
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor]
     let sorted = rawData
     if (orderAccessor && rawData.length > 0) {
       const getOrder = typeof orderAccessor === "function"
-        ? orderAccessor as (d: any) => number | Date
-        : (d: any) => d[orderAccessor]
+        ? orderAccessor as (d: Datum) => number | Date
+        : (d: Datum) => d[orderAccessor]
       sorted = [...rawData].sort((a, b) => {
         const va = getOrder(a)
         const vb = getOrder(b)
@@ -161,7 +162,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
       })
     }
     // Count renderable points and store ordering metadata in a WeakMap
-    const map = new WeakMap<Record<string, any>, { idx: number; total: number }>()
+    const map = new WeakMap<Datum, { idx: number; total: number }>()
     let total = 0
     for (const d of sorted) {
       const x = xAcc(d); const y = yAcc(d)
@@ -305,7 +306,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   // Reads ordering from the WeakMap (no user data mutation).
 
   const basePointStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const order = orderMap.get(d)
       const i = order?.idx ?? 0
       const n = order?.total ?? 1
@@ -331,7 +332,12 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Margin ────────────────────────────────────────────────────────────
 
-  const margin = { top: 50, right: 40, bottom: 60, left: 70, ...props.margin }
+  const margin = {
+    top: 50, right: 40, bottom: 60, left: 70,
+    ...(typeof props.margin === "number"
+      ? { top: props.margin, bottom: props.margin, left: props.margin, right: props.margin }
+      : props.margin),
+  }
 
   // ── Tooltip ───────────────────────────────────────────────────────────
 
@@ -400,7 +406,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 ConnectedScatterplot.displayName = "ConnectedScatterplot"

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -19,7 +20,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
-export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Data array. Omit for push API mode. */
   data?: TDatum[]
   /** Accessor for lane categories (swim lanes). Default "category". */
@@ -57,7 +58,7 @@ export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<
   /** Tooltip configuration */
   tooltip?: TooltipProp
   /** Annotation objects */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Enable brush on the value axis */
   brush?: boolean
   /** Callback when brush selection changes */
@@ -74,7 +75,7 @@ export interface SwimlaneChartProps<TDatum extends Record<string, any> = Record<
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Record<string, any> = Record<string, any>>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -173,11 +174,11 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
 
   // Merge frameProps.pieceStyle (stroke/strokeWidth for themed borders) with
   // the HOC's color-resolved fill. The HOC keeps control of fill; users can add borders.
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
-      const base: Record<string, any> = effectiveColorBy
+    return (d: Datum, category?: string) => {
+      const base: Datum = effectiveColorBy
         ? (setup.colorScale ? { fill: getColor(d, effectiveColorBy, setup.colorScale) } : {})
         : { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
       if (fpPieceStyle) {
@@ -271,7 +272,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
 
   return <SafeRender componentName="SwimlaneChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 SwimlaneChart.displayName = "SwimlaneChart"

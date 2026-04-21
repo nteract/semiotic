@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Bounds scene builder — produces an AreaSceneNode for confidence bands/envelopes.
  *
@@ -6,7 +7,7 @@
 import type { AreaSceneNode } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildBoundsForGroup(ctx: XYSceneContext, data: Record<string, any>[], group: string): AreaSceneNode | null {
+export function buildBoundsForGroup(ctx: XYSceneContext, data: Datum[], group: string): AreaSceneNode | null {
   if (!ctx.getBounds || !ctx.scales) return null
 
   const topPath: [number, number][] = []

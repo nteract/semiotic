@@ -18,6 +18,7 @@
  * frame owns rendering, interaction, and accessibility.
  */
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import {
   useRef,
@@ -460,11 +461,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Push API ─────────────────────────────────────────────────────────
 
-    const pushPoint = useCallback((datum: Record<string, any>) => {
+    const pushPoint = useCallback((datum: Datum) => {
       adapterRef.current?.push(datum)
     }, [])
 
-    const pushManyPoints = useCallback((data: Record<string, any>[]) => {
+    const pushManyPoints = useCallback((data: Datum[]) => {
       adapterRef.current?.pushMany(data)
     }, [])
 
@@ -488,13 +489,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     //
     // Parameter type mirrors `pushPoint`/`pushManyPoints` above: the frame
     // itself isn't generic (it's typed with the non-generic
-    // `StreamOrdinalFrameHandle`, whose default `T` is `Record<string, any>`),
+    // `StreamOrdinalFrameHandle`, whose default `T` is `Datum`),
     // so all internal callbacks use that concrete shape. The generic `T` on
     // `StreamOrdinalFrameHandle<T>` still flows to consumers — TS method-
     // bivariance lets this wider internal callback sit inside a ref typed
     // with a narrower `T`, so `useRef<StreamOrdinalFrameHandle<MyDatum>>`
     // sees `replace(data: MyDatum[])` at the call site.
-    const replaceData = useCallback((newData: Record<string, any>[]) => {
+    const replaceData = useCallback((newData: Datum[]) => {
       adapterRef.current?.clearLastData()
       adapterRef.current?.setReplacementData(newData)
     }, [])
@@ -522,7 +523,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         }
         return removed
       },
-      update: (id: string | string[], updater: (d: any) => any) => {
+      update: (id: string | string[], updater: (d: Datum) => any) => {
         adapterRef.current?.flush()
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {

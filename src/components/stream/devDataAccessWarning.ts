@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Dev-mode helper that warns when user callbacks access properties that exist
  * on `.data` but not on the RealtimeNode/RealtimeEdge wrapper.
@@ -12,7 +13,7 @@
 const warned = new Set<string>()
 const proxyCache = new WeakMap<object, Map<string, object>>()
 
-export function wrapWithDataHint<T extends { data?: Record<string, any> }>(
+export function wrapWithDataHint<T extends { data?: Datum }>(
   datum: T,
   callbackName: string
 ): T {

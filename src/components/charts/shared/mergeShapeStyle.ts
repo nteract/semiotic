@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * mergeShapeStyle — overlay top-level primitive styling props on a style function.
  *
@@ -28,7 +29,7 @@ export interface PrimitiveStyleOverrides {
   opacity?: number
 }
 
-type StyleFnArg = (...args: any[]) => Record<string, any>
+type StyleFnArg = (...args: any[]) => Datum
 
 /** Returns true when at least one override key has a non-undefined value. */
 export function hasPrimitiveOverrides(overrides: PrimitiveStyleOverrides): boolean {

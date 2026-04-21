@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import { createStore } from "./createStore"
 
 // ── Observation Event Types ──────────────────────────────────────────────
@@ -11,7 +12,7 @@ interface ObservationBase {
 
 export interface HoverObservation extends ObservationBase {
   type: "hover"
-  datum: Record<string, any>
+  datum: Datum
   x: number
   y: number
 }
@@ -31,7 +32,7 @@ export interface BrushEndObservation extends ObservationBase {
 
 export interface SelectionObservation extends ObservationBase {
   type: "selection"
-  selection: { name: string; fields: Record<string, any> }
+  selection: { name: string; fields: Datum }
 }
 
 export interface SelectionEndObservation extends ObservationBase {
@@ -41,7 +42,7 @@ export interface SelectionEndObservation extends ObservationBase {
 
 export interface ClickObservation extends ObservationBase {
   type: "click"
-  datum: Record<string, any>
+  datum: Datum
   x: number
   y: number
 }

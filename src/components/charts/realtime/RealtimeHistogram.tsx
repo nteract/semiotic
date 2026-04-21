@@ -23,8 +23,9 @@ import type { OnObservationCallback } from "../../store/ObservationStore"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
+import type { Datum } from "../shared/datumTypes"
 
-export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, any> = Record<string, any>> {
+export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Time interval for binning */
@@ -48,7 +49,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
-  data?: Record<string, any>[]
+  data?: Datum[]
   /** Time value accessor */
   timeAccessor?: ChartAccessor<TDatum, number>
   /** Value accessor */
@@ -90,9 +91,9 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   /** Callback on hover */
   onHover?: (d: HoverData | null) => void
   /** Annotation objects */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
@@ -137,7 +138,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
   /** ID accessor for remove()/update() on the push API */
-  pointIdAccessor?: string | ((d: any) => string)
+  pointIdAccessor?: string | ((d: Datum) => string)
 }
 
 /**
@@ -171,7 +172,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
  * ```
  */
 export const RealtimeTemporalHistogram = forwardRef(
-  function RealtimeTemporalHistogram<TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeTemporalHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  function RealtimeTemporalHistogram<TDatum extends Datum = Datum>(props: RealtimeTemporalHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     const resolved = useChartMode(props.mode, {
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
@@ -384,7 +385,7 @@ export const RealtimeTemporalHistogram = forwardRef(
     )
   }
 ) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: RealtimeTemporalHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: RealtimeTemporalHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 RealtimeTemporalHistogram.displayName = "RealtimeTemporalHistogram"

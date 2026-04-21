@@ -5,6 +5,7 @@ import { SankeyDiagram } from "./SankeyDiagram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { sankeyLayoutPlugin } from "../../stream/layouts/sankeyLayoutPlugin"
 import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../../stream/networkTypes"
+import type { Datum } from "../shared/datumTypes"
 
 // ── Mock StreamNetworkFrame to capture props ────────────────────────────
 let lastFrameProps: any = null
@@ -96,7 +97,7 @@ describe("SankeyDiagram label bug", () => {
     const labelFn = lastFrameProps.nodeLabel
 
     // Simulate what the layout plugin passes: a RealtimeNode with user data nested in .data
-    const realtimeNode: Record<string, any> = {
+    const realtimeNode: Datum = {
       id: "comparison",
       x: 50, y: 100,
       x0: 40, x1: 55, y0: 80, y1: 200,
@@ -135,7 +136,7 @@ describe("SankeyDiagram label bug", () => {
   // ── 3. Layout plugin's resolveLabelFn also has the issue ──────────────
 
   describe("sankeyLayoutPlugin.buildScene label resolution", () => {
-    function makeRealtimeNode(id: string, data: Record<string, any>): RealtimeNode {
+    function makeRealtimeNode(id: string, data: Datum): RealtimeNode {
       return {
         id,
         x: 0, y: 0,
@@ -191,7 +192,7 @@ describe("SankeyDiagram label bug", () => {
       const rtEdges = [makeRealtimeEdge("comparison", "bar", 1)]
 
       // Simulate what the HOC passes: a function that does d["name"]
-      const nodeLabelFn = (d: Record<string, any>) => d["name"]
+      const nodeLabelFn = (d: Datum) => d["name"]
 
       const config: NetworkPipelineConfig = {
         chartType: "sankey",
@@ -217,7 +218,7 @@ describe("SankeyDiagram label bug", () => {
       const rtEdges = [makeRealtimeEdge("comparison", "bar", 1)]
 
       // Correct label function that unwraps .data
-      const fixedLabelFn = (d: Record<string, any>) => d.data?.name ?? d.id
+      const fixedLabelFn = (d: Datum) => d.data?.name ?? d.id
 
       const config: NetworkPipelineConfig = {
         chartType: "sankey",

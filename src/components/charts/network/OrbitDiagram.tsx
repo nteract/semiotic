@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -31,15 +32,15 @@ type OrbitMode = "flat" | "solar" | "atomic" | number[]
 
 // ── OrbitDiagram props ──────────────────────────────────────────────────
 
-export interface OrbitDiagramProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Hierarchical data — single root object with children */
   data: TDatum
   /** How to access children from each datum @default "children" */
   childrenAccessor?: string | ((d: TDatum) => TDatum[] | null | undefined)
   /** How to identify each node @default "name" */
-  nodeIdAccessor?: string | ((d: any) => string)
+  nodeIdAccessor?: string | ((d: Datum) => string)
   /** Field or function for node color */
-  colorBy?: string | ((d: any) => string)
+  colorBy?: string | ((d: Datum) => string)
   /** Color scheme @default "category10" */
   colorScheme?: string | string[]
   /** Color by hierarchy depth instead of field @default false */
@@ -83,7 +84,7 @@ export interface OrbitDiagramProps<TDatum extends Record<string, any> = Record<s
   /** Enable hover @default true */
   enableHover?: boolean
   /** Annotation objects */
-  annotations?: Array<Record<string, any>>
+  annotations?: Array<Datum>
   /** Additional SVG content */
   foregroundGraphics?: React.ReactNode
   /** Frame props passthrough */
@@ -96,7 +97,7 @@ const DEPTH_COLORS = DEPTH_PALETTE_COLORS
 
 // ── Component ───────────────────────────────────────────────────────────
 
-export function OrbitDiagram<TDatum extends Record<string, any> = Record<string, any>>(
+export function OrbitDiagram<TDatum extends Datum = Datum>(
   props: OrbitDiagramProps<TDatum>
 ) {
   const resolved = useChartMode(props.mode, {
@@ -157,7 +158,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
 
   // ── Flatten for color scale ──────────────────────────────────────────────
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data, childrenAccessor as string | ((d: Datum) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -182,7 +183,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   }, [colorScheme])
 
   const baseNodeStyleFn = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { stroke: "#fff", strokeWidth: 1 }
       const isRoot = (d.depth ?? 0) === 0
       if (colorByDepth) {
@@ -191,7 +192,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
           ? schemeColors[0]
           : DEPTH_COLORS[(d.depth || 0) % DEPTH_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
       } else {
         baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
@@ -212,7 +213,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
   }, [])
 
   // Margin
-  const margin = { top: 10, right: 10, bottom: 10, left: 10, ...userMargin }
+  const margin = { top: 10, right: 10, bottom: 10, left: 10, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   // Selection
   const { customHoverBehavior, customClickBehavior } = useChartSelection({
@@ -263,7 +264,7 @@ export function OrbitDiagram<TDatum extends Record<string, any> = Record<string,
         responsiveHeight={props.responsiveHeight}
         margin={margin}
         nodeIDAccessor={nodeIdAccessor}
-        childrenAccessor={childrenAccessor as string | ((d: any) => any[])}
+        childrenAccessor={childrenAccessor as string | ((d: Datum) => any[])}
         nodeStyle={nodeStyleFn}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}

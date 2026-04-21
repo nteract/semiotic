@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Shared hover data utilities for stream frames.
  *
@@ -27,7 +28,7 @@ export interface HoverPointerCoords {
  * this matches the historical behavior where all datum fields are
  * accessible directly on the hover object (d.fieldName).
  */
-export function spreadDatum(rawDatum: any): Record<string, any> {
+export function spreadDatum(rawDatum: any): Datum {
   return typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum)
     ? rawDatum
     : {}
