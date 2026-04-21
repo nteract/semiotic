@@ -79,6 +79,41 @@ describe("resolveGroupColor after data changes", () => {
     expect(colorY).toBeDefined()
     expect(colorX).not.toBe(colorY)
   })
+
+  it("uses a monotonic counter for palette indexing (stable across lookups)", () => {
+    // Palette length 2 makes the counter/size distinction observable.
+    const store = makeStore({ colorScheme: ["red", "blue"] })
+    expect(store.resolveGroupColor("A")).toBe("red")   // counter 0 → red
+    expect(store.resolveGroupColor("B")).toBe("blue")  // counter 1 → blue
+    expect(store.resolveGroupColor("C")).toBe("red")   // counter 2 → red
+
+    // Re-querying existing groups doesn't increment the counter or mutate colors.
+    expect(store.resolveGroupColor("A")).toBe("red")
+    expect(store.resolveGroupColor("B")).toBe("blue")
+    expect(store.resolveGroupColor("C")).toBe("red")
+  })
+
+  it("FIFO-evicts the oldest entry past GROUP_COLOR_MAP_CAP (1000)", () => {
+    const store = makeStore({
+      colorScheme: ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
+    })
+    // Push well past the 1000 cap — prevents unbounded growth on streams with unique group IDs.
+    for (let i = 0; i < 1500; i++) {
+      store.resolveGroupColor(`g${i}`)
+    }
+    // Internal map bounded by the cap.
+    expect((store as any)._groupColorMap.size).toBeLessThanOrEqual(1000)
+
+    // The most-recent group is still resolvable and holds its monotonically-assigned palette slot
+    // (counter = 1499 at the time of `g1499`'s insertion → c9).
+    expect(store.resolveGroupColor("g1499")).toBe("c9")
+
+    // A previously-evicted group re-appearing gets a fresh palette slot off the running counter,
+    // not its original color. Counter is now 1500 → c0. The test's point is that eviction-then-
+    // reappearance doesn't throw, collide, or corrupt the rest of the map.
+    const revived = store.resolveGroupColor("g0")
+    expect(revived).toBe("c0")
+  })
 })
 
 // ── Stacked area extent cache ────────────────────────────────────────────

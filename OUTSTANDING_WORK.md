@@ -21,7 +21,7 @@ Second pass after the Stream Frames perf PR merged, triggered by Copilot feedbac
 
 ### Still open (deferred with reasoning)
 
-- **`_groupColorMap` unbounded growth** (`PipelineStore.ts`). Still no eviction policy. Long-running streams with truly unique group IDs (UUIDs) can accumulate arbitrary entries. Candidates: LRU with a cap, prune-on-buffer-evict, or simply rebuild on data clear. Needs a product decision on whether color assignment should persist for re-appearing groups.
+- **~~`_groupColorMap` unbounded growth~~** — landed 2026-04-20. FIFO cap at 1000 entries in `PipelineStore`. Latent bug fixed along the way: palette index previously read `_groupColorMap.size`, which collided with existing entries if the map ever shrank — now a monotonic `_groupColorCounter` drives palette indexing, decoupled from map size. Re-appearing evicted groups get a new palette slot (documented tradeoff: stable color assignment only guaranteed for the most-recent 1000 unique groups, which is well beyond any realistic dashboard). Three new assertions in `PipelineStore.cache.test.ts`.
 
 - **Style-spread allocation in decay / pulse / transitions** (`NetworkPipelineStore.applyDecay` line 936 in particular, plus `pipelineTransitions.ts`). `node.style = { ...node.style, opacity: x }` allocates a new style object per node per frame. NetworkPipelineStore's decay runs every frame in `StreamNetworkFrame`'s render loop, so the GC pressure is real for large graphs. Mutation is safe (scene nodes have unique style objects from `resolvePieceStyle` / `resolveStyle`) but the change touches ~13 sites across 4 files. Park until profiling identifies it as a bottleneck.
 
@@ -523,9 +523,16 @@ Mechanical application of the helper to every remaining shape-drawing HOC. Each 
 - **Renderer CSS-var audit** — Wrapped every user-facing stroke/fill path through `resolveCSSColor` in `networkRectRenderer`, `networkArcRenderer`, `networkCircleRenderer`, `networkEdgeRenderer` (all four edge types: bezier / line / ribbon / curved), `boxplotCanvasRenderer` (fillColor + strokeColor), `candlestickCanvasRenderer` (wickColor + body up/down colors), and `waterfallCanvasRenderer` (connector stroke). `lineCanvasRenderer` / `pointCanvasRenderer` / `barCanvasRenderer` / `areaCanvasRenderer` / `wedgeCanvasRenderer` / `connectorCanvasRenderer` / `trapezoidCanvasRenderer` / `violinCanvasRenderer` / `geoCanvasRenderer` already wrapped their user-facing stroke paths (from prior milestones or B1).
 - **Playwright** — Matrix extended from 9 → 18 fixtures. Added BoxPlot (ordinal summary), SankeyDiagram (network nodes + edges), and RealtimeLineChart (realtime `lineStyle.opacity`), each in default / stroked / translucent states. `integration-tests/primitive-props-examples/index.js` grew deterministic fixtures for each new family (hand-picked boxplot values, three-node A→B→C sankey, 20-point sinusoidal realtime buffer).
 
-### Phase C — Consolidation (contingent)
+### Phase C — Consolidation [CLOSED — not pursued, 2026-04-20]
 
-Evaluate once Phase B is stable. Hypothesis: a shared `resolveShapeStyle(config, datum, primitive)` used by bar / point / line / area / rect scene builders reduces per-primitive variance enough to justify migration. Defer until Phase B makes the shared logic visible.
+Evaluated after B2 + M4 landed. **Recommendation: don't pursue.** The consolidation already exists — the hypothesis missed that `PipelineStore` / `OrdinalPipelineStore` already expose the resolvers (`resolveLineStyle`, `resolveAreaStyle`, `resolveBoundsStyle`, `resolvePieceStyle`, `resolveSummaryStyle`) via `XYSceneContext` / `OrdinalSceneContext`, and every scene builder is a thin dispatcher that calls them. The `mergeShapeStyle` helper at the HOC layer (B1) handles the top-level primitive-prop override.
+
+Findings from the scene-builder audit:
+- **All 20+ scene builders** follow one of two dispatch patterns: call the context resolver once per group (XY line/area/bounds, ordinal bar/pie/funnel) or per-datum (XY points, ordinal swarm/point/swimlane). No repeated fallback-chain code inside the builders.
+- **Per-family variance is genuine, not incidental.** Waterfall resolves `themeSemantic.success`/`.danger` for positive/negative deltas; candlestick has a three-color triad (up/down/wick); connectors fall back to `.border`/`.secondary`; heatmap ignores the piece-style surface entirely in favor of a sequential LUT. A unified `resolveShapeStyle(userStyle, groupColor, themeFallback, hardcoded)` would still need a parameter for which semantic role to consult — at which point it's just a thin wrapper over already-thin dispatchers.
+- **A shared helper would add indirection without removing duplication.** The duplication candidates (~5–10 lines per builder) are the resolver call + node construction, not the resolution logic itself. Moving the call site into a helper would obscure where per-primitive defaults come from without eliminating them.
+
+**Status:** Consolidation goal already satisfied by B1 (`mergeShapeStyle` for HOC-layer override) + Phase A milestones 1–3 (pipeline-store resolvers with theme fallbacks). Phase C closed without code changes.
 
 ### Non-goals
 
