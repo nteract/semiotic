@@ -33,7 +33,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   /** Category ordering. `false` (default) = insertion order. `"asc"` /
    *  `"desc"` sorts by total value. `"auto"` preserves insertion order
    *  while streaming and falls through to value-desc on static data.
-   *  `true` = value-desc regardless of source. ((...args: any[]) => any) comparators
+   *  `true` = value-desc regardless of source. Custom comparator functions
    *  receive category name strings (not row objects) and run against
    *  the category list on the axis. */
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)

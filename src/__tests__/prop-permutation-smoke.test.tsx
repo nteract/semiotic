@@ -17,50 +17,37 @@ import { render, cleanup } from "@testing-library/react"
 import { TooltipProvider } from "../components/store/TooltipStore"
 
 // ── Mock all four Stream Frames ─────────────────────────────────────────
+// The mocks swallow props and render an empty frame div. This suite only asserts
+// that HOCs render without throwing under prop permutations — no prop-capture
+// is needed.
 
-const _lastXYProps: any = null
-vi.mock("../components/stream/StreamXYFrame", () => {
-  return {
-    __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
-      lastXYProps = props
-      return <div className="stream-xy-frame"><svg /></div>
-    })
-  }
-})
+vi.mock("../components/stream/StreamXYFrame", () => ({
+  __esModule: true,
+  default: React.forwardRef((_props: any, _ref: any) => (
+    <div className="stream-xy-frame"><svg /></div>
+  ))
+}))
 
-const _lastOrdinalProps: any = null
-vi.mock("../components/stream/StreamOrdinalFrame", () => {
-  return {
-    __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
-      lastOrdinalProps = props
-      return <div className="stream-ordinal-frame"><svg /></div>
-    })
-  }
-})
+vi.mock("../components/stream/StreamOrdinalFrame", () => ({
+  __esModule: true,
+  default: React.forwardRef((_props: any, _ref: any) => (
+    <div className="stream-ordinal-frame"><svg /></div>
+  ))
+}))
 
-const _lastNetworkProps: any = null
-vi.mock("../components/stream/StreamNetworkFrame", () => {
-  return {
-    __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
-      lastNetworkProps = props
-      return <div className="stream-network-frame"><svg /></div>
-    })
-  }
-})
+vi.mock("../components/stream/StreamNetworkFrame", () => ({
+  __esModule: true,
+  default: React.forwardRef((_props: any, _ref: any) => (
+    <div className="stream-network-frame"><svg /></div>
+  ))
+}))
 
-const _lastGeoProps: any = null
-vi.mock("../components/stream/StreamGeoFrame", () => {
-  return {
-    __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
-      lastGeoProps = props
-      return <div className="stream-geo-frame"><svg /></div>
-    })
-  }
-})
+vi.mock("../components/stream/StreamGeoFrame", () => ({
+  __esModule: true,
+  default: React.forwardRef((_props: any, _ref: any) => (
+    <div className="stream-geo-frame"><svg /></div>
+  ))
+}))
 
 vi.mock("../components/geo/useReferenceAreas", () => ({
   useReferenceAreas: (areas: any) => areas
@@ -115,11 +102,6 @@ const xyDataWithNulls = [
   { x: 2, y: null, category: "B" },
   { x: 3, y: 15, category: null },
   { x: null, y: 25, category: "A" },
-]
-
-const _lineData = [
-  { coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }, { x: 3, y: 15 }] },
-  { coordinates: [{ x: 1, y: 5 }, { x: 2, y: 25 }, { x: 3, y: 12 }] },
 ]
 
 const ordinalData = [
