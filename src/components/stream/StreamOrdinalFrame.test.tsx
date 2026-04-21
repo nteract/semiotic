@@ -3,7 +3,7 @@ import React from "react"
 import { render, act, fireEvent } from "@testing-library/react"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
-import { setupCanvasMock } from "../../test-utils/canvasMock"
+import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // Mock ResizeObserver for jsdom
@@ -588,7 +588,7 @@ describe("StreamOrdinalFrame", () => {
       // Capture fillStyle at each fillRect call + restore the original
       // method so the replacement can't leak into another test if the
       // mock's lifecycle ever changes.
-      function captureFillRectStyles(ctx: Datum) {
+      function captureFillRectStyles(ctx: CanvasContextMock) {
         const styles: string[] = []
         const orig = ctx.fillRect as (...args: any[]) => void
         ctx.fillRect = vi.fn((...args: any[]) => {
@@ -601,7 +601,7 @@ describe("StreamOrdinalFrame", () => {
         }
       }
       const getMockCtx = () =>
-        (HTMLCanvasElement.prototype.getContext as any)() as Datum
+        (HTMLCanvasElement.prototype.getContext as any)() as CanvasContextMock
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()

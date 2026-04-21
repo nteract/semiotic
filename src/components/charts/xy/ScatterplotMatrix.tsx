@@ -3,7 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useRef, useEffect } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameHandle, HoverData } from "../../stream/types"
+import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
 import { brush as d3Brush } from "d3-brush"
 import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
@@ -226,7 +226,7 @@ function ScatterplotCell({
 
   const pointStyle = useCallback(
     (d: Datum) => {
-      const style: Datum = {
+      const style: Style & { r?: number } = {
         opacity: pointOpacity,
         r: pointRadius
       }
