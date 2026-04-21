@@ -511,19 +511,17 @@ Proof-of-pattern with three representative HOCs — one per primitive family.
 - **Playwright** — 9 snapshots across 3 charts × 3 states (default / stroked / translucent). Confirms primitive props visibly reach every rendered shape: BarChart gets stroked rects, Scatterplot gets 0.4-opacity circles with grid lines showing through, LineChart renders red (`var(--semiotic-danger)` → `#d62728`) at strokeWidth 3.
 - **Docs** — new "Primitive styling props" section in SemanticColorsPage covering the four first-class props, precedence ladder, when-to-reach-for-which, composition with `frameProps.*Style`. CLAUDE.md Common Props updated with the three new props + a paragraph explaining the precedence rules, synced to all AI mirror files.
 
-#### B2 — Remaining HOC rollout [PENDING]
+#### B2 — Remaining HOC rollout [LANDED — 2026-04-19]
 
-Mechanical application of the helper to every remaining shape-drawing HOC. Each is one-line `mergeShapeStyle` overlay on the existing style-merge chain; template is BarChart/Scatterplot/LineChart from B1.
+Mechanical application of the helper to every remaining shape-drawing HOC. Each one-line `mergeShapeStyle` overlay on the existing style-merge chain, templated on BarChart/Scatterplot/LineChart from B1.
 
-- **Ordinal** — StackedBarChart, GroupedBarChart, PieChart, DonutChart, FunnelChart, SwimlaneChart, LikertChart, GaugeChart, DotPlot, BoxPlot, SwarmPlot, Histogram, ViolinPlot, RidgelinePlot
-- **XY** — AreaChart, StackedAreaChart, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap, MultiAxisLineChart, ScatterplotMatrix, MinimapChart
-- **Network** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
-- **Geo** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram
-- **Realtime** — RealtimeLineChart, RealtimeSwarmChart, RealtimeHeatmap, RealtimeHistogram, RealtimeWaterfallChart
-
-Each rollout PR should add test coverage matching B1's pattern (5–6 assertions per HOC: stroke, strokeWidth, opacity, precedence over frameProps style, "no override keys when unset"). Playwright coverage: one stroke + one opacity snapshot per HOC, ideally in the primitive-props matrix fixture.
-
-**Per-renderer audit needed**: `lineCanvasRenderer.ts` already routes stroke through `resolveCSSColor`. Audit the other canvas renderers (`pointCanvasRenderer`, `barCanvasRenderer`, `areaCanvasRenderer`, `wedgeCanvasRenderer`, `boxplotCanvasRenderer`, etc.) for the same bug pattern — any renderer that reads `node.style.stroke` or `.fill` without `resolveCSSColor` will silently reject `var(...)` values. Most fill paths already route through `resolveCSSColor` (checked during theming milestones); stroke paths are the new hot surface since Phase B makes top-level stroke ubiquitous.
+- **Ordinal** — StackedBarChart, GroupedBarChart, PieChart, DonutChart, FunnelChart, SwimlaneChart, LikertChart, GaugeChart, DotPlot, BoxPlot, SwarmPlot, Histogram, ViolinPlot, RidgelinePlot (14/14 wired). BoxPlot/Histogram/ViolinPlot/RidgelinePlot wrap `summaryStyle`; the rest wrap `pieceStyle`. GaugeChart is the outlier — the primitive-merge happens around its useMemo-returned `pieceStyle` before it's passed to `streamProps`.
+- **XY** — AreaChart, StackedAreaChart, BubbleChart, ConnectedScatterplot, QuadrantChart, Heatmap, MultiAxisLineChart (7/7 wired; ScatterplotMatrix and MinimapChart compose other HOCs and inherit by delegation — no separate wire-up needed).
+- **Network** — ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram (7/7 wired). ForceDirectedGraph and SankeyDiagram wrap both `nodeStyle` and `edgeStyle`. Treemap inserts `nodeStyleFnWithPrimitives` before the selection-aware wrapper. ChordDiagram preserves its conditional-undefined return.
+- **Geo** — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram (4/4 wired). FlowMap wraps both `lineStyleFn` and `pointStyleFn`.
+- **Realtime** — RealtimeLineChart, RealtimeSwarmChart (already had the props pre-B), RealtimeHistogram, RealtimeWaterfallChart (4/5 wired). RealtimeHeatmap deferred — no user-facing style surface; fills come from the heatmap LUT. Opacity added to `BarStyle` / `LineStyle` / `WaterfallStyle` interfaces in `realtime/types.ts`; scene builders (`barScene`, `waterfallScene`) consume the new field and thread it into the rect node style. `XYSceneConfig.waterfallStyle` inline type extended to match.
+- **Renderer CSS-var audit** — Wrapped every user-facing stroke/fill path through `resolveCSSColor` in `networkRectRenderer`, `networkArcRenderer`, `networkCircleRenderer`, `networkEdgeRenderer` (all four edge types: bezier / line / ribbon / curved), `boxplotCanvasRenderer` (fillColor + strokeColor), `candlestickCanvasRenderer` (wickColor + body up/down colors), and `waterfallCanvasRenderer` (connector stroke). `lineCanvasRenderer` / `pointCanvasRenderer` / `barCanvasRenderer` / `areaCanvasRenderer` / `wedgeCanvasRenderer` / `connectorCanvasRenderer` / `trapezoidCanvasRenderer` / `violinCanvasRenderer` / `geoCanvasRenderer` already wrapped their user-facing stroke paths (from prior milestones or B1).
+- **Playwright** — Matrix extended from 9 → 18 fixtures. Added BoxPlot (ordinal summary), SankeyDiagram (network nodes + edges), and RealtimeLineChart (realtime `lineStyle.opacity`), each in default / stroked / translucent states. `integration-tests/primitive-props-examples/index.js` grew deterministic fixtures for each new family (hand-picked boxplot values, three-node A→B→C sankey, 20-point sinusoidal realtime buffer).
 
 ### Phase C — Consolidation (contingent)
 

@@ -5,6 +5,7 @@ import type {
   NetworkRibbonEdge,
   NetworkCurvedEdge
 } from "../networkTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
@@ -69,13 +70,14 @@ function renderBezierEdge(
       // Gradient fill for stub circular edges
       const gradient = ctx.createLinearGradient(grad.x0, 0, grad.x1, 0)
       const baseAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
-      const color = typeof edge.style.fill === "string" ? edge.style.fill : "#999"
+      const rawColor = typeof edge.style.fill === "string" ? edge.style.fill : "#999"
+      const color = resolveCSSColor(ctx, rawColor) || rawColor
       gradient.addColorStop(0, grad.from === 1 ? color : "transparent")
       gradient.addColorStop(1, grad.to === 1 ? color : "transparent")
       ctx.fillStyle = gradient
       ctx.globalAlpha = baseAlpha
     } else {
-      ctx.fillStyle = edge.style.fill
+      ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
       ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
     }
     ctx.fill(path)
@@ -83,7 +85,7 @@ function renderBezierEdge(
 
   // Stroke the band outline
   if (edge.style.stroke && edge.style.stroke !== "none") {
-    ctx.strokeStyle = edge.style.stroke
+    ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
     ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.5
     ctx.stroke(path)
@@ -105,7 +107,8 @@ function renderLineEdge(
 ): void {
   ctx.save()
 
-  ctx.strokeStyle = edge.style.stroke || "#999"
+  const lineStroke = edge.style.stroke || "#999"
+  ctx.strokeStyle = resolveCSSColor(ctx, lineStroke) || lineStroke
   ctx.lineWidth = edge.style.strokeWidth ?? 1
   if (edge.style.opacity !== undefined) {
     ctx.globalAlpha = edge.style.opacity
@@ -145,13 +148,13 @@ function renderRibbonEdge(
   const path = getOrBuildEdgePath2D(edge)
 
   if (edge.style.fill && edge.style.fill !== "none") {
-    ctx.fillStyle = edge.style.fill
+    ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
     ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
     ctx.fill(path)
   }
 
   if (edge.style.stroke && edge.style.stroke !== "none") {
-    ctx.strokeStyle = edge.style.stroke
+    ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
     ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.3
     ctx.stroke(path)
@@ -177,7 +180,8 @@ function renderCurvedEdge(
 
   const path = getOrBuildEdgePath2D(edge)
 
-  ctx.strokeStyle = edge.style.stroke || "#999"
+  const curvedStroke = edge.style.stroke || "#999"
+  ctx.strokeStyle = resolveCSSColor(ctx, curvedStroke) || curvedStroke
   ctx.lineWidth = edge.style.strokeWidth ?? 1
   if (edge.style.opacity !== undefined) {
     ctx.globalAlpha = edge.style.opacity
@@ -186,7 +190,7 @@ function renderCurvedEdge(
 
   // Fill if specified (usually not for tree edges)
   if (edge.style.fill && edge.style.fill !== "none") {
-    ctx.fillStyle = edge.style.fill
+    ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
     ctx.globalAlpha = edge.style.fillOpacity ?? 0.1
     ctx.fill(path)
   }

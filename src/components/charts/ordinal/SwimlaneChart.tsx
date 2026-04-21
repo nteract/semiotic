@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
@@ -113,6 +114,9 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
     categoryFormat,
     rTickValues,
     tickLabelEdgeAlign,
@@ -186,9 +190,14 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Re
     }
   }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
+  const basePieceStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
+    [basePieceStyle, stroke, strokeWidth, opacity]
+  )
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

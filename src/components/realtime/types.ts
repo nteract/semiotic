@@ -9,6 +9,7 @@ export interface LineStyle {
   stroke?: string
   strokeWidth?: number
   strokeDasharray?: string
+  opacity?: number
 }
 
 /**
@@ -107,6 +108,7 @@ export interface BarStyle {
   fill?: string
   stroke?: string
   strokeWidth?: number
+  opacity?: number
   gap?: number
 }
 
@@ -118,6 +120,7 @@ export interface WaterfallStyle {
   gap?: number
   stroke?: string
   strokeWidth?: number
+  opacity?: number
 }
 
 export interface SwarmStyle {

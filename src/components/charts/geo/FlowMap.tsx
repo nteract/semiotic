@@ -7,6 +7,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
@@ -138,7 +139,10 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
     chartId,
     loading,
     emptyContent,
-    frameProps = {}
+    frameProps = {},
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -310,22 +314,26 @@ export function FlowMap<TDatum extends Record<string, any> = Record<string, any>
   // opacity / strokeOpacity are left to wrapStyleWithSelection so the
   // per-chart `selection.unselectedOpacity` or theme value takes effect.
   const lineStyleFn = useMemo(() => {
-    if (!activeSelectionHook) return baseLineStyleFn
+    const withPrimitives = mergeShapeStyle(baseLineStyleFn, { stroke, strokeWidth, opacity }) as (d: any) => Style
+    if (!activeSelectionHook) return withPrimitives
     const mergedUnselectedStyle = {
       ...(resolvedSelection?.unselectedStyle || {}),
       fillOpacity: 0,
     }
-    return wrapStyleWithSelection(baseLineStyleFn, activeSelectionHook, {
+    return wrapStyleWithSelection(withPrimitives, activeSelectionHook, {
       ...((resolvedSelection as any) || {}),
       unselectedStyle: mergedUnselectedStyle,
     }) as (d: any) => Style
-  }, [baseLineStyleFn, activeSelectionHook, resolvedSelection])
+  }, [baseLineStyleFn, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
 
   // Point style — not selection-wrapped because node datums lack flow
   // fields (source/target). Flow lines carry the selection visual signal.
   const pointStyleFn = useMemo(
-    () => () => ({ fill: "#333", r: 5, fillOpacity: 0.8 } as Style & { r?: number }),
-    []
+    () => mergeShapeStyle(
+      () => ({ fill: "#333", r: 5, fillOpacity: 0.8 } as Style & { r?: number }),
+      { stroke, strokeWidth, opacity }
+    ) as (d: any) => Style & { r?: number },
+    [stroke, strokeWidth, opacity]
   )
 
   const defaultTooltip = useMemo(() => (d: any) => {

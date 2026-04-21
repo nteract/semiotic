@@ -75,6 +75,8 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Record<string, an
   stroke?: string
   /** Bar stroke width */
   strokeWidth?: number
+  /** Uniform bar opacity (0–1). Pairs with `color` / `stroke` / `strokeWidth` for the designer-facing primitive vocabulary. */
+  opacity?: number
   /** Gap between bars in pixels */
   gap?: number
   /** Show canvas-drawn axes */
@@ -197,6 +199,7 @@ export const RealtimeTemporalHistogram = forwardRef(
       fill,
       stroke,
       strokeWidth,
+      opacity,
       gap,
       background,
       tooltipContent,
@@ -330,6 +333,7 @@ export const RealtimeTemporalHistogram = forwardRef(
     if (fill != null) barStyle.fill = fill
     if (stroke != null) barStyle.stroke = stroke
     if (strokeWidth != null) barStyle.strokeWidth = strokeWidth
+    if (opacity != null) barStyle.opacity = opacity
     if (gap != null) barStyle.gap = gap
 
     const resolvedClassName = emphasis

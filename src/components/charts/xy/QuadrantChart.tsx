@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 
 /**
@@ -188,7 +189,10 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -324,9 +328,14 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     }
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
+  const basePointStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
+    [basePointStyle, stroke, strokeWidth, opacity]
+  )
+
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyle, effectiveSelectionHook, resolvedSelection),
-    [basePointStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // Legend + margin

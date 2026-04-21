@@ -65,6 +65,8 @@ export interface RealtimeWaterfallChartProps<TDatum extends Record<string, any> 
   stroke?: string
   /** Bar stroke width */
   strokeWidth?: number
+  /** Uniform bar opacity (0–1). */
+  opacity?: number
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -153,6 +155,7 @@ export const RealtimeWaterfallChart = forwardRef(
       gap,
       stroke,
       strokeWidth,
+      opacity,
       background,
       tooltipContent,
       tooltip,
@@ -215,6 +218,7 @@ export const RealtimeWaterfallChart = forwardRef(
     if (gap != null) waterfallStyle.gap = gap
     if (stroke != null) waterfallStyle.stroke = stroke
     if (strokeWidth != null) waterfallStyle.strokeWidth = strokeWidth
+    if (opacity != null) waterfallStyle.opacity = opacity
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()

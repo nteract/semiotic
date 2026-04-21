@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -78,6 +79,9 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
     categoryFormat
   } = props
 
@@ -137,16 +141,19 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     }
   }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
 
-  // Merge user frameProps.pieceStyle (for stroke etc.) into the HOC's color-resolved style
+  // Merge user frameProps.pieceStyle (for stroke etc.) into the HOC's color-resolved style,
+  // then overlay top-level primitive props (stroke/strokeWidth/opacity) last so they win.
   const mergedPieceStyle = useMemo(() => {
     const userPieceStyle = frameProps?.pieceStyle
-    if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
-    return (d: Record<string, any>, category?: string) => {
-      const base = basePieceStyle(d, category)
-      const user = (userPieceStyle as Function)(d, category) || {}
-      return { ...base, ...user }
-    }
-  }, [basePieceStyle, frameProps])
+    const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
+      ? basePieceStyle
+      : (d: Record<string, any>, category?: string) => {
+        const base = basePieceStyle(d, category)
+        const user = (userPieceStyle as Function)(d, category) || {}
+        return { ...base, ...user }
+      }
+    return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
+  }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),

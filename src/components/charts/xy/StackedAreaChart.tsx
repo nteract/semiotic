@@ -14,6 +14,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
 
@@ -237,7 +238,10 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -391,9 +395,14 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     }
   }, [colorBy, colorScale, areaOpacity, showLine, lineWidth, color])
 
+  const baseLineStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
+    [baseLineStyle, stroke, strokeWidth, opacity]
+  )
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, effectiveSelectionHook, resolvedSelection),
-    [baseLineStyle, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
+    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // Point style function (if showPoints is true)

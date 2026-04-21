@@ -1,4 +1,5 @@
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, BoxplotSceneNode } from "../ordinalTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 export const boxplotCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -12,8 +13,10 @@ export const boxplotCanvasRenderer = (
     const halfWidth = node.columnWidth / 2
     const isVert = node.projection === "vertical"
 
-    const fillColor = node.style.fill || "#007bff"
-    const strokeColor = node.style.stroke || "#333"
+    const rawFill = typeof node.style.fill === "string" ? node.style.fill : "#007bff"
+    const rawStroke = node.style.stroke || "#333"
+    const fillColor = resolveCSSColor(ctx, rawFill) || rawFill
+    const strokeColor = resolveCSSColor(ctx, rawStroke) || rawStroke
     const lineWidth = node.style.strokeWidth || 1
     const opacity = node.style.fillOpacity ?? node.style.opacity ?? 0.6
 

@@ -61,6 +61,8 @@ export interface RealtimeLineChartProps<TDatum extends Record<string, any> = Rec
   strokeWidth?: number
   /** Dash pattern (e.g. "4,2") */
   strokeDasharray?: string
+  /** Uniform line opacity (0–1). Pairs with `stroke` / `strokeWidth` for the designer-facing primitive vocabulary. */
+  opacity?: number
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -154,6 +156,7 @@ export const RealtimeLineChart = forwardRef(
       stroke = "#007bff",
       strokeWidth = 2,
       strokeDasharray,
+      opacity,
       background,
       tooltipContent,
       tooltip,
@@ -213,6 +216,7 @@ export const RealtimeLineChart = forwardRef(
     const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
 
     const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
+    if (opacity != null) lineStyle.opacity = opacity
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()

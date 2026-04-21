@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -77,6 +78,9 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     legendInteraction,
     legendPosition: legendPositionProp,
     color,
+    stroke,
+    strokeWidth,
+    opacity,
     categoryFormat
   } = props
 
@@ -145,9 +149,16 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     }
   }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
 
+  // Overlay top-level primitive props (stroke/strokeWidth/opacity) last so they
+  // win over basePieceStyle + user frameProps.pieceStyle merge.
+  const basePieceStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
+    [basePieceStyle, stroke, strokeWidth, opacity]
+  )
+
   const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(

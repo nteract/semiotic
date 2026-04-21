@@ -11,6 +11,7 @@ import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../T
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
 import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -114,6 +115,9 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     loading,
     emptyContent,
     legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -171,7 +175,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
 
   // Node style function
   // d is a RealtimeNode — user data lives on d.data
-  const nodeStyle = useMemo(() => {
+  const baseNodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "black",
@@ -188,9 +192,15 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     }
   }, [colorBy, colorScale, themeCategorical, colorScheme, categoryIndexMap])
 
+  // Overlay top-level primitive props onto nodeStyle.
+  const nodeStyle = useMemo(
+    () => mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }),
+    [baseNodeStyle, stroke, strokeWidth, opacity]
+  )
+
   // Edge style function
   // d is a RealtimeEdge — d.source/d.target are RealtimeNode objects
-  const edgeStyle = useMemo(() => createEdgeStyleFn({
+  const baseEdgeStyle = useMemo(() => createEdgeStyleFn({
     edgeColorBy,
     colorBy,
     colorScale,
@@ -198,6 +208,11 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Rec
     edgeOpacity,
     baseStyle: { stroke: "none", strokeWidth: 0 }
   }), [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+
+  const edgeStyle = useMemo(
+    () => mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }),
+    [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {

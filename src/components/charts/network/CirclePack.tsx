@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
@@ -74,6 +75,9 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     linkedHover,
     loading,
     legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -118,7 +122,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
   }, [colorScheme, themeCategorical])
 
-  const nodeStyleFn = useMemo(() => {
+  const baseNodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "currentColor",
@@ -136,6 +140,11 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       return baseStyle
     }
   }, [colorBy, colorByDepth, colorScale, circleOpacity, themeCategorical, colorScheme, categoryIndexMap])
+
+  const nodeStyleFn = useMemo(
+    () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
+    [baseNodeStyleFn, stroke, strokeWidth, opacity]
+  )
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)

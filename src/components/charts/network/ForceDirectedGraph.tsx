@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -114,6 +115,9 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -160,7 +164,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   }, [colorScheme, themeCategorical])
 
   // Node style function — d is a RealtimeNode, user data on d.data
-  const nodeStyle = useMemo(() => {
+  const baseNodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
@@ -175,14 +179,26 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     }
   }, [colorBy, colorScale, nodeSize, themeCategorical, colorScheme, categoryIndexMap])
 
+  // Overlay top-level primitive props onto nodeStyle; top-level wins over base.
+  const nodeStyle = useMemo(
+    () => mergeShapeStyle(baseNodeStyle, { stroke, strokeWidth, opacity }),
+    [baseNodeStyle, stroke, strokeWidth, opacity]
+  )
+
   // Edge style function
-  const edgeStyle = useMemo(() => {
+  const baseEdgeStyle = useMemo(() => {
     return (d: Record<string, any>) => ({
       stroke: edgeColor,
       strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d) : d[edgeWidth] || 1,
       opacity: edgeOpacity
     })
   }, [edgeWidth, edgeColor, edgeOpacity])
+
+  // Top-level primitive props also apply to edges (stroke color, width, opacity).
+  const edgeStyle = useMemo(
+    () => mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }),
+    [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
 
   // Node label function
   const nodeLabelFn = useMemo(() => {

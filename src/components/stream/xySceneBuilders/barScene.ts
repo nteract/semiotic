@@ -62,9 +62,10 @@ export function buildBarScene(ctx: XYSceneContext, data: Record<string, any>[]):
   const themePrimary = ctx.config.themeSemantic?.primary
   const userGap = barStyle?.gap
   const gap = typeof userGap === "number" && userGap >= 0 ? userGap : 1
-  const strokeStyle: { stroke?: string; strokeWidth?: number } = {}
+  const strokeStyle: { stroke?: string; strokeWidth?: number; opacity?: number } = {}
   if (barStyle?.stroke) strokeStyle.stroke = barStyle.stroke
   if (typeof barStyle?.strokeWidth === "number") strokeStyle.strokeWidth = barStyle.strokeWidth
+  if (typeof barStyle?.opacity === "number") strokeStyle.opacity = barStyle.opacity
 
   for (const bin of bins.values()) {
     const clampedStart = Math.max(bin.start, domainMin)

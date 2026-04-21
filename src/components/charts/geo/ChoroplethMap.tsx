@@ -7,6 +7,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -137,7 +138,10 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
     chartId,
     loading,
     emptyContent,
-    frameProps = {}
+    frameProps = {},
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -189,11 +193,14 @@ export function ChoroplethMap<TDatum extends Record<string, any> = Record<string
         fillOpacity: areaOpacity
       }
     }
+    // Overlay top-level primitive props before selection wrap so they apply
+    // to every region regardless of selection state.
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style
     }
-    return base
-  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity])
+    return withPrimitives
+  }, [valAcc, colorScale, activeSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)

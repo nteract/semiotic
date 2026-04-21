@@ -9,6 +9,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -130,7 +131,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    frameProps = {}
+    frameProps = {},
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -173,11 +177,12 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       strokeWidth: 0.5,
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
     })
+    const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: any) => Style & { r?: number }
     if (activeSelectionHook) {
-      return wrapStyleWithSelection(base, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
+      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: any) => Style & { r?: number }
     }
-    return base
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, resolvedSelection])
+    return withPrimitives
+  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
 
   const allCategories = useMemo(() => {
     if (!colorBy) return []

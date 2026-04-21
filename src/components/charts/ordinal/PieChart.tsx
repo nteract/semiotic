@@ -13,6 +13,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -61,7 +62,10 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
     loading, emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
-    color
+    color,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -119,12 +123,14 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Record<strin
 
   const mergedPieceStyle = useMemo(() => {
     const userPieceStyle = frameProps?.pieceStyle
-    if (!userPieceStyle || typeof userPieceStyle !== "function") return basePieceStyle
-    return (d: Record<string, any>, category?: string) => ({
-      ...basePieceStyle(d, category),
-      ...((userPieceStyle as Function)(d, category) || {}),
-    })
-  }, [basePieceStyle, frameProps])
+    const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
+      ? basePieceStyle
+      : (d: Record<string, any>, category?: string) => ({
+        ...basePieceStyle(d, category),
+        ...((userPieceStyle as Function)(d, category) || {}),
+      })
+    return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
+  }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])
 
   const pieceStyle = useMemo(
     () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),

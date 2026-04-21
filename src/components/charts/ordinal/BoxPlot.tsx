@@ -12,6 +12,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildStatsTooltip } from "../shared/statsTooltip"
@@ -82,6 +83,9 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     legendInteraction,
     legendPosition: legendPositionProp,
     color: colorProp,
+    stroke,
+    strokeWidth,
+    opacity,
     showCategoryTicks,
     categoryFormat
   } = props
@@ -137,9 +141,14 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Record<string,
     }
   }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
 
+  const baseSummaryStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseSummaryStyle, { stroke, strokeWidth, opacity }),
+    [baseSummaryStyle, stroke, strokeWidth, opacity]
+  )
+
   const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseSummaryStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])

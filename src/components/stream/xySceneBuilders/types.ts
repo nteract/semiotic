@@ -82,7 +82,7 @@ export interface XYSceneConfig {
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
 
   // Waterfall
-  waterfallStyle?: { positiveColor?: string; negativeColor?: string; gap?: number; stroke?: string; strokeWidth?: number; connectorStroke?: string; connectorWidth?: number }
+  waterfallStyle?: { positiveColor?: string; negativeColor?: string; gap?: number; stroke?: string; strokeWidth?: number; opacity?: number; connectorStroke?: string; connectorWidth?: number }
 
   // Candlestick
   candlestickStyle?: { upColor?: string; downColor?: string; wickColor?: string; wickWidth?: number; bodyWidth?: number; rangeColor?: string }

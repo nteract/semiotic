@@ -15,6 +15,7 @@ import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/with
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 
 // ── Internal field names ────────────────────────────────────────────────
 const UNITIZED_FIELD = "__ma_unitized"
@@ -205,6 +206,9 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -381,9 +385,14 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     }
   }, [seriesLabels, seriesColors, lineWidth])
 
+  const baseLineStyleWithPrimitives = useMemo(
+    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
+    [baseLineStyle, stroke, strokeWidth, opacity]
+  )
+
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseLineStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // ── Tooltip ───────────────────────────────────────────────────────────

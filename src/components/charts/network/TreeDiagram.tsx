@@ -9,6 +9,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
@@ -78,6 +79,9 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     linkedHover,
     loading,
     legendInteraction,
+    stroke,
+    strokeWidth,
+    opacity,
   } = props
 
   const width = resolved.width
@@ -124,7 +128,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   }, [colorScheme, themeCategorical])
 
   // d is a RealtimeNode — user data on d.data, depth on d.depth
-  const nodeStyleFn = useMemo(() => {
+  const baseNodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { stroke: "black", strokeWidth: 1 }
       if (colorByDepth) {
@@ -138,9 +142,19 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     }
   }, [colorBy, colorByDepth, colorScale, themeCategorical, colorScheme, categoryIndexMap])
 
-  const edgeStyleFn = useMemo(() => {
+  const nodeStyleFn = useMemo(
+    () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
+    [baseNodeStyleFn, stroke, strokeWidth, opacity]
+  )
+
+  const baseEdgeStyleFn = useMemo(() => {
     return () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
   }, [])
+
+  const edgeStyleFn = useMemo(
+    () => mergeShapeStyle(baseEdgeStyleFn, { stroke, strokeWidth, opacity }),
+    [baseEdgeStyleFn, stroke, strokeWidth, opacity]
+  )
 
   const hierarchySumFn = useMemo(() => {
     if (layout === "treemap" || layout === "circlepack" || layout === "partition") {
