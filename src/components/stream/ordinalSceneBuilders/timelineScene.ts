@@ -2,7 +2,7 @@ import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
-export function buildTimelineScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildTimelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, getRawRange, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []

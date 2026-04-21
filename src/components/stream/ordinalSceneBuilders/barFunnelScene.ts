@@ -28,7 +28,7 @@ import type { OrdinalSceneContext } from "./types"
  */
 export function buildBarFunnelScene(
   ctx: OrdinalSceneContext,
-  layout: OrdinalLayout
+  _layout: OrdinalLayout
 ): OrdinalSceneNode[] {
   const { columns, getR, getStack, resolvePieceStyle, scales } = ctx
   const nodes: OrdinalSceneNode[] = []

@@ -5,7 +5,7 @@ import {
   sankeyCenter,
   sankeyJustify
 } from "../../../vendor/sankey-plus/index.js"
-import { interpolateNumber } from "d3-interpolate"
+
 import { schemeCategory10 } from "d3-scale-chromatic"
 import { areaLink, circularAreaLink } from "../../geometry/sankeyLinks"
 import { wrapWithDataHint } from "../devDataAccessWarning"

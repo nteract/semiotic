@@ -466,8 +466,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
       if (xCenter != null && !isFinite(xC)) return
       if (yCenter != null && !isFinite(yC)) return
 
-      const cx = Math.max(0, Math.min(w, xC))
-      const cy = Math.max(0, Math.min(h, yC))
+      const _cx = Math.max(0, Math.min(w, xC))
+      const _cy = Math.max(0, Math.min(h, yC))
 
       ctx.font = `600 ${quadrantLabelSize}px sans-serif`
       ctx.globalAlpha = 0.5

@@ -12,7 +12,7 @@ import { vi } from "vitest"
  * gets non-default dimensions (300x150 is the HTML default for an unsized canvas).
  */
 import React from "react"
-import { render, act } from "@testing-library/react"
+import { render } from "@testing-library/react"
 import { createMockCanvasContext } from "../../test-utils/canvasMock"
 
 // ── Canvas + rAF mocks ──────────────────────────────────────────────────

@@ -6,16 +6,13 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock StreamGeoFrame to capture props
 let lastGeoFrameProps: any = null
-vi.mock("../../stream/StreamGeoFrame", () => {
-  const React = require("react")
-  return {
-    __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
-      lastGeoFrameProps = props
-      return <div className="stream-geo-frame"><svg /></div>
-    })
-  }
-})
+vi.mock("../../stream/StreamGeoFrame", () => ({
+  __esModule: true,
+  default: React.forwardRef((props: any, _ref: any) => {
+    lastGeoFrameProps = props
+    return <div className="stream-geo-frame"><svg /></div>
+  })
+}))
 
 // Mock useReferenceAreas — simulate async load by returning null then areas
 let mockResolvedAreas: any = null

@@ -33,12 +33,11 @@ import type {
   StreamOrdinalFrameHandle,
   OrdinalChartType,
   OrdinalScales,
-  OrdinalSceneNode,
+  
   OrdinalPipelineConfig,
-  OrdinalRendererFn,
+  
   OrdinalLayout,
-  HoverData,
-  HoverAnnotationConfig
+  HoverData
 } from "./ordinalTypes"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
@@ -257,7 +256,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       oExtent,
       extentPadding = 0.05,
       oSort,
-      arrowOfTime,
+      arrowOfTime: _arrowOfTime,
       windowMode = "sliding",
       windowSize = 200,
       pieceStyle,

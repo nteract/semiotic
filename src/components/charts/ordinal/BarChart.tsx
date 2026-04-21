@@ -33,7 +33,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   /** Category ordering. `false` (default) = insertion order. `"asc"` /
    *  `"desc"` sorts by total value. `"auto"` preserves insertion order
    *  while streaming and falls through to value-desc on static data.
-   *  `true` = value-desc regardless of source. Function comparators
+   *  `true` = value-desc regardless of source. ((...args: any[]) => any) comparators
    *  receive category name strings (not row objects) and run against
    *  the category list on the axis. */
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)
@@ -175,7 +175,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
+    return (d: Record<string, any>, _category?: string) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, setup.colorScale)
@@ -192,7 +192,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Record<strin
       ? basePieceStyle
       : (d: Record<string, any>, category?: string) => ({
         ...basePieceStyle(d, category),
-        ...((userPieceStyle as Function)(d, category) || {}),
+        ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
       })
     // Top-level primitive props (stroke/strokeWidth/opacity) applied LAST so
     // they win over both HOC base style and user-supplied frameProps.pieceStyle.

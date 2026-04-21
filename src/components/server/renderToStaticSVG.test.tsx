@@ -289,7 +289,7 @@ describe("renderOrdinalToStaticSVG - violin", () => {
 // ── Ordinal SSR: Histogram ──────────────────────────────────────────
 
 describe("renderOrdinalToStaticSVG - histogram", () => {
-  const histData = Array.from({ length: 50 }, (_, i) => ({
+  const histData = Array.from({ length: 50 }, (_, _i) => ({
     category: "All",
     value: Math.random() * 100
   }))

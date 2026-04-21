@@ -149,7 +149,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
       ? basePieceStyle
       : (d: Record<string, any>, category?: string) => {
         const base = basePieceStyle(d, category)
-        const user = (userPieceStyle as Function)(d, category) || {}
+        const user = (userPieceStyle as ((...args: any[]) => any))(d, category) || {}
         return { ...base, ...user }
       }
     return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })

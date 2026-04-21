@@ -92,7 +92,7 @@ function ensureSelection(
 }
 
 export const [SelectionProvider, useSelectionSelector] = createStore(
-  (set: Function) => ({
+  (set: ((...args: any[]) => any)) => ({
     selections: new Map<string, Selection>(),
 
     setClause(selectionName: string, clause: SelectionClause) {

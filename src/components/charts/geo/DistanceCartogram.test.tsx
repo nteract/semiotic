@@ -11,7 +11,6 @@ const mockGetCartogramLayout = vi.fn(() => ({
 }))
 
 vi.mock("../../stream/StreamGeoFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, ref: any) => {

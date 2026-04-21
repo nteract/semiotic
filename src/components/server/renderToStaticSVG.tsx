@@ -25,7 +25,7 @@ import type {
 } from "../stream/types"
 
 import { getLayoutPlugin } from "../stream/layouts"
-import { NetworkPipelineStore } from "../stream/NetworkPipelineStore"
+
 import type {
   NetworkPipelineConfig,
   RealtimeNode,
@@ -1191,10 +1191,13 @@ export async function renderToImage(
   }
 
   // Load sharp dynamically — optional dep, loaded at call time only.
-   
+  // The string-variable indirection defeats static bundler resolution so sharp
+  // stays out of the main chunk. Dynamic `import()` would force renderToImage
+  // (and every caller) to become async.
   let sharp: any
   try {
     const sharpModule = "sharp"
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     sharp = require(sharpModule)
   } catch {
     throw new Error(

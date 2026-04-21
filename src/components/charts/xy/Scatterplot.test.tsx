@@ -10,7 +10,6 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 // combines HOC color resolution + top-level primitive props.
 let lastXYFrameProps: any = null
 vi.mock("../../stream/StreamXYFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {

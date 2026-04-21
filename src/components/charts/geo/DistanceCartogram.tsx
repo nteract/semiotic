@@ -9,7 +9,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import ChartError from "../shared/ChartError"
+
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
@@ -278,7 +278,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   // ── Compute ring radii ──────────────────────────────────────────
   const ringValues = useMemo(() => {
     if (!showRings || !cartogramLayout) return []
-    const { maxCost, availableRadius } = cartogramLayout
+    const { maxCost } = cartogramLayout
     if (maxCost <= 0) return []
 
     if (Array.isArray(showRings)) return showRings.filter(v => v > 0 && v <= maxCost)

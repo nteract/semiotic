@@ -119,7 +119,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
   const selName = options.name || "hover"
   const { fields } = options
 
-  const { predicate, isActive, selectPoints, clear, clientId } = useSelection({
+  const { predicate, isActive, selectPoints, clear } = useSelection({
     name: selName,
     fields
   })
@@ -176,7 +176,7 @@ export interface UseBrushSelectionResult {
 export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult {
   const { name, xField, yField } = options
 
-  const { predicate, isActive, selectInterval, clear, clientId } = useSelection({
+  const { predicate, isActive, selectInterval, clear } = useSelection({
     name,
     fields: [xField, yField].filter(Boolean) as string[]
   })

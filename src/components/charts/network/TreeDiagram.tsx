@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"

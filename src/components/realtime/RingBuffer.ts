@@ -53,13 +53,11 @@ export class RingBuffer<T> {
 
   [Symbol.iterator](): Iterator<T> {
     let i = 0
-    const self = this
-    return {
-      next(): IteratorResult<T> {
-        if (i >= self._size) return { done: true, value: undefined } as IteratorReturnResult<undefined>
-        return { done: false, value: self.get(i++)! }
-      }
+    const next = (): IteratorResult<T> => {
+      if (i >= this._size) return { done: true, value: undefined } as IteratorReturnResult<undefined>
+      return { done: false, value: this.get(i++)! }
     }
+    return { next }
   }
 
   forEach(callback: (value: T, index: number) => void): void {

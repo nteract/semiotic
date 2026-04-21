@@ -195,7 +195,7 @@ describe("normalizeTooltip", () => {
 
   it("unwraps HoverData for user tooltip functions", () => {
     const fn = (d: any) => d.task
-    const wrapped = normalizeTooltip(fn) as Function
+    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
     // Simulate HoverData wrapper from StreamNetworkFrame (has type + data)
     const hoverData = { type: "node", data: { task: "Fix bug" }, x: 10, y: 20 }
     const rendered = wrapped(hoverData) as any
@@ -206,7 +206,7 @@ describe("normalizeTooltip", () => {
 
   it("does not unwrap user data that happens to have a .data property", () => {
     const fn = (d: any) => d.data?.nested
-    const wrapped = normalizeTooltip(fn) as Function
+    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
     // User datum has .data but no .type — should NOT be unwrapped
     const datum = { data: { nested: "hello" }, x: 10, y: 20 }
     const rendered = wrapped(datum) as any

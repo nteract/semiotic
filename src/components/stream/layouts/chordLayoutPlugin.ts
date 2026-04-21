@@ -1,7 +1,7 @@
 import { chord, ribbon } from "d3-chord"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import { arc } from "d3-shape"
-import { schemeCategory10, schemeTableau10 } from "d3-scale-chromatic"
+import { schemeCategory10 } from "d3-scale-chromatic"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,

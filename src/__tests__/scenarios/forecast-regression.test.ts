@@ -9,7 +9,6 @@
 import { describe, it, expect } from "vitest"
 import {
   buildForecast,
-  buildAnomalyAnnotations,
   createSegmentLineStyle,
   SEGMENT_FIELD,
 } from "../../components/charts/shared/statisticalOverlays"

@@ -67,7 +67,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     sceneNodes,
     annotations,
     svgAnnotationRules,
-    annotationFrame
+    annotationFrame: _annotationFrame
   } = props
 
   return (

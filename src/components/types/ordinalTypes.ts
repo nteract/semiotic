@@ -16,13 +16,13 @@ import { ScaleLinear, ScaleBand } from "d3-scale"
 
 import { AxisProps, AxisGeneratingFunction } from "./annotationTypes"
 
-export type OExtentObject = { extent?: Array<string>; onChange?: Function }
+export type OExtentObject = { extent?: Array<string>; onChange?: ((...args: any[]) => any) }
 
 type OExtentSettingsType = Array<string> | OExtentObject
 
 interface RExtentObject {
   extent?: Array<number>
-  onChange?: Function
+  onChange?: ((...args: any[]) => any)
   includeAnnotations?: boolean
 }
 
@@ -52,7 +52,7 @@ export interface ProjectedOrdinalSummary {
 export interface OrdinalFrameProps<TDatum = Record<string, any>> extends GeneralFrameProps {
   type?: PieceTypes | PieceTypeSettings
   summaryType?: OrdinalSummaryTypeSettings
-  connectorType?: Function
+  connectorType?: ((...args: any[]) => any)
   rAccessor?: DataAccessor<TDatum, number> | DataAccessor<TDatum, number>[]
   oAccessor?: DataAccessor<TDatum, string | number> | DataAccessor<TDatum, string | number>[]
   oExtent?: OExtentSettingsType
@@ -107,8 +107,8 @@ export interface OrdinalFrameState<TDatum = Record<string, any>> extends General
   axesTickLines?: object[]
   oLabels: { labels: React.ReactNode }
   columnOverlays: Array<object>
-  oAccessor: Array<Function>
-  rAccessor: Array<Function>
+  oAccessor: Array<((...args: any[]) => any)>
+  rAccessor: Array<((...args: any[]) => any)>
   oScaleType: ScaleBand<string>
   rScaleType: ScaleLinear<number, number>
   oExtent: Array<string>
@@ -128,6 +128,6 @@ export interface OrdinalFrameState<TDatum = Record<string, any>> extends General
 export interface LabelSettingsType {
   orient?: string
   padding?: number
-  label?: boolean | Function
-  labelFormatter?: Function
+  label?: boolean | ((...args: any[]) => any)
+  labelFormatter?: ((...args: any[]) => any)
 }

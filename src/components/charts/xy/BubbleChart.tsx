@@ -358,7 +358,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
 
-  const brushHook = useBrushSelection({
+  const _brushHook = useBrushSelection({
     name: brushConfig?.name || "__unused_brush__",
     xField: brushConfig?.xField || (typeof xAccessor === "string" ? xAccessor : undefined),
     yField: brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)

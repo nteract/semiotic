@@ -6,7 +6,7 @@ import type {
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  MarginalGraphicsConfig,
+  
   PointSceneNode,
   LineSceneNode,
   ThemeSemanticColors
@@ -14,8 +14,7 @@ import type {
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
   HoverAnnotationConfig,
-  HoverData,
-  AnnotationContext
+  HoverData
 } from "../realtime/types"
 import type { GeoParticleStyle } from "./GeoParticlePool"
 

@@ -194,7 +194,7 @@ export function useChartSelection({
   selection,
   linkedHover,
   fallbackFields = [],
-  unwrapData = false,
+  unwrapData: _unwrapData = false,
   onObservation,
   chartType,
   chartId,

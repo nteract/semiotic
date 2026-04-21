@@ -82,7 +82,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Record<s
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    orientation = "vertical", bins = 25, curve = "catmullRom", showIQR = true,
+    orientation = "vertical", bins = 25, curve: _curve = "catmullRom", showIQR = true,
     valueFormat,
     colorBy, colorScheme, categoryPadding = 20,
     tooltip, annotations,

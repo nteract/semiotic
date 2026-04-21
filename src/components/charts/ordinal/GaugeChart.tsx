@@ -63,7 +63,7 @@ export interface GaugeChartProps extends BaseChartProps {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, ref: React.Ref<RealtimeFrameHandle>) {
+export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 300,
     height: props.height ?? 250,

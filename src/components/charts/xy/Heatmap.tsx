@@ -19,7 +19,7 @@ import {
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
+import { useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -386,19 +386,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])
 
-  // Get unique x and y values for bin sizing
-  const { xBinCount, yBinCount } = useMemo(() => {
-    const getX = resolveAccessor(xAccessor)
-    const getY = resolveAccessor(yAccessor)
-
-    return {
-      xBinCount: new Set(safeData.map(getX)).size,
-      yBinCount: new Set(safeData.map(getY)).size
-    }
-  }, [safeData, xAccessor, yAccessor])
-
   // Transform data to summary format for StreamXYFrame
-  const summaryData = useMemo(() => {
+  const _summaryData = useMemo(() => {
     return { coordinates: safeData }
   }, [safeData])
 
@@ -419,7 +408,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
     [baseSummaryStyle, stroke, strokeWidth, opacity]
   )
 
-  const summaryStyle = useMemo(
+  const _summaryStyle = useMemo(
     () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
     [baseSummaryStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )

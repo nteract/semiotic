@@ -23,10 +23,9 @@ import type {
   OrdinalScales,
   OrdinalSceneNode,
   OrdinalColumn,
-  OrdinalLayout,
-  OrdinalChartType
+  OrdinalLayout
 } from "./ordinalTypes"
-import type { Changeset, Style, DecayConfig, PointSceneNode } from "./types"
+import type { Changeset, Style, PointSceneNode } from "./types"
 import { computeDecayOpacity } from "./pipelineDecay"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -260,7 +259,7 @@ export class OrdinalPipelineStore {
   private getRawRange(d: any): [number, number] | null {
     const acc = this.config.valueAccessor || this.config.rAccessor
     if (!acc) return null
-    const result = typeof acc === "function" ? (acc as Function)(d) : d[acc as string]
+    const result = typeof acc === "function" ? (acc as ((...args: any[]) => any))(d) : d[acc as string]
     if (Array.isArray(result) && result.length >= 2) {
       return [+result[0], +result[1]]
     }
@@ -481,7 +480,7 @@ export class OrdinalPipelineStore {
 
   // ── Value domain computation ─────────────────────────────────────────
 
-  private computeValueDomain(data: Record<string, any>[], oExtent: string[]): [number, number] {
+  private computeValueDomain(data: Record<string, any>[], _oExtent: string[]): [number, number] {
     const chartType = this.config.chartType
     const pad = this.config.extentPadding ?? 0.05
 
@@ -803,7 +802,7 @@ export class OrdinalPipelineStore {
     const map = new Map<string, number[]>()
     for (let i = 0; i < data.length; i++) {
       const d = data[i]
-      const cat = isFn ? (oAcc as Function)(d) : d[key as string]
+      const cat = isFn ? (oAcc as ((...args: any[]) => any))(d) : d[key as string]
       let arr = map.get(cat)
       if (!arr) {
         arr = []

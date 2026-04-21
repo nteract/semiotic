@@ -180,7 +180,7 @@ describe("LinkedCharts", () => {
       return <span data-testid="active">{String(isActive)}</span>
     }
 
-    const { container, getByTestId } = render(
+    const { container, _getByTestId } = render(
       <CategoryColorProvider colors={{ North: "#f00", South: "#0f0" }}>
         <LinkedCharts
           showLegend

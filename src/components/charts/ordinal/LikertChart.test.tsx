@@ -8,7 +8,6 @@ import { defaultDivergingScheme, NEUTRAL_NEG, NEUTRAL_POS } from "../shared/useL
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -446,7 +445,7 @@ describe("LikertChart", () => {
   })
 
   it("uses custom tooltip function when provided", () => {
-    const customTooltip = (d: any) => <div>custom tooltip</div>
+    const customTooltip = (_d: any) => <div>custom tooltip</div>
     render(
       <TooltipProvider>
         <LikertChart data={rawData} valueAccessor="score" levels={levels5} tooltip={customTooltip} />

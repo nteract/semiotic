@@ -136,8 +136,6 @@ export const RealtimeSwarmChart = forwardRef(
 
     const {
       size,
-      width,
-      height,
       margin: userMargin,
       className,
       arrowOfTime = "right",

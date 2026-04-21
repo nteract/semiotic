@@ -24,7 +24,7 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
 // ── Default annotation rules factory ──────────────────────────────────
 
 export function createDefaultAnnotationRules(
-  frameType: "xy" | "ordinal" | "network"
+  _frameType: "xy" | "ordinal" | "network"
 ): (
   annotation: Record<string, any>,
   index: number,
@@ -472,7 +472,7 @@ export function createDefaultAnnotationRules(
         const data = context.data || []
         if (data.length < 2) return null
         const yAcc = context.yAccessor || "y"
-        const xAcc = context.xAccessor || "x"
+        const _xAcc = context.xAccessor || "x"
         const scaleX = context.scales?.x ?? context.scales?.time
         const scaleY = context.scales?.y ?? context.scales?.value
         if (!scaleX || !scaleY) return null

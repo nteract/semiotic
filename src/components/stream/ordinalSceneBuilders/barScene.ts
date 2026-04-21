@@ -3,7 +3,7 @@ import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { RectSceneNode } from "../types"
 import type { OrdinalSceneContext } from "./types"
 
-export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, getStack, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
@@ -148,7 +148,7 @@ export function buildBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   return nodes
 }
 
-export function buildClusterBarScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): OrdinalSceneNode[] {
+export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, getGroup, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []

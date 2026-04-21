@@ -1,4 +1,4 @@
-import type { SceneNode, HeatcellSceneNode } from "../types"
+import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
@@ -56,7 +56,7 @@ function defaultFormat(v: number): string {
  * Renders HeatcellSceneNode as filled rectangles with color encoding,
  * and optionally draws cell value text when showValues is enabled.
  */
-export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
+export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const heatNodes = nodes.filter((n): n is HeatcellSceneNode => n.type === "heatcell")
 
   ctx.save()

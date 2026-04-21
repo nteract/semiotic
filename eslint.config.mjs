@@ -61,17 +61,23 @@ export default [
       // that surface codebase-wide existing patterns — each is its own follow-up
       // sweep, tracked in OUTSTANDING_WORK.md. Re-enable individually by removing
       // its line below.
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/no-require-imports": "off",
-      // ~15 sites using the bare `Function` type — real type-safety debt worth
-      // a dedicated sweep but not a migration blocker.
-      "@typescript-eslint/no-unsafe-function-type": "off",
-      // One site in RingBuffer.ts uses the `const self = this` pattern.
-      "@typescript-eslint/no-this-alias": "off"
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["error", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/ban-ts-comment": ["error", {
+        "ts-expect-error": "allow-with-description",
+        "ts-ignore": true,
+        "ts-nocheck": "allow-with-description",
+        "ts-check": false
+      }],
+      "@typescript-eslint/no-empty-object-type": "error",
+      "@typescript-eslint/no-require-imports": "error",
+      "@typescript-eslint/no-unsafe-function-type": "error",
+      "@typescript-eslint/no-this-alias": "error"
     }
   }
 ]

@@ -4,9 +4,7 @@ import type {
   NetworkRectNode,
   NetworkArcNode,
   NetworkLineEdge,
-  NetworkBezierEdge,
-  NetworkSceneNode,
-  NetworkSceneEdge
+  NetworkBezierEdge
 } from "./networkTypes"
 
 describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {

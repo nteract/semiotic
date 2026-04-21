@@ -1,7 +1,7 @@
-import { vi, describe, it, expect } from "vitest"
+import { describe, it, expect } from "vitest"
 import { wedgeCanvasRenderer } from "./wedgeCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
-import type { WedgeSceneNode, OrdinalSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
+import type { WedgeSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
 import { createMockCanvasContext, recordCanvasOps } from "../../../test-utils/canvasMock"
 
 function createMockCtx() {

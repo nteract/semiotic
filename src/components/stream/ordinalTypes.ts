@@ -9,7 +9,7 @@ import type {
 } from "../realtime/types"
 import type {
   Style,
-  Changeset,
+  
   DecayConfig,
   PulseConfig,
   TransitionConfig,

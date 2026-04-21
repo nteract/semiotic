@@ -262,7 +262,7 @@ export interface ThemeStoreState {
 }
 
 export const [ThemeProvider, useThemeSelector] = createStore(
-  (set: Function) => ({
+  (set: ((...args: any[]) => any)) => ({
     theme: LIGHT_THEME,
 
     setTheme(theme: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") {

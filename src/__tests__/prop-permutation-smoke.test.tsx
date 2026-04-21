@@ -11,16 +11,15 @@
  * - FlowMap crashing on undefined flow entries
  * - Grouped bar coloring with various colorBy/groupBy combos
  */
-import { vi, describe, it, expect, beforeEach } from "vitest"
+import { vi, describe, it, expect } from "vitest"
 import React from "react"
 import { render, cleanup } from "@testing-library/react"
 import { TooltipProvider } from "../components/store/TooltipStore"
 
 // ── Mock all four Stream Frames ─────────────────────────────────────────
 
-let lastXYProps: any = null
+const _lastXYProps: any = null
 vi.mock("../components/stream/StreamXYFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -30,9 +29,8 @@ vi.mock("../components/stream/StreamXYFrame", () => {
   }
 })
 
-let lastOrdinalProps: any = null
+const _lastOrdinalProps: any = null
 vi.mock("../components/stream/StreamOrdinalFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -42,9 +40,8 @@ vi.mock("../components/stream/StreamOrdinalFrame", () => {
   }
 })
 
-let lastNetworkProps: any = null
+const _lastNetworkProps: any = null
 vi.mock("../components/stream/StreamNetworkFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -54,9 +51,8 @@ vi.mock("../components/stream/StreamNetworkFrame", () => {
   }
 })
 
-let lastGeoProps: any = null
+const _lastGeoProps: any = null
 vi.mock("../components/stream/StreamGeoFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {
@@ -121,7 +117,7 @@ const xyDataWithNulls = [
   { x: null, y: 25, category: "A" },
 ]
 
-const lineData = [
+const _lineData = [
   { coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }, { x: 3, y: 15 }] },
   { coordinates: [{ x: 1, y: 5 }, { x: 2, y: 25 }, { x: 3, y: 12 }] },
 ]

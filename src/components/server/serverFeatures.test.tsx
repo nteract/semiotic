@@ -540,7 +540,7 @@ describe("renderChart", () => {
   })
 
   it("renders Histogram", () => {
-    const histData = Array.from({ length: 50 }, (_, i) => ({
+    const histData = Array.from({ length: 50 }, (_, _i) => ({
       category: "All",
       value: Math.random() * 100,
     }))

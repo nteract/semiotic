@@ -6,7 +6,7 @@
  *
  * Consumed by: hierarchyLayoutPlugin.ts, hierarchySceneBuilders.ts
  */
-import type { NetworkPipelineConfig, RealtimeNode } from "../networkTypes"
+import type { NetworkPipelineConfig } from "../networkTypes"
 
 /** Depth-based color palette shared across all hierarchy scene builders */
 export const DEPTH_PALETTE = [

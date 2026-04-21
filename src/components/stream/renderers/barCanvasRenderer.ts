@@ -1,4 +1,4 @@
-import type { SceneNode, RectSceneNode } from "../types"
+import type { RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
@@ -8,7 +8,7 @@ import { resolveCSSColor } from "./resolveCSSColor"
  * Renders RectSceneNode as filled rectangles. Supports icon/isotype mode
  * where an image is stamped repeatedly to fill the bar instead of a solid fill.
  */
-export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
+export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const rectNodes = nodes.filter((n): n is RectSceneNode => n.type === "rect")
 
   for (const node of rectNodes) {

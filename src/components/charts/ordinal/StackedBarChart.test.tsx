@@ -8,7 +8,6 @@ import { STACKED_SAMPLE as sampleData } from "../../../test-utils/ordinalFixture
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
-  const React = require("react")
   return {
     __esModule: true,
     default: React.forwardRef((props: any, _ref: any) => {

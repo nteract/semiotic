@@ -102,7 +102,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const {
     data,
-    margin: userMargin,
+    margin: _userMargin,
     className,
     xFormat,
     yFormat,

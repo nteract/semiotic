@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import { useMemo, useRef, useEffect } from "react"
-import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
+import type { StreamScales, MarginalGraphicsConfig } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
@@ -356,7 +356,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     yValues,
     annotations,
     svgAnnotationRules,
-    annotationFrame,
+    annotationFrame: _annotationFrame,
     xAccessor: annXAccessor,
     yAccessor: annYAccessor,
     annotationData,

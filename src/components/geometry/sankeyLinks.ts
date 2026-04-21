@@ -1,6 +1,9 @@
-// @ts-nocheck
+// @ts-nocheck legacy d3 ribbon geometry. Parameters `p`, `c`, `d`, etc. are
+// dynamically shaped from d3-shape input and typing them correctly is a rewrite
+// (~20 implicit-any sites plus some null assignments to typed fields). Tracked
+// as tech debt.
 import { interpolateNumber } from "d3-interpolate"
-import { line, curveLinearClosed, curveLinear } from "d3-shape"
+import { line, curveLinearClosed } from "d3-shape"
 
 const dedupeRibbonPoints =
   (weight = 1) =>
@@ -252,7 +255,7 @@ function linearRibbon() {
 
 const curvature = 0.5
 
-const ribbonLink = (d) => {
+const _ribbonLink = (d) => {
   const diff =
     d.direction === "down"
       ? Math.abs(d.target.y - d.source.y)
@@ -327,7 +330,8 @@ export const areaLink = (d) => {
 
     return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
   }
-  (x0 = d.source.x1),  
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- legacy d3 comma-sequence pattern; tracked by the file-level @ts-nocheck.
+  (x0 = d.source.x1),
     (x1 = d.target.x0),
     (xi = interpolateNumber(x0, x1)),
     (x2 = xi(curvature)),

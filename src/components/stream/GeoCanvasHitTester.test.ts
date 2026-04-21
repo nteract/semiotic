@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
-import type { GeoAreaSceneNode, GeoSceneNode } from "./geoTypes"
+import type { GeoAreaSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
 
 // Mock canvas context with isPointInPath
@@ -8,7 +8,7 @@ function createMockHitCtx() {
   const pathsInPoint = new Set<string>()
 
   return {
-    isPointInPath: vi.fn((path: Path2D, x: number, y: number) => {
+    isPointInPath: vi.fn((path: Path2D, _x: number, _y: number) => {
       // Simulate: any path whose data starts with "M0" is "hit" for point (50,50)
       // We use the pathsInPoint set to control which paths register hits
       return pathsInPoint.has((path as any).__testId)
@@ -19,7 +19,7 @@ function createMockHitCtx() {
 }
 
 // Helper to create a Path2D mock that carries an ID
-const origPath2D = globalThis.Path2D
+const _origPath2D = globalThis.Path2D
 beforeEach(() => {
   let counter = 0
   globalThis.Path2D = class MockPath2D {

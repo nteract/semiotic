@@ -244,7 +244,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     nodes: RealtimeNode[],
     edges: RealtimeEdge[],
     config: NetworkPipelineConfig,
-    size: [number, number]
+    _size: [number, number]
   ): {
     sceneNodes: NetworkSceneNode[]
     sceneEdges: NetworkSceneEdge[]

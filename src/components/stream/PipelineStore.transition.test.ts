@@ -205,8 +205,8 @@ describe("PipelineStore — Transitions", () => {
 
     const midTransitionPoint = store.scene.find(n => n.type === "point")
     if (!midTransitionPoint) return
-    const midX = midTransitionPoint.x
-    const midY = midTransitionPoint.y
+    const _midX = midTransitionPoint.x
+    const _midY = midTransitionPoint.y
 
     // Phase 3: interrupt with new data — starts new transition from current positions
     store.ingest({ inserts: [{ x: 200, y: 200 }], bounded: true })
@@ -288,7 +288,7 @@ describe("PipelineStore — Transitions", () => {
     if (!rectNode) return
 
     const prevH = rectNode.h
-    const prevY = rectNode.y
+    const _prevY = rectNode.y
 
     // Second render with different value
     store.ingest({
@@ -302,7 +302,7 @@ describe("PipelineStore — Transitions", () => {
     const startTime = store.activeTransition.startTime
     const rect = store.scene.find(n => n.type === "rect")!
     const targetH = rect._targetH
-    const targetY = rect._targetY
+    const _targetY = rect._targetY
 
     if (targetH === undefined) return
 

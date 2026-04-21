@@ -1,4 +1,4 @@
-import type { SceneNode, AreaSceneNode, CurveType } from "../types"
+import type { AreaSceneNode, CurveType } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { renderPathPulse } from "./renderPulse"

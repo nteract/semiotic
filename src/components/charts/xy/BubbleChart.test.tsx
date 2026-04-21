@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+
 import React from "react"
 import { render, fireEvent } from "@testing-library/react"
 import { BubbleChart } from "./BubbleChart"
@@ -321,7 +321,7 @@ describe("BubbleChart", () => {
 
     // This should handle gracefully or throw a clear error
     expect(() => {
-      const result = tooltipFn(arrayData as any)
+      const _result = tooltipFn(arrayData as any)
       // Should return null or handle gracefully
     }).not.toThrow()
   })

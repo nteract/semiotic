@@ -20,7 +20,7 @@ export interface TooltipFieldConfig {
  * Extract a display name from an accessor.
  * Strings return themselves; functions return "value".
  */
-export function accessorName(acc: string | Function): string {
+export function accessorName(acc: string | ((...args: any[]) => any)): string {
   return typeof acc === "string" ? acc : "value"
 }
 

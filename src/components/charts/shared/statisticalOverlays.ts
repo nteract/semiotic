@@ -129,12 +129,6 @@ function readBool(d: Record<string, any>, accessor: string | ((d: Record<string,
   return !!d[accessor]
 }
 
-function readNum(d: Record<string, any>, accessor: string | ((d: Record<string, any>) => number)): number | undefined {
-  if (typeof accessor === "function") return accessor(d)
-  const v = d[accessor]
-  return v != null && isFinite(v as number) ? (v as number) : undefined
-}
-
 // ── Anomaly annotation builder (standalone, no forecast) ───────────────
 
 export function buildAnomalyAnnotations(

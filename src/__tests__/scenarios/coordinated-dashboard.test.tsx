@@ -8,12 +8,11 @@
  */
 import React from "react"
 import { render, act, fireEvent } from "@testing-library/react"
-import { renderHook } from "@testing-library/react"
+
 import {
   LinkedCharts,
   useSelection,
   useLinkedHover,
-  useBrushSelection,
   useFilteredData,
 } from "../../components/LinkedCharts"
 import { CategoryColorProvider, useCategoryColors } from "../../components/CategoryColors"

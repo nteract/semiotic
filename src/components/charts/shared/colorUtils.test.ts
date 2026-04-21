@@ -3,10 +3,8 @@ import {
   getColor,
   createColorScale,
   getSize,
-  COLOR_SCHEMES,
   DEFAULT_COLORS,
-  DEPTH_PALETTE_COLORS,
-} from "./colorUtils"
+  } from "./colorUtils"
 
 // ── COLOR_SCHEMES / DEFAULT_COLORS constants ──────────────────────────────
 
@@ -53,33 +51,33 @@ describe("getColor", () => {
 
   it("passes through CSS hex colors from function colorBy without colorScale mapping", () => {
     const colorFn = (d: any) => d.active ? "#ff0000" : "#00ff00"
-    const scale = vi.fn((v: any) => "#999")
+    const scale = vi.fn((_v: any) => "#999")
     expect(getColor({ active: true }, colorFn, scale)).toBe("#ff0000")
     expect(scale).not.toHaveBeenCalled()
   })
 
   it("passes through rgb() colors from function colorBy without colorScale mapping", () => {
     const colorFn = () => "rgb(255,0,0)"
-    const scale = vi.fn((v: any) => "#999")
+    const scale = vi.fn((_v: any) => "#999")
     expect(getColor({}, colorFn, scale)).toBe("rgb(255,0,0)")
     expect(scale).not.toHaveBeenCalled()
   })
 
   it("passes through hsl() colors from function colorBy without colorScale mapping", () => {
     const colorFn = () => "hsl(120,100%,50%)"
-    const scale = vi.fn((v: any) => "#999")
+    const scale = vi.fn((_v: any) => "#999")
     expect(getColor({}, colorFn, scale)).toBe("hsl(120,100%,50%)")
     expect(scale).not.toHaveBeenCalled()
   })
 
   it("returns function result directly when no colorScale is provided", () => {
-    const colorFn = (d: any) => "CategoryA"
+    const colorFn = (_d: any) => "CategoryA"
     expect(getColor({}, colorFn)).toBe("CategoryA")
   })
 
   it("passes through named CSS colors from function colorBy without colorScale mapping", () => {
     const colorFn = (d: any) => d.hot ? "red" : "steelblue"
-    const scale = vi.fn((v: any) => "#999")
+    const scale = vi.fn((_v: any) => "#999")
     expect(getColor({ hot: true }, colorFn, scale)).toBe("red")
     expect(getColor({ hot: false }, colorFn, scale)).toBe("steelblue")
     expect(scale).not.toHaveBeenCalled()
@@ -87,14 +85,14 @@ describe("getColor", () => {
 
   it("passes through 'transparent' from function colorBy without colorScale mapping", () => {
     const colorFn = () => "transparent"
-    const scale = vi.fn((v: any) => "#999")
+    const scale = vi.fn((_v: any) => "#999")
     expect(getColor({}, colorFn, scale)).toBe("transparent")
     expect(scale).not.toHaveBeenCalled()
   })
 
   it("maps non-color strings through colorScale even when they resemble color names", () => {
     const colorFn = () => "CategoryRed"
-    const scale = vi.fn((v: any) => "#123456")
+    const scale = vi.fn((_v: any) => "#123456")
     expect(getColor({}, colorFn, scale)).toBe("#123456")
     expect(scale).toHaveBeenCalledWith("CategoryRed")
   })

@@ -7,7 +7,7 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // Track all StreamXYFrame render calls to verify main + overview frames
 const xyFrameRenders: any[] = []
 vi.mock("../../stream/StreamXYFrame", () => {
-  const ForwardRef = React.forwardRef((props: any, ref: any) => {
+  const ForwardRef = React.forwardRef((props: any, _ref: any) => {
     xyFrameRenders.push(props)
     return <div className="stream-xy-frame"><svg /></div>
   })
@@ -116,7 +116,7 @@ describe("MinimapChart", () => {
   })
 
   it("handles data update via rerender", () => {
-    const { container, rerender } = render(
+    const { _container, rerender } = render(
       <TooltipProvider>
         <MinimapChart data={sampleData} />
       </TooltipProvider>

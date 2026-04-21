@@ -74,24 +74,24 @@ export interface GraphSettingsType {
   nodeHash: Map<any, NodeType>
   edgeHash: Map<any, EdgeType>
   hierarchicalNetwork: boolean
-  filterRenderedNodes?: Function
+  filterRenderedNodes?: ((...args: any[]) => any)
 }
 
 export interface NetworkSettingsType {
   type?:
     | string
     | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
-  hierarchyChildren?: Function
-  hierarchySum?: Function
-  layout?: Function
-  nodeSize?: Function
+  hierarchyChildren?: ((...args: any[]) => any)
+  hierarchySum?: ((...args: any[]) => any)
+  layout?: ((...args: any[]) => any)
+  nodeSize?: ((...args: any[]) => any)
   nodes?: NodeType[]
   edges?: EdgeType[]
   iterations?: number
   width?: number
   height?: number
   projection?: "horizontal" | "radial" | "vertical"
-  customSankey?: Function
+  customSankey?: ((...args: any[]) => any)
   groupWidth?: number
   padAngle?: number
   padding?: number
@@ -101,23 +101,23 @@ export interface NetworkSettingsType {
   nodeWidth?: number
   direction?: string
   fontSize?: number
-  rotate?: Function
+  rotate?: ((...args: any[]) => any)
   fontWeight?: number
-  textAccessor?: Function
+  textAccessor?: ((...args: any[]) => any)
   edgeStrength?: number
   distanceMax?: number
   edgeDistance?: number
-  forceManyBody?: Function | number
+  forceManyBody?: ((...args: any[]) => any) | number
   hierarchicalNetwork: boolean
   graphSettings: GraphSettingsType
-  sortGroups?: Function
-  simulation?: Function
+  sortGroups?: ((...args: any[]) => any)
+  simulation?: ((...args: any[]) => any)
   sort?: (a: Record<string, any>, b: Record<string, any>) => number
   zoom?:
     | boolean
     | "stretch"
     | ((nodes: NodeType[], edges: EdgeType[], size: number[]) => void)
-  fixExistingNodes?: boolean | Function
+  fixExistingNodes?: boolean | ((...args: any[]) => any)
   showArrows?: boolean
 }
 
@@ -145,10 +145,10 @@ export interface NetworkFrameProps<TNode = Record<string, any>, TEdge = Record<s
     | EdgeType[]
     | {
         (): () => void
-        nodes: Function
-        edges: Function
-        node: Function
-        edge: Function
+        nodes: ((...args: any[]) => any)
+        edges: ((...args: any[]) => any)
+        node: ((...args: any[]) => any)
+        edge: ((...args: any[]) => any)
       }
   nodes?: TNode[]
   edges?: TEdge[] | TEdge
@@ -169,9 +169,9 @@ export interface NetworkFrameProps<TNode = Record<string, any>, TEdge = Record<s
   targetAccessor?: DataAccessor<TEdge, string | Record<string, any>>
   sourceAccessor?: DataAccessor<TEdge, string | Record<string, any>>
   nodeIDAccessor?: DataAccessor<TNode, string>
-  edgeType?: string | Function
-  customNodeIcon?: Function
-  customEdgeIcon?: Function
+  edgeType?: string | ((...args: any[]) => any)
+  customNodeIcon?: ((...args: any[]) => any)
+  customEdgeIcon?: ((...args: any[]) => any)
   renderOrder?: ReadonlyArray<"edges" | "nodes">
   filterRenderedNodes?: (
     value?: NodeType,

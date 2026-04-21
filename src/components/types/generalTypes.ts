@@ -23,7 +23,7 @@ export type ProjectionTypes = "vertical" | "horizontal" | "radial"
 
 export type ExtentType =
   | number[]
-  | { extent?: number[]; onChange?: Function; includeAnnotations?: boolean }
+  | { extent?: number[]; onChange?: ((...args: any[]) => any); includeAnnotations?: boolean }
 
 export interface ProjectedPoint {
   x?: number
@@ -39,8 +39,8 @@ export interface ProjectedPoint {
   percent?: number
   data?: object
   _XYFrameRank?: number
-  style?: Function | object
-  class?: Function | string
+  style?: ((...args: any[]) => any) | object
+  class?: ((...args: any[]) => any) | string
   coordinates?: object[]
 }
 
@@ -48,14 +48,14 @@ export type PieceLayoutType = (args: {
   type: string | { type: string }
   data: Record<string, any>
   renderMode: (d?: Record<string, any>, i?: number) => string | Record<string, any>
-  eventListenersGenerator: (d: object, i: number) => Record<string, Function>
+  eventListenersGenerator: (d: object, i: number) => Record<string, ((...args: any[]) => any)>
   styleFn: (d: object) => object
   projection: string
   classFn: (d: object) => string
   adjustedSize: number[]
   chartSize: number[]
   margin: MarginType
-  rScale?: Function
+  rScale?: ((...args: any[]) => any)
 }) => Record<string, any>[]
 
 export interface ProjectedLine {
@@ -74,18 +74,18 @@ export interface ProjectedSummary {
   x: number
   parentSummary?: Record<string, any>
   bounds: object[] | number[]
-  customMark?: Function
+  customMark?: ((...args: any[]) => any)
   type?: string
-  curve?: Function
+  curve?: ((...args: any[]) => any)
   processedData?: boolean
   binMax?: number
 }
 
-export type RoughType = { canvas: Function; generator: Function }
+export type RoughType = { canvas: ((...args: any[]) => any); generator: ((...args: any[]) => any) }
 
-export type CanvasPostProcessTypes = Function
+export type CanvasPostProcessTypes = ((...args: any[]) => any)
 
-export type ExtentSettingsType = { extent?: Array<number>; onChange?: Function }
+export type ExtentSettingsType = { extent?: Array<number>; onChange?: ((...args: any[]) => any) }
 
 export type accessorType<ReturnValue> =
   | string
@@ -116,10 +116,10 @@ export type BasicLineTypes =
   | "difference"
 
 export interface LineTypeSettings {
-  type: BasicLineTypes | Function
+  type: BasicLineTypes | ((...args: any[]) => any)
   simpleLine?: boolean
   y1?: (d?: ProjectedPoint, index?: number) => number
-  interpolator: string | Function
+  interpolator: string | ((...args: any[]) => any)
 }
 
 export type BasicSummaryTypes =
@@ -132,17 +132,17 @@ export type BasicSummaryTypes =
 
 export interface SummaryTypeSettings {
   showSlope?: boolean
-  type: BasicSummaryTypes | Function
-  label?: string | Function
+  type: BasicSummaryTypes | ((...args: any[]) => any)
+  label?: string | ((...args: any[]) => any)
   cellPx?: number
   xCellPx?: number
   yCellPx?: number
   bins?: number
   xBins?: number
   yBins?: number
-  binValue?: Function
+  binValue?: ((...args: any[]) => any)
   binMax?: number
-  customMark?: Function
+  customMark?: ((...args: any[]) => any)
 }
 
 export interface RawLine<TDatum = Record<string, any>> {
@@ -155,15 +155,15 @@ export interface RawSummary<TDatum = Record<string, any>> {
   preprocess?: boolean
 }
 
-export interface RawPoint<TDatum = Record<string, any>> {}
+export type RawPoint<TDatum = Record<string, any>> = TDatum
 
 export interface CustomAreaMarkProps {
   d: object
   margin: object
-  styleFn: Function
-  classFn: Function
-  renderFn: Function
-  chartSize: Function
+  styleFn: ((...args: any[]) => any)
+  classFn: ((...args: any[]) => any)
+  renderFn: ((...args: any[]) => any)
+  chartSize: ((...args: any[]) => any)
   adjustedSize: number[]
 }
 
@@ -198,8 +198,8 @@ export type RenderPipelineType = {
   [key in VizLayerTypes]?: {
     data?: object[]
     ariaLabel?: { chart?: string; items?: string }
-    behavior?: Function
-    styleFn?: Function
+    behavior?: ((...args: any[]) => any)
+    styleFn?: ((...args: any[]) => any)
   }
 }
 
@@ -216,7 +216,7 @@ export type OrdinalSummaryTypes =
 export type OrdinalSummaryTypeSettings = {
   type: OrdinalSummaryTypes
   amplitude?: number
-  eventListenersGenerator?: Function
+  eventListenersGenerator?: ((...args: any[]) => any)
   flip?: boolean
   bins?: number
   axis?: AxisProps
@@ -229,7 +229,7 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
   summaryClass?: string
   r?: number
   showPoints?: boolean
-  filter?: Function
+  filter?: ((...args: any[]) => any)
 }
 
 export interface TransitionConfig {
@@ -256,26 +256,26 @@ export interface GeneralFrameProps {
   canvasPostProcess?: CanvasPostProcessTypes
   additionalDefs?: React.ReactNode
   className?: string
-  customHoverBehavior?: Function
-  customClickBehavior?: Function
-  customDoubleClickBehavior?: Function
+  customHoverBehavior?: ((...args: any[]) => any)
+  customClickBehavior?: ((...args: any[]) => any)
+  customDoubleClickBehavior?: ((...args: any[]) => any)
   hoverAnnotation?: CustomHoverType
   disableContext?: boolean
   interaction?: Interactivity
-  svgAnnotationRules?: Function
-  htmlAnnotationRules?: Function
-  tooltipContent?: Function
+  svgAnnotationRules?: ((...args: any[]) => any)
+  htmlAnnotationRules?: ((...args: any[]) => any)
+  tooltipContent?: ((...args: any[]) => any)
   optimizeCustomTooltipPosition?: boolean
   annotations?: object[]
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
+  backgroundGraphics?: React.ReactNode | ((...args: any[]) => any)
+  foregroundGraphics?: React.ReactNode | ((...args: any[]) => any)
   beforeElements?: React.ReactNode
   afterElements?: React.ReactNode
   annotationSettings?: AnnotationHandling
   renderKey?: string | GenericAccessor<string>
   legend?: object | boolean
   matte?: object
-  onUnmount?: Function
+  onUnmount?: ((...args: any[]) => any)
   sketchyRenderingEngine?: RoughType
   frameRenderOrder?: Array<string>
   disableCanvasInteraction?: boolean
@@ -288,8 +288,8 @@ export interface GeneralFrameState {
   dataVersion?: string
   adjustedPosition: number[]
   adjustedSize: number[]
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
+  backgroundGraphics?: React.ReactNode | ((...args: any[]) => any)
+  foregroundGraphics?: React.ReactNode | ((...args: any[]) => any)
   title: TitleType
   margin: MarginType
   legendSettings?: LegendProps

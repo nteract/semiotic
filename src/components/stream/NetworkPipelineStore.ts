@@ -5,7 +5,6 @@ import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUti
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type {
-  NetworkChartType,
   NetworkPipelineConfig,
   NetworkSceneNode,
   NetworkSceneEdge,
@@ -18,8 +17,7 @@ import type {
   BezierPoint
 } from "./networkTypes"
 import {
-  DEFAULT_TENSION_CONFIG,
-  DEFAULT_PARTICLE_STYLE
+  DEFAULT_TENSION_CONFIG
 } from "./networkTypes"
 
 const CURVATURE = 0.5

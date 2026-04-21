@@ -5,7 +5,7 @@ import type { OrdinalSceneContext } from "./types"
 export function buildConnectors(
   ctx: OrdinalSceneContext,
   pieceNodes: OrdinalSceneNode[],
-  layout: OrdinalLayout
+  _layout: OrdinalLayout
 ): ConnectorSceneNode[] {
   const { scales, config, getConnector, getO } = ctx
   if (!getConnector || !scales) return []

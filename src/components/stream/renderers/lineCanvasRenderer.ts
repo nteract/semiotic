@@ -1,4 +1,4 @@
-import type { SceneNode, LineSceneNode, LineColorThreshold, CurveType } from "../types"
+import type { LineSceneNode, LineColorThreshold, CurveType } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
