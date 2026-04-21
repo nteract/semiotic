@@ -226,7 +226,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
 
   // Warn in dev mode if not exactly 2 series
   if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production" && !isDualAxis) {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       `[MultiAxisLineChart] Expected exactly 2 series for dual-axis mode, got ${series.length}. ` +
       `Rendering as a standard multi-line chart.`

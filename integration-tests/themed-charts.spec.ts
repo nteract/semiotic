@@ -39,6 +39,10 @@ test.describe("Themed charts — visual matrix", () => {
           // GPU/font differences). 200px tolerance is enough to absorb that
           // while still catching color-channel-level changes.
           maxDiffPixels: 200,
+          // Firefox-linux occasionally times out on Playwright's implicit font
+          // wait under CI load (seen on dark-theme bar renders). 15s gives
+          // comfortable headroom; once fonts are loaded the compare is instant.
+          timeout: 15000,
         })
       })
     }

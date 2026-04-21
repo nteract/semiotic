@@ -323,7 +323,7 @@ export class NetworkPipelineStore {
     if (!plugin) return
 
     let nodesArr = Array.from(this.nodes.values())
-    let edgesArr = Array.from(this.edges.values())
+    const edgesArr = Array.from(this.edges.values())
 
     // For hierarchical plugins the store's Maps are empty — the plugin
     // populates the nodes/edges arrays itself from config.__hierarchyRoot.

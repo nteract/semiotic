@@ -69,7 +69,7 @@ export function DetailsPanel({
   const [isOpen, setIsOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const animTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const observationTypes = trigger === "click"
     ? (["click", "click-end"] as ChartObservation["type"][])

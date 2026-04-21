@@ -1,3 +1,4 @@
+import type { JSX } from "react"
 import { RenderPipelineType, DataAccessor } from "./generalTypes"
 import { GeneralFrameProps, GeneralFrameState } from "./generalTypes"
 

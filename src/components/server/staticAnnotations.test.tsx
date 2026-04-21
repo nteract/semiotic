@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const ReactDOMServer = require("react-dom/server") as { renderToStaticMarkup: (el: React.ReactElement) => string }
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
