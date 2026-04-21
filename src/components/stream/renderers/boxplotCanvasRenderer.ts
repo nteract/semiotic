@@ -13,10 +13,12 @@ export const boxplotCanvasRenderer = (
     const halfWidth = node.columnWidth / 2
     const isVert = node.projection === "vertical"
 
-    const rawFill = typeof node.style.fill === "string" ? node.style.fill : "#007bff"
-    const rawStroke = node.style.stroke || "#333"
-    const fillColor = resolveCSSColor(ctx, rawFill) || rawFill
-    const strokeColor = resolveCSSColor(ctx, rawStroke) || rawStroke
+    const rawFill = typeof node.style.fill === "string" ? node.style.fill : null
+    const rawStroke = node.style.stroke || null
+    const fillColor = (rawFill && (resolveCSSColor(ctx, rawFill) || rawFill))
+      || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+    const strokeColor = (rawStroke && (resolveCSSColor(ctx, rawStroke) || rawStroke))
+      || resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
     const lineWidth = node.style.strokeWidth || 1
     const opacity = node.style.fillOpacity ?? node.style.opacity ?? 0.6
 

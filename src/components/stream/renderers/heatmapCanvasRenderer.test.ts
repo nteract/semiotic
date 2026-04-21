@@ -43,7 +43,11 @@ describe("heatmapCanvasRenderer", () => {
     expect(ctx.fillRect).toHaveBeenCalledWith(10, 20, 25, 15)
   })
 
-  it("renders cell border with white stroke", () => {
+  it("renders cell border with theme surface color, falling back to white", () => {
+    // Stroke is resolved from `var(--semiotic-surface, #fff)`, so with no DOM
+    // root carrying `--semiotic-surface` the renderer falls through to the
+    // inline `#fff` hex. A dark theme setting `--semiotic-surface: #1a1a1a`
+    // would produce that value instead.
     const ctx = createMockCanvasContext()
     const node = makeHeatcellNode()
 

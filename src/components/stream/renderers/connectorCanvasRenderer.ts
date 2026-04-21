@@ -45,7 +45,9 @@ export const connectorCanvasRenderer = (
       ctx.moveTo(node.x1, node.y1)
       ctx.lineTo(node.x2, node.y2)
 
-      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#999"
+      ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke)
+        || (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
+        || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
       ctx.lineWidth = node.style.strokeWidth || 1
       ctx.globalAlpha = node.style.opacity ?? 0.5
       ctx.stroke()

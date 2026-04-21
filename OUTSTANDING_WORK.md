@@ -473,27 +473,27 @@ Drives value off the semantic roles + sequential/diverging scales for the obviou
 
 **Behavior change for existing consumers:** LikertChart without an explicit `colorScheme` prop now renders in the active theme's diverging scheme (LIGHT_THEME/DARK_THEME both declare `"RdBu"`). Prior behavior used a Carbon-inspired hardcoded palette regardless of theme. LikertChart tests updated to call `defaultDivergingScheme(n, "RdBu")` to match the new path.
 
-#### Milestone 4 — Dead-prop sweep finish [PARTIAL — XY leftovers landed]
+#### Milestone 4 — Dead-prop sweep finish [LANDED]
 
-XY-side scene builder + store fallbacks landed. Renderer-level fallbacks deliberately deferred — see note at the end.
-
-**Landed:**
+**XY-side scene builder + store fallbacks (original M4 scope):**
 
 - `xySceneBuilders/pointScene.ts` — default point fill now `ctx.config.themeSemantic?.primary || "#4e79a7"`. Resolved once per scene build, not per-datum. Unit coverage in `pointScene.test.ts`.
 - `xySceneBuilders/swarmScene.ts` — same pattern. Unit coverage in `swarmScene.test.ts`.
 - `PipelineStore.resolveLineStyle` — three `#007bff` fallbacks and the `#4e79a7` bounds-fill fallback all consult `this.config.themeSemantic?.primary` first. The pattern: `user > resolveGroupColor() > themeSemantic.primary > hardcoded`.
 - `StreamXYFrame.tsx` crosshair + hover-point + line-highlight — `ThemeColors` interface gained a `primary: string` field (populated from `--semiotic-primary` in `resolveThemeColors`). The three `#007bff` hex fallbacks at lines 266/279/321 are now `theme.primary`. Inline `getComputedStyle(…).getPropertyValue("--semiotic-primary")` call removed — it duplicated the theme resolver that already runs upstream.
 
-**Still pending (renderer-level fallbacks, deferred):**
+**Renderer-level fallback sweep (deferred follow-up, landed 2026-04-20):**
 
-- `renderers/barCanvasRenderer.ts:24,72` — `#007bff` fallback when `node.style.fill` is missing.
-- `renderers/boxplotCanvasRenderer.ts` — `#333` / `#007bff` fallbacks.
-- `renderers/heatmapCanvasRenderer.ts:40,74` — `#000` / `#fff` text-contrast + cell-stroke (semantic — pairs with `themeSemantic.text` / `.surface` but the contrast calculation is data-dependent).
-- `renderers/connectorCanvasRenderer.ts:48` — `#999` default.
-- `renderers/networkParticleRenderer.ts:31` — `#666` particle color fallback.
-- `renderers/barFunnelCanvasRenderer.ts:51,166,170,175` — `#999` + `#333` / `#666` shadow colors.
+Rather than threading resolved theme defaults through every renderer's argument list, the sweep uses `resolveCSSColor(ctx, "var(--semiotic-role, #hex)")` — the existing `resolveCSSColor` helper already handles inline var() fallbacks via its regex's second capture group, so the renderer reads `--semiotic-*` from the canvas's computed style and falls back to the hardcoded hex when the var isn't set. No API change, no extra plumbing.
 
-These are all renderer-level `||` fallbacks that only fire when the upstream scene builder didn't set the style field. Post-milestones 1–3, scene builders DO set style from theme, so these fallbacks are effectively unreachable in practice. Fixing them requires threading resolved theme defaults through the renderer's argument list — worth doing as defensive cleanup but not a functional blocker. Treat as a follow-up PR.
+- `renderers/barCanvasRenderer.ts:24,74` — `#007bff` → `var(--semiotic-primary, #007bff)`.
+- `renderers/boxplotCanvasRenderer.ts` — `#007bff` / `#333` fallbacks → `var(--semiotic-primary)` / `var(--semiotic-text)` with inline hex fallbacks.
+- `renderers/heatmapCanvasRenderer.ts:74` — cell border `#fff` → `var(--semiotic-surface, #fff)`. The `#000` / `#fff` pair at line 40 (`contrastTextColor`) stays hardcoded — contrast is driven by cell luminance, not theme.
+- `renderers/connectorCanvasRenderer.ts:48` — `#999` → `var(--semiotic-border, #999)`.
+- `renderers/networkParticleRenderer.ts:31` — `#666` → `var(--semiotic-secondary, #666)`.
+- `renderers/barFunnelCanvasRenderer.ts:51,166,170,175` — hatch base `#999` → `var(--semiotic-border, #999)`; label text pair `#333`/`#666` → `var(--semiotic-text, #333)` / `var(--semiotic-text-secondary, #666)`, resolved once per frame and hoisted above the label loop.
+
+Test note: existing unit tests (e.g. `heatmapCanvasRenderer.test.ts`'s `"#fff"` cell-border assertion) remain green — in the jsdom test environment the canvas has no root with `--semiotic-*` set, so the inline var() fallback path produces the old hex literals. Assertion names updated to document the themed-fallback semantics.
 
 ### Phase B — Designer-facing API (visible, additive)
 

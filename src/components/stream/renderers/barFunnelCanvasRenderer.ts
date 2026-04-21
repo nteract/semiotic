@@ -1,5 +1,6 @@
 import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { createHatchPattern } from "../../charts/shared/hatchPattern"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
@@ -48,7 +49,8 @@ export const barFunnelHatchRenderer = (
 
   for (const node of dropoffRects) {
     const baseColor =
-      typeof node.style.fill === "string" ? node.style.fill : "#999"
+      (typeof node.style.fill === "string" ? node.style.fill : null)
+      || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
     const hatch = getHatchForColor(baseColor, ctx)
 
     ctx.globalAlpha = node.style.opacity ?? 1
@@ -102,6 +104,10 @@ export const barFunnelLabelRenderer = (
 
   // Minimum bar width (px) before label is suppressed entirely
   const MIN_LABEL_BAR_WIDTH = 25
+
+  // Resolve once per frame — theme text colors for label primary/secondary text.
+  const primaryTextColor = resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
+  const secondaryTextColor = resolveCSSColor(ctx, "var(--semiotic-text-secondary, #666)")!
 
   for (const node of labelRects) {
     const d = node.datum
@@ -163,16 +169,16 @@ export const barFunnelLabelRenderer = (
     if (showPct) {
       // Two-line label: bold percentage + value
       ctx.font = `bold ${pctFontSize}px sans-serif`
-      ctx.fillStyle = "#333"
+      ctx.fillStyle = primaryTextColor
       ctx.fillText(pctStr, lx, boxY + padV)
 
       ctx.font = `${valFontSize}px sans-serif`
-      ctx.fillStyle = "#666"
+      ctx.fillStyle = secondaryTextColor
       ctx.fillText(valStr, lx, boxY + padV + pctFontSize + lineGap)
     } else {
       // Single-line label: just value
       ctx.font = `bold ${valFontSize}px sans-serif`
-      ctx.fillStyle = "#333"
+      ctx.fillStyle = primaryTextColor
       ctx.fillText(valStr, lx, boxY + padV)
     }
   }
