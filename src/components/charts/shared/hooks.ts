@@ -10,7 +10,7 @@ import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlo
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
-import type { MarginType } from "../../types/marginType"
+import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
@@ -431,12 +431,12 @@ export function useChartLegendAndMargin({
   colorScale: ((v: string) => string) | undefined
   showLegend: boolean | undefined
   legendPosition?: LegendPosition
-  userMargin: MarginType | undefined
-  defaults?: { top: number; bottom: number; left: number; right: number }
+  userMargin: PartialMargin | undefined
+  defaults?: MarginType
   categories?: string[]
 }): {
   legend: ReturnType<typeof createLegend> | undefined
-  margin: { top: number; bottom: number; left: number; right: number }
+  margin: MarginType
   legendPosition: LegendPosition
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
@@ -450,8 +450,11 @@ export function useChartLegendAndMargin({
     return createLegend({ data, colorBy, colorScale, getColor, categories })
   }, [shouldShowLegend, colorBy, data, colorScale, categories])
 
-  const margin = useMemo(() => {
-    const finalMargin = { ...defaults, ...userMargin }
+  const margin = useMemo<MarginType>(() => {
+    const userSides: Partial<MarginType> = typeof userMargin === "number"
+      ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
+      : (userMargin ?? {})
+    const finalMargin: MarginType = { ...defaults, ...userSides }
     if (legend) {
       if (legendPosition === "right" && finalMargin.right < 110) finalMargin.right = 110
       else if (legendPosition === "left" && finalMargin.left < 110) finalMargin.left = 110

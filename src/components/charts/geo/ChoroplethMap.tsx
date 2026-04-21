@@ -225,7 +225,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
 
   const margin = useMemo(() => ({
     top: 10, right: 10, bottom: 10, left: 10,
-    ...userMargin
+    ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin)
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───

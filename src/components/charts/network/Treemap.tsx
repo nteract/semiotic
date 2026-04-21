@@ -202,7 +202,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     : (showLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
 
   // Margin
-  const margin = { ...resolved.marginDefaults, ...userMargin }
+  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   // Validate
   const error = validateObjectData({ componentName: "Treemap", data })

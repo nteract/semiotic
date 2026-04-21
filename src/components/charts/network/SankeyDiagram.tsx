@@ -225,7 +225,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Margin
-  const margin = { ...resolved.marginDefaults, ...userMargin }
+  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   const { customHoverBehavior, customClickBehavior } = useChartSelection({
     selection,

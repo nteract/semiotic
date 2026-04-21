@@ -159,27 +159,28 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // d3-force's simulation.nodes() modifies positions during setup, so
     // we must avoid calling it when positions are pre-set.
     if (iterations > 0) {
-      // Configure link force
-      const linkForce = forceLink()
-        .strength((d: Datum) =>
-          Math.min(2.5, d.weight ? d.weight * forceStrength : forceStrength)
-        )
-        .id((d: Datum) => d.id)
+      // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
+      // d3-force's internal typing knows the shape of source/target.
+      const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
+        .strength(Math.min(2.5, forceStrength))
+        .id((d) => d.id)
 
-      // Build simulation
-      const simulation = forceSimulation()
+      // Build simulation — parameterizing forceSimulation + forceManyBody with
+      // RealtimeNode lets d3-force thread the node type through charge callbacks
+      // without per-call casts.
+      const simulation = forceSimulation<RealtimeNode>()
         .force(
           "charge",
-          forceManyBody().strength((d) => -25 * nodeRadius(d as RealtimeNode))
+          forceManyBody<RealtimeNode>().strength((d) => -25 * nodeRadius(d))
         )
         // forceCenter shifts the center of mass to the target on every tick,
         // ensuring the graph as a whole stays centered in the chart area
         .force("center", forceCenter(cx, cy).strength(0.8))
         // forceX/forceY pull individual nodes toward center, preventing outliers
-        .force("x", forceX(cx).strength(0.15))
-        .force("y", forceY(cy).strength(0.15))
+        .force("x", forceX<RealtimeNode>(cx).strength(0.15))
+        .force("y", forceY<RealtimeNode>(cy).strength(0.15))
 
-      simulation.nodes(nodes as any)
+      simulation.nodes(nodes)
 
       if (edges.length > 0) {
         // Resolve edge source/target to id strings for d3-force linking

@@ -1,5 +1,13 @@
 import { vi } from "vitest"
-import type { Datum } from "../components/charts/shared/datumTypes"
+
+/**
+ * Mock 2D canvas rendering context — structurally a `Partial<CanvasRenderingContext2D>`
+ * with method spies, plus a few extra stub fields. Typed as a loose stringy
+ * bag because vitest's `vi.fn()` return type doesn't line up with
+ * `CanvasRenderingContext2D`'s method signatures and tests inspect the spies
+ * directly via `ctx.fillRect.mock.calls` etc.
+ */
+export type CanvasContextMock = Record<string, unknown>
 
 /**
  * Creates a mock 2D canvas rendering context with all commonly used
@@ -8,7 +16,7 @@ import type { Datum } from "../components/charts/shared/datumTypes"
  * This is the single canonical canvas mock for the entire test suite.
  * Import from "../../test-utils/canvasMock" (or appropriate relative path).
  */
-export function createMockCanvasContext(): Datum {
+export function createMockCanvasContext(): CanvasContextMock {
   return {
     // Drawing methods
     beginPath: vi.fn(),
@@ -94,7 +102,7 @@ export interface CanvasOpLog {
   strokeLineWidths: number[]
 }
 
-export function recordCanvasOps(ctx: Datum): CanvasOpLog {
+export function recordCanvasOps(ctx: CanvasContextMock): CanvasOpLog {
   const log: CanvasOpLog = {
     fillStyles: [],
     strokeStyles: [],

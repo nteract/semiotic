@@ -1,5 +1,5 @@
 import type React from "react"
-import type { MarginType } from "../../types/marginType"
+import type { PartialMargin } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 import type { Datum } from "./datumTypes"
@@ -54,8 +54,10 @@ export interface BaseChartProps {
   width?: number
   /** Chart height in pixels. Default: 400 */
   height?: number
-  /** Margin around the chart. Can be number (same on all sides) or object specifying each side */
-  margin?: MarginType
+  /** Margin around the chart. Accepts a number (same on all sides) or an object
+   *  with any subset of `top`/`bottom`/`left`/`right`. Missing sides fall back
+   *  to the chart-mode defaults. */
+  margin?: PartialMargin
   /** Auto-match width to parent container. Default: false */
   responsiveWidth?: boolean
   /** Auto-match height to parent container (requires parent with explicit height). Default: false */

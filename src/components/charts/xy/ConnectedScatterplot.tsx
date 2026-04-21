@@ -332,7 +332,12 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Margin ────────────────────────────────────────────────────────────
 
-  const margin = { top: 50, right: 40, bottom: 60, left: 70, ...props.margin }
+  const margin = {
+    top: 50, right: 40, bottom: 60, left: 70,
+    ...(typeof props.margin === "number"
+      ? { top: props.margin, bottom: props.margin, left: props.margin, right: props.margin }
+      : props.margin),
+  }
 
   // ── Tooltip ───────────────────────────────────────────────────────────
 

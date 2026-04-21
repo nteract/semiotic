@@ -213,7 +213,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
   }, [])
 
   // Margin
-  const margin = { top: 10, right: 10, bottom: 10, left: 10, ...userMargin }
+  const margin = { top: 10, right: 10, bottom: 10, left: 10, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
 
   // Selection
   const { customHoverBehavior, customClickBehavior } = useChartSelection({
