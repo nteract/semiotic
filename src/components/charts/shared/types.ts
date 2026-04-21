@@ -1,5 +1,5 @@
 import type React from "react"
-import type { MarginType } from "../../types/generalTypes"
+import type { MarginType } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 

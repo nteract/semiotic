@@ -1,6 +1,37 @@
 import * as React from "react"
 
-import { AnnotationProps } from "./types/annotationTypes"
+/** Props for the single-annotation renderer. Consumed only by `SemioticAnnotation`
+ *  below; the broader annotation API flows through the frame-level `annotations`
+ *  array and its `svgAnnotationRules` hook. */
+export interface AnnotationProps {
+  noteData: {
+    eventListeners?: Record<string, (e: React.SyntheticEvent) => void>
+    events?: Record<string, (e: React.SyntheticEvent) => void>
+    type: string
+    screenCoordinates?: number[][]
+    /** When truthy, `screenCoordinates` is read as a sequence of anchor points
+     *  and one annotation renders per coordinate with `nx`/`ny` shared. */
+    coordinates?: boolean
+    noteHeight?: number | ((d: Record<string, unknown>) => number)
+    noteWidth?: number | ((d: Record<string, unknown>) => number)
+    x: number | number[]
+    y: number | number[]
+    nx?: number
+    ny?: number
+    dx?: number
+    dy?: number
+    note: { label?: string; title?: string; wrap?: number; orientation?: string; align?: string; noWrap?: boolean }
+    i?: number
+    fixedPosition?: boolean
+    label?: string
+    connector?: { end?: "arrow" }
+    subject?: Record<string, unknown>
+    color?: string
+    className?: string
+    disable?: string[]
+    [key: string]: unknown
+  }
+}
 
 function wrapText(
   text: string,

@@ -10,7 +10,7 @@ import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlo
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
-import type { MarginType } from "../../types/generalTypes"
+import type { MarginType } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
 

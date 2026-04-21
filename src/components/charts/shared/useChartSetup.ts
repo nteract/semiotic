@@ -22,7 +22,7 @@ import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInt
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import type { MarginType } from "../../types/generalTypes"
+import type { MarginType } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
