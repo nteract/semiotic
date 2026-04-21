@@ -195,75 +195,6 @@ Curated categorical sequences maximizing neighbor contrast, and per-role typogra
 
 ---
 
-## Primitive Theming & Semantic Colors [PLANNED — 3.5.0]
-
-Designer-facing theming cleanup. Outcome: one vocabulary across the library for `stroke` / `strokeWidth` / `fill` / `opacity` on any shape; theme-layer semantic colors that cascade via CSS custom properties; dead props honored.
-
-Motivating example: `RealtimeHistogram` declares `stroke` / `strokeWidth` props but `barStyle` is destructured in `StreamXYFrame` and dropped before reaching the scene builder. `StackedBarChart` supports theme-aware stroke only via `frameProps.pieceStyle` — a power-user escape hatch that shouldn't be designer-visible.
-
-### Theme layer — four color dimensions
-
-All owned by the theme, all overridable per-scope, all with light/dark variants:
-
-1. **Semantic roles** (scalars): `primary`, `secondary`, `success`, `danger`, `warning`, `error`, `info`, `text`, `textSecondary`, `border`, `grid`, `surface`. Default fills/strokes, status-driven charts (swimlane, waterfall), annotations.
-2. **Categorical scale** (array): existing `themeCategorical`. Distinct-category encodings.
-3. **Sequential scale** (array, magnitude): heatmap, choropleth, size encoding.
-4. **Diverging scale** (array, midpoint): likert, bivariate, ±deviation.
-
-### Override model
-
-- **Scalar roles via CSS custom properties.** `ThemeProvider` emits `--semiotic-success: #...` etc. at its mount root. Canvas scene builders read the resolved values via `getComputedStyle(frameEl)` once per theme change. Scoped override is CSS-native: `<div style={{ "--semiotic-danger": "#c00" }}>...charts...</div>` cascades through the React tree; canvas respects it via DOM-cascade read.
-- **Array scales via nested `ThemeProvider`.** CSS custom properties don't ergonomically carry arrays. A nested provider with a partial theme merges on top of the ambient one. Scoped by React subtree.
-
-### Semantic role vocabulary
-
-| Role | Default use |
-|---|---|
-| `primary`, `secondary` | Default fill/stroke when no color encoding |
-| `success`, `danger`, `warning`, `error`, `info` | Status-driven semantics — swimlane states, waterfall ±, annotation severity |
-| `text`, `textSecondary` | Labels, tick text, axis titles |
-| `border`, `grid`, `surface` | Chart chrome — bar outlines, grid lines, background fills |
-
-### Phase A — Foundations (invisible to users)
-
-Pure additive plumbing. One PR.
-
-1. `themeSemantic` + `themeSequential` + `themeDiverging` added to pipelineConfig; threaded ThemeProvider → StreamFrame → PipelineStore → scene context, parallel to the existing `themeCategorical`.
-2. Scene builders read roles from `ctx.config.themeSemantic.primary` (etc.) instead of hardcoded hex. Hardcoded literals remain as ultimate fallback when no theme is present.
-3. Fix `barStyle` end-to-end routing — land it in pipelineConfig, consume in `barScene.ts`. `RealtimeHistogram`'s declared `stroke` / `strokeWidth` / `fill` props start working.
-4. Audit every `*Style` prop across all 4 Stream Frames. Any dropped prop is either routed (preferred) or removed from the public type (breaking — defer to 4.0 if any are affected).
-5. Waterfall `positiveColor` / `negativeColor` default to `themeSemantic.success` / `.danger`.
-6. Heatmap / Choropleth default `colorScheme` falls back to `themeSequential` when unset. Likert falls back to `themeDiverging`.
-7. Regression test: for every HOC-declared `*Style` prop, assert presence in the memoized pipelineConfig. Prevents the next drop.
-
-### Phase B — Designer-facing API (visible, additive)
-
-Ships per chart-type group (XY, Ordinal, Network, Geo). No breakage.
-
-1. `stroke`, `strokeWidth`, `opacity` added to `BaseChartProps` (joining the existing `color`).
-2. Every shape-drawing HOC merges these into its internal `*Style` function via a shared `mergeShapeStyle(userFn, topLevel)` helper.
-3. **Decided:** top-level prop wins over `*Style` function return for matching keys. Explicit > generic. Single helper prevents drift across HOCs.
-4. Docs: per-primitive (bar / circle / line / area / rect) with light/dark + scoped-div-override examples.
-5. Playwright: one snapshot per primitive × light/dark × with/without scoped override.
-
-### Phase C — Consolidation (contingent)
-
-Evaluate once Phase B is stable. Hypothesis: a shared `resolveShapeStyle(config, datum, primitive)` used by bar / point / line / area / rect scene builders reduces per-primitive variance enough to justify migration. Defer until Phase B makes the shared logic visible.
-
-### Non-goals
-
-- Renaming `pieceStyle` / `pointStyle` / `nodeStyle` to a single name. Top-level primitive props cover the designer case; existing function-form names remain for power users.
-- Replacing `colorBy` / `colorScheme` machinery.
-- Touching hover / focus / selected visual states. Related but separable.
-
-### Risks
-
-- **Canvas cascade timing.** `getComputedStyle` on the frame element resolves `--semiotic-*` from ancestors but requires the DOM node to exist. First paint may fall back to preset defaults, then re-resolve on next render. Verify no visible flash.
-- **SSR role resolution.** Server renderer has no DOM to query. Falls back to theme-object JS values directly — already how `themeCategorical` works, same pattern applies.
-- **Precedence drift.** "Top-level wins over function" is simple in principle but easy to break per-HOC. Single `mergeShapeStyle` helper applied everywhere, one decision point.
-
----
-
 ## Push API
 
 ### Undo
@@ -457,7 +388,8 @@ Plan:
 - Expand HOC-level Playwright snapshots (Architecture → Visual regression → HOC-level snapshots). ~25 new baselines catches HOC-layer prop-resolution regressions — the most common source of visual bugs.
 - Shift `validateProps`-adjacent tests from "prop accepted" to "prop produces expected rendered output on fixture."
 
-=======
+---
+
 ## Primitive Theming & Semantic Colors [PLANNED — 3.5.0]
 
 Designer-facing theming cleanup. Outcome: one vocabulary across the library for `stroke` / `strokeWidth` / `fill` / `opacity` on any shape; theme-layer semantic colors that cascade via CSS custom properties; dead props honored.
