@@ -1,4 +1,3 @@
-import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Waterfall chart scene builder.
  *
@@ -8,7 +7,8 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Dependencies: SceneGraph (buildRectNode)
  * Consumed by: PipelineStore.buildSceneNodes (chartType "waterfall")
  */
-import type { SceneNode, StreamLayout } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
+import type { SceneNode, StreamLayout, Style } from "../types"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
@@ -65,7 +65,7 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: 
     const rectH = Math.abs(yBaseline - yTop)
 
     const fill = delta >= 0 ? positiveColor : negativeColor
-    const rectStyle: Datum = { fill, stroke: barStroke, strokeWidth: barStrokeWidth }
+    const rectStyle: Style = { fill, stroke: barStroke, strokeWidth: barStrokeWidth }
     if (barOpacity != null) rectStyle.opacity = barOpacity
     nodes.push(buildRectNode(
       x0, rectY, barWidth, rectH,

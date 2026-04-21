@@ -161,8 +161,14 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     if (iterations > 0) {
       // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
       // d3-force's internal typing knows the shape of source/target.
+      // `weight` isn't in the RealtimeEdge interface but duck-typed input may
+      // set it; widen the callback's parameter to read the optional field
+      // without losing the generic signatures everywhere else.
       const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
-        .strength(Math.min(2.5, forceStrength))
+        .strength((d) => {
+          const weight = (d as RealtimeEdge & { weight?: number }).weight
+          return Math.min(2.5, weight ? weight * forceStrength : forceStrength)
+        })
         .id((d) => d.id)
 
       // Build simulation — parameterizing forceSimulation + forceManyBody with

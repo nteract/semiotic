@@ -16,6 +16,7 @@ import type {
   RealtimeNode,
   RealtimeEdge
 } from "../networkTypes"
+import type { Style } from "../types"
 import { resolveChildrenAccessor, resolveNodeId } from "./hierarchyUtils"
 import {
   buildTreeScene,
@@ -167,8 +168,8 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
     labels: NetworkLabel[]
   } {
     const layoutType = config.chartType as HierarchyLayoutType
-    const nodeStyleFn = config.nodeStyle || ((): Datum => ({}))
-    const edgeStyleFn = config.edgeStyle || ((): Datum => ({}))
+    const nodeStyleFn = config.nodeStyle || ((): Style => ({}))
+    const edgeStyleFn = config.edgeStyle || ((): Style => ({}))
 
     switch (layoutType) {
       case "tree":

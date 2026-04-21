@@ -23,12 +23,12 @@ import type {
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
-const sankeyOrientHash: Datum = {
+const sankeyOrientHash = {
   left: sankeyLeft,
   right: sankeyRight,
   center: sankeyCenter,
-  justify: sankeyJustify
-}
+  justify: sankeyJustify,
+} as const
 
 /**
  * Sankey layout plugin — uses d3-sankey-circular for layout computation.

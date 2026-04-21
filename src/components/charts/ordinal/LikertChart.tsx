@@ -365,7 +365,10 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
       return "LikertChart: pre-aggregated mode requires both `levelAccessor` and `countAccessor`."
     }
     if (data !== undefined && data.length === 0) return null
-    const accessors: Datum = { categoryAccessor }
+    // Matches `accessors` parameter shape on validateArrayData — any here is the
+    // same alias the validator uses (string | function-with-unknown-signature).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mirrors validateArrayData's AccessorLike
+    const accessors: Record<string, string | ((...args: any[]) => any) | undefined> = { categoryAccessor }
     if (isRawMode) {
       if (valueAccessor) accessors.valueAccessor = valueAccessor
     } else {

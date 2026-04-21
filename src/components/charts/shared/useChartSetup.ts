@@ -223,7 +223,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   // ── Legend behavior props (to spread into frame) ───────────────────────
   const legendBehaviorProps = useMemo(() => {
-    const props: Datum = {}
+    const props: Record<string, unknown> = {}
     if (legend) {
       props.legend = legend
       props.legendPosition = legendPosition
