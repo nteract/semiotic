@@ -256,7 +256,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       oExtent,
       extentPadding = 0.05,
       oSort,
-      arrowOfTime: _arrowOfTime,
       windowMode = "sliding",
       windowSize = 200,
       pieceStyle,

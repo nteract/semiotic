@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear, ScaleBand } from "d3-scale"
 import type {
-  ArrowOfTime,
   WindowMode,
   HoverAnnotationConfig,
   HoverData,
@@ -361,7 +360,6 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc" | "auto"
 
   // Streaming
-  arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
 
@@ -505,4 +503,5 @@ export type OrdinalRendererFn = (
 ) => void
 
 // Re-export shared types
-export type { HoverData, HoverAnnotationConfig, AnnotationContext, ArrowOfTime, WindowMode }
+export type { HoverData, HoverAnnotationConfig, AnnotationContext, WindowMode }
+export type { ArrowOfTime } from "../realtime/types"
