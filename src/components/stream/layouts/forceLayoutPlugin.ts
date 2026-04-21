@@ -22,6 +22,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /**
  * Force-directed layout plugin — uses d3-force for physics-based node positioning.
@@ -152,7 +153,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       config.nodeSizeRange,
       nodes
     )
-    const nodeRadius = (d: any) => nodeSizeFn(d)
+    const nodeRadius = (d: RealtimeNode) => nodeSizeFn(d)
 
     // Skip simulation entirely when iterations=0 (pinned layout mode).
     // d3-force's simulation.nodes() modifies positions during setup, so
@@ -160,16 +161,16 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     if (iterations > 0) {
       // Configure link force
       const linkForce = forceLink()
-        .strength((d: any) =>
+        .strength((d: Datum) =>
           Math.min(2.5, d.weight ? d.weight * forceStrength : forceStrength)
         )
-        .id((d: any) => d.id)
+        .id((d: Datum) => d.id)
 
       // Build simulation
       const simulation = forceSimulation()
         .force(
           "charge",
-          forceManyBody().strength((d: any) => -25 * nodeRadius(d))
+          forceManyBody().strength((d) => -25 * nodeRadius(d as RealtimeNode))
         )
         // forceCenter shifts the center of mass to the target on every tick,
         // ensuring the graph as a whole stays centered in the chart area
@@ -407,11 +408,11 @@ function simpleHash(str: string): number {
 }
 
 function resolveLabelFn(
-  nodeLabel: string | ((d: any) => string) | undefined
-): ((d: any) => string) | null {
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
   if (typeof nodeLabel === "function") return nodeLabel
-  return (d: any) => d[nodeLabel] || d.id
+  return (d: Datum) => d[nodeLabel] || d.id
 }
 
 /**
@@ -421,7 +422,7 @@ function resolveLabelFn(
  * Falls back to a default radius of 8.
  */
 function resolveNodeSizeFn(
-  nodeSize: number | string | ((d: any) => number) | undefined,
+  nodeSize: number | string | ((d: Datum) => number) | undefined,
   nodeSizeRange: [number, number] | undefined,
   allNodes: RealtimeNode[]
 ): (node: RealtimeNode) => number {

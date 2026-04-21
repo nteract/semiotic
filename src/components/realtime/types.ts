@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
+import type { Datum } from "../charts/shared/datumTypes"
 
 export type ArrowOfTime = "up" | "down" | "left" | "right"
 export type WindowMode = "sliding" | "growing"
@@ -38,7 +39,7 @@ export interface AnnotationContext {
   yAccessor?: string
   width?: number
   height?: number
-  data?: Record<string, any>[]
+  data?: Datum[]
   frameType?: "xy" | "ordinal" | "network"
   /** Ordinal projection direction (only in ordinal frames) */
   projection?: "vertical" | "horizontal"
@@ -101,7 +102,7 @@ export interface HoverData {
 
   // ── Geo-specific ─────────────────────────────────────────────────────
   /** GeoJSON feature properties (flattened for convenience) */
-  properties?: Record<string, any>
+  properties?: Datum
 }
 
 export interface BarStyle {
@@ -136,9 +137,9 @@ export interface RealtimeFrameProps {
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
-  data?: Record<string, any>[]
-  timeAccessor?: string | ((d: Record<string, any>) => number)
-  valueAccessor?: string | ((d: Record<string, any>) => number)
+  data?: Datum[]
+  timeAccessor?: string | ((d: Datum) => number)
+  valueAccessor?: string | ((d: Datum) => number)
   timeExtent?: [number, number]
   valueExtent?: [number, number]
   extentPadding?: number
@@ -146,14 +147,14 @@ export interface RealtimeFrameProps {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   lineStyle?: LineStyle
-  annotations?: Record<string, any>[]
-  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
+  annotations?: Datum[]
+  svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   customHoverBehavior?: (d: HoverData | null) => void
   showAxes?: boolean
   background?: string
-  categoryAccessor?: string | ((d: Record<string, any>) => string)
+  categoryAccessor?: string | ((d: Datum) => string)
   binSize?: number
   barColors?: Record<string, string>
   barStyle?: BarStyle
@@ -164,14 +165,14 @@ export interface RealtimeFrameProps {
 }
 
 export interface RealtimeFrameHandle {
-  push(point: Record<string, any>): void
-  pushMany(points: Record<string, any>[]): void
+  push(point: Datum): void
+  pushMany(points: Datum[]): void
   /** Remove data by ID. Requires an ID accessor (pointIdAccessor or dataIdAccessor). */
-  remove(id: string | string[]): Record<string, any>[]
+  remove(id: string | string[]): Datum[]
   /** Update data by ID in place. Requires an ID accessor. Returns previous values. */
-  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[]
+  update(id: string | string[], updater: (d: Datum) => Datum): Datum[]
   clear(): void
-  getData(): Record<string, any>[]
+  getData(): Datum[]
   /** Returns the frame's resolved scales, or null if unavailable.
    *
    *  The concrete scales object differs by frame type — XY charts
@@ -198,7 +199,7 @@ export interface RealtimeLayout {
 }
 
 export interface RealtimeAccessors {
-  time: (d: Record<string, any>) => number
-  value: (d: Record<string, any>) => number
-  category?: (d: Record<string, any>) => string
+  time: (d: Datum) => number
+  value: (d: Datum) => number
+  category?: (d: Datum) => string
 }

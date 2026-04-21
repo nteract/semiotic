@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Heatmap scene builders — static grid and streaming aggregation variants.
  *
@@ -60,7 +61,7 @@ function getColorLut(schemeName: string): string[] {
   return lut
 }
 
-export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
+export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): SceneNode[] {
   // Streaming heatmap: 2D grid binning with aggregation
   if (ctx.config.heatmapAggregation) {
     return buildStreamingHeatmapScene(ctx, data, layout)
@@ -190,7 +191,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Record<string, any>
   return nodes
 }
 
-function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
+function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): SceneNode[] {
   const xBins = Math.max(1, Math.floor(ctx.config.heatmapXBins ?? 20))
   const yBins = Math.max(1, Math.floor(ctx.config.heatmapYBins ?? 20))
   const agg = ctx.config.heatmapAggregation ?? "count"

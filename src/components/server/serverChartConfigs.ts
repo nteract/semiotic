@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Chart-specific prop mapping for renderChart().
  *
@@ -15,7 +16,7 @@ type FrameType = "xy" | "ordinal" | "network" | "geo"
 interface ChartConfig {
   frameType: FrameType
   /** Build frame props from HOC-level props */
-  buildProps: (data: any, colorBy: any, colorScheme: any, common: Record<string, any>, rest: Record<string, any>) => Record<string, any>
+  buildProps: (data: any, colorBy: any, colorScheme: any, common: Datum, rest: Datum) => Datum
 }
 
 // ── XY Charts ──────────────────────────────────────────────────────────
@@ -553,9 +554,9 @@ const flowMap: ChartConfig = {
     // the explicit `rest.flows` escape hatch. `data` wins when both are
     // present so callers using the standard renderChart(_, { data }) shape
     // behave consistently with the rest of the registry.
-    const flows: Array<Record<string, any>> =
+    const flows: Array<Datum> =
       (Array.isArray(data) ? data : null) || rest.flows || []
-    const nodes: Array<Record<string, any>> = rest.nodes || []
+    const nodes: Array<Datum> = rest.nodes || []
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
     const valueAccessor = rest.valueAccessor || "value"
     const xAccessorIn = rest.xAccessor || "lon"
@@ -569,11 +570,11 @@ const flowMap: ChartConfig = {
     // That avoids the function-as-computed-key bug (where the key became
     // the stringified function source) and keeps line + point
     // accessor-resolution consistent.
-    const xAcc = typeof xAccessorIn === "function" ? xAccessorIn : (d: any) => d[xAccessorIn]
-    const yAcc = typeof yAccessorIn === "function" ? yAccessorIn : (d: any) => d[yAccessorIn]
+    const xAcc = typeof xAccessorIn === "function" ? xAccessorIn : (d: Datum) => d[xAccessorIn]
+    const yAcc = typeof yAccessorIn === "function" ? yAccessorIn : (d: Datum) => d[yAccessorIn]
 
-    const projectedNodes: Array<Record<string, any>> = nodes.map(n => ({ ...n, x: xAcc(n), y: yAcc(n) }))
-    const nodeLookup = new Map<string, Record<string, any>>()
+    const projectedNodes: Array<Datum> = nodes.map(n => ({ ...n, x: xAcc(n), y: yAcc(n) }))
+    const nodeLookup = new Map<string, Datum>()
     for (const node of projectedNodes) nodeLookup.set(String(node[nodeIdAccessor]), node)
 
     // Edge-color resolution — mirror the FlowMap HOC API. `edgeColorBy`
@@ -602,7 +603,7 @@ const flowMap: ChartConfig = {
           ],
         }
       })
-      .filter(Boolean) as Record<string, any>[]
+      .filter(Boolean) as Datum[]
 
     // Build an ordinal scale once so every line reuses the same category →
     // color mapping. For function accessors we synthesize a scratch field
@@ -616,15 +617,15 @@ const flowMap: ChartConfig = {
       if (!edgeColorByIn) return null
       if (isFnEdgeColor) {
         const domainSeed = lines.map(l => ({
-          [EDGE_COLOR_FIELD]: (edgeColorByIn as (d: any) => string)(l),
+          [EDGE_COLOR_FIELD]: (edgeColorByIn as (d: Datum) => string)(l),
         }))
         return createColorScale(domainSeed, EDGE_COLOR_FIELD, colorScheme || "category10")
       }
       return createColorScale(lines, edgeColorByIn as string, colorScheme || "category10")
     })()
-    const resolveEdgeColor = (d: any): string => {
+    const resolveEdgeColor = (d: Datum): string => {
       if (!edgeColorByIn || !colorScale) return FLOW_DEFAULT_COLOR
-      return getColor(d, edgeColorByIn as string | ((d: any) => string), colorScale)
+      return getColor(d, edgeColorByIn as string | ((d: Datum) => string), colorScale)
     }
 
     // Precompute min/max value range once per build. Recomputing inside
@@ -659,7 +660,7 @@ const flowMap: ChartConfig = {
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
       colorScheme,
-      lineStyle: (d: any) => {
+      lineStyle: (d: Datum) => {
         // Guard against non-finite values (NaN from strings, Infinity, etc.)
         // — they'd otherwise propagate through `normalized` and produce an
         // invalid `stroke-width="NaN"` in the output SVG. Non-finite inputs

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { mergeShapeStyle, hasPrimitiveOverrides } from "./mergeShapeStyle"
+import type { Datum } from "./datumTypes"
 
 describe("hasPrimitiveOverrides", () => {
   it("returns false for empty overrides", () => {
@@ -85,7 +86,7 @@ describe("mergeShapeStyle", () => {
   })
 
   it("tolerates styleFn returning null/undefined", () => {
-    const styleFn = (() => null) as unknown as () => Record<string, any>
+    const styleFn = (() => null) as unknown as () => Datum
     const out = mergeShapeStyle(styleFn, { stroke: "black" })
     expect(out()).toEqual({ stroke: "black" })
   })
@@ -93,9 +94,9 @@ describe("mergeShapeStyle", () => {
   it("doesn't share the patch object across calls (avoids mutation leaks)", () => {
     const styleFn = () => ({ fill: "red" })
     const out = mergeShapeStyle(styleFn, { stroke: "black" })
-    const first = out() as Record<string, any>
+    const first = out() as Datum
     first.stroke = "MUTATED"
-    const second = out() as Record<string, any>
+    const second = out() as Datum
     expect(second.stroke).toBe("black")
   })
 })

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -22,7 +23,7 @@ import { useBrushSelection } from "../../store/useSelection"
 /**
  * BubbleChart component props
  */
-export interface BubbleChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points. Each point should have x, y, and size properties.
    * @example
@@ -141,7 +142,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
   /**
    * Annotation objects to render on the chart
    */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   /**
    * Additional StreamXYFrame props for advanced customization
@@ -212,7 +213,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart
  */
-export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -286,7 +287,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const streamingSizeDomainRef = useRef<[number, number] | null>(null)
   const [sizeDomainVersion, setSizeDomainVersion] = useState(0)
 
-  const updateSizeDomain = useCallback((items: Record<string, any>[]) => {
+  const updateSizeDomain = useCallback((items: Datum[]) => {
     if (!isPushMode) return
     let changed = false
     for (const d of items) {
@@ -312,7 +313,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   })
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => {
+    streaming.wrapPush((d: Datum) => {
       updateSizeDomain([d])
       frameRef.current?.push(d)
     }),
@@ -373,7 +374,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
+    for (const d of safeData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -407,7 +408,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   // Point style function
   const basePointStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {
         fillOpacity: bubbleOpacity,
         strokeWidth: bubbleStrokeWidth,
@@ -541,7 +542,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Record
 
   return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 BubbleChart.displayName = "BubbleChart"

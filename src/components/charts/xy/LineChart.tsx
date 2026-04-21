@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -22,7 +23,7 @@ import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleL
 /**
  * LineChart component props
  */
-export interface LineChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points or array of line objects with coordinates.
    * @example
@@ -182,7 +183,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   /**
    * Annotation objects to render on the chart
    */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   /**
    * Place category labels directly at line endpoints instead of using a separate legend.
@@ -300,7 +301,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  * @returns Rendered line chart
  */
 export const LineChart = forwardRef(
-  function LineChart<TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -406,21 +407,21 @@ export const LineChart = forwardRef(
 
   // Lazy-load statistical overlays — only fetches the module when forecast/anomaly props are used
   const [statisticalResult, setStatisticalResult] = useState<{
-    processedData: Record<string, any>[]
-    annotations: Record<string, any>[]
+    processedData: Datum[]
+    annotations: Datum[]
   } | null>(null)
-  const [statisticalAnnotations, setStatisticalAnnotations] = useState<Record<string, any>[]>([])
+  const [statisticalAnnotations, setStatisticalAnnotations] = useState<Datum[]>([])
 
   // When accessors are functions, bake resolved values into data for the overlay pipeline
   const overlayData = useMemo(() => {
-    if (!forecast && !anomaly) return safeData as Record<string, any>[]
+    if (!forecast && !anomaly) return safeData as Datum[]
     const needsX = typeof xAccessor === "function"
     const needsY = typeof yAccessor === "function"
-    if (!needsX && !needsY) return safeData as Record<string, any>[]
-    return (safeData as Record<string, any>[]).map(d => {
+    if (!needsX && !needsY) return safeData as Datum[]
+    return (safeData as Datum[]).map(d => {
       const copy = { ...d }
-      if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: any) => any)(d)
-      if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: any) => any)(d)
+      if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: Datum) => any)(d)
+      if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: Datum) => any)(d)
       return copy
     })
   }, [safeData, forecast, anomaly, xAccessor, yAccessor])
@@ -498,9 +499,9 @@ export const LineChart = forwardRef(
   // Stamp compound group field onto data when both lineBy and forecast are active
   const compoundData = useMemo(() => {
     if (!needsCompoundGroup) return effectiveData
-    const lineByAcc = typeof lineBy === "function" ? lineBy : (d: Record<string, any>) => d[lineBy as string]
-    return (effectiveData as Record<string, any>[]).map(d => {
-      const copy: Record<string, any> = { ...d }
+    const lineByAcc = typeof lineBy === "function" ? lineBy : (d: Datum) => d[lineBy as string]
+    return (effectiveData as Datum[]).map(d => {
+      const copy: Datum = { ...d }
       copy[COMPOUND_GROUP] = `${lineByAcc(d)}__${d[SEGMENT_FIELD] || "observed"}`
       return copy
     })
@@ -519,18 +520,18 @@ export const LineChart = forwardRef(
     if (!upperAcc && !lowerAcc) return undefined
 
     const getUpper = typeof upperAcc === "function" ? upperAcc
-      : typeof upperAcc === "string" ? (d: Record<string, any>) => d[upperAcc] as number
+      : typeof upperAcc === "string" ? (d: Datum) => d[upperAcc] as number
       : null
     const getLower = typeof lowerAcc === "function" ? lowerAcc
-      : typeof lowerAcc === "string" ? (d: Record<string, any>) => d[lowerAcc] as number
+      : typeof lowerAcc === "string" ? (d: Datum) => d[lowerAcc] as number
       : null
 
     let min = Infinity
     let max = -Infinity
     const dataToScan = statisticalResult ? statisticalResult.processedData : safeData
-    for (const d of dataToScan as Record<string, any>[]) {
+    for (const d of dataToScan as Datum[]) {
       // Include the y value itself
-      const yVal = typeof yAccessor === "function" ? (yAccessor as (d: any) => number)(d) : +(d[yAccessor as string])
+      const yVal = typeof yAccessor === "function" ? (yAccessor as (d: Datum) => number)(d) : +(d[yAccessor as string])
       if (isFinite(yVal)) {
         if (yVal < min) min = yVal
         if (yVal > max) max = yVal
@@ -565,7 +566,7 @@ export const LineChart = forwardRef(
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Gap handling helper ──────────────────────────────────────────────
-  const isGap = useCallback((d: Record<string, any>) => {
+  const isGap = useCallback((d: Datum) => {
     const xVal = typeof xAccessor === "function" ? xAccessor(d) : d[xAccessor as string]
     const yVal = typeof yAccessor === "function" ? yAccessor(d) : d[yAccessor as string]
     return xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)
@@ -585,10 +586,10 @@ export const LineChart = forwardRef(
 
     if (effectiveGroupAccessor) {
       // Group data by lineBy field (or segment field for forecast)
-      const grouped = (chartData as Record<string, any>[]).reduce((acc, d) => {
+      const grouped = (chartData as Datum[]).reduce((acc, d) => {
         const key = typeof effectiveGroupAccessor === "function" ? effectiveGroupAccessor(d) : d[effectiveGroupAccessor]
         if (!acc[key]) {
-          const lineObj: Record<string, any> = { [lineDataAccessor]: [] }
+          const lineObj: Datum = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof effectiveGroupAccessor === "string") {
             lineObj[effectiveGroupAccessor] = key
@@ -603,7 +604,7 @@ export const LineChart = forwardRef(
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, any>>)
+      }, {} as Record<string, Datum>)
 
       return Object.values(grouped)
     }
@@ -630,9 +631,9 @@ export const LineChart = forwardRef(
       // We can't rely on SceneGraph filtering because resolveAccessor uses
       // unary + which converts null→0 before SceneGraph ever sees it.
       let found = false
-      const result: Record<string, any>[] = []
+      const result: Datum[] = []
       for (const line of lineData) {
-        const coords: Record<string, any>[] = line[lineDataAccessor] || []
+        const coords: Datum[] = line[lineDataAccessor] || []
         const filtered = coords.filter(d => {
           if (isGap(d)) { found = true; return false }
           return true
@@ -649,10 +650,10 @@ export const LineChart = forwardRef(
       // a unique _gapSegment key injected into its coordinates so that when
       // the data is flattened and re-grouped by the Frame, segments stay separate.
       let found = false
-      const result: Record<string, any>[] = []
+      const result: Datum[] = []
       for (const line of lineData) {
-        const coords: Record<string, any>[] = line[lineDataAccessor] || []
-        let segment: Record<string, any>[] = []
+        const coords: Datum[] = line[lineDataAccessor] || []
+        let segment: Datum[] = []
         let segIdx = 0
         const groupVal = effectiveGroupAccessor && typeof effectiveGroupAccessor === "string"
           ? line[effectiveGroupAccessor]
@@ -682,10 +683,10 @@ export const LineChart = forwardRef(
       // Replace null y-values with 0 so the line drops to the baseline
       let found = false
       const yField = typeof yAccessor === "string" ? yAccessor : "y"
-      const result: Record<string, any>[] = []
+      const result: Datum[] = []
       for (const line of lineData) {
-        const coords: Record<string, any>[] = line[lineDataAccessor] || []
-        const processed: Record<string, any>[] = []
+        const coords: Datum[] = line[lineDataAccessor] || []
+        const processed: Datum[] = []
         for (const d of coords) {
           if (isGap(d)) {
             found = true
@@ -703,13 +704,13 @@ export const LineChart = forwardRef(
   }, [lineData, gapStrategy, lineDataAccessor, isGap, effectiveGroupAccessor, yAccessor])
 
   // Create color scale if colorBy is specified
-  const colorScale = useColorScale(effectiveData as Record<string, any>[], colorBy, colorScheme)
+  const colorScale = useColorScale(effectiveData as Datum[], colorBy, colorScheme)
 
   // Legend interaction
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of effectiveData as Record<string, any>[]) {
+    for (const d of effectiveData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -728,7 +729,7 @@ export const LineChart = forwardRef(
   // Line style function
   const baseLineStyle = useMemo(() => {
     // Second arg is the group key (series name), passed by PipelineStore.resolveLineStyle
-    return (d: Record<string, any>, group?: string) => {
+    return (d: Datum, group?: string) => {
       const baseStyle: Record<string, string | number> = {
         strokeWidth: lineWidth
       }
@@ -758,7 +759,7 @@ export const LineChart = forwardRef(
   }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity, color])
 
   // Lazy-load segment-aware styling — only loads module when forecast is set
-  const [segmentAwareStyle, setSegmentAwareStyle] = useState<((d: Record<string, any>) => Record<string, any>) | null>(null)
+  const [segmentAwareStyle, setSegmentAwareStyle] = useState<((d: Datum) => Datum) | null>(null)
   useEffect(() => {
     if (!forecast) {
       setSegmentAwareStyle(null)
@@ -794,7 +795,7 @@ export const LineChart = forwardRef(
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
 
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {
         r: pointRadius,
         fillOpacity: 1
@@ -822,14 +823,14 @@ export const LineChart = forwardRef(
 
   const directLabelAnnotations = useMemo(() => {
     if (!directLabel || !colorBy) return []
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => d[xAccessor as string]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => d[yAccessor as string]
-    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Record<string, any>) => d[colorBy as string]
+    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
+    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
+    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
 
     // Get the endpoint of each line (by group)
-    const groupEndpoints = new Map<string, Record<string, any>>()
+    const groupEndpoints = new Map<string, Datum>()
     for (const line of gapProcessedLineData) {
-      const coords: Record<string, any>[] = line[lineDataAccessor] || []
+      const coords: Datum[] = line[lineDataAccessor] || []
       if (coords.length === 0) continue
       const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
       const label = colorAcc(endpoint) ?? colorAcc(line) ?? ""
@@ -930,10 +931,10 @@ export const LineChart = forwardRef(
     const needsFlatten = isLineObjectFormat || effectiveGroupAccessor || hasGaps
 
     if (needsFlatten) {
-      return gapProcessedLineData.flatMap((line: Record<string, any>) => {
+      return gapProcessedLineData.flatMap((line: Datum) => {
         const coords = line[lineDataAccessor] || []
         if (effectiveGroupAccessor && typeof effectiveGroupAccessor === "string") {
-          return coords.map((c: Record<string, any>) => ({ ...c, [effectiveGroupAccessor]: line[effectiveGroupAccessor] }))
+          return coords.map((c: Datum) => ({ ...c, [effectiveGroupAccessor]: line[effectiveGroupAccessor] }))
         }
         return coords
       })
@@ -1004,7 +1005,7 @@ export const LineChart = forwardRef(
 
   return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 LineChart.displayName = "LineChart"

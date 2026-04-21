@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * GeoParticlePool — particle system for geo line paths.
  *
@@ -22,7 +23,7 @@ export interface GeoParticleStyle {
   /** Particle radius @default 2 */
   radius?: number
   /** Particle color: a CSS color string, "source" to inherit from line stroke, or a function `(datum) => string` */
-  color?: string | ((datum: any) => string)
+  color?: string | ((datum: Datum) => string)
   /** Particle opacity @default 0.7 */
   opacity?: number
   /** Speed multiplier @default 1 */

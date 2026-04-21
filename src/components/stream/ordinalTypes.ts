@@ -17,6 +17,7 @@ import type {
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { LegendGroup } from "../types/legendTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Chart types ────────────────────────────────────────────────────────
 
@@ -187,7 +188,7 @@ export interface OrdinalColumn {
   width: number
   middle: number
   padding: number
-  pieceData: Record<string, any>[]
+  pieceData: Datum[]
   /** For radial: proportion of total (0-1) */
   pct: number
   /** For radial: cumulative start proportion */
@@ -205,17 +206,17 @@ export interface OrdinalPipelineConfig {
   projection: "vertical" | "horizontal" | "radial"
 
   // Primary accessors
-  categoryAccessor?: string | ((d: any) => string)
-  valueAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
-  colorAccessor?: string | ((d: any) => string)
-  stackBy?: string | ((d: any) => string)
-  groupBy?: string | ((d: any) => string)
-  timeAccessor?: string | ((d: any) => number)
+  categoryAccessor?: string | ((d: Datum) => string)
+  valueAccessor?: string | ((d: Datum) => number) | Array<string | ((d: Datum) => number)>
+  colorAccessor?: string | ((d: Datum) => string)
+  stackBy?: string | ((d: Datum) => string)
+  groupBy?: string | ((d: Datum) => string)
+  timeAccessor?: string | ((d: Datum) => number)
 
   /** @deprecated Use categoryAccessor */
-  oAccessor?: string | ((d: any) => string)
+  oAccessor?: string | ((d: Datum) => string)
   /** @deprecated Use valueAccessor */
-  rAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
+  rAccessor?: string | ((d: Datum) => number) | Array<string | ((d: Datum) => number)>
 
   multiAxis?: boolean
 
@@ -260,8 +261,8 @@ export interface OrdinalPipelineConfig {
   oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc" | "auto"
 
   // Connectors
-  connectorAccessor?: string | ((d: any) => string)
-  connectorStyle?: Style | ((d: any) => Style)
+  connectorAccessor?: string | ((d: Datum) => string)
+  connectorStyle?: Style | ((d: Datum) => Style)
 
   // Dynamic column width
   dynamicColumnWidth?: string | ((data: any[]) => number)
@@ -280,7 +281,7 @@ export interface OrdinalPipelineConfig {
   barColors?: Record<string, string>
 
   /** ID accessor for remove() — extracts a unique identifier from each datum */
-  dataIdAccessor?: string | ((d: any) => string)
+  dataIdAccessor?: string | ((d: Datum) => string)
 
   // Realtime encoding
   decay?: DecayConfig
@@ -293,7 +294,7 @@ export interface OrdinalPipelineConfig {
 
 // ── Component props ────────────────────────────────────────────────────
 
-export interface StreamOrdinalFrameProps<T = Record<string, any>> {
+export interface StreamOrdinalFrameProps<T = Datum> {
   chartType: OrdinalChartType
   runtimeMode?: "bounded" | "streaming"
   data?: T[]
@@ -365,10 +366,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
   // Connectors
   connectorAccessor?: string | ((d: T) => string)
-  connectorStyle?: Style | ((d: any) => Style)
+  connectorStyle?: Style | ((d: Datum) => Style)
 
   /** ID accessor for remove()/update() — extracts a unique identifier from each datum */
-  dataIdAccessor?: string | ((d: any) => string)
+  dataIdAccessor?: string | ((d: Datum) => string)
 
   /** Custom tick values for the value (r) axis. Overrides the default d3 ticks. */
   rTickValues?: number[]
@@ -408,9 +409,9 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   customHoverBehavior?: (d: HoverData | null) => void
 
   // Annotations
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   svgAnnotationRules?: (
-    annotation: Record<string, any>,
+    annotation: Datum,
     index: number,
     context: AnnotationContext
   ) => ReactNode
@@ -461,7 +462,7 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
 // ── Ref handle ─────────────────────────────────────────────────────────
 
-export interface StreamOrdinalFrameHandle<T = Record<string, any>> {
+export interface StreamOrdinalFrameHandle<T = Datum> {
   push(datum: T): void
   pushMany(data: T[]): void
   /** Replace all data. Unlike `clear() + pushMany()`, `replace()` preserves

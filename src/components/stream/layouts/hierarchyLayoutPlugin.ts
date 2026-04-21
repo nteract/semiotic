@@ -22,6 +22,7 @@ import {
   buildRectScene,
   buildCircleScene,
 } from "./hierarchySceneBuilders"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 type HierarchyLayoutType = "tree" | "cluster" | "treemap" | "circlepack" | "partition"
 
@@ -59,8 +60,8 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
     const hierarchySum = typeof rawSum === "function"
       ? rawSum
       : typeof rawSum === "string"
-        ? (d: any) => d[rawSum] ?? 0
-        : (d: any) => d.value ?? 0
+        ? (d: Datum) => d[rawSum] ?? 0
+        : (d: Datum) => d.value ?? 0
 
     // Build d3 hierarchy from the root data
     const root = d3Hierarchy(hierarchyRoot, childrenAccessor)
@@ -166,8 +167,8 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
     labels: NetworkLabel[]
   } {
     const layoutType = config.chartType as HierarchyLayoutType
-    const nodeStyleFn = config.nodeStyle || ((): Record<string, any> => ({}))
-    const edgeStyleFn = config.edgeStyle || ((): Record<string, any> => ({}))
+    const nodeStyleFn = config.nodeStyle || ((): Datum => ({}))
+    const edgeStyleFn = config.edgeStyle || ((): Datum => ({}))
 
     switch (layoutType) {
       case "tree":

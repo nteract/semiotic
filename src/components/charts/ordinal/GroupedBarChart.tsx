@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -18,7 +19,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
-export interface GroupedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   groupBy: ChartAccessor<TDatum, string>
@@ -42,13 +43,13 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -132,11 +133,11 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
 
   // Merge frameProps.pieceStyle (stroke/strokeWidth for themed borders) with
   // the HOC's color-resolved fill. The HOC keeps control of fill; users can add borders.
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
-      const base: Record<string, any> = effectiveColorBy
+    return (d: Datum, category?: string) => {
+      const base: Datum = effectiveColorBy
         ? (setup.colorScale ? { fill: getColor(d, effectiveColorBy, setup.colorScale) } : {})
         : { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
       if (fpPieceStyle) {
@@ -230,7 +231,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
 
   return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 GroupedBarChart.displayName = "GroupedBarChart"

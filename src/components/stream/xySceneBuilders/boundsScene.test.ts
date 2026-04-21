@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildBoundsForGroup } from "./boundsScene"
 import type { XYSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -205,7 +206,7 @@ describe("buildBoundsForGroup", () => {
     let receivedDatum: any
     const ctx = makeCtx({
       getBounds: () => 5,
-      resolveBoundsStyle: (group: string, datum?: Record<string, any>) => {
+      resolveBoundsStyle: (group: string, datum?: Datum) => {
         receivedGroup = group
         receivedDatum = datum
         return { fill: "#ccc" }

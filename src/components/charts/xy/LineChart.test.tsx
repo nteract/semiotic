@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { LineChart } from "./LineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock XYFrame to capture props
 let lastXYFrameProps: any = null
@@ -70,8 +71,8 @@ describe("LineChart", () => {
     })
 
     it("forwards function accessors", () => {
-      const xFn = (d: any) => d.x * 2
-      const yFn = (d: any) => d.y + 1
+      const xFn = (d: Datum) => d.x * 2
+      const yFn = (d: Datum) => d.y + 1
       render(
         <TooltipProvider>
           <LineChart data={sampleData} xAccessor={xFn} yAccessor={yFn} />
@@ -239,8 +240,8 @@ describe("LineChart", () => {
       )
       // With "break", the null entry is removed and data is split into segments.
       // The flattened data forwarded to StreamXYFrame should exclude null points.
-      const forwarded = lastXYFrameProps.data as Record<string, any>[]
-      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
+      const forwarded = lastXYFrameProps.data as Datum[]
+      expect(forwarded.every((d: Datum) => d.y !== null && d.y !== undefined)).toBe(true)
       expect(forwarded.length).toBe(2)
     })
 
@@ -250,13 +251,13 @@ describe("LineChart", () => {
           <LineChart data={gapData} xAccessor="x" yAccessor="y" lineBy="series" gapStrategy="zero" />
         </TooltipProvider>
       )
-      const forwarded = lastXYFrameProps.data as Record<string, any>[]
+      const forwarded = lastXYFrameProps.data as Datum[]
       // All 3 points should be present
       expect(forwarded.length).toBe(3)
       // No null y values should remain
-      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
+      expect(forwarded.every((d: Datum) => d.y !== null && d.y !== undefined)).toBe(true)
       // The formerly-null entry (x=2) should now be 0
-      const replaced = forwarded.find((d: any) => d.x === 2)
+      const replaced = forwarded.find((d: Datum) => d.x === 2)
       expect(replaced).toBeDefined()
       expect(replaced!.y).toBe(0)
     })
@@ -267,10 +268,10 @@ describe("LineChart", () => {
           <LineChart data={gapData} xAccessor="x" yAccessor="y" lineBy="series" gapStrategy="interpolate" />
         </TooltipProvider>
       )
-      const forwarded = lastXYFrameProps.data as Record<string, any>[]
+      const forwarded = lastXYFrameProps.data as Datum[]
       // Interpolate filters out null points so the line connects across gaps
       expect(forwarded.length).toBe(2)
-      expect(forwarded.every((d: any) => d.y !== null && d.y !== undefined)).toBe(true)
+      expect(forwarded.every((d: Datum) => d.y !== null && d.y !== undefined)).toBe(true)
     })
   })
 

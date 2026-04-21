@@ -3,6 +3,7 @@ import { render, fireEvent, act as rtlAct } from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
 import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, estimateLegendRowCount } from "./LinkedCharts"
 import { CategoryColorProvider } from "./CategoryColors"
+import type { Datum } from "./charts/shared/datumTypes"
 
 describe("LinkedCharts", () => {
   it("renders children within a SelectionProvider", () => {
@@ -171,7 +172,7 @@ describe("LinkedCharts", () => {
 
   it("legendInteraction='highlight' produces selection on hover", () => {
     let consumerActive = false
-    let consumerPredicate: (d: Record<string, any>) => boolean = () => true
+    let consumerPredicate: (d: Datum) => boolean = () => true
 
     function Consumer() {
       const { isActive, predicate } = useSelection({ name: "hl", fields: ["region"] })
@@ -216,7 +217,7 @@ describe("LinkedCharts", () => {
 
   it("legendInteraction='isolate' produces selection on click", () => {
     let consumerActive = false
-    let consumerPredicate: (d: Record<string, any>) => boolean = () => true
+    let consumerPredicate: (d: Datum) => boolean = () => true
 
     function Consumer() {
       const { isActive, predicate } = useSelection({ name: "hl", fields: ["region"] })

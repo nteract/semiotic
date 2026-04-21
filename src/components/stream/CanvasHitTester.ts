@@ -3,6 +3,7 @@ import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
+import type { Datum } from "../charts/shared/datumTypes"
 
 export interface HitResult {
   node: SceneNode
@@ -304,9 +305,9 @@ function binarySearchPath(path: [number, number][], targetX: number): number {
  * Binary search for nearest point by time value in a RingBuffer.
  */
 export function findNearestIndex(
-  buf: RingBuffer<Record<string, any>>,
+  buf: RingBuffer<Datum>,
   targetTime: number,
-  getTime: (d: Record<string, any>) => number
+  getTime: (d: Datum) => number
 ): number {
   if (buf.size === 0) return -1
 

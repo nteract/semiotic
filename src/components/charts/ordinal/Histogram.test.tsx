@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { Histogram } from "./Histogram"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
@@ -180,8 +181,8 @@ describe("Histogram", () => {
       <TooltipProvider>
         <Histogram
           data={fnData}
-          categoryAccessor={(d: any) => d.n}
-          valueAccessor={(d: any) => d.amt}
+          categoryAccessor={(d: Datum) => d.n}
+          valueAccessor={(d: Datum) => d.amt}
         />
       </TooltipProvider>
     )

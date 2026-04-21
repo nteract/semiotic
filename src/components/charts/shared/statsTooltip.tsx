@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./datumTypes"
 
 import * as React from "react"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
@@ -21,9 +22,9 @@ interface SummaryStats {
  */
 export function buildStatsTooltip(options?: {
   /** If provided, computes fallback stats from raw data when d.stats is missing */
-  valueAccessor?: string | ((d: any) => number)
-}): (d: Record<string, any>) => React.ReactElement {
-  return (d: Record<string, any>) => {
+  valueAccessor?: string | ((d: Datum) => number)
+}): (d: Datum) => React.ReactElement {
+  return (d: Datum) => {
     const category = d.category || (d.data && d.data[0]?.category) || ""
     const stats: SummaryStats | undefined = d.stats || (d.data || d).stats
 

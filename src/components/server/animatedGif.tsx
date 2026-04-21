@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Animated GIF generation from semiotic chart data.
  *
@@ -75,8 +76,8 @@ export interface AnimatedGifFrameConfig {
  */
 export function generateFrameSVGs(
   chartType: string,
-  data: Record<string, any>[],
-  props: Record<string, any>,
+  data: Datum[],
+  props: Datum,
   options: AnimatedGifOptions = {}
 ): string[] {
   const {
@@ -233,8 +234,8 @@ export function generateFrameSVGs(
  */
 export function generateFrameSequence(
   component: string,
-  snapshots: Record<string, any>[],
-  baseProps: Record<string, any> = {}
+  snapshots: Datum[],
+  baseProps: Datum = {}
 ): string[] {
   return snapshots.map(snapshot => {
     try {
@@ -250,14 +251,14 @@ export function generateFrameSequence(
 // ── SVG frame renderers ──────────────────────────────────────────────
 
 /** Resolve the effective background color — always concrete, never CSS vars */
-function resolveBackground(props: Record<string, any>, theme: SemioticTheme): string | null {
+function resolveBackground(props: Datum, theme: SemioticTheme): string | null {
   const bg = props.background || theme.colors.background
   return bg && bg !== "transparent" ? bg : null
 }
 
 /** Render y-threshold annotations using yExtent or scale for coordinate mapping */
 function renderFrameAnnotations(
-  annotations: Record<string, any>[] | undefined,
+  annotations: Datum[] | undefined,
   innerWidth: number,
   innerHeight: number,
   theme: SemioticTheme,
@@ -315,7 +316,7 @@ function renderXYFrameSVG(
   width: number,
   height: number,
   theme: SemioticTheme,
-  props: Record<string, any>,
+  props: Datum,
   storeScales?: { y?: (v: number) => number }
 ): string {
   const s = themeStyles(theme)
@@ -362,7 +363,7 @@ function renderOrdinalFrameSVG(
   width: number,
   height: number,
   theme: SemioticTheme,
-  props: Record<string, any>
+  props: Datum
 ): string {
   const s = themeStyles(theme)
   const margin = { top: 20, right: 20, bottom: 30, left: 40, ...props.margin }
@@ -411,8 +412,8 @@ function renderOrdinalFrameSVG(
  */
 export async function renderToAnimatedGif(
   chartType: string,
-  data: Record<string, any>[],
-  props: Record<string, any>,
+  data: Datum[],
+  props: Datum,
   options: AnimatedGifOptions = {}
 ): Promise<Buffer> {
   const { fps = 12, loop = true, scale = 1, background } = options

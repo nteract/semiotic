@@ -34,6 +34,7 @@ import { RingBuffer } from "../realtime/RingBuffer"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Projection resolution ────────────────────────────────────────────
 
@@ -71,20 +72,20 @@ function resolveProjection(prop: ProjectionProp | undefined): GeoProjection {
 
 // ── Accessor helpers ─────────────────────────────────────────────────
 
-function makeAccessor(acc: string | ((d: any) => number) | undefined, fallback: string): (d: any) => number {
-  if (!acc) return (d: any) => d[fallback]
+function makeAccessor(acc: string | ((d: Datum) => number) | undefined, fallback: string): (d: Datum) => number {
+  if (!acc) return (d: Datum) => d[fallback]
   if (typeof acc === "function") return acc
-  return (d: any) => d[acc]
+  return (d: Datum) => d[acc]
 }
 
-function makeLineDataAccessor(acc: string | ((d: any) => any[]) | undefined): (d: any) => any[] {
-  if (!acc) return (d: any) => d.coordinates || d.data || []
+function makeLineDataAccessor(acc: string | ((d: Datum) => any[]) | undefined): (d: Datum) => any[] {
+  if (!acc) return (d: Datum) => d.coordinates || d.data || []
   if (typeof acc === "function") return acc
-  return (d: any) => d[acc]
+  return (d: Datum) => d[acc]
 }
 
 function resolveStyle(
-  styleProp: Style | ((d: any) => Style) | undefined,
+  styleProp: Style | ((d: Datum) => Style) | undefined,
   datum: any,
   defaults: Style
 ): Style {
@@ -329,11 +330,11 @@ export class GeoPipelineStore {
 
   // Bounded data
   private areas: GeoJSON.Feature[] = []
-  private pointData: Record<string, any>[] = []
-  private lineData: Record<string, any>[] = []
+  private pointData: Datum[] = []
+  private lineData: Datum[] = []
 
   // Streaming buffer for points
-  private pointBuffer: RingBuffer<Record<string, any>> | null = null
+  private pointBuffer: RingBuffer<Datum> | null = null
   private streaming = false
 
   // Timestamps for pulse
@@ -359,24 +360,24 @@ export class GeoPipelineStore {
     this.areas = features
   }
 
-  setPoints(data: Record<string, any>[]): void {
+  setPoints(data: Datum[]): void {
     this.pointData = data
     this.streaming = false
   }
 
-  setLines(data: Record<string, any>[]): void {
+  setLines(data: Datum[]): void {
     this.lineData = data
   }
 
   /** Initialize streaming mode with a ring buffer */
   initStreaming(windowSize = 500): void {
-    this.pointBuffer = new RingBuffer<Record<string, any>>(windowSize)
+    this.pointBuffer = new RingBuffer<Datum>(windowSize)
     this.timestampBuffer = new RingBuffer<number>(windowSize)
     this.streaming = true
   }
 
   /** Push a single streaming point */
-  pushPoint(datum: Record<string, any>): void {
+  pushPoint(datum: Datum): void {
     if (!this.pointBuffer) this.initStreaming()
     this.pointBuffer!.push(datum)
     this.timestampBuffer!.push(performance.now())
@@ -384,7 +385,7 @@ export class GeoPipelineStore {
   }
 
   /** Push multiple streaming points */
-  pushMany(data: Record<string, any>[]): void {
+  pushMany(data: Datum[]): void {
     if (!this.pointBuffer) this.initStreaming()
     const now = performance.now()
     for (const d of data) {
@@ -398,18 +399,18 @@ export class GeoPipelineStore {
    * Remove points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items.
    */
-  removePoint(id: string | string[]): Record<string, any>[] {
+  removePoint(id: string | string[]): Datum[] {
     const { pointIdAccessor } = this.config
     if (!pointIdAccessor) {
       throw new Error("removePoint() requires pointIdAccessor to be configured")
     }
     const getId = typeof pointIdAccessor === "function"
       ? pointIdAccessor
-      : (d: any) => d[pointIdAccessor as string]
+      : (d: Datum) => d[pointIdAccessor as string]
     const ids = new Set(Array.isArray(id) ? id : [id])
 
     if (this.streaming && this.pointBuffer) {
-      const predicate = (item: Record<string, any>) => ids.has(String(getId(item)))
+      const predicate = (item: Datum) => ids.has(String(getId(item)))
       // Compact timestamp buffer in lockstep
       if (this.timestampBuffer && this.timestampBuffer.size > 0) {
         const oldTimestamps = this.timestampBuffer.toArray()
@@ -424,7 +425,7 @@ export class GeoPipelineStore {
       if (removed.length > 0) this.version++
       return removed
     } else {
-      const removed: Record<string, any>[] = []
+      const removed: Datum[] = []
       this.pointData = this.pointData.filter(d => {
         if (ids.has(String(getId(d)))) {
           removed.push(d)
@@ -551,7 +552,7 @@ export class GeoPipelineStore {
     for (const line of this.lineData) {
       const coords = lineDataAcc(line)
       if (coords && coords.length > 0) {
-        const lineCoords: [number, number][] = coords.map((d: any) => [xAcc(d), yAcc(d)])
+        const lineCoords: [number, number][] = coords.map((d: Datum) => [xAcc(d), yAcc(d)])
         allFeatures.push({
           type: "Feature",
           properties: {},
@@ -749,7 +750,7 @@ export class GeoPipelineStore {
 
   // ── Build scene nodes ──────────────────────────────────────────
 
-  getPoints(): Record<string, any>[] {
+  getPoints(): Datum[] {
     if (this.streaming && this.pointBuffer) {
       return this.pointBuffer.toArray()
     }
@@ -957,7 +958,7 @@ export class GeoPipelineStore {
     const pointIdAcc = config.pointIdAccessor
       ? (typeof config.pointIdAccessor === "function"
         ? config.pointIdAccessor
-        : (d: any) => d[config.pointIdAccessor as string])
+        : (d: Datum) => d[config.pointIdAccessor as string])
       : null
 
     // For projections with a clip angle (e.g. orthographic), cull points
@@ -1024,12 +1025,12 @@ export class GeoPipelineStore {
     const idAcc = transform.centerAccessor
       ? (typeof transform.centerAccessor === "function"
         ? transform.centerAccessor
-        : (d: any) => d[transform.centerAccessor as string])
-      : (d: any) => d.id
+        : (d: Datum) => d[transform.centerAccessor as string])
+      : (d: Datum) => d.id
 
     const costAcc = typeof transform.costAccessor === "function"
       ? transform.costAccessor
-      : (d: any) => d[transform.costAccessor as string]
+      : (d: Datum) => d[transform.costAccessor as string]
 
     // Find center node
     const centerNode = pointNodes.find(

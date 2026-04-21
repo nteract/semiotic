@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Data transform helpers for common data shapes.
  * Import from "semiotic/data"
@@ -7,7 +8,7 @@
  * Bin continuous data into histogram-ready format.
  * Returns array of { category, value } objects suitable for BarChart.
  */
-export function bin<T extends Record<string, any>>(
+export function bin<T extends Datum>(
   data: T[],
   options: {
     field: string
@@ -53,14 +54,14 @@ export function bin<T extends Record<string, any>>(
  * Group and aggregate data.
  * Returns array of { [groupBy]: string, value: number } objects.
  */
-export function rollup<T extends Record<string, any>>(
+export function rollup<T extends Datum>(
   data: T[],
   options: {
     groupBy: string
     value: string
     agg?: "sum" | "mean" | "count" | "min" | "max"
   }
-): Record<string, any>[] {
+): Datum[] {
   const { groupBy: groupField, value: valueField, agg = "sum" } = options
 
   const groups = new Map<string, number[]>()
@@ -73,7 +74,7 @@ export function rollup<T extends Record<string, any>>(
     groups.get(key)!.push(Number(d[valueField]))
   }
 
-  const result: Record<string, any>[] = []
+  const result: Datum[] = []
 
   for (const [key, vals] of groups) {
     let aggregated: number
@@ -107,16 +108,16 @@ export function rollup<T extends Record<string, any>>(
  * Group flat rows into line-chart-ready nested format.
  * Returns array of { id, coordinates } objects for LineChart with lineBy.
  */
-export function groupBy<T extends Record<string, any>>(
+export function groupBy<T extends Datum>(
   data: T[],
   options: {
     key: string
     fields?: string[]
   }
-): { id: string; coordinates: Record<string, any>[] }[] {
+): { id: string; coordinates: Datum[] }[] {
   const { key, fields } = options
 
-  const groups = new Map<string, Record<string, any>[]>()
+  const groups = new Map<string, Datum[]>()
 
   for (const d of data) {
     const groupKey = String(d[key])
@@ -125,7 +126,7 @@ export function groupBy<T extends Record<string, any>>(
     }
 
     if (fields) {
-      const filtered: Record<string, any> = {}
+      const filtered: Datum = {}
       for (const f of fields) {
         if (f in d) {
           filtered[f] = d[f]
@@ -137,7 +138,7 @@ export function groupBy<T extends Record<string, any>>(
     }
   }
 
-  const result: { id: string; coordinates: Record<string, any>[] }[] = []
+  const result: { id: string; coordinates: Datum[] }[] = []
 
   for (const [id, coordinates] of groups) {
     result.push({ id, coordinates })
@@ -150,21 +151,21 @@ export function groupBy<T extends Record<string, any>>(
  * Pivot wide data to long format.
  * Converts column-per-variable to row-per-variable.
  */
-export function pivot<T extends Record<string, any>>(
+export function pivot<T extends Datum>(
   data: T[],
   options: {
     columns: string[]
     nameField?: string
     valueField?: string
   }
-): Record<string, any>[] {
+): Datum[] {
   const { columns, nameField = "name", valueField = "value" } = options
 
   const columnsSet = new Set(columns)
-  const result: Record<string, any>[] = []
+  const result: Datum[] = []
 
   for (const row of data) {
-    const base: Record<string, any> = {}
+    const base: Datum = {}
     for (const k of Object.keys(row)) {
       if (!columnsSet.has(k)) {
         base[k] = row[k]

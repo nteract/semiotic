@@ -1,3 +1,4 @@
+import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * sankey-plus layout engine by Tom Shanley (@tomshanley)
  * Type declarations for Semiotic integration
@@ -61,7 +62,7 @@ export interface SankeyLayout {
   links(): any
   links(_: any[] | ((graph: any) => any[])): SankeyLayout
   nodeId(): any
-  nodeId(_: ((d: any) => any)): SankeyLayout
+  nodeId(_: ((d: Datum) => any)): SankeyLayout
   nodeAlign(): any
   nodeAlign(_: ((node: any, n: number) => number)): SankeyLayout
   nodeSort(): any

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -17,7 +18,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 /**
  * ForceDirectedGraph component props
  */
-export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
   nodes?: TNode[]
   edges?: TEdge[]
   nodeIDAccessor?: ChartAccessor<TNode, string>
@@ -47,7 +48,7 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
  *
  * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
  */
-export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as EdgePush),
@@ -55,7 +56,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     remove: (id) => {
       const ids = Array.isArray(id) ? id : [id]
       const nodes = frameRef.current?.getTopology()?.nodes ?? []
-      const results: Record<string, any>[] = []
+      const results: Datum[] = []
       for (const nodeId of ids) {
         const node = nodes.find(n => n.id === nodeId)
         if (node) results.push({ ...(node.data ?? {}), id: nodeId })
@@ -143,7 +144,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of safeNodes as Record<string, any>[]) {
+    for (const d of safeNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -165,7 +166,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
@@ -187,7 +188,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
 
   // Edge style function
   const baseEdgeStyle = useMemo(() => {
-    return (d: Record<string, any>) => ({
+    return (d: Datum) => ({
       stroke: edgeColor,
       strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d) : d[edgeWidth] || 1,
       opacity: edgeOpacity
@@ -205,7 +206,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     if (!showLabels || !nodeLabel) return undefined
     if (typeof nodeLabel === "function") return nodeLabel
     // d is a RealtimeNode — user data lives at d.data, fall back to d.id
-    return (d: Record<string, any>) => d.data?.[nodeLabel] ?? d[nodeLabel] ?? d.id
+    return (d: Datum) => d.data?.[nodeLabel] ?? d[nodeLabel] ?? d.id
   }, [showLabels, nodeLabel])
 
   // Legend & margin
@@ -288,7 +289,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     />
   </SafeRender>)
 }) as unknown as {
-  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 ForceDirectedGraph.displayName = "ForceDirectedGraph"

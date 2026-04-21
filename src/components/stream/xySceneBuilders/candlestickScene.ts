@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Candlestick (OHLC) scene builder.
  *
@@ -8,7 +9,7 @@
 import type { SceneNode, CandlestickSceneNode, StreamLayout } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildCandlestickScene(ctx: XYSceneContext, data: Record<string, any>[], _layout: StreamLayout): SceneNode[] {
+export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layout: StreamLayout): SceneNode[] {
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
   // Range mode: detected by PipelineStore when both open/close accessors are missing.

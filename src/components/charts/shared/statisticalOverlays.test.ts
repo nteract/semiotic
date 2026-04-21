@@ -6,6 +6,7 @@ import {
   SEGMENT_FIELD,
 } from "./statisticalOverlays"
 import type { ForecastConfig, AnomalyConfig } from "./statisticalOverlays"
+import type { Datum } from "./datumTypes"
 
 // ── buildAnomalyAnnotations ─────────────────────────────────────────────
 
@@ -287,10 +288,10 @@ describe("buildForecast — pre-computed mode", () => {
   it("supports function accessors for bounds", () => {
     const data = makePrecomputedData()
     const config: ForecastConfig = {
-      isTraining: (d: any) => d.isTraining,
-      isForecast: (d: any) => d.isForecast,
-      upperBounds: (d: any) => d.upper,
-      lowerBounds: (d: any) => d.lower,
+      isTraining: (d: Datum) => d.isTraining,
+      isForecast: (d: Datum) => d.isForecast,
+      upperBounds: (d: Datum) => d.upper,
+      lowerBounds: (d: Datum) => d.lower,
     }
 
     const result = buildForecast(data, "time", "value", config)

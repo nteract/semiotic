@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { DistanceCartogram } from "./DistanceCartogram"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamGeoFrame to capture props and expose ref handle
 let lastGeoFrameProps: any = null
@@ -216,7 +217,7 @@ describe("DistanceCartogram", () => {
     })
 
     it("uses colorBy function for point colors", () => {
-      const colorByFn = (d: any) => d.flightHours <= 5 ? "Short" : "Long"
+      const colorByFn = (d: Datum) => d.flightHours <= 5 ? "Short" : "Long"
       render(
         <Wrapper>
           <DistanceCartogram points={samplePoints} center="London" costAccessor="flightHours" colorBy={colorByFn} />

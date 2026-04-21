@@ -1,5 +1,6 @@
 // Polyfill TextEncoder/TextDecoder for react-dom/server in jsdom
 import { TextEncoder, TextDecoder } from "util"
+import type { Datum } from "../charts/shared/datumTypes"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import {
@@ -324,7 +325,7 @@ describe("renderOrdinalToStaticSVG - timeline", () => {
       chartType: "timeline",
       data: timelineData,
       oAccessor: "category",
-      rAccessor: (d: any) => d.range,
+      rAccessor: (d: Datum) => d.range,
       size: [400, 300]
     })
 

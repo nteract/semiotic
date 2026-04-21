@@ -8,6 +8,7 @@ import {
   buildDefaultTooltip,
   buildOrdinalTooltip,
 } from "./tooltipUtils"
+import type { Datum } from "./datumTypes"
 
 // ── formatVal ────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ describe("accessorName", () => {
   })
 
   it('returns "value" when accessor is a function', () => {
-    expect(accessorName((d: any) => d.x)).toBe("value")
+    expect(accessorName((d: Datum) => d.x)).toBe("value")
   })
 })
 
@@ -73,7 +74,7 @@ describe("resolveValue", () => {
   })
 
   it("calls a function accessor with the datum", () => {
-    expect(resolveValue({ a: 1, b: 2 }, (d: any) => d.a + d.b)).toBe(3)
+    expect(resolveValue({ a: 1, b: 2 }, (d: Datum) => d.a + d.b)).toBe(3)
   })
 
   it("returns undefined for missing string key", () => {
@@ -133,7 +134,7 @@ describe("buildDefaultTooltip", () => {
 
   it("uses function accessors", () => {
     const fn = buildDefaultTooltip([
-      { label: "Computed", accessor: (d: any) => d.a + d.b },
+      { label: "Computed", accessor: (d: Datum) => d.a + d.b },
     ])
     const node = fn({ data: { a: 3, b: 4 } } as any)
     const { container } = render(<>{node}</>)
@@ -235,8 +236,8 @@ describe("buildOrdinalTooltip", () => {
 
   it("uses function accessors for category and value", () => {
     const fn = buildOrdinalTooltip({
-      categoryAccessor: (d: any) => d.name.toUpperCase(),
-      valueAccessor: (d: any) => d.amount * 2,
+      categoryAccessor: (d: Datum) => d.name.toUpperCase(),
+      valueAccessor: (d: Datum) => d.amount * 2,
     })
     const node = fn({ data: { name: "test", amount: 5 } })
     const { container } = render(<>{node}</>)

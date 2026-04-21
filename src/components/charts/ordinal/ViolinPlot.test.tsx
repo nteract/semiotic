@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { ViolinPlot } from "./ViolinPlot"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
@@ -161,8 +162,8 @@ describe("ViolinPlot", () => {
       <TooltipProvider>
         <ViolinPlot
           data={sampleData}
-          categoryAccessor={(d: any) => d.category}
-          valueAccessor={(d: any) => d.value}
+          categoryAccessor={(d: Datum) => d.category}
+          valueAccessor={(d: Datum) => d.value}
         />
       </TooltipProvider>
     )
@@ -253,7 +254,7 @@ describe("ViolinPlot", () => {
     })
 
     it("uses custom tooltip function when provided", () => {
-      const customTooltip = (d: any) => <div>custom: {d.category}</div>
+      const customTooltip = (d: Datum) => <div>custom: {d.category}</div>
       render(
         <TooltipProvider>
           <ViolinPlot data={sampleData} tooltip={customTooltip} />

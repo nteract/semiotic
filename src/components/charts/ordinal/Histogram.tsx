@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -17,7 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 
-export interface HistogramProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -36,7 +37,7 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Enable brush on the value axis */
   brush?: boolean
   /** Callback when brush selection changes */
@@ -48,7 +49,7 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const Histogram = forwardRef(function Histogram<TDatum extends Record<string, any> = Record<string, any>>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -143,7 +144,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
   // Compute global value extent across all categories so bins are shared
   const rExtent = useMemo(() => {
     if (safeData.length === 0) return undefined
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Datum) => d[valueAccessor]
     let min = Infinity
     let max = -Infinity
     for (const d of safeData) {
@@ -160,7 +161,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const baseSummaryStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
       return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.8 }
     }
@@ -177,7 +178,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
   )
 
   const defaultTooltipContent = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const datum = d.data || d
       const category = datum.category || d.category || ""
       const count = datum.count
@@ -247,7 +248,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Record<str
 
   return <SafeRender componentName="Histogram" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 Histogram.displayName = "Histogram"

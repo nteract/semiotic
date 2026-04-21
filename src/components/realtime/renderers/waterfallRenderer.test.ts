@@ -2,6 +2,7 @@ import { vi } from "vitest"
 import { waterfallRenderer, computeWaterfallExtent } from "./waterfallRenderer"
 import type { RealtimeScales, RealtimeLayout, LineStyle, RealtimeAccessors } from "../types"
 import { scaleLinear } from "d3-scale"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 function makeCtx() {
   return {
@@ -29,8 +30,8 @@ function makeCtx() {
   } as unknown as CanvasRenderingContext2D
 }
 
-const getTime = (d: any) => d.time
-const getValue = (d: any) => d.value
+const getTime = (d: Datum) => d.time
+const getValue = (d: Datum) => d.value
 const accessors: RealtimeAccessors = { time: getTime, value: getValue }
 
 function makeScales(timeAxis: "x" | "y"): RealtimeScales {

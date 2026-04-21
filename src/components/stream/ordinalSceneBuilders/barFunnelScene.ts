@@ -1,6 +1,7 @@
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /**
  * Bar-funnel scene builder (vertical orientation).
@@ -55,7 +56,7 @@ export function buildBarFunnelScene(
   // Compute per-step, per-category totals
   interface StepGroup {
     total: number
-    pieces: Record<string, any>[]
+    pieces: Datum[]
   }
   interface StepData {
     col: (typeof orderedColumns)[0]
@@ -129,7 +130,7 @@ export function buildBarFunnelScene(
         hasCategories ? catKey : col.name
       )
 
-      const retainedDatum: Record<string, any> = {
+      const retainedDatum: Datum = {
         ...group.pieces[0],
         __barFunnelValue: val,
         __barFunnelPercent: pct,
@@ -165,7 +166,7 @@ export function buildBarFunnelScene(
         // apply the hatch pattern based on __barFunnelIsDropoff
         const dropoffStyle = { ...retainedStyle }
 
-        const dropoffDatum: Record<string, any> = {
+        const dropoffDatum: Datum = {
           ...group.pieces[0],
           __barFunnelValue: dropoff,
           __barFunnelPercent: catFirstTotal > 0 ? (dropoff / catFirstTotal) * 100 : 0,

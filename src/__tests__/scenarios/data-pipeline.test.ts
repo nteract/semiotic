@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { DataSourceAdapter } from "../../components/stream/DataSourceAdapter"
 import type { Changeset } from "../../components/stream/types"
+import type { Datum } from "../../components/charts/shared/datumTypes"
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -240,7 +241,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     await flushMicrotasks()
     expect(changesets).toHaveLength(1)
     expect(changesets[0].inserts).toHaveLength(4)
-    expect(changesets[0].inserts.map((d: any) => d.id)).toEqual([1, 2, 3, 4])
+    expect(changesets[0].inserts.map((d: Datum) => d.id)).toEqual([1, 2, 3, 4])
   })
 
   // 11. clear() discards buffered pushes
@@ -287,7 +288,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     adapter.flush()
     expect(changesets).toHaveLength(1)
     expect(changesets[0].inserts).toHaveLength(2)
-    expect(changesets[0].inserts.map((d: any) => d.id)).toEqual([1, 2])
+    expect(changesets[0].inserts.map((d: Datum) => d.id)).toEqual([1, 2])
   })
 
   // 14. clearLastData discards buffered pushes

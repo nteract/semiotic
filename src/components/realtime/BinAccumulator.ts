@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 export interface Bin {
   start: number
   end: number
@@ -6,11 +7,11 @@ export interface Bin {
 }
 
 export function computeBins(
-  data: Iterable<Record<string, any>>,
-  getTime: (d: Record<string, any>) => number,
-  getValue: (d: Record<string, any>) => number,
+  data: Iterable<Datum>,
+  getTime: (d: Datum) => number,
+  getValue: (d: Datum) => number,
   binSize: number,
-  getCategory?: (d: Record<string, any>) => string
+  getCategory?: (d: Datum) => string
 ): Map<number, Bin> {
   const bins = new Map<number, Bin>()
 
@@ -40,11 +41,11 @@ export function computeBins(
 }
 
 export function computeBinExtent(
-  data: Iterable<Record<string, any>>,
-  getTime: (d: Record<string, any>) => number,
-  getValue: (d: Record<string, any>) => number,
+  data: Iterable<Datum>,
+  getTime: (d: Datum) => number,
+  getValue: (d: Datum) => number,
   binSize: number,
-  getCategory?: (d: Record<string, any>) => string
+  getCategory?: (d: Datum) => string
 ): [number, number] {
   const bins = computeBins(data, getTime, getValue, binSize, getCategory)
 

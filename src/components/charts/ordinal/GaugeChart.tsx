@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -54,7 +55,7 @@ export interface GaugeChartProps extends BaseChartProps {
   /** Enable tooltip on arc segments */
   tooltip?: TooltipProp
   /** Annotations — supports threshold markers via standard annotation system */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Enable hover interaction (default true) */
   enableHover?: boolean
   /** frameProps escape hatch */
@@ -120,7 +121,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const { gaugeData, pieceStyle, gaugeAnnotations } = useMemo(() => {
     const data: Array<{ category: string; value: number; _zone?: string; _isFill: boolean }> = []
     const styles = new Map<string, { fill: string; opacity?: number }>()
-    const scaleAnnotations: Record<string, any>[] = []
+    const scaleAnnotations: Datum[] = []
 
     // Normalize thresholds: sort by value, clamp to [min, max], ensure last zone reaches max
     let zones = thresholds && thresholds.length > 0
@@ -179,7 +180,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
       }
     }
 
-    const styleFn = (d: Record<string, any>, category?: string) => {
+    const styleFn = (d: Datum, category?: string) => {
       const key = category || d.category
       return styles.get(key) || { fill: backgroundColor }
     }
@@ -324,7 +325,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
 
   // ── Default tooltip ──────────────────────────────────────────────────────
   const defaultTooltipContent = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const datum = d?.data?.[0] || d?.data || d
       const zone = datum?._zone || ""
       const isFill = datum?._isFill

@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Scene builders for hierarchy layouts (tree, treemap, circlepack).
  *
@@ -55,8 +56,8 @@ export function buildTreeScene(
   edges: RealtimeEdge[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>,
-  edgeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: Datum) => Datum,
+  edgeStyleFn: (d: Datum) => Datum
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]
@@ -218,7 +219,7 @@ export function buildRectScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: Datum) => Datum
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]
@@ -329,7 +330,7 @@ export function buildCircleScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
   size: [number, number],
-  nodeStyleFn: (d: any) => Record<string, any>
+  nodeStyleFn: (d: Datum) => Datum
 ): {
   sceneNodes: NetworkSceneNode[]
   sceneEdges: NetworkSceneEdge[]

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildLineScene } from "./lineScene"
 import type { XYSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -263,7 +264,7 @@ describe("buildLineScene", () => {
       { x: 1, y: 10, group: "A" },
       { x: 2, y: 20, group: "B" },
     ]
-    const styleMap: Record<string, any> = {
+    const styleMap: Datum = {
       A: { stroke: "red", strokeWidth: 2 },
       B: { stroke: "blue", strokeWidth: 3 },
     }

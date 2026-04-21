@@ -11,6 +11,7 @@ import {
   interpolateViridis,
   interpolatePlasma
 } from "d3-scale-chromatic"
+import type { Datum } from "./datumTypes"
 
 /**
  * Predefined color schemes
@@ -113,7 +114,7 @@ function isCssColor(value: string): boolean {
  */
 export function getColor(
   dataPoint: any,
-  colorBy: string | ((d: any) => string),
+  colorBy: string | ((d: Datum) => string),
   colorScale?: (v: any) => string
 ): string {
   if (typeof colorBy === "function") {
@@ -150,7 +151,7 @@ export function getColor(
  * ```
  */
 export function createColorScale(
-  data: Array<Record<string, any>>,
+  data: Array<Datum>,
   colorBy: string,
   scheme: string | string[] = "category10"
 ): (v: string) => string {
@@ -209,7 +210,7 @@ function hashString(str: string): number {
  */
 export function getSize(
   dataPoint: any,
-  sizeBy: string | ((d: any) => number),
+  sizeBy: string | ((d: Datum) => number),
   sizeRange: [number, number] = [3, 20],
   domain?: [number, number]
 ): number {

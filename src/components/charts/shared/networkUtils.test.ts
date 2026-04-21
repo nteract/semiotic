@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import { inferNodesFromEdges, createEdgeStyleFn } from "./networkUtils"
+import type { Datum } from "./datumTypes"
 
 describe("inferNodesFromEdges", () => {
   const edges = [
@@ -25,7 +26,7 @@ describe("inferNodesFromEdges", () => {
 })
 
 describe("createEdgeStyleFn", () => {
-  const defaultNodeStyleFn = vi.fn((d: any) => ({ fill: `color-${d.id}` }))
+  const defaultNodeStyleFn = vi.fn((d: Datum) => ({ fill: `color-${d.id}` }))
   const baseArgs = {
     colorBy: undefined as string | undefined,
     colorScale: undefined as ((v: string) => string) | undefined,
@@ -46,7 +47,7 @@ describe("createEdgeStyleFn", () => {
   })
 
   it('edgeColorBy="target" without colorBy falls back to nodeStyleFn', () => {
-    const nodeStyleFn = vi.fn((d: any) => ({ fill: `tgt-${d.id}` }))
+    const nodeStyleFn = vi.fn((d: Datum) => ({ fill: `tgt-${d.id}` }))
     const styleFn = createEdgeStyleFn({
       ...baseArgs,
       edgeColorBy: "target",
@@ -69,7 +70,7 @@ describe("createEdgeStyleFn", () => {
   })
 
   it("edgeColorBy as a function calls the function", () => {
-    const customFn = (d: any) => `custom-${d.source}`
+    const customFn = (d: Datum) => `custom-${d.source}`
     const styleFn = createEdgeStyleFn({
       ...baseArgs,
       edgeColorBy: customFn,

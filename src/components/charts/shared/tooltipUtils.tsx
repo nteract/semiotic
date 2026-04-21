@@ -1,9 +1,16 @@
 import * as React from "react"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
+import type { Datum } from "./datumTypes"
 
 export interface TooltipFieldConfig {
   label: string
+  // Parameter is `any` (not `Datum`) specifically so HOC accessors declared
+  // `(d: TDatum) => ...` flow in without contravariance errors — TDatum extends
+  // Datum, so a `(TDatum) => X` function isn't assignable to a `(Datum) => X`
+  // slot (wider-param rule). The `any` here is a typed escape hatch at the
+  // tooltip-field boundary, not a data-shape declaration.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see comment above
   accessor: string | ((d: any) => any)
   role?: "title" | "x" | "y" | "color" | "size" | "group" | "value"
   /** Per-field formatter. HOCs pass `xFormat`/`yFormat`/`valueFormat` here so
@@ -49,7 +56,7 @@ function applyFormat(value: unknown, fmt?: (v: any, ...rest: any[]) => React.Rea
   }
 }
 
-export function resolveValue(d: Record<string, any>, acc: string | ((d: Record<string, any>) => any)): unknown {
+export function resolveValue(d: Datum, acc: string | ((d: Datum) => any)): unknown {
   return typeof acc === "function" ? acc(d) : d[acc]
 }
 
@@ -109,17 +116,17 @@ export function buildOrdinalTooltip({
   pieData = false,
   valueFormat,
 }: {
-  categoryAccessor: string | ((d: any) => any)
-  valueAccessor: string | ((d: any) => any)
-  groupAccessor?: string | ((d: any) => any)
+  categoryAccessor: string | ((d: Datum) => any)
+  valueAccessor: string | ((d: Datum) => any)
+  groupAccessor?: string | ((d: Datum) => any)
   groupLabel?: string
   pieData?: boolean
   /** Same formatter the HOC passes to the value axis. Threaded here so the
    *  default tooltip shows values consistently with the axis ("$450k", not
    *  "450000"). Override by passing a custom `tooltip` prop. */
   valueFormat?: (v: any, ...rest: any[]) => React.ReactNode
-}): (d: Record<string, any>) => React.ReactNode {
-  return (d: Record<string, any>) => {
+}): (d: Datum) => React.ReactNode {
+  return (d: Datum) => {
     const datum = pieData
       ? (d.data?.[0] || d.data || d)
       : (d.data || d)

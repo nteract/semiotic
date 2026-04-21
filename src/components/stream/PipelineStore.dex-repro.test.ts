@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Reproduction tests for chart rendering issues:
  * 1. LineChart: axes render but no lines (Date xAccessor, function yAccessor)
@@ -81,7 +82,7 @@ describe("Chart Repro — LineChart with Date xAccessor", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "line",
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         groupAccessor: "metricLabel",
         runtimeMode: "bounded"
@@ -108,8 +109,8 @@ describe("Chart Repro — LineChart with Date xAccessor", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "line",
-        xAccessor: (d: any) => new Date(d.timestamp),
-        yAccessor: (d: any) => d[d.metricLabel],
+        xAccessor: (d: Datum) => new Date(d.timestamp),
+        yAccessor: (d: Datum) => d[d.metricLabel],
         groupAccessor: "metricLabel",
         runtimeMode: "bounded"
       })
@@ -134,7 +135,7 @@ describe("Chart Repro — LineChart with Date xAccessor", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "line",
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         groupAccessor: "metricLabel",
         runtimeMode: "bounded"
@@ -156,7 +157,7 @@ describe("Chart Repro — StackedAreaChart with Date xAccessor", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "stackedarea",
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         groupAccessor: "metricLabel",
         runtimeMode: "bounded"
@@ -182,7 +183,7 @@ describe("Chart Repro — StackedAreaChart with Date xAccessor", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "stackedarea",
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         groupAccessor: "metricLabel",
         runtimeMode: "bounded"
@@ -234,7 +235,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
     })
 
     // Unitize
-    const result: Record<string, any>[] = []
+    const result: Datum[] = []
     for (const d of multiAxisData) {
       for (let i = 0; i < 2; i++) {
         const val = (d as any)[series[i].yAccessor]
@@ -253,7 +254,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
     const store = new PipelineStore(
       makeConfig({
         chartType: "line",
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: UNITIZED_FIELD,
         groupAccessor: SERIES_FIELD,
         yExtent: [0, 1],

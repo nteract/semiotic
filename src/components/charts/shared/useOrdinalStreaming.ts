@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./datumTypes"
 
 import type { Ref, RefObject } from "react"
 import { useCallback, useImperativeHandle, useMemo } from "react"
@@ -25,7 +26,7 @@ interface UseOrdinalStreamingConfig {
   legendPosition?: LegendPosition
   /** Results from useChartSetup — needed for legend/margin merge */
   setup: {
-    legendBehaviorProps: Record<string, any>
+    legendBehaviorProps: Datum
     legendPosition: LegendPosition
     margin: { top: number; right: number; bottom: number; left: number }
   }
@@ -33,7 +34,7 @@ interface UseOrdinalStreamingConfig {
 
 interface UseOrdinalStreamingResult {
   /** Legend props merged with streaming legend (spread into streamProps) */
-  effectiveLegendProps: Record<string, any>
+  effectiveLegendProps: Datum
   /** Margin merged with streaming legend margin adjustments */
   effectiveMargin: { top: number; right: number; bottom: number; left: number }
 }
@@ -66,7 +67,7 @@ export function useOrdinalStreaming({
   })
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => frameRef.current?.push(d)),
+    streaming.wrapPush((d: Datum) => frameRef.current?.push(d)),
     [streaming.wrapPush]
   )
   const wrappedPushMany = useCallback(

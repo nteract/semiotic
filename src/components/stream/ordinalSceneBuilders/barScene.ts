@@ -2,6 +2,7 @@ import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { RectSceneNode } from "../types"
 import type { OrdinalSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, getStack, resolvePieceStyle } = ctx
@@ -32,7 +33,7 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
 
   for (const col of Object.values(columns)) {
     // Group pieces by stack key if stacking, and aggregate values per group
-    const stacks = new Map<string, { total: number; pieces: Record<string, any>[] }>()
+    const stacks = new Map<string, { total: number; pieces: Datum[] }>()
     for (const d of col.pieceData) {
       const key = getStack ? getStack(d) : "_default"
       if (!stacks.has(key)) stacks.set(key, { total: 0, pieces: [] })
@@ -175,7 +176,7 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalL
     const subWidth = col.width / groupCount
     const innerPad = subWidth * innerPadRatio
     const barWidth = subWidth - innerPad
-    const grouped = new Map<string, Record<string, any>[]>()
+    const grouped = new Map<string, Datum[]>()
     for (const d of col.pieceData) {
       const key = getGroup ? getGroup(d) : "_default"
       if (!grouped.has(key)) grouped.set(key, [])

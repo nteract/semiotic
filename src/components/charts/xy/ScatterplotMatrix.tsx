@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useRef, useEffect } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -24,7 +25,7 @@ const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface ScatterplotMatrixProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Array of data objects */
   data: TDatum[]
   /** Array of field names to include in the matrix */
@@ -131,7 +132,7 @@ function CellBrushOverlay({ frameRef, cellSize, xField: _xField, yField: _yField
 // ── Scatterplot Cell ───────────────────────────────────────────────────────
 
 interface CellProps {
-  data: Record<string, any>[]
+  data: Datum[]
   xField: string
   yField: string
   fieldLabels: Record<string, string>
@@ -148,7 +149,7 @@ interface CellProps {
   /** "brush" or "hover" — mutually exclusive */
   mode: "brush" | "hover"
   /** Callback when a point is hovered (hover mode only). */
-  onPointHover?: (datum: Record<string, any> | null, px?: number, py?: number) => void
+  onPointHover?: (datum: Datum | null, px?: number, py?: number) => void
 }
 
 function ScatterplotCell({
@@ -224,8 +225,8 @@ function ScatterplotCell({
   )
 
   const pointStyle = useCallback(
-    (d: Record<string, any>) => {
-      const style: Record<string, any> = {
+    (d: Datum) => {
+      const style: Datum = {
         opacity: pointOpacity,
         r: pointRadius
       }
@@ -291,7 +292,7 @@ function ScatterplotCell({
 // ── Diagonal Cell (Histogram) ──────────────────────────────────────────────
 
 interface DiagonalCellProps {
-  data: Record<string, any>[]
+  data: Datum[]
   field: string
   label: string
   cellSize: number
@@ -525,7 +526,7 @@ function LabelCell({ label, cellSize }: { label: string; cellSize: number }) {
 
 // ── ScatterplotMatrix ──────────────────────────────────────────────────────
 
-function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<string, any>>(
+function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
   const {
@@ -563,7 +564,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
   // Grid-level hover state — single tooltip for the entire matrix
   const clearSelection = useSelectionSelector((s: any) => s.clearSelection)
   const [hoveredInfo, setHoveredInfo] = useState<{
-    datum: Record<string, any>
+    datum: Datum
     xField: string
     yField: string
     colIndex: number
@@ -582,7 +583,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
 
   // Stamp each datum with a stable index for cross-cell identity matching
   const indexedData = useMemo(() => {
-    return ((data || []) as Record<string, any>[]).map((d, i) => {
+    return ((data || []) as Datum[]).map((d, i) => {
       if (d[SPLOM_IDX] !== undefined) return d
       return { ...d, [SPLOM_IDX]: i }
     })
@@ -824,7 +825,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
  * />
  * ```
  */
-export function ScatterplotMatrix<TDatum extends Record<string, any> = Record<string, any>>(
+export function ScatterplotMatrix<TDatum extends Datum = Datum>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
   const { brushMode = "crossfilter", hoverMode = true } = props

@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Point/scatter/bubble scene builder.
  *
@@ -11,7 +12,7 @@ import type { SceneNode } from "../types"
 import { buildPointNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
-export function buildPointScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildPointScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const nodes: SceneNode[] = []
   const defaultR = ctx.config.chartType === "bubble" ? 10 : 5
   const sizeRange = ctx.config.sizeRange || [3, 15]

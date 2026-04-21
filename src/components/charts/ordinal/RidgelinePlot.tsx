@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -17,7 +18,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 
-export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -38,7 +39,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -50,7 +51,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
  * Each category shows its value distribution as a filled area extending from a
  * baseline. The amplitude prop controls overlap between rows.
  */
-export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -142,7 +143,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
   const baseSummaryStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
       return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.5 }
     }
@@ -210,7 +211,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Re
 
   return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 RidgelinePlot.displayName = "RidgelinePlot"

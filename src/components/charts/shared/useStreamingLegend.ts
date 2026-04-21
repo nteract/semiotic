@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./datumTypes"
 
 import { useRef, useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
@@ -47,7 +48,7 @@ export function useStreamingLegend({
   const [version, setVersion] = useState(0)
 
   const extractCategory = useCallback(
-    (datum: Record<string, any>): string | null => {
+    (datum: Datum): string | null => {
       if (!colorBy) return null
       const val = typeof colorBy === "function" ? colorBy(datum) : datum[colorBy as string]
       return val != null ? String(val) : null
@@ -56,7 +57,7 @@ export function useStreamingLegend({
   )
 
   const processData = useCallback(
-    (items: Record<string, any>[]) => {
+    (items: Datum[]) => {
       if (!isPushMode || !colorBy) return
       let changed = false
       for (const d of items) {
@@ -77,8 +78,8 @@ export function useStreamingLegend({
 
   /** Wrap push to intercept data for category discovery */
   const wrapPush = useCallback(
-    (originalPush: (d: any) => void) => {
-      return (datum: any) => {
+    (originalPush: (d: Datum) => void) => {
+      return (datum: Datum) => {
         processData([datum])
         originalPush(datum)
       }

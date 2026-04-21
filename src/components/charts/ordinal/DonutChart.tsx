@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -18,7 +19,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
-export interface DonutChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -35,11 +36,11 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   legendInteraction?: LegendInteractionMode
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -115,11 +116,11 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
-      let base: Record<string, any>
+    return (d: Datum, category?: string) => {
+      let base: Datum
       if (effectiveColorBy) {
         if (setup.colorScale) base = { fill: getColor(d, effectiveColorBy, setup.colorScale) }
         else base = {} // Let frame use its own color scheme (push API)
@@ -210,7 +211,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Record<s
 
   return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 DonutChart.displayName = "DonutChart"

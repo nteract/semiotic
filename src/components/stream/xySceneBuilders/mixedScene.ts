@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Mixed scene builder — renders some series as areas and others as lines.
  *
@@ -12,7 +13,7 @@ import { buildLineNode, buildAreaNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
 
-export function buildMixedScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   const nodes: SceneNode[] = []
   const areaGroups = ctx.config.areaGroups || new Set<string>()
@@ -21,7 +22,7 @@ export function buildMixedScene(ctx: XYSceneContext, data: Record<string, any>[]
   const baseline = yDomain[0]
 
   const y0Get = ctx.getY0
-    ? (d: Record<string, any>): number => {
+    ? (d: Datum): number => {
         const value = ctx.getY0!(d)
         return value == null ? baseline : value
       }

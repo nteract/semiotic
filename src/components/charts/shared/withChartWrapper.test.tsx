@@ -8,6 +8,7 @@ import {
   renderEmptyState,
   renderLoadingState,
 } from "./withChartWrapper"
+import type { Datum } from "./datumTypes"
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -186,7 +187,7 @@ describe("warnMissingField", () => {
 
   it("does not warn when accessor is a function (not string)", () => {
     const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnMissingField("LineChart", [{ x: 1 }], "xAccessor", (d: any) => d.x)
+    warnMissingField("LineChart", [{ x: 1 }], "xAccessor", (d: Datum) => d.x)
     expect(spy).not.toHaveBeenCalled()
   })
 

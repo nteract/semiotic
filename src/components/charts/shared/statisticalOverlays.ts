@@ -1,3 +1,4 @@
+import type { Datum } from "./datumTypes"
 /**
  * Statistical overlay processing for LineChart.
  *
@@ -48,15 +49,15 @@ export interface ForecastConfig {
 
   // ── Pre-computed mode (field accessors) ─────────────────────
   /** Field or function marking training data points */
-  isTraining?: string | ((d: Record<string, any>) => boolean)
+  isTraining?: string | ((d: Datum) => boolean)
   /** Field or function marking forecast data points */
-  isForecast?: string | ((d: Record<string, any>) => boolean)
+  isForecast?: string | ((d: Datum) => boolean)
   /** Field or function marking anomalous data points */
-  isAnomaly?: string | ((d: Record<string, any>) => boolean)
+  isAnomaly?: string | ((d: Datum) => boolean)
   /** Field or function for upper envelope bound per data point */
-  upperBounds?: string | ((d: Record<string, any>) => number)
+  upperBounds?: string | ((d: Datum) => number)
   /** Field or function for lower envelope bound per data point */
-  lowerBounds?: string | ((d: Record<string, any>) => number)
+  lowerBounds?: string | ((d: Datum) => number)
 
   // ── Styling (both modes) ───────────────────────────────────
   /** Color for forecast line and envelope. Default: "#6366f1" */
@@ -93,19 +94,19 @@ export interface ForecastConfig {
    * - `string`: fixed color (default: "#ef4444")
    * - `(datum) => string`: per-datum color function
    */
-  anomalyColor?: string | ((datum: Record<string, any>) => string)
+  anomalyColor?: string | ((datum: Datum) => string)
   /**
    * Outlier dot radius.
    * - `number`: fixed radius (default: 6)
    * - `(datum) => number`: per-datum radius function (e.g. for count-based sizing)
    */
-  anomalyRadius?: number | ((datum: Record<string, any>) => number)
+  anomalyRadius?: number | ((datum: Datum) => number)
   /**
    * Full style override for anomaly dots.
    * When provided as a function, receives the datum and should return a CSS style object.
    * Overrides `anomalyColor` when provided.
    */
-  anomalyStyle?: Record<string, any> | ((datum: Record<string, any>) => Record<string, any>)
+  anomalyStyle?: Datum | ((datum: Datum) => Datum)
   /**
    * Internal: field name used to group data into separate lines (e.g. "metricLabel").
    * When set, boundary point duplication only bridges within the same group,
@@ -124,7 +125,7 @@ export type SegmentType = "training" | "training-base" | "observed" | "forecast"
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-function readBool(d: Record<string, any>, accessor: string | ((d: Record<string, any>) => boolean)): boolean {
+function readBool(d: Datum, accessor: string | ((d: Datum) => boolean)): boolean {
   if (typeof accessor === "function") return accessor(d)
   return !!d[accessor]
 }
@@ -133,7 +134,7 @@ function readBool(d: Record<string, any>, accessor: string | ((d: Record<string,
 
 export function buildAnomalyAnnotations(
   config: AnomalyConfig
-): Record<string, any>[] {
+): Datum[] {
   return [
     {
       type: "anomaly-band",
@@ -151,12 +152,12 @@ export function buildAnomalyAnnotations(
 // ── Pre-computed mode ──────────────────────────────────────────────────
 
 export interface ForecastResult {
-  processedData: Record<string, any>[]
-  annotations: Record<string, any>[]
+  processedData: Datum[]
+  annotations: Datum[]
 }
 
 function buildPrecomputed(
-  data: Record<string, any>[],
+  data: Datum[],
   xAccessor: string,
   yAccessor: string,
   config: ForecastConfig,
@@ -176,7 +177,7 @@ function buildPrecomputed(
   } = config
 
   // Tag each datum with segment
-  const tagged: Record<string, any>[] = data.map((d) => {
+  const tagged: Datum[] = data.map((d) => {
     let segment: SegmentType = "observed"
     if (isForecastAcc && readBool(d, isForecastAcc)) {
       segment = "forecast"
@@ -191,14 +192,14 @@ function buildPrecomputed(
   // because the flat data is interleaved by timestamp (A_t1, B_t1, A_t2, B_t2...),
   // so adjacent-pair scanning would never find within-group segment transitions.
   const groupByField = config._groupBy
-  const processedData: Record<string, any>[] = []
+  const processedData: Datum[] = []
 
   if (groupByField) {
     // Group-aware boundary duplication: collect points per group, find
     // segment transitions within each group, then append bridge points
     // after the tagged data. Ordering within groups is handled by the
     // downstream pipeline which sorts by x-accessor per group.
-    const groups = new Map<string, Record<string, any>[]>()
+    const groups = new Map<string, Datum[]>()
     for (const d of tagged) {
       const key = d[groupByField] ?? "__default"
       if (!groups.has(key)) groups.set(key, [])
@@ -206,7 +207,7 @@ function buildPrecomputed(
     }
 
     // For each group, find segment boundaries and collect bridge points.
-    const bridgePoints: Record<string, any>[] = []
+    const bridgePoints: Datum[] = []
     for (const [, groupPoints] of groups) {
       for (let j = 0; j < groupPoints.length - 1; j++) {
         if (groupPoints[j][SEGMENT_FIELD] !== groupPoints[j + 1][SEGMENT_FIELD]) {
@@ -237,7 +238,7 @@ function buildPrecomputed(
   // underline includes bridge points and covers the same x-extent as the
   // dashed training segment.
   if (config.trainUnderline) {
-    const trainBaseCopies: Record<string, any>[] = []
+    const trainBaseCopies: Datum[] = []
     for (const d of processedData) {
       if (d[SEGMENT_FIELD] === "training") {
         trainBaseCopies.push({ ...d, [SEGMENT_FIELD]: "training-base" as SegmentType })
@@ -247,7 +248,7 @@ function buildPrecomputed(
     processedData.unshift(...trainBaseCopies)
   }
 
-  const annotations: Record<string, any>[] = []
+  const annotations: Datum[] = []
 
   // Envelope from upper/lower bounds
   if (upperAcc && lowerAcc) {
@@ -277,9 +278,9 @@ function buildPrecomputed(
   if (isAnomalyAcc) {
     const anomalyStyleProp = config.anomalyStyle
     // Build the annotation — support function-based r and style
-    const highlightAnn: Record<string, any> = {
+    const highlightAnn: Datum = {
       type: "highlight",
-      filter: (d: Record<string, any>) => readBool(d, isAnomalyAcc!),
+      filter: (d: Datum) => readBool(d, isAnomalyAcc!),
     }
 
     if (anomalyStyleProp) {
@@ -288,8 +289,8 @@ function buildPrecomputed(
       highlightAnn.r = anomalyRadius
     } else if (typeof anomalyColor === "function") {
       // Per-datum color function
-      highlightAnn.style = (d: Record<string, any>) => {
-        const c = (anomalyColor as (d: Record<string, any>) => string)(d)
+      highlightAnn.style = (d: Datum) => {
+        const c = (anomalyColor as (d: Datum) => string)(d)
         return { stroke: c, strokeWidth: 1.5, fill: c, fillOpacity: 0.7 }
       }
       highlightAnn.r = anomalyRadius
@@ -328,7 +329,7 @@ function buildPrecomputed(
 // ── Auto mode (computed regression) ────────────────────────────────────
 
 function buildAutoForecast(
-  data: Record<string, any>[],
+  data: Datum[],
   xAccessor: string,
   yAccessor: string,
   config: ForecastConfig,
@@ -344,12 +345,12 @@ function buildAutoForecast(
   } = config
 
   if (trainEnd == null) {
-    return { processedData: data as Record<string, any>[], annotations: [] }
+    return { processedData: data as Datum[], annotations: [] }
   }
 
   // Split data into training and observed
-  const training: Record<string, any>[] = []
-  const observed: Record<string, any>[] = []
+  const training: Datum[] = []
+  const observed: Datum[] = []
 
   for (const d of data) {
     const xVal = d[xAccessor] as number
@@ -366,8 +367,8 @@ function buildAutoForecast(
     .filter((p) => p[0] != null && p[1] != null && isFinite(p[0]) && isFinite(p[1]))
     .sort((a, b) => a[0] - b[0])
 
-  const annotations: Record<string, any>[] = []
-  const forecastPoints: Record<string, any>[] = []
+  const annotations: Datum[] = []
+  const forecastPoints: Datum[] = []
 
   if (points.length >= 3) {
     const n = points.length
@@ -448,7 +449,7 @@ function buildAutoForecast(
   }
 
   // Duplicate boundary points so adjacent segments share an endpoint (no gap)
-  const processedData: Record<string, any>[] = []
+  const processedData: Datum[] = []
 
   // Training → Observed boundary
   processedData.push(...training)
@@ -483,7 +484,7 @@ function isPrecomputedMode(config: ForecastConfig): boolean {
 }
 
 export function buildForecast(
-  data: Record<string, any>[],
+  data: Datum[],
   xAccessor: string,
   yAccessor: string,
   forecastConfig: ForecastConfig,
@@ -503,9 +504,9 @@ export { darkenColor, lightenColor } from "./colorManipulation"
 // ── Segment-aware line style wrapper ───────────────────────────────────
 
 export function createSegmentLineStyle(
-  baseStyle: (d: Record<string, any>) => Record<string, any>,
+  baseStyle: (d: Datum) => Datum,
   forecastConfig: ForecastConfig
-): (d: Record<string, any>) => Record<string, any> {
+): (d: Datum) => Datum {
   const trainDash = forecastConfig.trainDasharray ?? "8,4"
   const forecastDash = forecastConfig.forecastDasharray ?? "4,4"
   const forecastColor = forecastConfig.color || "#6366f1"
@@ -515,7 +516,7 @@ export function createSegmentLineStyle(
   const trainLinecap = forecastConfig.trainLinecap
   const trainUnderline = forecastConfig.trainUnderline
 
-  return (d: Record<string, any>) => {
+  return (d: Datum) => {
     const base = baseStyle(d)
     const segment = d[SEGMENT_FIELD] as SegmentType | undefined
 

@@ -15,6 +15,7 @@ import { SelectionProvider } from "../../store/SelectionStore"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
 import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
+import type { Datum } from "./datumTypes"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -49,7 +50,7 @@ describe("resolveAccessor", () => {
   })
 
   it("resolves a function accessor by passing it through", () => {
-    const original = (d: Record<string, any>) => d.x * 2
+    const original = (d: Datum) => d.x * 2
     const fn = resolveAccessor(original)
     expect(fn).toBe(original)
     expect(fn({ x: 5 })).toBe(10)
@@ -79,7 +80,7 @@ describe("useColorScale", () => {
 
   it("returns a color scale when colorBy is a function", () => {
     const { result } = renderHook(
-      () => useColorScale(data, (d: any) => d.cat),
+      () => useColorScale(data, (d: Datum) => d.cat),
       { wrapper: createWrapper() }
     )
     // After the fix, function colorBy now derives categories and builds a scale
@@ -88,7 +89,7 @@ describe("useColorScale", () => {
 
   it("function colorBy scale returns different colors for different categories", () => {
     const { result } = renderHook(
-      () => useColorScale(data, (d: any) => d.cat),
+      () => useColorScale(data, (d: Datum) => d.cat),
       { wrapper: createWrapper() }
     )
     const scale = result.current!
@@ -99,7 +100,7 @@ describe("useColorScale", () => {
   it("function colorBy uses CategoryColorProvider when available", () => {
     const categoryColors = { A: "#ff0000", B: "#00ff00", C: "#0000ff" }
     const { result } = renderHook(
-      () => useColorScale(data, (d: any) => d.cat),
+      () => useColorScale(data, (d: Datum) => d.cat),
       { wrapper: createWrapper({ categoryColors }) }
     )
     expect(result.current!("A")).toBe("#ff0000")

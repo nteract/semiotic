@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import { scaleSequential } from "d3-scale"
@@ -33,7 +34,7 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 /**
  * Heatmap component props
  */
-export interface HeatmapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /**
    * Array of data points with x, y, and value properties.
    * @example
@@ -79,7 +80,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   /**
    * Format function for y-axis tick labels
    */
-  yFormat?: (d: any) => string
+  yFormat?: (d: number | Date | string) => string
 
   /**
    * Color scheme for the heatmap — any d3-scale-chromatic sequential scheme
@@ -157,7 +158,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   /**
    * Annotation objects to render on the chart
    */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   /**
    * Additional StreamXYFrame props for advanced customization
@@ -224,7 +225,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -347,8 +348,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
   // Get value accessor function
   const getValueFn = useMemo(() => {
     return typeof valueAccessor === "function"
-      ? (d: Record<string, any>) => (valueAccessor as (d: any) => number)(d)
-      : (d: Record<string, any>) => d[valueAccessor]
+      ? (d: Datum) => (valueAccessor as (d: Datum) => number)(d)
+      : (d: Datum) => d[valueAccessor]
   }, [valueAccessor])
 
   // Calculate value domain
@@ -468,7 +469,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Record<string,
 
   return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 Heatmap.displayName = "Heatmap"

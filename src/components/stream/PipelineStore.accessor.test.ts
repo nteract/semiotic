@@ -1,4 +1,5 @@
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -39,8 +40,8 @@ describe("PipelineStore — Accessor Stability", () => {
 
   it("does not set needsFullRebuild for functionally equivalent inline arrows", () => {
     const store = new PipelineStore(makeConfig({
-      xAccessor: (d: any) => d.time,
-      yAccessor: (d: any) => d.value
+      xAccessor: (d: Datum) => d.time,
+      yAccessor: (d: Datum) => d.value
     }))
     store.ingest({ inserts: [{ time: 1, value: 2 }], bounded: false })
     store.computeScene({ width: 100, height: 100 })
@@ -48,20 +49,20 @@ describe("PipelineStore — Accessor Stability", () => {
 
     // Simulate a React re-render: new function objects with identical source
     store.updateConfig({
-      xAccessor: (d: any) => d.time,
-      yAccessor: (d: any) => d.value
+      xAccessor: (d: Datum) => d.time,
+      yAccessor: (d: Datum) => d.value
     })
     expect(store.needsFullRebuild).toBe(false)
   })
 
   it("sets needsFullRebuild when function accessor source changes", () => {
     const store = new PipelineStore(makeConfig({
-      xAccessor: (d: any) => d.time,
-      yAccessor: (d: any) => d.value
+      xAccessor: (d: Datum) => d.time,
+      yAccessor: (d: Datum) => d.value
     }))
     store.needsFullRebuild = false
 
-    store.updateConfig({ yAccessor: (d: any) => d.price })
+    store.updateConfig({ yAccessor: (d: Datum) => d.price })
     expect(store.needsFullRebuild).toBe(true)
   })
 
@@ -77,11 +78,11 @@ describe("PipelineStore — Accessor Stability", () => {
 
   it("does not set needsFullRebuild for equivalent colorAccessor", () => {
     const store = new PipelineStore(makeConfig({
-      colorAccessor: (d: any) => d.category
+      colorAccessor: (d: Datum) => d.category
     }))
     store.needsFullRebuild = false
 
-    store.updateConfig({ colorAccessor: (d: any) => d.category })
+    store.updateConfig({ colorAccessor: (d: Datum) => d.category })
     expect(store.needsFullRebuild).toBe(false)
   })
 
@@ -115,8 +116,8 @@ describe("PipelineStore — Accessor Stability", () => {
 
   it("resolved accessor functions still work after skipping re-resolution", () => {
     const store = new PipelineStore(makeConfig({
-      xAccessor: (d: any) => d.ts,
-      yAccessor: (d: any) => d.val,
+      xAccessor: (d: Datum) => d.ts,
+      yAccessor: (d: Datum) => d.val,
       runtimeMode: "bounded"
     }))
     store.ingest({ inserts: [{ ts: 10, val: 20 }], bounded: true })
@@ -124,8 +125,8 @@ describe("PipelineStore — Accessor Stability", () => {
 
     // Pass equivalent functions — should NOT re-resolve
     store.updateConfig({
-      xAccessor: (d: any) => d.ts,
-      yAccessor: (d: any) => d.val
+      xAccessor: (d: Datum) => d.ts,
+      yAccessor: (d: Datum) => d.val
     })
 
     // Ingest more data and verify scene still works
@@ -140,7 +141,7 @@ describe("PipelineStore — xIsDate auto-detection", () => {
     const store = new PipelineStore(makeConfig({
       chartType: "line",
       runtimeMode: "bounded",
-      xAccessor: (d: any) => new Date(d.timestamp),
+      xAccessor: (d: Datum) => new Date(d.timestamp),
       yAccessor: "value"
     }))
     store.ingest({

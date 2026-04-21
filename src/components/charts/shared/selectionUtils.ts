@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "./datumTypes"
 
 /**
  * Selection integration utilities for HOC charts.
@@ -70,13 +71,13 @@ export function normalizeLinkedBrush(
 
 export interface SelectionHookResult {
   isActive: boolean
-  predicate: (datum: Record<string, any>) => boolean
+  predicate: (datum: Datum) => boolean
 }
 
 export interface SelectionStyleConfig {
   unselectedOpacity?: number
-  unselectedStyle?: Record<string, any>
-  selectedStyle?: Record<string, any>
+  unselectedStyle?: Datum
+  selectedStyle?: Datum
 }
 
 /**
@@ -98,13 +99,13 @@ export const DEFAULT_SELECTION_OPACITY = 0.5
  * 2. `DEFAULT_SELECTION_OPACITY`
  */
 export function wrapStyleWithSelection(
-  baseStyleFn: (d: Record<string, any>) => Record<string, any>,
+  baseStyleFn: (d: Datum) => Datum,
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
-): (d: Record<string, any>) => Record<string, any> {
+): (d: Datum) => Datum {
   if (!selectionHook) return baseStyleFn
 
-  return (d: Record<string, any>) => {
+  return (d: Datum) => {
     const style = { ...baseStyleFn(d) }
 
     if (selectionHook.isActive) {

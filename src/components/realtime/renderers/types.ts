@@ -1,4 +1,5 @@
 import type { RealtimeScales, RealtimeLayout, LineStyle, RealtimeAccessors, BarStyle, WaterfallStyle, SwarmStyle } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 export interface RendererOptions {
   binSize?: number
@@ -10,11 +11,11 @@ export interface RendererOptions {
 
 export type RendererFn = (
   ctx: CanvasRenderingContext2D,
-  data: Iterable<Record<string, any>>,
+  data: Iterable<Datum>,
   scales: RealtimeScales,
   layout: RealtimeLayout,
   style: LineStyle,
   accessors: RealtimeAccessors,
-  annotations?: Record<string, any>[],
+  annotations?: Datum[],
   options?: RendererOptions
 ) => void

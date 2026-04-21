@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -54,7 +55,7 @@ import {
  * the polarity.
  */
 
-export interface LikertChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
 
   /** Question / item accessor — the ordinal axis. */
@@ -110,7 +111,7 @@ export interface LikertChartProps<TDatum extends Record<string, any> = Record<st
   legendInteraction?: LegendInteractionMode
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
@@ -127,7 +128,7 @@ export interface LikertChartHandle extends RealtimeFrameHandle {
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export const LikertChart = forwardRef(function LikertChart<TDatum extends Record<string, any> = Record<string, any>>(
+export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum = Datum>(
   props: LikertChartProps<TDatum>,
   ref: React.Ref<LikertChartHandle>
 ) {
@@ -224,7 +225,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   })
 
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: any) => {
+    streaming.wrapPush((d: Datum) => {
       accumulatorRef.current.push(d)
       reAggregate(accumulatorRef.current)
     }),
@@ -291,13 +292,13 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levels, levelColorMap])
 
   // ── Piece style ──────────────────────────────────────────────────────
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Record<string, any>) | undefined
+  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
 
   const basePieceStyle = useMemo(() => {
-    return (d: Record<string, any>, category?: string) => {
+    return (d: Datum, category?: string) => {
       const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel
-      let base: Record<string, any>
+      let base: Datum
       if (level === NEUTRAL_NEG || level === NEUTRAL_POS) {
         base = { fill: neutralColor }
       } else {
@@ -333,7 +334,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
   }, [levels])
 
   const defaultTooltipContent = useMemo(() => {
-    return (d: any) => {
+    return (d: Datum) => {
       const row = d.data || d
       const rawLevel = row.__likertLevel || "Unknown"
       const level = (rawLevel === NEUTRAL_NEG || rawLevel === NEUTRAL_POS)
@@ -364,7 +365,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
       return "LikertChart: pre-aggregated mode requires both `levelAccessor` and `countAccessor`."
     }
     if (data !== undefined && data.length === 0) return null
-    const accessors: Record<string, any> = { categoryAccessor }
+    const accessors: Datum = { categoryAccessor }
     if (isRawMode) {
       if (valueAccessor) accessors.valueAccessor = valueAccessor
     } else {
@@ -482,7 +483,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Record
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(
+  <TDatum extends Datum = Datum>(
     props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>
   ): React.ReactElement | null
   displayName?: string

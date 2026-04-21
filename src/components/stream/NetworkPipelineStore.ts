@@ -19,6 +19,7 @@ import type {
 import {
   DEFAULT_TENSION_CONFIG
 } from "./networkTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 
 const CURVATURE = 0.5
 
@@ -176,19 +177,19 @@ export class NetworkPipelineStore {
 
     const getNodeId = typeof nodeIDAccessor === "function"
       ? nodeIDAccessor
-      : (d: any) => d[nodeIDAccessor]
+      : (d: Datum) => d[nodeIDAccessor]
 
     const getSource = typeof sourceAccessor === "function"
       ? sourceAccessor
-      : (d: any) => d[sourceAccessor]
+      : (d: Datum) => d[sourceAccessor]
 
     const getTarget = typeof targetAccessor === "function"
       ? targetAccessor
-      : (d: any) => d[targetAccessor]
+      : (d: Datum) => d[targetAccessor]
 
     const getValue = typeof valueAccessor === "function"
       ? valueAccessor
-      : (d: any) => d[valueAccessor] ?? 1
+      : (d: Datum) => d[valueAccessor] ?? 1
 
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
@@ -1047,7 +1048,7 @@ export class NetworkPipelineStore {
   /**
    * Update a node's data by ID. Returns the previous data, or null if not found.
    */
-  updateNode(id: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any> | null {
+  updateNode(id: string, updater: (data: Datum) => Datum): Datum | null {
     const node = this.nodes.get(id)
     if (!node) return null
     const previous = node.data ? { ...node.data } : {}
@@ -1060,12 +1061,12 @@ export class NetworkPipelineStore {
    * Update all edges between source and target. Handles parallel edges.
    * Returns array of previous data values (one per updated edge), or empty array.
    */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+  updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[] {
     const valAcc = this.config.valueAccessor
     const valFn = typeof valAcc === "function" ? valAcc
-      : valAcc ? (d: any) => d[valAcc]
-      : (d: any) => d.value
-    const results: Record<string, any>[] = []
+      : valAcc ? (d: Datum) => d[valAcc]
+      : (d: Datum) => d.value
+    const results: Datum[] = []
     for (const [, edge] of this.edges) {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
@@ -1121,9 +1122,9 @@ export class NetworkPipelineStore {
       if (!accessor) {
         throw new Error("removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead.")
       }
-      const getEdgeId = typeof accessor === "function" ? accessor : (d: any) => d?.[accessor]
+      const getEdgeId = typeof accessor === "function" ? accessor : (d: Datum) => d?.[accessor]
       for (const [edgeKey, edge] of this.edges) {
-        if (getEdgeId(edge.data) === sourceIdOrEdgeId) {
+        if (edge.data && getEdgeId(edge.data) === sourceIdOrEdgeId) {
           toDelete.push(edgeKey)
         }
       }

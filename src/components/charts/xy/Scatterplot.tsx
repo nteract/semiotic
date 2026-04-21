@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -21,7 +22,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 /**
  * Scatterplot component props
  */
-export interface ScatterplotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /** Array of data points. Each point should have x and y properties. */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
@@ -57,7 +58,7 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   /** Legend position */
   legendPosition?: LegendPosition
   /** Annotation objects to render on the chart */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -74,7 +75,7 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
  * />
  * ```
  */
-export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -228,7 +229,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
   }, [safeData, sizeBy])
 
   const basePointStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
       if (colorBy) {
         if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
@@ -318,7 +319,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Record
 
   return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 Scatterplot.displayName = "Scatterplot"

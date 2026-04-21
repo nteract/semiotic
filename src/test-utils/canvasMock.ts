@@ -1,4 +1,5 @@
 import { vi } from "vitest"
+import type { Datum } from "../components/charts/shared/datumTypes"
 
 /**
  * Creates a mock 2D canvas rendering context with all commonly used
@@ -7,7 +8,7 @@ import { vi } from "vitest"
  * This is the single canonical canvas mock for the entire test suite.
  * Import from "../../test-utils/canvasMock" (or appropriate relative path).
  */
-export function createMockCanvasContext(): Record<string, any> {
+export function createMockCanvasContext(): Datum {
   return {
     // Drawing methods
     beginPath: vi.fn(),
@@ -93,7 +94,7 @@ export interface CanvasOpLog {
   strokeLineWidths: number[]
 }
 
-export function recordCanvasOps(ctx: Record<string, any>): CanvasOpLog {
+export function recordCanvasOps(ctx: Datum): CanvasOpLog {
   const log: CanvasOpLog = {
     fillStyles: [],
     strokeStyles: [],

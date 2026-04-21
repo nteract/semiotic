@@ -11,6 +11,7 @@ import { buildSwimlaneScene } from "./swimlaneScene"
 import type { OrdinalSceneContext } from "./types"
 import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig } from "../ordinalTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ function makeScales(opts: {
   }
 }
 
-function makeColumn(name: string, pieceData: Record<string, any>[], overrides: Partial<OrdinalColumn> = {}): OrdinalColumn {
+function makeColumn(name: string, pieceData: Datum[], overrides: Partial<OrdinalColumn> = {}): OrdinalColumn {
   return {
     name,
     x: 10,
@@ -62,10 +63,10 @@ function makeCtx(overrides: Partial<OrdinalSceneContext> = {}): OrdinalSceneCont
     scales,
     columns: overrides.columns || {},
     config: overrides.config || makeConfig(),
-    getR: overrides.getR || ((d: any) => d.value),
-    getO: overrides.getO || ((d: any) => d.category),
+    getR: overrides.getR || ((d: Datum) => d.value),
+    getO: overrides.getO || ((d: Datum) => d.category),
     multiScales: overrides.multiScales || [],
-    rAccessors: overrides.rAccessors || [(d: any) => d.value],
+    rAccessors: overrides.rAccessors || [(d: Datum) => d.value],
     resolvePieceStyle: overrides.resolvePieceStyle || (() => ({ ...defaultStyle })),
     resolveSummaryStyle: overrides.resolveSummaryStyle || (() => ({ ...defaultStyle })),
     getRawRange: overrides.getRawRange || (() => null),
@@ -144,7 +145,7 @@ describe("buildBarScene", () => {
     const scales = makeScales({ rDomain: [0, 100], rRange: [300, 0] })
     const ctx = makeCtx({
       scales,
-      getStack: (d: any) => d.stack,
+      getStack: (d: Datum) => d.stack,
       columns: {
         A: makeColumn("A", [
           { category: "A", value: 30, stack: "x" },
@@ -177,7 +178,7 @@ describe("buildBarScene", () => {
           { category: "A", value: -20, stack: "neg" }
         ]),
       },
-      getStack: (d: any) => d.stack
+      getStack: (d: Datum) => d.stack
     })
     const nodes = buildBarScene(ctx, layout)
     expect(nodes).toHaveLength(2)
@@ -195,7 +196,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ normalize: true }),
-      getStack: (d: any) => d.stack,
+      getStack: (d: Datum) => d.stack,
       columns: {
         A: makeColumn("A", [
           { category: "A", value: 60, stack: "x" },
@@ -247,7 +248,7 @@ describe("buildClusterBarScene", () => {
     const scales = makeScales()
     const ctx = makeCtx({
       scales,
-      getGroup: (d: any) => d.group,
+      getGroup: (d: Datum) => d.group,
       columns: {
         A: makeColumn("A", [
           { category: "A", value: 30, group: "g1" },
@@ -274,7 +275,7 @@ describe("buildClusterBarScene", () => {
     const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
     const ctx = makeCtx({
       scales,
-      getGroup: (d: any) => d.group,
+      getGroup: (d: Datum) => d.group,
       columns: {
         A: makeColumn("A", [
           { category: "A", value: 30, group: "g1" }
@@ -926,7 +927,7 @@ describe("buildTimelineScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "timeline", projection: "horizontal" }),
-      getRawRange: (d: any) => [d.start, d.end],
+      getRawRange: (d: Datum) => [d.start, d.end],
       columns: {
         A: makeColumn("A", [{ category: "A", start: 10, end: 50 }])
       }
@@ -941,7 +942,7 @@ describe("buildTimelineScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "timeline", projection: "horizontal" }),
-      getRawRange: (d: any) => [d.start, d.end],
+      getRawRange: (d: Datum) => [d.start, d.end],
       columns: {
         A: makeColumn("A", [{ category: "A", start: 0, end: 50 }])
       }
@@ -960,7 +961,7 @@ describe("buildTimelineScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "timeline", projection: "vertical" }),
-      getRawRange: (d: any) => [d.start, d.end],
+      getRawRange: (d: Datum) => [d.start, d.end],
       columns: {
         A: makeColumn("A", [{ category: "A", start: 20, end: 80 }])
       }
@@ -990,7 +991,7 @@ describe("buildTimelineScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "timeline", projection: "horizontal" }),
-      getRawRange: (d: any) => [d.start, d.end],
+      getRawRange: (d: Datum) => [d.start, d.end],
       columns: {
         A: makeColumn("A", [{ category: "A", start: 80, end: 20 }])
       }
@@ -1021,8 +1022,8 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category,
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category,
       config: makeConfig({ connectorStyle: { stroke: "#333", strokeWidth: 2 } })
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
@@ -1048,7 +1049,7 @@ describe("buildConnectors", () => {
     const ctx = makeCtx({
       scales,
       getConnector: () => "",
-      getO: (d: any) => d.category
+      getO: (d: Datum) => d.category
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(0)
@@ -1061,8 +1062,8 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(0)
@@ -1076,8 +1077,8 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(1)
@@ -1093,10 +1094,10 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category,
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category,
       config: makeConfig({
-        connectorStyle: (d: any) => ({ stroke: d.color, strokeWidth: 3 })
+        connectorStyle: (d: Datum) => ({ stroke: d.color, strokeWidth: 3 })
       })
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
@@ -1112,8 +1113,8 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category,
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category,
       config: makeConfig({})
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
@@ -1130,8 +1131,8 @@ describe("buildConnectors", () => {
     ]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(2) // A->B and B->C
@@ -1146,8 +1147,8 @@ describe("buildConnectors", () => {
     ] as any[]
     const ctx = makeCtx({
       scales,
-      getConnector: (d: any) => d.group,
-      getO: (d: any) => d.category
+      getConnector: (d: Datum) => d.group,
+      getO: (d: Datum) => d.category
     })
     const connectors = buildConnectors(ctx, pieceNodes, layout)
     expect(connectors).toHaveLength(0)
@@ -1181,7 +1182,7 @@ describe("buildFunnelScene", () => {
         Signups: makeColumn("Signups", [{ step: "Signups", value: 600 }], { x: scales.o("Signups")!, width: band, pieceData: [{ step: "Signups", value: 600 }] }),
         Paid: makeColumn("Paid", [{ step: "Paid", value: 200 }], { x: scales.o("Paid")!, width: band, pieceData: [{ step: "Paid", value: 200 }] }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
     const nodes = buildFunnelScene(ctx, layout)
 
@@ -1219,7 +1220,7 @@ describe("buildFunnelScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "funnel", projection: "horizontal" }),
-      getStack: (d: any) => d.channel,
+      getStack: (d: Datum) => d.channel,
       columns: {
         Step1: makeColumn("Step1", [
           { step: "Step1", value: 100, channel: "Web" },
@@ -1230,7 +1231,7 @@ describe("buildFunnelScene", () => {
           { step: "Step2", value: 40, channel: "Mobile" },
         ], { x: scales.o("Step2")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildFunnelScene(ctx, layout)
@@ -1270,7 +1271,7 @@ describe("buildFunnelScene", () => {
         B: makeColumn("B", [{ value: 50 }], { x: scales.o("B")!, width: band }),
         C: makeColumn("C", [{ value: 25 }], { x: scales.o("C")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildFunnelScene(ctx, layout)
@@ -1314,7 +1315,7 @@ describe("buildFunnelScene", () => {
         Visit: makeColumn("Visit", [{ value: 100 }], { x: scales.o("Visit")!, width: band }),
         Signup: makeColumn("Signup", [{ value: 40 }], { x: scales.o("Signup")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildFunnelScene(ctx, layout)
@@ -1342,7 +1343,7 @@ describe("buildFunnelScene", () => {
         Mid: makeColumn("Mid", [{ value: 100 }], { x: scales.o("Mid")!, width: band }),
         Bot: makeColumn("Bot", [{ value: 50 }], { x: scales.o("Bot")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildFunnelScene(ctx, layout)
@@ -1382,7 +1383,7 @@ describe("buildFunnelScene", () => {
         S2: makeColumn("S2", [{ value: 200 }], { x: scales.o("S2")!, width: band }),
         S3: makeColumn("S3", [{ value: 100 }], { x: scales.o("S3")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildFunnelScene(ctx, layout)
@@ -1424,7 +1425,7 @@ describe("buildBarFunnelScene", () => {
         Interest: makeColumn("Interest", [{ value: 60 }], { x: scales.o("Interest")!, width: band }),
         Decision: makeColumn("Decision", [{ value: 30 }], { x: scales.o("Decision")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
@@ -1457,7 +1458,7 @@ describe("buildBarFunnelScene", () => {
         Step1: makeColumn("Step1", [{ value: 100 }], { x: scales.o("Step1")!, width: band }),
         Step2: makeColumn("Step2", [{ value: 70 }], { x: scales.o("Step2")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
@@ -1490,7 +1491,7 @@ describe("buildBarFunnelScene", () => {
         First: makeColumn("First", [{ value: 100 }], { x: scales.o("First")!, width: band }),
         Second: makeColumn("Second", [{ value: 50 }], { x: scales.o("Second")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
@@ -1511,7 +1512,7 @@ describe("buildBarFunnelScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "bar-funnel", projection: "vertical" }),
-      getStack: (d: any) => d.channel,
+      getStack: (d: Datum) => d.channel,
       columns: {
         S1: makeColumn("S1", [
           { value: 100, channel: "Web" },
@@ -1522,7 +1523,7 @@ describe("buildBarFunnelScene", () => {
           { value: 40, channel: "App" },
         ], { x: scales.o("S2")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
@@ -1551,7 +1552,7 @@ describe("buildBarFunnelScene", () => {
         Top: makeColumn("Top", [{ value: 100 }], { x: scales.o("Top")!, width: band }),
         Bottom: makeColumn("Bottom", [{ value: 40 }], { x: scales.o("Bottom")!, width: band }),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
@@ -1580,7 +1581,7 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         LaneA: makeColumn("LaneA", [
           { value: 20, sub: "task1" },
@@ -1588,7 +1589,7 @@ describe("buildSwimlaneScene", () => {
           { value: 10, sub: "task3" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)
@@ -1601,7 +1602,7 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         Lane: makeColumn("Lane", [
           { value: 20, sub: "a" },
@@ -1609,7 +1610,7 @@ describe("buildSwimlaneScene", () => {
           { value: 10, sub: "c" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)
@@ -1637,7 +1638,7 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         Lane: makeColumn("Lane", [
           { value: 15, sub: "task" },
@@ -1645,7 +1646,7 @@ describe("buildSwimlaneScene", () => {
           { value: 10, sub: "task" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)
@@ -1667,14 +1668,14 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         Lane: makeColumn("Lane", [
           { value: -30, sub: "neg" },
           { value: 20, sub: "pos" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)
@@ -1696,7 +1697,7 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "horizontal" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         Lane: makeColumn("Lane", [
           { value: 20, sub: "a" },
@@ -1704,7 +1705,7 @@ describe("buildSwimlaneScene", () => {
           { value: 10, sub: "c" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)
@@ -1723,14 +1724,14 @@ describe("buildSwimlaneScene", () => {
     const ctx = makeCtx({
       scales,
       config: makeConfig({ chartType: "swimlane", projection: "vertical" }),
-      getStack: (d: any) => d.sub,
+      getStack: (d: Datum) => d.sub,
       columns: {
         Lane: makeColumn("Lane", [
           { value: 40, sub: "x" },
           { value: 30, sub: "y" },
         ]),
       },
-      getR: (d: any) => d.value,
+      getR: (d: Datum) => d.value,
     })
 
     const nodes = buildSwimlaneScene(ctx, layout)

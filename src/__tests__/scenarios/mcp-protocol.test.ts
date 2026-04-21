@@ -1,3 +1,4 @@
+import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * MCP protocol compliance tests.
  *
@@ -31,7 +32,7 @@ function spawnServer(): ChildProcess {
 function sendRequest(
   proc: ChildProcess,
   method: string,
-  params: Record<string, any> = {},
+  params: Datum = {},
   id: string | number = 1
 ): Promise<any> {
   return new Promise((resolve, reject) => {

@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { ChoroplethMap } from "./ChoroplethMap"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamGeoFrame to capture props
 let lastGeoFrameProps: any = null
@@ -174,7 +175,7 @@ describe("ChoroplethMap", () => {
     it("supports function valueAccessor", () => {
       render(
         <Wrapper>
-          <ChoroplethMap areas={sampleAreas} valueAccessor={(d: any) => d.properties.gdp * 2} />
+          <ChoroplethMap areas={sampleAreas} valueAccessor={(d: Datum) => d.properties.gdp * 2} />
         </Wrapper>
       )
       const style = lastGeoFrameProps.areaStyle(sampleAreas[0])

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -17,7 +18,7 @@ import { validateObjectData } from "../shared/validateChartData"
 /**
  * TreeDiagram component props
  */
-export interface TreeDiagramProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChartProps {
   data: TNode
   layout?: "tree" | "cluster" | "partition" | "treemap" | "circlepack"
   orientation?: "vertical" | "horizontal" | "radial"
@@ -42,7 +43,7 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
  *
  * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
-export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode>) {
+export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -98,7 +99,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   // Node style function
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -107,14 +108,14 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   const allCategories = useMemo(() => {
     if (!colorBy || colorByDepth) return []
     const vals = new Set<string>()
-    for (const d of allNodes as Record<string, any>[]) {
+    for (const d of allNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)
   }, [allNodes, colorBy, colorByDepth])
 
-  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: any) => string) | undefined, allCategories)
+  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: Datum) => string) | undefined, allCategories)
 
   // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
   const themeCategorical = useThemeCategorical()
@@ -129,12 +130,12 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   // d is a RealtimeNode — user data on d.data, depth on d.depth
   const baseNodeStyleFn = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { stroke: "black", strokeWidth: 1 }
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
       } else {
         baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }

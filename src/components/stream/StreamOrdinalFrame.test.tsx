@@ -4,6 +4,7 @@ import { render, act, fireEvent } from "@testing-library/react"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // Mock ResizeObserver for jsdom
 if (typeof globalThis.ResizeObserver === "undefined") {
@@ -252,8 +253,8 @@ describe("StreamOrdinalFrame", () => {
       })
       const after = ref.current!.getData()
       expect(after.length).toBe(3)
-      expect(after.find((d: any) => d.val === 10)).toBeUndefined() // old datum gone
-      expect(after.find((d: any) => d.val === 99)).toBeTruthy()    // new datum present
+      expect(after.find((d: Datum) => d.val === 10)).toBeUndefined() // old datum gone
+      expect(after.find((d: Datum) => d.val === 99)).toBeTruthy()    // new datum present
     })
 
     it("replace preserves the position snapshot that clear() wipes", async () => {
@@ -298,7 +299,7 @@ describe("StreamOrdinalFrame", () => {
         ref.current!.replace([{ cat: "A", val: 50 }, { cat: "B", val: 60 }])
       })
       expect(ref.current!.getData().length).toBe(2)
-      expect(ref.current!.getData().find((d: any) => d.val === 50)).toBeTruthy()
+      expect(ref.current!.getData().find((d: Datum) => d.val === 50)).toBeTruthy()
     })
 
     it("replace preserves category insertion order across value-swapping updates", async () => {
@@ -587,7 +588,7 @@ describe("StreamOrdinalFrame", () => {
       // Capture fillStyle at each fillRect call + restore the original
       // method so the replacement can't leak into another test if the
       // mock's lifecycle ever changes.
-      function captureFillRectStyles(ctx: Record<string, any>) {
+      function captureFillRectStyles(ctx: Datum) {
         const styles: string[] = []
         const orig = ctx.fillRect as (...args: any[]) => void
         ctx.fillRect = vi.fn((...args: any[]) => {
@@ -600,7 +601,7 @@ describe("StreamOrdinalFrame", () => {
         }
       }
       const getMockCtx = () =>
-        (HTMLCanvasElement.prototype.getContext as any)() as Record<string, any>
+        (HTMLCanvasElement.prototype.getContext as any)() as Datum
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()

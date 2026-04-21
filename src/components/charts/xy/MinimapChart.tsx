@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { brushX, brushY } from "d3-brush"
@@ -22,7 +23,7 @@ export interface MinimapConfig {
   /** Margin for the minimap chart */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** Line style override for the minimap */
-  lineStyle?: (d: Record<string, any>) => Record<string, any>
+  lineStyle?: (d: Datum) => Datum
   /** Show axes in minimap (default: false) */
   showAxes?: boolean
   /** Background color for minimap */
@@ -31,7 +32,7 @@ export interface MinimapConfig {
   brushDirection?: "x" | "y"
 }
 
-export interface MinimapChartProps<TDatum extends Record<string, any> = Record<string, any>>
+export interface MinimapChartProps<TDatum extends Datum = Datum>
   extends Omit<BaseChartProps, "onClick" | "onObservation" | "selection" | "linkedHover">,
     AxisConfig {
   /** Array of data points or line objects with coordinates */
@@ -213,7 +214,7 @@ function BrushOverlay({
 
 // ── MinimapChart ────────────────────────────────────────────────────────
 
-export function MinimapChart<TDatum extends Record<string, any> = Record<string, any>>(
+export function MinimapChart<TDatum extends Datum = Datum>(
   props: MinimapChartProps<TDatum>
 ) {
   const {
@@ -313,13 +314,13 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof lineBy === "function" ? lineBy(d) : d[lineBy as string]
         if (!acc[key]) {
-          const lineObj: Record<string, any> = { [lineDataAccessor]: [] }
+          const lineObj: Datum = { [lineDataAccessor]: [] }
           if (typeof lineBy === "string") lineObj[lineBy] = key
           acc[key] = lineObj
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, any>>)
+      }, {} as Record<string, Datum>)
       return Object.values(grouped)
     }
 
@@ -328,10 +329,10 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
 
   const flattenedData = useMemo(() => {
     if (isLineObjectFormat || lineBy) {
-      return lineData.flatMap((line: Record<string, any>) => {
+      return lineData.flatMap((line: Datum) => {
         const coords = line[lineDataAccessor] || []
         if (lineBy && typeof lineBy === "string") {
-          return coords.map((c: Record<string, any>) => ({ ...c, [lineBy]: line[lineBy] }))
+          return coords.map((c: Datum) => ({ ...c, [lineBy]: line[lineBy] }))
         }
         return coords
       })
@@ -344,8 +345,8 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   const mainLineStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const style: Record<string, any> = { strokeWidth: lineWidth }
+    return (d: Datum) => {
+      const style: Datum = { strokeWidth: lineWidth }
       style.stroke = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
       if (fillArea) {
         style.fill = style.stroke
@@ -357,8 +358,8 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
 
   const overviewLineStyle = useMemo(() => {
     if (minimapConfig.lineStyle) return minimapConfig.lineStyle
-    return (d: Record<string, any>) => {
-      const style: Record<string, any> = { strokeWidth: 1 }
+    return (d: Datum) => {
+      const style: Datum = { strokeWidth: 1 }
       style.stroke = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
       return style
     }
@@ -366,8 +367,8 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
 
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
-    return (d: Record<string, any>) => {
-      const style: Record<string, any> = { r: pointRadius, fillOpacity: 1 }
+    return (d: Datum) => {
+      const style: Datum = { r: pointRadius, fillOpacity: 1 }
       style.fill = colorBy ? getColor(d.parentLine || d, colorBy, colorScale) : DEFAULT_COLOR
       return style
     }

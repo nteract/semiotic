@@ -14,6 +14,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 const DEFAULT_PALETTE = schemeCategory10 as readonly string[]
 
@@ -313,19 +314,19 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 function resolveLabelFn(
-  nodeLabel: string | ((d: any) => string) | undefined
-): ((d: any) => string) | null {
+  nodeLabel: string | ((d: Datum) => string) | undefined
+): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
   if (typeof nodeLabel === "function") return nodeLabel
-  return (d: any) => d[nodeLabel] || d.id
+  return (d: Datum) => d[nodeLabel] || d.id
 }
 
 function resolveValueAccessor(
-  valueAccessor: string | ((d: any) => number) | undefined
-): (d: any) => number {
-  if (!valueAccessor) return (d: any) => d.value ?? 1
+  valueAccessor: string | ((d: Datum) => number) | undefined
+): (d: Datum) => number {
+  if (!valueAccessor) return (d: Datum) => d.value ?? 1
   if (typeof valueAccessor === "function") return valueAccessor
-  return (d: any) => d[valueAccessor] ?? 1
+  return (d: Datum) => d[valueAccessor] ?? 1
 }
 
 /**

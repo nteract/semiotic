@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { toConfig, fromConfig, toURL, fromURL, configToJSX } from "./chartConfig"
 import type { ChartConfig } from "./chartConfig"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── toConfig ───────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ describe("toConfig", () => {
       xAccessor: "x",
       yAccessor: "y",
       customHoverBehavior: () => {},
-      sizeBy: (d: any) => d.size
+      sizeBy: (d: Datum) => d.size
     })
     expect(config.props.xAccessor).toBe("x")
     expect(config.props.customHoverBehavior).toBeUndefined()

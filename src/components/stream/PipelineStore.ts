@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * PipelineStore — stateful pipeline for XY/streaming chart data.
  *
@@ -86,14 +87,14 @@ export interface PipelineConfig {
   maxCapacity?: number
 
   // Accessors
-  xAccessor?: string | ((d: any) => number)
-  yAccessor?: string | ((d: any) => number)
-  timeAccessor?: string | ((d: any) => number)
-  valueAccessor?: string | ((d: any) => number)
-  colorAccessor?: string | ((d: any) => string)
-  sizeAccessor?: string | ((d: any) => number)
-  groupAccessor?: string | ((d: any) => string)
-  categoryAccessor?: string | ((d: any) => string)
+  xAccessor?: string | ((d: Datum) => number)
+  yAccessor?: string | ((d: Datum) => number)
+  timeAccessor?: string | ((d: Datum) => number)
+  valueAccessor?: string | ((d: Datum) => number)
+  colorAccessor?: string | ((d: Datum) => string)
+  sizeAccessor?: string | ((d: Datum) => number)
+  groupAccessor?: string | ((d: Datum) => string)
+  categoryAccessor?: string | ((d: Datum) => string)
   lineDataAccessor?: string
 
   // Scale types
@@ -110,20 +111,20 @@ export interface PipelineConfig {
   normalize?: boolean
 
   // Candlestick accessors
-  openAccessor?: string | ((d: any) => number)
-  highAccessor?: string | ((d: any) => number)
-  lowAccessor?: string | ((d: any) => number)
-  closeAccessor?: string | ((d: any) => number)
+  openAccessor?: string | ((d: Datum) => number)
+  highAccessor?: string | ((d: Datum) => number)
+  lowAccessor?: string | ((d: Datum) => number)
+  closeAccessor?: string | ((d: Datum) => number)
   candlestickStyle?: CandlestickStyle
   /** Internal: set by PipelineStore when open/close accessors are both missing */
   candlestickRangeMode?: boolean
 
   // Bounds/uncertainty
-  boundsAccessor?: string | ((d: any) => number)
+  boundsAccessor?: string | ((d: Datum) => number)
   boundsStyle?: any
 
   // Per-point area baseline (for band/ribbon charts like percentile bands)
-  y0Accessor?: string | ((d: any) => number)
+  y0Accessor?: string | ((d: Datum) => number)
 
   // Area gradient fill (opacity or multi-color)
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
@@ -134,8 +135,8 @@ export interface PipelineConfig {
 
   // Style
   lineStyle?: any
-  pointStyle?: (d: any) => Style & { r?: number }
-  areaStyle?: (d: any) => Style
+  pointStyle?: (d: Datum) => Style & { r?: number }
+  areaStyle?: (d: Datum) => Style
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
   waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
   colorScheme?: string | string[]
@@ -167,7 +168,7 @@ export interface PipelineConfig {
   barStyle?: BarStyle
 
   // Annotations (threshold coloring uses these)
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   // Realtime encoding
   decay?: DecayConfig
@@ -187,7 +188,7 @@ export interface PipelineConfig {
   heatmapValueFormat?: (v: number) => string
 
   // Point identification (for point-anchored annotations)
-  pointIdAccessor?: string | ((d: any) => string)
+  pointIdAccessor?: string | ((d: Datum) => string)
 
   // Curve interpolation for line/area charts
   curve?: CurveType
@@ -196,25 +197,25 @@ export interface PipelineConfig {
 // ── PipelineStore ──────────────────────────────────────────────────────
 
 export class PipelineStore {
-  private buffer: RingBuffer<Record<string, any>>
+  private buffer: RingBuffer<Datum>
   private xExtent = new IncrementalExtent()
   private yExtent = new IncrementalExtent()
   private config: PipelineConfig
   private growingCap: number
 
-  private getX: (d: any) => number
-  private getY: (d: any) => number
-  private getGroup: ((d: any) => string) | undefined
-  private getCategory: ((d: any) => string) | undefined
-  private getSize: ((d: any) => number) | undefined
-  private getColor: ((d: any) => string) | undefined
-  private getBounds: ((d: any) => number) | undefined
-  private getY0: ((d: any) => number) | undefined
-  private getOpen: ((d: any) => number) | undefined
-  private getHigh: ((d: any) => number) | undefined
-  private getLow: ((d: any) => number) | undefined
-  private getClose: ((d: any) => number) | undefined
-  private getPointId: ((d: any) => string) | undefined
+  private getX: (d: Datum) => number
+  private getY: (d: Datum) => number
+  private getGroup: ((d: Datum) => string) | undefined
+  private getCategory: ((d: Datum) => string) | undefined
+  private getSize: ((d: Datum) => number) | undefined
+  private getColor: ((d: Datum) => string) | undefined
+  private getBounds: ((d: Datum) => number) | undefined
+  private getY0: ((d: Datum) => number) | undefined
+  private getOpen: ((d: Datum) => number) | undefined
+  private getHigh: ((d: Datum) => number) | undefined
+  private getLow: ((d: Datum) => number) | undefined
+  private getClose: ((d: Datum) => number) | undefined
+  private getPointId: ((d: Datum) => string) | undefined
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -255,7 +256,7 @@ export class PipelineStore {
 
   // ── Buffer array caching ────────────────────────────────────────────
   /** Cached materialized array from buffer.toArray() — only rebuilt when buffer changes */
-  private _bufferArrayCache: Record<string, any>[] | null = null
+  private _bufferArrayCache: Datum[] | null = null
   /** True when the buffer has been mutated since last toArray() call */
   private _bufferDirty = true
 
@@ -380,10 +381,10 @@ export class PipelineStore {
         if (isDateStr) {
           const key = typeof rawAccessor === "string" ? rawAccessor : undefined
           this.getX = key
-            ? (d: any) => +new Date(d[key])
-            : (d: any) => +((rawAccessor as (d: any) => any)(d) instanceof Date
-                ? (rawAccessor as (d: any) => any)(d)
-                : new Date((rawAccessor as (d: any) => any)(d)))
+            ? (d: Datum) => +new Date(d[key])
+            : (d: Datum) => +((rawAccessor as (d: Datum) => any)(d) instanceof Date
+                ? (rawAccessor as (d: Datum) => any)(d)
+                : new Date((rawAccessor as (d: Datum) => any)(d)))
         }
       }
 
@@ -802,7 +803,7 @@ export class PipelineStore {
     this.version++
   }
 
-  private buildSceneNodes(layout: StreamLayout, data: Record<string, any>[]): SceneNode[] {
+  private buildSceneNodes(layout: StreamLayout, data: Datum[]): SceneNode[] {
     const { config, scales } = this
     if (!scales || data.length === 0) return []
 
@@ -862,7 +863,7 @@ export class PipelineStore {
     }
   }
 
-  private resolveBoundsStyle(group: string, sampleDatum?: Record<string, any>): Style {
+  private resolveBoundsStyle(group: string, sampleDatum?: Datum): Style {
     const bs = this.config.boundsStyle
     if (typeof bs === "function") {
       return bs(sampleDatum || {}, group)
@@ -887,14 +888,14 @@ export class PipelineStore {
     return computeDecayOpacityFn(decay, bufferIndex, bufferSize)
   }
 
-  private applyDecay(nodes: SceneNode[], data: Record<string, any>[]): void {
+  private applyDecay(nodes: SceneNode[], data: Datum[]): void {
     if (!this.config.decay) return
     applyDecayFn(this.config.decay, nodes, data)
   }
 
   // ── Pulse (delegated to pipelinePulse.ts) ──────────────────────────
 
-  private applyPulse(nodes: SceneNode[], data: Record<string, any>[]): void {
+  private applyPulse(nodes: SceneNode[], data: Datum[]): void {
     if (!this.config.pulse || !this.timestampBuffer) return
     applyPulseFn(this.config.pulse, nodes, data, this.timestampBuffer)
   }
@@ -983,12 +984,12 @@ export class PipelineStore {
 
   // ── Helpers ──────────────────────────────────────────────────────────
 
-  private groupData(data: Record<string, any>[]): { key: string; data: Record<string, any>[] }[] {
+  private groupData(data: Datum[]): { key: string; data: Datum[] }[] {
     if (!this.getGroup) {
       return [{ key: "_default", data }]
     }
 
-    const groups = new Map<string, Record<string, any>[]>()
+    const groups = new Map<string, Datum[]>()
     for (const d of data) {
       const key = this.getGroup(d)
       if (!groups.has(key)) groups.set(key, [])
@@ -1005,7 +1006,7 @@ export class PipelineStore {
    * invalidate). Multiple scene builders within one frame skip the data scan
    * entirely after the first call.
    */
-  private resolveColorMap(data: Record<string, any>[]): Map<string, string> {
+  private resolveColorMap(data: Datum[]): Map<string, string> {
     if (this._colorMapCache && this._colorMapCache.version === this._ingestVersion) {
       return this._colorMapCache.map
     }
@@ -1036,7 +1037,7 @@ export class PipelineStore {
     return colorMap
   }
 
-  private resolveLineStyle(group: string, sampleDatum?: Record<string, any>): Style {
+  private resolveLineStyle(group: string, sampleDatum?: Datum): Style {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
       const style = ls(sampleDatum || {}, group)
@@ -1066,7 +1067,7 @@ export class PipelineStore {
     return { stroke: color, strokeWidth: 2 }
   }
 
-  private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
+  private resolveAreaStyle(group: string, sampleDatum?: Datum): Style {
     if (this.config.areaStyle) {
       const style = this.config.areaStyle(sampleDatum || {})
       // Fill in colors from frame's palette when HOC has no color scale (push API).
@@ -1148,7 +1149,7 @@ export class PipelineStore {
    * (new push, resize, or clear), avoiding per-frame allocation on
    * transition ticks, hover redraws, and other non-data-changing renders.
    */
-  private getBufferArray(): Record<string, any>[] {
+  private getBufferArray(): Datum[] {
     if (this._bufferDirty || !this._bufferArrayCache) {
       this._bufferArrayCache = this.buffer.toArray()
       this._bufferDirty = false
@@ -1158,7 +1159,7 @@ export class PipelineStore {
 
   // ── Public accessors ─────────────────────────────────────────────────
 
-  getData(): Record<string, any>[] {
+  getData(): Datum[] {
     return this.getBufferArray()
   }
 
@@ -1166,7 +1167,7 @@ export class PipelineStore {
    * Remove data points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
    */
-  remove(id: string | string[]): Record<string, any>[] {
+  remove(id: string | string[]): Datum[] {
     if (!this.getPointId) {
       throw new Error("remove() requires pointIdAccessor to be configured")
     }
@@ -1177,7 +1178,7 @@ export class PipelineStore {
     const ids = new Set(Array.isArray(id) ? id : [id])
     const getPointId = this.getPointId
     // Compact timestamp buffer in lockstep with data removal
-    const predicate = (item: Record<string, any>) => ids.has(getPointId(item))
+    const predicate = (item: Datum) => ids.has(getPointId(item))
     if (this.timestampBuffer && this.timestampBuffer.size > 0) {
       const oldTimestamps = this.timestampBuffer.toArray()
       const removeSet = new Set<number>()
@@ -1214,7 +1215,7 @@ export class PipelineStore {
    * The updater receives the current datum and returns the replacement.
    * Returns the previous values. Extents and scene are marked dirty.
    */
-  update(id: string | string[], updater: (d: Record<string, any>) => Record<string, any>): Record<string, any>[] {
+  update(id: string | string[], updater: (d: Datum) => Datum): Datum[] {
     if (!this.getPointId) {
       throw new Error("update() requires pointIdAccessor to be configured")
     }
@@ -1307,19 +1308,19 @@ export class PipelineStore {
     return this.buffer.size
   }
 
-  getBuffer(): RingBuffer<Record<string, any>> {
+  getBuffer(): RingBuffer<Datum> {
     return this.buffer
   }
 
-  getXAccessor(): (d: any) => number {
+  getXAccessor(): (d: Datum) => number {
     return this.getX
   }
 
-  getYAccessor(): (d: any) => number {
+  getYAccessor(): (d: Datum) => number {
     return this.getY
   }
 
-  getCategoryAccessor(): ((d: any) => string) | undefined {
+  getCategoryAccessor(): ((d: Datum) => string) | undefined {
     return this.getCategory
   }
 

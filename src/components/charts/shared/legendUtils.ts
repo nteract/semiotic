@@ -1,6 +1,7 @@
 import type { Accessor } from "./types"
 import type { LegendItem } from "../../types/legendTypes"
 import { STREAMING_PALETTE } from "./colorUtils"
+import type { Datum } from "./datumTypes"
 
 /**
  * Create a legend configuration for HOC components
@@ -22,10 +23,10 @@ export function createLegend({
   strokeWidth,
   categories
 }: {
-  data: Array<Record<string, any>>
+  data: Array<Datum>
   colorBy: Accessor<string>
   colorScale?: ((v: string) => string)
-  getColor: (d: Record<string, any>, accessor: Accessor<string>, scale?: ((v: string) => string)) => string
+  getColor: (d: Datum, accessor: Accessor<string>, scale?: ((v: string) => string)) => string
   strokeColor?: string
   strokeWidth?: number
   categories?: string[]

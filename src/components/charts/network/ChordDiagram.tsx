@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -18,7 +19,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 /**
  * ChordDiagram component props
  */
-export interface ChordDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
   nodes?: TNode[]
   edges?: TEdge[]
   sourceAccessor?: ChartAccessor<TEdge, string>
@@ -27,7 +28,7 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
   colorScheme?: string | string[]
-  edgeColorBy?: "source" | "target" | ((d: any) => string)
+  edgeColorBy?: "source" | "target" | ((d: Datum) => string)
   padAngle?: number
   groupWidth?: number
   sortGroups?: (a: any, b: any) => number
@@ -45,7 +46,7 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
  *
  * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
  */
-export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useImperativeHandle(ref, () => ({
     push: (point) => frameRef.current?.push(point as any),
@@ -53,7 +54,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     remove: (id) => {
       const ids = Array.isArray(id) ? id : [id]
       const nodes = frameRef.current?.getTopology()?.nodes ?? []
-      const results: Record<string, any>[] = []
+      const results: Datum[] = []
       for (const nodeId of ids) {
         const node = nodes.find(n => n.id === nodeId)
         if (node) results.push({ ...(node.data ?? {}), id: nodeId })
@@ -142,7 +143,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of inferredNodes as Record<string, any>[]) {
+    for (const d of inferredNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -171,7 +172,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
     if (!hasColorData) return undefined
-    return (d: Record<string, any>, i?: number) => {
+    return (d: Datum, i?: number) => {
       const baseStyle: Record<string, string | number> = {
         stroke: "black",
         strokeWidth: 1
@@ -201,7 +202,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
       edgeColorBy,
       colorBy,
       colorScale,
-      nodeStyleFn: nodeStyle || ((_d: Record<string, any>) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
+      nodeStyleFn: nodeStyle || ((_d: Datum) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
       edgeOpacity,
       baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
     })
@@ -218,7 +219,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     const accessor = nodeLabel || nodeIdAccessor
     if (typeof accessor === "function") return accessor
     // d is a RealtimeNode — user data lives at d.data, fall back to d.id
-    return (d: Record<string, any>) => d.data?.[accessor] ?? d[accessor] ?? d.id
+    return (d: Datum) => d.data?.[accessor] ?? d[accessor] ?? d.id
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Margin
@@ -288,7 +289,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Recor
     />
   </SafeRender>)
 }) as unknown as {
-  <TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 ChordDiagram.displayName = "ChordDiagram"

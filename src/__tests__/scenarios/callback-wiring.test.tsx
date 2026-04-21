@@ -16,6 +16,7 @@ import { BarChart } from "../../components/charts/ordinal/BarChart"
 import { PieChart } from "../../components/charts/ordinal/PieChart"
 import { Scatterplot } from "../../components/charts/xy/Scatterplot"
 import { ForceDirectedGraph } from "../../components/charts/network/ForceDirectedGraph"
+import type { Datum } from "../../components/charts/shared/datumTypes"
 
 // ── onClick wiring ─────────────────────────────────────────────────────
 
@@ -195,7 +196,7 @@ describe("tooltip prop variants render without crash", () => {
   })
 
   it("tooltip as custom function", () => {
-    const customTooltip = (d: any) => <div>Custom: {d?.data?.x}</div>
+    const customTooltip = (d: Datum) => <div>Custom: {d?.data?.x}</div>
     expect(() =>
       render(
         <BarChart

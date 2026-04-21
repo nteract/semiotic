@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -24,7 +25,7 @@ const SERIES_FIELD = "__ma_series"
 /**
  * Configuration for a single series in a MultiAxisLineChart.
  */
-export interface MultiAxisSeriesConfig<TDatum = Record<string, any>> {
+export interface MultiAxisSeriesConfig<TDatum = Datum> {
   /** Field name or function to access y values for this series */
   yAccessor: ChartAccessor<TDatum, number>
   /** Axis label for this series */
@@ -41,7 +42,7 @@ export interface MultiAxisSeriesConfig<TDatum = Record<string, any>> {
 /**
  * MultiAxisLineChart component props
  */
-export interface MultiAxisLineChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /** Array of data points shared by both series */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
@@ -68,7 +69,7 @@ export interface MultiAxisLineChartProps<TDatum extends Record<string, any> = Re
   /** Legend position */
   legendPosition?: LegendPosition
   /** Annotations */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Additional StreamXYFrame props */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -76,12 +77,12 @@ export interface MultiAxisLineChartProps<TDatum extends Record<string, any> = Re
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function computeExtent(
-  data: Record<string, any>[],
+  data: Datum[],
   accessor: ChartAccessor<any, number>
 ): [number, number] {
   let min = Infinity
   let max = -Infinity
-  const fn = typeof accessor === "function" ? accessor : (d: any) => d[accessor]
+  const fn = typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
   for (const d of data) {
     const v = fn(d)
     if (v != null && isFinite(v)) {
@@ -119,7 +120,7 @@ function invertUnitized(unitized: number, extent: [number, number]): number {
  * If `series` does not contain exactly 2 entries, renders as a standard
  * multi-line chart with a dev-mode console warning.
  */
-export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum extends Record<string, any> = Record<string, any>>(
+export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
   props: MultiAxisLineChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
@@ -129,13 +130,13 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   useImperativeHandle(ref, () => ({
     push: (point) => {
       if (!frameRef.current) return
-      const raw = point as Record<string, any>
+      const raw = point as Datum
       // Transform point into unitized series points
       for (let i = 0; i < props.series.length && i < 2; i++) {
         const s = props.series[i]
         const extent = s.extent || extentsRef.current[i]
         if (!extent) continue
-        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: any) => d[s.yAccessor as string]
+        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
         const val = fn(raw)
         if (val == null || !isFinite(val)) continue
         frameRef.current.push({
@@ -147,13 +148,13 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     },
     pushMany: (points) => {
       if (!frameRef.current) return
-      const transformed: Record<string, any>[] = []
-      for (const raw of points as Record<string, any>[]) {
+      const transformed: Datum[] = []
+      for (const raw of points as Datum[]) {
         for (let i = 0; i < props.series.length && i < 2; i++) {
           const s = props.series[i]
           const extent = s.extent || extentsRef.current[i]
           if (!extent) continue
-          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: any) => d[s.yAccessor as string]
+          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
           const val = fn(raw)
           if (val == null || !isFinite(val)) continue
           transformed.push({
@@ -279,7 +280,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
 
     if (!isDualAxis) {
       // Fallback: no unitization, just group by series
-      const result: Record<string, any>[] = []
+      const result: Datum[] = []
       for (const d of safeData) {
         for (let i = 0; i < series.length; i++) {
           const s = series[i]
@@ -296,7 +297,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       return { unitizedData: result, extents: exts }
     }
 
-    const result: Record<string, any>[] = []
+    const result: Datum[] = []
     for (const d of safeData) {
       for (let i = 0; i < 2; i++) {
         const s = series[i]
@@ -375,7 +376,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     const colorMap = new Map<string, string>()
     seriesLabels.forEach((label, i) => colorMap.set(label, seriesColors[i]))
 
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const seriesName = d[SERIES_FIELD]
       return {
         stroke: colorMap.get(seriesName) || seriesColors[0],
@@ -402,7 +403,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     if (userTooltip) return userTooltip
 
     // Default: show series name, x value, and original y value
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const datum = d.data || d
       const seriesName = datum[SERIES_FIELD]
       const seriesIdx = seriesLabels.indexOf(seriesName)
@@ -492,7 +493,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(
+  <TDatum extends Datum = Datum>(
     props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
   displayName?: string

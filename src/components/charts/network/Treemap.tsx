@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -19,7 +20,7 @@ import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 /**
  * Treemap component props
  */
-export interface TreemapProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProps {
   data: TNode
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
   valueAccessor?: ChartAccessor<TNode, number>
@@ -43,7 +44,7 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
  *
  * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
  */
-export function Treemap<TNode extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode>) {
+export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -110,7 +111,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   // sceneNode.data = original datum for this hierarchy node
   // Pass it as { data: originalDatum } so useChartSelection unwraps correctly
   const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
+    (d: Datum | null) => {
       if (!d) return baseHoverBehavior(null)
       const sceneNode = d.data || d
       const originalDatum = sceneNode?.data || sceneNode
@@ -120,7 +121,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   )
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: any) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
@@ -129,14 +130,14 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const allCategories = useMemo(() => {
     if (!colorBy || colorByDepth) return []
     const vals = new Set<string>()
-    for (const d of allNodes as Record<string, any>[]) {
+    for (const d of allNodes as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)
   }, [allNodes, colorBy, colorByDepth])
 
-  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: any) => string) | undefined, allCategories)
+  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: Datum) => string) | undefined, allCategories)
 
   // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
   const themeCategorical = useThemeCategorical()
@@ -150,12 +151,12 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   }, [colorScheme, themeCategorical])
 
   const nodeStyleFn = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { stroke: "#fff", strokeWidth: 1, strokeOpacity: 0.8 }
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
       } else {
         baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
@@ -173,7 +174,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   // Wrap node style with selection — unwrap hierarchy .data for predicate matching
   const nodeStyle = useMemo(() => {
     if (!activeSelectionHook) return nodeStyleFnWithPrimitives
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const style = { ...nodeStyleFnWithPrimitives(d) }
       if (activeSelectionHook.isActive) {
         const datum = d.data || d

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import { useId, useMemo, useCallback } from "react"
 import {
   useSelectionSelector,
@@ -23,7 +24,7 @@ export interface UseSelectionOptions {
 
 export interface UseSelectionResult {
   /** Returns true if the datum matches the current selection */
-  predicate: (datum: Record<string, any>) => boolean
+  predicate: (datum: Datum) => boolean
   /** Whether any selection clause is currently active */
   isActive: boolean
   /** Set a point selection (categorical values) */
@@ -108,9 +109,9 @@ export interface UseLinkedHoverOptions {
 
 export interface UseLinkedHoverResult {
   /** Call with a datum to set hover, or null to clear */
-  onHover: (datum: Record<string, any> | null) => void
+  onHover: (datum: Datum | null) => void
   /** Returns true if datum matches the hover selection */
-  predicate: (datum: Record<string, any>) => boolean
+  predicate: (datum: Datum) => boolean
   /** Whether any hover is active */
   isActive: boolean
 }
@@ -125,7 +126,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
   })
 
   const onHover = useCallback(
-    (datum: Record<string, any> | null) => {
+    (datum: Datum | null) => {
       if (!datum) {
         clear()
         return
@@ -166,7 +167,7 @@ export interface UseBrushSelectionResult {
     end: (extent: any) => void
   }
   /** Returns true if datum matches the brush selection */
-  predicate: (datum: Record<string, any>) => boolean
+  predicate: (datum: Datum) => boolean
   /** Whether any brush is active */
   isActive: boolean
   /** Clear the brush */
@@ -227,7 +228,7 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
  * Returns the subset of `data` that matches the given selection.
  * In crossfilter mode, pass the consumer's clientId so its own clause is excluded.
  */
-export function useFilteredData<T extends Record<string, any>>(
+export function useFilteredData<T extends Datum>(
   data: T[],
   selectionName: string,
   clientId?: string

@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -59,7 +60,7 @@ export interface CenterlineStyle {
 /**
  * QuadrantChart component props
  */
-export interface QuadrantChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
+export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   /** Array of data points */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
@@ -105,7 +106,7 @@ export interface QuadrantChartProps<TDatum extends Record<string, any> = Record<
   /** Legend position */
   legendPosition?: LegendPosition
   /** Annotation objects */
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
   /** Additional StreamXYFrame props */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -131,7 +132,7 @@ export interface QuadrantChartProps<TDatum extends Record<string, any> = Record<
  * />
  * ```
  */
-export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Record<string, any> = Record<string, any>>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useImperativeHandle(ref, () => ({
@@ -237,7 +238,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of safeData as Record<string, any>[]) {
+    for (const d of safeData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
@@ -260,12 +261,12 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
   // We include the center point and add 10% padding.
   const dataExtents = useMemo(() => {
     if (!safeData.length) return undefined
-    const getX = typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => +d[xAccessor as string]
-    const getY = typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => +d[yAccessor as string]
+    const getX = typeof xAccessor === "function" ? xAccessor : (d: Datum) => +d[xAccessor as string]
+    const getY = typeof yAccessor === "function" ? yAccessor : (d: Datum) => +d[yAccessor as string]
     let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity
     for (const d of safeData) {
-      const xv = getX(d as Record<string, any>)
-      const yv = getY(d as Record<string, any>)
+      const xv = getX(d as Datum)
+      const yv = getY(d as Datum)
       if (isFinite(xv)) { if (xv < xMin) xMin = xv; if (xv > xMax) xMax = xv }
       if (isFinite(yv)) { if (yv < yMin) yMin = yv; if (yv > yMax) yMax = yv }
     }
@@ -293,16 +294,16 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
 
   // Resolve x/y accessors for quadrant coloring
   const getXValue = useMemo(() =>
-    typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => +d[xAccessor as string],
+    typeof xAccessor === "function" ? xAccessor : (d: Datum) => +d[xAccessor as string],
     [xAccessor]
   )
   const getYValue = useMemo(() =>
-    typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => +d[yAccessor as string],
+    typeof yAccessor === "function" ? yAccessor : (d: Datum) => +d[yAccessor as string],
     [yAccessor]
   )
 
   const basePointStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
+    return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
       if (colorBy) {
         if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
@@ -358,7 +359,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
     if (typeof yAccessor === "string") usedFields.add(yAccessor)
     if (typeof colorBy === "string") usedFields.add(colorBy)
     if (typeof sizeBy === "string") usedFields.add(sizeBy)
-    const sample = safeData[0] as Record<string, any>
+    const sample = safeData[0] as Datum
     for (const key of Object.keys(sample)) {
       if (key.startsWith("_")) continue
       if (usedFields.has(key)) continue
@@ -628,7 +629,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Re
 
   return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
-  <TDatum extends Record<string, any> = Record<string, any>>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
 QuadrantChart.displayName = "QuadrantChart"

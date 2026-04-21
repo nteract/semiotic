@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import { createStore } from "./createStore"
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -39,8 +40,8 @@ export interface SelectionStoreState {
 
 // ── Predicate builders ─────────────────────────────────────────────────────
 
-function buildClausePredicate(clause: SelectionClause): (d: Record<string, any>) => boolean {
-  const fieldTests: Array<(d: Record<string, any>) => boolean> = []
+function buildClausePredicate(clause: SelectionClause): (d: Datum) => boolean {
+  const fieldTests: Array<(d: Datum) => boolean> = []
 
   for (const [field, constraint] of Object.entries(clause.fields)) {
     if (constraint.type === "point") {
@@ -61,8 +62,8 @@ function buildClausePredicate(clause: SelectionClause): (d: Record<string, any>)
 export function buildPredicate(
   selection: Selection,
   requestingClientId?: string
-): (d: Record<string, any>) => boolean {
-  const clausePredicates: Array<(d: Record<string, any>) => boolean> = []
+): (d: Datum) => boolean {
+  const clausePredicates: Array<(d: Datum) => boolean> = []
 
   for (const [clientId, clause] of selection.clauses) {
     // In crossfilter mode, exclude the requesting client's own clause

@@ -1,3 +1,4 @@
+import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * Scenario tests: Coordinated views across multiple charts.
  *
@@ -28,7 +29,7 @@ function SelectionProbe({
   name: string
   probeRef: React.MutableRefObject<{
     isActive: boolean
-    predicate: (d: Record<string, any>) => boolean
+    predicate: (d: Datum) => boolean
   }>
 }) {
   const { isActive, predicate } = useSelection({ name })
@@ -61,7 +62,7 @@ function HoverEmitter({
   name: string
   fields: string[]
   emitRef: React.MutableRefObject<{
-    onHover: (datum: Record<string, any> | null) => void
+    onHover: (datum: Datum | null) => void
   }>
 }) {
   const { onHover } = useLinkedHover({ name, fields })

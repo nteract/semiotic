@@ -1,5 +1,6 @@
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeConfig(overrides: Partial<OrdinalPipelineConfig> = {}): OrdinalPipelineConfig {
   return {
@@ -44,8 +45,8 @@ describe("OrdinalPipelineStore", () => {
 
     it("resolves function accessors", () => {
       const store = new OrdinalPipelineStore(makeConfig({
-        oAccessor: (d: any) => d.label.toUpperCase(),
-        rAccessor: (d: any) => d.x * 2
+        oAccessor: (d: Datum) => d.label.toUpperCase(),
+        rAccessor: (d: Datum) => d.x * 2
       }))
       expect(store.getOAccessor()({ label: "hello" })).toBe("HELLO")
       expect(store.getRAccessor()({ x: 5 })).toBe(10)

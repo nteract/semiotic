@@ -1,4 +1,5 @@
 import type { Changeset } from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 /**
  * DataSourceAdapter normalizes all data ingestion paths into uniform changesets:
@@ -24,7 +25,7 @@ const CHUNK_SIZE = 5000
 
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
 
-export class DataSourceAdapter<T = Record<string, any>> {
+export class DataSourceAdapter<T = Datum> {
   private callback: ChangesetCallback<T>
   private lastBoundedData: T[] | null = null
   private chunkTimer: number = 0

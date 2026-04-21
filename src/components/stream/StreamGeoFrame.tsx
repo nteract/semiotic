@@ -1,4 +1,5 @@
 "use client"
+import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import {
   useRef,
@@ -352,13 +353,13 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Push API ──────────────────────────────────────────────────────
 
-    const pushPoint = useCallback((datum: Record<string, any>) => {
+    const pushPoint = useCallback((datum: Datum) => {
       storeRef.current?.pushPoint(datum)
       dirtyRef.current = true
       scheduleRender()
     }, [scheduleRender])
 
-    const pushMany = useCallback((data: Record<string, any>[]) => {
+    const pushMany = useCallback((data: Datum[]) => {
       storeRef.current?.pushMany(data)
       dirtyRef.current = true
       scheduleRender()

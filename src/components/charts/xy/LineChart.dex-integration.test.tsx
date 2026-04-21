@@ -1,3 +1,4 @@
+import type { Datum } from "../shared/datumTypes"
 /**
  * Integration tests verifying HOC data transformation for chart patterns.
  * Mocks StreamXYFrame to capture the props the HOCs generate.
@@ -7,7 +8,7 @@ import { render } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 // Capture props passed to StreamXYFrame
-let capturedProps: Record<string, any> = {}
+let capturedProps: Datum = {}
 
 // Mock StreamXYFrame to capture props
 vi.mock("../../stream/StreamXYFrame", () => ({
@@ -55,7 +56,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(LineChart, {
         data: processedData,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         lineBy: "metricLabel",
         colorBy: "metricLabel",
@@ -95,7 +96,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(LineChart, {
         data: processedData,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         lineBy: "metricLabel",
         width: 600,
@@ -127,7 +128,7 @@ describe("StackedAreaChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(StackedAreaChart, {
         data: processedData,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         areaBy: "metricLabel",
         colorBy: "metricLabel",
@@ -154,7 +155,7 @@ describe("StackedAreaChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(StackedAreaChart, {
         data: processedData,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         yAccessor: "value",
         areaBy: "metricLabel",
         colorBy: "metricLabel",
@@ -163,7 +164,7 @@ describe("StackedAreaChart HOC → StreamXYFrame prop verification", () => {
       })
     )
 
-    const groups = new Set(capturedProps.data.map((d: any) => d.metricLabel))
+    const groups = new Set(capturedProps.data.map((d: Datum) => d.metricLabel))
     expect(groups.has(undefined)).toBe(false)
     expect(groups.has("undefined")).toBe(false)
     expect(groups.size).toBe(2)
@@ -175,7 +176,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(MultiAxisLineChart, {
         data: multiAxisRows,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         series: [
           { yAccessor: "requests", label: "requests" },
           { yAccessor: "latencyMs", label: "latencyMs" }
@@ -198,7 +199,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     }
 
     // Should have both series
-    const series = new Set(capturedProps.data.map((d: any) => d.__ma_series))
+    const series = new Set(capturedProps.data.map((d: Datum) => d.__ma_series))
     expect(series.has("requests")).toBe(true)
     expect(series.has("latencyMs")).toBe(true)
   })
@@ -207,7 +208,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(MultiAxisLineChart, {
         data: multiAxisRows,
-        xAccessor: (d: any) => new Date(d.x),
+        xAccessor: (d: Datum) => new Date(d.x),
         series: [
           { yAccessor: "requests", label: "requests" },
           { yAccessor: "latencyMs", label: "latencyMs" }

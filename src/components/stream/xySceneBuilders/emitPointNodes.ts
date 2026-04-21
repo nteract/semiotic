@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Shared helper for emitting PointSceneNodes from grouped data.
  *
@@ -11,9 +12,9 @@ import type { XYSceneContext } from "./types"
 
 export function emitPointNodes(
   ctx: XYSceneContext,
-  groups: { key: string; data: Record<string, any>[] }[],
+  groups: { key: string; data: Datum[] }[],
   nodes: SceneNode[],
-  yGetOverride?: (d: Record<string, any>) => number
+  yGetOverride?: (d: Datum) => number
 ): void {
   if (!ctx.config.pointStyle) return
 

@@ -1,3 +1,4 @@
+import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Area and stacked area scene builders.
  *
@@ -12,7 +13,7 @@ import { buildAreaNode, buildStackedAreaNodes } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
 
-export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   const nodes: SceneNode[] = []
 
@@ -20,7 +21,7 @@ export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[])
   const baseline = yDomain[0]
 
   const y0Get = ctx.getY0
-    ? (d: Record<string, any>): number => {
+    ? (d: Datum): number => {
         const value = ctx.getY0!(d)
         return value == null ? baseline : value
       }
@@ -46,13 +47,13 @@ export function buildAreaScene(ctx: XYSceneContext, data: Record<string, any>[])
   return nodes
 }
 
-export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, any>[]): SceneNode[] {
+export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   // Sort groups by key to ensure a stable stacking order. Without this,
   // a sliding window can reorder groups when eviction changes which group
   // appears first in the buffer, causing layers to swap and flicker.
   groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
-  const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
+  const styleFn = (group: string, sampleDatum?: Datum) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined
   const { nodes: areaNodes, stackedTops } = buildStackedAreaNodes(
@@ -69,7 +70,7 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
   // Emit points at stacked (cumulative) Y positions using stackedTops
   // computed by buildStackedAreaNodes — no duplicate stacking pass.
   if (ctx.config.pointStyle) {
-    const stackedYMap = new WeakMap<Record<string, any>, number>()
+    const stackedYMap = new WeakMap<Datum, number>()
     for (const g of groups) {
       const groupTops = stackedTops.get(g.key)
       if (!groupTops) continue
@@ -82,7 +83,7 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Record<string, 
       }
     }
 
-    const stackedYGet = (d: Record<string, any>): number => stackedYMap.get(d) ?? ctx.getY(d)
+    const stackedYGet = (d: Datum): number => stackedYMap.get(d) ?? ctx.getY(d)
     emitPointNodes(ctx, groups, nodes, stackedYGet)
   }
 

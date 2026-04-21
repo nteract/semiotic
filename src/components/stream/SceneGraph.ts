@@ -10,19 +10,20 @@ import type {
   
   CurveType
 } from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Scene node builders ────────────────────────────────────────────────
 
 export function buildLineNode(
-  data: Record<string, any>[],
+  data: Datum[],
   scales: StreamScales,
-  xGet: (d: Record<string, any>) => number,
-  yGet: (d: Record<string, any>) => number,
+  xGet: (d: Datum) => number,
+  yGet: (d: Datum) => number,
   style: Style,
   group?: string
 ): LineSceneNode {
   // Build indexed entries so we can sort by x while keeping datum alignment
-  const entries: { px: number; py: number; rawY: number; d: Record<string, any> }[] = []
+  const entries: { px: number; py: number; rawY: number; d: Datum }[] = []
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
@@ -34,7 +35,7 @@ export function buildLineNode(
 
   const path: [number, number][] = new Array(entries.length)
   const rawValues: number[] = new Array(entries.length)
-  const sortedData: Record<string, any>[] = new Array(entries.length)
+  const sortedData: Datum[] = new Array(entries.length)
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i]
     path[i] = [e.px, e.py]
@@ -45,14 +46,14 @@ export function buildLineNode(
 }
 
 export function buildAreaNode(
-  data: Record<string, any>[],
+  data: Datum[],
   scales: StreamScales,
-  xGet: (d: Record<string, any>) => number,
-  yGet: (d: Record<string, any>) => number,
+  xGet: (d: Datum) => number,
+  yGet: (d: Datum) => number,
   baselineY: number,
   style: Style,
   group?: string,
-  y0Get?: (d: Record<string, any>) => number
+  y0Get?: (d: Datum) => number
 ): AreaSceneNode {
   // Build indexed entries so we can sort by x for binary search correctness
   const entries: { px: number; topY: number; botY: number }[] = []
@@ -81,11 +82,11 @@ export function buildAreaNode(
 export type StackedTops = Map<string, Map<number, number>>
 
 export function buildStackedAreaNodes(
-  groups: { key: string; data: Record<string, any>[] }[],
+  groups: { key: string; data: Datum[] }[],
   scales: StreamScales,
-  xGet: (d: Record<string, any>) => number,
-  yGet: (d: Record<string, any>) => number,
-  styleFn: (group: string, sampleDatum?: Record<string, any>) => Style,
+  xGet: (d: Datum) => number,
+  yGet: (d: Datum) => number,
+  styleFn: (group: string, sampleDatum?: Datum) => Style,
   normalize?: boolean,
   curve?: CurveType
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
@@ -173,10 +174,10 @@ export function buildStackedAreaNodes(
 }
 
 export function buildPointNode(
-  datum: Record<string, any>,
+  datum: Datum,
   scales: StreamScales,
-  xGet: (d: Record<string, any>) => number,
-  yGet: (d: Record<string, any>) => number,
+  xGet: (d: Datum) => number,
+  yGet: (d: Datum) => number,
   r: number,
   style: Style,
   pointId?: string

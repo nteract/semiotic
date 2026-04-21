@@ -17,6 +17,7 @@ import type {
   HoverData
 } from "../realtime/types"
 import type { GeoParticleStyle } from "./GeoParticlePool"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -54,8 +55,8 @@ export interface GraticuleConfig {
 
 export interface DistanceCartogramConfig {
   center: string
-  centerAccessor?: string | ((d: any) => string)
-  costAccessor: string | ((d: any) => number)
+  centerAccessor?: string | ((d: Datum) => string)
+  costAccessor: string | ((d: Datum) => number)
   strength?: number
   lineMode?: "straight" | "fractional"
 }
@@ -106,15 +107,15 @@ export interface GeoPipelineConfig {
   /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
   fitPadding?: number
 
-  xAccessor?: string | ((d: any) => number)
-  yAccessor?: string | ((d: any) => number)
-  lineDataAccessor?: string | ((d: any) => any[])
+  xAccessor?: string | ((d: Datum) => number)
+  yAccessor?: string | ((d: Datum) => number)
+  lineDataAccessor?: string | ((d: Datum) => any[])
   lineType?: "geo" | "line"
   /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
   flowStyle?: "basic" | "offset" | "arc"
 
-  areaStyle?: Style | ((d: any) => Style)
-  pointStyle?: (d: any) => Style & { r?: number }
+  areaStyle?: Style | ((d: Datum) => Style)
+  pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: any, group?: string) => Style)
   colorScheme?: string | string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
@@ -137,13 +138,13 @@ export interface GeoPipelineConfig {
   introAnimation?: boolean
 
   // Annotations
-  annotations?: Record<string, any>[]
-  pointIdAccessor?: string | ((d: any) => string)
+  annotations?: Datum[]
+  pointIdAccessor?: string | ((d: Datum) => string)
 }
 
 // ── Frame props ──────────────────────────────────────────────────────
 
-export interface StreamGeoFrameProps<T = Record<string, any>> {
+export interface StreamGeoFrameProps<T = Datum> {
   // ── Projection ──
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
@@ -203,8 +204,8 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   runtimeMode?: "bounded" | "streaming"
 
   // ── Style ──
-  areaStyle?: Style | ((d: any) => Style)
-  pointStyle?: (d: any) => Style & { r?: number }
+  areaStyle?: Style | ((d: Datum) => Style)
+  pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: any, group?: string) => Style)
   colorScheme?: string | string[]
 
@@ -214,7 +215,7 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
   tooltipContent?: (d: HoverData) => ReactNode
   customClickBehavior?: (d: HoverData | null) => void
   customHoverBehavior?: (d: HoverData | null) => void
-  annotations?: Record<string, any>[]
+  annotations?: Datum[]
 
   // ── Realtime encoding ──
   decay?: DecayConfig
@@ -250,10 +251,10 @@ export interface StreamGeoFrameProps<T = Record<string, any>> {
 }
 
 export interface StreamGeoFrameHandle {
-  push(datum: Record<string, any>): void
-  pushMany(data: Record<string, any>[]): void
+  push(datum: Datum): void
+  pushMany(data: Datum[]): void
   /** Remove points by ID. Requires pointIdAccessor. */
-  removePoint(id: string | string[]): Record<string, any>[]
+  removePoint(id: string | string[]): Datum[]
   clear(): void
   getProjection(): GeoProjection | null
   getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null
@@ -264,5 +265,5 @@ export interface StreamGeoFrameHandle {
   /** Animate back to initial view */
   resetZoom(): void
   /** Get current data points */
-  getData(): Record<string, any>[]
+  getData(): Datum[]
 }

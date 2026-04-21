@@ -1,4 +1,5 @@
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import type { Datum } from "../charts/shared/datumTypes"
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -11,7 +12,7 @@ function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   }
 }
 
-function ingestBounded(store: PipelineStore, data: Record<string, any>[]) {
+function ingestBounded(store: PipelineStore, data: Datum[]) {
   store.ingest({ inserts: data, bounded: true })
 }
 

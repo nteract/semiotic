@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Shared decay encoding utilities for all pipeline stores.
  *
@@ -44,7 +45,7 @@ export function computeDecayOpacity(decay: DecayConfig, bufferIndex: number, buf
  * Apply decay opacity to a list of scene nodes.
  * Uses the datum's index in the buffer data array.
  */
-export function applyDecay(decay: DecayConfig, nodes: SceneNode[], data: Record<string, any>[]): void {
+export function applyDecay(decay: DecayConfig, nodes: SceneNode[], data: Datum[]): void {
   const bufferSize = data.length
   if (bufferSize <= 1) return
 

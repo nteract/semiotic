@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Cache invalidation tests for PipelineStore.
  *
@@ -9,7 +10,7 @@
 
 import { PipelineStore } from "./PipelineStore"
 
-function makeStore(overrides: Record<string, any> = {}) {
+function makeStore(overrides: Datum = {}) {
   return new PipelineStore({
     xAccessor: "x",
     yAccessor: "y",
@@ -22,7 +23,7 @@ function makeStore(overrides: Record<string, any> = {}) {
 }
 
 /** Ingest as bounded data (replaces entire buffer) */
-function setData(store: PipelineStore, data: Record<string, any>[]) {
+function setData(store: PipelineStore, data: Datum[]) {
   store.ingest({ inserts: data, bounded: true })
 }
 
