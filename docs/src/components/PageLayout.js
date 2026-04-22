@@ -45,10 +45,11 @@ export default function PageLayout({
 
     const headings = contentEl.querySelectorAll("h2, h3")
     const items = []
-    // Dedupe so transient collisions during route transitions (when the old
-    // page's headings can still be in the DOM while the new page mounts)
-    // don't trigger React's duplicate-key warning. Also covers page authors
-    // who legitimately reuse a heading label within one page.
+    // Dedupe React keys so transient collisions during route transitions
+    // (when the old page's headings can still be in the DOM while the new
+    // page mounts) don't trigger a duplicate-key warning. `id` is still the
+    // real heading id so the anchor link jumps to the right element —
+    // `key` is a separate React-only identifier for the list.
     const seen = new Set()
 
     headings.forEach((heading) => {
@@ -63,7 +64,8 @@ export default function PageLayout({
       }
       seen.add(key)
       items.push({
-        id: key,
+        id: heading.id,
+        key,
         text: heading.textContent,
         level: heading.tagName === "H3" ? 3 : 2,
       })
@@ -150,7 +152,7 @@ export default function PageLayout({
             <h4 style={styles.tocTitle}>On this page</h4>
             <ul style={styles.tocList}>
               {tocItems.map((item) => (
-                <li key={item.id} style={styles.tocListItem}>
+                <li key={item.key ?? item.id} style={styles.tocListItem}>
                   <a
                     href={`#${item.id}`}
                     style={{

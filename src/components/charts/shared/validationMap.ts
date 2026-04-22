@@ -215,6 +215,25 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  CandlestickChart: {
+    required: ["highAccessor", "lowAccessor"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "highAccessor", "lowAccessor"],
+    props: {
+      ...commonProps,
+      ...xyAxisProps,
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"] },
+      highAccessor: { type: ["string", "function"] },
+      lowAccessor: { type: ["string", "function"] },
+      openAccessor: { type: ["string", "function"] },
+      closeAccessor: { type: ["string", "function"] },
+      candlestickStyle: { type: "object" },
+      mode: { type: "string", enum: ["primary", "context", "sparkline"] },
+      annotations: { type: "array" },
+    },
+  },
+
   ConnectedScatterplot: {
     required: ["data"],
     dataShape: "array",

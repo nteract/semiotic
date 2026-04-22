@@ -105,9 +105,13 @@ export function snapshotPositions(
     } else if (node.type === "heatcell") {
       prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
     } else if (node.type === "candlestick") {
+      // `w` carries bodyWidth so the exit stub can render at the same width
+      // the bar had before disappearing — otherwise exits would snap to the
+      // default 6px regardless of the scene-computed value.
       prevPositionMap.set(key, {
         x: node.x,
         y: node.openY,
+        w: node.bodyWidth,
         openY: node.openY,
         closeY: node.closeY,
         highY: node.highY,

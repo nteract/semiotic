@@ -15,13 +15,17 @@ import { Link } from "react-router-dom"
 // ---------------------------------------------------------------------------
 
 // Synthetic OHLC over 20 sessions — drifts up then pulls back so both up and
-// down bodies appear.
+// down bodies appear. Deterministic on purpose: `Math.random()` at module
+// scope would make the page reflow on every reload and flake any visual
+// snapshot that ever lands on it. Jitter is a cheap modulo pattern instead.
 const ohlcData = Array.from({ length: 20 }, (_, i) => {
   const base = 100 + Math.sin(i * 0.4) * 8 + i * 0.3
   const o = base
   const c = base + (i % 3 === 0 ? -2.5 : 2)
-  const h = Math.max(o, c) + 1.5 + Math.random() * 1.5
-  const l = Math.min(o, c) - 1.5 - Math.random() * 1.5
+  const highJitter = 1.5 + ((i * 7) % 6) * 0.25
+  const lowJitter = 1.5 + ((i * 11 + 3) % 6) * 0.25
+  const h = Math.max(o, c) + highJitter
+  const l = Math.min(o, c) - lowJitter
   return { session: i, o: +o.toFixed(2), h: +h.toFixed(2), l: +l.toFixed(2), c: +c.toFixed(2) }
 })
 

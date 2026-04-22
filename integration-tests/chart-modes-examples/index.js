@@ -16,8 +16,9 @@
 //                          chart when open/close are omitted; here we render the
 //                          OHLC form for the visual baseline.
 //
-// Each chart is rendered in all three modes. 15 fixtures total; each snapshot
-// proves the chart stays legible at the mode's chosen size.
+// Each chart is rendered in all three modes. 18 fixtures total (5 HOCs plus
+// the candlestick range variant); each snapshot proves the chart stays
+// legible at the mode's chosen size.
 
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"

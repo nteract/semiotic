@@ -302,21 +302,31 @@ describe("Range / dumbbell mode", () => {
     expect(nodes.length).toBe(3)
   })
 
-  it("computes a gap-derived bodyWidth in range mode (renderer uses it for dot sizing)", () => {
-    // Previously bodyWidth was forced to 0 in range mode because the renderer
-    // drew no body. After the dot-sizing change, the renderer uses bodyWidth/2
-    // as the dot-radius basis so sparkline-sized charts don't render fixed 4px
-    // dots. Assert bodyWidth is the same gap-derived value OHLC would get.
-    const ctx = makeCtx({
+  it("computes the same gap-derived bodyWidth in range mode as in OHLC mode", () => {
+    // Previously bodyWidth was forced to 0 in range mode; the renderer now
+    // uses bodyWidth/2 as the dot-radius basis so sparkline-sized charts
+    // don't render fixed 4px dots. The computed value must match what OHLC
+    // mode would produce for the same x-layout — otherwise regressions that
+    // swap it for a default (e.g. 6) would go uncaught.
+    const rangeCtx = makeCtx({
       getOpen: undefined,
       getClose: undefined,
       getHigh: (d) => d.high,
       getLow: (d) => d.low,
       config: { candlestickRangeMode: true },
     })
-    const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
-    const node = asCandlestick(nodes[0])
-    expect(node.bodyWidth).toBeGreaterThan(0)
+    const ohlcData = rangeData.map(d => ({ ...d, open: d.low, close: d.high }))
+    const ohlcCtx = makeCtx({
+      getHigh: (d) => d.high,
+      getLow: (d) => d.low,
+      getOpen: (d) => d.open,
+      getClose: (d) => d.close,
+    })
+    const rangeNode = asCandlestick(buildCandlestickScene(rangeCtx, rangeData, defaultLayout)[0])
+    const ohlcNode = asCandlestick(buildCandlestickScene(ohlcCtx, ohlcData, defaultLayout)[0])
+    // minGap = 20 (x at 10, 30, 50), 20 * 0.6 = 12, capped at 20 → 12.
+    expect(rangeNode.bodyWidth).toBe(12)
+    expect(rangeNode.bodyWidth).toBe(ohlcNode.bodyWidth)
   })
 
   it("uses range color (not up/down) in range mode", () => {

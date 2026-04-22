@@ -4,7 +4,10 @@ import { waitForChartReady } from "./helpers"
 /**
  * Chart-mode visual regression matrix.
  *
- * Five HOCs × three modes (primary / context / sparkline) = 15 fixtures.
+ * Six chart forms × three modes (primary / context / sparkline) = 18 fixtures.
+ * The six: donut, gauge, swimlane, histogram, candlestick (OHLC), and
+ * candlestick-range — the last verifies the renderer's dot-radius cap when
+ * open/close are omitted.
  * Regression guard against the sparkline/context bugs fixed 2026-04-21:
  *   • DonutChart — innerRadius literal (60) exceeded the outer radius at
  *     sparkline 120×24, inverting the ring. Now scales with size.
