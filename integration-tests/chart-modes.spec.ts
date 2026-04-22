@@ -13,7 +13,9 @@ import { waitForChartReady } from "./helpers"
  *   • SwimlaneChart — axes stayed on in sparkline/context. Now showAxes
  *     participates in mode resolution via `resolved.showAxes`.
  *   • RealtimeHistogram — only dimensions were mode-driven; axis chrome
- *     crowded 120×24. Now showAxes/showLegend participate.
+ *     crowded 120×24. Now showAxes participates in mode resolution.
+ *     (showLegend isn't wired because the HOC doesn't construct a `legend`
+ *     prop for StreamXYFrame — there's no legend surface to suppress.)
  *
  * Candlestick is not covered here — it's only available via
  * `chartType="candlestick"` on StreamXYFrame, not an HOC with a `mode` prop.

@@ -8,8 +8,9 @@
 //   • SwimlaneChart      — axes stayed on in sparkline mode; fix threads showAxes
 //                          through useChartMode.
 //   • RealtimeHistogram  — only dimensions were mode-driven; full axis chrome
-//                          crowded the 120×24 canvas. Now showAxes/showLegend
-//                          participate in mode resolution.
+//                          crowded the 120×24 canvas. Now showAxes participates
+//                          in mode resolution. (showLegend isn't wired because
+//                          the HOC doesn't build a legend prop for the frame.)
 //
 // Each chart is rendered in all three modes. Twelve fixtures total; each
 // snapshot proves the chart stays legible at the mode's chosen size.
