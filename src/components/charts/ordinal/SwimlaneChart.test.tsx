@@ -256,4 +256,80 @@ describe("SwimlaneChart", () => {
     )
     expect(lastOrdinalFrameProps.showCategoryTicks).toBeUndefined()
   })
+
+  describe("chart mode resolution", () => {
+    it("sparkline mode shrinks dimensions and turns axes off", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" mode="sparkline" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([120, 24])
+      expect(lastOrdinalFrameProps.showAxes).toBe(false)
+    })
+
+    it("context mode shrinks dimensions and turns axes off", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" mode="context" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([400, 250])
+      expect(lastOrdinalFrameProps.showAxes).toBe(false)
+    })
+
+    it("primary mode uses the 600×400 default with axes on", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([600, 400])
+      expect(lastOrdinalFrameProps.showAxes).toBe(true)
+    })
+
+    it("primary mode defaults barPadding to 40", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.barPadding).toBe(40)
+    })
+
+    it("sparkline mode caps barPadding at 1px for legible lanes", () => {
+      // 2 unique categories fit comfortably in 24px height; padding sits at
+      // the 1px target rather than the 40px default.
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" mode="sparkline" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.barPadding).toBe(1)
+    })
+
+    it("sparkline mode shrinks barPadding below 1 when categories crowd the canvas", () => {
+      // 10 categories at 24px height with 1px padding would shrink each lane
+      // below 2px. The formula `(avail - 2n) / (n - 1)` yields ~0.44px.
+      const crowdedData = Array.from({ length: 10 }, (_, i) => ({
+        category: `Lane ${i}`, task: "t", value: 1,
+      }))
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={crowdedData} subcategoryAccessor="task" mode="sparkline" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.barPadding).toBeLessThan(1)
+      expect(lastOrdinalFrameProps.barPadding).toBeGreaterThanOrEqual(0)
+    })
+
+    it("user-supplied barPadding wins over mode default", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" mode="sparkline" barPadding={10} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.barPadding).toBe(10)
+    })
+  })
 })

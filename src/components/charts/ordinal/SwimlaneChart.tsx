@@ -103,7 +103,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     valueFormat,
     colorBy,
     colorScheme,
-    barPadding = 40,
+    barPadding: userBarPadding,
     tooltip, annotations,
     brush: brushProp,
     onBrush: onBrushProp,
@@ -139,6 +139,28 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   const safeData = data || []
   const effectiveColorBy = colorBy || subcategoryAccessor
   const isPushMode = data === undefined
+
+  // Mode-aware `barPadding`: sparkline uses 1px by default (or less when so
+  // many categories are present that 1px would shrink each lane below 2px).
+  // Primary/context keep the generous 40px default. User-supplied values
+  // always win regardless of mode.
+  const barPadding = useMemo(() => {
+    if (userBarPadding != null) return userBarPadding
+    if (props.mode !== "sparkline") return 40
+    const uniqueCategories = new Set(
+      safeData.map((d) => typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor as string])
+    )
+    const laneCount = Math.max(1, uniqueCategories.size)
+    if (laneCount <= 1) return 1
+    // The available length is the dimension perpendicular to the lane axis.
+    // Horizontal (default): lanes stack vertically → available = height.
+    const availableLength = orientation === "horizontal" ? height : width
+    // Each lane must be >= 2px after subtracting cumulative padding.
+    // Lane width = (avail - (n-1)*pad) / n; solve for pad when laneWidth=2:
+    // pad = (avail - 2n) / (n - 1), capped at 1 (the target default).
+    const maxPadForMinLane = (availableLength - 2 * laneCount) / (laneCount - 1)
+    return Math.max(0, Math.min(1, maxPadForMinLane))
+  }, [userBarPadding, props.mode, safeData, categoryAccessor, orientation, width, height])
 
   const setup = useChartSetup({
     data: safeData,

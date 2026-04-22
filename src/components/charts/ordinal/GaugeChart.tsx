@@ -65,18 +65,29 @@ export interface GaugeChartProps extends BaseChartProps {
 // ── Component ─────────────────────────────────────────────────────────────
 
 export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
+  // Width/height passed through unmassaged so `useChartMode` can substitute
+  // the mode default (context: 400×250, sparkline: 120×24). Primary-mode
+  // default is 300×250 via the third arg — a gauge reads better compact.
   const resolved = useChartMode(props.mode, {
-    width: props.width ?? 300,
-    height: props.height ?? 250,
-    enableHover: props.enableHover ?? true,
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
     showLegend: false,
     title: props.title,
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  })
+  }, { width: 300, height: 250 })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
+
+  // Mode-aware defaults: context and sparkline hide the min/max scale labels
+  // and per-threshold annotations (they don't read at compact sizes). Sparkline
+  // additionally hides the value readout entirely — a sparkline is a dial
+  // indicator, not a labeled chart. User-supplied values still win.
+  const modeIsContext = props.mode === "context"
+  const modeIsSparkline = props.mode === "sparkline"
+  const compactMode = modeIsContext || modeIsSparkline
 
   const {
     value,
@@ -90,7 +101,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     needleColor = "var(--semiotic-text, #333)",
     centerContent,
     valueFormat,
-    showScaleLabels = true,
+    showScaleLabels = !compactMode,
     sweep = 240,
     fillZones = true,
     tooltip,
@@ -205,7 +216,13 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const startAngleDegFinal = 180 + gapDeg / 2
 
   // ── Compute arc bounding box to maximize radius and center the arc ────
-  const PAD = 10
+  // PAD shrinks at very small widget sizes (sparkline 120×24 etc.) so the arc
+  // isn't squeezed to zero thickness by the fixed edge inset. At 120×24 with
+  // the old PAD=10, `(height - 20)/1 = 4` forced radius=10 (the floor) while
+  // innerRadius also hit 10 — resulting in a zero-thickness arc that painted
+  // nothing. Scaling PAD with the smaller dimension keeps the arc visible at
+  // sparkline sizes while leaving larger modes unchanged.
+  const PAD = Math.min(10, Math.max(1, Math.min(width, height) / 12))
   const offsetRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
   const arcPts: [number, number][] = [
     [Math.cos(offsetRad), Math.sin(offsetRad)],
@@ -227,11 +244,18 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   // Maximize radius: the arc's visible bbox must fit in the widget.
   // The arc occupies arcW*R horizontally and arcH*R vertically.
   const arcCX = (arcMinX + arcMaxX) / 2
-  const radius = Math.max(10, Math.min(
+  // Floor the radius at 4px (arbitrary but enough for the canvas content-check
+  // to detect painted pixels) rather than 10, since a 10 floor at 120×24 would
+  // push the gauge outside its own bbox. The arc stays legible at any realistic
+  // primary/context size and remains detectable as "has content" at sparkline.
+  const radius = Math.max(4, Math.min(
     (width - 2 * PAD) / arcW,
     (height - 2 * PAD) / arcH
-  ) - 4)
-  const innerRadius = Math.max(10, radius * (1 - arcWidth))
+  ) - 2)
+  // Minimum visible thickness: ensure `radius - innerRadius >= 1.5px` so the
+  // arc always has SOME width to paint, even when the outer radius itself is
+  // near the floor.
+  const innerRadius = Math.max(0, Math.min(radius - 1.5, radius * (1 - arcWidth)))
 
   // Position the frame center so the arc bbox is centered in the widget.
   // The arc center (0,0 in unit circle) maps to the frame layout center.
@@ -245,11 +269,17 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   const S = 2 * (radius + 4)
 
   // ── Center content ──────────────────────────────────────────────────────
+  // - primary: value in the hub, min–max range beneath it
+  // - context: centerContent suppressed — value renders as an SVG annotation
+  //   below the dial (see `gauge-value` rule) so it can't be clipped by the
+  //   center-slot's absolute-positioning constraints
+  // - sparkline: nothing at all — a sparkline gauge is a dial indicator
   const centerEl = useMemo(() => {
+    if (modeIsSparkline && centerContent == null) return null
+    if (modeIsContext && centerContent == null) return null
     if (centerContent != null) {
       return typeof centerContent === "function" ? centerContent(clampedValue, min, max) : centerContent
     }
-    // Default: show value prominently
     const formatted = valueFormat ? valueFormat(clampedValue) : String(Math.round(clampedValue))
     return (
       <div style={{ textAlign: "center", lineHeight: 1.2 }}>
@@ -263,16 +293,35 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
         )}
       </div>
     )
-  }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius])
+  }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius, modeIsContext, modeIsSparkline])
+
+  // Context-mode value annotation: rendered as SVG text inside the bottom gap
+  // of the arc (the 120° wedge the 240° sweep leaves at 6 o'clock). User-
+  // supplied centerContent short-circuits this since they've expressed intent.
+  const contextValueAnnotation = useMemo(() => {
+    if (!modeIsContext || centerContent != null) return null
+    const formatted = valueFormat ? valueFormat(clampedValue) : String(Math.round(clampedValue))
+    return { type: "gauge-value", text: formatted }
+  }, [modeIsContext, centerContent, clampedValue, valueFormat])
 
   // ── Needle SVG ──────────────────────────────────────────────────────────
   const needleAnnotation = useMemo(() => {
     if (!showNeedle) return null
     // pieScene coordinate system: -π/2 = 12 o'clock, then + startAngle (in radians)
-    // Needle maps pct [0,1] to [startAngle, startAngle + sweep] in the same frame
+    // Needle maps pct [0,1] to [startAngle, startAngle + sweep] in the same frame.
+    // Length scales with innerRadius so sparkline gauges (innerRadius ~2px) still
+    // draw a visible needle. The old `innerRadius - 8` formula went negative at
+    // compact sizes and flipped the needle away from the dial.
     const startRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
     const needleAngle = startRad + pct * sweepRad
-    const needleLength = innerRadius - 8
+    // Primary: traditional gauge — needle stops ~8px shy of the inner arc edge.
+    // Compact modes: `innerRadius - 8` goes negative at sparkline sizes, and
+    // even `innerRadius * 0.85` (6.7px at 120×24) leaves the line so short it
+    // reads as a dot. Instead, extend the needle through the arc band so it
+    // visually is a needle — reaching ~1px shy of the outer radius.
+    const needleLength = innerRadius > 20
+      ? Math.max(1, innerRadius - 8)
+      : Math.max(2, radius - 1)
     const tipX = Math.cos(needleAngle) * needleLength
     const tipY = Math.sin(needleAngle) * needleLength
     return { type: "gauge-needle", tipX, tipY, color: needleColor }
@@ -284,11 +333,17 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
       if (ann.type === "gauge-needle") {
         const cx = (context.width || width) / 2
         const cy = (context.height || height) / 2
+        // Needle stroke + hub scale with the arc's thickness so sparkline's
+        // 24px-tall gauge gets a ~1px needle and a ~2px hub rather than the
+        // literal 2.5/5 values that overwhelmed the tiny dial.
+        const arcThickness = Math.max(1, radius - innerRadius)
+        const needleStroke = Math.max(1, Math.min(2.5, arcThickness * 0.4))
+        const hubR = Math.max(1, Math.min(5, arcThickness * 0.6))
         return (
           <g key={`gauge-needle-${index}`} transform={`translate(${cx},${cy})`}>
             <line x1={0} y1={0} x2={ann.tipX} y2={ann.tipY}
-              stroke={ann.color} strokeWidth={2.5} strokeLinecap="round" />
-            <circle cx={0} cy={0} r={5} fill={ann.color} />
+              stroke={ann.color} strokeWidth={needleStroke} strokeLinecap="round" />
+            <circle cx={0} cy={0} r={hubR} fill={ann.color} />
           </g>
         )
       }
@@ -312,16 +367,41 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
           </text>
         )
       }
+      if (ann.type === "gauge-value") {
+        // Sit the value in the empty space between the arc's peak and the
+        // needle hub. `cy` alone put the text right on top of the hub dot;
+        // the older `cy + innerRadius * 0.55` sat ~220px from the top of a
+        // 250px-tall widget, which the user flagged as ~70px too low.
+        // `cy - innerRadius * 0.2` lands the text roughly mid-arc — same
+        // visual weight as primary's hub label, no hub overlap, and matches
+        // the requested upward shift.
+        const cx = (context.width || width) / 2
+        const cy = (context.height || height) / 2
+        const ty = cy - innerRadius * 0.2
+        const fontSize = Math.max(12, Math.min(22, radius * 0.28))
+        return (
+          <text key={`gauge-value-${index}`}
+            x={cx} y={ty}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize={fontSize} fontWeight={700}
+            fill="var(--semiotic-text, #333)"
+            style={{ userSelect: "none" }}
+          >
+            {ann.text}
+          </text>
+        )
+      }
       return null
     }
-  }, [width, height, min, range, startAngleDegFinal, sweepRad, innerRadius])
+  }, [width, height, min, range, startAngleDegFinal, sweepRad, innerRadius, radius])
 
   // Combine annotations
   const allAnnotations = useMemo(() => {
     const anns = [...gaugeAnnotations, ...(annotations || [])]
     if (needleAnnotation) anns.push(needleAnnotation)
+    if (contextValueAnnotation) anns.push(contextValueAnnotation)
     return anns
-  }, [gaugeAnnotations, annotations, needleAnnotation])
+  }, [gaugeAnnotations, annotations, needleAnnotation, contextValueAnnotation])
 
   // ── Default tooltip ──────────────────────────────────────────────────────
   const defaultTooltipContent = useMemo(() => {

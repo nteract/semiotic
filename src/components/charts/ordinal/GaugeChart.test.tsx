@@ -208,4 +208,111 @@ describe("GaugeChart", () => {
     // The center content should use the formatter
     expect(lastOrdinalFrameProps.centerContent).toBeTruthy()
   })
+
+  describe("chart mode resolution", () => {
+    it("primary mode uses the gauge-specific 300×250 default", () => {
+      // Gauge overrides the generic primary default (600×400) with a more
+      // compact 300×250 via useChartMode's third argument.
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([300, 250])
+    })
+
+    it("sparkline mode overrides the primary default with 120×24", () => {
+      // Regression: `width: props.width ?? 300` previously swallowed the
+      // sparkline size default. The fix moved `300` into useChartMode's
+      // primaryDefaults so sparkline/context can still substitute.
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} mode="sparkline" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([120, 24])
+    })
+
+    it("context mode uses the 400×250 default", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} mode="context" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([400, 250])
+    })
+
+    it("explicit width/height override the mode defaults", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} mode="sparkline" width={200} height={40} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.size).toEqual([200, 40])
+    })
+
+    it("context mode suppresses threshold scale labels and renders the value as an SVG annotation below the dial", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} thresholds={[
+            { value: 30, color: "#22c55e", label: "Low" },
+            { value: 70, color: "#eab308", label: "Mid" },
+            { value: 100, color: "#ef4444", label: "High" },
+          ]} mode="context" />
+        </TooltipProvider>
+      )
+      const anns = lastOrdinalFrameProps.annotations || []
+      // gauge-label annotations are only emitted when showScaleLabels is true;
+      // context mode defaults showScaleLabels to false.
+      expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(false)
+      // gauge-value annotation takes the range's old spot (below the dial).
+      const valueAnn = anns.find((a: Datum) => a.type === "gauge-value")
+      expect(valueAnn).toBeTruthy()
+      expect(valueAnn?.text).toBe("50")
+      // centerContent slot is suppressed so the value doesn't render twice.
+      expect(lastOrdinalFrameProps.centerContent).toBeNull()
+    })
+
+    it("sparkline mode suppresses threshold scale labels and the value readout", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} thresholds={[
+            { value: 30, color: "#22c55e", label: "Low" },
+            { value: 100, color: "#ef4444", label: "High" },
+          ]} mode="sparkline" />
+        </TooltipProvider>
+      )
+      const anns = lastOrdinalFrameProps.annotations || []
+      expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(false)
+      // Sparkline hides the value readout entirely — centerContent is null.
+      expect(lastOrdinalFrameProps.centerContent).toBeNull()
+    })
+
+    it("primary mode renders threshold scale labels", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} thresholds={[
+            { value: 30, color: "#22c55e", label: "Low" },
+            { value: 70, color: "#eab308", label: "Mid" },
+            { value: 100, color: "#ef4444", label: "High" },
+          ]} />
+        </TooltipProvider>
+      )
+      const anns = lastOrdinalFrameProps.annotations || []
+      expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
+    })
+
+    it("user-supplied showScaleLabels wins over mode default", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart value={50} thresholds={[
+            { value: 30, color: "#22c55e", label: "Low" },
+            { value: 100, color: "#ef4444", label: "High" },
+          ]} mode="context" showScaleLabels />
+        </TooltipProvider>
+      )
+      const anns = lastOrdinalFrameProps.annotations || []
+      expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
+    })
+  })
 })

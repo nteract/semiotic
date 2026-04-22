@@ -41,9 +41,12 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
 }
 
 export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  // Width/height passed through unmassaged so `useChartMode` can substitute
+  // the mode default (context: 400×250, sparkline: 120×24). Primary-mode
+  // default is 400×400 via the third arg — a donut looks square.
   const resolved = useChartMode(props.mode, {
-    width: props.width ?? 400,
-    height: props.height ?? 400,
+    width: props.width,
+    height: props.height,
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
@@ -52,14 +55,14 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     summary: props.summary,
     linkedHover: props.linkedHover,
     showCategoryTicks: props.showCategoryTicks,
-  })
+  }, { width: 400, height: 400 })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    innerRadius = 60, centerContent,
+    innerRadius: userInnerRadius, centerContent,
     colorBy, colorScheme, startAngle = 0, cornerRadius,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
@@ -112,6 +115,17 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   })
 
   if (setup.earlyReturn) return setup.earlyReturn
+
+  // Default `innerRadius` scales with the container's min dimension so the
+  // donut keeps its ring shape at any size. User-supplied pixel values always
+  // win. The ratio `min(w, h) * 0.15` (so primary 400×400 → 60, matching the
+  // pre-fix literal; sparkline 120×24 → 3.6 → clamped to 2) deliberately
+  // undershoots the frame's actual outer radius: the frame subtracts its
+  // margin + legend allowance before drawing the arc, and we can't see that
+  // number from the HOC layer. Staying conservative keeps the ring thick
+  // enough to read at every size rather than degrading to a hairline at the
+  // larger primary defaults where the legend eats half the right margin.
+  const innerRadius = userInnerRadius ?? Math.max(2, Math.min(width, height) * 0.15)
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
