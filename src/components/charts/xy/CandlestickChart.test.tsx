@@ -176,6 +176,38 @@ describe("CandlestickChart", () => {
     })
   })
 
+  describe("dev warnings", () => {
+    it("warns when OHLC mode is requested but data is missing open/close fields", () => {
+      // warnMissingField only fires in development — vitest sets NODE_ENV=test
+      // by default, which the helper treats as dev-equivalent.
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const missingOpenClose = [{ t: 1, h: 15, l: 8 }, { t: 2, h: 18, l: 11 }]
+      render(
+        <TooltipProvider>
+          <CandlestickChart data={missingOpenClose as any} xAccessor="t"
+            openAccessor="o" highAccessor="h" lowAccessor="l" closeAccessor="c" />
+        </TooltipProvider>
+      )
+      const warnings = spy.mock.calls.map(c => c.join(" ")).join("\n")
+      expect(warnings).toMatch(/openAccessor/)
+      expect(warnings).toMatch(/closeAccessor/)
+      spy.mockRestore()
+    })
+
+    it("does NOT warn about open/close when in range mode", () => {
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      render(
+        <TooltipProvider>
+          <CandlestickChart data={range} xAccessor="t" highAccessor="max" lowAccessor="min" />
+        </TooltipProvider>
+      )
+      const warnings = spy.mock.calls.map(c => c.join(" ")).join("\n")
+      expect(warnings).not.toMatch(/openAccessor/)
+      expect(warnings).not.toMatch(/closeAccessor/)
+      spy.mockRestore()
+    })
+  })
+
   describe("tooltip", () => {
     it("renders OHLC rows when open/close provided", () => {
       render(<TooltipProvider><CandlestickChart data={ohlc} xAccessor="t"

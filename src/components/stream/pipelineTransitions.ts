@@ -50,8 +50,16 @@ export interface TransitionContext {
 
 /**
  * Get a stable identity key for a scene node.
+ *
+ * Exit stubs (created during startTransition for scrolled-off nodes) have
+ * `datum: null` and carry their original identity on `_transitionKey`. If a
+ * new transition starts while exits are still in the scene, resolving their
+ * identity via the datum-less fallback (e.g. `c:${index}`) would reshuffle
+ * which exit matches which key on the next snapshot. Preferring the stored
+ * `_transitionKey` keeps exits stable across overlapping transitions.
  */
 export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: number): string | null {
+  if (node._transitionKey) return node._transitionKey
   switch (node.type) {
     case "point": {
       if (node.pointId) return `p:${node.pointId}`

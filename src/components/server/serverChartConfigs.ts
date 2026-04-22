@@ -85,6 +85,26 @@ const stackedAreaChart: ChartConfig = {
   }),
 }
 
+const candlestickChart: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, _colorBy, _colorScheme, common, rest) => ({
+    chartType: "candlestick",
+    data,
+    xAccessor: rest.xAccessor || "x",
+    // yAccessor drives the scale extent; the scene builder reads high/low/
+    // open/close directly. High is the natural upper bound for the axis.
+    yAccessor: rest.highAccessor || "high",
+    highAccessor: rest.highAccessor || "high",
+    lowAccessor: rest.lowAccessor || "low",
+    // Open/close are optional — PipelineStore detects range mode when both
+    // are absent, so don't synthesize defaults here.
+    openAccessor: rest.openAccessor,
+    closeAccessor: rest.closeAccessor,
+    candlestickStyle: rest.candlestickStyle,
+    ...common,
+  }),
+}
+
 const scatterplot: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
@@ -694,6 +714,7 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   AreaChart: areaChart,
   StackedAreaChart: stackedAreaChart,
   Scatterplot: scatterplot,
+  CandlestickChart: candlestickChart,
   BubbleChart: {
     frameType: "xy",
     buildProps: (data, colorBy, colorScheme, common, rest) => ({

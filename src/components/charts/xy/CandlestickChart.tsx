@@ -128,6 +128,13 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   warnMissingField("CandlestickChart", safeData, "xAccessor", xAccessor)
   warnMissingField("CandlestickChart", safeData, "highAccessor", highAccessor)
   warnMissingField("CandlestickChart", safeData, "lowAccessor", lowAccessor)
+  // When the user asked for OHLC mode (both open & close accessors supplied),
+  // warn if the data doesn't actually carry those fields — otherwise the
+  // scene builder silently drops bars and the chart renders blank.
+  if (!isRange) {
+    warnMissingField("CandlestickChart", safeData, "openAccessor", openAccessor!)
+    warnMissingField("CandlestickChart", safeData, "closeAccessor", closeAccessor!)
+  }
 
   const { customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection, linkedHover,
@@ -168,7 +175,10 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   const validationError = validateArrayData({
     componentName: "CandlestickChart",
     data: data,
-    accessors: { xAccessor, highAccessor, lowAccessor },
+    accessors: {
+      xAccessor, highAccessor, lowAccessor,
+      ...(!isRange && { openAccessor: openAccessor!, closeAccessor: closeAccessor! }),
+    },
   })
 
   // yAccessor on the frame drives scale extent. Use high by default so the

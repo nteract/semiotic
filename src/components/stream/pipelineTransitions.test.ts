@@ -154,8 +154,23 @@ describe("pipelineTransitions — candlestick", () => {
     expect(state.activeTransition).toBeNull()
   })
 
+  it("getNodeIdentity prefers _transitionKey so exit stubs stay stable across re-snapshots", () => {
+    // Exit nodes are created with datum: null but carry _transitionKey from
+    // their pre-exit identity. If a new transition starts while the exit is
+    // still in the scene, snapshotPositions must not reassign them an
+    // index-based id (which would reshuffle which stub matches which key).
+    const exitStub = makeCandle({
+      datum: null as any,
+      _transitionKey: "c:7",
+    })
+    expect(getNodeIdentity(ctx, exitStub, 0)).toBe("c:7")
+    // Index-based fallback only kicks in when neither datum nor key is set.
+    const stranded = makeCandle({ datum: null as any })
+    expect(getNodeIdentity(ctx, stranded, 3)).toBe("c:3")
+  })
+
   it("exiting candlestick (key gone from new scene) produces a fading exit node", () => {
-    const prior: SceneNode[] = [makeCandle({ x: 100, openY: 50, closeY: 40, highY: 30, lowY: 60, datum: { x: 5 } })]
+    const prior: SceneNode[] = [makeCandle({ x: 100, openY: 50, closeY: 40, highY: 30, lowY: 60, bodyWidth: 11, datum: { x: 5 } })]
     const prevPos = new Map<string, PrevPosition>()
     const prevPath = new Map<string, PrevPath>()
     snapshotPositions(ctx, prior, prevPos, prevPath)
@@ -172,6 +187,9 @@ describe("pipelineTransitions — candlestick", () => {
     expect(exit.x).toBe(100)
     expect(exit.openY).toBe(50)
     expect(exit.highY).toBe(30)
+    // bodyWidth flows from the snapshot so the fading-out bar doesn't jump to
+    // the 6px fallback on the final frame.
+    expect(exit.bodyWidth).toBe(11)
     expect(exit._targetOpacity).toBe(0)
     expect(state.scene).toContain(exit)
   })
