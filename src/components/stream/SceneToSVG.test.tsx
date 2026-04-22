@@ -91,6 +91,82 @@ describe("xySceneNodeToSVG — rect", () => {
 
 })
 
+describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
+  it("emits a <linearGradient> and fill=\"url(#id)\" when fillGradient.colorStops is set", () => {
+    const node: any = {
+      type: "rect",
+      x: 10, y: 20, w: 30, h: 40,
+      roundedEdge: "top",
+      style: { fill: "blue" },
+      fillGradient: {
+        colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+      datum: { category: "A" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).toContain("<linearGradient")
+    expect(html).toContain('gradientUnits="userSpaceOnUse"')
+    expect(html).toContain('x1="10"')
+    expect(html).toContain('y1="20"')
+    expect(html).toContain('x2="10"')
+    expect(html).toContain('y2="60"')  // y + h = 20 + 40
+    expect(html).toContain('stop-color="#ff0000"')
+    expect(html).toContain('stop-color="#0000ff"')
+    expect(html).toContain('fill="url(#')
+  })
+
+  it("emits stop-opacity stops for the { topOpacity, bottomOpacity } form", () => {
+    const node: any = {
+      type: "rect",
+      x: 0, y: 0, w: 20, h: 50,
+      roundedEdge: "top",
+      style: { fill: "#3366cc" },
+      fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+      datum: { category: "B" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).toContain('stop-color="#3366cc"')
+    expect(html).toContain('stop-opacity="0.8"')
+    expect(html).toContain('stop-opacity="0.05"')
+  })
+
+  it("falls back to solid fill when fillGradient has < 2 colorStops", () => {
+    const node: any = {
+      type: "rect",
+      x: 0, y: 0, w: 20, h: 50,
+      style: { fill: "#abcdef" },
+      fillGradient: { colorStops: [{ offset: 0, color: "#ff0000" }] },
+      datum: { category: "C" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).not.toContain("<linearGradient")
+    expect(html).toContain('fill="#abcdef"')
+  })
+
+  it("flips gradient direction for horizontal (roundedEdge=right) bars", () => {
+    const node: any = {
+      type: "rect",
+      x: 10, y: 20, w: 80, h: 20,
+      roundedEdge: "right",
+      style: { fill: "blue" },
+      fillGradient: { colorStops: [
+        { offset: 0, color: "#ff0000" },
+        { offset: 1, color: "#0000ff" },
+      ]},
+      datum: { category: "D" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    // Tip (right) at x+w=90 → base at x=10, y stays at 20.
+    expect(html).toContain('x1="90"')
+    expect(html).toContain('y1="20"')
+    expect(html).toContain('x2="10"')
+    expect(html).toContain('y2="20"')
+  })
+})
+
 describe("xySceneNodeToSVG — area", () => {
   it("renders a closed path from topPath and bottomPath", () => {
     const node: any = {

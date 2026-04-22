@@ -242,4 +242,104 @@ describe("barCanvasRenderer", () => {
     expect(alphaValues[0]).toBe(0.15)
     expect(alphaValues[alphaValues.length - 1]).toBe(1)
   })
+
+  describe("gradientFill", () => {
+    it("switches fillStyle to a CanvasGradient when fillGradient + colorStops are set", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        roundedEdge: "top",
+        fillGradient: { colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.createLinearGradient).toHaveBeenCalled()
+      // fillStyle is the gradient object returned by the mock (an object
+      // with addColorStop), not a color string.
+      expect(typeof ctx.fillStyle).toBe("object")
+    })
+
+    it("falls back to solid fill when fillGradient has < 2 colorStops", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        style: { fill: "#abcdef" },
+        roundedEdge: "top",
+        fillGradient: { colorStops: [{ offset: 0, color: "#ff0000" }] },
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.fillStyle).toBe("#abcdef")
+    })
+
+    it("vertical positive bar (roundedEdge=top): gradient runs top → bottom", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        x: 10, y: 20, w: 50, h: 100,
+        roundedEdge: "top",
+        fillGradient: { colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // tip (top) at y=20, base at y=120 — gradient along the y-axis only.
+      expect(ctx.createLinearGradient).toHaveBeenCalledWith(10, 20, 10, 120)
+    })
+
+    it("vertical negative bar (roundedEdge=bottom): gradient runs bottom → top", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        x: 10, y: 20, w: 50, h: 100,
+        roundedEdge: "bottom",
+        fillGradient: { colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // Negative bars point downward, so tip is at y+h and base at y.
+      expect(ctx.createLinearGradient).toHaveBeenCalledWith(10, 120, 10, 20)
+    })
+
+    it("horizontal positive bar (roundedEdge=right): gradient runs right → left", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        x: 10, y: 20, w: 80, h: 20,
+        roundedEdge: "right",
+        fillGradient: { colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // Tip (right) at x+w=90, base at x=10 — gradient along x-axis only.
+      expect(ctx.createLinearGradient).toHaveBeenCalledWith(90, 20, 10, 20)
+    })
+
+    it("horizontal negative bar (roundedEdge=left): gradient runs left → right", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        x: 10, y: 20, w: 80, h: 20,
+        roundedEdge: "left",
+        fillGradient: { colorStops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.createLinearGradient).toHaveBeenCalledWith(10, 20, 90, 20)
+    })
+
+    it("opacity-form gradient works through the rounded-corner path too", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        style: { fill: "#3366cc" },
+        roundedTop: 6,
+        roundedEdge: "top",
+        fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.createLinearGradient).toHaveBeenCalled()
+    })
+  })
 })

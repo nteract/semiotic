@@ -23,11 +23,15 @@ export function parseCanvasColor(ctx: CanvasRenderingContext2D, color: string): 
   try {
     ctx.fillStyle = color
   } catch {
-    ctx.fillStyle = prev as string
+    ctx.fillStyle = prev
     return [78, 121, 167]  // fallback: semiotic primary
   }
-  const normalized = ctx.fillStyle as string
-  ctx.fillStyle = prev as string
+  const normalized = ctx.fillStyle
+  ctx.fillStyle = prev
+  // Invalid CSS colors don't throw — they're silently ignored, leaving
+  // fillStyle as whatever was there before (which may be a CanvasGradient
+  // or CanvasPattern). Guard before treating the result as a string.
+  if (typeof normalized !== "string") return [78, 121, 167]
 
   if (normalized.startsWith("#")) {
     // Canvas returns #rrggbb (never the short form after round-trip)
