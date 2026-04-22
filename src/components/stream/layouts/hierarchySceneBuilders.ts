@@ -294,8 +294,10 @@ export function buildRectScene(
         fill = palette[node.depth % palette.length]
       }
       // contrastTextColor works on hex/rgb strings; fall back to the theme
-      // primary text on CanvasPattern fills where no luminance can be computed.
-      const textColor = typeof fill === "string" ? contrastTextColor(fill) : "#000"
+      // text color on CanvasPattern fills where no luminance can be computed.
+      const textColor = typeof fill === "string"
+        ? contrastTextColor(fill)
+        : (config.themeSemantic?.text ?? "#000")
 
       if (isLeaf) {
         labels.push({
@@ -397,8 +399,10 @@ export function buildCircleScene(
 
       if (isLeaf) {
         // contrastTextColor works on hex/rgb strings; fall back to the theme
-      // primary text on CanvasPattern fills where no luminance can be computed.
-      const textColor = typeof fill === "string" ? contrastTextColor(fill) : "#000"
+        // text color on CanvasPattern fills where no luminance can be computed.
+        const textColor = typeof fill === "string"
+          ? contrastTextColor(fill)
+          : (config.themeSemantic?.text ?? "#000")
         labels.push({
           x: node.x,
           y: node.y,

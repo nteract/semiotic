@@ -59,7 +59,12 @@ describe("DonutChart", () => {
     expect(lastOrdinalFrameProps.projection).toBe("radial")
   })
 
-  it("includes innerRadius as a direct prop", () => {
+  it("includes innerRadius as a direct prop scaled to the chart size", () => {
+    // Primary mode default is 400×400 → default innerRadius = 400 * 0.15 = 60.
+    // Matches the pre-fix literal at primary size while still scaling down at
+    // context/sparkline. The 0.15 ratio intentionally undershoots the frame's
+    // actual outer radius so legend + margin allowances don't reduce the ring
+    // to a hairline.
     render(
       <TooltipProvider>
         <DonutChart data={sampleData} />
@@ -77,6 +82,44 @@ describe("DonutChart", () => {
     )
 
     expect(lastOrdinalFrameProps.innerRadius).toBe(100)
+  })
+
+  describe("chart mode resolution", () => {
+    it("sparkline mode shrinks dimensions and scales innerRadius inside the outer radius", () => {
+      render(
+        <TooltipProvider>
+          <DonutChart data={sampleData} mode="sparkline" />
+        </TooltipProvider>
+      )
+      // Sparkline default is 120×24
+      expect(lastOrdinalFrameProps.size).toEqual([120, 24])
+      // innerRadius = min(120, 24) * 0.15 = 3.6 (floating-point noise OK)
+      expect(lastOrdinalFrameProps.innerRadius).toBeCloseTo(3.6, 5)
+      // innerRadius must stay inside the ~12px outer bound — the old literal 60
+      // inverted the ring entirely
+      expect(lastOrdinalFrameProps.innerRadius).toBeLessThan(12)
+    })
+
+    it("context mode shrinks dimensions and scales innerRadius", () => {
+      render(
+        <TooltipProvider>
+          <DonutChart data={sampleData} mode="context" />
+        </TooltipProvider>
+      )
+      // Context default is 400×250
+      expect(lastOrdinalFrameProps.size).toEqual([400, 250])
+      // innerRadius = min(400, 250) * 0.15 = 37.5
+      expect(lastOrdinalFrameProps.innerRadius).toBe(37.5)
+    })
+
+    it("user-supplied innerRadius overrides the size-scaled default even in sparkline mode", () => {
+      render(
+        <TooltipProvider>
+          <DonutChart data={sampleData} mode="sparkline" innerRadius={5} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.innerRadius).toBe(5)
+    })
   })
 
   it("renders centerContent via centerContent prop", () => {
