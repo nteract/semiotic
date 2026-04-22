@@ -935,6 +935,47 @@
     {
       "type": "function",
       "function": {
+        "name": "CandlestickChart",
+        "description": "OHLC candlestick bars, or a range chart when open/close are omitted. Honors mode (primary/context/sparkline). Range variant degrades cleanly: endpoint dots + wick, sized against canvas height so sparkline rows don't render marble-sized dots.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": { "type": "array", "items": { "type": "object" } },
+            "xAccessor": { "type": "string", "default": "x" },
+            "highAccessor": { "type": "string", "default": "high", "description": "Required. Upper bound (candlestick high or range top)." },
+            "lowAccessor": { "type": "string", "default": "low", "description": "Required. Lower bound (candlestick low or range bottom)." },
+            "openAccessor": { "type": "string", "description": "Optional. Pair with closeAccessor for OHLC; omit both to render a range chart." },
+            "closeAccessor": { "type": "string", "description": "Optional. See openAccessor." },
+            "candlestickStyle": {
+              "type": "object",
+              "description": "Style overrides.",
+              "properties": {
+                "upColor": { "type": "string" },
+                "downColor": { "type": "string" },
+                "wickColor": { "type": "string" },
+                "wickWidth": { "type": "number" },
+                "bodyWidth": { "type": "number" },
+                "rangeColor": { "type": "string", "description": "Color for range-mode dots and wick." }
+              }
+            },
+            "mode": { "type": "string", "enum": ["primary", "context", "sparkline"] },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "annotations": { "type": "array", "items": { "type": "object" } }
+          },
+          "required": ["highAccessor", "lowAccessor"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "BubbleChart",
         "description": "Scatterplot with required size dimension for three-variable comparison. Bubble area encodes a numeric value.",
         "parameters": {

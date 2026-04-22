@@ -330,6 +330,13 @@ export interface CandlestickSceneNode {
   _decayOpacity?: number
   /** Stable identity key for transition tracking */
   _transitionKey?: string
+  /** Geometry targets — set during a transition so advanceTransition can lerp
+   *  toward them from the snapshotted prev position. Cleared on completion. */
+  _targetX?: number
+  _targetOpenY?: number
+  _targetCloseY?: number
+  _targetHighY?: number
+  _targetLowY?: number
 }
 
 // ── Candlestick style ──────────────────────────────────────────────────

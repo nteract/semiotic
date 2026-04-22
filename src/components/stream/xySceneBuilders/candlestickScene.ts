@@ -30,20 +30,21 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layou
     .filter(x => x != null && !Number.isNaN(x))
     .sort((a, b) => a - b)
 
-  let bodyWidth = isRangeMode ? 0 : (cs.bodyWidth ?? 0)
-  if (!isRangeMode && cs.bodyWidth == null && sortedX.length > 1) {
-    let minGap = Infinity
-    for (let i = 1; i < sortedX.length; i++) {
-      const gap = Math.abs(ctx.scales.x(sortedX[i]) - ctx.scales.x(sortedX[i - 1]))
-      if (gap > 0 && gap < minGap) minGap = gap
-    }
-    if (minGap !== Infinity) {
-      bodyWidth = Math.max(2, Math.min(minGap * 0.6, 20))
+  // Compute the gap-derived default width once. OHLC uses it as bodyWidth
+  // (body rect). Range uses it as the basis for dot radius (bodyWidth/2),
+  // additionally capped by the renderer to fit vertically at small heights.
+  let bodyWidth = cs.bodyWidth ?? 0
+  if (cs.bodyWidth == null) {
+    if (sortedX.length > 1) {
+      let minGap = Infinity
+      for (let i = 1; i < sortedX.length; i++) {
+        const gap = Math.abs(ctx.scales.x(sortedX[i]) - ctx.scales.x(sortedX[i - 1]))
+        if (gap > 0 && gap < minGap) minGap = gap
+      }
+      bodyWidth = minGap !== Infinity ? Math.max(2, Math.min(minGap * 0.6, 20)) : 6
     } else {
       bodyWidth = 6
     }
-  } else if (!isRangeMode && cs.bodyWidth == null) {
-    bodyWidth = 6
   }
 
   for (const d of data) {

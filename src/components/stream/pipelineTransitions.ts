@@ -17,6 +17,7 @@ import type {
   PointSceneNode,
   RectSceneNode,
   HeatcellSceneNode,
+  CandlestickSceneNode,
   TransitionConfig
 } from "./types"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
@@ -25,7 +26,16 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export type PrevPosition = { x: number; y: number; w?: number; h?: number; r?: number; opacity?: number }
+export type PrevPosition = {
+  x: number
+  y: number
+  w?: number; h?: number; r?: number
+  opacity?: number
+  // Candlestick-only: the four y-coords of an OHLC bar. Stored separately
+  // so geometry interpolates (body top/bottom, wick top/bottom) during a
+  // transition instead of snapping.
+  openY?: number; closeY?: number; highY?: number; lowY?: number
+}
 export type PrevPath = { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }
 
 /** Context needed from PipelineStore for identity resolution */
@@ -40,8 +50,16 @@ export interface TransitionContext {
 
 /**
  * Get a stable identity key for a scene node.
+ *
+ * Exit stubs (created during startTransition for scrolled-off nodes) have
+ * `datum: null` and carry their original identity on `_transitionKey`. If a
+ * new transition starts while exits are still in the scene, resolving their
+ * identity via the datum-less fallback (e.g. `c:${index}`) would reshuffle
+ * which exit matches which key on the next snapshot. Preferring the stored
+ * `_transitionKey` keeps exits stable across overlapping transitions.
  */
 export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: number): string | null {
+  if (node._transitionKey) return node._transitionKey
   switch (node.type) {
     case "point": {
       if (node.pointId) return `p:${node.pointId}`
@@ -95,7 +113,19 @@ export function snapshotPositions(
     } else if (node.type === "heatcell") {
       prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style?.opacity })
     } else if (node.type === "candlestick") {
-      prevPositionMap.set(key, { x: node.x, y: node.openY })
+      // `w` carries bodyWidth so the exit stub can render at the same width
+      // the bar had before disappearing — otherwise exits would snap to the
+      // default 6px regardless of the scene-computed value.
+      prevPositionMap.set(key, {
+        x: node.x,
+        y: node.openY,
+        w: node.bodyWidth,
+        openY: node.openY,
+        closeY: node.closeY,
+        highY: node.highY,
+        lowY: node.lowY,
+        opacity: node.style?.opacity,
+      })
     } else if (node.type === "line") {
       prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
     } else if (node.type === "area") {
@@ -251,6 +281,38 @@ export function startTransition(
         node.style = { ...(node.style || {}), opacity: 0 }
         hasChanges = true
       }
+    } else if (node.type === "candlestick") {
+      if (prev && prev.openY != null) {
+        matchedPrevKeys.add(key)
+        const target = {
+          x: node.x, openY: node.openY, closeY: node.closeY,
+          highY: node.highY, lowY: node.lowY,
+        }
+        node._targetOpacity = node.style?.opacity ?? 1
+        const moved = prev.x !== target.x
+          || prev.openY !== target.openY
+          || prev.closeY !== target.closeY
+          || prev.highY !== target.highY
+          || prev.lowY !== target.lowY
+        if (moved) {
+          node._targetX = target.x
+          node._targetOpenY = target.openY
+          node._targetCloseY = target.closeY
+          node._targetHighY = target.highY
+          node._targetLowY = target.lowY
+          node.x = prev.x
+          node.openY = prev.openY
+          node.closeY = prev.closeY ?? node.closeY
+          node.highY = prev.highY ?? node.highY
+          node.lowY = prev.lowY ?? node.lowY
+          hasChanges = true
+        }
+      } else {
+        // Entering candlestick — fade in from 0
+        node._targetOpacity = node.style?.opacity ?? 1
+        node.style = { ...(node.style || {}), opacity: 0 }
+        hasChanges = true
+      }
     }
   }
 
@@ -301,6 +363,23 @@ export function startTransition(
         fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
         _targetOpacity: 0, _transitionKey: key
       } as unknown as HeatcellSceneNode
+      state.exitNodes.push(exitNode)
+    } else if (key.startsWith("c:")) {
+      // Candlestick exit: hold prev geometry and fade to zero.
+      const openY = prev.openY ?? prev.y
+      const exitNode = {
+        type: "candlestick",
+        x: prev.x,
+        openY,
+        closeY: prev.closeY ?? openY,
+        highY: prev.highY ?? openY,
+        lowY: prev.lowY ?? openY,
+        bodyWidth: prev.w ?? 6,
+        upColor: "#999", downColor: "#999", wickColor: "#999",
+        wickWidth: 1, isUp: true, datum: null,
+        style: { opacity: prev.opacity ?? 1 },
+        _targetOpacity: 0, _transitionKey: key,
+      } as unknown as CandlestickSceneNode
       state.exitNodes.push(exitNode)
     }
     hasChanges = true
@@ -385,6 +464,21 @@ export function advanceTransition(
       node.y = lerp(prev.y, node._targetY!, t)
       if (prev.w !== undefined) node.w = lerp(prev.w, node._targetW!, t)
       if (prev.h !== undefined) node.h = lerp(prev.h, node._targetH!, t)
+    } else if (node.type === "candlestick") {
+      if (node._targetOpacity !== undefined) {
+        const prev = key ? prevPositionMap.get(key) : undefined
+        const startOpacity = prev ? (prev.opacity ?? 1) : 0
+        node.style = { ...(node.style || {}), opacity: lerp(startOpacity, node._targetOpacity, t) }
+      }
+      if (node._targetX === undefined) continue
+      if (!key) continue
+      const prev = prevPositionMap.get(key)
+      if (!prev) continue
+      node.x = lerp(prev.x, node._targetX, t)
+      if (prev.openY !== undefined) node.openY = lerp(prev.openY, node._targetOpenY!, t)
+      if (prev.closeY !== undefined) node.closeY = lerp(prev.closeY, node._targetCloseY!, t)
+      if (prev.highY !== undefined) node.highY = lerp(prev.highY, node._targetHighY!, t)
+      if (prev.lowY !== undefined) node.lowY = lerp(prev.lowY, node._targetLowY!, t)
     } else if (node.type === "line") {
       if (node._targetOpacity !== undefined) {
         const startOpacity = node._startOpacity ?? 0
@@ -470,6 +564,18 @@ export function advanceTransition(
         node._targetY = undefined
         node._targetW = undefined
         node._targetH = undefined
+      } else if (node.type === "candlestick") {
+        if (node._targetX === undefined) continue
+        node.x = node._targetX
+        if (node._targetOpenY !== undefined) node.openY = node._targetOpenY
+        if (node._targetCloseY !== undefined) node.closeY = node._targetCloseY
+        if (node._targetHighY !== undefined) node.highY = node._targetHighY
+        if (node._targetLowY !== undefined) node.lowY = node._targetLowY
+        node._targetX = undefined
+        node._targetOpenY = undefined
+        node._targetCloseY = undefined
+        node._targetHighY = undefined
+        node._targetLowY = undefined
       } else if (node.type === "line") {
         const targetPath = node._targetPath
         if (targetPath) {

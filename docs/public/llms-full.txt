@@ -31,6 +31,7 @@
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
 **ScatterplotMatrix** — `data`, `fields` (array of numeric field names for grid)
 **MinimapChart** — Overview + detail with linked zoom. Wraps an XY chart.
+**CandlestickChart** — `data`, `xAccessor`, `highAccessor` (req), `lowAccessor` (req), `openAccessor` + `closeAccessor` (optional). With all four: OHLC bars. With only high/low: degrades to a range chart. `candlestickStyle` ({ upColor, downColor, wickColor, rangeColor, bodyWidth, wickWidth }). Honors `mode` (primary/context/sparkline).
 
 ## Ordinal Charts (`semiotic/ordinal`)
 

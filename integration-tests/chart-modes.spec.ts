@@ -4,7 +4,10 @@ import { waitForChartReady } from "./helpers"
 /**
  * Chart-mode visual regression matrix.
  *
- * Four HOCs × three modes (primary / context / sparkline) = 12 fixtures.
+ * Six chart forms × three modes (primary / context / sparkline) = 18 fixtures.
+ * The six: donut, gauge, swimlane, histogram, candlestick (OHLC), and
+ * candlestick-range — the last verifies the renderer's dot-radius cap when
+ * open/close are omitted.
  * Regression guard against the sparkline/context bugs fixed 2026-04-21:
  *   • DonutChart — innerRadius literal (60) exceeded the outer radius at
  *     sparkline 120×24, inverting the ring. Now scales with size.
@@ -16,15 +19,18 @@ import { waitForChartReady } from "./helpers"
  *     crowded 120×24. Now showAxes participates in mode resolution.
  *     (showLegend isn't wired because the HOC doesn't construct a `legend`
  *     prop for StreamXYFrame — there's no legend surface to suppress.)
- *
- * Candlestick is not covered here — it's only available via
- * `chartType="candlestick"` on StreamXYFrame, not an HOC with a `mode` prop.
+ *   • CandlestickChart — new HOC wrapping `chartType="candlestick"`. Same
+ *     mode-resolution pattern as the XY HOCs; degrades to a range chart
+ *     when open/close are omitted. Previously candlestick was frame-only
+ *     with no mode prop. The range variant (`candlestick-range-*`) covers
+ *     the dot-sizing cap the renderer applies when high/low are the only
+ *     y accessors — without the cap, sparkline rows render marble-sized dots.
  *
  * Update baselines after intentional rendering changes:
  *   npx playwright test integration-tests/chart-modes.spec.ts --update-snapshots
  */
 
-const CHARTS = ["donut", "gauge", "swimlane", "histogram"] as const
+const CHARTS = ["donut", "gauge", "swimlane", "histogram", "candlestick", "candlestick-range"] as const
 const MODES = ["primary", "context", "sparkline"] as const
 
 test.describe("Chart modes — sparkline/context/primary matrix", () => {
