@@ -45,14 +45,25 @@ export default function PageLayout({
 
     const headings = contentEl.querySelectorAll("h2, h3")
     const items = []
+    // Dedupe so transient collisions during route transitions (when the old
+    // page's headings can still be in the DOM while the new page mounts)
+    // don't trigger React's duplicate-key warning. Also covers page authors
+    // who legitimately reuse a heading label within one page.
+    const seen = new Set()
 
     headings.forEach((heading) => {
-      // Ensure each heading has an id attribute
       if (!heading.id) {
         heading.id = slugify(heading.textContent)
       }
+      let key = heading.id
+      if (seen.has(key)) {
+        let suffix = 2
+        while (seen.has(`${heading.id}-${suffix}`)) suffix++
+        key = `${heading.id}-${suffix}`
+      }
+      seen.add(key)
       items.push({
-        id: heading.id,
+        id: key,
         text: heading.textContent,
         level: heading.tagName === "H3" ? 3 : 2,
       })

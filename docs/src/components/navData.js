@@ -30,7 +30,8 @@ const navData = [
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
           { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" },
-          { title: "Realtime Histogram", path: "/charts/realtime-histogram" }
+          { title: "Realtime Histogram", path: "/charts/realtime-histogram" },
+          { title: "Candlestick Chart", path: "/charts/candlestick-chart" }
         ]
       },
       {

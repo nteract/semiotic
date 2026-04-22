@@ -302,7 +302,11 @@ describe("Range / dumbbell mode", () => {
     expect(nodes.length).toBe(3)
   })
 
-  it("sets bodyWidth to 0 in range mode", () => {
+  it("computes a gap-derived bodyWidth in range mode (renderer uses it for dot sizing)", () => {
+    // Previously bodyWidth was forced to 0 in range mode because the renderer
+    // drew no body. After the dot-sizing change, the renderer uses bodyWidth/2
+    // as the dot-radius basis so sparkline-sized charts don't render fixed 4px
+    // dots. Assert bodyWidth is the same gap-derived value OHLC would get.
     const ctx = makeCtx({
       getOpen: undefined,
       getClose: undefined,
@@ -312,7 +316,7 @@ describe("Range / dumbbell mode", () => {
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])
-    expect(node.bodyWidth).toBe(0)
+    expect(node.bodyWidth).toBeGreaterThan(0)
   })
 
   it("uses range color (not up/down) in range mode", () => {

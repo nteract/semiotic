@@ -43,6 +43,9 @@ export type { QuadrantChartProps, QuadrantsConfig, QuadrantConfig, CenterlineSty
 export { MultiAxisLineChart } from "./xy/MultiAxisLineChart"
 export type { MultiAxisLineChartProps, MultiAxisSeriesConfig } from "./xy/MultiAxisLineChart"
 
+export { CandlestickChart } from "./xy/CandlestickChart"
+export type { CandlestickChartProps } from "./xy/CandlestickChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================

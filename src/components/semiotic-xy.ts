@@ -19,6 +19,7 @@ export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
 export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
+export { CandlestickChart } from "./charts/xy/CandlestickChart"
 
 // Stream Frame types
 export type {
@@ -36,3 +37,4 @@ export type { BubbleChartProps } from "./charts/xy/BubbleChart"
 export type { HeatmapProps } from "./charts/xy/Heatmap"
 export type { QuadrantChartProps } from "./charts/xy/QuadrantChart"
 export type { MultiAxisLineChartProps } from "./charts/xy/MultiAxisLineChart"
+export type { CandlestickChartProps } from "./charts/xy/CandlestickChart"

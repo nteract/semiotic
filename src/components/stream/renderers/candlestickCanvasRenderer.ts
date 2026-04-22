@@ -6,7 +6,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
   ctx: CanvasRenderingContext2D,
   nodes: SceneNode[],
   _scales: StreamScales,
-  _layout: StreamLayout
+  layout: StreamLayout
 ) => {
   for (const node of nodes) {
     if (node.type !== "candlestick") continue
@@ -14,25 +14,43 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
 
     ctx.save()
 
-    // Apply decay opacity if present
-    const decayOpacity = n._decayOpacity
-    if (decayOpacity != null && decayOpacity !== 1) {
-      ctx.globalAlpha = decayOpacity
-    }
+    // Apply decay + transition opacity together. Decay is set by the decay
+    // pipeline (streaming fade); style.opacity is driven by the transition
+    // pipeline (enter/exit fades). Multiply so either can attenuate the mark.
+    const decayOpacity = n._decayOpacity ?? 1
+    const styleOpacity = n.style?.opacity ?? 1
+    const alpha = decayOpacity * styleOpacity
+    if (alpha !== 1) ctx.globalAlpha = alpha
 
     const wickColor = resolveCSSColor(ctx, n.wickColor) || n.wickColor
 
-    // Draw wick (high-low line)
-    ctx.beginPath()
-    ctx.moveTo(n.x, n.highY)
-    ctx.lineTo(n.x, n.lowY)
-    ctx.strokeStyle = wickColor
-    ctx.lineWidth = n.wickWidth
-    ctx.stroke()
+    // Compact sizes: the wick protrusion above/below the body is often <2px
+    // and lands on subpixel boundaries, making it visually invisible. At those
+    // heights we (a) bump the stroke width so each AA contribution reads as
+    // ink, and (b) draw the wick AFTER the body so the full high-low line is
+    // visible across the entire range, with the body showing as a thicker
+    // middle segment. At normal heights we keep the traditional order (wick
+    // behind, body covering the middle).
+    const compact = layout.height < 60
+    const effectiveWickWidth = compact ? Math.max(n.wickWidth, 2) : n.wickWidth
+
+    const drawWick = () => {
+      ctx.beginPath()
+      ctx.moveTo(n.x, n.highY)
+      ctx.lineTo(n.x, n.lowY)
+      ctx.strokeStyle = wickColor
+      ctx.lineWidth = effectiveWickWidth
+      ctx.stroke()
+    }
+
+    if (!compact) drawWick()
 
     if (n.isRange) {
-      // Range/dumbbell mode: draw endpoint dots instead of body
-      const dotRadius = Math.max(n.wickWidth * 2, 4)
+      // Range/dumbbell mode: dots scale with the scene-computed bodyWidth
+      // (derived from min x-gap) and get capped by canvas height so sparkline
+      // rows (24px tall) don't render marble-sized dots. Floor at 2px so
+      // there's always SOMETHING to see.
+      const dotRadius = Math.max(2, Math.min(n.bodyWidth / 2, layout.height * 0.12))
       ctx.fillStyle = wickColor
       ctx.beginPath()
       ctx.arc(n.x, n.highY, dotRadius, 0, Math.PI * 2)
@@ -54,6 +72,8 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       ctx.strokeRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
     }
     // When bodyWidth === 0 and not range mode, skip body entirely (user explicitly set width to 0)
+
+    if (compact) drawWick()
 
     ctx.restore()
   }

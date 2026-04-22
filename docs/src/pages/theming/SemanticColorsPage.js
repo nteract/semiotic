@@ -228,7 +228,7 @@ export default function SemanticColorsPage() {
 
       <RoleGrid />
 
-      <h3>When to reach for which</h3>
+      <h3>When to reach for which role</h3>
 
       <ul>
         <li>
@@ -624,7 +624,7 @@ export default function SemanticColorsPage() {
         per-datum inside the function if they want granular control.
       </p>
 
-      <h3>When to reach for which</h3>
+      <h3>When to reach for which primitive</h3>
 
       <ul>
         <li>

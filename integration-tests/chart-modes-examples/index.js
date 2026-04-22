@@ -1,6 +1,6 @@
 // Chart-mode visual regression matrix.
 //
-// Four HOCs that regressed on `mode="sparkline"` / `mode="context"`:
+// Five HOCs exercised across all three modes (`primary`/`context`/`sparkline`):
 //   • DonutChart         — innerRadius previously hardcoded at 60, inverting the
 //                          ring at sparkline 120×24. Now scales with size.
 //   • GaugeChart         — `width: props.width ?? 300` previously swallowed the
@@ -11,12 +11,13 @@
 //                          crowded the 120×24 canvas. Now showAxes participates
 //                          in mode resolution. (showLegend isn't wired because
 //                          the HOC doesn't build a legend prop for the frame.)
+//   • CandlestickChart   — new HOC over `chartType="candlestick"`. Same mode
+//                          plumbing as the other XY HOCs. Degrades to a range
+//                          chart when open/close are omitted; here we render the
+//                          OHLC form for the visual baseline.
 //
-// Each chart is rendered in all three modes. Twelve fixtures total; each
-// snapshot proves the chart stays legible at the mode's chosen size.
-//
-// Candlestick isn't included because it's only available via
-// `chartType="candlestick"` on StreamXYFrame — there's no HOC to set `mode` on.
+// Each chart is rendered in all three modes. 15 fixtures total; each snapshot
+// proves the chart stays legible at the mode's chosen size.
 
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
@@ -27,6 +28,7 @@ const {
   GaugeChart,
   SwimlaneChart,
   RealtimeHistogram,
+  CandlestickChart,
   ThemeProvider,
 } = Semiotic
 
@@ -50,6 +52,22 @@ const histogramData = Array.from({ length: 20 }, (_, i) => ({
   time: i * 100,
   value: 10 + Math.round(Math.sin(i * 0.5) * 5),
 }))
+
+// Deterministic OHLC — a gentle up-then-down sine ensures both green and red
+// bars appear, and every bar has a non-zero body/wick for the snapshot.
+const candlestickData = Array.from({ length: 12 }, (_, i) => {
+  const base = 50 + Math.sin(i * 0.6) * 8
+  const o = base
+  const c = base + (i % 2 === 0 ? 3 : -3)
+  const h = Math.max(o, c) + 2
+  const l = Math.min(o, c) - 2
+  return { t: i, o, h, l, c }
+})
+
+// Range-only fixture: derived from the OHLC data by keeping only high/low.
+// Covers the renderer's dot-radius cap (layout.height * 0.12) — without it,
+// sparkline rows (24px tall) render disproportionate dots.
+const candlestickRangeData = candlestickData.map(d => ({ t: d.t, h: d.h, l: d.l }))
 
 const MODES = ["primary", "context", "sparkline"]
 
@@ -128,13 +146,48 @@ function App() {
     )
   )
 
+  const candlestickCases = MODES.map(mode =>
+    React.createElement(
+      TestCase,
+      { key: `candlestick-${mode}`, title: `candlestick — ${mode}`, testId: `candlestick-${mode}` },
+      React.createElement(Themed, null, React.createElement(CandlestickChart, {
+        data: candlestickData,
+        xAccessor: "t",
+        openAccessor: "o",
+        highAccessor: "h",
+        lowAccessor: "l",
+        closeAccessor: "c",
+        mode,
+        tooltip: false,
+      }))
+    )
+  )
+
+  const candlestickRangeCases = MODES.map(mode =>
+    React.createElement(
+      TestCase,
+      { key: `candlestick-range-${mode}`, title: `candlestick-range — ${mode}`, testId: `candlestick-range-${mode}` },
+      React.createElement(Themed, null, React.createElement(CandlestickChart, {
+        data: candlestickRangeData,
+        xAccessor: "t",
+        highAccessor: "h",
+        lowAccessor: "l",
+        candlestickStyle: { rangeColor: "#6366f1" },
+        mode,
+        tooltip: false,
+      }))
+    )
+  )
+
   return React.createElement(
     "div",
     null,
     ...donutCases,
     ...gaugeCases,
     ...swimlaneCases,
-    ...histogramCases
+    ...histogramCases,
+    ...candlestickCases,
+    ...candlestickRangeCases
   )
 }
 

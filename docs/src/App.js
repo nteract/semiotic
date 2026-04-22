@@ -56,6 +56,7 @@ import DistanceCartogramPage from "./pages/charts/DistanceCartogramPage"
 import TileMapPage from "./pages/charts/TileMapPage"
 import QuadrantChartPage from "./pages/charts/QuadrantChartPage"
 import MultiAxisLineChartPage from "./pages/charts/MultiAxisLineChartPage"
+import CandlestickChartPage from "./pages/charts/CandlestickChartPage"
 
 // New frame pages
 import StreamXYFramePage from "./pages/frames/XYFramePage"
@@ -90,7 +91,7 @@ import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
 
 // New cookbook pages
-import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
+import CandlestickCookbookPage from "./pages/cookbook/CandlestickChartPage"
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
 import CanvasInteractionPage from "./pages/cookbook/CanvasInteractionPage"
 import UncertaintyVisualizationPage from "./pages/cookbook/UncertaintyVisualizationPage"
@@ -309,7 +310,7 @@ export default function DocsApp() {
                   </>
                 }
               />
-              <Route path="candlestick-chart" element={<CandlestickChartPage />} />
+              <Route path="candlestick-chart" element={<CandlestickCookbookPage />} />
               <Route path="homerun-map" element={<HomerunMapPage />} />
               <Route path="canvas-interaction" element={<CanvasInteractionPage />} />
               <Route path="uncertainty-visualization" element={<UncertaintyVisualizationPage />} />
@@ -423,6 +424,7 @@ export default function DocsApp() {
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
               <Route path="quadrant-chart" element={<QuadrantChartPage />} />
               <Route path="multi-axis-line-chart" element={<MultiAxisLineChartPage />} />
+              <Route path="candlestick-chart" element={<CandlestickChartPage />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
               <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
               <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
