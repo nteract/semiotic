@@ -35,7 +35,7 @@
 
 ## Ordinal Charts (`semiotic/ordinal`)
 
-**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40)
+**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40), `roundedTop`, `gradientFill` (`true` | `{topOpacity, bottomOpacity}` | `{colorStops}` — same API as AreaChart; runs tip→base)
 **StackedBarChart** — + `stackBy` (required), `normalize`, `sort` (default false — insertion order)
 **GroupedBarChart** — + `groupBy` (required), `barPadding` (60), `sort` (default false — insertion order)
 **SwarmPlot** — `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`

@@ -228,6 +228,12 @@ export interface OrdinalPipelineConfig {
   barPadding?: number
   /** Rounded top corner radius for bar charts. Only the end away from the baseline is rounded. For stacked bars, only the topmost segment gets rounded. */
   roundedTop?: number
+  /** Gradient fill for bar rects. `{ topOpacity, bottomOpacity }` fades the
+   *  resolved fill color from tip (opposite the baseline) to base; `{ colorStops }`
+   *  renders a multi-color gradient along the same axis. Direction follows the
+   *  bar's orientation (tip → base). Same shape as AreaChart.gradientFill
+   *  sans the `boolean` case — the HOC resolves `true` to default opacities. */
+  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
   baselinePadding?: boolean
   innerRadius?: number
@@ -327,6 +333,9 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   barPadding?: number
   roundedTop?: number
+  /** Gradient fill for bar rects. Same shape as AreaChart.gradientFill sans
+   *  the boolean case — resolve booleans at the HOC layer. */
+  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   baselinePadding?: boolean
   innerRadius?: number
   cornerRadius?: number

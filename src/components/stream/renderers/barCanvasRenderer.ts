@@ -2,6 +2,47 @@ import type { RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { parseColor } from "../layouts/hierarchyUtils"
+
+/**
+ * Build a CanvasGradient that runs from the bar's tip (opposite the baseline)
+ * toward its base, honoring `fillGradient.colorStops` or the opacity-based
+ * `{ topOpacity, bottomOpacity }` shape. Mirrors AreaChart's direction so
+ * the same `gradientFill` input yields analogous output across chart types.
+ * Returns null if the config can't resolve (e.g., fewer than 2 color stops).
+ */
+function buildBarGradient(
+  ctx: CanvasRenderingContext2D,
+  node: RectSceneNode,
+  baseFill: string
+): CanvasGradient | null {
+  const fg = node.fillGradient
+  if (!fg) return null
+
+  const edge = node.roundedEdge  // tip edge — set unconditionally by the scene builder
+  // tip → base coordinates along the value axis. Default = top-to-bottom
+  // (matches positive vertical bars) when orientation is unknown.
+  let x0 = node.x, y0 = node.y, x1 = node.x, y1 = node.y + node.h
+  if (edge === "bottom") { y0 = node.y + node.h; y1 = node.y }
+  else if (edge === "right") { x0 = node.x + node.w; y0 = node.y; x1 = node.x; y1 = node.y }
+  else if (edge === "left")  { x0 = node.x; y0 = node.y; x1 = node.x + node.w; y1 = node.y }
+  // "top" and undefined both use the default initialised above.
+
+  const grad = ctx.createLinearGradient(x0, y0, x1, y1)
+
+  if ("colorStops" in fg) {
+    if (fg.colorStops.length < 2) return null
+    for (const stop of fg.colorStops) {
+      const offset = Math.max(0, Math.min(1, stop.offset))
+      if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
+    }
+  } else {
+    const [r, g, b] = parseColor(baseFill)
+    grad.addColorStop(0, `rgba(${r},${g},${b},${fg.topOpacity})`)
+    grad.addColorStop(1, `rgba(${r},${g},${b},${fg.bottomOpacity})`)
+  }
+  return grad
+}
 
 /**
  * Canvas bar renderer.
@@ -21,8 +62,10 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       drawIconBar(ctx, node)
     } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
-      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
+      const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
         || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+      const grad = buildBarGradient(ctx, node, typeof solid === "string" ? solid : "#4e79a7")
+      ctx.fillStyle = grad || solid
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
       ctx.beginPath()
       const { x, y, w, h } = node
@@ -69,9 +112,11 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
         ctx.stroke()
       }
     } else {
-      // Standard solid fill
-      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
+      // Standard solid fill — or gradient when fillGradient is set.
+      const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
         || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+      const grad = buildBarGradient(ctx, node, typeof solid === "string" ? solid : "#4e79a7")
+      ctx.fillStyle = grad || solid
       ctx.fillRect(node.x, node.y, node.w, node.h)
 
       if (node.style.stroke && node.style.stroke !== "none") {

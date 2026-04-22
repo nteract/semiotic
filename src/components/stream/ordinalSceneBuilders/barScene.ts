@@ -105,9 +105,29 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
     }
   }
 
-  // Apply roundedTop to the topmost segment per category
-  if (config.roundedTop && config.roundedTop > 0) {
-    const r = Math.max(0, config.roundedTop)
+  const isV = projection === "vertical"
+  const r = config.roundedTop && config.roundedTop > 0 ? Math.max(0, config.roundedTop) : 0
+
+  // Tag every segment with its tip edge (away from baseline) and the optional
+  // gradient. roundedEdge is set unconditionally so gradients resolve orientation
+  // even when roundedTop is zero — the renderer only actually rounds when
+  // roundedTop > 0. gradientFill is applied per-segment so each stack piece
+  // fades tip→base along its own rect.
+  for (const n of nodes) {
+    if (n.type !== "rect") continue
+    const val = n.datum?.__aggregateValue ?? 0
+    if (isV) {
+      n.roundedEdge = val >= 0 ? "top" : "bottom"
+    } else {
+      n.roundedEdge = val >= 0 ? "right" : "left"
+    }
+    if (config.gradientFill) {
+      n.fillGradient = config.gradientFill
+    }
+  }
+
+  // Rounded corners still go on only the outermost segment per category.
+  if (r > 0) {
     const byCat = new Map<string, RectSceneNode[]>()
     for (const n of nodes) {
       if (n.type !== "rect") continue
@@ -115,33 +135,21 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
       if (!byCat.has(cat)) byCat.set(cat, [])
       byCat.get(cat)!.push(n)
     }
-    const isV = projection === "vertical"
     for (const rects of byCat.values()) {
       if (rects.length === 0) continue
-      // Split into positive (above/right of baseline) and negative (below/left)
-      const positive = rects.filter(n => {
-        const val = n.datum?.__aggregateValue ?? 0
-        return val >= 0
-      })
-      const negative = rects.filter(n => {
-        const val = n.datum?.__aggregateValue ?? 0
-        return val < 0
-      })
-      // Topmost positive segment: farthest from baseline in positive direction
+      const positive = rects.filter(n => (n.datum?.__aggregateValue ?? 0) >= 0)
+      const negative = rects.filter(n => (n.datum?.__aggregateValue ?? 0) < 0)
       if (positive.length > 0) {
         const topmost = isV
           ? positive.reduce((a, b) => a.y < b.y ? a : b)
           : positive.reduce((a, b) => (a.x + a.w) > (b.x + b.w) ? a : b)
         topmost.roundedTop = r
-        topmost.roundedEdge = isV ? "top" : "right"
       }
-      // Bottommost negative segment: farthest from baseline in negative direction
       if (negative.length > 0) {
         const bottommost = isV
           ? negative.reduce((a, b) => (a.y + a.h) > (b.y + b.h) ? a : b)
           : negative.reduce((a, b) => a.x < b.x ? a : b)
         bottommost.roundedTop = r
-        bottommost.roundedEdge = isV ? "bottom" : "left"
       }
     }
   }
@@ -210,18 +218,23 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalL
     }
   }
 
-  // Apply roundedTop — each grouped bar is independent (not stacked)
-  if (config.roundedTop && config.roundedTop > 0) {
-    const r = Math.max(0, config.roundedTop)
-    for (const n of nodes) {
-      if (n.type !== "rect") continue
-      const val = getR(n.datum)
-      n.roundedTop = r
-      if (isVertical) {
-        n.roundedEdge = val >= 0 ? "top" : "bottom"
-      } else {
-        n.roundedEdge = val >= 0 ? "right" : "left"
-      }
+  // Tag every bar with the edge opposite the baseline (the "tip"). Used by
+  // the renderer for rounded-corner placement AND for gradient direction —
+  // we want gradients running from tip → base regardless of orientation or
+  // sign. Setting this unconditionally (not only when roundedTop > 0) keeps
+  // gradient direction resolvable without roundedTop being set.
+  const r = config.roundedTop && config.roundedTop > 0 ? Math.max(0, config.roundedTop) : 0
+  for (const n of nodes) {
+    if (n.type !== "rect") continue
+    const val = getR(n.datum)
+    if (r > 0) n.roundedTop = r
+    if (isVertical) {
+      n.roundedEdge = val >= 0 ? "top" : "bottom"
+    } else {
+      n.roundedEdge = val >= 0 ? "right" : "left"
+    }
+    if (config.gradientFill) {
+      n.fillGradient = config.gradientFill
     }
   }
 
