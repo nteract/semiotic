@@ -2,7 +2,7 @@ import type { RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { parseColor } from "../layouts/hierarchyUtils"
+import { parseCanvasColor } from "./colorUtils"
 
 /**
  * Build a CanvasGradient that runs from the bar's tip (opposite the baseline)
@@ -37,7 +37,9 @@ function buildBarGradient(
       if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
     }
   } else {
-    const [r, g, b] = parseColor(baseFill)
+    // Normalize via canvas so named colors ("steelblue"), hsl(), etc. all
+    // produce opacity-faded gradients that match the bar's actual fill.
+    const [r, g, b] = parseCanvasColor(ctx, baseFill)
     grad.addColorStop(0, `rgba(${r},${g},${b},${fg.topOpacity})`)
     grad.addColorStop(1, `rgba(${r},${g},${b},${fg.bottomOpacity})`)
   }

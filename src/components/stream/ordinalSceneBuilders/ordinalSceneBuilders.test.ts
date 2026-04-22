@@ -250,10 +250,14 @@ describe("buildBarScene", () => {
       }
     })
     const nodes = buildBarScene(ctx, layout)
-    const rects = nodes.filter(n => n.type === "rect")
+    // Look up by datum.category — scene-builder emit order is an impl detail.
+    const byCat = new Map<string, any>()
+    for (const n of nodes) {
+      if (n.type === "rect") byCat.set(n.datum.category, n)
+    }
     // Default projection is vertical — positive = tip "top", negative = tip "bottom"
-    expect(rects[0].type === "rect" && rects[0].roundedEdge).toBe("top")
-    expect(rects[1].type === "rect" && rects[1].roundedEdge).toBe("bottom")
+    expect(byCat.get("A")?.roundedEdge).toBe("top")
+    expect(byCat.get("B")?.roundedEdge).toBe("bottom")
   })
 
   it("attaches config.gradientFill to every rect node", () => {
