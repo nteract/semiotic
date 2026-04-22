@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] - 2026-04-22
+
+### Added
+
+- **`CandlestickChart` HOC** (`semiotic/xy`) — wraps `chartType="candlestick"` with the same mode-aware, animated, push-API conventions as the other XY HOCs. Required: `highAccessor`, `lowAccessor`. Optional: `openAccessor` + `closeAccessor` — omit both and the chart degrades to a range/dumbbell visualization (endpoint dots + wick, no body). Honors `mode="primary" | "context" | "sparkline"`: `scalePadding` scales from width (12 / 10 / 3) to keep leftmost/rightmost bars from clipping, `extentPadding` drops to 2% at widths ≤200 so the y-domain isn't padded into uselessness, and sparkline zeroes `top`/`bottom` margin (axes are stripped, so the 2px defaults were dead space). Full docs page at `/charts/candlestick-chart` with static ↔ streaming toggle, range-chart demo, compact-mode grid for OHLC + Range, and an Animation section demoing data-morph (seeded regenerate button) and a sliding push/remove window.
+- **Candlestick animation support** — the transition pipeline in `pipelineTransitions.ts` gained full enter/update/exit branches for `type: "candlestick"` nodes. Bars matching by x-identity smoothly interpolate all four y-coords (`openY`, `closeY`, `highY`, `lowY`) when data updates; new bars fade in; scrolled-off bars fade out with a held-in-place gray stub. Snapshot carries `bodyWidth` too so exits don't jump to a 6px fallback on the final frame. Renderer now composites `decayOpacity * style.opacity` so decay and transition fades stack. `getNodeIdentity` prefers an existing `_transitionKey` over the datum-derived key so exit stubs stay stable across overlapping transitions (fixes a latent reshuffle risk for *all* exit-node types, not just candlestick).
+- **Server-side rendering for candlestick** — `renderChart("CandlestickChart", ...)` works through a new entry in `serverChartConfigs.ts`. Passthrough config: HOC-level accessors map 1:1 to frame-level ones; `openAccessor`/`closeAccessor` are forwarded without defaults so `PipelineStore` can auto-detect range mode.
+- **`compactMode: boolean` on `useChartMode` return** — the context∨sparkline union now lives on the hook instead of being recomputed in each HOC. `GaugeChart` consumes it (replaces the local `modeIsContext || modeIsSparkline` flag and collapses three conditional-render branches into one).
+- **`candlestick-range-*` visual regression fixtures** — 3 new modes × 3 browsers = 9 baselines added to the chart-modes matrix specifically covering range-mode rendering (the path that motivated the dot-radius cap).
+
+### Changed
+
+- **Candlestick sparkline rendering** — three rendering changes converge to make high/low lines actually visible at 120×24:
+  - Wick is drawn **on top** of the body at `layout.height < 60` with a 2px minimum stroke. At sparkline heights the protrusion above/below a tiny body is often <2px and lands on subpixel boundaries, antialiasing to ~11% alpha (invisible). Drawing the wick last shows the full high-low range as a continuous line through the body.
+  - **Range-mode dot radius** scales with `bodyWidth/2` and caps at `layout.height * 0.12` (was hardcoded `max(wickWidth * 2, 4)` — ≥4px always, marble-sized on a 24px row). Scales up for primary/context.
+  - Scene builder now computes the **same gap-derived `bodyWidth`** in OHLC and range modes so the renderer has a scale-aware basis for dot sizing.
+- **`GaugeChart` needle formula simplification** — `innerRadius > 20 ? innerRadius - 8 : radius - 1`. The `Math.max(1, ...)` / `Math.max(2, ...)` floors in the previous formula were dead: the guarded expression is always well above the floor in either branch.
+- **Type safety sweep** — ~216 `any` types eliminated across the codebase. Scene-node interfaces, scale helpers, hook returns, and accessor resolution gained concrete types. No behavior change; catches more regressions at compile time.
+- **Major dependency updates** — `@playwright/test` + `playwright-chromium` `^1.17.1` → `^1.59.1` (regenerated 9 darwin baselines for chromium font-rendering shifts on label-heavy charts), `vitest` + `@vitest/coverage-v8` + `@vitest/ui` `^4.0.18` → `^4.1.4`, `typedoc` `^0.28.17` → `^0.28.19`, `@axe-core/playwright` `^4.11.1` → `^4.11.2`, `@modelcontextprotocol/sdk` 1.27.1 → 1.29.0, `@types/node` aligned to Node 22.19.17 (matches the Volta-pinned runtime). `.node-version` corrected from `18` → `22.22.1`.
+
+### Fixed
+
+- **`RealtimeHistogram.showLegend` dead pass-through** — `showLegend` was being fed into `useChartMode` but the resolved value was never consumed (the HOC doesn't construct a `legend` prop for StreamXYFrame). Removed the feed-in and updated the comment to explain the absence.
+- **`arrowOfTime` wrongly exposed on `StreamOrdinalFrame`** — removed. The prop only applies to XY time-series layouts; its presence on the ordinal frame was a leftover from a shared-types refactor.
+- **Doc TOC duplicate-key warning** — two sections titled "When to reach for which" on `/theming/semantic-colors` slugged to the same React key. Renamed to "When to reach for which role" and "When to reach for which primitive"; `PageLayout` additionally de-dupes TOC keys defensively so a transient DOM overlap during route transitions can't re-surface the warning. `item.id` still carries the real heading id for anchor navigation; `item.key` is a separate React-only identifier.
+- **Shadowed cookbook import in `App.js`** — `import CandlestickChartPage from "./pages/cookbook/..."` was re-importing the same symbol used by the new `/charts/` route, so the charts-route fell through to the cookbook recipe. Renamed to `CandlestickCookbookPage`.
+
+### Tooling
+
+- `ai/schema.json` and `validationMap.ts` gained `CandlestickChart` entries; `check-schema-freshness.js` and `check-ssr-alignment.js` both pass.
+
 ## [3.4.0] - 2026-04-18
 
 ### Added

@@ -9,7 +9,7 @@ import type { CandlestickStyle } from "../../stream/types"
 import { useChartSelection, useChartMode, getCrosshairProps } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
+import { buildDefaultTooltip, accessorName, type TooltipFieldConfig } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -155,21 +155,24 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     return { ...d, ...userMargin }
   }, [userMargin, resolved.marginDefaults, props.mode])
 
-  // Tooltip: OHLC when present, range when degraded.
+  // Tooltip: OHLC when present, range when degraded. `ChartAccessor<TDatum,
+  // number>` is narrower than TooltipFieldConfig.accessor by parameter
+  // variance — a single cast at the boundary is cleaner than per-row noise.
   const defaultTooltipContent = useMemo(() => {
-    const rows: Array<{ label: string; accessor: ChartAccessor<TDatum, number> | string; role?: "x" | "y" | "group"; format?: any }> = [
-      { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    type Acc = TooltipFieldConfig["accessor"]
+    const rows: TooltipFieldConfig[] = [
+      { label: xLabel || accessorName(xAccessor), accessor: xAccessor as Acc, role: "x", format: xFormat },
     ]
     if (!isRange) {
-      rows.push({ label: "Open", accessor: openAccessor!, format: yFormat })
-      rows.push({ label: "High", accessor: highAccessor, format: yFormat })
-      rows.push({ label: "Low", accessor: lowAccessor, format: yFormat })
-      rows.push({ label: "Close", accessor: closeAccessor!, format: yFormat })
+      rows.push({ label: "Open", accessor: openAccessor! as Acc, format: yFormat })
+      rows.push({ label: "High", accessor: highAccessor as Acc, format: yFormat })
+      rows.push({ label: "Low", accessor: lowAccessor as Acc, format: yFormat })
+      rows.push({ label: "Close", accessor: closeAccessor! as Acc, format: yFormat })
     } else {
-      rows.push({ label: "High", accessor: highAccessor, role: "y", format: yFormat })
-      rows.push({ label: "Low", accessor: lowAccessor, format: yFormat })
+      rows.push({ label: "High", accessor: highAccessor as Acc, role: "y", format: yFormat })
+      rows.push({ label: "Low", accessor: lowAccessor as Acc, format: yFormat })
     }
-    return buildDefaultTooltip(rows as any)
+    return buildDefaultTooltip(rows)
   }, [xAccessor, xLabel, xFormat, yFormat, highAccessor, lowAccessor, openAccessor, closeAccessor, isRange])
 
   const validationError = validateArrayData({
