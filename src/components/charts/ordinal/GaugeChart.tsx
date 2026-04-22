@@ -81,13 +81,12 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
-  // Mode-aware defaults: context and sparkline hide the min/max scale labels
-  // and per-threshold annotations (they don't read at compact sizes). Sparkline
-  // additionally hides the value readout entirely — a sparkline is a dial
-  // indicator, not a labeled chart. User-supplied values still win.
+  // Mode-aware defaults: context and sparkline (compactMode) hide the min/max
+  // scale labels and per-threshold annotations — they don't read at compact
+  // sizes. Context keeps its own value readout as an SVG annotation; sparkline
+  // suppresses that too. User-supplied values always win.
   const modeIsContext = props.mode === "context"
-  const modeIsSparkline = props.mode === "sparkline"
-  const compactMode = modeIsContext || modeIsSparkline
+  const { compactMode } = resolved
 
   const {
     value,
@@ -275,8 +274,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   //   center-slot's absolute-positioning constraints
   // - sparkline: nothing at all — a sparkline gauge is a dial indicator
   const centerEl = useMemo(() => {
-    if (modeIsSparkline && centerContent == null) return null
-    if (modeIsContext && centerContent == null) return null
+    if (compactMode && centerContent == null) return null
     if (centerContent != null) {
       return typeof centerContent === "function" ? centerContent(clampedValue, min, max) : centerContent
     }
@@ -293,7 +291,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
         )}
       </div>
     )
-  }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius, modeIsContext, modeIsSparkline])
+  }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius, compactMode])
 
   // Context-mode value annotation: rendered as SVG text inside the bottom gap
   // of the arc (the 120° wedge the 240° sweep leaves at 6 o'clock). User-
@@ -314,14 +312,12 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     // compact sizes and flipped the needle away from the dial.
     const startRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
     const needleAngle = startRad + pct * sweepRad
-    // Primary: traditional gauge — needle stops ~8px shy of the inner arc edge.
-    // Compact modes: `innerRadius - 8` goes negative at sparkline sizes, and
-    // even `innerRadius * 0.85` (6.7px at 120×24) leaves the line so short it
-    // reads as a dot. Instead, extend the needle through the arc band so it
-    // visually is a needle — reaching ~1px shy of the outer radius.
-    const needleLength = innerRadius > 20
-      ? Math.max(1, innerRadius - 8)
-      : Math.max(2, radius - 1)
+    // Primary/context (innerRadius > 20): traditional gauge — needle tip sits
+    // ~8px shy of the inner arc edge. Sparkline (innerRadius ≤ 20): the
+    // traditional formula collapses to a dot, so extend through the arc band
+    // to ~1px shy of the outer radius. The 20px threshold is where the
+    // "inside" needle would become too short to read as a line.
+    const needleLength = innerRadius > 20 ? innerRadius - 8 : radius - 1
     const tipX = Math.cos(needleAngle) * needleLength
     const tipY = Math.sin(needleAngle) * needleLength
     return { type: "gauge-needle", tipX, tipY, color: needleColor }

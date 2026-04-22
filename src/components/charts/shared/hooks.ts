@@ -630,6 +630,8 @@ interface ChartModeResult {
   categoryLabel: string | undefined
   valueLabel: string | undefined
   marginDefaults: { top: number; bottom: number; left: number; right: number }
+  /** True when mode is context or sparkline — the "hide interactive chrome" union. */
+  compactMode: boolean
 }
 
 /**
@@ -662,6 +664,7 @@ export function useChartMode(
     categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,
     valueLabel: suppressLabels ? undefined : userProps.valueLabel,
     marginDefaults: adjustMarginsForCategoryTicks(m.marginDefaults, userProps.showCategoryTicks, userProps.orientation),
+    compactMode: suppressLabels,
   }
 }
 
