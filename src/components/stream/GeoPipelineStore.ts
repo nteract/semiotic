@@ -19,6 +19,7 @@ import type {
   GeoScales,
   GeoSceneNode,
   GeoAreaSceneNode,
+  GeoLineSceneNode,
   ProjectionProp,
   ProjectionName,
   GraticuleConfig,
@@ -26,7 +27,6 @@ import type {
 } from "./geoTypes"
 import type {
   PointSceneNode,
-  LineSceneNode,
   Style,
   StreamLayout
 } from "./types"
@@ -931,7 +931,7 @@ export class GeoPipelineStore {
 
       if (segments.length <= 1) {
         // No anti-meridian crossing — render as a single line
-        const lineNode: LineSceneNode = {
+        const lineNode: GeoLineSceneNode = {
           type: "line",
           path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
           style,
@@ -942,7 +942,7 @@ export class GeoPipelineStore {
         // Anti-meridian crossing detected — render each segment with edge fade
         for (const segment of segments) {
           if (segment.length < 2) continue
-          const lineNode: LineSceneNode = {
+          const lineNode: GeoLineSceneNode = {
             type: "line",
             path: segment,
             style: { ...style, _edgeFade: true } as any,
@@ -1106,7 +1106,7 @@ export class GeoPipelineStore {
 
     // Reposition lines connecting repositioned points
     const lineNodes = this.scene.filter(
-      (n): n is LineSceneNode => n.type === "line"
+      (n): n is GeoLineSceneNode => n.type === "line"
     )
     if (lineNodes.length > 0 && transform.lineMode !== "fractional") {
       // Build position lookup from repositioned points

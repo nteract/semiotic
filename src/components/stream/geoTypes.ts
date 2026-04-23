@@ -8,7 +8,6 @@ import type {
   StalenessConfig,
   SceneDatum,
   PointSceneNode,
-  LineSceneNode,
   ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
@@ -84,17 +83,25 @@ export interface GeoAreaSceneNode {
   _pulseColor?: string
 }
 
+export interface GeoLineSceneNode {
+  type: "line"
+  path: [number, number][]
+  style: Style
+  datum: SceneDatum
+  group?: string
+}
+
 /** Union of all scene node types that GeoFrame produces */
 export type GeoSceneNode =
   | GeoAreaSceneNode
   | PointSceneNode
-  | LineSceneNode
+  | GeoLineSceneNode
 
 // ── Scales ───────────────────────────────────────────────────────────
 
 export interface GeoScales {
   projection: GeoProjection
-  geoPath: GeoPath<never, GeoPermissibleObjects>
+  geoPath: GeoPath<any, GeoPermissibleObjects>
   projectedPoint: (lon: number, lat: number) => [number, number] | null
   invertedPoint: (px: number, py: number) => [number, number] | null
 }
@@ -257,7 +264,7 @@ export interface StreamGeoFrameHandle {
   removePoint(id: string | string[]): Datum[]
   clear(): void
   getProjection(): GeoProjection | null
-  getGeoPath(): GeoPath<never, GeoPermissibleObjects> | null
+  getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null
   /** Get cartogram layout info (center position, max cost, radius) */
   getCartogramLayout(): { cx: number; cy: number; maxCost: number; availableRadius: number } | null
   /** Get current zoom level (1 = default) */

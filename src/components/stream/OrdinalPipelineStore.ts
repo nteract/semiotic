@@ -1133,13 +1133,13 @@ export class OrdinalPipelineStore {
           type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
           style: { opacity: prev.opacity ?? 1 }, datum: null,
           _targetOpacity: 0, _transitionKey: key
-        } as unknown as OrdinalSceneNode)
+        })
       } else if (key.startsWith("r:")) {
         this.exitNodes.push({
           type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
           style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
           _targetOpacity: 0, _transitionKey: key
-        } as unknown as OrdinalSceneNode)
+        })
       } else if (key.startsWith("w:")) {
         // Exiting wedge: collapse arc to midpoint and fade out
         const midAngle = ((prev.startAngle ?? 0) + (prev.endAngle ?? 0)) / 2

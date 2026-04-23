@@ -15,6 +15,7 @@ import type {
   StreamGeoFrameHandle,
   GeoSceneNode,
   GeoAreaSceneNode,
+  GeoLineSceneNode,
   ProjectionName,
   ProjectionProp
 } from "./geoTypes"
@@ -44,7 +45,6 @@ import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
 import type { HoverPointerCoords } from "./hoverUtils"
-import type { LineSceneNode } from "./types"
 import { resolveNodeColor } from "./sceneUtils"
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -482,7 +482,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         if (hit) {
           const node = hit.node
           const datum = node.datum
-          const rawData = datum?.properties ? datum : (datum?.data || datum)
+          const rawData = Array.isArray(datum)
+            ? null
+            : (datum?.properties ? datum : (datum?.data || datum))
 
           let x: number, y: number
           if (node.type === "point") {
@@ -559,7 +561,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
       if (hit) {
         const datum = hit.node.datum
-        const rawData = datum?.properties ? datum : (datum?.data || datum)
+        const rawData = Array.isArray(datum)
+          ? null
+          : (datum?.properties ? datum : (datum?.data || datum))
         const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
         customClickBehavior({
           ...flattened,
@@ -748,7 +752,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (showParticles && particlePoolRef.current) {
         const pool = particlePoolRef.current
         const lineNodes = scene.filter(
-          (n): n is LineSceneNode => n.type === "line"
+          (n): n is GeoLineSceneNode => n.type === "line"
         )
 
         if (lineNodes.length > 0) {

@@ -226,6 +226,7 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalL
   const r = config.roundedTop && config.roundedTop > 0 ? Math.max(0, config.roundedTop) : 0
   for (const n of nodes) {
     if (n.type !== "rect") continue
+    if (n.datum == null) continue
     const val = getR(n.datum)
     if (r > 0) n.roundedTop = r
     if (isVertical) {

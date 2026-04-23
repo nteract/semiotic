@@ -17,6 +17,7 @@ import type {
 import type { Datum } from "../charts/shared/datumTypes"
 
 export type SceneDatum = Datum | null
+export type SeriesDatum = Datum[] | null
 export type AxisTickFormat =
   | ((d: number, index?: number, allTicks?: number[]) => string)
   | ((d: string, index?: number, allTicks?: number[]) => string)
@@ -167,7 +168,7 @@ export interface LineSceneNode {
   /** Threshold-based color segments */
   colorThresholds?: LineColorThreshold[]
   style: Style
-  datum: Datum
+  datum: SeriesDatum
   group?: string
   /** Horizontal gradient for the line stroke */
   strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
@@ -194,7 +195,7 @@ export interface AreaSceneNode {
   topPath: [number, number][]
   bottomPath: [number, number][]
   style: Style
-  datum: Datum
+  datum: SeriesDatum
   group?: string
   /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
@@ -234,7 +235,7 @@ export interface PointSceneNode {
   y: number
   r: number
   style: Style
-  datum: Datum
+  datum: SceneDatum
   /** Optional unique identifier for point-anchored annotations */
   pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active) */
@@ -271,7 +272,7 @@ export interface RectSceneNode {
    *  along the bar axis (inferred from `roundedEdge`). */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   style: Style
-  datum: Datum
+  datum: SceneDatum
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -294,7 +295,7 @@ export interface HeatcellSceneNode {
   w: number
   h: number
   fill: string
-  datum: Datum
+  datum: SceneDatum
   /** Optional style object (used for decay/transition opacity on heatmap cells) */
   style?: Style
   /** Numeric cell value (for canvas text rendering when showValues is enabled) */
@@ -332,7 +333,7 @@ export interface CandlestickSceneNode {
   isUp: boolean
   /** Range/dumbbell mode — no body, endpoint dots instead */
   isRange?: boolean
-  datum: Datum
+  datum: SceneDatum
   /** Optional style object (used during transition opacity animations) */
   style?: Style
   _pulseIntensity?: number
