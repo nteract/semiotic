@@ -14,9 +14,11 @@ import type {
   StreamGeoFrameProps,
   StreamGeoFrameHandle,
   GeoSceneNode,
-  GeoAreaSceneNode
+  GeoAreaSceneNode,
+  ProjectionName,
+  ProjectionProp
 } from "./geoTypes"
-import type { PointSceneNode } from "./types"
+import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
@@ -32,7 +34,7 @@ import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
-import { select } from "d3-selection"
+import { select, type Selection } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
@@ -81,7 +83,43 @@ const zoomButtonStyle: React.CSSProperties = {
   boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
 }
 
-function DefaultGeoTooltip({ data }: { data: any }) {
+type GeoTooltipData = HoverData | null
+type GeoFeatureLike = Datum & {
+  properties?: Datum
+  geometry?: unknown
+  data?: Datum
+}
+type HitCanvas = HTMLCanvasElement | OffscreenCanvas
+type HitCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+type GeoZoomSelection = Selection<HTMLDivElement, unknown, null, undefined>
+
+interface GeoZoomControlBehavior {
+  scaleBy(selection: GeoZoomSelection, factor: number): void
+  transform(selection: GeoZoomSelection, transform: ZoomTransform | Pick<ZoomTransform, "k">): void
+}
+
+function resolveProjectionName(projection: ProjectionProp): ProjectionName | null {
+  if (typeof projection === "string") return projection
+  if (typeof projection === "object" && projection && "type" in projection) {
+    return projection.type
+  }
+  return null
+}
+
+function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | null {
+  if (!canvas) return null
+  return canvas.getContext("2d")
+}
+
+function flattenGeoDatum(datum: GeoFeatureLike | null | undefined): GeoFeatureLike | null {
+  if (!datum) return null
+  if (datum.properties && typeof datum.properties === "object") {
+    return { ...datum, ...datum.properties }
+  }
+  return datum
+}
+
+function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   if (!data) return null
   // GeoJSON features: show properties
   if (data.properties) {
@@ -236,11 +274,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // Resolve dragRotate — defaults to true for orthographic
     const effectiveDragRotate = useMemo(() => {
       if (dragRotateProp != null) return dragRotateProp
-      const projName = typeof projection === "string"
-        ? projection
-        : typeof projection === "object" && "type" in projection
-          ? (projection as any).type
-          : null
+      const projName = resolveProjectionName(projection)
       return projName === "orthographic"
     }, [dragRotateProp, projection])
 
@@ -299,7 +333,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const prevAnnotationsRef = useRef(annotations)
 
     // Zoom state
-    const zoomBehaviorRef = useRef<ZoomBehavior<Element, unknown> | null>(null)
+    const zoomBehaviorRef = useRef<ZoomBehavior<HTMLDivElement, unknown> | GeoZoomControlBehavior | null>(null)
     const zoomTransformRef = useRef<ZoomTransform>(zoomIdentity)
     const isZoomingRef = useRef(false)
     const containerRef = useRef<HTMLDivElement | null>(null)
@@ -320,7 +354,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // Hover state
     const hoverRef = useRef<HoverData | null>(null)
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
-    const [hoverPoint, setHoverPoint] = useState<any>(null)
+    const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
     // Staleness
@@ -392,7 +426,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         if (container && zoomBehaviorRef.current) {
           // Reset zoom transform — immediate (no d3-transition dependency)
           select(container).call(
-            (zoomBehaviorRef.current as any).transform,
+            zoomBehaviorRef.current.transform,
             zoomIdentity
           )
         }
@@ -440,7 +474,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             hitCanvasRef.current = document.createElement("canvas")
           }
         }
-        const hitCtx = (hitCanvasRef.current as any).getContext("2d")
+        const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
         if (!hitCtx) return
 
         const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
@@ -519,7 +553,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           hitCanvasRef.current = document.createElement("canvas")
         }
       }
-      const hitCtx = (hitCanvasRef.current as any).getContext("2d")
+      const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
       if (!hitCtx) return
 
       const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
@@ -574,13 +608,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
       // Build full HoverData with flattened GeoJSON properties — same shape for
       // both state (tooltip) and customHoverBehavior (no mismatch)
-      const rawDatum: any = point.datum
-      let data: any = rawDatum
-      if (rawDatum && typeof rawDatum === "object" && "geometry" in rawDatum) {
-        if (rawDatum.properties && typeof rawDatum.properties === "object") {
-          data = { ...rawDatum, ...rawDatum.properties }
-        }
-      }
+      const rawDatum = point.datum as GeoFeatureLike | null
+      const data = flattenGeoDatum(rawDatum)
       const hover: HoverData = {
         ...data,
         data: rawDatum,
@@ -712,8 +741,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const layout = { width: adjustedWidth, height: adjustedHeight }
 
       geoCanvasRenderer(ctx, scene, scales, layout)
-      lineCanvasRenderer(ctx, scene as any, scales as any, layout)
-      pointCanvasRenderer(ctx, scene as any, scales as any, layout)
+      lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+      pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
       // ── Geo particles ──
       if (showParticles && particlePoolRef.current) {
@@ -852,16 +881,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       scheduleRender()
     }, [adjustedWidth, adjustedHeight, background, scheduleRender])
 
-    useStalenessCheck(staleness, storeRef as any, dirtyRef, scheduleRender, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // Dev warning: tiles only work with Mercator projection
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && tileURL) {
-        const projName = typeof projection === "string"
-          ? projection
-          : typeof projection === "object" && "type" in projection
-            ? (projection as any).type
-            : null
+        const projName = resolveProjectionName(projection)
         if (projName && projName !== "mercator") {
           console.warn(
             `[StreamGeoFrame] tileURL is set but projection is "${projName}". ` +
@@ -917,9 +942,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
         // Expose a synthetic zoom behavior for the +/- buttons and resetZoom()
         zoomBehaviorRef.current = {
-          scaleBy: (_sel: any, factor: number) => applyScale(currentK * factor),
-          transform: (_sel: any, t: any) => applyScale(t?.k ?? 1)
-        } as any
+          scaleBy: (_selection: GeoZoomSelection, factor: number) => applyScale(currentK * factor),
+          transform: (_selection: GeoZoomSelection, t: ZoomTransform | Pick<ZoomTransform, "k">) => applyScale(t?.k ?? 1)
+        }
 
         const onWheel = (e: WheelEvent) => {
           e.preventDefault()
@@ -1016,11 +1041,11 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
 
       // ── Standard pan/zoom mode ──
-      const behavior = d3Zoom()
+      const behavior = d3Zoom<HTMLDivElement, unknown>()
         .scaleExtent([minZoom, maxZoom])
         .extent([[0, 0], [size[0], size[1]]])
         .translateExtent([[-Infinity, -Infinity], [Infinity, Infinity]])
-        .on("zoom", (event: D3ZoomEvent<Element, unknown>) => {
+        .on("zoom", (event: D3ZoomEvent<HTMLDivElement, unknown>) => {
           const transform = event.transform
           zoomTransformRef.current = transform
           isZoomingRef.current = true
@@ -1033,7 +1058,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             scheduleRender()
           }
         })
-        .on("end", (event: D3ZoomEvent<Element, unknown>) => {
+        .on("end", (event: D3ZoomEvent<HTMLDivElement, unknown>) => {
           zoomTransformRef.current = event.transform
           isZoomingRef.current = false
 
@@ -1047,7 +1072,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         })
 
       zoomBehaviorRef.current = behavior
-      select(container).call(behavior as any)
+      select(container).call(behavior)
 
       return () => {
         select(container).on(".zoom", null)
@@ -1273,7 +1298,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
               onClick={(e) => {
                 e.stopPropagation()
                 const container = containerRef.current
-                const behavior = zoomBehaviorRef.current as any
+                const behavior = zoomBehaviorRef.current
                 if (container && behavior?.scaleBy) {
                   behavior.scaleBy(select(container), 1.5)
                 }
@@ -1288,7 +1313,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
               onClick={(e) => {
                 e.stopPropagation()
                 const container = containerRef.current
-                const behavior = zoomBehaviorRef.current as any
+                const behavior = zoomBehaviorRef.current
                 if (container && behavior?.scaleBy) {
                   behavior.scaleBy(select(container), 1 / 1.5)
                 }
@@ -1323,7 +1348,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           hoverPoint={hoverPoint}
           margin={margin}
           size={size}
-          shape={focusedNavPointRef.current?.shape as any}
+          shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | undefined}
           width={focusedNavPointRef.current?.w}
           height={focusedNavPointRef.current?.h}
         />
