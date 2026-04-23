@@ -1,4 +1,3 @@
-import React from "react"
 import { render } from "@testing-library/react"
 import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"

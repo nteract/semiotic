@@ -305,6 +305,21 @@ describe("BarChart", () => {
       expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(110)
       expect(lastOrdinalFrameProps.legend).toBeDefined()
     })
+
+    it("suppresses an empty legend when data is omitted (push API) so no margin is reserved", () => {
+      // Demo on /features/push-api uses this exact shape: omitted data +
+      // colorBy. Previously useChartLegendAndMargin returned a legend with
+      // zero items, which reserved margin and rendered only the header
+      // neatline. Now it returns undefined so no margin is reserved and
+      // the chart can use the full width until data arrives via push.
+      render(
+        <TooltipProvider>
+          <BarChart colorBy="category" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.legend).toBeUndefined()
+      expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
+    })
   })
 
   describe("hoverAnnotation", () => {

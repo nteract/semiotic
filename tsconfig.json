@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "react",
+    "jsx": "react-jsx",
     "types": ["node", "vitest/globals"],
     "strict": true
   },

@@ -106,12 +106,20 @@ async function createBundle(options = {}) {
     // dynamic imports in the output bundle. The consumer's bundler (webpack,
     // vite, etc.) handles the JSON resolution at app build time.
     //
-    // react-dom/server is a subpath of react-dom (which auto-external marks
-    // external at the package-root level only). Without this rule, rollup
-    // fails to resolve react-dom/server in the browser, tree-shakes the
-    // unused namespace binding, and leaves `(void 0)(...)` calls wherever
-    // `ReactDOMServer.renderToStaticMarkup` was invoked.
-    external: (id) => id.startsWith("world-atlas/") || id === "react-dom/server",
+    // react-dom/server, react/jsx-runtime, and react/jsx-dev-runtime are all
+    // subpaths of their host packages (react-dom / react), which auto-external
+    // marks external only at the package-root level. Without these explicit
+    // rules, rollup fails to resolve the subpath in the browser, tree-shakes
+    // the namespace binding, and emits `(void 0)(...)` calls wherever
+    // `ReactDOMServer.renderToStaticMarkup` or a JSX factory was invoked.
+    // jsx-runtime entered the picture when tsconfig flipped to the automatic
+    // JSX transform (`"jsx": "react-jsx"`) — every .tsx file now imports from
+    // `react/jsx-runtime` instead of compiling JSX to `React.createElement`.
+    external: (id) =>
+      id.startsWith("world-atlas/")
+      || id === "react-dom/server"
+      || id === "react/jsx-runtime"
+      || id === "react/jsx-dev-runtime",
     onLog(level, log, handler) {
       if (log.message && typeof log.message === 'string') {
         const d3Patterns = ["d3-", "internmap", "delaunator"]

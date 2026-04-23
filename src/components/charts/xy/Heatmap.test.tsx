@@ -1,5 +1,4 @@
 
-import React from "react"
 import { render } from "@testing-library/react"
 import { Heatmap } from "./Heatmap"
 import { TooltipProvider } from "../../store/TooltipStore"

@@ -96,10 +96,10 @@
   "scripts": {
     "start": "parcel serve --target website --port 3000",
     "build": "parcel build --target website",
-    "build:analyze": "node scripts/build.mjs --analyze",
-    "build:prod": "node scripts/build.mjs --production",
+    "build:analyze": "node --max-old-space-size=8192 scripts/build.mjs --analyze",
+    "build:prod": "node --max-old-space-size=8192 scripts/build.mjs --production",
     "test": "vitest run",
-    "pretest:dist": "node scripts/build.mjs",
+    "pretest:dist": "node --max-old-space-size=8192 scripts/build.mjs",
     "test:dist": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "bench": "vitest bench",
@@ -128,8 +128,8 @@
     "typescript": "tsc --noEmit",
     "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
-    "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && node scripts/build.mjs --production && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && rm -rf dist && node scripts/build.mjs --production"
+    "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && npm run dist:prod && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && rm -rf dist && npm run dist:prod"
   },
   "targets": {
     "website": {

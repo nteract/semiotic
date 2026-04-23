@@ -8,7 +8,6 @@
  * Visual interaction testing is covered by Playwright E2E specs.
  */
 
-import React from "react"
 import { render } from "@testing-library/react"
 
 import { LineChart } from "../../components/charts/xy/LineChart"
