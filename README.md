@@ -470,6 +470,9 @@ Args: {
 For quick validation without an MCP client:
 
 ```bash
+npx semiotic-ai --list         # list components with import paths and renderability
+npx semiotic-ai --list --json  # machine-readable component index
+npx semiotic-ai --schema GaugeChart
 npx semiotic-ai --doctor       # validate component + props JSON
 npx semiotic-ai --schema       # dump all chart schemas
 npx semiotic-ai --compact      # compact schema (fewer tokens)

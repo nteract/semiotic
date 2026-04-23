@@ -5,6 +5,7 @@ import type { Datum } from "./datumTypes"
  * Validates component name, required props, prop types, enum values,
  * unknown props (typo detection), and data shape via the existing
  * validateArrayData / validateObjectData / validateNetworkData helpers.
+ * Components with dataShape "none" intentionally skip data validation.
  */
 
 import { validateArrayData } from "./validateChartData"
@@ -36,7 +37,7 @@ type DataShape = "array" | "object" | "network" | "realtime" | "none"
 export interface ComponentSpec {
   /** Props that must be present */
   required: string[]
-  /** Data shape — drives which validateChartData helper to call */
+  /** Data shape — drives which validateChartData helper to call; "none" means no data prop is expected */
   dataShape: DataShape
   /** Accessor props to validate against data (key = prop name) */
   dataAccessors: string[]
@@ -160,6 +161,8 @@ export function validateProps(
       edgesRequired: spec.required.includes("edges"),
     })
     if (dataError) errors.push(dataError)
+  } else if (spec.dataShape === "none") {
+    // Value-only components such as GaugeChart have no data prop to validate.
   }
   // realtime charts: no data validation (ref-based push API)
 
