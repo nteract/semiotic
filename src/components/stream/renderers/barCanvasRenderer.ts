@@ -28,21 +28,24 @@ function buildBarGradient(
   else if (edge === "left")  { x0 = node.x; y0 = node.y; x1 = node.x + node.w; y1 = node.y }
   // "top" and undefined both use the default initialised above.
 
-  const grad = ctx.createLinearGradient(x0, y0, x1, y1)
-
   if ("colorStops" in fg) {
-    if (fg.colorStops.length < 2) return null
-    for (const stop of fg.colorStops) {
-      const offset = Math.max(0, Math.min(1, stop.offset))
-      if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
-    }
-  } else {
-    // Normalize via canvas so named colors ("steelblue"), hsl(), etc. all
-    // produce opacity-faded gradients that match the bar's actual fill.
-    const [r, g, b] = parseCanvasColor(ctx, baseFill)
-    grad.addColorStop(0, `rgba(${r},${g},${b},${fg.topOpacity})`)
-    grad.addColorStop(1, `rgba(${r},${g},${b},${fg.bottomOpacity})`)
+    // Filter out non-finite offsets before the count check so we don't build
+    // a gradient with < 2 usable stops (which renders as a flat/transparent
+    // fill and violates the "can't resolve" contract).
+    const validStops = fg.colorStops
+      .filter(s => Number.isFinite(s.offset))
+      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
+    if (validStops.length < 2) return null
+    const grad = ctx.createLinearGradient(x0, y0, x1, y1)
+    for (const s of validStops) grad.addColorStop(s.offset, s.color)
+    return grad
   }
+  // Opacity form. Normalize via canvas so named colors ("steelblue"), hsl(),
+  // etc. all produce opacity-faded gradients that match the bar's actual fill.
+  const grad = ctx.createLinearGradient(x0, y0, x1, y1)
+  const [r, g, b] = parseCanvasColor(ctx, baseFill)
+  grad.addColorStop(0, `rgba(${r},${g},${b},${fg.topOpacity})`)
+  grad.addColorStop(1, `rgba(${r},${g},${b},${fg.bottomOpacity})`)
   return grad
 }
 

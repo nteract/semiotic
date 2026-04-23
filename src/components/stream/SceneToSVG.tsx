@@ -89,11 +89,15 @@ function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement 
 
   const stops: React.ReactElement[] = []
   if ("colorStops" in fg) {
-    if (fg.colorStops.length < 2) return null
-    for (let i = 0; i < fg.colorStops.length; i++) {
-      const s = fg.colorStops[i]
-      const offset = Math.max(0, Math.min(1, s.offset))
-      stops.push(<stop key={i} offset={offset} stopColor={s.color} />)
+    // Mirror the canvas path: filter non-finite offsets first, then require
+    // ≥2 valid stops. Without the filter a NaN offset would emit offset="NaN",
+    // which is invalid SVG and breaks the whole gradient.
+    const validStops = fg.colorStops
+      .filter(s => Number.isFinite(s.offset))
+      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
+    if (validStops.length < 2) return null
+    for (let i = 0; i < validStops.length; i++) {
+      stops.push(<stop key={i} offset={validStops[i].offset} stopColor={validStops[i].color} />)
     }
   } else {
     // Opacity form — use the resolved fill as the base color and let SVG's

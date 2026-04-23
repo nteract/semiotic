@@ -330,6 +330,23 @@ describe("barCanvasRenderer", () => {
       expect(ctx.createLinearGradient).toHaveBeenCalledWith(10, 20, 90, 20)
     })
 
+    it("returns null when filtering NaN offsets leaves < 2 valid stops", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({
+        style: { fill: "#abcdef" },
+        roundedEdge: "top",
+        // Two configured stops, but one has a NaN offset → only 1 survives.
+        fillGradient: { colorStops: [
+          { offset: NaN, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ]},
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // Falls back to the solid node.style.fill — no gradient created.
+      expect(ctx.createLinearGradient).not.toHaveBeenCalled()
+      expect(ctx.fillStyle).toBe("#abcdef")
+    })
+
     it("opacity-form gradient works through the rounded-corner path too", () => {
       const ctx = createMockCanvasContext()
       const node = makeRectNode({

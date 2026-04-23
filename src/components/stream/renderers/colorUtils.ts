@@ -20,7 +20,15 @@
  */
 export function parseCanvasColor(ctx: CanvasRenderingContext2D, color: string): [number, number, number] {
   const prev = ctx.fillStyle
+  // Force a known sentinel before trying the user's color so we can detect
+  // silent rejections. The browser ignores invalid CSS color assignments
+  // without throwing — fillStyle is left at whatever was there before. If
+  // that previous value happened to be a string, a naive round-trip check
+  // would parse the prior color as if it were the user's input. Setting the
+  // sentinel first means a rejected assignment leaves fillStyle === sentinel.
+  const SENTINEL = "#010203"
   try {
+    ctx.fillStyle = SENTINEL
     ctx.fillStyle = color
   } catch {
     ctx.fillStyle = prev
@@ -28,10 +36,14 @@ export function parseCanvasColor(ctx: CanvasRenderingContext2D, color: string): 
   }
   const normalized = ctx.fillStyle
   ctx.fillStyle = prev
-  // Invalid CSS colors don't throw — they're silently ignored, leaving
-  // fillStyle as whatever was there before (which may be a CanvasGradient
-  // or CanvasPattern). Guard before treating the result as a string.
+  // Guard against non-string fillStyle (CanvasGradient/CanvasPattern — can't
+  // happen after our sentinel assignment, but defensive).
   if (typeof normalized !== "string") return [78, 121, 167]
+  // Sentinel unchanged means the browser rejected the user's color. Only
+  // treat this as rejection if the input wasn't literally the sentinel.
+  if (normalized.toLowerCase() === SENTINEL && color.trim().toLowerCase() !== SENTINEL) {
+    return [78, 121, 167]
+  }
 
   if (normalized.startsWith("#")) {
     // Canvas returns #rrggbb (never the short form after round-trip)

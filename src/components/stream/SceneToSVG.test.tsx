@@ -146,6 +146,22 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
     expect(html).toContain('fill="#abcdef"')
   })
 
+  it("falls back to solid fill when NaN offsets leave < 2 valid stops", () => {
+    const node: any = {
+      type: "rect",
+      x: 0, y: 0, w: 20, h: 50,
+      style: { fill: "#abcdef" },
+      fillGradient: { colorStops: [
+        { offset: NaN, color: "#ff0000" },
+        { offset: 1, color: "#0000ff" },
+      ]},
+      datum: { category: "E" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).not.toContain("<linearGradient")
+    expect(html).toContain('fill="#abcdef"')
+  })
+
   it("flips gradient direction for horizontal (roundedEdge=right) bars", () => {
     const node: any = {
       type: "rect",
