@@ -758,7 +758,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             if (!p.active) continue
             const lineNode = lineNodes[p.lineIndex]
             const color = typeof pStyle.color === "function"
-              ? pStyle.color(lineNode?.datum)
+              ? pStyle.color(lineNode?.datum ?? {})
               : pStyle.color === "source" || !pStyle.color
                 ? (lineNode?.style.stroke || "#fff")
                 : pStyle.color

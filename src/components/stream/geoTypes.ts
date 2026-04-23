@@ -6,7 +6,7 @@ import type {
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  
+  SceneDatum,
   PointSceneNode,
   LineSceneNode,
   ThemeSemanticColors
@@ -74,7 +74,7 @@ export interface GeoAreaSceneNode {
   /** Screen-space area in px² */
   screenArea: number
   style: Style
-  datum: any
+  datum: SceneDatum
   group?: string
   interactive?: boolean
   /** Lazily-cached Path2D parsed from pathData (avoids re-parsing on every hit test) */
@@ -94,7 +94,7 @@ export type GeoSceneNode =
 
 export interface GeoScales {
   projection: GeoProjection
-  geoPath: GeoPath<any, GeoPermissibleObjects>
+  geoPath: GeoPath<never, GeoPermissibleObjects>
   projectedPoint: (lon: number, lat: number) => [number, number] | null
   invertedPoint: (px: number, py: number) => [number, number] | null
 }
@@ -109,14 +109,14 @@ export interface GeoPipelineConfig {
 
   xAccessor?: string | ((d: Datum) => number)
   yAccessor?: string | ((d: Datum) => number)
-  lineDataAccessor?: string | ((d: Datum) => any[])
+  lineDataAccessor?: string | ((d: Datum) => Datum[])
   lineType?: "geo" | "line"
   /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
   flowStyle?: "basic" | "offset" | "arc"
 
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
-  lineStyle?: Style | ((d: any, group?: string) => Style)
+  lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
@@ -159,7 +159,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Accessors ──
   xAccessor?: string | ((d: T) => number)
   yAccessor?: string | ((d: T) => number)
-  lineDataAccessor?: string | ((d: T) => any[])
+  lineDataAccessor?: string | ((d: T) => Datum[])
   pointIdAccessor?: string | ((d: T) => string)
 
   // ── Geo-specific ──
@@ -206,7 +206,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Style ──
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
-  lineStyle?: Style | ((d: any, group?: string) => Style)
+  lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
 
   // ── Interaction ──
@@ -233,7 +233,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   title?: string | ReactNode
 
   // ── Legend (passed from HOCs) ──
-  legend?: any
+  legend?: ReactNode | { legendGroups: import("../types/legendTypes").LegendGroup[] }
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
@@ -257,7 +257,7 @@ export interface StreamGeoFrameHandle {
   removePoint(id: string | string[]): Datum[]
   clear(): void
   getProjection(): GeoProjection | null
-  getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null
+  getGeoPath(): GeoPath<never, GeoPermissibleObjects> | null
   /** Get cartogram layout info (center position, max cost, radius) */
   getCartogramLayout(): { cx: number; cy: number; maxCost: number; availableRadius: number } | null
   /** Get current zoom level (1 = default) */

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { ScaleLinear } from "d3-scale"
+import type { ScaleBand, ScaleLinear } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
 
 export type ArrowOfTime = "up" | "down" | "left" | "right"
@@ -31,7 +31,7 @@ export interface AnnotationContext {
     time?: ScaleLinear<number, number>
     value?: ScaleLinear<number, number>
     /** The raw ordinal band scale (only in ordinal frames). Has .bandwidth(). */
-    o?: any
+    o?: ScaleBand<string>
   } | null
   /** @deprecated Use scales.x / scales.y instead */
   timeAxis?: "x" | "y"
@@ -66,7 +66,7 @@ export interface HoverAnnotationConfig {
 
 export interface HoverData {
   /** The raw datum from the user's data array (may be an object, array, or null for exit nodes) */
-  data: any
+  data: Datum | null
   /** Pixel X coordinate of the hovered element */
   x: number
   /** Pixel Y coordinate of the hovered element */
@@ -78,11 +78,11 @@ export interface HoverData {
 
   // ── XY-specific ──────────────────────────────────────────────────────
   /** All series values at hovered X (multi-point tooltip mode) */
-  allSeries?: Array<{ group: string; value: number; valuePx?: number; color: string; datum: any }>
+  allSeries?: Array<{ group: string; value: number; valuePx?: number; color: string; datum: Datum }>
   /** Pixel X of hover position (may differ from x for multi-point snap) */
   xPx?: number
   /** Raw X domain value at hover position */
-  xValue?: any
+  xValue?: unknown
 
   // ── Ordinal-specific ─────────────────────────────────────────────────
   /** Distribution statistics for boxplot/violin/ridgeline */

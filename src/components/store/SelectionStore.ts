@@ -8,7 +8,7 @@ export type ResolutionMode = "union" | "intersect" | "crossfilter"
 
 export interface FieldConstraint {
   type: "point"
-  values: Set<any>
+  values: Set<unknown>
 }
 
 export interface IntervalConstraint {

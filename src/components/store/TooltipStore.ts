@@ -1,9 +1,14 @@
 "use client"
 import { createStore } from "./createStore"
 
-const [TooltipProvider, useTooltip] = createStore((set) => ({
+interface TooltipStoreState {
+  tooltip: unknown
+  changeTooltip: (tooltip: unknown) => void
+}
+
+const [TooltipProvider, useTooltip] = createStore<TooltipStoreState>((set) => ({
   tooltip: null,
-  changeTooltip(tooltip: any) {
+  changeTooltip(tooltip: unknown) {
     set(() => ({ tooltip }))
   }
 }))

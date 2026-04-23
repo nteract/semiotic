@@ -405,7 +405,7 @@ export type TooltipContentFn = (d: Datum) => React.ReactNode
  */
 export function MultiPointTooltip(): TooltipContentFn {
   return (d: Datum) => {
-    const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: any }> | undefined
+    const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: Datum }> | undefined
     if (!allSeries || allSeries.length === 0) {
       // Fallback to single-datum display — prefer data-space values from datum
       const val = d.data?.value ?? d.data?.y ?? d.value ?? d.y

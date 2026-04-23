@@ -320,21 +320,21 @@ export function startTransition(
   for (const [key, prevPath] of prevPathMap) {
     if (matchedPrevPathKeys.has(key)) continue
     if (key.startsWith("l:") && prevPath.path) {
-      const exitNode: LineSceneNode = {
+      const exitNode = {
         type: "line", path: prevPath.path.map(p => [p[0], p[1]] as [number, number]),
         group: key.slice(2), style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
         _targetOpacity: 0, _transitionKey: key, datum: null
-      }
+      } as unknown as LineSceneNode
       state.exitNodes.push(exitNode)
       hasChanges = true
     } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
-      const exitNode: AreaSceneNode = {
+      const exitNode = {
         type: "area",
         topPath: prevPath.topPath.map(p => [p[0], p[1]] as [number, number]),
         bottomPath: prevPath.bottomPath.map(p => [p[0], p[1]] as [number, number]),
         group: key.slice(2), style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
         _targetOpacity: 0, _transitionKey: key, datum: null
-      }
+      } as unknown as AreaSceneNode
       state.exitNodes.push(exitNode)
       hasChanges = true
     }

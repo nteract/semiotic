@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -72,7 +72,7 @@ export interface RealtimeEdge {
   _introFromZero?: boolean
   direction?: string
   circular?: boolean
-  circularPathData?: any
+  circularPathData?: CircularPathData
   bezier?: BezierCache
   data?: Datum
   /** Unique key for this edge (supports parallel edges between same node pair) */
@@ -97,6 +97,28 @@ export interface BezierCache {
   points?: [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
   segments?: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]>
   halfWidth: number
+}
+
+export interface CircularPathData {
+  sourceX: number
+  targetX: number
+  sourceY: number
+  targetY: number
+  rightFullExtent: number
+  leftFullExtent: number
+  verticalFullExtent: number
+  rightInnerExtent: number
+  leftInnerExtent: number
+  verticalRightInnerExtent: number
+  verticalLeftInnerExtent: number
+  rightSmallArcRadius: number
+  rightLargeArcRadius: number
+  leftSmallArcRadius: number
+  leftLargeArcRadius: number
+  sourceWidth: number
+  rightNodeBuffer: number
+  leftNodeBuffer: number
+  arcRadius: number
 }
 
 // ── Particle system ────────────────────────────────────────────────────
@@ -167,7 +189,7 @@ export interface RealtimeNetworkFrameProps {
   nodeLabel?: string | ((d: RealtimeNode) => string)
   showLabels?: boolean
   enableHover?: boolean
-  tooltipContent?: (d: { type: "node" | "edge"; data: any }) => ReactNode
+  tooltipContent?: (d: { type: "node" | "edge"; data: Datum | null }) => ReactNode
   onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
   background?: string
   className?: string
@@ -196,7 +218,7 @@ export interface NetworkCircleNode {
   cy: number
   r: number
   style: Style
-  datum: any
+  datum: SceneDatum
   id?: string
   label?: string
   depth?: number
@@ -213,7 +235,7 @@ export interface NetworkRectNode {
   w: number
   h: number
   style: Style
-  datum: any
+  datum: SceneDatum
   id?: string
   label?: string
   depth?: number
@@ -235,7 +257,7 @@ export interface NetworkArcNode {
   /** End angle in radians, canvas convention */
   endAngle: number
   style: Style
-  datum: any
+  datum: SceneDatum
   id?: string
   label?: string
   _pulseIntensity?: number
@@ -251,7 +273,7 @@ export interface NetworkLineEdge {
   x2: number
   y2: number
   style: Style
-  datum: any
+  datum: SceneDatum
   _pulseIntensity?: number
   _pulseColor?: string
 }
@@ -262,7 +284,7 @@ export interface NetworkBezierEdge {
   pathD: string
   bezierCache?: BezierCache
   style: Style
-  datum: any
+  datum: SceneDatum
   _pulseIntensity?: number
   _pulseColor?: string
   /** Lazily-built Path2D for hit testing; invalidated when pathD changes. */
@@ -275,7 +297,7 @@ export interface NetworkRibbonEdge {
   type: "ribbon"
   pathD: string
   style: Style
-  datum: any
+  datum: SceneDatum
   _pulseIntensity?: number
   _pulseColor?: string
   _cachedPath2D?: Path2D
@@ -287,7 +309,7 @@ export interface NetworkCurvedEdge {
   type: "curved"
   pathD: string
   style: Style
-  datum: any
+  datum: SceneDatum
   _pulseIntensity?: number
   _pulseColor?: string
   _cachedPath2D?: Path2D
@@ -405,7 +427,7 @@ export interface NetworkPipelineConfig {
   edgeIdAccessor?: string | ((d: Datum) => string)
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
-  childrenAccessor?: string | ((d: Datum) => any[])
+  childrenAccessor?: string | ((d: Datum) => Datum[])
   hierarchySum?: string | ((d: Datum) => number)
 
   // ── Sankey layout ────────────────────────────────
@@ -413,7 +435,7 @@ export interface NetworkPipelineConfig {
   nodeAlign?: "justify" | "left" | "right" | "center"
   nodePaddingRatio?: number
   nodeWidth?: number
-  edgeSort?: (a: any, b: any) => number
+  edgeSort?: (a: unknown, b: unknown) => number
 
   // ── Force layout ─────────────────────────────────
   iterations?: number
@@ -422,7 +444,7 @@ export interface NetworkPipelineConfig {
   // ── Chord layout ─────────────────────────────────
   padAngle?: number
   groupWidth?: number
-  sortGroups?: (a: any, b: any) => number
+  sortGroups?: (a: unknown, b: unknown) => number
 
   // ── Tree/hierarchy layout ────────────────────────
   treeOrientation?: "vertical" | "horizontal" | "radial"
@@ -473,11 +495,11 @@ export interface NetworkPipelineConfig {
    *  "atomic" ([2,8] electron shell), or custom capacities. @default "flat" */
   orbitMode?: "flat" | "solar" | "atomic" | number[]
   /** Ring size divisor per depth. Larger = tighter orbits. @default 2.95 */
-  orbitSize?: number | ((node: any) => number)
+  orbitSize?: number | ((node: Datum) => number)
   /** Orbit speed multiplier (higher = faster rotation). @default 0.25 */
   orbitSpeed?: number
   /** Per-node speed modifier. @default (node) => 1 / (node.depth + 1) */
-  orbitRevolution?: (node: any) => number
+  orbitRevolution?: (node: Datum) => number
   /**
    * Built-in revolution style presets:
    * - "locked": children rotate with parent at decreasing speed (default)
@@ -488,7 +510,7 @@ export interface NetworkPipelineConfig {
    */
   orbitRevolutionStyle?: "locked" | "decay" | "alternate"
   /** Vertical squash for elliptical orbits. 1 = circle. @default 1 */
-  orbitEccentricity?: number | ((node: any) => number)
+  orbitEccentricity?: number | ((node: Datum) => number)
   /** Show orbital ring ellipses as foreground graphics. @default true */
   orbitShowRings?: boolean
   /** Enable orbit animation. @default true */
@@ -539,8 +561,8 @@ export interface StreamNetworkFrameProps<T = Datum> {
   forceStrength?: number
   padAngle?: number
   groupWidth?: number
-  sortGroups?: (a: any, b: any) => number
-  edgeSort?: (a: any, b: any) => number
+  sortGroups?: (a: unknown, b: unknown) => number
+  edgeSort?: (a: unknown, b: unknown) => number
   treeOrientation?: "vertical" | "horizontal" | "radial"
   edgeType?: "line" | "curve"
   padding?: number
@@ -622,11 +644,11 @@ export interface StreamNetworkFrameProps<T = Datum> {
 
   // ── Orbit layout ────────────────────────────────────
   orbitMode?: "flat" | "solar" | "atomic" | number[]
-  orbitSize?: number | ((node: any) => number)
+  orbitSize?: number | ((node: Datum) => number)
   orbitSpeed?: number
-  orbitRevolution?: (node: any) => number
+  orbitRevolution?: (node: Datum) => number
   orbitRevolutionStyle?: "locked" | "decay" | "alternate"
-  orbitEccentricity?: number | ((node: any) => number)
+  orbitEccentricity?: number | ((node: Datum) => number)
   orbitShowRings?: boolean
   orbitAnimated?: boolean
 

@@ -8,7 +8,7 @@ import type {
 } from "../realtime/types"
 import type {
   Style,
-  
+  SceneDatum,
   DecayConfig,
   PulseConfig,
   TransitionConfig,
@@ -66,7 +66,7 @@ export interface WedgeSceneNode {
   /** Corner radius for rounded wedge arcs (d3-shape arc.cornerRadius) */
   cornerRadius?: number
   style: Style
-  datum: any
+  datum: SceneDatum
   category?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -93,9 +93,9 @@ export interface BoxplotSceneNode {
   maxPos: number
   stats: DistributionStats
   style: Style
-  datum: any
+  datum: Datum
   category?: string
-  outliers?: { px: number; py: number; value: number; datum: any }[]
+  outliers?: { px: number; py: number; value: number; datum: Datum }[]
   _pulseIntensity?: number
   _pulseColor?: string
   _pulseGlowRadius?: number
@@ -127,7 +127,7 @@ export interface ViolinSceneNode {
   /** Pre-computed distribution statistics for tooltips */
   stats?: DistributionStats
   style: Style
-  datum: any
+  datum: Datum
   category?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -143,7 +143,7 @@ export interface ConnectorSceneNode {
   x2: number
   y2: number
   style: Style
-  datum: any
+  datum: Datum
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -157,7 +157,7 @@ export interface TrapezoidSceneNode {
   /** Four corners: [top-left, top-right, bottom-right, bottom-left] */
   points: [number, number][]
   style: Style
-  datum: any
+  datum: Datum
   category?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -271,11 +271,11 @@ export interface OrdinalPipelineConfig {
   connectorStyle?: Style | ((d: Datum) => Style)
 
   // Dynamic column width
-  dynamicColumnWidth?: string | ((data: any[]) => number)
+  dynamicColumnWidth?: string | ((data: Datum[]) => number)
 
   // Style
-  pieceStyle?: (d: any, category?: string) => Style
-  summaryStyle?: (d: any, category?: string) => Style
+  pieceStyle?: (d: Datum, category?: string) => Style
+  summaryStyle?: (d: Datum, category?: string) => Style
   colorScheme?: string | string[]
   themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
@@ -386,8 +386,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   tickLabelEdgeAlign?: boolean
 
   // Style
-  pieceStyle?: (d: any, category?: string) => Style
-  summaryStyle?: (d: any, category?: string) => Style
+  pieceStyle?: (d: Datum, category?: string) => Style
+  summaryStyle?: (d: Datum, category?: string) => Style
   colorScheme?: string | string[]
   barColors?: Record<string, string>
 
