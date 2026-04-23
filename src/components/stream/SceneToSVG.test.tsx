@@ -162,6 +162,30 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
     expect(html).toContain('fill="#abcdef"')
   })
 
+  it("sanitizes category names with spaces/punctuation in the gradient id", () => {
+    const node: any = {
+      type: "rect",
+      x: 10, y: 20, w: 30, h: 40,
+      roundedEdge: "top",
+      style: { fill: "blue" },
+      fillGradient: { colorStops: [
+        { offset: 0, color: "#ff0000" },
+        { offset: 1, color: "#0000ff" },
+      ]},
+      datum: { category: "Q1 2026 (revenue)" },
+      category: "Q1 2026 (revenue)",
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    // The raw category never appears inside the id/url — only the sanitized form.
+    expect(html).not.toMatch(/id="[^"]* [^"]*"/)  // no spaces in id
+    expect(html).not.toMatch(/url\(#[^)]* [^)]*\)/)  // no spaces in url(#...)
+    // Both the linearGradient id and the fill reference land on the same
+    // sanitized string — otherwise the gradient would fail to resolve.
+    const idMatch = html.match(/id="([^"]+-grad)"/)
+    expect(idMatch).toBeTruthy()
+    expect(html).toContain(`url(#${idMatch![1]})`)
+  })
+
   it("flips gradient direction for horizontal (roundedEdge=right) bars", () => {
     const node: any = {
       type: "rect",

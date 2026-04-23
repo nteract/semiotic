@@ -69,7 +69,10 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       // Rounded corners on the end away from the baseline
       const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
         || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
-      const grad = buildBarGradient(ctx, node, typeof solid === "string" ? solid : "#4e79a7")
+      // Skip gradient construction entirely when the resolved fill is a
+      // CanvasPattern — feeding the fallback color into the opacity branch
+      // would silently replace the pattern with a solid-color gradient.
+      const grad = typeof solid === "string" ? buildBarGradient(ctx, node, solid) : null
       ctx.fillStyle = grad || solid
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
       ctx.beginPath()
@@ -120,7 +123,10 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       // Standard solid fill — or gradient when fillGradient is set.
       const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
         || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
-      const grad = buildBarGradient(ctx, node, typeof solid === "string" ? solid : "#4e79a7")
+      // Skip gradient construction entirely when the resolved fill is a
+      // CanvasPattern — feeding the fallback color into the opacity branch
+      // would silently replace the pattern with a solid-color gradient.
+      const grad = typeof solid === "string" ? buildBarGradient(ctx, node, solid) : null
       ctx.fillStyle = grad || solid
       ctx.fillRect(node.x, node.y, node.w, node.h)
 

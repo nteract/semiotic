@@ -347,6 +347,21 @@ describe("barCanvasRenderer", () => {
       expect(ctx.fillStyle).toBe("#abcdef")
     })
 
+    it("skips the opacity-form gradient when the fill is a CanvasPattern (preserves the pattern)", () => {
+      const ctx = createMockCanvasContext()
+      // Simulate a resolved CanvasPattern — Style.fill accepts this, and it
+      // should survive intact instead of being replaced by a grey gradient.
+      const fakePattern = { __kind: "pattern" } as unknown as CanvasPattern
+      const node = makeRectNode({
+        style: { fill: fakePattern },
+        roundedEdge: "top",
+        fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
+      })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.createLinearGradient).not.toHaveBeenCalled()
+      expect(ctx.fillStyle).toBe(fakePattern)
+    })
+
     it("opacity-form gradient works through the rounded-corner path too", () => {
       const ctx = createMockCanvasContext()
       const node = makeRectNode({

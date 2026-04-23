@@ -68,6 +68,21 @@ function svgFill(fill: string | CanvasPattern | undefined, fallback = "#4e79a7")
 }
 
 /**
+ * Coerce a candidate SVG `id` value to the strict `[A-Za-z0-9_-]` charset.
+ * Scene-node keys embed user-provided category/group strings, which can
+ * contain spaces, colons, parentheses, or other characters that are either
+ * invalid in an SVG id or break a `url(#id)` reference. Non-matching
+ * characters are replaced with underscores; an empty/leading-digit result
+ * is prefixed so the final id is a legal SVG identifier.
+ */
+function safeSvgId(candidate: string): string {
+  const cleaned = candidate.replace(/[^A-Za-z0-9_-]/g, "_")
+  // SVG ids can't start with a digit; prepend a letter in that edge case.
+  if (!cleaned || /^\d/.test(cleaned)) return `s_${cleaned}`
+  return cleaned
+}
+
+/**
  * Build `<defs><linearGradient>` for a bar's fillGradient, mirroring the
  * tip→base direction the canvas renderer uses (inferred from roundedEdge).
  * Returns null when the config can't resolve (e.g. colorStops < 2), so the
@@ -401,7 +416,10 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       // If the scene node carries a gradient, build the SVG defs entry and
       // reference it via `fill="url(#id)"`. buildRectSVGGradient returns null
       // for invalid configs (e.g. < 2 colorStops) so we fall back to solid.
-      const gradientId = `${baseKey}-grad`
+      // baseKey embeds the category/group from user data — sanitize to the
+      // strict ID charset so spaces or punctuation in category names can't
+      // produce invalid markup or break the url(#...) reference.
+      const gradientId = `${safeSvgId(baseKey)}-grad`
       const gradientDefs = buildRectSVGGradient(n, gradientId)
       const fillValue = gradientDefs ? `url(#${gradientId})` : svgFill(n.style.fill)
       if (n.roundedTop && n.roundedTop > 0) {
