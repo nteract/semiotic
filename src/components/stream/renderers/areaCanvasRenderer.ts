@@ -1,5 +1,6 @@
 import type { AreaSceneNode, CurveType } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { parseCanvasColor } from "./colorUtils"
 import type { StreamRendererFn } from "./types"
 import { renderPathPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
@@ -34,23 +35,6 @@ function resolveCurveFactory(curve: CurveType | undefined): CurveFactory | null 
     default:
       return null
   }
-}
-
-/** Parse a CSS color string to [r, g, b]. Handles #hex and rgb(). */
-function parseColor(color: string): [number, number, number] {
-  if (color.startsWith("#")) {
-    const hex = color.length === 4
-      ? color[1] + color[1] + color[2] + color[2] + color[3] + color[3]
-      : color.slice(1, 7)
-    return [
-      parseInt(hex.slice(0, 2), 16),
-      parseInt(hex.slice(2, 4), 16),
-      parseInt(hex.slice(4, 6), 16),
-    ]
-  }
-  const m = color.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
-  if (m) return [+m[1], +m[2], +m[3]]
-  return [78, 121, 167] // fallback: #4e79a7
 }
 
 /**
@@ -168,9 +152,11 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
           if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
         }
       } else if ("topOpacity" in node.fillGradient) {
-        const parsed = parseColor(typeof fillColor === "string" ? fillColor : "#4e79a7")
-        grad.addColorStop(0, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.topOpacity})`)
-        grad.addColorStop(1, `rgba(${parsed[0]},${parsed[1]},${parsed[2]},${node.fillGradient.bottomOpacity})`)
+        // Canvas-normalized so named colors ("steelblue"), hsl(), etc. all
+        // round-trip to an rgba gradient that matches the area's actual fill.
+        const [r, g, b] = parseCanvasColor(ctx, typeof fillColor === "string" ? fillColor : "#4e79a7")
+        grad.addColorStop(0, `rgba(${r},${g},${b},${node.fillGradient.topOpacity})`)
+        grad.addColorStop(1, `rgba(${r},${g},${b},${node.fillGradient.bottomOpacity})`)
       }
       ctx.fillStyle = grad
       ctx.globalAlpha = nodeOpacity

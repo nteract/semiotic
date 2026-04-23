@@ -254,8 +254,15 @@ export interface RectSceneNode {
   h: number
   /** Rounded corner radius on the end away from the baseline */
   roundedTop?: number
-  /** Which edge to round: "top"/"bottom" (vertical), "right"/"left" (horizontal) */
+  /** Which edge is the "tip" (opposite the baseline): "top"/"bottom" for
+   *  vertical orientation, "right"/"left" for horizontal. Used by the
+   *  renderer for rounded-corner placement AND gradient direction. Set by
+   *  bar scene builders unconditionally so gradients resolve without
+   *  requiring roundedTop. */
   roundedEdge?: "top" | "bottom" | "right" | "left"
+  /** Gradient fill — same shape as the area-scene version. Runs tip → base
+   *  along the bar axis (inferred from `roundedEdge`). */
+  fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   style: Style
   datum: any
   group?: string

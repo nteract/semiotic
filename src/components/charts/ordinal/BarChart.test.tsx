@@ -508,4 +508,43 @@ describe("BarChart", () => {
       expect(style).not.toHaveProperty("opacity")
     })
   })
+
+  describe("gradientFill", () => {
+    it("is omitted when not set", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.gradientFill).toBeUndefined()
+    })
+
+    it("resolves `true` to default 80%/5% opacity stops (matches AreaChart)", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} gradientFill />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.gradientFill).toEqual({ topOpacity: 0.8, bottomOpacity: 0.05 })
+    })
+
+    it("passes explicit opacity object through unchanged", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.2 }} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.gradientFill).toEqual({ topOpacity: 0.9, bottomOpacity: 0.2 })
+    })
+
+    it("passes colorStops object through unchanged", () => {
+      const stops = { colorStops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#00f" }] }
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} gradientFill={stops} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.gradientFill).toEqual(stops)
+    })
+  })
 })

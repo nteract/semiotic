@@ -241,6 +241,41 @@ describe("buildBarScene", () => {
       expect(nodes[0].datum.category).toBe("A")
     }
   })
+
+  it("tags every bar with roundedEdge so the renderer can orient gradients", () => {
+    const ctx = makeCtx({
+      columns: {
+        A: makeColumn("A", [{ category: "A", value: 10 }]),  // positive
+        B: makeColumn("B", [{ category: "B", value: -4 }]),  // negative
+      }
+    })
+    const nodes = buildBarScene(ctx, layout)
+    // Look up by datum.category — scene-builder emit order is an impl detail.
+    const byCat = new Map<string, any>()
+    for (const n of nodes) {
+      if (n.type === "rect") byCat.set(n.datum.category, n)
+    }
+    // Default projection is vertical — positive = tip "top", negative = tip "bottom"
+    expect(byCat.get("A")?.roundedEdge).toBe("top")
+    expect(byCat.get("B")?.roundedEdge).toBe("bottom")
+  })
+
+  it("attaches config.gradientFill to every rect node", () => {
+    const gradientFill = { topOpacity: 0.9, bottomOpacity: 0.1 }
+    const ctx = makeCtx({
+      config: { gradientFill },
+      columns: {
+        A: makeColumn("A", [{ category: "A", value: 10 }]),
+        B: makeColumn("B", [{ category: "B", value: 20 }]),
+      }
+    })
+    const nodes = buildBarScene(ctx, layout)
+    const rects = nodes.filter(n => n.type === "rect")
+    expect(rects.length).toBe(2)
+    for (const n of rects) {
+      if (n.type === "rect") expect(n.fillGradient).toEqual(gradientFill)
+    }
+  })
 })
 
 describe("buildClusterBarScene", () => {

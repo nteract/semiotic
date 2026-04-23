@@ -67,6 +67,72 @@ function svgFill(fill: string | CanvasPattern | undefined, fallback = "#4e79a7")
   return fill
 }
 
+/**
+ * Coerce a candidate SVG `id` value to the strict `[A-Za-z0-9_-]` charset.
+ * Scene-node keys embed user-provided category/group strings, which can
+ * contain spaces, colons, parentheses, or other characters that are either
+ * invalid in an SVG id or break a `url(#id)` reference. Non-matching
+ * characters are replaced with underscores; an empty/leading-digit result
+ * is prefixed so the final id is a legal SVG identifier.
+ */
+function safeSvgId(candidate: string): string {
+  const cleaned = candidate.replace(/[^A-Za-z0-9_-]/g, "_")
+  // SVG ids can't start with a digit; prepend a letter in that edge case.
+  if (!cleaned || /^\d/.test(cleaned)) return `s_${cleaned}`
+  return cleaned
+}
+
+/**
+ * Build `<defs><linearGradient>` for a bar's fillGradient, mirroring the
+ * tip→base direction the canvas renderer uses (inferred from roundedEdge).
+ * Returns null when the config can't resolve (e.g. colorStops < 2), so the
+ * caller falls back to a solid fill — same parity with the canvas path.
+ *
+ * Using `gradientUnits="userSpaceOnUse"` with absolute coords keeps each bar's
+ * gradient aligned to its own rect independent of the parent viewBox.
+ */
+function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement | null {
+  const fg = n.fillGradient
+  if (!fg) return null
+
+  // Tip → base coords by orientation. Default top-to-bottom for positive
+  // vertical bars (and anything without roundedEdge).
+  let x1 = n.x, y1 = n.y, x2 = n.x, y2 = n.y + n.h
+  if (n.roundedEdge === "bottom") { y1 = n.y + n.h; y2 = n.y }
+  else if (n.roundedEdge === "right") { x1 = n.x + n.w; y1 = n.y; x2 = n.x; y2 = n.y }
+  else if (n.roundedEdge === "left")  { x1 = n.x; y1 = n.y; x2 = n.x + n.w; y2 = n.y }
+
+  const stops: React.ReactElement[] = []
+  if ("colorStops" in fg) {
+    // Mirror the canvas path: filter non-finite offsets first, then require
+    // ≥2 valid stops. Without the filter a NaN offset would emit offset="NaN",
+    // which is invalid SVG and breaks the whole gradient.
+    const validStops = fg.colorStops
+      .filter(s => Number.isFinite(s.offset))
+      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
+    if (validStops.length < 2) return null
+    for (let i = 0; i < validStops.length; i++) {
+      stops.push(<stop key={i} offset={validStops[i].offset} stopColor={validStops[i].color} />)
+    }
+  } else {
+    // Opacity form — use the resolved fill as the base color and let SVG's
+    // stop-opacity do the work. Matches the canvas path's rgba() stops.
+    const base = svgFill(n.style.fill)
+    stops.push(<stop key="0" offset={0} stopColor={base} stopOpacity={fg.topOpacity} />)
+    stops.push(<stop key="1" offset={1} stopColor={base} stopOpacity={fg.bottomOpacity} />)
+  }
+
+  return (
+    <linearGradient
+      id={id}
+      gradientUnits="userSpaceOnUse"
+      x1={x1} y1={y1} x2={x2} y2={y2}
+    >
+      {stops}
+    </linearGradient>
+  )
+}
+
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
 
 export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
@@ -347,6 +413,15 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
   switch (node.type) {
     case "rect": {
       const n = node as RectSceneNode
+      // If the scene node carries a gradient, build the SVG defs entry and
+      // reference it via `fill="url(#id)"`. buildRectSVGGradient returns null
+      // for invalid configs (e.g. < 2 colorStops) so we fall back to solid.
+      // baseKey embeds the category/group from user data — sanitize to the
+      // strict ID charset so spaces or punctuation in category names can't
+      // produce invalid markup or break the url(#...) reference.
+      const gradientId = `${safeSvgId(baseKey)}-grad`
+      const gradientDefs = buildRectSVGGradient(n, gradientId)
+      const fillValue = gradientDefs ? `url(#${gradientId})` : svgFill(n.style.fill)
       if (n.roundedTop && n.roundedTop > 0) {
         const r = Math.min(n.roundedTop, n.w / 2, n.h / 2)
         const { x, y, w, h } = n
@@ -365,25 +440,29 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
             d = `M${x},${y+h} L${x},${y+r} A${r},${r} 0 0 1 ${x+r},${y} L${x+w-r},${y} A${r},${r} 0 0 1 ${x+w},${y+r} L${x+w},${y+h} Z`
         }
         return (
-          <path
-            key={baseKey}
-            d={d}
-            fill={svgFill(n.style.fill)}
+          <React.Fragment key={baseKey}>
+            {gradientDefs && <defs>{gradientDefs}</defs>}
+            <path
+              d={d}
+              fill={fillValue}
+              opacity={n.style.opacity}
+              stroke={n.style.stroke}
+              strokeWidth={n.style.strokeWidth}
+            />
+          </React.Fragment>
+        )
+      }
+      return (
+        <React.Fragment key={baseKey}>
+          {gradientDefs && <defs>{gradientDefs}</defs>}
+          <rect
+            x={n.x} y={n.y} width={n.w} height={n.h}
+            fill={fillValue}
             opacity={n.style.opacity}
             stroke={n.style.stroke}
             strokeWidth={n.style.strokeWidth}
           />
-        )
-      }
-      return (
-        <rect
-          key={baseKey}
-          x={n.x} y={n.y} width={n.w} height={n.h}
-          fill={svgFill(n.style.fill)}
-          opacity={n.style.opacity}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-        />
+        </React.Fragment>
       )
     }
     case "point": {

@@ -160,6 +160,7 @@ const barChartProps = [
   { name: "sort", type: "boolean | string | function", required: false, default: "false", description: 'Sort bars by value. Accepts true, "asc", "desc", or a custom comparator function.' },
   { name: "barPadding", type: "number", required: false, default: "5", description: "Padding between bars in pixels." },
   { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius on bar tops (the end away from baseline)." },
+  { name: "gradientFill", type: "boolean | { topOpacity, bottomOpacity } | { colorStops }", required: false, default: "false", description: "Gradient running from each bar's tip toward its base. `true` = default 80%→5% opacity fade; object forms mirror AreaChart.gradientFill. Direction follows orientation and sign." },
   { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth transitions on data change. `true` for defaults (300ms ease-out), or `{ duration, easing, intro }` for custom. Bars grow from baseline on first render." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bars." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
@@ -419,6 +420,98 @@ export default function BarChartPage() {
           categoryAccessor: "category",
           valueAccessor: "value",
           orientation: "horizontal",
+          roundedTop: 6,
+          margin: { left: 100, top: 20, right: 20, bottom: 30 },
+        }}
+        type={BarChart}
+        overrideProps={{ data: "sampleData" }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Gradient fill */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="gradient-fill">Gradient Fill</h3>
+      <p>
+        <code>gradientFill</code> runs a gradient from each bar's tip (opposite
+        the baseline) toward its base. Same API as{" "}
+        <Link to="/charts/area-chart">AreaChart</Link>:
+      </p>
+      <ul>
+        <li><code>true</code> — default fade (80% → 5% of the bar's resolved color).</li>
+        <li><code>{`{ topOpacity, bottomOpacity }`}</code> — explicit opacity stops on the bar's color.</li>
+        <li><code>{`{ colorStops: [{ offset, color }, ...] }`}</code> — arbitrary multi-color gradient.</li>
+      </ul>
+      <p>Default opacity fade:</p>
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          gradientFill: true,
+          roundedTop: 6,
+        }}
+        type={BarChart}
+        overrideProps={{ data: "sampleData" }}
+        hiddenProps={{}}
+      />
+      <CodeBlock code={`<BarChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  gradientFill
+  roundedTop={6}
+/>`} />
+
+      <p>Multi-color gradient via <code>colorStops</code>:</p>
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          gradientFill: {
+            colorStops: [
+              { offset: 0, color: "#f472b6" },
+              { offset: 0.5, color: "#a855f7" },
+              { offset: 1, color: "#3b82f6" },
+            ],
+          },
+          roundedTop: 6,
+        }}
+        type={BarChart}
+        overrideProps={{ data: "sampleData" }}
+        hiddenProps={{}}
+      />
+      <CodeBlock code={`<BarChart
+  data={sampleData}
+  categoryAccessor="category"
+  valueAccessor="value"
+  gradientFill={{
+    colorStops: [
+      { offset: 0, color: "#f472b6" },   // pink at the tip
+      { offset: 0.5, color: "#a855f7" }, // purple in the middle
+      { offset: 1, color: "#3b82f6" },   // blue at the base
+    ],
+  }}
+  roundedTop={6}
+/>`} />
+
+      <p>
+        Horizontal bars get a left-to-right or right-to-left gradient
+        automatically (direction = tip → base):
+      </p>
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          orientation: "horizontal",
+          gradientFill: {
+            colorStops: [
+              { offset: 0, color: "#22d3ee" },
+              { offset: 1, color: "#2563eb" },
+            ],
+          },
           roundedTop: 6,
           margin: { left: 100, top: 20, right: 20, bottom: 30 },
         }}

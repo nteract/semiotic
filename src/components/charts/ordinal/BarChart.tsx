@@ -41,6 +41,17 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   barPadding?: number
   /** Rounded top corner radius in pixels. Only the end away from the baseline is rounded. */
   roundedTop?: number
+  /**
+   * Gradient fill from the bar's tip (opposite the baseline) toward its base.
+   * - `true` — default opacity fade (80% → 5% of the resolved fill color).
+   * - `{ topOpacity, bottomOpacity }` — explicit opacity stops on the resolved fill.
+   * - `{ colorStops: [{offset, color}, ...] }` — arbitrary multi-color gradient.
+   *
+   * Direction follows the bar's orientation (vertical/horizontal) and sign
+   * (positive/negative bars). Same API as `AreaChart.gradientFill`.
+   * @default false
+   */
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   /** When true, adds padding below the 0 baseline. Default false (bars flush with axis). */
   baselinePadding?: boolean
   enableHover?: boolean
@@ -99,6 +110,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     colorScheme,
     sort = false,
     barPadding = 40, roundedTop,
+    gradientFill = false,
     baselinePadding = false,
     tooltip,
     annotations,
@@ -238,6 +250,14 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     margin: setup.margin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
+    // Resolve boolean `true` to the same default opacities AreaChart uses
+    // (80% → 5%) so a single top-level toggle gets you a reasonable look.
+    // Object forms are passed through unchanged.
+    ...(gradientFill && {
+      gradientFill: gradientFill === true
+        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+        : gradientFill,
+    }),
     ...(dataIdAccessor && { dataIdAccessor }),
     baselinePadding,
     enableHover,
