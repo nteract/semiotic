@@ -344,30 +344,30 @@ export function startTransition(
   for (const [key, prev] of prevPositionMap) {
     if (matchedPrevKeys.has(key)) continue
     if (key.startsWith("p:")) {
-      const exitNode = {
+      const exitNode: PointSceneNode = {
         type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
         style: { opacity: prev.opacity ?? 1 }, datum: null,
         _targetOpacity: 0, _transitionKey: key
-      } as unknown as PointSceneNode
+      }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("r:")) {
-      const exitNode = {
+      const exitNode: RectSceneNode = {
         type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
         style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
         _targetOpacity: 0, _transitionKey: key
-      } as unknown as RectSceneNode
+      }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("h:")) {
-      const exitNode = {
+      const exitNode: HeatcellSceneNode = {
         type: "heatcell", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
         fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
         _targetOpacity: 0, _transitionKey: key
-      } as unknown as HeatcellSceneNode
+      }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("c:")) {
       // Candlestick exit: hold prev geometry and fade to zero.
       const openY = prev.openY ?? prev.y
-      const exitNode = {
+      const exitNode: CandlestickSceneNode = {
         type: "candlestick",
         x: prev.x,
         openY,
@@ -379,7 +379,7 @@ export function startTransition(
         wickWidth: 1, isUp: true, datum: null,
         style: { opacity: prev.opacity ?? 1 },
         _targetOpacity: 0, _transitionKey: key,
-      } as unknown as CandlestickSceneNode
+      }
       state.exitNodes.push(exitNode)
     }
     hasChanges = true

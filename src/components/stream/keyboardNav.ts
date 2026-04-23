@@ -11,11 +11,16 @@
  */
 
 import type { HoverData } from "../realtime/types"
+import type { Datum } from "../charts/shared/datumTypes"
+import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
+import type { SceneNode } from "./types"
+import type { OrdinalSceneNode } from "./ordinalTypes"
+import type { GeoSceneNode } from "./geoTypes"
 
 export interface NavPoint {
   x: number
   y: number
-  datum: any
+  datum: Datum | null
   /** Shape hint for focus ring rendering */
   shape?: "circle" | "rect" | "wedge"
   /** Width of rect-shaped elements (bars, sankey nodes) */
@@ -219,13 +224,13 @@ function findNearestInGroup(graph: NavGraph, targetGroup: string, ref: NavPoint)
  * Lines/areas carry a `group` field identifying the series.
  * ArrowRight/Left = within series, ArrowUp/Down = switch series.
  */
-export function extractXYNavPoints(scene: any[]): NavPoint[] {
+export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {
     switch (node.type) {
       case "point":
-        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: node.group ?? "_default" })
+        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
         break
 
       case "line": {
@@ -285,7 +290,7 @@ export function extractXYNavPoints(scene: any[]): NavPoint[] {
  * Bars use `node.group` (stack/group key) falling back to `datum.category`.
  * ArrowRight/Left = across categories, ArrowUp/Down = within stacked segments.
  */
-export function extractOrdinalNavPoints(scene: any[]): NavPoint[] {
+export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {
@@ -302,7 +307,7 @@ export function extractOrdinalNavPoints(scene: any[]): NavPoint[] {
         group: node.group ?? category
       })
     } else if (node.type === "point") {
-      points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: node.group ?? "_default" })
+      points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "wedge" && node.cx != null) {
       const midAngle = ((node.startAngle || 0) + (node.endAngle || 0)) / 2
       const r = ((node.innerRadius || 0) + (node.outerRadius || 50)) / 2
@@ -326,7 +331,7 @@ export function extractOrdinalNavPoints(scene: any[]): NavPoint[] {
  * Extract navigable points from network scene nodes.
  * Each node's group is its own id, enabling neighbor traversal via edges.
  */
-export function extractNetworkNavPoints(scene: any[]): NavPoint[] {
+export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {
@@ -364,7 +369,7 @@ export function nextNetworkIndex(
   key: string,
   pos: NavPosition,
   graph: NavGraph,
-  edges: any[],
+  edges: EdgeLike[],
   neighborIndexRef: { current: number }
 ): number | null {
   const currentPoint = graph.flat[pos.flatIndex]
@@ -447,13 +452,22 @@ function findNearestSpatial(
 }
 
 /** Collect neighbor node ids from edge list for a given node. */
-function collectNeighborIds(nodeId: string, edges: any[]): string[] {
+type EdgeLike = NetworkSceneEdge | { source?: unknown; target?: unknown; datum?: Datum | null }
+
+function getLinkedId(value: unknown): unknown {
+  if (typeof value === "object" && value !== null && "id" in value) {
+    return (value as { id?: unknown }).id
+  }
+  return value
+}
+
+function collectNeighborIds(nodeId: string, edges: EdgeLike[]): string[] {
   const nid = String(nodeId)
   const ids: string[] = []
   for (const edge of edges) {
-    const raw = edge.datum ?? edge
-    const srcRaw = typeof raw.source === "object" ? raw.source?.id : raw.source
-    const tgtRaw = typeof raw.target === "object" ? raw.target?.id : raw.target
+    const raw = (edge.datum ?? edge) as { source?: unknown; target?: unknown }
+    const srcRaw = getLinkedId(raw.source)
+    const tgtRaw = getLinkedId(raw.target)
     const hasSrc = srcRaw != null
     const hasTgt = tgtRaw != null
     if (hasSrc && String(srcRaw) === nid && hasTgt) ids.push(String(tgtRaw))
@@ -468,7 +482,7 @@ function collectNeighborIds(nodeId: string, edges: any[]): string[] {
  * Extract navigable points from geo scene nodes.
  * Flat navigation only (no meaningful grouping for geo).
  */
-export function extractGeoNavPoints(scene: any[]): NavPoint[] {
+export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {

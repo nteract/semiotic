@@ -65,7 +65,7 @@ export const funnelLabelRenderer = (
   )
 
   // Check if any rect has label metadata (showLabels was on)
-  if (rects.length === 0 || !rects.some(r => r.datum.__funnelStepLabel != null || r.datum.__funnelValueLabelX != null)) {
+  if (rects.length === 0 || !rects.some(r => r.datum?.__funnelStepLabel != null || r.datum?.__funnelValueLabelX != null)) {
     return
   }
 
@@ -80,6 +80,7 @@ export const funnelLabelRenderer = (
   ctx.font = `bold ${stepFontSize}px sans-serif`
   for (const node of rects) {
     const d = node.datum
+    if (!d) continue
     if (!d.__funnelStepLabel) continue
 
     // Measure text vs available row width (sum of all bars in this step row)
@@ -106,6 +107,7 @@ export const funnelLabelRenderer = (
   ctx.font = `bold ${valueFontSize}px sans-serif`
   for (const node of rects) {
     const d = node.datum
+    if (!d) continue
     if (d.__funnelValueLabelX == null) continue
 
     const barW = d.__funnelBarW ?? 0

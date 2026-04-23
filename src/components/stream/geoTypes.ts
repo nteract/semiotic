@@ -1,14 +1,14 @@
 import type { ReactNode } from "react"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
+import type { GradientLegendConfig, LegendGroup } from "../types/legendTypes"
 import type {
   Style,
   DecayConfig,
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  
+  SceneDatum,
   PointSceneNode,
-  LineSceneNode,
   ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
@@ -74,7 +74,7 @@ export interface GeoAreaSceneNode {
   /** Screen-space area in px² */
   screenArea: number
   style: Style
-  datum: any
+  datum: SceneDatum
   group?: string
   interactive?: boolean
   /** Lazily-cached Path2D parsed from pathData (avoids re-parsing on every hit test) */
@@ -84,11 +84,19 @@ export interface GeoAreaSceneNode {
   _pulseColor?: string
 }
 
+export interface GeoLineSceneNode {
+  type: "line"
+  path: [number, number][]
+  style: Style
+  datum: SceneDatum
+  group?: string
+}
+
 /** Union of all scene node types that GeoFrame produces */
 export type GeoSceneNode =
   | GeoAreaSceneNode
   | PointSceneNode
-  | LineSceneNode
+  | GeoLineSceneNode
 
 // ── Scales ───────────────────────────────────────────────────────────
 
@@ -109,14 +117,14 @@ export interface GeoPipelineConfig {
 
   xAccessor?: string | ((d: Datum) => number)
   yAccessor?: string | ((d: Datum) => number)
-  lineDataAccessor?: string | ((d: Datum) => any[])
+  lineDataAccessor?: string | ((d: Datum) => Datum[])
   lineType?: "geo" | "line"
   /** Flow rendering style: "basic" (straight/great-circle), "offset" (bidirectional offset), "arc" (curved arcs) @default "basic" */
   flowStyle?: "basic" | "offset" | "arc"
 
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
-  lineStyle?: Style | ((d: any, group?: string) => Style)
+  lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
@@ -159,7 +167,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Accessors ──
   xAccessor?: string | ((d: T) => number)
   yAccessor?: string | ((d: T) => number)
-  lineDataAccessor?: string | ((d: T) => any[])
+  lineDataAccessor?: string | ((d: T) => Datum[])
   pointIdAccessor?: string | ((d: T) => string)
 
   // ── Geo-specific ──
@@ -206,7 +214,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Style ──
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
-  lineStyle?: Style | ((d: any, group?: string) => Style)
+  lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
 
   // ── Interaction ──
@@ -233,7 +241,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   title?: string | ReactNode
 
   // ── Legend (passed from HOCs) ──
-  legend?: any
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void

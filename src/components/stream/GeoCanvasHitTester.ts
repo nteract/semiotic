@@ -1,5 +1,5 @@
-import type { GeoAreaSceneNode, GeoSceneNode } from "./geoTypes"
-import type { PointSceneNode, LineSceneNode } from "./types"
+import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode } from "./geoTypes"
+import type { PointSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { getHitRadius } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
@@ -82,12 +82,12 @@ export function findNearestGeoNode(
 
   // ── 3. Line nodes ──────────────────────────────────────────────
 
-  let bestLine: LineSceneNode | null = null
+  let bestLine: GeoLineSceneNode | null = null
   let bestLineDist = maxDistance
 
   for (const node of nodes) {
     if (node.type !== "line") continue
-    const line = node as LineSceneNode
+    const line = node as GeoLineSceneNode
     const { path } = line
     const hitWidth = Math.max((line.style.strokeWidth || 2) + 4, 5)
     for (let j = 0; j < path.length - 1; j++) {

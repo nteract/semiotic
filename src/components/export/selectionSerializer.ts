@@ -7,7 +7,7 @@ import type {
 // ── Serialized types (JSON-safe) ────────────────────────────────────────
 
 export type SerializedFieldSelection =
-  | { type: "point"; values: any[] }
+  | { type: "point"; values: unknown[] }
   | { type: "interval"; range: [number, number] }
 
 export interface SerializedSelection {

@@ -5,7 +5,8 @@ import {
   useSelectionSelector,
   buildPredicate,
   type SelectionClause,
-  type FieldSelection
+  type FieldSelection,
+  type SelectionStoreState
 } from "./SelectionStore"
 
 // Re-export crosshair store for convenience
@@ -28,7 +29,7 @@ export interface UseSelectionResult {
   /** Whether any selection clause is currently active */
   isActive: boolean
   /** Set a point selection (categorical values) */
-  selectPoints: (fieldValues: Record<string, any[]>) => void
+  selectPoints: (fieldValues: Record<string, unknown[]>) => void
   /** Set an interval selection (numeric ranges) */
   selectInterval: (fieldRanges: Record<string, [number, number]>) => void
   /** Clear this client's clause */
@@ -43,11 +44,11 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   const { name } = options
 
   const selection = useSelectionSelector(
-    (state: any) => state.selections.get(name)
+    (state: SelectionStoreState) => state.selections.get(name)
   )
 
-  const setClause = useSelectionSelector((state: any) => state.setClause)
-  const clearClauseFn = useSelectionSelector((state: any) => state.clearClause)
+  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
 
   const isActive = useMemo(() => {
     if (!selection) return false
@@ -60,7 +61,7 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   }, [selection, clientId])
 
   const selectPoints = useCallback(
-    (fieldValues: Record<string, any[]>) => {
+    (fieldValues: Record<string, unknown[]>) => {
       const fields: Record<string, FieldSelection> = {}
       for (const [field, values] of Object.entries(fieldValues)) {
         fields[field] = { type: "point", values: new Set(values) }
@@ -131,7 +132,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
         clear()
         return
       }
-      const fieldValues: Record<string, any[]> = {}
+      const fieldValues: Record<string, unknown[]> = {}
       for (const field of fields) {
         const val = datum[field]
         if (val !== undefined) {
@@ -160,18 +161,40 @@ export interface UseBrushSelectionOptions {
 }
 
 export interface UseBrushSelectionResult {
-  /** Interaction config to pass to frameProps.interaction */
   brushInteraction: {
     brush: "xyBrush" | "xBrush" | "yBrush"
-    during: (extent: any) => void
-    end: (extent: any) => void
+    during: (extent: BrushExtent | null) => void
+    end: (extent: BrushExtent | null) => void
   }
+  /** Interaction config to pass to frameProps.interaction */
   /** Returns true if datum matches the brush selection */
   predicate: (datum: Datum) => boolean
   /** Whether any brush is active */
   isActive: boolean
   /** Clear the brush */
   clear: () => void
+}
+
+type LinearBrushExtent = [number, number]
+type XYBrushExtent = [[number, number], [number, number]]
+type BrushExtent = LinearBrushExtent | XYBrushExtent | [number, number][]
+
+function isXYBrushExtent(extent: BrushExtent): extent is XYBrushExtent {
+  return (
+    extent.length === 2 &&
+    Array.isArray(extent[0]) &&
+    extent[0].length === 2 &&
+    Array.isArray(extent[1]) &&
+    extent[1].length === 2
+  )
+}
+
+function isLinearBrushExtent(extent: BrushExtent): extent is LinearBrushExtent {
+  return (
+    extent.length === 2 &&
+    typeof extent[0] === "number" &&
+    typeof extent[1] === "number"
+  )
 }
 
 export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult {
@@ -185,7 +208,7 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
   const brushType = xField && yField ? "xyBrush" : xField ? "xBrush" : "yBrush"
 
   const handleBrush = useCallback(
-    (extent: any) => {
+    (extent: BrushExtent | null) => {
       if (!extent) {
         clear()
         return
@@ -193,13 +216,13 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
 
       const fieldRanges: Record<string, [number, number]> = {}
 
-      if (brushType === "xyBrush" && Array.isArray(extent) && extent.length === 2) {
+      if (brushType === "xyBrush" && isXYBrushExtent(extent)) {
         // extent = [[x0, y0], [x1, y1]]
         if (xField) fieldRanges[xField] = [Math.min(extent[0][0], extent[1][0]), Math.max(extent[0][0], extent[1][0])]
         if (yField) fieldRanges[yField] = [Math.min(extent[0][1], extent[1][1]), Math.max(extent[0][1], extent[1][1])]
-      } else if (brushType === "xBrush" && Array.isArray(extent)) {
+      } else if (brushType === "xBrush" && isLinearBrushExtent(extent)) {
         if (xField) fieldRanges[xField] = [Math.min(...extent), Math.max(...extent)]
-      } else if (brushType === "yBrush" && Array.isArray(extent)) {
+      } else if (brushType === "yBrush" && isLinearBrushExtent(extent)) {
         if (yField) fieldRanges[yField] = [Math.min(...extent), Math.max(...extent)]
       }
 
@@ -234,7 +257,7 @@ export function useFilteredData<T extends Datum>(
   clientId?: string
 ): T[] {
   const selection = useSelectionSelector(
-    (state: any) => state.selections.get(selectionName)
+    (state: SelectionStoreState) => state.selections.get(selectionName)
   )
 
   return useMemo(() => {

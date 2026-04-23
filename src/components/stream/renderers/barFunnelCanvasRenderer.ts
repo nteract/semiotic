@@ -111,6 +111,7 @@ export const barFunnelLabelRenderer = (
 
   for (const node of labelRects) {
     const d = node.datum
+    if (!d) continue
     const value = d.__barFunnelValue
     if (value == null) continue
 

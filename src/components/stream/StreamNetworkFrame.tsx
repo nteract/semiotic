@@ -13,7 +13,7 @@ import {
 import type {
   StreamNetworkFrameProps,
   StreamNetworkFrameHandle,
-  
+  NetworkSceneNode,
   NetworkPipelineConfig,
   RealtimeNode,
   RealtimeEdge,
@@ -78,7 +78,8 @@ function DefaultNetworkTooltip({
   data: HoverData
 }) {
   if (data.nodeOrEdge === "edge") {
-    const edge = data.data
+    const edge = data.data as RealtimeEdge | null
+    if (!edge) return null
     const sourceId =
       typeof edge.source === "object" ? edge.source.id : edge.source
     const targetId =
@@ -100,14 +101,16 @@ function DefaultNetworkTooltip({
     )
   }
 
-  const node = data.data
+  const node = data.data as RealtimeNode | null
+  if (!node) return null
 
   // Hierarchy nodes have a __hierarchyNode with a .parent chain.
   // Show ancestor breadcrumb: grandparent → parent → **node**
-  const hNode = node?.__hierarchyNode
+  type HierarchyNode = { data?: Datum; parent?: HierarchyNode }
+  const hNode = (node as RealtimeNode & { __hierarchyNode?: HierarchyNode }).__hierarchyNode
   if (hNode) {
     const ancestors: string[] = []
-    let cur = hNode
+    let cur: HierarchyNode | undefined = hNode
     while (cur) {
       const name = cur.data?.name ?? cur.data?.id ?? node.id
       if (name != null) ancestors.unshift(String(name))
@@ -146,8 +149,8 @@ function DefaultNetworkTooltip({
 
   // Compute degree centrality from source/target links
   const degree = (node.sourceLinks?.length || 0) + (node.targetLinks?.length || 0)
-  const weightedDegree = (node.sourceLinks || []).reduce((s: number, e: any) => s + (e.value || 0), 0)
-    + (node.targetLinks || []).reduce((s: number, e: any) => s + (e.value || 0), 0)
+  const weightedDegree = (node.sourceLinks || []).reduce((s, e) => s + (e.value || 0), 0)
+    + (node.targetLinks || []).reduce((s, e) => s + (e.value || 0), 0)
 
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
@@ -980,7 +983,7 @@ const StreamNetworkFrame = forwardRef<
 
     // Always rebuild NavGraph from current sceneNodes — positions change during
     // force simulation ticks and transition interpolation, so caching risks stale coordinates
-    const navPoints = extractNetworkNavPoints(store.sceneNodes as any)
+    const navPoints = extractNetworkNavPoints(store.sceneNodes as NetworkSceneNode[])
     if (navPoints.length === 0) return
     const graph: NavGraph = buildNavGraph(navPoints)
 
@@ -1288,7 +1291,7 @@ const StreamNetworkFrame = forwardRef<
           totalHeight={size[1]}
           margin={margin}
           labels={labels}
-          sceneNodes={sceneNodes as any}
+          sceneNodes={sceneNodes}
           title={title}
           legend={legend}
           legendPosition={legendPosition}
@@ -1372,7 +1375,7 @@ const StreamNetworkFrame = forwardRef<
         totalHeight={size[1]}
         margin={margin}
         labels={store?.labels || []}
-        sceneNodes={store?.sceneNodes as any}
+        sceneNodes={store?.sceneNodes}
         title={title}
         legend={legend}
         legendPosition={legendPosition}
@@ -1391,7 +1394,7 @@ const StreamNetworkFrame = forwardRef<
         hoverPoint={hoverData}
         margin={margin}
         size={size}
-        shape={focusedNavPointRef.current?.shape as any}
+        shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | undefined}
         width={focusedNavPointRef.current?.w}
         height={focusedNavPointRef.current?.h}
       />

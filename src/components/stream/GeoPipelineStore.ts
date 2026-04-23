@@ -19,6 +19,7 @@ import type {
   GeoScales,
   GeoSceneNode,
   GeoAreaSceneNode,
+  GeoLineSceneNode,
   ProjectionProp,
   ProjectionName,
   GraticuleConfig,
@@ -26,7 +27,6 @@ import type {
 } from "./geoTypes"
 import type {
   PointSceneNode,
-  LineSceneNode,
   Style,
   StreamLayout
 } from "./types"
@@ -931,7 +931,7 @@ export class GeoPipelineStore {
 
       if (segments.length <= 1) {
         // No anti-meridian crossing — render as a single line
-        const lineNode: LineSceneNode = {
+        const lineNode: GeoLineSceneNode = {
           type: "line",
           path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
           style,
@@ -942,7 +942,7 @@ export class GeoPipelineStore {
         // Anti-meridian crossing detected — render each segment with edge fade
         for (const segment of segments) {
           if (segment.length < 2) continue
-          const lineNode: LineSceneNode = {
+          const lineNode: GeoLineSceneNode = {
             type: "line",
             path: segment,
             style: { ...style, _edgeFade: true } as any,
@@ -1034,7 +1034,7 @@ export class GeoPipelineStore {
 
     // Find center node
     const centerNode = pointNodes.find(
-      n => String(idAcc(n.datum)) === String(transform.center)
+      n => n.datum && String(idAcc(n.datum)) === String(transform.center)
     )
     if (!centerNode) {
       if (process.env.NODE_ENV !== "production") {
@@ -1047,7 +1047,9 @@ export class GeoPipelineStore {
     const cy = centerNode.y
 
     // Compute max cost for scaling
-    const costs = pointNodes.map(n => costAcc(n.datum)).filter(c => isFinite(c) && c >= 0)
+    const costs = pointNodes
+      .map(n => (n.datum ? costAcc(n.datum) : NaN))
+      .filter(c => isFinite(c) && c >= 0)
     const maxCost = Math.max(...costs, 1)
 
     const availableRadius = Math.min(layout.width, layout.height) / 2
@@ -1071,6 +1073,7 @@ export class GeoPipelineStore {
 
     for (const node of pointNodes) {
       if (node === centerNode) continue
+      if (!node.datum) continue
 
       const angle = Math.atan2(node.y - cy, node.x - cx)
       const geoDist = Math.sqrt((node.x - cx) ** 2 + (node.y - cy) ** 2)
@@ -1103,7 +1106,7 @@ export class GeoPipelineStore {
 
     // Reposition lines connecting repositioned points
     const lineNodes = this.scene.filter(
-      (n): n is LineSceneNode => n.type === "line"
+      (n): n is GeoLineSceneNode => n.type === "line"
     )
     if (lineNodes.length > 0 && transform.lineMode !== "fractional") {
       // Build position lookup from repositioned points

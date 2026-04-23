@@ -22,6 +22,7 @@ import type {
 } from "../networkTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
+import type { CircularPathData } from "../networkTypes"
 
 const sankeyOrientHash = {
   left: sankeyLeft,
@@ -29,6 +30,37 @@ const sankeyOrientHash = {
   center: sankeyCenter,
   justify: sankeyJustify,
 } as const
+
+type SankeyNodeRef = { id: string }
+
+interface SankeyComputedEdge {
+  source: SankeyNodeRef | string
+  target: SankeyNodeRef | string
+  y0: number
+  y1: number
+  width?: number
+  circular?: boolean
+  circularPathData?: CircularPathData
+  _circularWidth?: number
+  _circularStub?: boolean
+  _edgeKey?: string
+  path?: string
+  circularLinkType?: string
+}
+
+interface GradientBezierEdge extends NetworkBezierEdge {
+  _gradient?: {
+    direction: "left" | "right"
+    from: number
+    to: number
+    x0: number
+    x1: number
+  }
+}
+
+function getNodeId(node: SankeyNodeRef | string): string {
+  return typeof node === "string" ? node : node.id
+}
 
 /**
  * Sankey layout plugin — uses d3-sankey-circular for layout computation.
@@ -106,10 +138,10 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       }
 
       // Circular path bounds
-      for (const se of sankeyEdges) {
-        if (!(se as any).circular || !(se as any).circularPathData) continue
-        const cpd = (se as any).circularPathData
-        const cw = ((se as any)._circularWidth ?? (se as any).width ?? 0) / 2
+      for (const se of sankeyEdges as SankeyComputedEdge[]) {
+        if (!se.circular || !se.circularPathData) continue
+        const cpd = se.circularPathData
+        const cw = ((se._circularWidth ?? se.width ?? 0) / 2)
         if (cpd.leftFullExtent - cw < minX) minX = cpd.leftFullExtent - cw
         if (cpd.rightFullExtent + cw > maxX) maxX = cpd.rightFullExtent + cw
         if (cpd.verticalFullExtent - cw < minY) minY = cpd.verticalFullExtent - cw
@@ -137,17 +169,17 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         }
 
         // Scale edge positions
-        for (const se of sankeyEdges) {
-          (se as any).y0 = (se as any).y0 * scale + offsetY;
-          (se as any).y1 = (se as any).y1 * scale + offsetY;
-          (se as any).width = ((se as any).width ?? 0) * scale
-          if ((se as any)._circularWidth) {
-            (se as any)._circularWidth *= scale
+        for (const se of sankeyEdges as SankeyComputedEdge[]) {
+          se.y0 = se.y0 * scale + offsetY
+          se.y1 = se.y1 * scale + offsetY
+          se.width = (se.width ?? 0) * scale
+          if (se._circularWidth) {
+            se._circularWidth *= scale
           }
 
           // Scale circular path data
-          if ((se as any).circular && (se as any).circularPathData) {
-            const cpd = (se as any).circularPathData
+          if (se.circular && se.circularPathData) {
+            const cpd = se.circularPathData
             cpd.sourceX = cpd.sourceX * scale + offsetX
             cpd.targetX = cpd.targetX * scale + offsetX
             cpd.sourceY = cpd.sourceY * scale + offsetY
@@ -210,26 +242,24 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     }
 
     // Write computed positions back to original edges
-    for (const se of sankeyEdges) {
-      const src = se.source as any
-      const tgt = se.target as any
-      const sourceId = typeof src === "object" && src !== null ? src.id : String(src)
-      const targetId = typeof tgt === "object" && tgt !== null ? tgt.id : String(tgt)
+    for (const se of sankeyEdges as SankeyComputedEdge[]) {
+      const sourceId = getNodeId(se.source)
+      const targetId = getNodeId(se.target)
 
-      const original = (se as any)._edgeKey
-        ? edgeMap.get((se as any)._edgeKey)
+      const original = se._edgeKey
+        ? edgeMap.get(se._edgeKey)
         : edgeMap.get(`${sourceId}\0${targetId}`)
 
       if (original) {
-        original.y0 = (se as any).y0
-        original.y1 = (se as any).y1
-        original.sankeyWidth = (se as any).width ?? 0
-        original.circular = !!(se as any).circular
-        original.circularPathData = (se as any).circularPathData
-        ;(original as any)._circularWidth = (se as any)._circularWidth
-        ;(original as any)._circularStub = (se as any)._circularStub
-        ;(original as any).path = (se as any).path
-        ;(original as any).circularLinkType = (se as any).circularLinkType
+        original.y0 = se.y0
+        original.y1 = se.y1
+        original.sankeyWidth = se.width ?? 0
+        original.circular = !!se.circular
+        original.circularPathData = se.circularPathData
+        original._circularWidth = se._circularWidth
+        original._circularStub = se._circularStub
+        ;(original as RealtimeEdge & { path?: string; circularLinkType?: string }).path = se.path
+        ;(original as RealtimeEdge & { path?: string; circularLinkType?: string }).circularLinkType = se.circularLinkType
         original.direction = direction
 
         // Resolve source/target to node references
@@ -357,7 +387,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
 
       // Stub circular edges: two separate fading rectangles
-      if ((edge as any)._circularStub && edge.circular && edge.circularPathData) {
+      if (edge._circularStub && edge.circular && edge.circularPathData) {
         const cpd = edge.circularPathData
         const hw = edge.sankeyWidth / 2
         const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33))
@@ -378,7 +408,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           },
           datum: edge,
           _gradient: { direction: "right", from: 1, to: 0, x0: cpd.sourceX, x1: cpd.sourceX + stubLen }
-        } as any)
+        } as GradientBezierEdge)
 
         // Inbound stub (fades in)
         const inPath = `M${cpd.targetX},${cpd.targetY - hw}L${cpd.targetX - stubLenT},${cpd.targetY - hw}L${cpd.targetX - stubLenT},${cpd.targetY + hw}L${cpd.targetX},${cpd.targetY + hw}Z`
@@ -393,7 +423,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           },
           datum: edge,
           _gradient: { direction: "left", from: 0, to: 1, x0: cpd.targetX - stubLenT, x1: cpd.targetX }
-        } as any)
+        } as GradientBezierEdge)
 
         continue
       }
@@ -445,7 +475,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           // Swap for rendering: horizontal = breadth (y), vertical = depth (x).
           x = node.y0 + (node.y1 - node.y0) / 2
           y = node.x1 + 14
-          anchor = "middle" as any
+          anchor = "start"
         } else {
           // Horizontal: label to the right or left depending on position
           const midX = size[0] / 2
@@ -463,7 +493,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           x,
           y,
           text: String(text),
-          anchor,
+          anchor: direction === "down" ? "middle" : anchor,
           baseline: "middle",
           fontSize: 11
         })

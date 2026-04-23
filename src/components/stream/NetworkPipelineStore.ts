@@ -781,6 +781,7 @@ export class NetworkPipelineStore {
   private buildCircularBezier(edge: RealtimeEdge): BezierCache {
     const hw = (edge._circularWidth || edge.sankeyWidth || 1) / 2
     const cpd = edge.circularPathData
+    if (!cpd) throw new Error("buildCircularBezier requires circularPathData")
 
     // Stub edges: particles travel outbound stub, then teleport to inbound stub
     if (edge._circularStub) {

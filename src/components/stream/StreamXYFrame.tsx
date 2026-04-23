@@ -311,7 +311,7 @@ function drawLineHighlight(
 
     // Resolve style
     const rawStyle = typeof highlightConfig.style === "function"
-      ? highlightConfig.style(node.datum)
+      ? (node.datum ? highlightConfig.style(node.datum) : {})
       : (highlightConfig.style || {})
 
     ctx.save()

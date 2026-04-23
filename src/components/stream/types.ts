@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
 import type { AnimateProp } from "./pipelineTransitionUtils"
+import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -14,6 +15,13 @@ import type {
   AnnotationAnchorMode
 } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
+
+export type SceneDatum = Datum | null
+export type SeriesDatum = Datum[] | null
+export type AxisTickFormat =
+  | ((d: number, index?: number, allTicks?: number[]) => string)
+  | ((d: string, index?: number, allTicks?: number[]) => string)
+  | ((d: Date, index?: number, allTicks?: number[]) => string)
 
 // ── Theme-resolved semantic role colors ──────────────────────────────
 //
@@ -160,7 +168,7 @@ export interface LineSceneNode {
   /** Threshold-based color segments */
   colorThresholds?: LineColorThreshold[]
   style: Style
-  datum: any
+  datum: SeriesDatum
   group?: string
   /** Horizontal gradient for the line stroke */
   strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
@@ -187,7 +195,7 @@ export interface AreaSceneNode {
   topPath: [number, number][]
   bottomPath: [number, number][]
   style: Style
-  datum: any
+  datum: SeriesDatum
   group?: string
   /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
@@ -227,7 +235,7 @@ export interface PointSceneNode {
   y: number
   r: number
   style: Style
-  datum: any
+  datum: SceneDatum
   /** Optional unique identifier for point-anchored annotations */
   pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active) */
@@ -264,7 +272,7 @@ export interface RectSceneNode {
    *  along the bar axis (inferred from `roundedEdge`). */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   style: Style
-  datum: any
+  datum: SceneDatum
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -287,7 +295,7 @@ export interface HeatcellSceneNode {
   w: number
   h: number
   fill: string
-  datum: any
+  datum: SceneDatum
   /** Optional style object (used for decay/transition opacity on heatmap cells) */
   style?: Style
   /** Numeric cell value (for canvas text rendering when showValues is enabled) */
@@ -325,7 +333,7 @@ export interface CandlestickSceneNode {
   isUp: boolean
   /** Range/dumbbell mode — no body, endpoint dots instead */
   isRange?: boolean
-  datum: any
+  datum: SceneDatum
   /** Optional style object (used during transition opacity animations) */
   style?: Style
   _pulseIntensity?: number
@@ -525,7 +533,7 @@ export interface StreamXYFrameProps<T = Datum> {
     orient: "left" | "right" | "top" | "bottom"
     label?: string
     ticks?: number
-    tickFormat?: (d: any, index?: number, allTicks?: number[]) => string
+    tickFormat?: AxisTickFormat
     baseline?: boolean | "under"
     jaggedBase?: boolean
   }>
@@ -578,7 +586,7 @@ export interface StreamXYFrameProps<T = Datum> {
 
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
-  legend?: ReactNode | { legendGroups: any[] } | { gradient: import("../types/legendTypes").GradientLegendConfig }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

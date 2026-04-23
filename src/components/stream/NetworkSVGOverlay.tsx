@@ -6,6 +6,18 @@ import type { NetworkLabel } from "./networkTypes"
 import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 
+type AnnotationAnchorNode = {
+  type: string
+  datum: Datum | null
+  id?: string
+  x?: number
+  y?: number
+  cx?: number
+  cy?: number
+  w?: number
+  h?: number
+}
+
 export interface NetworkSVGOverlayProps {
   width: number
   height: number
@@ -31,14 +43,14 @@ export interface NetworkSVGOverlayProps {
   foregroundGraphics?: ReactNode
 
   /** Scene nodes for annotation positioning */
-  sceneNodes?: Array<{ type: string; datum: any; id?: string; x?: number; y?: number; cx?: number; cy?: number; w?: number; h?: number }>
+  sceneNodes?: AnnotationAnchorNode[]
 
   /** Annotations */
   annotations?: Datum[]
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,
-    context: any
+    context: { width: number; height: number; sceneNodes?: AnnotationAnchorNode[] }
   ) => ReactNode
   annotationFrame?: number
 }
@@ -94,7 +106,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
             x={label.x}
             y={label.y}
             textAnchor={label.anchor || "start"}
-            dominantBaseline={(label.baseline || "middle") as any}
+            dominantBaseline={(label.baseline || "middle") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
             fontSize={label.fontSize || 11}
             fontWeight={label.fontWeight}
             fill={label.fill || "currentColor"}
