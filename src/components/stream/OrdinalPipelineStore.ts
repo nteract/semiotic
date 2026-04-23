@@ -24,7 +24,8 @@ import type {
   OrdinalScales,
   OrdinalSceneNode,
   OrdinalColumn,
-  OrdinalLayout
+  OrdinalLayout,
+  WedgeSceneNode
 } from "./ordinalTypes"
 import type { Changeset, Style, PointSceneNode } from "./types"
 import { computeDecayOpacity } from "./pipelineDecay"
@@ -1143,7 +1144,7 @@ export class OrdinalPipelineStore {
       } else if (key.startsWith("w:")) {
         // Exiting wedge: collapse arc to midpoint and fade out
         const midAngle = ((prev.startAngle ?? 0) + (prev.endAngle ?? 0)) / 2
-        this.exitNodes.push({
+        const exitNode: WedgeSceneNode = {
           type: "wedge",
           cx: prev.x, cy: prev.y,
           innerRadius: prev.innerRadius ?? 0,
@@ -1157,7 +1158,8 @@ export class OrdinalPipelineStore {
           _targetEndAngle: midAngle,
           _targetOpacity: 0,
           _transitionKey: key
-        } as unknown as import("./ordinalTypes").WedgeSceneNode)
+        }
+        this.exitNodes.push(exitNode)
       }
       hasChanges = true
     }

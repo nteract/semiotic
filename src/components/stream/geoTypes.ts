@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
+import type { GradientLegendConfig, LegendGroup } from "../types/legendTypes"
 import type {
   Style,
   DecayConfig,
@@ -240,7 +241,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   title?: string | ReactNode
 
   // ── Legend (passed from HOCs) ──
-  legend?: ReactNode | { legendGroups: import("../types/legendTypes").LegendGroup[] }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendPosition?: "right" | "left" | "top" | "bottom"
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
