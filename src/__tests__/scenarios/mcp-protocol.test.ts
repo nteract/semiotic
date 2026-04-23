@@ -8,6 +8,7 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  * These tests validate:
  *   - Server responds to `initialize` with capabilities
  *   - `tools/list` returns all 6 registered tools
+ *   - `resources/list` and `prompts/list` expose AI context surfaces
  *   - Each tool responds to `tools/call` with correct result shape
  *   - Error cases return `isError: true`
  *   - Invalid methods return JSON-RPC error
@@ -132,6 +133,8 @@ describe("MCP protocol round-trip", () => {
       expect(result.result).toBeDefined()
       expect(result.result.serverInfo.name).toBe("semiotic")
       expect(result.result.capabilities.tools).toBeDefined()
+      expect(result.result.capabilities.resources).toBeDefined()
+      expect(result.result.capabilities.prompts).toBeDefined()
     } finally {
       freshProc.kill("SIGTERM")
     }
@@ -141,7 +144,7 @@ describe("MCP protocol round-trip", () => {
     const result = await sendRequest(proc, "tools/list", {}, "list-1")
 
     expect(result.result).toBeDefined()
-    const toolNames = result.result.tools.map((t: any) => t.name).sort()
+    const toolNames = result.result.tools.map((t: { name: string }) => t.name).sort()
     expect(toolNames).toEqual([
       "applyTheme",
       "diagnoseConfig",
@@ -150,6 +153,61 @@ describe("MCP protocol round-trip", () => {
       "reportIssue",
       "suggestChart",
     ])
+  })
+
+  it("resources/list exposes AI instruction resources", async () => {
+    const result = await sendRequest(proc, "resources/list", {}, "resources-list")
+
+    expect(result.result).toBeDefined()
+    const uris = result.result.resources.map((r: { uri: string }) => r.uri).sort()
+    expect(uris).toEqual([
+      "semiotic://components",
+      "semiotic://examples",
+      "semiotic://schema",
+      "semiotic://system-prompt",
+    ])
+  })
+
+  it("resources/read returns the component index", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://components",
+    }, "resources-read-components")
+
+    expect(result.result).toBeDefined()
+    const text = result.result.contents[0].text
+    expect(text).toContain('"totalComponents": 43')
+    expect(text).toContain('"renderableComponents": 38')
+    expect(text).toContain('"name": "GaugeChart"')
+    expect(text).toContain('"category": "ordinal"')
+  })
+
+  it("prompts/list exposes chart build and debug workflows", async () => {
+    const result = await sendRequest(proc, "prompts/list", {}, "prompts-list")
+
+    expect(result.result).toBeDefined()
+    const promptNames = result.result.prompts.map((p: { name: string }) => p.name).sort()
+    expect(promptNames).toEqual([
+      "build-semiotic-chart",
+      "debug-semiotic-chart",
+    ])
+  })
+
+  it("prompts/get returns an actionable chart workflow", async () => {
+    const result = await sendRequest(proc, "prompts/get", {
+      name: "build-semiotic-chart",
+      arguments: {
+        intent: "trend",
+        dataDescription: "monthly revenue rows with month, revenue, and region fields",
+      },
+    }, "prompts-get-build")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.messages[0].role).toBe("user")
+    const text = result.result.messages[0].content.text
+    expect(text).toContain("suggestChart")
+    expect(text).toContain("getSchema")
+    expect(text).toContain("renderChart")
+    expect(text).toContain("semiotic://system-prompt")
   })
 
   it("getSchema without component lists all components", async () => {

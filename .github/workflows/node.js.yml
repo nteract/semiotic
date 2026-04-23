@@ -35,6 +35,9 @@ jobs:
       - name: Run type check
         run: npm run typescript
 
+      - name: Run MCP type check
+        run: npm run typescript:mcp
+
       - name: Check schema freshness
         run: npm run check:schema
 
