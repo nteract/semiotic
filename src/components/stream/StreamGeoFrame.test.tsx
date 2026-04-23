@@ -1,5 +1,4 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import React from "react"
 import { render } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createMockCanvasContext } from "../../test-utils/canvasMock"

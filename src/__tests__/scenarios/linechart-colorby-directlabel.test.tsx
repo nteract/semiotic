@@ -5,7 +5,6 @@
  * when using colorBy="series" + lineBy="series" + directLabel={true}.
  */
 
-import React from "react"
 import { render } from "@testing-library/react"
 import { LineChart } from "../../components/charts/xy/LineChart"
 import { PipelineStore, type PipelineConfig } from "../../components/stream/PipelineStore"

@@ -1,4 +1,3 @@
-import React from "react"
 import { render } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"

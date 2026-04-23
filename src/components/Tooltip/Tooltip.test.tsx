@@ -1,4 +1,3 @@
-import React from "react"
 import { render } from "@testing-library/react"
 import { Tooltip, MultiLineTooltip, MultiPointTooltip, normalizeTooltip } from "./Tooltip"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"

@@ -6,7 +6,6 @@
  * when combined — including edge cases like throwing children not crashing
  * sibling charts.
  */
-import React from "react"
 import { render } from "@testing-library/react"
 import { ChartGrid } from "../../components/ChartGrid"
 import {

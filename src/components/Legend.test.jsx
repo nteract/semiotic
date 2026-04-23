@@ -1,4 +1,3 @@
-import React from "react"
 import { render } from "@testing-library/react"
 import Legend, { GradientLegend } from "./Legend"
 // import "@testing-library/jest-dom"

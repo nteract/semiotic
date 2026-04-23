@@ -38,6 +38,11 @@ export default [
     },
     rules: {
       ...reactPlugin.configs.recommended.rules,
+      // Disable the classic-transform rules now that tsconfig uses
+      // `"jsx": "react-jsx"`. `react-in-jsx-scope` and `jsx-uses-react`
+      // both exist to enforce `import React from "react"` for the old
+      // createElement transform — neither applies to the automatic runtime.
+      ...reactPlugin.configs["jsx-runtime"].rules,
       "no-unused-vars": "off",
       "react/prop-types": "off",
       "react/display-name": "off",

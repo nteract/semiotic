@@ -7,7 +7,6 @@
  * issues that component-level tests miss.
  */
 
-import React from "react"
 import { render } from "@testing-library/react"
 
 // XY

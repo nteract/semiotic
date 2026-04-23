@@ -447,7 +447,15 @@ export function useChartLegendAndMargin({
 
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data, colorBy, colorScale, getColor, categories })
+    const built = createLegend({ data, colorBy, colorScale, getColor, categories })
+    // Suppress empty legends — when a chart using the push API mounts with no
+    // `data` yet and no explicit `categories`, createLegend returns a shell
+    // with zero items. Returning it would reserve margin for a legend that
+    // renders only a title bar ("neatline"), which is what a user sees as
+    // empty reserved space. Treat zero-item legends as absent.
+    const totalItems = built.legendGroups.reduce((sum, g) => sum + g.items.length, 0)
+    if (totalItems === 0) return undefined
+    return built
   }, [shouldShowLegend, colorBy, data, colorScale, categories])
 
   const margin = useMemo<MarginType>(() => {
