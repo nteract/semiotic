@@ -31,7 +31,7 @@ export interface PropDef {
   enum?: readonly string[]
 }
 
-type DataShape = "array" | "object" | "network" | "realtime"
+type DataShape = "array" | "object" | "network" | "realtime" | "none"
 
 export interface ComponentSpec {
   /** Props that must be present */

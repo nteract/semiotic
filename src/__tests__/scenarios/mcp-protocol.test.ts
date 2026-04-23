@@ -164,6 +164,10 @@ describe("MCP protocol round-trip", () => {
     expect(text).toContain("Available components")
     expect(text).toContain("LineChart")
     expect(text).toContain("BarChart")
+    expect(text).toContain("CandlestickChart [renderable]")
+    expect(text).toContain("GaugeChart [renderable]")
+    expect(text).toContain("LikertChart [renderable]")
+    expect(text).toContain("SwimlaneChart [renderable]")
   })
 
   it("getSchema with specific component returns schema", async () => {
@@ -233,6 +237,33 @@ describe("MCP protocol round-trip", () => {
         },
       },
     }, "render-1")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.isError).toBeFalsy()
+    const text = result.result.content[0].text
+    expect(text).toContain("<svg")
+    expect(text).toContain("</svg>")
+  })
+
+  it("renderChart works for a newly repaired registry component", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "renderChart",
+      arguments: {
+        component: "GaugeChart",
+        props: {
+          value: 72,
+          min: 0,
+          max: 100,
+          width: 240,
+          height: 180,
+          thresholds: [
+            { value: 50, color: "#2ca02c", label: "ok" },
+            { value: 80, color: "#f0ad4e", label: "warn" },
+            { value: 100, color: "#d62728", label: "crit" },
+          ],
+        },
+      },
+    }, "render-gauge")
 
     expect(result.result).toBeDefined()
     expect(result.result.isError).toBeFalsy()

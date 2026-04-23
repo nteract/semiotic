@@ -1052,7 +1052,7 @@ export function renderGeoToStaticSVG(props: StreamGeoFrameProps & ThemeAwareProp
 /** Chart component name to frame type + props mapping */
 type ChartName =
   | "LineChart" | "AreaChart" | "StackedAreaChart" | "Scatterplot"
-  | "BubbleChart" | "ConnectedScatterplot" | "Heatmap" | "Sparkline"
+  | "BubbleChart" | "ConnectedScatterplot" | "Heatmap" | "CandlestickChart" | "Sparkline"
   | "BarChart" | "StackedBarChart" | "GroupedBarChart"
   | "PieChart" | "DonutChart" | "SwimlaneChart"
   | "Histogram" | "BoxPlot" | "ViolinPlot" | "SwarmPlot"

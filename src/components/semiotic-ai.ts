@@ -12,8 +12,10 @@ export { ConnectedScatterplot } from "./charts/xy/ConnectedScatterplot"
 export { BubbleChart } from "./charts/xy/BubbleChart"
 export { Heatmap } from "./charts/xy/Heatmap"
 export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
+export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
+export { CandlestickChart } from "./charts/xy/CandlestickChart"
 
 // Coordinated Views
 export { LinkedCharts } from "./LinkedCharts"
@@ -31,8 +33,10 @@ export { DotPlot } from "./charts/ordinal/DotPlot"
 export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
+export { GaugeChart } from "./charts/ordinal/GaugeChart"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
 export { LikertChart } from "./charts/ordinal/LikertChart"
+export { SwimlaneChart } from "./charts/ordinal/SwimlaneChart"
 
 // Network Charts
 export { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"

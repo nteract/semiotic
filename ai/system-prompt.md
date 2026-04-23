@@ -1,6 +1,6 @@
 # Semiotic — React Data Visualization
 
-Use sub-path imports: `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB). Or `semiotic/ai` for all 38 HOCs in one import (269KB).
+Use sub-path imports: `semiotic/xy` (143KB gz), `semiotic/ordinal` (109KB), `semiotic/network` (98KB), `semiotic/geo` (93KB), `semiotic/realtime` (145KB). Or `semiotic/ai` for all 39 non-geo HOCs in one import (269KB).
 
 ## Flat Array Data (`data: object[]`)
 - **LineChart** — `xAccessor`, `yAccessor`, `lineBy` (multi-line), `curve`

@@ -128,8 +128,9 @@
     "typescript": "tsc --noEmit",
     "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
-    "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && npm run dist:prod && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && rm -rf dist && npm run dist:prod"
+    "check:surface": "node scripts/check-surface-parity.js",
+    "release:check": "npm run lint && npm run typescript && npm run test && npm run check:schema && npm run check:surface && npm run dist:prod && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run test && npm run check:schema && npm run check:surface && rm -rf dist && npm run dist:prod"
   },
   "targets": {
     "website": {
