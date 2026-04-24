@@ -148,6 +148,78 @@ function printSingleComponentSchema(componentName) {
   console.log(JSON.stringify(payload, null, 2))
 }
 
+function schemaTypeMatches(value, expectedType) {
+  const expectedTypes = Array.isArray(expectedType) ? expectedType : [expectedType]
+  return expectedTypes.some((type) => {
+    if (type === "array") return Array.isArray(value)
+    if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value)
+    return typeof value === type
+  })
+}
+
+function describeActualType(value) {
+  if (Array.isArray(value)) return "array"
+  if (value === null) return "null"
+  return typeof value
+}
+
+function validatePropsWithSchema(componentName, props) {
+  const component = findComponent(componentName)
+  if (!component) {
+    const available = schemaEntries().map((entry) => entry.name).sort().join(", ")
+    return {
+      valid: false,
+      errors: [`Unknown component "${componentName}". Available components: ${available}`],
+    }
+  }
+
+  const parameters = component.parameters || {}
+  const properties = parameters.properties || {}
+  const required = parameters.required || []
+  const errors = []
+
+  for (const propName of required) {
+    if (props[propName] === undefined || props[propName] === null) {
+      errors.push(`"${propName}" is required for ${component.name}.`)
+    }
+  }
+
+  for (const [propName, value] of Object.entries(props)) {
+    if (value === undefined || value === null) continue
+    const propSchema = properties[propName]
+    if (!propSchema) {
+      errors.push(`Unknown prop "${propName}" for ${component.name}.`)
+      continue
+    }
+
+    if (propSchema.type && !schemaTypeMatches(value, propSchema.type)) {
+      const expected = Array.isArray(propSchema.type) ? propSchema.type.join(" | ") : propSchema.type
+      errors.push(`"${propName}" should be ${expected}, got ${describeActualType(value)}.`)
+    }
+
+    if (propSchema.enum && typeof value === "string" && !propSchema.enum.includes(value)) {
+      errors.push(`"${propName}" value "${value}" is not valid. Expected one of: ${propSchema.enum.join(", ")}.`)
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  }
+}
+
+function printSchemaOnlyDoctorResult(component, props) {
+  const result = validatePropsWithSchema(component, props)
+  if (result.valid) {
+    console.log(`✓ ${component}: schema-only validation passed.`)
+  } else {
+    console.log(`✗ ${component}: schema-only validation failed.`)
+    for (const err of result.errors) {
+      console.log(`  • ${err}`)
+    }
+  }
+}
+
 if (flag === "--help" || flag === "-h") {
   console.log(HELP)
   process.exit(0)
@@ -185,21 +257,23 @@ if (flag === "--doctor") {
       process.exit(1)
     }
 
-    // Load diagnoseConfig from dist (falls back to validateProps)
+    // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
     const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
     let diagnoseConfig, validateProps
     try {
-      const mod = require(distPath)
-      diagnoseConfig = mod.diagnoseConfig
-      validateProps = mod.validateProps
+      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+        const mod = require(distPath)
+        diagnoseConfig = mod.diagnoseConfig
+        validateProps = mod.validateProps
+      }
     } catch (e) {
-      console.error("Could not load semiotic/ai dist. Run 'npm run dist' first.")
-      process.exit(1)
+      // Dist is not available in a clean source checkout. Fall back to the
+      // packaged schema so the CLI still catches basic agent mistakes.
     }
 
     if (!diagnoseConfig && !validateProps) {
-      console.error("diagnoseConfig/validateProps not found in semiotic/ai exports.")
-      process.exit(1)
+      printSchemaOnlyDoctorResult(component, props)
+      process.exit(0)
     }
 
     if (diagnoseConfig) {

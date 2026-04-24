@@ -478,6 +478,8 @@ npx semiotic-ai --schema       # dump all chart schemas
 npx semiotic-ai --compact      # compact schema (fewer tokens)
 ```
 
+`--doctor` uses the full `diagnoseConfig` checks when `dist` is available and falls back to schema-only validation in clean source checkouts.
+
 ## Documentation
 
 [Interactive docs and examples](https://semiotic.nteract.io)

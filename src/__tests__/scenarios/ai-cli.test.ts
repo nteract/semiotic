@@ -10,9 +10,10 @@ import { describe, expect, it } from "vitest"
 
 const CLI_PATH = path.resolve(__dirname, "../../../ai/cli.js")
 
-function runCLI(args: string[]) {
+function runCLI(args: string[], env: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, [CLI_PATH, ...args], {
     encoding: "utf-8",
+    env: { ...process.env, ...env },
   })
 }
 
@@ -84,5 +85,26 @@ describe("semiotic-ai CLI", () => {
     expect(result.stderr).toContain("Unknown component: NopeChart")
     expect(result.stderr).toContain("LineChart")
     expect(result.stderr).toContain("GaugeChart")
+  })
+
+  it("--doctor falls back to schema-only validation when dist is unavailable", () => {
+    const result = runCLI(
+      ["--doctor", JSON.stringify({ component: "GaugeChart", props: { value: 72 } })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("GaugeChart: schema-only validation passed")
+  })
+
+  it("--doctor schema-only fallback reports missing required props", () => {
+    const result = runCLI(
+      ["--doctor", JSON.stringify({ component: "GaugeChart", props: {} })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("GaugeChart: schema-only validation failed")
+    expect(result.stdout).toContain('"value" is required for GaugeChart')
   })
 })
