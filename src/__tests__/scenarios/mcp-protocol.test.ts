@@ -115,6 +115,27 @@ function parseHTTPRPCBody(text: string, contentType: string | null): any {
   }
 }
 
+function waitForProcessExit(proc: ChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    if (proc.exitCode !== null || proc.signalCode !== null) {
+      resolve()
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      proc.off("exit", onExit)
+      resolve()
+    }, 1000)
+
+    const onExit = () => {
+      clearTimeout(timeout)
+      resolve()
+    }
+
+    proc.once("exit", onExit)
+  })
+}
+
 async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Promise<{
   body?: any
   response: Response
@@ -149,6 +170,7 @@ async function spawnReadyHTTPServer(): Promise<{ proc: ChildProcess; port: numbe
     } catch (err) {
       lastError = err
       proc.kill("SIGTERM")
+      await waitForProcessExit(proc)
     }
   }
 

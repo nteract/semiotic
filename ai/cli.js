@@ -169,7 +169,7 @@ function readJSONInput(usage) {
     return process.argv.slice(3).join(" ")
   }
   if (!process.stdin.isTTY) {
-    return fs.readFileSync("/dev/stdin", "utf-8")
+    return fs.readFileSync(0, "utf-8")
   }
 
   console.error(usage)

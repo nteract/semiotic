@@ -6944,6 +6944,7 @@ var require_chartSuggestions = __commonJS({
       "network",
       "hierarchy"
     ];
+    var MAX_SAMPLE_SIZE = 5;
     function summarizeFields(data, keys) {
       const numericFields = [];
       const stringFields = [];
@@ -6984,7 +6985,7 @@ var require_chartSuggestions = __commonJS({
       };
     }
     function jsxString(value) {
-      return `"${value}"`;
+      return JSON.stringify(String(value));
     }
     function jsxExpression(value) {
       return `{${value}}`;
@@ -7012,6 +7013,12 @@ var require_chartSuggestions = __commonJS({
         return {
           ok: false,
           error: "Pass { data: [{ ... }, ...] } with 1-5 sample data objects. Optionally include intent: 'comparison' | 'trend' | 'distribution' | 'relationship' | 'composition' | 'geographic' | 'network' | 'hierarchy'."
+        };
+      }
+      if (data.length > MAX_SAMPLE_SIZE) {
+        return {
+          ok: false,
+          error: `Pass 1-${MAX_SAMPLE_SIZE} sample data objects; received ${data.length}. Use a representative sample instead of the full dataset.`
         };
       }
       const sample = data[0];
@@ -7206,7 +7213,7 @@ ${setup}<${suggestion.component} ${propsStr} />
 }
 \`\`\`
 Or use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...}, typography: {...} }}>\`.
-For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic\`) - 8-color palette safe for all forms of color blindness.`;
+For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic/themes\`) - 8-color palette safe for all forms of color blindness.`;
       return lines.join("\n\n") + themingTip;
     }
     module2.exports = {

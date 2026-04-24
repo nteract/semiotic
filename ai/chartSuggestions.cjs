@@ -4,6 +4,7 @@ const VALID_INTENTS = [
   "comparison", "trend", "distribution", "relationship", "composition",
   "geographic", "network", "hierarchy",
 ]
+const MAX_SAMPLE_SIZE = 5
 
 function summarizeFields(data, keys) {
   const numericFields = []
@@ -50,7 +51,7 @@ function summarizeFields(data, keys) {
 }
 
 function jsxString(value) {
-  return `"${value}"`
+  return JSON.stringify(String(value))
 }
 
 function jsxExpression(value) {
@@ -83,6 +84,13 @@ function suggestCharts(args = {}) {
     return {
       ok: false,
       error: "Pass { data: [{ ... }, ...] } with 1-5 sample data objects. Optionally include intent: 'comparison' | 'trend' | 'distribution' | 'relationship' | 'composition' | 'geographic' | 'network' | 'hierarchy'.",
+    }
+  }
+
+  if (data.length > MAX_SAMPLE_SIZE) {
+    return {
+      ok: false,
+      error: `Pass 1-${MAX_SAMPLE_SIZE} sample data objects; received ${data.length}. Use a representative sample instead of the full dataset.`,
     }
   }
 
@@ -271,7 +279,7 @@ function formatSuggestionReport(result) {
     return `${i + 1}. **${suggestion.component}** (${suggestion.confidence} confidence)\n   ${suggestion.reason}\n\`\`\`tsx\n${setup}<${suggestion.component} ${propsStr} />\n\`\`\``
   })
 
-  const themingTip = `\n---\n**Styling**: All charts respond to CSS custom properties on any ancestor element:\n\`\`\`css\n.my-theme {\n  --semiotic-bg: #fff;\n  --semiotic-text: #333;\n  --semiotic-text-secondary: #666;\n  --semiotic-grid: #e0e0e0;\n  --semiotic-border: #e0e0e0;\n  --semiotic-font-family: sans-serif;\n  --semiotic-tooltip-bg: rgba(0,0,0,0.85);\n  --semiotic-tooltip-text: white;\n  --semiotic-tooltip-radius: 6px;\n}\n\`\`\`\nOr use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...}, typography: {...} }}>\`.\nFor accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic\`) - 8-color palette safe for all forms of color blindness.`
+  const themingTip = `\n---\n**Styling**: All charts respond to CSS custom properties on any ancestor element:\n\`\`\`css\n.my-theme {\n  --semiotic-bg: #fff;\n  --semiotic-text: #333;\n  --semiotic-text-secondary: #666;\n  --semiotic-grid: #e0e0e0;\n  --semiotic-border: #e0e0e0;\n  --semiotic-font-family: sans-serif;\n  --semiotic-tooltip-bg: rgba(0,0,0,0.85);\n  --semiotic-tooltip-text: white;\n  --semiotic-tooltip-radius: 6px;\n}\n\`\`\`\nOr use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...}, typography: {...} }}>\`.\nFor accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic/themes\`) - 8-color palette safe for all forms of color blindness.`
 
   return lines.join("\n\n") + themingTip
 }

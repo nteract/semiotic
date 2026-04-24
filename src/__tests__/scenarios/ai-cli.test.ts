@@ -10,10 +10,11 @@ import { describe, expect, it } from "vitest"
 
 const CLI_PATH = path.resolve(__dirname, "../../../ai/cli.js")
 
-function runCLI(args: string[], env: NodeJS.ProcessEnv = {}) {
+function runCLI(args: string[], env: NodeJS.ProcessEnv = {}, input?: string) {
   return spawnSync(process.execPath, [CLI_PATH, ...args], {
     encoding: "utf-8",
     env: { ...process.env, ...env },
+    input,
   })
 }
 
@@ -139,6 +140,52 @@ describe("semiotic-ai CLI", () => {
     expect(result.stdout).toContain("data={data}")
     expect(result.stdout).toContain("categoryAccessor")
     expect(result.stdout).toContain("valueAccessor")
+    expect(result.stdout).toContain("semiotic/themes")
+  })
+
+  it("--suggest reads JSON from stdin", () => {
+    const result = runCLI(
+      ["--suggest"],
+      {},
+      JSON.stringify({
+        intent: "comparison",
+        data: [{ category: "A", value: 10 }],
+      })
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("BarChart")
+  })
+
+  it("--suggest escapes unusual JSON field names in TSX snippets", () => {
+    const categoryKey = 'cat"egory'
+    const valueKey = "value\\amount"
+    const result = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "comparison",
+        data: [
+          { [categoryKey]: "A", [valueKey]: 10 },
+          { [categoryKey]: "B", [valueKey]: 20 },
+        ],
+      }),
+    ])
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain(`categoryAccessor=${JSON.stringify(categoryKey)}`)
+    expect(result.stdout).toContain(`valueAccessor=${JSON.stringify(valueKey)}`)
+  })
+
+  it("--suggest rejects oversized samples", () => {
+    const result = runCLI([
+      "--suggest",
+      JSON.stringify({
+        data: Array.from({ length: 6 }, (_, i) => ({ category: `C${i}`, value: i })),
+      }),
+    ])
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toContain("Pass 1-5 sample data objects")
   })
 
   it("--suggest makes network recommendations copy-pasteable", () => {
