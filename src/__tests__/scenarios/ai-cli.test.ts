@@ -121,4 +121,29 @@ describe("semiotic-ai CLI", () => {
     expect(result.stdout).toContain("GaugeChart: schema-only validation failed")
     expect(result.stdout).toContain('"value" is required for GaugeChart')
   })
+
+  it("--suggest recommends charts from sample data", () => {
+    const result = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "comparison",
+        data: [
+          { category: "A", value: 10 },
+          { category: "B", value: 20 },
+        ],
+      }),
+    ])
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("BarChart")
+    expect(result.stdout).toContain("categoryAccessor")
+    expect(result.stdout).toContain("valueAccessor")
+  })
+
+  it("--suggest rejects invalid input", () => {
+    const result = runCLI(["--suggest", JSON.stringify({ data: [] })])
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toContain("Pass { data:")
+  })
 })
