@@ -1,12 +1,13 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes five tools:
+ * Exposes six tools, four resources, and two prompts:
  *   1. renderChart — renders any HOC chart to static SVG
  *   2. diagnoseConfig — anti-pattern detector for chart configurations
  *   3. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
  *   4. getSchema — returns the prop schema for a specific component
  *   5. suggestChart — recommends chart types for a given data shape
+ *   6. applyTheme — returns usage guidance for theme presets
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -33,6 +34,33 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { diagnoseConfig } from "semiotic/ai"
 
+const {
+  componentIndexFromSchema,
+  metadataForComponent,
+} = require("./componentMetadata.cjs") as {
+  componentIndexFromSchema: (schema: any) => {
+    version?: string
+    totalComponents: number
+    renderableComponents: number
+    browserOnlyComponents: number
+    categories: Record<string, string[]>
+    components: Array<{
+      name: string
+      category: string
+      importPath: string
+      renderable: boolean
+      description?: string
+    }>
+  }
+  metadataForComponent: (entryOrName: string | { name: string; description?: string }) => {
+    name: string
+    category: string
+    importPath: string
+    renderable: boolean
+    description?: string
+  }
+}
+
 // Load schema.json for version info
 const schemaPath = path.resolve(__dirname, "../schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
@@ -43,8 +71,43 @@ for (const tool of schema.tools) {
   schemaByComponent[tool.function.name] = tool.function
 }
 
+const allComponentNames = Object.keys(schemaByComponent).sort()
 const componentNames = Object.keys(COMPONENT_REGISTRY).sort()
 const REPO = "nteract/semiotic"
+
+function aiFilePath(fileName: string): string {
+  return path.resolve(__dirname, "..", fileName)
+}
+
+function readAIFile(fileName: string): string {
+  return fs.readFileSync(aiFilePath(fileName), "utf-8")
+}
+
+function componentIndexJSON(): string {
+  return JSON.stringify(componentIndexFromSchema(schema), null, 2)
+}
+
+function textResource(uri: URL, mimeType: string, text: string) {
+  return {
+    contents: [{
+      uri: uri.href,
+      mimeType,
+      text,
+    }],
+  }
+}
+
+function promptMessage(text: string) {
+  return {
+    messages: [{
+      role: "user" as const,
+      content: {
+        type: "text" as const,
+        text,
+      },
+    }],
+  }
+}
 
 // ── Tool handlers ────────────────────────────────────────────────────────
 // Extracted as named functions so both stdio and HTTP server instances share them.
@@ -55,11 +118,9 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   const component = args.component
 
   if (!component) {
-    const all = Object.keys(schemaByComponent).sort()
-    const renderable = new Set(Object.keys(COMPONENT_REGISTRY))
-    const list = all.map(name => renderable.has(name) ? `${name} [renderable]` : name)
+    const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
     return {
-      content: [{ type: "text" as const, text: `Available components (${all.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
     }
   }
 
@@ -72,7 +133,7 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
     }
   }
 
-  const renderableNote = COMPONENT_REGISTRY[component] ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
+  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
   return {
     content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}` }],
   }
@@ -318,6 +379,13 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   }
 
   if (!COMPONENT_REGISTRY[component]) {
+    if (schemaByComponent[component]) {
+      return {
+        content: [{ type: "text" as const, text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
+        isError: true,
+      }
+    }
+
     return {
       content: [{ type: "text" as const, text: `Unknown component "${component}". Available: ${componentNames.join(", ")}` }],
       isError: true,
@@ -514,6 +582,109 @@ function createServer(): McpServer {
     version: schema.version || "3.0.0",
   })
 
+  srv.registerResource(
+    "semiotic-schema",
+    "semiotic://schema",
+    {
+      title: "Semiotic Component Schema",
+      description: "Machine-readable JSON schema for all Semiotic AI chart components.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify(schema, null, 2))
+  )
+
+  srv.registerResource(
+    "semiotic-components",
+    "semiotic://components",
+    {
+      title: "Semiotic Component Index",
+      description: "Renderable/browser-only component index with MCP categories.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", componentIndexJSON())
+  )
+
+  srv.registerResource(
+    "semiotic-system-prompt",
+    "semiotic://system-prompt",
+    {
+      title: "Semiotic AI System Prompt",
+      description: "Compact implementation guidance for AI assistants building with Semiotic.",
+      mimeType: "text/markdown",
+    },
+    (uri) => textResource(uri, "text/markdown", readAIFile("system-prompt.md"))
+  )
+
+  srv.registerResource(
+    "semiotic-examples",
+    "semiotic://examples",
+    {
+      title: "Semiotic AI Examples",
+      description: "Copy-paste examples for common Semiotic chart data shapes.",
+      mimeType: "text/markdown",
+    },
+    (uri) => textResource(uri, "text/markdown", readAIFile("examples.md"))
+  )
+
+  srv.registerPrompt(
+    "build-semiotic-chart",
+    {
+      title: "Build a Semiotic chart",
+      description: "Workflow for choosing a chart, validating props, and rendering a preview.",
+      argsSchema: {
+        intent: z.string().optional().describe("Visualization intent, e.g. trend, comparison, distribution, relationship, composition, network, hierarchy."),
+        dataDescription: z.string().optional().describe("Brief description of the data fields and sample rows."),
+        component: z.string().optional().describe("Optional preferred Semiotic component name."),
+      },
+    },
+    (args) => promptMessage([
+      "Build a production-ready Semiotic visualization.",
+      "",
+      `Intent: ${args.intent || "not specified"}`,
+      `Data: ${args.dataDescription || "not specified"}`,
+      `Preferred component: ${args.component || "not specified"}`,
+      "",
+      "Use this MCP workflow:",
+      "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
+      "2. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "3. Call getSchema for the selected component before writing JSX or renderChart props.",
+      "4. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
+      "5. If the component is renderable, call renderChart once to verify it returns SVG.",
+      "6. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "",
+      "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation.",
+    ].join("\n"))
+  )
+
+  srv.registerPrompt(
+    "debug-semiotic-chart",
+    {
+      title: "Debug a Semiotic chart",
+      description: "Workflow for diagnosing bad props, rendering failures, and chart-quality issues.",
+      argsSchema: {
+        component: z.string().optional().describe("Semiotic component name, e.g. BarChart."),
+        problem: z.string().optional().describe("Observed failure, warning, or visual issue."),
+        props: z.string().optional().describe("Relevant chart props as JSON or a short summary."),
+      },
+    },
+    (args) => promptMessage([
+      "Debug this Semiotic chart with the MCP server.",
+      "",
+      `Component: ${args.component || "not specified"}`,
+      `Problem: ${args.problem || "not specified"}`,
+      `Props: ${args.props || "not provided"}`,
+      "",
+      "Use this MCP workflow:",
+      "1. Call getSchema for the component and compare the provided props against required props and accessor names.",
+      "2. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
+      "3. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
+      "4. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "5. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
+      "",
+      "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step.",
+    ].join("\n"))
+  )
+
   srv.tool(
     "getSchema",
     `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
@@ -638,7 +809,8 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue")
+      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme")
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples")
     })
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.

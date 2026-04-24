@@ -6799,6 +6799,137 @@ var require_dist = __commonJS({
   }
 });
 
+// ai/componentMetadata.cjs
+var require_componentMetadata = __commonJS({
+  "ai/componentMetadata.cjs"(exports2, module2) {
+    "use strict";
+    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"];
+    var COMPONENTS_BY_CATEGORY = {
+      xy: [
+        "LineChart",
+        "AreaChart",
+        "StackedAreaChart",
+        "Scatterplot",
+        "QuadrantChart",
+        "MultiAxisLineChart",
+        "CandlestickChart",
+        "BubbleChart",
+        "Heatmap",
+        "ConnectedScatterplot",
+        "ScatterplotMatrix",
+        "MinimapChart"
+      ],
+      ordinal: [
+        "BarChart",
+        "StackedBarChart",
+        "LikertChart",
+        "GroupedBarChart",
+        "SwarmPlot",
+        "BoxPlot",
+        "Histogram",
+        "ViolinPlot",
+        "RidgelinePlot",
+        "DotPlot",
+        "PieChart",
+        "DonutChart",
+        "GaugeChart",
+        "FunnelChart",
+        "SwimlaneChart"
+      ],
+      network: [
+        "ForceDirectedGraph",
+        "SankeyDiagram",
+        "ChordDiagram",
+        "TreeDiagram",
+        "Treemap",
+        "CirclePack",
+        "OrbitDiagram"
+      ],
+      geo: [
+        "ChoroplethMap",
+        "ProportionalSymbolMap",
+        "FlowMap",
+        "DistanceCartogram"
+      ],
+      realtime: [
+        "RealtimeLineChart",
+        "RealtimeHistogram",
+        "RealtimeSwarmChart",
+        "RealtimeWaterfallChart",
+        "RealtimeHeatmap"
+      ]
+    };
+    var COMPONENT_TO_CATEGORY = /* @__PURE__ */ new Map();
+    for (const [category, names] of Object.entries(COMPONENTS_BY_CATEGORY)) {
+      for (const name of names) {
+        COMPONENT_TO_CATEGORY.set(name, category);
+      }
+    }
+    function schemaEntries(schema2) {
+      return schema2.tools.map((tool) => tool.function);
+    }
+    function categoryForComponent(name) {
+      const category = COMPONENT_TO_CATEGORY.get(name);
+      if (!category) {
+        throw new Error(`No AI component metadata category for "${name}"`);
+      }
+      return category;
+    }
+    function importPathForCategory(category) {
+      return category === "geo" ? "semiotic/geo" : `semiotic/${category}`;
+    }
+    function metadataForComponent2(entryOrName) {
+      const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name;
+      const category = categoryForComponent(name);
+      return {
+        name,
+        category,
+        importPath: importPathForCategory(category),
+        renderable: category !== "realtime",
+        description: typeof entryOrName === "string" ? void 0 : entryOrName.description
+      };
+    }
+    function findComponent(schema2, name) {
+      const entries = schemaEntries(schema2);
+      const exact = entries.find((entry) => entry.name === name);
+      if (exact) return exact;
+      const lower = name.toLowerCase();
+      return entries.find((entry) => entry.name.toLowerCase() === lower);
+    }
+    function componentIndexFromSchema2(schema2) {
+      const components = schemaEntries(schema2).map(metadataForComponent2);
+      const categories = {};
+      for (const category of CATEGORY_ORDER) {
+        categories[category] = [];
+      }
+      for (const component of components) {
+        categories[component.category].push(component.name);
+      }
+      for (const names of Object.values(categories)) {
+        names.sort();
+      }
+      return {
+        version: schema2.version,
+        totalComponents: components.length,
+        renderableComponents: components.filter((component) => component.renderable).length,
+        browserOnlyComponents: components.filter((component) => !component.renderable).length,
+        categories,
+        components
+      };
+    }
+    module2.exports = {
+      CATEGORY_ORDER,
+      COMPONENTS_BY_CATEGORY,
+      categoryForComponent,
+      componentIndexFromSchema: componentIndexFromSchema2,
+      findComponent,
+      importPathForCategory,
+      metadataForComponent: metadataForComponent2,
+      schemaEntries
+    };
+  }
+});
+
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
@@ -31460,9 +31591,12 @@ var COMPONENT_REGISTRY = {
   Scatterplot: { component: import_ai.Scatterplot, category: "xy" },
   BubbleChart: { component: import_ai.BubbleChart, category: "xy" },
   Heatmap: { component: import_ai.Heatmap, category: "xy" },
+  ScatterplotMatrix: { component: import_ai.ScatterplotMatrix, category: "xy" },
+  MinimapChart: { component: import_ai.MinimapChart, category: "xy" },
   ConnectedScatterplot: { component: import_ai.ConnectedScatterplot, category: "xy" },
   QuadrantChart: { component: import_ai.QuadrantChart, category: "xy" },
   MultiAxisLineChart: { component: import_ai.MultiAxisLineChart, category: "xy" },
+  CandlestickChart: { component: import_ai.CandlestickChart, category: "xy" },
   BarChart: { component: import_ai.BarChart, category: "ordinal" },
   StackedBarChart: { component: import_ai.StackedBarChart, category: "ordinal" },
   GroupedBarChart: { component: import_ai.GroupedBarChart, category: "ordinal" },
@@ -31474,7 +31608,10 @@ var COMPONENT_REGISTRY = {
   RidgelinePlot: { component: import_ai.RidgelinePlot, category: "ordinal" },
   PieChart: { component: import_ai.PieChart, category: "ordinal" },
   DonutChart: { component: import_ai.DonutChart, category: "ordinal" },
+  GaugeChart: { component: import_ai.GaugeChart, category: "ordinal" },
   FunnelChart: { component: import_ai.FunnelChart, category: "ordinal" },
+  LikertChart: { component: import_ai.LikertChart, category: "ordinal" },
+  SwimlaneChart: { component: import_ai.SwimlaneChart, category: "ordinal" },
   ForceDirectedGraph: { component: import_ai.ForceDirectedGraph, category: "network" },
   ChordDiagram: { component: import_ai.ChordDiagram, category: "network" },
   SankeyDiagram: { component: import_ai.SankeyDiagram, category: "network" },
@@ -31523,25 +31660,59 @@ ${errors.join("\n")}`
 
 // ai/mcp-server.ts
 var import_ai3 = require("semiotic/ai");
+var {
+  componentIndexFromSchema,
+  metadataForComponent
+} = require_componentMetadata();
 var schemaPath = path.resolve(__dirname, "../schema.json");
 var schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 var schemaByComponent = {};
 for (const tool of schema.tools) {
   schemaByComponent[tool.function.name] = tool.function;
 }
+var allComponentNames = Object.keys(schemaByComponent).sort();
 var componentNames = Object.keys(COMPONENT_REGISTRY).sort();
 var REPO = "nteract/semiotic";
+function aiFilePath(fileName) {
+  return path.resolve(__dirname, "..", fileName);
+}
+function readAIFile(fileName) {
+  return fs.readFileSync(aiFilePath(fileName), "utf-8");
+}
+function componentIndexJSON() {
+  return JSON.stringify(componentIndexFromSchema(schema), null, 2);
+}
+function textResource(uri, mimeType, text) {
+  return {
+    contents: [{
+      uri: uri.href,
+      mimeType,
+      text
+    }]
+  };
+}
+function promptMessage(text) {
+  return {
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text
+      }
+    }]
+  };
+}
 async function getSchemaHandler(args) {
   const component = args.component;
   if (!component) {
-    const all = Object.keys(schemaByComponent).sort();
-    const renderable = new Set(Object.keys(COMPONENT_REGISTRY));
-    const list = all.map((name) => renderable.has(name) ? `${name} [renderable]` : name);
+    const list = allComponentNames.map((name) => metadataForComponent(name).renderable ? `${name} [renderable]` : name);
     return {
-      content: [{ type: "text", text: `Available components (${all.length}):
+      content: [{ type: "text", text: `Available components (${allComponentNames.length}):
 ${list.join(", ")}
 
 Components marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.
+
+For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples.
 
 All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.
 
@@ -31556,7 +31727,7 @@ Pass { component: '<name>' } to get the prop schema for a specific component.` }
       isError: true
     };
   }
-  const renderableNote = COMPONENT_REGISTRY[component] ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
+  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
   return {
     content: [{ type: "text", text: `${renderableNote}
 
@@ -31789,6 +31960,12 @@ async function renderChartHandler(args) {
     };
   }
   if (!COMPONENT_REGISTRY[component]) {
+    if (schemaByComponent[component]) {
+      return {
+        content: [{ type: "text", text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
+        isError: true
+      };
+    }
     return {
       content: [{ type: "text", text: `Unknown component "${component}". Available: ${componentNames.join(", ")}` }],
       isError: true
@@ -31974,6 +32151,103 @@ function createServer2() {
     name: "semiotic",
     version: schema.version || "3.0.0"
   });
+  srv.registerResource(
+    "semiotic-schema",
+    "semiotic://schema",
+    {
+      title: "Semiotic Component Schema",
+      description: "Machine-readable JSON schema for all Semiotic AI chart components.",
+      mimeType: "application/json"
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify(schema, null, 2))
+  );
+  srv.registerResource(
+    "semiotic-components",
+    "semiotic://components",
+    {
+      title: "Semiotic Component Index",
+      description: "Renderable/browser-only component index with MCP categories.",
+      mimeType: "application/json"
+    },
+    (uri) => textResource(uri, "application/json", componentIndexJSON())
+  );
+  srv.registerResource(
+    "semiotic-system-prompt",
+    "semiotic://system-prompt",
+    {
+      title: "Semiotic AI System Prompt",
+      description: "Compact implementation guidance for AI assistants building with Semiotic.",
+      mimeType: "text/markdown"
+    },
+    (uri) => textResource(uri, "text/markdown", readAIFile("system-prompt.md"))
+  );
+  srv.registerResource(
+    "semiotic-examples",
+    "semiotic://examples",
+    {
+      title: "Semiotic AI Examples",
+      description: "Copy-paste examples for common Semiotic chart data shapes.",
+      mimeType: "text/markdown"
+    },
+    (uri) => textResource(uri, "text/markdown", readAIFile("examples.md"))
+  );
+  srv.registerPrompt(
+    "build-semiotic-chart",
+    {
+      title: "Build a Semiotic chart",
+      description: "Workflow for choosing a chart, validating props, and rendering a preview.",
+      argsSchema: {
+        intent: external_exports3.string().optional().describe("Visualization intent, e.g. trend, comparison, distribution, relationship, composition, network, hierarchy."),
+        dataDescription: external_exports3.string().optional().describe("Brief description of the data fields and sample rows."),
+        component: external_exports3.string().optional().describe("Optional preferred Semiotic component name.")
+      }
+    },
+    (args) => promptMessage([
+      "Build a production-ready Semiotic visualization.",
+      "",
+      `Intent: ${args.intent || "not specified"}`,
+      `Data: ${args.dataDescription || "not specified"}`,
+      `Preferred component: ${args.component || "not specified"}`,
+      "",
+      "Use this MCP workflow:",
+      "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
+      "2. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "3. Call getSchema for the selected component before writing JSX or renderChart props.",
+      "4. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
+      "5. If the component is renderable, call renderChart once to verify it returns SVG.",
+      "6. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "",
+      "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation."
+    ].join("\n"))
+  );
+  srv.registerPrompt(
+    "debug-semiotic-chart",
+    {
+      title: "Debug a Semiotic chart",
+      description: "Workflow for diagnosing bad props, rendering failures, and chart-quality issues.",
+      argsSchema: {
+        component: external_exports3.string().optional().describe("Semiotic component name, e.g. BarChart."),
+        problem: external_exports3.string().optional().describe("Observed failure, warning, or visual issue."),
+        props: external_exports3.string().optional().describe("Relevant chart props as JSON or a short summary.")
+      }
+    },
+    (args) => promptMessage([
+      "Debug this Semiotic chart with the MCP server.",
+      "",
+      `Component: ${args.component || "not specified"}`,
+      `Problem: ${args.problem || "not specified"}`,
+      `Props: ${args.props || "not provided"}`,
+      "",
+      "Use this MCP workflow:",
+      "1. Call getSchema for the component and compare the provided props against required props and accessor names.",
+      "2. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
+      "3. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
+      "4. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "5. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
+      "",
+      "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step."
+    ].join("\n"))
+  );
   srv.tool(
     "getSchema",
     `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
@@ -32073,7 +32347,8 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue");
+      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme");
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples");
     });
   } else {
     const srv = createServer2();

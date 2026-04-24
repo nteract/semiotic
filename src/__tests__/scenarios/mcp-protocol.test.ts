@@ -8,6 +8,7 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  * These tests validate:
  *   - Server responds to `initialize` with capabilities
  *   - `tools/list` returns all 6 registered tools
+ *   - `resources/list` and `prompts/list` expose AI context surfaces
  *   - Each tool responds to `tools/call` with correct result shape
  *   - Error cases return `isError: true`
  *   - Invalid methods return JSON-RPC error
@@ -132,6 +133,8 @@ describe("MCP protocol round-trip", () => {
       expect(result.result).toBeDefined()
       expect(result.result.serverInfo.name).toBe("semiotic")
       expect(result.result.capabilities.tools).toBeDefined()
+      expect(result.result.capabilities.resources).toBeDefined()
+      expect(result.result.capabilities.prompts).toBeDefined()
     } finally {
       freshProc.kill("SIGTERM")
     }
@@ -141,7 +144,7 @@ describe("MCP protocol round-trip", () => {
     const result = await sendRequest(proc, "tools/list", {}, "list-1")
 
     expect(result.result).toBeDefined()
-    const toolNames = result.result.tools.map((t: any) => t.name).sort()
+    const toolNames = result.result.tools.map((t: { name: string }) => t.name).sort()
     expect(toolNames).toEqual([
       "applyTheme",
       "diagnoseConfig",
@@ -150,6 +153,70 @@ describe("MCP protocol round-trip", () => {
       "reportIssue",
       "suggestChart",
     ])
+  })
+
+  it("resources/list exposes AI instruction resources", async () => {
+    const result = await sendRequest(proc, "resources/list", {}, "resources-list")
+
+    expect(result.result).toBeDefined()
+    const uris = result.result.resources.map((r: { uri: string }) => r.uri).sort()
+    expect(uris).toEqual([
+      "semiotic://components",
+      "semiotic://examples",
+      "semiotic://schema",
+      "semiotic://system-prompt",
+    ])
+  })
+
+  it("resources/read returns the component index", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://components",
+    }, "resources-read-components")
+
+    expect(result.result).toBeDefined()
+    const text = result.result.contents[0].text
+    // Parse and assert the invariant `renderable + browserOnly === total`
+    // rather than pinning exact counts — the resource shape is the contract,
+    // not the specific component total (which drifts as charts are added).
+    const componentIndex = JSON.parse(text)
+    expect(componentIndex.totalComponents).toBeGreaterThan(0)
+    expect(componentIndex.renderableComponents).toBeGreaterThan(0)
+    expect(componentIndex.browserOnlyComponents).toBeGreaterThanOrEqual(0)
+    expect(componentIndex.renderableComponents + componentIndex.browserOnlyComponents)
+      .toBe(componentIndex.totalComponents)
+    // Spot-check a representative component so regressions in category/
+    // renderable wiring still fail visibly.
+    expect(text).toContain('"name": "GaugeChart"')
+    expect(text).toContain('"category": "ordinal"')
+  })
+
+  it("prompts/list exposes chart build and debug workflows", async () => {
+    const result = await sendRequest(proc, "prompts/list", {}, "prompts-list")
+
+    expect(result.result).toBeDefined()
+    const promptNames = result.result.prompts.map((p: { name: string }) => p.name).sort()
+    expect(promptNames).toEqual([
+      "build-semiotic-chart",
+      "debug-semiotic-chart",
+    ])
+  })
+
+  it("prompts/get returns an actionable chart workflow", async () => {
+    const result = await sendRequest(proc, "prompts/get", {
+      name: "build-semiotic-chart",
+      arguments: {
+        intent: "trend",
+        dataDescription: "monthly revenue rows with month, revenue, and region fields",
+      },
+    }, "prompts-get-build")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.messages[0].role).toBe("user")
+    const text = result.result.messages[0].content.text
+    expect(text).toContain("suggestChart")
+    expect(text).toContain("getSchema")
+    expect(text).toContain("renderChart")
+    expect(text).toContain("semiotic://system-prompt")
   })
 
   it("getSchema without component lists all components", async () => {
@@ -164,6 +231,10 @@ describe("MCP protocol round-trip", () => {
     expect(text).toContain("Available components")
     expect(text).toContain("LineChart")
     expect(text).toContain("BarChart")
+    expect(text).toContain("CandlestickChart [renderable]")
+    expect(text).toContain("GaugeChart [renderable]")
+    expect(text).toContain("LikertChart [renderable]")
+    expect(text).toContain("SwimlaneChart [renderable]")
   })
 
   it("getSchema with specific component returns schema", async () => {
@@ -233,6 +304,33 @@ describe("MCP protocol round-trip", () => {
         },
       },
     }, "render-1")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.isError).toBeFalsy()
+    const text = result.result.content[0].text
+    expect(text).toContain("<svg")
+    expect(text).toContain("</svg>")
+  })
+
+  it("renderChart works for a newly repaired registry component", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "renderChart",
+      arguments: {
+        component: "GaugeChart",
+        props: {
+          value: 72,
+          min: 0,
+          max: 100,
+          width: 240,
+          height: 180,
+          thresholds: [
+            { value: 50, color: "#2ca02c", label: "ok" },
+            { value: 80, color: "#f0ad4e", label: "warn" },
+            { value: 100, color: "#d62728", label: "crit" },
+          ],
+        },
+      },
+    }, "render-gauge")
 
     expect(result.result).toBeDefined()
     expect(result.result.isError).toBeFalsy()

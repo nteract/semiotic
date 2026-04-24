@@ -6,10 +6,10 @@ import type { ComponentType } from "react"
 
 import {
   LineChart, AreaChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap,
-  QuadrantChart, MultiAxisLineChart,
+  ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart,
   BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
   Histogram, ViolinPlot, RidgelinePlot,
-  PieChart, DonutChart, FunnelChart,
+  PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
   ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
 } from "semiotic/ai"
 
@@ -29,9 +29,12 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   Scatterplot: { component: Scatterplot, category: "xy" },
   BubbleChart: { component: BubbleChart, category: "xy" },
   Heatmap: { component: Heatmap, category: "xy" },
+  ScatterplotMatrix: { component: ScatterplotMatrix, category: "xy" },
+  MinimapChart: { component: MinimapChart, category: "xy" },
   ConnectedScatterplot: { component: ConnectedScatterplot, category: "xy" },
   QuadrantChart: { component: QuadrantChart, category: "xy" },
   MultiAxisLineChart: { component: MultiAxisLineChart, category: "xy" },
+  CandlestickChart: { component: CandlestickChart, category: "xy" },
 
   BarChart: { component: BarChart, category: "ordinal" },
   StackedBarChart: { component: StackedBarChart, category: "ordinal" },
@@ -44,7 +47,10 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   RidgelinePlot: { component: RidgelinePlot, category: "ordinal" },
   PieChart: { component: PieChart, category: "ordinal" },
   DonutChart: { component: DonutChart, category: "ordinal" },
+  GaugeChart: { component: GaugeChart, category: "ordinal" },
   FunnelChart: { component: FunnelChart, category: "ordinal" },
+  LikertChart: { component: LikertChart, category: "ordinal" },
+  SwimlaneChart: { component: SwimlaneChart, category: "ordinal" },
 
   ForceDirectedGraph: { component: ForceDirectedGraph, category: "network" },
   ChordDiagram: { component: ChordDiagram, category: "network" },

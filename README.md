@@ -356,7 +356,7 @@ const gif = await renderToAnimatedGif("line", data, { ... }, { fps: 12 })
 
 ## MCP Server
 
-Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, and get chart recommendations via tool calls.
+Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, read packaged AI guidance, and get chart recommendations via tool calls.
 
 ### Setup
 
@@ -373,17 +373,34 @@ Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desk
 }
 ```
 
-No API keys or authentication required. The server runs locally via stdio.
+No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors and web clients: `npx semiotic-mcp --http --port 3001`.
 
 ### Tools
 
 | Tool | Description |
 |------|-------------|
 | **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
-| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 30 chart types. Use before `renderChart` to look up valid props. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 43 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
 | **`suggestChart`** | Recommend chart types for a data sample. Pass `{ data: [{...}, ...] }` with 1–5 sample objects. Optionally include `intent` (`"comparison"`, `"trend"`, `"distribution"`, `"relationship"`, `"composition"`, `"geographic"`, `"network"`, `"hierarchy"`). Returns ranked suggestions with example props. |
 | **`diagnoseConfig`** | Check a chart configuration for common problems — empty data, bad dimensions, missing accessors, wrong data shape, and more. Returns a human-readable diagnostic report with actionable fixes. |
 | **`reportIssue`** | Generate a pre-filled GitHub issue URL for bug reports or feature requests. Pass `{ title: "...", body: "...", labels: ["bug"] }`. Returns a URL the user can open to submit. |
+| **`applyTheme`** | List named theme presets or return ThemeProvider/CSS/token usage for a preset such as `{ name: "tufte" }`. |
+
+### Resources
+
+| Resource | Description |
+|----------|-------------|
+| **`semiotic://schema`** | Full machine-readable component schema JSON. |
+| **`semiotic://components`** | Component index showing renderable/browser-only status and MCP categories. |
+| **`semiotic://system-prompt`** | Compact AI instructions with import rules, chart props, SSR guidance, and pitfalls. |
+| **`semiotic://examples`** | Copy-paste chart examples by data shape. |
+
+### Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| **`build-semiotic-chart`** | Reusable workflow for choosing a chart, reading schema, diagnosing props, and rendering a preview. |
+| **`debug-semiotic-chart`** | Reusable workflow for debugging invalid props, rendering failures, and issue reports. |
 
 ### Example: get schema for a component
 
@@ -453,17 +470,22 @@ Args: {
 For quick validation without an MCP client:
 
 ```bash
+npx semiotic-ai --list         # list components with import paths and renderability
+npx semiotic-ai --list --json  # machine-readable component index
+npx semiotic-ai --schema GaugeChart
 npx semiotic-ai --doctor       # validate component + props JSON
 npx semiotic-ai --schema       # dump all chart schemas
 npx semiotic-ai --compact      # compact schema (fewer tokens)
 ```
+
+`--doctor` uses the full `diagnoseConfig` checks when `dist` is available and falls back to schema-only validation in clean source checkouts.
 
 ## Documentation
 
 [Interactive docs and examples](https://semiotic.nteract.io)
 
 - [Getting Started](https://semiotic.nteract.io/getting-started)
-- [Charts](https://semiotic.nteract.io/charts) — all 38 chart types with live examples
+- [Charts](https://semiotic.nteract.io/charts) — chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
 - [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes

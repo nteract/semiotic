@@ -48,6 +48,12 @@ describe("validateProps — required props", () => {
       result.errors.some((e) => e.includes('"binSize" is required'))
     ).toBe(true)
   })
+
+  it("validates GaugeChart with value-only props", () => {
+    const result = validateProps("GaugeChart", { value: 72 })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
 })
 
 describe("validateProps — network component validation", () => {
