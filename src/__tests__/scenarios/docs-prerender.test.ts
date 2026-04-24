@@ -1,0 +1,83 @@
+import { describe, expect, it } from "vitest"
+import { extractRoutesFromSource, generatePage } from "../../../scripts/prerender.mjs"
+
+describe("docs prerender helpers", () => {
+  it("extracts nested docs routes without leaking the previous parent", () => {
+    const source = `
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="api" element={<Outlet />}>
+          <Route path="" element={<ApiIndex />} />
+          <Route path="charts" element={<ChartsApi />} />
+          <Route path="typedoc" element={<ApiDocs />} />
+        </Route>
+        <Route path="charts" element={<Outlet />}>
+          <Route path="line-chart" element={<LineChart />} />
+        </Route>
+        <Route path="theming" element={<Outlet />}>
+          <Route path="styling" element={<Styling />} />
+          <Route path="theme-provider" element={<ThemeProviderDocs />} />
+        </Route>
+        <Route path="features/styling" element={<Redirect />} />
+        <Route path="cookbook" element={<Outlet />}>
+          <Route path="timeline" element={<Timeline />} />
+        </Route>
+      </Routes>
+    `
+
+    const routes = extractRoutesFromSource(source)
+
+    expect(routes).toContain("")
+    expect(routes).toContain("api")
+    expect(routes).toContain("api/charts")
+    expect(routes).toContain("api/typedoc")
+    expect(routes).toContain("charts")
+    expect(routes).toContain("charts/line-chart")
+    expect(routes).toContain("theming/styling")
+    expect(routes).toContain("theming/theme-provider")
+    expect(routes).toContain("features/styling")
+    expect(routes).toContain("cookbook/timeline")
+    expect(routes).not.toContain("api/styling")
+  })
+
+  it("generates SEO metadata and a noscript fallback for the homepage", () => {
+    const shell = `
+      <html>
+        <head>
+          <title>Semiotic</title>
+          <link rel=canonical href=https://example.com/>
+        </head>
+        <body><noscript>
+          old fallback
+        </noscript><div id="root"></div></body>
+      </html>
+    `
+
+    const html = generatePage(shell, "")
+
+    expect(html).toContain("<title>Semiotic \u2014 Data Visualization for React</title>")
+    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/"')
+    expect(html).toContain("AI / Machine-readable docs")
+    expect(html).not.toContain("old fallback")
+  })
+
+  it("replaces minified canonical tags for nested routes", () => {
+    const html = generatePage(
+      '<html><head><title>Shell</title><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>',
+      "theming/styling"
+    )
+
+    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
+    expect(html).not.toContain("https://example.com")
+  })
+
+  it("does not duplicate injected metadata when rerun", () => {
+    const shell = '<html><head><title>Shell</title><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>'
+    const once = generatePage(shell, "")
+    const twice = generatePage(once, "theming/styling")
+
+    expect(twice.match(/<link rel="alternate" type="text\/plain" href="\/llms\.txt"/g)).toHaveLength(1)
+    expect(twice.match(/"@type":"SoftwareApplication"/g)).toHaveLength(1)
+    expect(twice).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
+  })
+})

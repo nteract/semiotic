@@ -15,7 +15,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs"
 import { resolve, dirname } from "path"
-import { fileURLToPath } from "url"
+import { fileURLToPath, pathToFileURL } from "url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
@@ -23,35 +23,50 @@ const APP_SRC = resolve(__dirname, "../docs/src/App.js")
 
 // ── Extract routes from App.js ──────────────────────────────────────────
 
-function extractRoutes() {
-  const source = readFileSync(APP_SRC, "utf-8")
-  const PARENTS = ["charts", "features", "cookbook", "frames", "playground", "recipes", "api"]
-  const routePattern = /path="([^"]+)"/g
-  const rawPaths = []
-  let match
-  while ((match = routePattern.exec(source)) !== null) {
-    rawPaths.push(match[1])
-  }
-
+export function extractRoutesFromSource(source) {
   const paths = new Set([""])
-  let currentParent = ""
-  for (const p of rawPaths) {
-    if (p === "*") continue
-    if (PARENTS.includes(p)) {
-      currentParent = p
-      paths.add(p)
-    } else if (!p.includes("/")) {
-      paths.add(currentParent ? `${currentParent}/${p}` : p)
-    } else {
-      paths.add(p)
+  const parentStack = []
+
+  for (const line of source.split(/\r?\n/)) {
+    const match = line.match(/<Route\b[^>]*\bpath="([^"]+)"/)
+    if (!match) continue
+
+    const rawPath = match[1]
+    if (rawPath === "*") continue
+
+    const indent = line.match(/^\s*/)[0].length
+    while (parentStack.length > 0 && parentStack[parentStack.length - 1].indent >= indent) {
+      parentStack.pop()
+    }
+
+    const parentPath = parentStack[parentStack.length - 1]?.path || ""
+    const routePath = rawPath === "/"
+      ? ""
+      : rawPath === ""
+        ? parentPath
+        : rawPath.includes("/")
+          ? rawPath.replace(/^\/+/, "")
+          : parentPath
+            ? `${parentPath}/${rawPath}`
+            : rawPath
+
+    paths.add(routePath)
+
+    if (line.includes("<Outlet")) {
+      parentStack.push({ indent, path: routePath })
     }
   }
+
   return Array.from(paths)
+}
+
+function extractRoutes() {
+  return extractRoutesFromSource(readFileSync(APP_SRC, "utf-8"))
 }
 
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
-function generatePage(shellHtml, routePath) {
+export function generatePage(shellHtml, routePath) {
   const title = routePath
     .split("/")
     .filter(Boolean)
@@ -70,17 +85,21 @@ function generatePage(shellHtml, routePath) {
     </nav>`
 
   // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
+  const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
   const jsonLd = '<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
+  const normalizedShell = shellHtml
+    .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
+    .replace(/<script\s+type=["']application\/ld\+json["']>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication".*?<\/script>/g, "")
 
-  return shellHtml
-    .replace(/<title>[^<]*<\/title>/, `<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" /><title>${fullTitle}</title>${jsonLd}`)
-    .replace(/<noscript>.*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
-    .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="https://semiotic3.nteract.io/${routePath}" />`)
+  return normalizedShell
+    .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}<title>${fullTitle}</title>${jsonLd}`)
+    .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
+    .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="https://semiotic3.nteract.io/${routePath}" />`)
 }
 
 // ── Main ────────────────────────────────────────────────────────────────
 
-function main() {
+export function prerender() {
   const shellPath = resolve(BUILD_DIR, "index.html")
   if (!existsSync(shellPath)) {
     console.error("docs/build/index.html not found. Run 'npm run website:build' first.")
@@ -92,7 +111,8 @@ function main() {
 
   console.log(`Pre-rendering ${routes.length} routes...`)
 
-  let created = 0
+  writeFileSync(shellPath, generatePage(shellHtml, ""))
+  let created = 1
   for (const route of routes) {
     if (route === "/" || route === "" || route === "*" || route.includes(":")) continue
     const dir = resolve(BUILD_DIR, route)
@@ -111,4 +131,6 @@ function main() {
   console.log(`\u2705 sitemap.txt written`)
 }
 
-main()
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  prerender()
+}

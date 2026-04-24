@@ -335,13 +335,13 @@ Regex-based CLAUDE.md parsing can still miss narrative/semantic drift. `check:su
 
 ## Docs & Publishing
 
-### Docs site prerendering
+### Docs site prerendering [GREEN]
 
-Homepage resolves to a JS shell. Prerendering improves SEO and LLM retrieval.
+`scripts/prerender.mjs` now rewrites the root `docs/build/index.html` as well as nested routes, so the homepage no longer remains a plain SPA shell after `website:build`. Route extraction is indentation-aware and covers nested `/api/*` and `/theming/*` routes; canonical URLs, LLM alternate links, JSON-LD, and noscript fallbacks are generated idempotently.
 
-### API Reference Documentation
+### API Reference Documentation [YELLOW]
 
-TypeDoc setup, prop table component, `/api` route. Not started.
+Baseline is present: `typedoc.json`, `docs:api:json`, `docs/src/pages/api/ApiReferencePage.js`, `/api/charts`, and `/api/typedoc`. Remaining work: richer component summaries/examples, stronger TypeDoc prop extraction, and a docs-route smoke test in CI that runs after a clean `website:build`.
 
 ---
 
