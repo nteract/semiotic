@@ -20,6 +20,7 @@ import { fileURLToPath, pathToFileURL } from "url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
 const APP_SRC = resolve(__dirname, "../docs/src/App.js")
+const SITE_URL = "https://semiotic3.nteract.io"
 
 // ── Extract routes from App.js ──────────────────────────────────────────
 
@@ -131,14 +132,21 @@ export function generatePage(shellHtml, routePath) {
   // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
   const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
   const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
-  const normalizedShell = shellHtml
-    .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
-    .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication"[\s\S]*?<\/script>/g, "")
+  const canonicalUrl = routePath ? `${SITE_URL}/${routePath}` : SITE_URL
+  let normalizedShell = shellHtml
+  let previousShell
+  do {
+    previousShell = normalizedShell
+    normalizedShell = normalizedShell
+      .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
+      .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication"[\s\S]*?<\/script>/g, "")
+  } while (normalizedShell !== previousShell)
 
   return normalizedShell
     .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}<title>${fullTitle}</title>${jsonLd}`)
     .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
-    .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="https://semiotic3.nteract.io/${routePath}" />`)
+    .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
+    .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
 }
 
 // ── Main ────────────────────────────────────────────────────────────────

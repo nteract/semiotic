@@ -62,6 +62,7 @@ describe("docs prerender helpers", () => {
       <html>
         <head>
           <title>Semiotic</title>
+          <meta property=og:url content=https://example.com/>
           <link rel=canonical href=https://example.com/>
         </head>
         <body><noscript>
@@ -73,7 +74,8 @@ describe("docs prerender helpers", () => {
     const html = generatePage(shell, "")
 
     expect(html).toContain("<title>Semiotic \u2014 Data Visualization for React</title>")
-    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/"')
+    expect(html).toContain('property="og:url" content="https://semiotic3.nteract.io"')
+    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io"')
     expect(html).toContain('data-jsonld="semiotic"')
     expect(html).toContain("AI / Machine-readable docs")
     expect(html).not.toContain("old fallback")
@@ -81,22 +83,25 @@ describe("docs prerender helpers", () => {
 
   it("replaces minified canonical tags for nested routes", () => {
     const html = generatePage(
-      '<html><head><title>Shell</title><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>',
+      '<html><head><title>Shell</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>',
       "theming/styling"
     )
 
+    expect(html).toContain('property="og:url" content="https://semiotic3.nteract.io/theming/styling"')
     expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
     expect(html).not.toContain("https://example.com")
   })
 
   it("does not duplicate injected metadata when rerun", () => {
-    const shell = '<html><head><title>Shell</title><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>'
+    const shell = '<html><head><title>Shell</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>'
     const once = generatePage(shell, "")
     const twice = generatePage(once, "theming/styling")
 
     expect(twice.match(/<link rel="alternate" type="text\/plain" href="\/llms\.txt"/g)).toHaveLength(1)
     expect(twice.match(/"@type":"SoftwareApplication"/g)).toHaveLength(1)
     expect(twice.match(/data-jsonld="semiotic"/g)).toHaveLength(1)
+    expect(twice.match(/property="og:url"/g)).toHaveLength(1)
+    expect(twice).toContain('property="og:url" content="https://semiotic3.nteract.io/theming/styling"')
     expect(twice).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
   })
 })
