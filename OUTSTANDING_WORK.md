@@ -315,13 +315,21 @@ O(log n) lookup for >10k points. Currently linear scan. 3-5 days.
 
 ## MCP & AI Tooling
 
-### MCP protocol compliance testing [RED]
+### MCP protocol compliance testing [GREEN]
 
-No integration test exercises the actual MCP protocol round-trip. Tested via CLI only.
+Actual stdio JSON-RPC round-trip coverage now lives in `src/__tests__/scenarios/mcp-protocol.test.ts` for initialize, tools, resources, prompts, renderChart, suggestChart, diagnoseConfig, reportIssue, and applyTheme. The same file includes a Streamable HTTP smoke test for session initialization and tools/list.
+
+### Shared AI chart recommendations [GREEN]
+
+`suggestChart` now shares one CommonJS recommendation engine with `npx semiotic-ai --suggest`, so MCP and CLI guidance stay aligned and can be tested without an MCP client.
+
+### Shared AI component metadata [GREEN]
+
+`ai/componentMetadata.cjs` is the shared source for component category/import/renderability metadata across the CLI, MCP resources, and surface parity checks.
 
 ### Schema freshness check [YELLOW]
 
-Regex-based parsing. Structural CLAUDE.md changes could cause silent drift.
+Regex-based CLAUDE.md parsing can still miss narrative/semantic drift. `check:surface` now guards shared component metadata parity, but behavior-contract tests are still needed for prop semantics.
 
 ---
 

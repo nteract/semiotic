@@ -12,12 +12,20 @@ const {
   metadataForComponent,
   schemaEntries,
 } = require("./componentMetadata.cjs")
+const {
+  formatSuggestionReport,
+  suggestCharts,
+} = require("./chartSuggestions.cjs")
 
 const FILES = {
   default: path.join(pkgRoot, "CLAUDE.md"),
   "--schema": path.join(__dirname, "schema.json"),
   "--compact": path.join(__dirname, "system-prompt.md"),
   "--examples": path.join(__dirname, "examples.md"),
+}
+
+function errorMessage(err) {
+  return err instanceof Error ? err.message : String(err)
 }
 
 const HELP = `
@@ -30,6 +38,7 @@ Usage:
   npx semiotic-ai --schema     Print ai/schema.json (all tool definitions)
   npx semiotic-ai --schema BarChart
                                 Print one component schema plus AI metadata
+  npx semiotic-ai --suggest     Recommend charts from { data, intent? } JSON
   npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
   npx semiotic-ai --doctor     Validate component + props JSON from stdin
@@ -159,6 +168,18 @@ function printSchemaOnlyDoctorResult(component, props) {
   }
 }
 
+function readJSONInput(usage) {
+  if (process.argv[3]) {
+    return process.argv.slice(3).join(" ")
+  }
+  if (!process.stdin.isTTY) {
+    return fs.readFileSync(0, "utf-8")
+  }
+
+  console.error(usage)
+  process.exit(1)
+}
+
 if (flag === "--help" || flag === "-h") {
   console.log(HELP)
   process.exit(0)
@@ -174,20 +195,22 @@ if (flag === "--schema" && process.argv[3]) {
   process.exit(0)
 }
 
-// --doctor: validate component + props from stdin or argv
-if (flag === "--doctor") {
-  let input = ""
-  if (process.argv[3]) {
-    // npx semiotic-ai --doctor '{"component":"LineChart","props":{...}}'
-    input = process.argv.slice(3).join(" ")
-  } else if (!process.stdin.isTTY) {
-    // echo '...' | npx semiotic-ai --doctor
-    input = fs.readFileSync("/dev/stdin", "utf-8")
-  } else {
-    console.error("Usage: npx semiotic-ai --doctor '{\"component\":\"LineChart\",\"props\":{\"data\":[...]}}'")
-    console.error("       echo '{...}' | npx semiotic-ai --doctor")
+if (flag === "--suggest") {
+  const input = readJSONInput("Usage: npx semiotic-ai --suggest '{\"data\":[{\"category\":\"A\",\"value\":10}],\"intent\":\"comparison\"}'")
+  try {
+    const args = JSON.parse(input)
+    const result = suggestCharts(args)
+    console.log(formatSuggestionReport(result))
+    process.exit(result.ok ? 0 : 1)
+  } catch (err) {
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
     process.exit(1)
   }
+}
+
+// --doctor: validate component + props from stdin or argv
+if (flag === "--doctor") {
+  const input = readJSONInput("Usage: npx semiotic-ai --doctor '{\"component\":\"LineChart\",\"props\":{\"data\":[...]}}'\n       echo '{...}' | npx semiotic-ai --doctor")
 
   try {
     const { component, props } = JSON.parse(input)

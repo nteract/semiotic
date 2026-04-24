@@ -3,7 +3,8 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  * MCP protocol compliance tests.
  *
  * Spawns the MCP server as a child process and exercises the full
- * JSON-RPC 2.0 round-trip over stdio for every registered tool.
+ * JSON-RPC 2.0 round-trip over stdio for every registered tool, plus
+ * a Streamable HTTP smoke test for session initialization.
  *
  * These tests validate:
  *   - Server responds to `initialize` with capabilities
@@ -15,9 +16,11 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  */
 
 import { spawn, type ChildProcess } from "child_process"
+import * as net from "net"
 import * as path from "path"
 
 const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
+const HTTP_START_RETRIES = 3
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -27,6 +30,172 @@ function spawnServer(): ChildProcess {
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env, NODE_ENV: "test" },
   })
+}
+
+/** Spawn the MCP server process in Streamable HTTP mode. */
+function spawnHTTPServer(port: number): ChildProcess {
+  return spawn("node", [SERVER_PATH, "--http", "--port", String(port)], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, NODE_ENV: "test" },
+  })
+}
+
+/** Reserve an open port long enough to avoid hard-coding one in tests. */
+function getOpenPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.once("error", reject)
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address()
+      if (!address || typeof address === "string") {
+        server.close(() => reject(new Error("Could not determine open port")))
+        return
+      }
+      server.close(() => resolve(address.port))
+    })
+  })
+}
+
+/** Wait for the HTTP server startup log before sending requests. */
+function waitForHTTPServer(proc: ChildProcess): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let stderr = ""
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      proc.stderr!.off("data", onData)
+      proc.off("exit", onExit)
+    }
+
+    const onData = (chunk: Buffer) => {
+      stderr += chunk.toString()
+      if (stderr.includes("Semiotic MCP server (HTTP) listening")) {
+        cleanup()
+        resolve()
+      }
+    }
+
+    const onExit = (code: number | null) => {
+      cleanup()
+      reject(new Error(`HTTP server exited with code ${code}: ${stderr}`))
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error(`Timeout waiting for HTTP server startup: ${stderr}`))
+    }, 10000)
+
+    proc.stderr!.on("data", onData)
+    proc.on("exit", onExit)
+  })
+}
+
+function parseSSEJSON(text: string): any {
+  const events = text.split(/\r?\n\r?\n/)
+  for (const event of events) {
+    const data = event
+      .split(/\r?\n/)
+      .filter(line => line.startsWith("data:"))
+      .map(line => line.replace(/^data:\s?/, ""))
+      .join("\n")
+    if (data) return JSON.parse(data)
+  }
+  throw new Error(`No SSE data line found: ${text}`)
+}
+
+function parseHTTPRPCBody(text: string, contentType: string | null): any {
+  if (!text) return undefined
+  if (contentType?.includes("application/json")) return JSON.parse(text)
+  if (contentType?.includes("text/event-stream")) return parseSSEJSON(text)
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return parseSSEJSON(text)
+  }
+}
+
+function waitForProcessExit(proc: ChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    if (proc.exitCode !== null || proc.signalCode !== null) {
+      resolve()
+      return
+    }
+
+    let settled = false
+
+    const cleanup = () => {
+      clearTimeout(graceTimeout)
+      clearTimeout(forceTimeout)
+      proc.off("exit", onExit)
+    }
+
+    const onExit = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }
+
+    const graceTimeout = setTimeout(() => {
+      if (proc.exitCode !== null || proc.signalCode !== null) return
+      try {
+        proc.kill("SIGKILL")
+      } catch {
+        // The process may have exited between the state check and kill call.
+      }
+    }, 1000)
+
+    const forceTimeout = setTimeout(() => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }, 5000)
+
+    proc.once("exit", onExit)
+  })
+}
+
+async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Promise<{
+  body?: any
+  response: Response
+  text: string
+}> {
+  const response = await fetch(`http://127.0.0.1:${port}`, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      ...(sessionId ? { "mcp-session-id": sessionId } : {}),
+    },
+    body: JSON.stringify(message),
+  })
+  const text = await response.text()
+  return {
+    body: parseHTTPRPCBody(text, response.headers.get("content-type")),
+    response,
+    text,
+  }
+}
+
+async function spawnReadyHTTPServer(): Promise<{ proc: ChildProcess; port: number }> {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < HTTP_START_RETRIES; attempt++) {
+    const port = await getOpenPort()
+    const proc = spawnHTTPServer(port)
+    try {
+      await waitForHTTPServer(proc)
+      return { proc, port }
+    } catch (err) {
+      lastError = err
+      proc.kill("SIGTERM")
+      await waitForProcessExit(proc)
+    }
+  }
+
+  throw lastError
 }
 
 /** Send a JSON-RPC request and wait for the response. */
@@ -276,6 +445,8 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.isError).toBeFalsy()
     const text = result.result.content[0].text
     expect(text).toContain("BarChart")
+    expect(result.result.structuredContent.ok).toBe(true)
+    expect(result.result.structuredContent.suggestions[0].component).toBe("BarChart")
   })
 
   it("suggestChart with empty data returns error", async () => {
@@ -465,5 +636,58 @@ describe("MCP protocol round-trip", () => {
 
     // MCP SDK returns an error for unknown tools
     expect(result.error || result.result?.isError).toBeTruthy()
+  })
+})
+
+describe("MCP HTTP transport smoke", () => {
+  let proc: ChildProcess
+  let port: number
+
+  beforeEach(async () => {
+    const server = await spawnReadyHTTPServer()
+    proc = server.proc
+    port = server.port
+  })
+
+  afterEach(() => {
+    proc.kill("SIGTERM")
+  })
+
+  it("initializes a Streamable HTTP session and lists tools", async () => {
+    const init = await sendHTTPRPC(port, {
+      jsonrpc: "2.0",
+      id: "http-init",
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    })
+
+    expect(init.response.status).toBe(200)
+    expect(init.body.result.serverInfo.name).toBe("semiotic")
+
+    const sessionId = init.response.headers.get("mcp-session-id")
+    expect(sessionId).toMatch(/^semiotic-/)
+
+    const initialized = await sendHTTPRPC(port, {
+      jsonrpc: "2.0",
+      method: "notifications/initialized",
+    }, sessionId!)
+    expect(initialized.response.status).toBe(202)
+
+    const tools = await sendHTTPRPC(port, {
+      jsonrpc: "2.0",
+      id: "http-tools",
+      method: "tools/list",
+      params: {},
+    }, sessionId!)
+
+    expect(tools.response.status).toBe(200)
+    const names = tools.body.result.tools.map((tool: { name: string }) => tool.name)
+    expect(names).toContain("getSchema")
+    expect(names).toContain("suggestChart")
+    expect(names).toContain("renderChart")
   })
 })
