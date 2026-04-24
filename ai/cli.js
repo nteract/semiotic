@@ -83,18 +83,21 @@ function printSingleComponentSchema(componentName) {
   console.log(JSON.stringify(payload, null, 2))
 }
 
+// Both helpers are only called from `validatePropsWithSchema` below, which
+// filters `undefined` / `null` out of `value` before reaching them — so
+// neither guards null here. CodeQL flags the dead branches if they return.
+
 function schemaTypeMatches(value, expectedType) {
   const expectedTypes = Array.isArray(expectedType) ? expectedType : [expectedType]
   return expectedTypes.some((type) => {
     if (type === "array") return Array.isArray(value)
-    if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value)
+    if (type === "object") return typeof value === "object" && !Array.isArray(value)
     return typeof value === type
   })
 }
 
 function describeActualType(value) {
   if (Array.isArray(value)) return "array"
-  if (value === null) return "null"
   return typeof value
 }
 
