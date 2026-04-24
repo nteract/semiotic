@@ -6799,6 +6799,137 @@ var require_dist = __commonJS({
   }
 });
 
+// ai/componentMetadata.cjs
+var require_componentMetadata = __commonJS({
+  "ai/componentMetadata.cjs"(exports2, module2) {
+    "use strict";
+    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"];
+    var COMPONENTS_BY_CATEGORY = {
+      xy: [
+        "LineChart",
+        "AreaChart",
+        "StackedAreaChart",
+        "Scatterplot",
+        "QuadrantChart",
+        "MultiAxisLineChart",
+        "CandlestickChart",
+        "BubbleChart",
+        "Heatmap",
+        "ConnectedScatterplot",
+        "ScatterplotMatrix",
+        "MinimapChart"
+      ],
+      ordinal: [
+        "BarChart",
+        "StackedBarChart",
+        "LikertChart",
+        "GroupedBarChart",
+        "SwarmPlot",
+        "BoxPlot",
+        "Histogram",
+        "ViolinPlot",
+        "RidgelinePlot",
+        "DotPlot",
+        "PieChart",
+        "DonutChart",
+        "GaugeChart",
+        "FunnelChart",
+        "SwimlaneChart"
+      ],
+      network: [
+        "ForceDirectedGraph",
+        "SankeyDiagram",
+        "ChordDiagram",
+        "TreeDiagram",
+        "Treemap",
+        "CirclePack",
+        "OrbitDiagram"
+      ],
+      geo: [
+        "ChoroplethMap",
+        "ProportionalSymbolMap",
+        "FlowMap",
+        "DistanceCartogram"
+      ],
+      realtime: [
+        "RealtimeLineChart",
+        "RealtimeHistogram",
+        "RealtimeSwarmChart",
+        "RealtimeWaterfallChart",
+        "RealtimeHeatmap"
+      ]
+    };
+    var COMPONENT_TO_CATEGORY = /* @__PURE__ */ new Map();
+    for (const [category, names] of Object.entries(COMPONENTS_BY_CATEGORY)) {
+      for (const name of names) {
+        COMPONENT_TO_CATEGORY.set(name, category);
+      }
+    }
+    function schemaEntries(schema2) {
+      return schema2.tools.map((tool) => tool.function);
+    }
+    function categoryForComponent(name) {
+      const category = COMPONENT_TO_CATEGORY.get(name);
+      if (!category) {
+        throw new Error(`No AI component metadata category for "${name}"`);
+      }
+      return category;
+    }
+    function importPathForCategory(category) {
+      return category === "geo" ? "semiotic/geo" : `semiotic/${category}`;
+    }
+    function metadataForComponent2(entryOrName) {
+      const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name;
+      const category = categoryForComponent(name);
+      return {
+        name,
+        category,
+        importPath: importPathForCategory(category),
+        renderable: category !== "realtime",
+        description: typeof entryOrName === "string" ? void 0 : entryOrName.description
+      };
+    }
+    function findComponent(schema2, name) {
+      const entries = schemaEntries(schema2);
+      const exact = entries.find((entry) => entry.name === name);
+      if (exact) return exact;
+      const lower = name.toLowerCase();
+      return entries.find((entry) => entry.name.toLowerCase() === lower);
+    }
+    function componentIndexFromSchema2(schema2) {
+      const components = schemaEntries(schema2).map(metadataForComponent2);
+      const categories = {};
+      for (const category of CATEGORY_ORDER) {
+        categories[category] = [];
+      }
+      for (const component of components) {
+        categories[component.category].push(component.name);
+      }
+      for (const names of Object.values(categories)) {
+        names.sort();
+      }
+      return {
+        version: schema2.version,
+        totalComponents: components.length,
+        renderableComponents: components.filter((component) => component.renderable).length,
+        browserOnlyComponents: components.filter((component) => !component.renderable).length,
+        categories,
+        components
+      };
+    }
+    module2.exports = {
+      CATEGORY_ORDER,
+      COMPONENTS_BY_CATEGORY,
+      categoryForComponent,
+      componentIndexFromSchema: componentIndexFromSchema2,
+      findComponent,
+      importPathForCategory,
+      metadataForComponent: metadataForComponent2,
+      schemaEntries
+    };
+  }
+});
+
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
@@ -31529,6 +31660,10 @@ ${errors.join("\n")}`
 
 // ai/mcp-server.ts
 var import_ai3 = require("semiotic/ai");
+var {
+  componentIndexFromSchema,
+  metadataForComponent
+} = require_componentMetadata();
 var schemaPath = path.resolve(__dirname, "../schema.json");
 var schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 var schemaByComponent = {};
@@ -31537,7 +31672,6 @@ for (const tool of schema.tools) {
 }
 var allComponentNames = Object.keys(schemaByComponent).sort();
 var componentNames = Object.keys(COMPONENT_REGISTRY).sort();
-var browserOnlyComponentNames = allComponentNames.filter((name) => !COMPONENT_REGISTRY[name]);
 var REPO = "nteract/semiotic";
 function aiFilePath(fileName) {
   return path.resolve(__dirname, "..", fileName);
@@ -31546,26 +31680,7 @@ function readAIFile(fileName) {
   return fs.readFileSync(aiFilePath(fileName), "utf-8");
 }
 function componentIndexJSON() {
-  const categories = {};
-  for (const [name, entry] of Object.entries(COMPONENT_REGISTRY)) {
-    categories[entry.category] ??= [];
-    categories[entry.category].push(name);
-  }
-  for (const names of Object.values(categories)) {
-    names.sort();
-  }
-  return JSON.stringify({
-    version: schema.version,
-    totalComponents: allComponentNames.length,
-    renderableComponents: componentNames.length,
-    browserOnlyComponents: browserOnlyComponentNames.length,
-    categories,
-    components: allComponentNames.map((name) => ({
-      name,
-      renderable: Boolean(COMPONENT_REGISTRY[name]),
-      category: COMPONENT_REGISTRY[name]?.category ?? "browser-only"
-    }))
-  }, null, 2);
+  return JSON.stringify(componentIndexFromSchema(schema), null, 2);
 }
 function textResource(uri, mimeType, text) {
   return {
@@ -31590,8 +31705,7 @@ function promptMessage(text) {
 async function getSchemaHandler(args) {
   const component = args.component;
   if (!component) {
-    const renderable = new Set(Object.keys(COMPONENT_REGISTRY));
-    const list = allComponentNames.map((name) => renderable.has(name) ? `${name} [renderable]` : name);
+    const list = allComponentNames.map((name) => metadataForComponent(name).renderable ? `${name} [renderable]` : name);
     return {
       content: [{ type: "text", text: `Available components (${allComponentNames.length}):
 ${list.join(", ")}
@@ -31613,7 +31727,7 @@ Pass { component: '<name>' } to get the prop schema for a specific component.` }
       isError: true
     };
   }
-  const renderableNote = COMPONENT_REGISTRY[component] ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
+  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
   return {
     content: [{ type: "text", text: `${renderableNote}
 

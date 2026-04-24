@@ -87,6 +87,7 @@
     "ai/schema.json",
     "ai/system-prompt.md",
     "ai/examples.md",
+    "ai/componentMetadata.cjs",
     "ai/cli.js",
     "ai/dist/*.js",
     "CLAUDE.md",

@@ -17,6 +17,7 @@ const files = {
   validation: path.join(ROOT, "src/components/charts/shared/validationMap.ts"),
   semioticAI: path.join(ROOT, "src/components/semiotic-ai.ts"),
   componentRegistry: path.join(ROOT, "ai/componentRegistry.ts"),
+  componentMetadata: path.join(ROOT, "ai/componentMetadata.cjs"),
   serverConfigs: path.join(ROOT, "src/components/server/serverChartConfigs.ts"),
   chartsDir: path.join(ROOT, "src/components/charts"),
 }
@@ -54,8 +55,12 @@ function parseValidationComponents() {
   return names
 }
 
+function loadSchemaDocument() {
+  return JSON.parse(read(files.schema))
+}
+
 function parseSchemaComponents() {
-  const schema = JSON.parse(read(files.schema))
+  const schema = loadSchemaDocument()
   return new Set(schema.tools.map(tool => tool.function.name))
 }
 
@@ -111,6 +116,14 @@ const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
 const realtimeCharts = new Set([...validation].filter(name => name.startsWith("Realtime")))
+const { componentIndexFromSchema } = require(files.componentMetadata)
+const componentMetadata = componentIndexFromSchema(loadSchemaDocument())
+const metadataComponents = new Set(componentMetadata.components.map(component => component.name))
+const metadataRenderable = new Set(
+  componentMetadata.components
+    .filter(component => component.renderable)
+    .map(component => component.name)
+)
 
 const expectedAIExports = new Set([...validation].filter(name => !geoCharts.has(name)))
 const expectedMCPRegistry = new Set([...validation].filter(name => !realtimeCharts.has(name)))
@@ -138,6 +151,11 @@ assertNoUnexpected("semiotic/ai chart exports", semioticAI, expectedAIExports)
 
 assertNoMissing("MCP component registry", mcpRegistry, expectedMCPRegistry)
 assertNoUnexpected("MCP component registry", mcpRegistry, expectedMCPRegistry)
+
+assertNoMissing("AI component metadata", metadataComponents, validation)
+assertNoUnexpected("AI component metadata", metadataComponents, validation)
+assertNoMissing("AI renderable metadata", metadataRenderable, expectedMCPRegistry)
+assertNoUnexpected("AI renderable metadata", metadataRenderable, expectedMCPRegistry)
 
 assertNoMissing("serverChartConfigs", serverConfigs, expectedServerConfigs)
 
@@ -167,5 +185,5 @@ console.log("AI/MCP surface parity check passed")
 console.log(`  ${validation.size} validation/schema components`)
 console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo charts intentionally excluded)`)
 console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime charts intentionally excluded)`)
+console.log(`  ${metadataComponents.size} shared AI metadata components`)
 console.log(`  ${serverConfigs.size} server render configs (+ ${SERVER_CONFIG_EXCLUDED.size} documented HOC-SSR exclusions)`)
-

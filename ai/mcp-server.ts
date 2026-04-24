@@ -34,6 +34,33 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { diagnoseConfig } from "semiotic/ai"
 
+const {
+  componentIndexFromSchema,
+  metadataForComponent,
+} = require("./componentMetadata.cjs") as {
+  componentIndexFromSchema: (schema: any) => {
+    version?: string
+    totalComponents: number
+    renderableComponents: number
+    browserOnlyComponents: number
+    categories: Record<string, string[]>
+    components: Array<{
+      name: string
+      category: string
+      importPath: string
+      renderable: boolean
+      description?: string
+    }>
+  }
+  metadataForComponent: (entryOrName: string | { name: string; description?: string }) => {
+    name: string
+    category: string
+    importPath: string
+    renderable: boolean
+    description?: string
+  }
+}
+
 // Load schema.json for version info
 const schemaPath = path.resolve(__dirname, "../schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
@@ -46,7 +73,6 @@ for (const tool of schema.tools) {
 
 const allComponentNames = Object.keys(schemaByComponent).sort()
 const componentNames = Object.keys(COMPONENT_REGISTRY).sort()
-const browserOnlyComponentNames = allComponentNames.filter(name => !COMPONENT_REGISTRY[name])
 const REPO = "nteract/semiotic"
 
 function aiFilePath(fileName: string): string {
@@ -58,28 +84,7 @@ function readAIFile(fileName: string): string {
 }
 
 function componentIndexJSON(): string {
-  const categories: Record<string, string[]> = {}
-  for (const [name, entry] of Object.entries(COMPONENT_REGISTRY)) {
-    categories[entry.category] ??= []
-    categories[entry.category].push(name)
-  }
-
-  for (const names of Object.values(categories)) {
-    names.sort()
-  }
-
-  return JSON.stringify({
-    version: schema.version,
-    totalComponents: allComponentNames.length,
-    renderableComponents: componentNames.length,
-    browserOnlyComponents: browserOnlyComponentNames.length,
-    categories,
-    components: allComponentNames.map(name => ({
-      name,
-      renderable: Boolean(COMPONENT_REGISTRY[name]),
-      category: COMPONENT_REGISTRY[name]?.category ?? "browser-only",
-    })),
-  }, null, 2)
+  return JSON.stringify(componentIndexFromSchema(schema), null, 2)
 }
 
 function textResource(uri: URL, mimeType: string, text: string) {
@@ -113,8 +118,7 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   const component = args.component
 
   if (!component) {
-    const renderable = new Set(Object.keys(COMPONENT_REGISTRY))
-    const list = allComponentNames.map(name => renderable.has(name) ? `${name} [renderable]` : name)
+    const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
     return {
       content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
     }
@@ -129,7 +133,7 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
     }
   }
 
-  const renderableNote = COMPONENT_REGISTRY[component] ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
+  const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
   return {
     content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}` }],
   }
