@@ -1049,17 +1049,13 @@ export function renderGeoToStaticSVG(props: StreamGeoFrameProps & ThemeAwareProp
 
 // ── HOC-level renderChart API ─────────────────────────────────────────
 
-/** Chart component name to frame type + props mapping */
-type ChartName =
-  | "LineChart" | "AreaChart" | "StackedAreaChart" | "Scatterplot"
-  | "BubbleChart" | "ConnectedScatterplot" | "Heatmap" | "CandlestickChart" | "Sparkline"
-  | "BarChart" | "StackedBarChart" | "GroupedBarChart"
-  | "PieChart" | "DonutChart" | "SwimlaneChart"
-  | "Histogram" | "BoxPlot" | "ViolinPlot" | "SwarmPlot"
-  | "DotPlot" | "RidgelinePlot" | "LikertChart" | "FunnelChart" | "GaugeChart"
-  | "ForceDirectedGraph" | "SankeyDiagram" | "ChordDiagram"
-  | "TreeDiagram" | "Treemap" | "CirclePack"
-  | "ChoroplethMap" | "ProportionalSymbolMap" | "FlowMap"
+/**
+ * Chart component names renderable via `renderChart()`. Derived from the
+ * registry so adding a chart to `CHART_CONFIGS` automatically widens this
+ * union — no second edit required, no silent drift like the CandlestickChart
+ * gap that motivated this refactor.
+ */
+type ChartName = keyof typeof CHART_CONFIGS
 
 interface RenderChartOptions {
   /** Output format — currently only "svg" is synchronous */
@@ -1119,9 +1115,24 @@ export function renderChart(
   const renderFn = renderers[config.frameType]
   let svg = renderFn(frameProps2)
 
-  // GaugeChart post-processing: inject needle SVG
-  if (component === "GaugeChart" && frameProps2.__gauge) {
-    const g = frameProps2.__gauge
+  // GaugeChart post-processing: inject needle SVG. The gauge config's
+  // buildProps attaches a `__gauge` descriptor (see serverChartConfigs.ts —
+  // `{ gMin, gMax, sweep, arcWidth, value, startAngleDeg, thresholds }`).
+  // With `CHART_CONFIGS` now typed via `satisfies`, TypeScript narrows
+  // frameProps2 to a union where most shapes don't carry `__gauge`, so we
+  // cast it gated on the runtime component-name check above.
+  type GaugeDescriptor = {
+    gMin: number
+    gMax: number
+    sweep: number
+    arcWidth: number
+    value?: number
+    startAngleDeg: number
+    thresholds?: Array<{ value: number; color: string; label?: string }>
+  }
+  const gaugeProps = frameProps2 as { __gauge?: GaugeDescriptor }
+  if (component === "GaugeChart" && gaugeProps.__gauge) {
+    const g = gaugeProps.__gauge
     const resolvedMargin = common.margin || { top: 20, right: 20, bottom: 30, left: 40 }
     const innerW = (width || 300) - resolvedMargin.left - resolvedMargin.right
     const innerH = (height || 300) - resolvedMargin.top - resolvedMargin.bottom

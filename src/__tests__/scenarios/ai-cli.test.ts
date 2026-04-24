@@ -22,7 +22,16 @@ describe("semiotic-ai CLI", () => {
     const result = runCLI(["--list"])
 
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain("Semiotic components (43 total, 38 renderable)")
+    // Assert the header shape, not the exact counts — otherwise this test
+    // has to be edited every time a chart is added or removed, even though
+    // the CLI's output contract hasn't changed.
+    const header = result.stdout.match(/Semiotic components \((\d+) total, (\d+) renderable\)/)
+    expect(header).not.toBeNull()
+    const [, total, renderable] = header!
+    expect(Number(total)).toBeGreaterThan(Number(renderable))
+    expect(Number(renderable)).toBeGreaterThan(0)
+    // Sample a few representative entries across categories so a regression
+    // in category wiring or renderability flagging still fails loudly.
     expect(result.stdout).toContain("GaugeChart [renderable] import semiotic/ordinal")
     expect(result.stdout).toContain("FlowMap [renderable] import semiotic/geo")
     expect(result.stdout).toContain("RealtimeLineChart [browser-only] import semiotic/realtime")
@@ -44,9 +53,14 @@ describe("semiotic-ai CLI", () => {
       }>
     }
 
-    expect(index.totalComponents).toBe(43)
-    expect(index.renderableComponents).toBe(38)
-    expect(index.browserOnlyComponents).toBe(5)
+    // Invariants, not pinned counts — `renderable + browserOnly === total`
+    // is the actual contract. Pinning exact numbers makes every chart
+    // addition a mandatory test edit.
+    expect(index.totalComponents).toBeGreaterThan(0)
+    expect(index.renderableComponents).toBeGreaterThan(0)
+    expect(index.browserOnlyComponents).toBeGreaterThanOrEqual(0)
+    expect(index.renderableComponents + index.browserOnlyComponents).toBe(index.totalComponents)
+    expect(index.components).toHaveLength(index.totalComponents)
     expect(index.components).toContainEqual(
       expect.objectContaining({
         name: "GaugeChart",

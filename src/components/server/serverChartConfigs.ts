@@ -708,7 +708,11 @@ const flowMap: ChartConfig = {
 
 // ── Registry ───────────────────────────────────────────────────────────
 
-export const CHART_CONFIGS: Record<string, ChartConfig> = {
+// `satisfies` (not `: Record<string, ChartConfig>`) so TypeScript preserves
+// the literal key union. Downstream code derives `ChartName` via
+// `keyof typeof CHART_CONFIGS` and stays in lockstep automatically — adding
+// a chart here makes it available to renderChart() without a second edit.
+export const CHART_CONFIGS = {
   Sparkline: sparkline,
   LineChart: lineChart,
   AreaChart: areaChart,
@@ -755,4 +759,4 @@ export const CHART_CONFIGS: Record<string, ChartConfig> = {
   ChoroplethMap: choroplethMap,
   ProportionalSymbolMap: proportionalSymbolMap,
   FlowMap: flowMap,
-}
+} satisfies Record<string, ChartConfig>

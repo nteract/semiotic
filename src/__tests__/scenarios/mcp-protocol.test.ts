@@ -175,8 +175,17 @@ describe("MCP protocol round-trip", () => {
 
     expect(result.result).toBeDefined()
     const text = result.result.contents[0].text
-    expect(text).toContain('"totalComponents": 43')
-    expect(text).toContain('"renderableComponents": 38')
+    // Parse and assert the invariant `renderable + browserOnly === total`
+    // rather than pinning exact counts — the resource shape is the contract,
+    // not the specific component total (which drifts as charts are added).
+    const componentIndex = JSON.parse(text)
+    expect(componentIndex.totalComponents).toBeGreaterThan(0)
+    expect(componentIndex.renderableComponents).toBeGreaterThan(0)
+    expect(componentIndex.browserOnlyComponents).toBeGreaterThanOrEqual(0)
+    expect(componentIndex.renderableComponents + componentIndex.browserOnlyComponents)
+      .toBe(componentIndex.totalComponents)
+    // Spot-check a representative component so regressions in category/
+    // renderable wiring still fail visibly.
     expect(text).toContain('"name": "GaugeChart"')
     expect(text).toContain('"category": "ordinal"')
   })
