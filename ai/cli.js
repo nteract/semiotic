@@ -24,6 +24,10 @@ const FILES = {
   "--examples": path.join(__dirname, "examples.md"),
 }
 
+function errorMessage(err) {
+  return err instanceof Error ? err.message : String(err)
+}
+
 const HELP = `
 semiotic-ai — Dump Semiotic AI context to stdout
 
@@ -199,7 +203,7 @@ if (flag === "--suggest") {
     console.log(formatSuggestionReport(result))
     process.exit(result.ok ? 0 : 1)
   } catch (err) {
-    console.error(`Failed to parse input: ${err.message}`)
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
     process.exit(1)
   }
 }

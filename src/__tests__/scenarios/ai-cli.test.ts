@@ -267,4 +267,11 @@ describe("semiotic-ai CLI", () => {
     expect(result.status).toBe(1)
     expect(result.stdout).toContain("Pass { data:")
   })
+
+  it("--suggest reports invalid JSON parse errors", () => {
+    const result = runCLI(["--suggest", "{not json"])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain("Failed to parse input:")
+  })
 })

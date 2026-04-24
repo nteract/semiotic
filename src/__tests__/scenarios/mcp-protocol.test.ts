@@ -122,15 +122,36 @@ function waitForProcessExit(proc: ChildProcess): Promise<void> {
       return
     }
 
-    const timeout = setTimeout(() => {
+    let settled = false
+
+    const cleanup = () => {
+      clearTimeout(graceTimeout)
+      clearTimeout(forceTimeout)
       proc.off("exit", onExit)
-      resolve()
-    }, 1000)
+    }
 
     const onExit = () => {
-      clearTimeout(timeout)
+      if (settled) return
+      settled = true
+      cleanup()
       resolve()
     }
+
+    const graceTimeout = setTimeout(() => {
+      if (proc.exitCode !== null || proc.signalCode !== null) return
+      try {
+        proc.kill("SIGKILL")
+      } catch {
+        // The process may have exited between the state check and kill call.
+      }
+    }, 1000)
+
+    const forceTimeout = setTimeout(() => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }, 5000)
 
     proc.once("exit", onExit)
   })
