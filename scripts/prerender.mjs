@@ -23,18 +23,62 @@ const APP_SRC = resolve(__dirname, "../docs/src/App.js")
 
 // ── Extract routes from App.js ──────────────────────────────────────────
 
+function collectRouteOpeningTags(source) {
+  const tags = []
+  const routePattern = /<Route\b/g
+  let match
+
+  while ((match = routePattern.exec(source)) !== null) {
+    const start = match.index
+    const lineStart = source.lastIndexOf("\n", start) + 1
+    const indent = source.slice(lineStart, start).match(/^\s*/)[0].length
+    let quote = null
+    let braceDepth = 0
+    let end = -1
+
+    for (let i = start; i < source.length; i++) {
+      const char = source[i]
+
+      if (quote) {
+        if (char === "\\") {
+          i++
+        } else if (char === quote) {
+          quote = null
+        }
+        continue
+      }
+
+      if (char === "\"" || char === "'" || char === "`") {
+        quote = char
+      } else if (char === "{") {
+        braceDepth++
+      } else if (char === "}" && braceDepth > 0) {
+        braceDepth--
+      } else if (char === ">" && braceDepth === 0) {
+        end = i + 1
+        break
+      }
+    }
+
+    if (end === -1) continue
+    tags.push({ tag: source.slice(start, end), indent })
+    routePattern.lastIndex = end
+  }
+
+  return tags
+}
+
 export function extractRoutesFromSource(source) {
   const paths = new Set([""])
   const parentStack = []
 
-  for (const line of source.split(/\r?\n/)) {
-    const match = line.match(/<Route\b[^>]*\bpath="([^"]+)"/)
+  for (const { tag, indent } of collectRouteOpeningTags(source)) {
+    const match = tag.match(/\bpath\s*=\s*["']([^"']+)["']/)
     if (!match) continue
 
     const rawPath = match[1]
     if (rawPath === "*") continue
 
-    const indent = line.match(/^\s*/)[0].length
     while (parentStack.length > 0 && parentStack[parentStack.length - 1].indent >= indent) {
       parentStack.pop()
     }
@@ -52,7 +96,7 @@ export function extractRoutesFromSource(source) {
 
     paths.add(routePath)
 
-    if (line.includes("<Outlet")) {
+    if (!/\/\s*>$/.test(tag.trim())) {
       parentStack.push({ indent, path: routePath })
     }
   }
@@ -86,10 +130,10 @@ export function generatePage(shellHtml, routePath) {
 
   // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
   const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
-  const jsonLd = '<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
+  const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
   const normalizedShell = shellHtml
     .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
-    .replace(/<script\s+type=["']application\/ld\+json["']>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication".*?<\/script>/g, "")
+    .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication"[\s\S]*?<\/script>/g, "")
 
   return normalizedShell
     .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}<title>${fullTitle}</title>${jsonLd}`)

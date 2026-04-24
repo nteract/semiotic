@@ -7,9 +7,20 @@ describe("docs prerender helpers", () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="api" element={<Outlet />}>
-          <Route path="" element={<ApiIndex />} />
+          <Route
+            path=""
+            element={
+              <>
+                <h1>API</h1>
+                <ApiIndex />
+              </>
+            }
+          />
           <Route path="charts" element={<ChartsApi />} />
-          <Route path="typedoc" element={<ApiDocs />} />
+          <Route
+            path="typedoc"
+            element={<ApiDocs />}
+          />
         </Route>
         <Route path="charts" element={<Outlet />}>
           <Route path="line-chart" element={<LineChart />} />
@@ -19,8 +30,14 @@ describe("docs prerender helpers", () => {
           <Route path="theme-provider" element={<ThemeProviderDocs />} />
         </Route>
         <Route path="features/styling" element={<Redirect />} />
-        <Route path="cookbook" element={<Outlet />}>
-          <Route path="timeline" element={<Timeline />} />
+        <Route
+          path="cookbook"
+          element={<Outlet />}
+        >
+          <Route
+            path="timeline"
+            element={<Timeline />}
+          />
         </Route>
       </Routes>
     `
@@ -57,6 +74,7 @@ describe("docs prerender helpers", () => {
 
     expect(html).toContain("<title>Semiotic \u2014 Data Visualization for React</title>")
     expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/"')
+    expect(html).toContain('data-jsonld="semiotic"')
     expect(html).toContain("AI / Machine-readable docs")
     expect(html).not.toContain("old fallback")
   })
@@ -78,6 +96,7 @@ describe("docs prerender helpers", () => {
 
     expect(twice.match(/<link rel="alternate" type="text\/plain" href="\/llms\.txt"/g)).toHaveLength(1)
     expect(twice.match(/"@type":"SoftwareApplication"/g)).toHaveLength(1)
+    expect(twice.match(/data-jsonld="semiotic"/g)).toHaveLength(1)
     expect(twice).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
   })
 })
