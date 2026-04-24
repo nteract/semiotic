@@ -130,6 +130,8 @@ type SuggestChartResult =
         component: string
         confidence: string
         reason: string
+        setup?: string[]
+        derivedData?: Record<string, unknown>
         props: Record<string, string>
       }>
     }

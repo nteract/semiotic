@@ -136,8 +136,82 @@ describe("semiotic-ai CLI", () => {
 
     expect(result.status).toBe(0)
     expect(result.stdout).toContain("BarChart")
+    expect(result.stdout).toContain("data={data}")
     expect(result.stdout).toContain("categoryAccessor")
     expect(result.stdout).toContain("valueAccessor")
+  })
+
+  it("--suggest makes network recommendations copy-pasteable", () => {
+    const result = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "network",
+        data: [
+          { source: "A", target: "B", value: 3 },
+          { source: "B", target: "C", value: 2 },
+        ],
+      }),
+    ])
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("ForceDirectedGraph")
+    expect(result.stdout).toContain("const nodes =")
+    expect(result.stdout).toContain("nodes={nodes}")
+    expect(result.stdout).not.toContain("auto-inferred")
+  })
+
+  it("--suggest points hierarchy charts at the provided root sample", () => {
+    const result = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "hierarchy",
+        data: [
+          {
+            name: "root",
+            children: [{ name: "leaf", value: 10 }],
+          },
+        ],
+      }),
+    ])
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("Treemap")
+    expect(result.stdout).toContain("data={data[0]}")
+    expect(result.stdout).not.toContain("rootObject")
+  })
+
+  it("--suggest only recommends heatmaps for two dimensions plus a value", () => {
+    const relationship = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "relationship",
+        data: [
+          { x: 1, y: 2, group: "A" },
+          { x: 2, y: 4, group: "B" },
+        ],
+      }),
+    ])
+
+    expect(relationship.status).toBe(0)
+    expect(relationship.stdout).toContain("Scatterplot")
+    expect(relationship.stdout).not.toContain("Heatmap")
+
+    const heatmap = runCLI([
+      "--suggest",
+      JSON.stringify({
+        intent: "relationship",
+        data: [
+          { region: "West", quarter: "Q1", sales: 10 },
+          { region: "West", quarter: "Q2", sales: 15 },
+        ],
+      }),
+    ])
+
+    expect(heatmap.status).toBe(0)
+    expect(heatmap.stdout).toContain("Heatmap")
+    expect(heatmap.stdout).toContain('xAccessor="region"')
+    expect(heatmap.stdout).toContain('yAccessor="quarter"')
+    expect(heatmap.stdout).toContain('valueAccessor="sales"')
   })
 
   it("--suggest rejects invalid input", () => {

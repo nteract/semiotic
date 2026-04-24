@@ -20,6 +20,7 @@ import * as net from "net"
 import * as path from "path"
 
 const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
+const HTTP_START_RETRIES = 3
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -90,9 +91,28 @@ function waitForHTTPServer(proc: ChildProcess): Promise<void> {
 }
 
 function parseSSEJSON(text: string): any {
-  const dataLine = text.split("\n").find(line => line.startsWith("data: "))
-  if (!dataLine) throw new Error(`No SSE data line found: ${text}`)
-  return JSON.parse(dataLine.slice("data: ".length))
+  const events = text.split(/\r?\n\r?\n/)
+  for (const event of events) {
+    const data = event
+      .split(/\r?\n/)
+      .filter(line => line.startsWith("data:"))
+      .map(line => line.replace(/^data:\s?/, ""))
+      .join("\n")
+    if (data) return JSON.parse(data)
+  }
+  throw new Error(`No SSE data line found: ${text}`)
+}
+
+function parseHTTPRPCBody(text: string, contentType: string | null): any {
+  if (!text) return undefined
+  if (contentType?.includes("application/json")) return JSON.parse(text)
+  if (contentType?.includes("text/event-stream")) return parseSSEJSON(text)
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return parseSSEJSON(text)
+  }
 }
 
 async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Promise<{
@@ -111,10 +131,28 @@ async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Pr
   })
   const text = await response.text()
   return {
-    body: text ? parseSSEJSON(text) : undefined,
+    body: parseHTTPRPCBody(text, response.headers.get("content-type")),
     response,
     text,
   }
+}
+
+async function spawnReadyHTTPServer(): Promise<{ proc: ChildProcess; port: number }> {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < HTTP_START_RETRIES; attempt++) {
+    const port = await getOpenPort()
+    const proc = spawnHTTPServer(port)
+    try {
+      await waitForHTTPServer(proc)
+      return { proc, port }
+    } catch (err) {
+      lastError = err
+      proc.kill("SIGTERM")
+    }
+  }
+
+  throw lastError
 }
 
 /** Send a JSON-RPC request and wait for the response. */
@@ -563,9 +601,9 @@ describe("MCP HTTP transport smoke", () => {
   let port: number
 
   beforeEach(async () => {
-    port = await getOpenPort()
-    proc = spawnHTTPServer(port)
-    await waitForHTTPServer(proc)
+    const server = await spawnReadyHTTPServer()
+    proc = server.proc
+    port = server.port
   })
 
   afterEach(() => {

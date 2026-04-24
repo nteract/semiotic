@@ -6983,6 +6983,22 @@ var require_chartSuggestions = __commonJS({
         hierarchyFields
       };
     }
+    function jsxString(value) {
+      return `"${value}"`;
+    }
+    function jsxExpression(value) {
+      return `{${value}}`;
+    }
+    function uniqueNetworkNodes(data, sourceField, targetField) {
+      const ids = /* @__PURE__ */ new Set();
+      for (const datum of data) {
+        const source = datum[sourceField];
+        const target = datum[targetField];
+        if (source != null) ids.add(source);
+        if (target != null) ids.add(target);
+      }
+      return Array.from(ids).map((id) => ({ id }));
+    }
     function suggestCharts2(args = {}) {
       const data = args.data;
       const intent = args.intent;
@@ -7023,28 +7039,32 @@ var require_chartSuggestions = __commonJS({
             component: "SankeyDiagram",
             confidence: "high",
             reason: `Data has ${src}->${tgt} with ${networkFields.value} - ideal for flow visualization`,
-            props: { edges: "data", sourceAccessor: `"${src}"`, targetAccessor: `"${tgt}"`, valueAccessor: `"${networkFields.value}"` }
+            props: { edges: jsxExpression("data"), sourceAccessor: jsxString(src), targetAccessor: jsxString(tgt), valueAccessor: jsxString(networkFields.value) }
           });
         }
+        const nodes = uniqueNetworkNodes(data, src, tgt);
         suggestions.push({
           component: "ForceDirectedGraph",
           confidence: networkFields.value ? "medium" : "high",
-          reason: `Data has ${src}->${tgt} edges - force layout shows network structure. Nodes are auto-inferred from edges when not provided.`,
-          props: { edges: "data", sourceAccessor: `"${src}"`, targetAccessor: `"${tgt}"` }
+          reason: `Data has ${src}->${tgt} edges - force layout shows network structure. ForceDirectedGraph requires explicit nodes, derived here from unique source/target IDs.`,
+          setup: [`const nodes = ${JSON.stringify(nodes, null, 2)}`],
+          derivedData: { nodes },
+          props: { nodes: jsxExpression("nodes"), edges: jsxExpression("data"), nodeIDAccessor: jsxString("id"), sourceAccessor: jsxString(src), targetAccessor: jsxString(tgt) }
         });
       }
-      if (hasHierarchy && (!intent || intent === "hierarchy")) {
+      if (hasHierarchy && hierarchyFields.children && Array.isArray(sample[hierarchyFields.children]) && (!intent || intent === "hierarchy")) {
+        const childrenAccessor = hierarchyFields.children;
         suggestions.push({
           component: "Treemap",
           confidence: "high",
-          reason: `Data has nested ${hierarchyFields.children || "parent"} structure - treemap shows hierarchical proportions`,
-          props: { data: "rootObject", childrenAccessor: `"${hierarchyFields.children || "children"}"`, ...numericFields[0] ? { valueAccessor: `"${numericFields[0]}"` } : {} }
+          reason: `Data has nested ${childrenAccessor} structure - treemap shows hierarchical proportions. Use data[0] as the root node from the provided sample.`,
+          props: { data: jsxExpression("data[0]"), childrenAccessor: jsxString(childrenAccessor), ...numericFields[0] ? { valueAccessor: jsxString(numericFields[0]) } : {} }
         });
         suggestions.push({
           component: "TreeDiagram",
           confidence: "medium",
-          reason: "Tree layout shows hierarchical relationships",
-          props: { data: "rootObject", childrenAccessor: `"${hierarchyFields.children || "children"}"` }
+          reason: `Tree layout shows hierarchical relationships. Use data[0] as the root node from the provided sample.`,
+          props: { data: jsxExpression("data[0]"), childrenAccessor: jsxString(childrenAccessor) }
         });
       }
       if (hasGeo && (!intent || intent === "geographic")) {
@@ -7053,7 +7073,7 @@ var require_chartSuggestions = __commonJS({
           component: "ProportionalSymbolMap",
           confidence: "high",
           reason: `Data has ${geoFields.lat}/${geoFields.lon} coordinates - map shows spatial distribution`,
-          props: { points: "data", xAccessor: `"${geoFields.lon}"`, yAccessor: `"${geoFields.lat}"`, ...sizeField ? { sizeBy: `"${sizeField}"` } : {} }
+          props: { points: jsxExpression("data"), xAccessor: jsxString(geoFields.lon), yAccessor: jsxString(geoFields.lat), ...sizeField ? { sizeBy: jsxString(sizeField) } : {} }
         });
       }
       if (hasTime && hasNum && (!intent || intent === "trend")) {
@@ -7063,14 +7083,14 @@ var require_chartSuggestions = __commonJS({
           component: "LineChart",
           confidence: "high",
           reason: `Data has dates (${timeField}) and numeric values (${valueField}) - line chart shows trends over time`,
-          props: { data: "data", xAccessor: `"${timeField}"`, yAccessor: `"${valueField}"`, ...hasCat ? { lineBy: `"${stringFields[0]}"`, colorBy: `"${stringFields[0]}"` } : {} }
+          props: { data: jsxExpression("data"), xAccessor: jsxString(timeField), yAccessor: jsxString(valueField), ...hasCat ? { lineBy: jsxString(stringFields[0]), colorBy: jsxString(stringFields[0]) } : {} }
         });
         if (hasCat) {
           suggestions.push({
             component: "StackedAreaChart",
             confidence: "medium",
             reason: `Multiple categories (${stringFields[0]}) over time - stacked area shows composition trends`,
-            props: { data: "data", xAccessor: `"${timeField}"`, yAccessor: `"${valueField}"`, areaBy: `"${stringFields[0]}"`, colorBy: `"${stringFields[0]}"` }
+            props: { data: jsxExpression("data"), xAccessor: jsxString(timeField), yAccessor: jsxString(valueField), areaBy: jsxString(stringFields[0]), colorBy: jsxString(stringFields[0]) }
           });
         }
       }
@@ -7082,7 +7102,7 @@ var require_chartSuggestions = __commonJS({
             component: "BarChart",
             confidence: hasTime ? "medium" : "high",
             reason: `Categorical field (${catField}) with values (${valField}) - bar chart for comparison`,
-            props: { data: "data", categoryAccessor: `"${catField}"`, valueAccessor: `"${valField}"` }
+            props: { data: jsxExpression("data"), categoryAccessor: jsxString(catField), valueAccessor: jsxString(valField) }
           });
         }
         if (stringFields.length >= 2 && (!intent || intent === "composition")) {
@@ -7090,7 +7110,7 @@ var require_chartSuggestions = __commonJS({
             component: "StackedBarChart",
             confidence: "medium",
             reason: `Two categorical fields (${stringFields.join(", ")}) - stacked bar shows composition within categories`,
-            props: { data: "data", categoryAccessor: `"${catField}"`, valueAccessor: `"${valField}"`, stackBy: `"${stringFields[1]}"` }
+            props: { data: jsxExpression("data"), categoryAccessor: jsxString(catField), valueAccessor: jsxString(valField), stackBy: jsxString(stringFields[1]) }
           });
         }
         if (!intent || intent === "distribution") {
@@ -7098,7 +7118,7 @@ var require_chartSuggestions = __commonJS({
             component: "Histogram",
             confidence: "medium",
             reason: `Numeric distribution of ${valField} - histogram shows value spread`,
-            props: { data: "data", categoryAccessor: `"${catField}"`, valueAccessor: `"${valField}"` }
+            props: { data: jsxExpression("data"), categoryAccessor: jsxString(catField), valueAccessor: jsxString(valField) }
           });
         }
         if (!intent || intent === "composition") {
@@ -7108,7 +7128,7 @@ var require_chartSuggestions = __commonJS({
               component: "DonutChart",
               confidence: "medium",
               reason: `${uniqueCats} categories - donut chart shows proportional composition`,
-              props: { data: "data", categoryAccessor: `"${catField}"`, valueAccessor: `"${valField}"` }
+              props: { data: jsxExpression("data"), categoryAccessor: jsxString(catField), valueAccessor: jsxString(valField) }
             });
           }
         }
@@ -7120,24 +7140,27 @@ var require_chartSuggestions = __commonJS({
           component: "Scatterplot",
           confidence: "high",
           reason: `Two numeric fields (${xField}, ${yField}) - scatterplot shows relationships`,
-          props: { data: "data", xAccessor: `"${xField}"`, yAccessor: `"${yField}"`, ...hasCat ? { colorBy: `"${stringFields[0]}"` } : {}, ...numericFields[2] ? { sizeBy: `"${numericFields[2]}"` } : {} }
+          props: { data: jsxExpression("data"), xAccessor: jsxString(xField), yAccessor: jsxString(yField), ...hasCat ? { colorBy: jsxString(stringFields[0]) } : {}, ...numericFields[2] ? { sizeBy: jsxString(numericFields[2]) } : {} }
         });
         if (numericFields.length >= 3) {
           suggestions.push({
             component: "BubbleChart",
             confidence: "medium",
             reason: "Three numeric fields - bubble chart adds size dimension to scatter",
-            props: { data: "data", xAccessor: `"${xField}"`, yAccessor: `"${yField}"`, sizeBy: `"${numericFields[2]}"` }
+            props: { data: jsxExpression("data"), xAccessor: jsxString(xField), yAccessor: jsxString(yField), sizeBy: jsxString(numericFields[2]) }
           });
         }
-        if (hasCat) {
-          suggestions.push({
-            component: "Heatmap",
-            confidence: "medium",
-            reason: "Numeric values across dimensions - heatmap shows density/intensity",
-            props: { data: "data", xAccessor: `"${xField}"`, yAccessor: `"${stringFields[0]}"`, valueAccessor: `"${numericFields[0]}"` }
-          });
-        }
+      }
+      if (stringFields.length >= 2 && numericFields.length >= 1 && (!intent || intent === "relationship" || intent === "distribution" || intent === "composition")) {
+        const xField = stringFields[0];
+        const yField = stringFields[1];
+        const valueField = numericFields[0];
+        suggestions.push({
+          component: "Heatmap",
+          confidence: "medium",
+          reason: `Two categorical fields (${xField}, ${yField}) plus numeric values (${valueField}) - heatmap shows intensity across dimensions`,
+          props: { data: jsxExpression("data"), xAccessor: jsxString(xField), yAccessor: jsxString(yField), valueAccessor: jsxString(valueField) }
+        });
       }
       return {
         ok: true,
@@ -7158,9 +7181,13 @@ Try providing intent ('${VALID_INTENTS.join("', '")}') to narrow recommendations
       }
       const lines = result.suggestions.map((suggestion, i) => {
         const propsStr = Object.entries(suggestion.props).map(([k, v]) => `${k}=${v}`).join(" ");
+        const setup = suggestion.setup ? `${suggestion.setup.join("\n")}
+` : "";
         return `${i + 1}. **${suggestion.component}** (${suggestion.confidence} confidence)
    ${suggestion.reason}
-   \`<${suggestion.component} ${propsStr} />\``;
+\`\`\`tsx
+${setup}<${suggestion.component} ${propsStr} />
+\`\`\``;
       });
       const themingTip = `
 ---
