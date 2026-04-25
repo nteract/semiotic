@@ -182,9 +182,9 @@ All four planned variables implemented:
 
 Theme presets updated: Tufte and Journalist presets include `annotation`, `tickFontFamily`, `legendSize`. `themeToCSS()` and `themeToTokens()` emit the new tokens. Server `themeStyles()` resolves the new fields with fallbacks.
 
-### ThemeProvider useEffect timing lag [YELLOW]
+### ThemeProvider useEffect timing lag [DONE]
 
-`ThemeInitializer` uses `useEffect` to sync the store, causing CSS variables to be one render behind on initial mount. Mitigated by inline CSS vars on `ThemeCSSWrapper`'s div, but the architecture is fragile. Fix: resolve theme synchronously during render via `useSyncExternalStore` or store initialization.
+`ThemeProvider` now resolves the requested preset/object theme synchronously and seeds the scoped store through provider initialization. `useTheme()`, chart theme defaults, and `ThemeCSSWrapper` CSS variables see the requested theme on the first child render. Forced-colors initialization is also synchronous and restores the default light theme when forced-colors exits.
 
 ### Canvas theme bridge fragility [YELLOW]
 
