@@ -49,6 +49,7 @@ import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
 import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
 import type { StreamRendererFn } from "./renderers/types"
 import { resolveNodeColor } from "./sceneUtils"
+import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
@@ -407,6 +408,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendCategoryAccessor,
+      onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
       canvasPreRenderers,
@@ -519,6 +522,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // on every pointermove. Initialized to LIGHT_THEME.primary so the first
     // hover before a paint still returns a valid color.
     const themePrimaryRef = useRef<string>(LIGHT_THEME.primary)
+    const lastLegendCategoriesRef = useRef<string[]>([])
 
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
@@ -936,6 +940,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onPointerMove(e)
     }, [onPointerMove])
 
+    const emitLegendCategories = useCallback(() => {
+      if (!onCategoriesChange || !legendCategoryAccessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], legendCategoryAccessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onCategoriesChange(categories)
+    }, [legendCategoryAccessor, onCategoriesChange])
+
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -963,6 +975,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Compute scene graph (scales + scene nodes) — only when data changed
       if (needsDataRepaint && !isTransitioning) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        emitLegendCategories()
       }
 
       const dpr = getDevicePixelRatio()

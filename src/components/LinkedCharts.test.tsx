@@ -1,7 +1,7 @@
 import React from "react"
-import { render, fireEvent, act as rtlAct } from "@testing-library/react"
+import { render, fireEvent, act as rtlAct, waitFor } from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
-import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, estimateLegendRowCount } from "./LinkedCharts"
+import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, useLinkedChartCategories, estimateLegendRowCount } from "./LinkedCharts"
 import { CategoryColorProvider } from "./CategoryColors"
 import type { Datum } from "./charts/shared/datumTypes"
 
@@ -146,6 +146,35 @@ describe("LinkedCharts", () => {
     expect(container.querySelector("svg")).toBeTruthy()
     expect(container.textContent).toContain("North")
     expect(container.textContent).toContain("South")
+  })
+
+  it("builds and shrinks unified legend categories from child chart registrations", async () => {
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories)
+      return <div>child</div>
+    }
+
+    const { container, rerender } = render(
+      <LinkedCharts>
+        <RegisteringChart categories={["A", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("A")
+      expect(container.textContent).toContain("B")
+    })
+
+    rerender(
+      <LinkedCharts>
+        <RegisteringChart categories={["A"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("A")
+      expect(container.textContent).not.toContain("B")
+    })
   })
 
   it("does not render legend when showLegend is false", () => {

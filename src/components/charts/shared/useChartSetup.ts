@@ -18,7 +18,7 @@
 "use client"
 import type { Datum } from "./datumTypes"
 
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
@@ -163,6 +163,15 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     width,
     height,
   } = input
+  const isPushMode = rawData === undefined
+  const [frameCategories, setFrameCategories] = useState<string[]>([])
+
+  const onCategoriesChange = useCallback((categories: string[]) => {
+    setFrameCategories(prev => {
+      if (prev.length === categories.length && prev.every((v, i) => v === categories[i])) return prev
+      return categories
+    })
+  }, [])
 
   // ── Selection hooks (always called) ────────────────────────────────────
   const colorByField = typeof input.colorBy === "string" ? input.colorBy : undefined
@@ -196,8 +205,13 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     return Array.from(vals)
   }, [data, colorBy])
 
+  const activeCategories = useMemo(() => {
+    if (isPushMode && frameCategories.length > 0) return frameCategories
+    return allCategories
+  }, [isPushMode, frameCategories, allCategories])
+
   // ── Legend interaction ─────────────────────────────────────────────────
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
 
   // ── Merge hover highlight > legend selection > cross-chart selection ───
   const effectiveSelectionHook = useMemo(() => {
@@ -219,6 +233,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     legendPosition: legendPositionProp,
     userMargin,
     defaults: marginDefaults,
+    categories: isPushMode ? activeCategories : undefined,
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────
@@ -234,8 +249,12 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
       props.legendHighlightedCategory = legendState.highlightedCategory
       props.legendIsolatedCategories = legendState.isolatedCategories
     }
+    if (isPushMode && colorBy) {
+      props.legendCategoryAccessor = colorBy
+      props.onCategoriesChange = onCategoriesChange
+    }
     return props
-  }, [legend, legendPosition, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories])
+  }, [legend, legendPosition, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
 
   // ── Loading / empty state (computed after all hooks) ───────────────────
   const loadingEl = renderLoadingState(loading, width, height)
@@ -244,7 +263,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   return {
     colorScale,
-    allCategories,
+    allCategories: activeCategories,
     legendState,
     effectiveSelectionHook,
     activeSelectionHook,

@@ -6,6 +6,7 @@ import { createLegend } from "./legendUtils"
 import { getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor } from "./types"
 import type { LegendPosition } from "./hooks"
+import { useLinkedChartCategories } from "../../LinkedCharts"
 
 /**
  * Hook that discovers categories from streamed (pushed) data and builds
@@ -76,6 +77,16 @@ export function useStreamingLegend({
     [isPushMode, colorBy, extractCategory]
   )
 
+  const setCategoryDomain = useCallback((categories: string[]) => {
+    if (!isPushMode || !colorBy) return
+    const next = Array.from(new Set(categories.map(String)))
+    const current = orderedRef.current
+    if (current.length === next.length && current.every((v, i) => v === next[i])) return
+    categoriesRef.current = new Set(next)
+    orderedRef.current = next
+    setVersion(v => v + 1)
+  }, [isPushMode, colorBy])
+
   /** Wrap push to intercept data for category discovery */
   const wrapPush = useCallback(
     (originalPush: (d: Datum) => void) => {
@@ -104,6 +115,9 @@ export function useStreamingLegend({
     orderedRef.current = []
     setVersion(v => v + 1)
   }, [])
+
+  const linkedCategories = isPushMode && colorBy ? orderedRef.current : []
+  useLinkedChartCategories(linkedCategories)
 
   // Build legend from discovered categories
   const streamingLegend = useMemo(() => {
@@ -146,6 +160,13 @@ export function useStreamingLegend({
     wrapPush,
     wrapPushMany,
     resetCategories,
+    categories: orderedRef.current,
+    categoryDomainProps: isPushMode && colorBy
+      ? {
+        legendCategoryAccessor: colorBy,
+        onCategoriesChange: setCategoryDomain,
+      }
+      : {},
     streamingLegend,
     streamingMarginAdjust,
   }

@@ -19,6 +19,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 /**
  * LineChart component props
@@ -391,6 +392,14 @@ export const LineChart = forwardRef(
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
+  const isPushMode = data === undefined
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy,
+    colorScheme,
+    showLegend: directLabel && showLegend === undefined ? false : showLegend,
+    legendPosition: legendPositionProp,
+  })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("LineChart", safeData, "xAccessor", xAccessor)
@@ -717,7 +726,8 @@ export const LineChart = forwardRef(
     return Array.from(vals)
   }, [effectiveData, colorBy])
 
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
+  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
 
   // Merge hover highlight > legend selection > cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
@@ -899,6 +909,18 @@ export const LineChart = forwardRef(
     userMargin,
     defaults: directLabelMarginDefaults,
   })
+  const effectiveLegend = streaming.streamingLegend || legend
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return margin
+  }, [margin, streaming.streamingMarginAdjust])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -961,7 +983,7 @@ export const LineChart = forwardRef(
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: effectiveMargin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -969,7 +991,8 @@ export const LineChart = forwardRef(
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend, legendPosition }),
+    ...streaming.categoryDomainProps,
+    ...(effectiveLegend && { legend: effectiveLegend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

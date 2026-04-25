@@ -235,6 +235,42 @@ describe("StreamXYFrame", () => {
       expect(ref.current!.getData().length).toBe(3)
     })
 
+    it("emits legend category domain changes after push, remove, update, and clear", async () => {
+      const ref = React.createRef<StreamXYFrameHandle>()
+      const onCategoriesChange = vi.fn()
+      render(
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          runtimeMode="streaming"
+          timeAccessor="t"
+          valueAccessor="v"
+          pointIdAccessor="id"
+          legendCategoryAccessor="series"
+          onCategoriesChange={onCategoriesChange}
+        />
+      )
+
+      await act(async () => {
+        ref.current!.pushMany([
+          { id: "a", t: 1, v: 10, series: "A" },
+          { id: "b", t: 2, v: 20, series: "B" },
+        ])
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
+
+      await act(async () => { ref.current!.remove("b") })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
+
+      await act(async () => {
+        ref.current!.update("a", d => ({ ...d, series: "C" }))
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["C"])
+
+      await act(async () => { ref.current!.clear() })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith([])
+    })
+
     it("clear empties the data buffer", async () => {
       const ref = React.createRef<StreamXYFrameHandle>()
       render(

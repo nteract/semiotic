@@ -222,6 +222,42 @@ describe("StreamOrdinalFrame", () => {
       expect(ref.current!.getData().length).toBe(3)
     })
 
+    it("emits legend category domain changes after push, remove, update, and clear", async () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
+      const onCategoriesChange = vi.fn()
+      render(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          runtimeMode="streaming"
+          categoryAccessor="cat"
+          valueAccessor="val"
+          dataIdAccessor="id"
+          legendCategoryAccessor="cat"
+          onCategoriesChange={onCategoriesChange}
+        />
+      )
+
+      await act(async () => {
+        ref.current!.pushMany([
+          { id: "a", cat: "A", val: 10 },
+          { id: "b", cat: "B", val: 20 },
+        ])
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
+
+      await act(async () => { ref.current!.remove("b") })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
+
+      await act(async () => {
+        ref.current!.update("a", d => ({ ...d, cat: "C" }))
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["C"])
+
+      await act(async () => { ref.current!.clear() })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith([])
+    })
+
     it("replace swaps the full dataset in one call", async () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
       render(

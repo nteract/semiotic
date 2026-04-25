@@ -14,6 +14,7 @@ import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
+import { useLinkedChartCategories } from "../../LinkedCharts"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -445,9 +446,21 @@ export function useChartLegendAndMargin({
     ? showLegend
     : linkedLegendActive ? false : !!colorBy
 
+  const legendCategories = useMemo(() => {
+    if (!colorBy) return []
+    if (categories && categories.length > 0) return categories
+    const vals = new Set<string>()
+    for (const d of data) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [categories, colorBy, data])
+  useLinkedChartCategories(colorBy ? legendCategories : [])
+
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-    const built = createLegend({ data, colorBy, colorScale, getColor, categories })
+    const built = createLegend({ data, colorBy, colorScale, getColor, categories: legendCategories })
     // Suppress empty legends — when a chart using the push API mounts with no
     // `data` yet and no explicit `categories`, createLegend returns a shell
     // with zero items. Returning it would reserve margin for a legend that
@@ -456,7 +469,7 @@ export function useChartLegendAndMargin({
     const totalItems = built.legendGroups.reduce((sum, g) => sum + g.items.length, 0)
     if (totalItems === 0) return undefined
     return built
-  }, [shouldShowLegend, colorBy, data, colorScale, categories])
+  }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const margin = useMemo<MarginType>(() => {
     const userSides: Partial<MarginType> = typeof userMargin === "number"

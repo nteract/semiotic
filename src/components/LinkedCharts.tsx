@@ -1,11 +1,12 @@
 "use client"
 import * as React from "react"
-import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, useCallback } from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
 import type { ResolutionMode } from "./store/SelectionStore"
 import { ObservationProvider } from "./store/ObservationStore"
 import { useLinkedHover, useSelection } from "./store/useSelection"
-import { useCategoryColors } from "./CategoryColors"
+import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
+import { DEFAULT_COLORS } from "./charts/shared/colorUtils"
 import Legend from "./Legend"
 import type { LegendGroup } from "./types/legendTypes"
 import { useResponsiveSize } from "./stream/useResponsiveSize"
@@ -38,6 +39,49 @@ const LinkedLegendContext = createContext<boolean>(false)
 /** Hook: returns true when a parent LinkedCharts is handling the legend. */
 export function useLinkedLegendSuppression(): boolean {
   return useContext(LinkedLegendContext)
+}
+
+interface LinkedCategoryRegistry {
+  registerCategories: (id: string, categories: string[]) => void
+  unregisterCategories: (id: string) => void
+}
+
+const LinkedCategoryRegistryContext = createContext<LinkedCategoryRegistry | null>(null)
+
+function uniqueCategories(categories: string[]): string[] {
+  const seen = new Set<string>()
+  const unique: string[] = []
+  for (const category of categories) {
+    if (seen.has(category)) continue
+    seen.add(category)
+    unique.push(category)
+  }
+  return unique
+}
+
+function sameCategories(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
+}
+
+/** Register a chart's current color categories with the nearest LinkedCharts. */
+export function useLinkedChartCategories(categories: string[]): void {
+  const registry = useContext(LinkedCategoryRegistryContext)
+  const id = useId()
+  const categoriesKey = categories.join("\0")
+  const stableCategories = useMemo(
+    () => categoriesKey ? uniqueCategories(categoriesKey.split("\0")) : [],
+    [categoriesKey]
+  )
+
+  useEffect(() => {
+    if (!registry) return
+    registry.registerCategories(id, stableCategories)
+    return () => registry.unregisterCategories(id)
+  }, [registry, id, stableCategories])
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────
@@ -299,7 +343,45 @@ export function LinkedCharts({
   legendSelectionName = "legend",
   legendField = "category",
 }: LinkedChartsProps) {
-  const categoryColors = useCategoryColors()
+  const parentCategoryColors = useCategoryColors()
+  const [registeredCategories, setRegisteredCategories] = useState<Record<string, string[]>>({})
+
+  const registry = useMemo<LinkedCategoryRegistry>(() => ({
+    registerCategories: (id, categories) => {
+      const nextCategories = uniqueCategories(categories)
+      setRegisteredCategories(prev => {
+        if (sameCategories(prev[id] ?? [], nextCategories)) return prev
+        return { ...prev, [id]: nextCategories }
+      })
+    },
+    unregisterCategories: (id) => {
+      setRegisteredCategories(prev => {
+        if (!(id in prev)) return prev
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+    }
+  }), [])
+
+  const dynamicCategories = useMemo(() => {
+    const merged: string[] = []
+    for (const categories of Object.values(registeredCategories)) {
+      for (const category of categories) merged.push(category)
+    }
+    return uniqueCategories(merged)
+  }, [registeredCategories])
+
+  const categoryColors = useMemo(() => {
+    const map: Record<string, string> = { ...(parentCategoryColors ?? {}) }
+    let paletteIndex = Object.keys(map).length
+    for (const category of dynamicCategories) {
+      if (map[category]) continue
+      map[category] = DEFAULT_COLORS[paletteIndex % DEFAULT_COLORS.length]
+      paletteIndex++
+    }
+    return map
+  }, [parentCategoryColors, dynamicCategories])
 
   // Determine if we should show a unified legend
   const shouldShowLegend = showLegend !== undefined
@@ -310,25 +392,29 @@ export function LinkedCharts({
     <SelectionProvider>
       <ObservationProvider>
         {selections && <ResolutionInit selections={selections} />}
-        <LinkedLegendContext.Provider value={shouldShowLegend}>
-          {shouldShowLegend && legendPosition === "top" && categoryColors && (
-            <LinkedLegend
-              categoryColors={categoryColors}
-              interaction={legendInteraction}
-              selectionName={legendSelectionName}
-              field={legendField}
-            />
-          )}
-          {children}
-          {shouldShowLegend && legendPosition === "bottom" && categoryColors && (
-            <LinkedLegend
-              categoryColors={categoryColors}
-              interaction={legendInteraction}
-              selectionName={legendSelectionName}
-              field={legendField}
-            />
-          )}
-        </LinkedLegendContext.Provider>
+        <LinkedCategoryRegistryContext.Provider value={registry}>
+          <CategoryColorProvider colors={categoryColors}>
+            <LinkedLegendContext.Provider value={shouldShowLegend}>
+              {shouldShowLegend && legendPosition === "top" && (
+                <LinkedLegend
+                  categoryColors={categoryColors}
+                  interaction={legendInteraction}
+                  selectionName={legendSelectionName}
+                  field={legendField}
+                />
+              )}
+              {children}
+              {shouldShowLegend && legendPosition === "bottom" && (
+                <LinkedLegend
+                  categoryColors={categoryColors}
+                  interaction={legendInteraction}
+                  selectionName={legendSelectionName}
+                  field={legendField}
+                />
+              )}
+            </LinkedLegendContext.Provider>
+          </CategoryColorProvider>
+        </LinkedCategoryRegistryContext.Provider>
       </ObservationProvider>
     </SelectionProvider>
   )

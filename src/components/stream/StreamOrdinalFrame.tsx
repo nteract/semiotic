@@ -65,6 +65,7 @@ import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
 import { trapezoidCanvasRenderer, funnelLabelRenderer } from "./renderers/trapezoidCanvasRenderer"
 import { barFunnelHatchRenderer, barFunnelLabelRenderer } from "./renderers/barFunnelCanvasRenderer"
+import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
@@ -284,6 +285,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendCategoryAccessor,
+      onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -348,6 +351,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const hoverRef = useRef<HoverData | null>(null)
+    const lastLegendCategoriesRef = useRef<string[]>([])
 
     // ── State ────────────────────────────────────────────────────────────
 
@@ -709,6 +713,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       onPointerMove(e)
     }, [onPointerMove])
 
+    const emitLegendCategories = useCallback(() => {
+      if (!onCategoriesChange || !legendCategoryAccessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], legendCategoryAccessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onCategoriesChange(categories)
+    }, [legendCategoryAccessor, onCategoriesChange])
+
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
@@ -733,6 +745,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const wasDirty = dirtyRef.current
       if (wasDirty && !transitionActive) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        emitLegendCategories()
         dirtyRef.current = false
       }
 
