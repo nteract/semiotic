@@ -132,8 +132,9 @@
     "size": "size-limit",
     "check:schema": "node scripts/check-schema-freshness.js",
     "check:surface": "node scripts/check-surface-parity.js",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run dist:prod && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && rm -rf dist && npm run dist:prod"
+    "check:ssr": "node scripts/check-ssr-alignment.js",
+    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ssr && npm run dist:prod && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ssr && rm -rf dist && npm run dist:prod"
   },
   "targets": {
     "website": {

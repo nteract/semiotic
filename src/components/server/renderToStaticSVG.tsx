@@ -422,10 +422,12 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
 
   const content = (
     <>
+      {props.backgroundGraphics}
       {grid}
-      {annotationNodes}
       {dataMarks}
       {axes}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -494,6 +496,15 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
   const margin = { ...defaultMargin, ...props.margin }
+  // Match the XY frame: reserve legend space BEFORE computing inner dims so
+  // the layout doesn't draw under the legend.
+  const legendPos = props.legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top, 40)
+  }
   const innerWidth = size[0] - margin.left - margin.right
   const innerHeight = size[1] - margin.top - margin.bottom
 
@@ -621,11 +632,57 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     .map((label, i) => networkLabelToSVG(label, i))
     .filter(Boolean)
 
+  // Network annotations: layout assigns absolute pixel coords to nodes, so
+  // overlay annotations use raw `x`/`y` numbers directly. `staticAnnotations`
+  // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
+  const annotationNodes = props.annotations ? renderStaticAnnotations({
+    annotations: props.annotations,
+    scales: {},
+    layout: { width: innerWidth, height: innerHeight },
+    theme,
+    idPrefix: props._idPrefix,
+  }) : null
+
+  // Network legend: parity with the XY/Ordinal auto-build. Source is the
+  // node list (one entry per unique colorBy/nodeIDAccessor value); layout-
+  // produced node positions are irrelevant here, only the categorical set
+  // matters. `extractCategories` operates on the raw input data.
+  const networkLegend = props.showLegend ? (() => {
+    const accessorName = (a: any): string | undefined =>
+      typeof a === "string" ? a : undefined
+    const colorAccessor = accessorName(props.colorBy) || accessorName(props.nodeIDAccessor)
+    const legendSource = props.nodes && props.nodes.length > 0
+      ? (props.nodes as any[])
+      // Fall back to deriving categories from edge endpoints when nodes
+      // weren't provided directly (a common shape for force charts).
+      : Array.from(new Set(
+        (Array.isArray(props.edges) ? props.edges : []).flatMap((e: any) => [
+          typeof e.source === "string" ? e.source : e.source?.id,
+          typeof e.target === "string" ? e.target : e.target?.id,
+        ]).filter(Boolean)
+      )).map((id) => ({ id }))
+    const categories = extractCategories(legendSource, colorAccessor)
+    if (categories.length === 0) return null
+    return renderStaticLegend({
+      categories,
+      colorScheme: props.colorScheme,
+      theme,
+      position: props.legendPosition || "right",
+      totalWidth: size[0],
+      totalHeight: size[1],
+      margin,
+      hasTitle: !!props.title,
+    })
+  })() : null
+
   const content = (
     <>
+      {props.backgroundGraphics}
       {edgeElements}
       {nodeElements}
       {labelElements}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -636,7 +693,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
-        idPrefix: props._idPrefix,
+      legend: networkLegend,
+      idPrefix: props._idPrefix,
     })
   )
 }
@@ -910,10 +968,12 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
 
   const content = (
     <>
+      {props.backgroundGraphics}
       {grid}
-      {annotationNodes}
       {dataMarks}
       {axes}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -938,6 +998,15 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
   const margin = { ...defaultMargin, ...props.margin }
+  // Reserve legend space BEFORE computing inner dims so the geo projection
+  // fits inside the post-legend area. Same shape as XY/Network.
+  const legendPos = props.legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right ?? 0, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left ?? 0, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom ?? 0, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top ?? 0, 40)
+  }
   const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
   const height = size[1] - (margin.top ?? 0) - (margin.bottom ?? 0)
 
@@ -975,8 +1044,30 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   store.computeScene({ width, height })
 
   if (store.scene.length === 0) {
+    // Even when the data scene is empty, bg/fg graphics and annotations are
+    // valid surfaces a caller may have legitimately set. Pipe them through
+    // so the empty-data path doesn't silently drop them.
+    const emptyContent = (props.backgroundGraphics || props.foregroundGraphics || props.annotations)
+      ? (
+        <>
+          {props.backgroundGraphics}
+          {props.annotations ? renderStaticAnnotations({
+            annotations: props.annotations,
+            scales: {
+              geoProjection: store.scales?.projectedPoint
+                ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
+                : undefined,
+            },
+            layout: { width, height },
+            theme,
+            idPrefix: props._idPrefix,
+          }) : null}
+          {props.foregroundGraphics}
+        </>
+      )
+      : null
     return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(null, {
+      wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
         title: props.title, description: props.description, background: props.background,
@@ -991,9 +1082,58 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     .map((node, i) => geoSceneNodeToSVG(node, i))
     .filter(Boolean)
 
+  // Geo annotations: `coordinates: [lon, lat]` flows through the resolved
+  // projection from the store's scales; raw `x`/`y` numbers remain valid via
+  // staticAnnotations' pixel passthrough for callers who pre-projected.
+  const annotationNodes = props.annotations ? renderStaticAnnotations({
+    annotations: props.annotations,
+    scales: {
+      geoProjection: store.scales?.projectedPoint
+        ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
+        : undefined,
+    },
+    layout: { width, height },
+    theme,
+    idPrefix: props._idPrefix,
+  }) : null
+
+  // Geo legend: auto-build from colorBy on either points (proportional
+  // symbol maps) or areas (choropleth maps), or accept a fully-formed
+  // `legend` prop the caller pre-built. Matches the XY/Network pattern but
+  // sources categories from whichever data input is present.
+  const geoLegend = props.showLegend ? (() => {
+    const accessorName = (a: any): string | undefined =>
+      typeof a === "string" ? a : undefined
+    const colorAccessor = accessorName((props as any).colorBy)
+    const legendSource: any[] = (() => {
+      if (Array.isArray(props.points) && props.points.length > 0) return props.points as any[]
+      if (Array.isArray(props.areas) && props.areas.length > 0) {
+        // GeoJSON features carry attributes under `properties` — flatten so
+        // `extractCategories` can read the colorBy field.
+        return (props.areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+      }
+      return []
+    })()
+    const categories = extractCategories(legendSource, colorAccessor)
+    if (categories.length === 0) return null
+    return renderStaticLegend({
+      categories,
+      colorScheme: props.colorScheme,
+      theme,
+      position: props.legendPosition || "right",
+      totalWidth: size[0],
+      totalHeight: size[1],
+      margin,
+      hasTitle: !!props.title,
+    })
+  })() : null
+
   const content = (
     <>
+      {props.backgroundGraphics}
       {dataMarks}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -1004,7 +1144,8 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
-        idPrefix: props._idPrefix,
+      legend: geoLegend,
+      idPrefix: props._idPrefix,
     })
   )
 }

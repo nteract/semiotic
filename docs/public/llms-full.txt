@@ -3,7 +3,7 @@
 ## Quick Start
 - Install: `npm install semiotic`
 - **Use sub-path imports** — `semiotic/xy` (78KB gz), `semiotic/ordinal` (65KB), `semiotic/network` (54KB), `semiotic/geo` (53KB), `semiotic/realtime` (77KB), `semiotic/server` (58KB), `semiotic/utils` (19KB), `semiotic/themes` (3KB), `semiotic/data` (3KB). Full `semiotic` is 158KB gz.
-- CLI: `npx semiotic-ai [--list|--schema [Component]|--suggest|--compact|--examples|--doctor]`
+- CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
 ## Architecture
@@ -137,7 +137,7 @@ Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations
 - **GroupedBarChart** — `data`, `categoryAccessor`, `valueAccessor`, `groupBy` (required).
 - **PieChart/DonutChart** — `data`, `categoryAccessor`, `valueAccessor`.
 - **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"). Renders with trapezoid connectors, no axes.
-- **GaugeChart** — `value` required. Optional: `thresholds` (array of `{value, color, label}`), `min`, `max`, `sweep`, `arcWidth`.
+- **GaugeChart** — `value`, `thresholds` (array of `{value, color, label}`). Optional: `min`, `max`, `sweep`, `arcWidth`.
 - **SwimlaneChart** — `data`, `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`.
 - **ForceDirectedGraph** — `edges` (required). `nodes` optional (inferred from edges).
 - **SankeyDiagram** — `edges` (required), `valueAccessor`.
@@ -180,7 +180,7 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 Canvas scene builders read CSS variables via `getComputedStyle` on the canvas DOM ancestor, so standard CSS cascade rules apply even though rendering is canvas-based. Use CSS vars for **single-role** overrides; use a nested `ThemeProvider` for **array/scale** overrides (categorical palette, sequential/diverging scheme name).
 
 ## AI Features
-`onObservation`/`useChartObserver`, `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`, `validateProps(component, props)`, `diagnoseConfig(component, props)`, `exportChart(div, { format })`, `npx semiotic-ai --doctor`, `npx semiotic-mcp` tools/resources/prompts
+`onObservation`/`useChartObserver`, `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`, `validateProps(component, props)`, `diagnoseConfig(component, props)`, `exportChart(div, { format })`, `npx semiotic-ai --doctor`
 
 ## Accessibility
 

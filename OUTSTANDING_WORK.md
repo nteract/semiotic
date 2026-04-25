@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-22.
+Last updated 2026-04-24.
 
 ---
 
@@ -368,14 +368,29 @@ Open extensions, ranked by leverage:
 
 Five load-bearing concerns from a recent audit. Listed with the plan for each — none urgent individually; each has a way to decay the library silently if ignored.
 
-### 1. Canvas vs. SVG rendering divergence [YELLOW]
+### 1. Canvas vs. SVG rendering divergence [GREEN]
 
-Client renders canvas; server renders SVG via `SceneToSVG`. Any new rendering feature must land in both paths or they drift. The backgroundGraphics bug (canvas painted over SVG backgrounds in Ordinal/Network frames, not XY) lived unseen because the integration test only exercised XY. **The gap is only visible when MCP or `renderToStaticSVG` runs — most contributors never touch those paths.**
+Client renders canvas; server renders SVG via `SceneToSVG`. Any new rendering feature must land in both paths or they drift silently. The bar `gradientFill` near-miss in 3.4.2 and the earlier backgroundGraphics bug (canvas painted over SVG backgrounds in Ordinal/Network frames) both lived through CI because no test enforced the parity contract.
 
-Plan:
-- Extend the SSR-vs-client diff snapshot test (Architecture → Visual regression) to cover every rendering feature, not only chart output — backgrounds, overlays, annotations, legends each get their own diff.
-- Extend `check-ssr-alignment.js` from prop parity to scene-builder parity: every builder referenced on canvas must have a matching `SceneToSVG` converter registered.
-- Dev-mode warning in Stream Frames when a rendering feature lacks an SSR counterpart (surface the gap explicitly rather than silently diverging).
+**Closed in 3.4.x:**
+
+- **Structural layer.** `scripts/check-ssr-alignment.js` extended to scene-node parity. For each frame's `*SceneNode` type union, every member's `type: "X"` discriminant must have a matching `case "X":` in the corresponding `*SceneNodeToSVG` converter, and vice versa. Drift in either direction fails CI with a file-pointing message. `PARITY_EXCEPTIONS` map handles the legitimate one-sided cases (network edge sub-types, `roundedEdge` direction labels) with one-line justifications. Wired into `release:check`, `prepublishOnly`, and the `node.js.yml` workflow as `npm run check:ssr`. Lock-down test in `src/__tests__/scenarios/ssr-alignment.test.ts` mutates `SceneToSVG.tsx` mid-test to inject canvas-only and svg-only drift, asserting the script exits 1 with the correct error in both directions.
+- **Feature layer.** `src/components/server/featureParity.test.tsx` — feature-level matrix across (XY, Ordinal, Network, Geo) frames covering title, axes, grid, annotations, legend, backgroundGraphics, foregroundGraphics. All 27 assertions pass; zero `.todo` markers remain. As features land, the matrix expands.
+
+**Surface fixes that landed alongside the matrix:**
+
+- Network annotations: `renderNetworkFrame` now pipes `props.annotations` through `renderStaticAnnotations` with no scales (pixel passthrough since network coords are already in pixel space).
+- Geo annotations: `renderGeoFrame` plumbs `store.scales.projectedPoint` into a new `geoProjection` field on `staticAnnotations`' `AnnotationScales`. Annotations carrying `coordinates: [lon, lat]` resolve through it; raw `x`/`y` numbers still work via pixel passthrough.
+- `staticAnnotations.tsx` extended: `resolveCoords` orchestrates (geoProjection → x/y scale → accessor lookup → pixel passthrough) so the same renderer serves all four frames.
+- Network legend: `renderNetworkFrame` auto-builds a legend from `colorBy/nodeIDAccessor + showLegend`, sourcing categories from the node list (or deriving from edge endpoints when nodes aren't supplied directly). Legend margin is reserved before computing inner dimensions, mirroring the XY pattern.
+- Geo legend: `renderGeoFrame` auto-builds from `colorBy` on points (proportional symbol map) or area features' `properties` (choropleth). Same margin reservation.
+- `backgroundGraphics` and `foregroundGraphics` plumbed through all four frame render functions. The bg layer is rendered first inside the inner-translated `<g>`, fg last, matching `SVGOverlay` / `OrdinalSVGOverlay` z-order. Geo's empty-scene early-return path also pipes them so a chart with no data but legitimate overlays doesn't silently drop them.
+
+**Skipped:**
+
+- Runtime dev-mode warning in Stream Frames. The static check fires at commit time and in CI; a runtime warning would cost every server-rendered chart for a case the static check already catches.
+
+The contract is now both structurally enforced (build-time CI) and behaviorally tested (vitest matrix). Adding a new rendering feature requires touching both the canvas path and the SVG path in the same PR, and CI fails if either is missing.
 
 ### 2. Latent dead props at HOC ↔ Frame seam [YELLOW]
 

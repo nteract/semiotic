@@ -45,7 +45,7 @@ jobs:
         run: npm run check:surface
 
       - name: Check SSR alignment
-        run: node scripts/check-ssr-alignment.js
+        run: npm run check:ssr
 
       - name: Build production bundles
         run: npm run dist:prod
