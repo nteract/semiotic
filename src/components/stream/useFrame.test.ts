@@ -423,6 +423,10 @@ describe("useFrame — theme-change effect", () => {
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#222222")
     } finally {
       canvas.remove()
+      // resolveCSSColor lazily attaches a global MutationObserver/matchMedia
+      // listener via ensureGlobalObserver. Reset the cache + observer here so
+      // they don't leak into later tests in this file or other test files.
+      _resetCSSColorCacheForTest()
     }
   })
 })
