@@ -118,10 +118,10 @@ describe("SSR feature parity: grid", () => {
 
 // ── Annotations ────────────────────────────────────────────────────────
 //
-// XY and Ordinal: full support. Network and Geo: known SSR gaps — the
-// `annotations` prop is accepted but `*SceneNodeToSVG` doesn't render the
-// overlay annotations through. Marked `.todo` until support lands.
-// Tracked in OUTSTANDING_WORK.md → Future work #1.
+// This matrix verifies SSR annotation overlays across frame types.
+// XY and Ordinal render threshold-style annotations; Network renders
+// pixel-coordinate annotations; Geo renders projected `[lon, lat]`
+// annotations when a fitted geography is available.
 
 describe("SSR feature parity: annotations", () => {
   it("xy renders annotation overlay group", () => {
