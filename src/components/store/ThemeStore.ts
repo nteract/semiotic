@@ -276,6 +276,15 @@ export function resolveThemeUpdate(
   if (theme === "high-contrast") {
     return HIGH_CONTRAST_THEME
   }
+  // Runtime guard: an unrecognized string would otherwise fall through and be
+  // object-spread, producing numeric-keyed garbage. Plain JS callers can land
+  // here despite the TS typing — keep the store resilient.
+  if (typeof theme === "string") {
+    if (typeof console !== "undefined") {
+      console.warn(`[ThemeStore] Unknown theme preset "${theme}". Keeping current theme.`)
+    }
+    return current
+  }
   // If the object has `mode`, merge onto the matching base theme so
   // unspecified fields (background, text, grid, etc.) inherit correctly.
   // Without `mode`, shallow-merge into the current theme (partial override).

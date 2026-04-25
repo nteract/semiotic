@@ -42,9 +42,14 @@ function themeToStoreUpdate(
   const preset = resolveThemePreset(theme)
   if (preset) return preset
 
-  // TypeScript prevents this branch for public callers, but keeping the
-  // fallback preserves the previous runtime behavior for plain JS consumers.
-  return theme as "light" | "dark" | "high-contrast"
+  // Plain JS consumers can pass an unknown preset string despite the TS
+  // typing. Warn and fall back to "light" rather than passing the string
+  // through — `resolveThemeUpdate` would otherwise treat it as an object
+  // and corrupt the theme via spread.
+  if (typeof console !== "undefined") {
+    console.warn(`[ThemeProvider] Unknown theme preset "${theme}". Falling back to light theme.`)
+  }
+  return "light"
 }
 
 function resolveInitialTheme(

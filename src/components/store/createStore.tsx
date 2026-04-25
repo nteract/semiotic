@@ -14,7 +14,7 @@ interface Source<T> {
   subscribe: (cb: () => void) => () => void
 }
 
-interface StoreProviderProps<T> {
+export interface StoreProviderProps<T> {
   children: React.ReactNode
   initialState?: Partial<T>
 }
