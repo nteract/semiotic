@@ -661,7 +661,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend-category emission deferred to the post-computeScene path
+          // in the render loop — that's the single canonical emit point per
+          // data change, already rAF-throttled. Calling here too would scan
+          // the full buffer twice per push at high streaming frequencies.
           scheduleRender()
         }
       }, { chunkThreshold, chunkSize })
@@ -685,10 +688,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const clearAll = useCallback(() => {
       adapterRef.current?.clear()
       storeRef.current?.clear()
-      emitLegendCategories()
       dirtyRef.current = true
+      // emitLegendCategories runs after computeScene in the render loop.
       scheduleRender()
-    }, [emitLegendCategories, scheduleRender])
+    }, [scheduleRender])
 
     useImperativeHandle(ref, () => ({
       push: pushPoint,
@@ -703,7 +706,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             setHoverPoint(null)
           }
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return removed
@@ -713,7 +716,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return previous
@@ -726,7 +729,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null
-    }), [pushPoint, pushManyPoints, clearAll, emitLegendCategories, scheduleRender])
+    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

@@ -474,7 +474,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend-category emission deferred to the post-computeScene path
+          // in the render loop — single canonical emit point per data change,
+          // already rAF-throttled. Calling here too would scan the full
+          // buffer twice per push at high streaming frequencies.
           scheduleRender()
         }
       })
@@ -493,10 +496,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const clearAll = useCallback(() => {
       adapterRef.current?.clear()
       storeRef.current?.clear()
-      emitLegendCategories()
       dirtyRef.current = true
+      // emitLegendCategories runs after computeScene in the render loop.
       scheduleRender()
-    }, [emitLegendCategories, scheduleRender])
+    }, [scheduleRender])
 
     // Data replacement. Routes through `setReplacementData`, which emits
     // `{ bounded: true, preserveCategoryOrder: true }`. Three effects:
@@ -541,7 +544,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             setHoverPoint(null)
           }
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return removed
@@ -551,7 +554,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
-          emitLegendCategories()
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return previous
@@ -562,7 +565,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null
-    }), [pushPoint, pushManyPoints, replaceData, clearAll, emitLegendCategories, scheduleRender])
+    }), [pushPoint, pushManyPoints, replaceData, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

@@ -127,9 +127,22 @@ describe("LinkedCharts", () => {
     expect(result.current).toBe(true)
   })
 
-  it("useLinkedLegendSuppression returns true by default inside LinkedCharts", () => {
+  it("useLinkedLegendSuppression returns false when LinkedCharts has no categories yet (no unified legend would render)", () => {
+    // Suppression now activates only once the unified legend has categories
+    // to render — otherwise child legends would silence themselves while
+    // <LinkedLegend> returns null on empty input, leaving no legend at all.
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LinkedCharts>{children}</LinkedCharts>
+    )
+    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    expect(result.current).toBe(false)
+  })
+
+  it("useLinkedLegendSuppression returns true once categories are present", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <CategoryColorProvider colors={{ A: "#f00", B: "#0f0" }}>
+        <LinkedCharts>{children}</LinkedCharts>
+      </CategoryColorProvider>
     )
     const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
     expect(result.current).toBe(true)

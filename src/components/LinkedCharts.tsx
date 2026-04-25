@@ -406,13 +406,21 @@ export function LinkedCharts({
     ? showLegend
     : true
 
+  // Only suppress child-chart legends once the unified legend actually has
+  // categories to render. Setting LinkedLegendContext = true on first render
+  // (before any chart has registered) would silence child legends while
+  // <LinkedLegend> still returns null on empty categoryColors — leaving the
+  // page with no legend at all for one tick.
+  const hasCategories = Object.keys(categoryColors).length > 0
+  const suppressChildLegends = shouldShowLegend && hasCategories
+
   return (
     <SelectionProvider>
       <ObservationProvider>
         {selections && <ResolutionInit selections={selections} />}
         <LinkedCategoryRegistryContext.Provider value={registry}>
           <CategoryColorProvider colors={categoryColors}>
-            <LinkedLegendContext.Provider value={shouldShowLegend}>
+            <LinkedLegendContext.Provider value={suppressChildLegends}>
               {shouldShowLegend && legendPosition === "top" && (
                 <LinkedLegend
                   categoryColors={categoryColors}
