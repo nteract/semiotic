@@ -14,14 +14,20 @@ interface Source<T> {
   subscribe: (cb: () => void) => () => void
 }
 
+interface StoreProviderProps<T> {
+  children: React.ReactNode
+  initialState?: Partial<T>
+}
+
 export function createStore<T>(
   fn: (set: (updater: (current: T) => Partial<T>) => void) => T
-): [React.FC<{ children: React.ReactNode }>, <R>(selector: (state: T) => R) => R] {
+): [React.FC<StoreProviderProps<T>>, <R>(selector: (state: T) => R) => R] {
   const Ctx = createContext<Source<T> | null>(null)
   const fallbackSource = createSource(fn)
 
-  function Provider({ children }: { children: React.ReactNode }) {
-    const source = useMemo(() => createSource(fn), [])
+  function Provider({ children, initialState }: StoreProviderProps<T>) {
+    const initialStateRef = useRef(initialState)
+    const source = useMemo(() => createSource(fn, initialStateRef.current), [])
     return <Ctx.Provider value={source} children={children} />
   }
 
@@ -44,10 +50,14 @@ export function createStore<T>(
 }
 
 function createSource<T>(
-  fn: (set: (updater: (current: T) => Partial<T>) => void) => T
+  fn: (set: (updater: (current: T) => Partial<T>) => void) => T,
+  initialState?: Partial<T>
 ): Source<T> {
   const events = new EventTarget()
-  let state = fn(set)
+  let state = {
+    ...fn(set),
+    ...(initialState ?? {})
+  } as T
 
   function set(updater: (current: T) => Partial<T>) {
     state = { ...state, ...updater(state) } as T

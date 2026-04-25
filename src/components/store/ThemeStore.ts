@@ -258,51 +258,58 @@ export const HIGH_CONTRAST_THEME: SemioticTheme = {
 
 export interface ThemeStoreState {
   theme: SemioticTheme
-  setTheme: (theme: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void
+  setTheme: (theme: ThemeStoreUpdate) => void
+}
+
+export type ThemeStoreUpdate = Partial<SemioticTheme> | "light" | "dark" | "high-contrast"
+
+export function resolveThemeUpdate(
+  current: SemioticTheme,
+  theme: ThemeStoreUpdate
+): SemioticTheme {
+  if (theme === "light") {
+    return LIGHT_THEME
+  }
+  if (theme === "dark") {
+    return DARK_THEME
+  }
+  if (theme === "high-contrast") {
+    return HIGH_CONTRAST_THEME
+  }
+  // If the object has `mode`, merge onto the matching base theme so
+  // unspecified fields (background, text, grid, etc.) inherit correctly.
+  // Without `mode`, shallow-merge into the current theme (partial override).
+  if (theme.mode && theme.mode !== "auto") {
+    const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
+    return applyThemeAccessibility({
+      ...base,
+      ...theme,
+      colors: { ...base.colors, ...(theme.colors || {}) },
+      typography: { ...base.typography, ...(theme.typography || {}) },
+    } as SemioticTheme)
+  }
+  return applyThemeAccessibility({
+    ...current,
+    ...theme,
+    colors: {
+      ...current.colors,
+      ...(theme.colors || {})
+    },
+    typography: {
+      ...current.typography,
+      ...(theme.typography || {})
+    }
+  } as SemioticTheme)
 }
 
 export const [ThemeProvider, useThemeSelector] = createStore<ThemeStoreState>(
   (set) => ({
     theme: LIGHT_THEME,
 
-    setTheme(theme: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") {
+    setTheme(theme: ThemeStoreUpdate) {
       set((current: ThemeStoreState) => {
-        if (theme === "light") {
-          return { theme: LIGHT_THEME }
-        }
-        if (theme === "dark") {
-          return { theme: DARK_THEME }
-        }
-        if (theme === "high-contrast") {
-          return { theme: HIGH_CONTRAST_THEME }
-        }
-        // If the object has `mode`, merge onto the matching base theme so
-        // unspecified fields (background, text, grid, etc.) inherit correctly.
-        // Without `mode`, shallow-merge into the current theme (partial override).
-        if (theme.mode && theme.mode !== "auto") {
-          const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
-          return {
-            theme: applyThemeAccessibility({
-              ...base,
-              ...theme,
-              colors: { ...base.colors, ...(theme.colors || {}) },
-              typography: { ...base.typography, ...(theme.typography || {}) },
-            } as SemioticTheme)
-          }
-        }
         return {
-          theme: applyThemeAccessibility({
-            ...current.theme,
-            ...theme,
-            colors: {
-              ...current.theme.colors,
-              ...(theme.colors || {})
-            },
-            typography: {
-              ...current.theme.typography,
-              ...(theme.typography || {})
-            }
-          } as SemioticTheme)
+          theme: resolveThemeUpdate(current.theme, theme)
         }
       })
     }

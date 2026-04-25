@@ -5,9 +5,10 @@ import {
   useThemeSelector,
   LIGHT_THEME,
   DARK_THEME,
-  HIGH_CONTRAST_THEME
+  HIGH_CONTRAST_THEME,
+  resolveThemeUpdate
 } from "./store/ThemeStore"
-import type { SemioticTheme } from "./store/ThemeStore"
+import type { SemioticTheme, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
 import { resolveThemePreset } from "./semiotic-themes"
 import type { ThemePresetName } from "./semiotic-themes"
 import { addMqlListener } from "./stream/useMediaPreferences"
@@ -23,8 +24,55 @@ interface ThemeProviderProps {
 // Track the active preset name for the data-semiotic-theme attribute.
 const ThemeNameContext = React.createContext<string | undefined>(undefined)
 
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
+
+function isForcedColorsActive(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false
+  return window.matchMedia("(forced-colors: active)").matches
+}
+
+function themeToStoreUpdate(
+  theme: ThemePresetName | Partial<SemioticTheme>
+): ThemeStoreUpdate {
+  if (typeof theme !== "string") return theme
+  if (theme === "light" || theme === "dark" || theme === "high-contrast") return theme
+
+  // Try named presets next (covers "tufte", "pastels-dark", etc.).
+  const preset = resolveThemePreset(theme)
+  if (preset) return preset
+
+  // TypeScript prevents this branch for public callers, but keeping the
+  // fallback preserves the previous runtime behavior for plain JS consumers.
+  return theme as "light" | "dark" | "high-contrast"
+}
+
+function resolveInitialTheme(
+  theme: ThemePresetName | Partial<SemioticTheme> | undefined
+): SemioticTheme {
+  if (theme !== undefined) {
+    return resolveThemeUpdate(LIGHT_THEME, themeToStoreUpdate(theme))
+  }
+  return isForcedColorsActive() ? HIGH_CONTRAST_THEME : LIGHT_THEME
+}
+
+function setResolvedTheme(
+  setTheme: ThemeStoreState["setTheme"],
+  theme: Partial<SemioticTheme>
+) {
+  if (theme === LIGHT_THEME) {
+    setTheme("light")
+  } else if (theme === DARK_THEME) {
+    setTheme("dark")
+  } else if (theme === HIGH_CONTRAST_THEME) {
+    setTheme("high-contrast")
+  } else {
+    setTheme(theme)
+  }
+}
+
 // ── ThemeInitializer ────────────────────────────────────────────────────────
-// Calls setTheme on mount to sync the store with the prop value.
+// Syncs prop changes after the provider-scoped store is initialized.
 // When no explicit theme is provided and forced-colors (high contrast)
 // mode is active, automatically applies HIGH_CONTRAST_THEME.
 
@@ -34,10 +82,10 @@ function ThemeInitializer({
   theme?: ThemePresetName | Partial<SemioticTheme>
 }) {
   const setTheme = useThemeSelector(
-    (state: { setTheme: (t: Partial<SemioticTheme> | "light" | "dark" | "high-contrast") => void }) => state.setTheme
+    (state: ThemeStoreState) => state.setTheme
   )
   const currentTheme = useThemeSelector(
-    (state: { theme: SemioticTheme }) => state.theme
+    (state: ThemeStoreState) => state.theme
   )
   // Keep a ref to the latest theme so the forced-colors handler can read it
   // without re-registering the listener on every theme change.
@@ -54,39 +102,37 @@ function ThemeInitializer({
 
     const mql = window.matchMedia("(forced-colors: active)")
     if (mql.matches) {
-      themeBeforeForcedColorsRef.current = currentThemeRef.current
-      setTheme(HIGH_CONTRAST_THEME)
+      themeBeforeForcedColorsRef.current =
+        currentThemeRef.current === HIGH_CONTRAST_THEME ? LIGHT_THEME : currentThemeRef.current
+      setTheme("high-contrast")
     }
 
     const handler = (e: MediaQueryListEvent) => {
       if (e.matches) {
         // Store current theme before overriding
-        themeBeforeForcedColorsRef.current = currentThemeRef.current
-        setTheme(HIGH_CONTRAST_THEME)
+        themeBeforeForcedColorsRef.current =
+          currentThemeRef.current === HIGH_CONTRAST_THEME
+            ? themeBeforeForcedColorsRef.current ?? LIGHT_THEME
+            : currentThemeRef.current
+        setTheme("high-contrast")
       } else {
         // Restore previous theme, falling back to LIGHT_THEME
-        setTheme(themeBeforeForcedColorsRef.current ?? LIGHT_THEME)
+        setResolvedTheme(setTheme, themeBeforeForcedColorsRef.current ?? LIGHT_THEME)
         themeBeforeForcedColorsRef.current = null
       }
     }
     return addMqlListener(mql, handler)
   }, [theme, setTheme])
 
-  React.useEffect(() => {
+  const didMountRef = React.useRef(false)
+  useIsomorphicLayoutEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
     if (theme === undefined) return
 
-    if (typeof theme === "string") {
-      // Try named preset first (covers "light", "dark", "high-contrast", "tufte", etc.)
-      const preset = resolveThemePreset(theme)
-      if (preset) {
-        setTheme(preset)
-      } else {
-        // Fallback for the three built-in string presets
-        setTheme(theme as "light" | "dark" | "high-contrast")
-      }
-    } else {
-      setTheme(theme)
-    }
+    setTheme(themeToStoreUpdate(theme))
   }, [theme, setTheme])
 
   return null
@@ -96,7 +142,7 @@ function ThemeInitializer({
 
 function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
   const theme = useThemeSelector(
-    (state: { theme: SemioticTheme }) => state.theme
+    (state: ThemeStoreState) => state.theme
   )
 
   const style: React.CSSProperties & Record<string, string> = {
@@ -157,9 +203,10 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   // Otherwise leave undefined (custom object themes or unknown strings don't get a data attribute).
   const themeName =
     typeof theme === "string" && resolveThemePreset(theme) ? theme : undefined
+  const initialTheme = React.useMemo(() => resolveInitialTheme(theme), [theme])
 
   return (
-    <StoreProvider>
+    <StoreProvider initialState={{ theme: initialTheme }}>
       <ThemeNameContext.Provider value={themeName}>
         <ThemeInitializer theme={theme} />
         <ThemeCSSWrapper>{children}</ThemeCSSWrapper>
@@ -171,7 +218,7 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
 // ── useTheme hook ───────────────────────────────────────────────────────────
 
 function useTheme(): SemioticTheme {
-  return useThemeSelector((state: { theme: SemioticTheme }) => state.theme)
+  return useThemeSelector((state: ThemeStoreState) => state.theme)
 }
 
 // ── Exports ─────────────────────────────────────────────────────────────────
