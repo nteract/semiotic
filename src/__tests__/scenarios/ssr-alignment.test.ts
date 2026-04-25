@@ -7,38 +7,45 @@
  * script catches both drift directions and that the happy path stays green
  * on the current tree.
  *
- * The simulation strategy: temporarily mutate `SceneToSVG.tsx` to inject a
- * known drift, run the script, restore the file. Spawn-based to honor the
- * script's `process.exit` semantics.
+ * The simulation strategy: copy `SceneToSVG.tsx` to a temporary file, mutate
+ * that copy to inject known drift, and point the script at it via env var.
+ * This avoids rewriting tracked source while Vitest runs suites in parallel.
+ * Spawn-based to honor the script's `process.exit` semantics.
  */
 import { spawnSync } from "child_process"
 import * as fs from "fs"
+import * as os from "os"
 import * as path from "path"
-import { afterEach, describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest"
 
 const ROOT = path.resolve(__dirname, "../../..")
 const SCRIPT = path.join(ROOT, "scripts/check-ssr-alignment.js")
 const SCENE_TO_SVG = path.join(ROOT, "src/components/stream/SceneToSVG.tsx")
 
-function runCheck() {
-  return spawnSync(process.execPath, [SCRIPT], { encoding: "utf-8", cwd: ROOT })
+function runCheck(sceneToSvgPath?: string) {
+  return spawnSync(process.execPath, [SCRIPT], {
+    encoding: "utf-8",
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      ...(sceneToSvgPath ? { SEMIOTIC_SCENE_TO_SVG: sceneToSvgPath } : {}),
+    },
+  })
 }
 
-function withSceneToSVGMutation(mutate: (src: string) => string, fn: () => void) {
+function withSceneToSVGMutation(mutate: (src: string) => string, fn: (sceneToSvgPath: string) => void) {
   const original = fs.readFileSync(SCENE_TO_SVG, "utf-8")
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "semiotic-ssr-alignment-"))
+  const tempSceneToSvg = path.join(tempDir, "SceneToSVG.tsx")
   try {
-    fs.writeFileSync(SCENE_TO_SVG, mutate(original))
-    fn()
+    fs.writeFileSync(tempSceneToSvg, mutate(original))
+    fn(tempSceneToSvg)
   } finally {
-    fs.writeFileSync(SCENE_TO_SVG, original)
+    fs.rmSync(tempDir, { recursive: true, force: true })
   }
 }
 
 describe("check-ssr-alignment.js", () => {
-  // Belt-and-suspenders: even if a test throws mid-mutation, the next test's
-  // afterEach restores from the live filesystem.
-  afterEach(() => { /* withSceneToSVGMutation restores on its own */ })
-
   it("passes on the current tree (parity is intact)", () => {
     const result = runCheck()
     expect(result.status).toBe(0)
@@ -55,8 +62,8 @@ describe("check-ssr-alignment.js", () => {
       // Rename the candlestick case so the union still has the type but the
       // converter no longer handles it. Drift direction: canvas → SVG.
       src => src.replace(/case "candlestick": \{/, 'case "REMOVED-FOR-TEST": {'),
-      () => {
-        const result = runCheck()
+      (sceneToSvgPath) => {
+        const result = runCheck(sceneToSvgPath)
         expect(result.status).toBe(1)
         expect(result.stderr).toContain('Scene type "candlestick" is part of the xy SceneNode union but xySceneNodeToSVG has no `case "candlestick":` branch')
         expect(result.stderr).toContain("SSR will drop these marks")
@@ -71,8 +78,8 @@ describe("check-ssr-alignment.js", () => {
       // silently skip a hyphenated name, masking the test. Drift direction:
       // SVG → canvas (dead branch).
       src => src.replace(/(case "point":)/, 'case "phantomForTest": return null\n    $1'),
-      () => {
-        const result = runCheck()
+      (sceneToSvgPath) => {
+        const result = runCheck(sceneToSvgPath)
         expect(result.status).toBe(1)
         expect(result.stderr).toContain('xySceneNodeToSVG has a `case "phantomForTest":` branch but no scene-node interface in the xy SceneNode union declares')
         expect(result.stderr).toContain("likely dead code")

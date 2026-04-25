@@ -3,7 +3,7 @@ import type { Datum } from "./datumTypes"
 
 import { useRef, useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
-import { createColorScale, getColor } from "./colorUtils"
+import { getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor } from "./types"
 import { useThemeCategorical, type LegendPosition } from "./hooks"
 import { useLinkedChartCategories } from "../../LinkedCharts"
@@ -122,11 +122,10 @@ export function useStreamingLegend({
   const linkedCategories = isPushMode && colorBy ? orderedRef.current : []
   useLinkedChartCategories(linkedCategories)
 
-  // Build legend from discovered categories. Color resolution mirrors
-  // `useColorScale` (categoryColors → user colorScheme → theme categorical
-  // → d3 "category10") so legend swatches always match the marks the
-  // chart's own colorScale produces — including the case where neither
-  // CategoryColorProvider nor LinkedCharts is wrapping the chart.
+  // Build legend from discovered categories. Color resolution mirrors the
+  // push-mode mark path: CategoryColorProvider/LinkedCharts colors win; if
+  // there is no provider, the stream frame falls back to explicit palette,
+  // then theme categorical, then STREAMING_PALETTE.
   const streamingLegend = useMemo(() => {
     if (!isPushMode || !colorBy || showLegend === false) return undefined
     // Use version to trigger recompute (consumed by useMemo dep)
@@ -134,15 +133,18 @@ export function useStreamingLegend({
     const categories = orderedRef.current
     if (categories.length === 0) return undefined
 
-    const effectiveScheme: string | string[] = colorScheme
-      ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
-      ?? "category10"
+    const palette = Array.isArray(colorScheme) && colorScheme.length > 0
+      ? colorScheme
+      : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
+    const colorMap = new Map<string, string>()
+    for (let i = 0; i < categories.length; i++) {
+      colorMap.set(categories[i], palette[i % palette.length])
+    }
 
     // Build synthetic data so createLegend can extract categories
     const syntheticColorBy = typeof colorBy === "string" ? colorBy : "__streamCat"
     const syntheticData = categories.map(cat => ({ [syntheticColorBy]: cat }))
-    const fallbackScale = createColorScale(syntheticData, syntheticColorBy, effectiveScheme)
-    const syntheticScale = (v: string) => categoryColors?.[v] || fallbackScale(v) || "#999"
+    const syntheticScale = (v: string) => categoryColors?.[v] || colorMap.get(v) || "#999"
 
     return createLegend({
       data: syntheticData,

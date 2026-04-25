@@ -25,6 +25,9 @@
  *
  * Usage:
  *   node scripts/check-ssr-alignment.js
+ *
+ * Tests can point the scene parity pass at a temporary SceneToSVG copy via:
+ *   SEMIOTIC_SCENE_TO_SVG=/tmp/SceneToSVG.tsx node scripts/check-ssr-alignment.js
  */
 
 const fs = require("fs")
@@ -164,7 +167,9 @@ for (const { prop, charts, label } of PROP_CHECKS) {
 // the literal lives — the union is the only single point of truth.
 
 const STREAM_DIR = path.join(ROOT, "src/components/stream")
-const SCENE_TO_SVG = path.join(STREAM_DIR, "SceneToSVG.tsx")
+const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
+  ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
+  : path.join(STREAM_DIR, "SceneToSVG.tsx")
 
 const FRAMES = {
   xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG" },

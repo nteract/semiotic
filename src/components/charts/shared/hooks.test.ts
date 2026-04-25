@@ -16,6 +16,7 @@ import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
 import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import type { Datum } from "./datumTypes"
+import { useStreamingLegend } from "./useStreamingLegend"
 
 /**
  * Wrapper that provides the store providers needed by hooks that
@@ -125,6 +126,31 @@ describe("useColorScale", () => {
     })
     expect(result.current!("A")).toBe("#ff0000")
     expect(result.current!("B")).toBe("#00ff00")
+  })
+})
+
+// ── useStreamingLegend ───────────────────────────────────────────────────
+
+describe("useStreamingLegend", () => {
+  it("uses CategoryColorProvider colors for push-mode legend swatches", () => {
+    const { result } = renderHook(
+      () => useStreamingLegend({
+        isPushMode: true,
+        colorBy: "cat",
+        colorScheme: undefined,
+        showLegend: true,
+      }),
+      { wrapper: createWrapper({ categoryColors: { A: "#ff0000", B: "#00ff00" } }) }
+    )
+
+    act(() => {
+      const push = result.current.wrapPush(() => {})
+      push({ cat: "A" })
+      push({ cat: "B" })
+    })
+
+    const items = result.current.streamingLegend?.legendGroups[0].items
+    expect(items?.map(item => item.color)).toEqual(["#ff0000", "#00ff00"])
   })
 })
 

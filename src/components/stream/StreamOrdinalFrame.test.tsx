@@ -243,6 +243,7 @@ describe("StreamOrdinalFrame", () => {
           { id: "a", cat: "A", val: 10 },
           { id: "b", cat: "B", val: 20 },
         ])
+        await Promise.resolve()
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
 
