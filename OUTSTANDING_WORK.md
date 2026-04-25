@@ -186,9 +186,9 @@ Theme presets updated: Tufte and Journalist presets include `annotation`, `tickF
 
 `ThemeProvider` now resolves the requested preset/object theme synchronously and seeds the scoped store through provider initialization. `useTheme()`, chart theme defaults, and `ThemeCSSWrapper` CSS variables see the requested theme on the first child render. Forced-colors initialization is also synchronous and restores the default light theme when forced-colors exits.
 
-### Canvas theme bridge fragility [YELLOW]
+### Canvas theme bridge fragility [DONE]
 
-Canvas renderers read theme values via `getComputedStyle`. If the dirty flag isn't set when the theme updates, canvas keeps old colors while SVG updates to the new theme. Currently works because theme changes trigger re-render → dirty flag, but the coupling is implicit.
+Canvas renderers read CSS-variable colors via `getComputedStyle`, and `useFrame` now owns the theme-change bridge explicitly: clear the CSS color cache, mark the frame dirty, and queue a repaint from a layout-timed effect whenever the ThemeStore theme changes. All four Stream Frame families pass `themeDirtyRef`, and `useFrame` has a regression test proving a theme update invalidates cached CSS-variable colors and schedules repaint work.
 
 ### Design system research gaps
 

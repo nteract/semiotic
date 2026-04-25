@@ -38,7 +38,7 @@
 "use client"
 
 import * as React from "react"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -49,6 +49,9 @@ import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import type { HoverPointerCoords } from "./hoverUtils"
+
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect
 
 // ── Margin handling ─────────────────────────────────────────────────────────
 
@@ -331,7 +334,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // Both the canvas-arg and argless call sites in the four frames
   // reduced to a single global counter bump; we use the argless form.
   const themeDirtyRef = input.themeDirtyRef
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!themeDirtyRef) return
     clearCSSColorCache()
     themeDirtyRef.current = true

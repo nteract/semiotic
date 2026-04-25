@@ -10,7 +10,8 @@ import { act, renderHook } from "@testing-library/react"
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useFrame } from "./useFrame"
 import type { UseFrameInput } from "./useFrame"
-import { ThemeProvider, LIGHT_THEME, useThemeSelector } from "../store/ThemeStore"
+import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
+import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
 
 const DEFAULT_INPUT: UseFrameInput = {
   sizeProp: [800, 600],
@@ -234,6 +235,7 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
   afterEach(() => {
     global.requestAnimationFrame = originalRAF
     global.cancelAnimationFrame = originalCAF
+    _resetCSSColorCacheForTest()
   })
 
   function flushRafs() {
@@ -382,6 +384,46 @@ describe("useFrame — theme-change effect", () => {
     // No new theme-change effect fire, no new rAF queued.
     expect(rafCallbacks).toHaveLength(0)
     expect(dirtyRef.current).toBe(false)
+  })
+
+  it("invalidates cached CSS-variable colors and queues repaint on ThemeStore changes", () => {
+    const dirtyRef = { current: false } as React.MutableRefObject<boolean>
+    const { result } = renderHook(
+      () => ({
+        frame: useFrame({ ...DEFAULT_INPUT, themeDirtyRef: dirtyRef }),
+        setTheme: useThemeSelector(
+          (s: { setTheme: (t: "light" | "dark" | "high-contrast") => void }) => s.setTheme,
+        ),
+      }),
+      { wrapper },
+    )
+
+    const canvas = document.createElement("canvas")
+    document.body.appendChild(canvas)
+    const ctx = { canvas } as CanvasRenderingContext2D
+    try {
+      canvas.style.setProperty("--semiotic-primary", "#111111")
+      _resetCSSColorCacheForTest()
+
+      expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#111111")
+      canvas.style.setProperty("--semiotic-primary", "#222222")
+      expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#111111")
+
+      dirtyRef.current = false
+      result.current.frame.rafRef.current = 0
+      rafCallbacks = []
+
+      act(() => {
+        result.current.setTheme("dark")
+      })
+
+      expect(result.current.frame.currentTheme).toBe(DARK_THEME)
+      expect(dirtyRef.current).toBe(true)
+      expect(rafCallbacks).toHaveLength(1)
+      expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#222222")
+    } finally {
+      canvas.remove()
+    }
   })
 })
 
