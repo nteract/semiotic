@@ -352,6 +352,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const hoverRef = useRef<HoverData | null>(null)
     const lastLegendCategoriesRef = useRef<string[]>([])
+    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
+    const onCategoriesChangeRef = useRef(onCategoriesChange)
+    legendCategoryAccessorRef.current = legendCategoryAccessor
+    onCategoriesChangeRef.current = onCategoriesChange
 
     // ── State ────────────────────────────────────────────────────────────
 
@@ -440,6 +444,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // scheduleRender comes from useFrame above.
 
+    const emitLegendCategories = useCallback(() => {
+      const accessor = legendCategoryAccessorRef.current
+      const onChange = onCategoriesChangeRef.current
+      if (!onChange || !accessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onChange(categories)
+    }, [])
+
     // Update config when it changes
     useEffect(() => {
       storeRef.current?.updateConfig(pipelineConfig)
@@ -460,6 +474,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
       })
@@ -478,9 +493,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const clearAll = useCallback(() => {
       adapterRef.current?.clear()
       storeRef.current?.clear()
+      emitLegendCategories()
       dirtyRef.current = true
       scheduleRender()
-    }, [scheduleRender])
+    }, [emitLegendCategories, scheduleRender])
 
     // Data replacement. Routes through `setReplacementData`, which emits
     // `{ bounded: true, preserveCategoryOrder: true }`. Three effects:
@@ -525,6 +541,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             setHoverPoint(null)
           }
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
         return removed
@@ -534,6 +551,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
         return previous
@@ -544,7 +562,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null
-    }), [pushPoint, pushManyPoints, replaceData, clearAll, scheduleRender])
+    }), [pushPoint, pushManyPoints, replaceData, clearAll, emitLegendCategories, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 
@@ -712,14 +730,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       focusedNavPointRef.current = null
       onPointerMove(e)
     }, [onPointerMove])
-
-    const emitLegendCategories = useCallback(() => {
-      if (!onCategoriesChange || !legendCategoryAccessor) return
-      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], legendCategoryAccessor)
-      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
-      lastLegendCategoriesRef.current = categories
-      onCategoriesChange(categories)
-    }, [legendCategoryAccessor, onCategoriesChange])
 
     // ── Render function ──────────────────────────────────────────────────
 

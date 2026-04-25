@@ -87,7 +87,6 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
 
   const safeData = data || []
   const effectiveColorBy = colorBy || categoryAccessor
-  const isPushMode = data === undefined
 
   const setup = useChartSetup({
     data: safeData,
@@ -178,10 +177,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
-    ref, frameRef, isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme, showLegend,
-    legendPosition: legendPositionProp,
+    ref, frameRef,
     setup,
   })
 

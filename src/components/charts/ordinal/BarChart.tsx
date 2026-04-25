@@ -139,7 +139,6 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const valueLabel = resolved.valueLabel
 
   const safeData = data || []
-  const isPushMode = data === undefined
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
@@ -170,11 +169,6 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
     ref,
     frameRef,
-    isPushMode,
-    colorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
     setup,
   })
 

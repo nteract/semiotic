@@ -233,7 +233,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     legendPosition: legendPositionProp,
     userMargin,
     defaults: marginDefaults,
-    categories: isPushMode ? activeCategories : undefined,
+    categories: activeCategories,
   })
 
   // ── Legend behavior props (to spread into frame) ───────────────────────

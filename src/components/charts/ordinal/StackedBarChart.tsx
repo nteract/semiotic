@@ -100,7 +100,6 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
 
   const safeData = data || []
   const effectiveColorBy = colorBy || stackBy
-  const isPushMode = data === undefined
 
   const setup = useChartSetup({
     data: safeData,
@@ -177,10 +176,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
-    ref, frameRef, isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme, showLegend,
-    legendPosition: legendPositionProp,
+    ref, frameRef,
     setup,
   })
 

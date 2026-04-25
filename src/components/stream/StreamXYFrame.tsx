@@ -523,6 +523,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // hover before a paint still returns a valid color.
     const themePrimaryRef = useRef<string>(LIGHT_THEME.primary)
     const lastLegendCategoriesRef = useRef<string[]>([])
+    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
+    const onCategoriesChangeRef = useRef(onCategoriesChange)
+    legendCategoryAccessorRef.current = legendCategoryAccessor
+    onCategoriesChangeRef.current = onCategoriesChange
 
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
@@ -626,6 +630,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
+    const emitLegendCategories = useCallback(() => {
+      const accessor = legendCategoryAccessorRef.current
+      const onChange = onCategoriesChangeRef.current
+      if (!onChange || !accessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onChange(categories)
+    }, [])
+
     // Update config when it changes — also schedule re-render since style
     // callbacks (pointStyle, areaStyle, etc.) may have changed.
     useEffect(() => {
@@ -647,6 +661,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
       }, { chunkThreshold, chunkSize })
@@ -670,9 +685,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const clearAll = useCallback(() => {
       adapterRef.current?.clear()
       storeRef.current?.clear()
+      emitLegendCategories()
       dirtyRef.current = true
       scheduleRender()
-    }, [scheduleRender])
+    }, [emitLegendCategories, scheduleRender])
 
     useImperativeHandle(ref, () => ({
       push: pushPoint,
@@ -687,6 +703,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             setHoverPoint(null)
           }
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
         return removed
@@ -696,6 +713,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
+          emitLegendCategories()
           scheduleRender()
         }
         return previous
@@ -708,7 +726,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null
-    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
+    }), [pushPoint, pushManyPoints, clearAll, emitLegendCategories, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
 
@@ -939,14 +957,6 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       focusedNavPointRef.current = null
       onPointerMove(e)
     }, [onPointerMove])
-
-    const emitLegendCategories = useCallback(() => {
-      if (!onCategoriesChange || !legendCategoryAccessor) return
-      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], legendCategoryAccessor)
-      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
-      lastLegendCategoriesRef.current = categories
-      onCategoriesChange(categories)
-    }, [legendCategoryAccessor, onCategoriesChange])
 
     // ── Render function ──────────────────────────────────────────────────
 

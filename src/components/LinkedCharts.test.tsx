@@ -2,7 +2,7 @@ import React from "react"
 import { render, fireEvent, act as rtlAct, waitFor } from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
 import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, useLinkedChartCategories, estimateLegendRowCount } from "./LinkedCharts"
-import { CategoryColorProvider } from "./CategoryColors"
+import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import type { Datum } from "./charts/shared/datumTypes"
 
 describe("LinkedCharts", () => {
@@ -127,6 +127,14 @@ describe("LinkedCharts", () => {
     expect(result.current).toBe(true)
   })
 
+  it("useLinkedLegendSuppression returns true by default inside LinkedCharts", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <LinkedCharts>{children}</LinkedCharts>
+    )
+    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    expect(result.current).toBe(true)
+  })
+
   it("useLinkedLegendSuppression returns false when LinkedCharts has showLegend={false}", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LinkedCharts showLegend={false}>{children}</LinkedCharts>
@@ -174,6 +182,44 @@ describe("LinkedCharts", () => {
     await waitFor(() => {
       expect(container.textContent).toContain("A")
       expect(container.textContent).not.toContain("B")
+    })
+  })
+
+  it("keeps generated category colors stable when registered category order changes", async () => {
+    function ColorSnapshot() {
+      const colors = useCategoryColors()
+      return <pre data-testid="colors">{JSON.stringify(colors)}</pre>
+    }
+
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories)
+      return <ColorSnapshot />
+    }
+
+    const { getByTestId, rerender } = render(
+      <LinkedCharts>
+        <RegisteringChart categories={["A", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      const colors = JSON.parse(getByTestId("colors").textContent || "{}")
+      expect(colors.B).toBeTruthy()
+    })
+    const firstColors = JSON.parse(getByTestId("colors").textContent || "{}")
+    const bColor = firstColors.B
+
+    rerender(
+      <LinkedCharts>
+        <RegisteringChart categories={["C", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      const colors = JSON.parse(getByTestId("colors").textContent || "{}")
+      expect(colors.A).toBeUndefined()
+      expect(colors.B).toBe(bColor)
+      expect(colors.C).toBeTruthy()
     })
   })
 

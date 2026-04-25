@@ -99,7 +99,6 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
 
   const safeData = data || []
   const effectiveColorBy = colorBy || groupBy
-  const isPushMode = data === undefined
 
   const setup = useChartSetup({
     data: safeData,
@@ -178,10 +177,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
-    ref, frameRef, isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme, showLegend,
-    legendPosition: legendPositionProp,
+    ref, frameRef,
     setup,
   })
 

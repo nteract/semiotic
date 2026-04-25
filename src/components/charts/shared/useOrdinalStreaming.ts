@@ -5,28 +5,15 @@ import type { Ref, RefObject } from "react"
 import { useImperativeHandle } from "react"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { Accessor } from "./types"
-import type { LegendPosition } from "./hooks"
 
 interface UseOrdinalStreamingConfig {
   /** External ref for push API */
   ref: Ref<RealtimeFrameHandle>
   /** Internal frame ref */
   frameRef: RefObject<StreamOrdinalFrameHandle | null>
-  /** True when data prop is undefined (push API mode) */
-  isPushMode: boolean
-  /** Color-by accessor (may be derived from stackBy/groupBy/etc.) */
-  colorBy: Accessor<string> | undefined
-  /** Color scheme name or array — undefined lets useColorScale consult the theme */
-  colorScheme: string | string[] | undefined
-  /** Whether legend is requested */
-  showLegend: boolean | undefined
-  /** Legend position */
-  legendPosition?: LegendPosition
-  /** Results from useChartSetup — needed for legend/margin merge */
+  /** Results from useChartSetup that should be forwarded to the stream frame */
   setup: {
     legendBehaviorProps: Datum
-    legendPosition: LegendPosition
     margin: { top: number; right: number; bottom: number; left: number }
   }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState, useId, useEffect } from "react"
 import { useCategoryColors } from "../../CategoryColors"
-import { useLinkedLegendSuppression } from "../../LinkedCharts"
+import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
@@ -14,7 +14,6 @@ import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
-import { useLinkedChartCategories } from "../../LinkedCharts"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -441,22 +440,24 @@ export function useChartLegendAndMargin({
   legendPosition: LegendPosition
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
+  const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
   // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
   const shouldShowLegend = showLegend !== undefined
     ? showLegend
     : linkedLegendActive ? false : !!colorBy
+  const shouldResolveCategories = !!colorBy && (shouldShowLegend || linkedCategoryRegistryActive)
 
   const legendCategories = useMemo(() => {
-    if (!colorBy) return []
-    if (categories && categories.length > 0) return categories
+    if (!shouldResolveCategories) return []
+    if (categories !== undefined) return categories
     const vals = new Set<string>()
     for (const d of data) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)
-  }, [categories, colorBy, data])
-  useLinkedChartCategories(colorBy ? legendCategories : [])
+  }, [categories, colorBy, data, shouldResolveCategories])
+  useLinkedChartCategories(linkedCategoryRegistryActive && colorBy ? legendCategories : [])
 
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
