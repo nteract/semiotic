@@ -80,7 +80,6 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
 
   const safeData = data || []
   const effectiveColorBy = colorBy || categoryAccessor
-  const isPushMode = data === undefined
 
   const setup = useChartSetup({
     data: safeData,
@@ -155,10 +154,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
-    ref, frameRef, isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme, showLegend,
-    legendPosition: legendPositionProp,
+    ref, frameRef,
     setup,
   })
 

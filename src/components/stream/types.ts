@@ -592,6 +592,10 @@ export interface StreamXYFrameProps<T = Datum> {
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
+  /** Accessor used to report the current legend category domain in push mode. */
+  legendCategoryAccessor?: string | ((d: T) => string)
+  /** Fires when the current legend category domain changes after scene rebuilds. */
+  onCategoriesChange?: (categories: string[]) => void
 
   // ── Background / foreground graphics ───────────
   /** SVG elements rendered behind the canvas (in pixel space) */

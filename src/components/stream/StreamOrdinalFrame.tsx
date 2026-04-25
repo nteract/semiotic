@@ -65,6 +65,7 @@ import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
 import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
 import { trapezoidCanvasRenderer, funnelLabelRenderer } from "./renderers/trapezoidCanvasRenderer"
 import { barFunnelHatchRenderer, barFunnelLabelRenderer } from "./renderers/barFunnelCanvasRenderer"
+import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
@@ -284,6 +285,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendCategoryAccessor,
+      onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
       title,
@@ -348,6 +351,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const hoverRef = useRef<HoverData | null>(null)
+    const lastLegendCategoriesRef = useRef<string[]>([])
+    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
+    const onCategoriesChangeRef = useRef(onCategoriesChange)
+    legendCategoryAccessorRef.current = legendCategoryAccessor
+    onCategoriesChangeRef.current = onCategoriesChange
 
     // ── State ────────────────────────────────────────────────────────────
 
@@ -436,6 +444,16 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // scheduleRender comes from useFrame above.
 
+    const emitLegendCategories = useCallback(() => {
+      const accessor = legendCategoryAccessorRef.current
+      const onChange = onCategoriesChangeRef.current
+      if (!onChange || !accessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onChange(categories)
+    }, [])
+
     // Update config when it changes
     useEffect(() => {
       storeRef.current?.updateConfig(pipelineConfig)
@@ -456,6 +474,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
+          // Legend-category emission deferred to the post-computeScene path
+          // in the render loop — single canonical emit point per data change,
+          // already rAF-throttled. Calling here too would scan the full
+          // buffer twice per push at high streaming frequencies.
           scheduleRender()
         }
       })
@@ -475,6 +497,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       adapterRef.current?.clear()
       storeRef.current?.clear()
       dirtyRef.current = true
+      // emitLegendCategories runs after computeScene in the render loop.
       scheduleRender()
     }, [scheduleRender])
 
@@ -521,6 +544,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             setHoverPoint(null)
           }
           dirtyRef.current = true
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return removed
@@ -530,6 +554,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return previous
@@ -733,6 +758,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const wasDirty = dirtyRef.current
       if (wasDirty && !transitionActive) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        emitLegendCategories()
         dirtyRef.current = false
       }
 

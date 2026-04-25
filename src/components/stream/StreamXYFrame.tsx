@@ -49,6 +49,7 @@ import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
 import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
 import type { StreamRendererFn } from "./renderers/types"
 import { resolveNodeColor } from "./sceneUtils"
+import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
@@ -407,6 +408,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendCategoryAccessor,
+      onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
       canvasPreRenderers,
@@ -519,6 +522,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // on every pointermove. Initialized to LIGHT_THEME.primary so the first
     // hover before a paint still returns a valid color.
     const themePrimaryRef = useRef<string>(LIGHT_THEME.primary)
+    const lastLegendCategoriesRef = useRef<string[]>([])
+    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
+    const onCategoriesChangeRef = useRef(onCategoriesChange)
+    legendCategoryAccessorRef.current = legendCategoryAccessor
+    onCategoriesChangeRef.current = onCategoriesChange
 
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
@@ -622,6 +630,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
+    const emitLegendCategories = useCallback(() => {
+      const accessor = legendCategoryAccessorRef.current
+      const onChange = onCategoriesChangeRef.current
+      if (!onChange || !accessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onChange(categories)
+    }, [])
+
     // Update config when it changes — also schedule re-render since style
     // callbacks (pointStyle, areaStyle, etc.) may have changed.
     useEffect(() => {
@@ -643,6 +661,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const needsRender = store.ingest(changeset)
         if (needsRender) {
           dirtyRef.current = true
+          // Legend-category emission deferred to the post-computeScene path
+          // in the render loop — that's the single canonical emit point per
+          // data change, already rAF-throttled. Calling here too would scan
+          // the full buffer twice per push at high streaming frequencies.
           scheduleRender()
         }
       }, { chunkThreshold, chunkSize })
@@ -667,6 +689,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       adapterRef.current?.clear()
       storeRef.current?.clear()
       dirtyRef.current = true
+      // emitLegendCategories runs after computeScene in the render loop.
       scheduleRender()
     }, [scheduleRender])
 
@@ -683,6 +706,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             setHoverPoint(null)
           }
           dirtyRef.current = true
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return removed
@@ -692,6 +716,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
           dirtyRef.current = true
+          // Legend emit deferred to post-computeScene render path.
           scheduleRender()
         }
         return previous
@@ -963,6 +988,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Compute scene graph (scales + scene nodes) — only when data changed
       if (needsDataRepaint && !isTransitioning) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        emitLegendCategories()
       }
 
       const dpr = getDevicePixelRatio()

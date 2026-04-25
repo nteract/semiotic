@@ -17,6 +17,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 /**
  * AreaChart component props
@@ -294,6 +295,14 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = data || []
+  const isPushMode = data === undefined
+  const streaming = useStreamingLegend({
+    isPushMode,
+    colorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+  })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("AreaChart", safeData, "xAccessor", xAccessor)
@@ -363,7 +372,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     return Array.from(vals)
   }, [safeData, colorBy])
 
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
+  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
@@ -440,6 +450,18 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     userMargin,
     defaults: resolved.marginDefaults,
   })
+  const effectiveLegend = streaming.streamingLegend || legend
+  const effectiveMargin = useMemo(() => {
+    if (streaming.streamingMarginAdjust) {
+      const m = { ...margin }
+      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+        const k = key as keyof typeof m
+        if (m[k] < val) m[k] = val
+      }
+      return m
+    }
+    return margin
+  }, [margin, streaming.streamingMarginAdjust])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -490,7 +512,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: effectiveMargin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -499,7 +521,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
-    ...(legend && { legend, legendPosition }),
+    ...streaming.categoryDomainProps,
+    ...(effectiveLegend && { legend: effectiveLegend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,
       legendClickBehavior: legendState.onLegendClick,

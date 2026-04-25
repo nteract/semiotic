@@ -2,48 +2,34 @@
 import type { Datum } from "./datumTypes"
 
 import type { Ref, RefObject } from "react"
-import { useCallback, useImperativeHandle, useMemo } from "react"
-import { useStreamingLegend } from "./useStreamingLegend"
+import { useImperativeHandle } from "react"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { Accessor } from "./types"
-import type { LegendPosition } from "./hooks"
 
 interface UseOrdinalStreamingConfig {
   /** External ref for push API */
   ref: Ref<RealtimeFrameHandle>
   /** Internal frame ref */
   frameRef: RefObject<StreamOrdinalFrameHandle | null>
-  /** True when data prop is undefined (push API mode) */
-  isPushMode: boolean
-  /** Color-by accessor (may be derived from stackBy/groupBy/etc.) */
-  colorBy: Accessor<string> | undefined
-  /** Color scheme name or array — undefined lets useColorScale consult the theme */
-  colorScheme: string | string[] | undefined
-  /** Whether legend is requested */
-  showLegend: boolean | undefined
-  /** Legend position */
-  legendPosition?: LegendPosition
-  /** Results from useChartSetup — needed for legend/margin merge */
+  /** Results from useChartSetup that should be forwarded to the stream frame */
   setup: {
     legendBehaviorProps: Datum
-    legendPosition: LegendPosition
     margin: { top: number; right: number; bottom: number; left: number }
   }
 }
 
 interface UseOrdinalStreamingResult {
-  /** Legend props merged with streaming legend (spread into streamProps) */
+  /** Legend/category-domain props from useChartSetup (spread into streamProps) */
   effectiveLegendProps: Datum
-  /** Margin merged with streaming legend margin adjustments */
+  /** Margin from useChartSetup, including frame-domain legend expansion */
   effectiveMargin: { top: number; right: number; bottom: number; left: number }
 }
 
 /**
  * Shared hook for ordinal charts that support push API + streaming legend.
  *
- * Consolidates: useStreamingLegend, wrappedPush/pushMany,
- * useImperativeHandle, effectiveLegendProps, effectiveMargin.
+ * Consolidates imperative handle forwarding and returns the legend/margin
+ * props that useChartSetup derives from static data or frame-reported domains.
  *
  * Used by: StackedBarChart, GroupedBarChart, PieChart, DonutChart, SwimlaneChart.
  * NOT used by LikertChart (custom accumulator + deterministic legend).
@@ -51,64 +37,20 @@ interface UseOrdinalStreamingResult {
 export function useOrdinalStreaming({
   ref,
   frameRef,
-  isPushMode,
-  colorBy,
-  colorScheme,
-  showLegend,
-  legendPosition,
   setup,
 }: UseOrdinalStreamingConfig): UseOrdinalStreamingResult {
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy,
-    colorScheme,
-    showLegend,
-    legendPosition,
-  })
-
-  const wrappedPush = useCallback(
-    streaming.wrapPush((d: Datum) => frameRef.current?.push(d)),
-    [streaming.wrapPush]
-  )
-  const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
-    [streaming.wrapPushMany]
-  )
-
   useImperativeHandle(ref, () => ({
-    push: wrappedPush,
-    pushMany: wrappedPushMany,
+    push: (d: Datum) => frameRef.current?.push(d),
+    pushMany: (d: Datum[]) => frameRef.current?.pushMany(d),
     remove: (id: string | string[]) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => {
-      streaming.resetCategories()
-      frameRef.current?.clear()
-    },
-    getData: () => frameRef.current?.getData() ?? []
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
+    clear: () => frameRef.current?.clear(),
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
+  }), [frameRef])
 
-  const effectiveLegendProps = useMemo(() => {
-    if (streaming.streamingLegend) {
-      return {
-        ...setup.legendBehaviorProps,
-        legend: streaming.streamingLegend,
-        legendPosition: legendPosition || setup.legendPosition,
-      }
-    }
-    return setup.legendBehaviorProps
-  }, [setup.legendBehaviorProps, setup.legendPosition, streaming.streamingLegend, legendPosition])
-
-  const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...setup.margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
-    }
-    return setup.margin
-  }, [setup.margin, streaming.streamingMarginAdjust])
+  const effectiveLegendProps = setup.legendBehaviorProps
+  const effectiveMargin = setup.margin
 
   return { effectiveLegendProps, effectiveMargin }
 }

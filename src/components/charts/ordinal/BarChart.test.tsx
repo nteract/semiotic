@@ -1,6 +1,6 @@
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { BarChart } from "./BarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import {
@@ -11,14 +11,73 @@ import {
   NAMED_COUNT_DATA as customData,
 } from "../../../test-utils/ordinalFixtures"
 import type { Datum } from "../shared/datumTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef((props: any, ref: any) => {
       lastOrdinalFrameProps = props
+      const dataRef = React.useRef<any[]>([])
+      const emitCategories = () => {
+        const accessor = props.legendCategoryAccessor
+        if (!props.onCategoriesChange || !accessor) return
+        const seen = new Set<string>()
+        const categories: string[] = []
+        for (const d of dataRef.current) {
+          const raw = typeof accessor === "function" ? accessor(d) : d[accessor]
+          if (raw == null) continue
+          const category = String(raw)
+          if (seen.has(category)) continue
+          seen.add(category)
+          categories.push(category)
+        }
+        props.onCategoriesChange(categories)
+      }
+      React.useImperativeHandle(ref, () => ({
+        push: vi.fn((d) => {
+          dataRef.current.push(d)
+          emitCategories()
+        }),
+        pushMany: vi.fn((data) => {
+          dataRef.current.push(...data)
+          emitCategories()
+        }),
+        remove: vi.fn((id) => {
+          const ids = new Set(Array.isArray(id) ? id : [id])
+          const accessor = props.dataIdAccessor
+          const removed: any[] = []
+          dataRef.current = dataRef.current.filter((d) => {
+            const dataId = typeof accessor === "function" ? accessor(d) : d[accessor]
+            if (!ids.has(dataId)) return true
+            removed.push(d)
+            return false
+          })
+          emitCategories()
+          return removed
+        }),
+        update: vi.fn((id, updater) => {
+          const ids = new Set(Array.isArray(id) ? id : [id])
+          const accessor = props.dataIdAccessor
+          const previous: any[] = []
+          dataRef.current = dataRef.current.map((d) => {
+            const dataId = typeof accessor === "function" ? accessor(d) : d[accessor]
+            if (!ids.has(dataId)) return d
+            previous.push(d)
+            return updater(d)
+          })
+          emitCategories()
+          return previous
+        }),
+        clear: vi.fn(() => {
+          dataRef.current = []
+          emitCategories()
+        }),
+        getData: vi.fn(() => []),
+        getScales: vi.fn(() => null),
+      }))
       return <div className="stream-ordinal-frame"><svg /></div>
     })
   }
@@ -320,6 +379,60 @@ describe("BarChart", () => {
       expect(lastOrdinalFrameProps.legend).toBeUndefined()
       expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
     })
+
+    it("populates legend categories from pushed data", async () => {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      render(
+        <TooltipProvider>
+          <BarChart ref={ref} colorBy="category" />
+        </TooltipProvider>
+      )
+
+      expect(lastOrdinalFrameProps.legend).toBeUndefined()
+      expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
+
+      await act(async () => {
+        ref.current!.push({ category: "A", value: 10 })
+        ref.current!.push({ category: "B", value: 20 })
+      })
+
+      const labels = lastOrdinalFrameProps.legend.legendGroups[0].items.map((item: { label: string }) => item.label)
+      expect(labels).toEqual(["A", "B"])
+      expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(110)
+    })
+
+    it("shrinks and updates pushed legend categories from the frame domain", async () => {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      render(
+        <TooltipProvider>
+          <BarChart ref={ref} colorBy="category" dataIdAccessor="id" />
+        </TooltipProvider>
+      )
+
+      await act(async () => {
+        ref.current!.pushMany([
+          { id: "a", category: "A", value: 10 },
+          { id: "b", category: "B", value: 20 },
+        ])
+      })
+      expect(lastOrdinalFrameProps.legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["A", "B"])
+
+      await act(async () => {
+        ref.current!.remove("b")
+      })
+      expect(lastOrdinalFrameProps.legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["A"])
+
+      await act(async () => {
+        ref.current!.update("a", (d) => ({ ...d, category: "C" }))
+      })
+      expect(lastOrdinalFrameProps.legend.legendGroups[0].items.map((item: { label: string }) => item.label)).toEqual(["C"])
+
+      await act(async () => {
+        ref.current!.clear()
+      })
+      expect(lastOrdinalFrameProps.legend).toBeUndefined()
+      expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
+    })
   })
 
   describe("hoverAnnotation", () => {
@@ -401,7 +514,7 @@ describe("BarChart", () => {
   })
 
   describe("push API", () => {
-    it("ref exposes push, pushMany, getData, and clear", () => {
+    it("ref exposes push, pushMany, getData, getScales, and clear", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
@@ -412,22 +525,27 @@ describe("BarChart", () => {
       expect(typeof ref.current.push).toBe("function")
       expect(typeof ref.current.pushMany).toBe("function")
       expect(typeof ref.current.getData).toBe("function")
+      expect(typeof ref.current.getScales).toBe("function")
       expect(typeof ref.current.clear).toBe("function")
     })
 
-    it("push does not throw when frame ref is not connected", () => {
+    it("push methods remain safe through the streaming legend wrapper", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
           <BarChart ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
-      expect(() => ref.current.push({ category: "A", value: 10 })).not.toThrow()
-      expect(() => ref.current.pushMany([{ category: "B", value: 20 }])).not.toThrow()
-      expect(() => ref.current.clear()).not.toThrow()
+      expect(() => {
+        act(() => {
+          ref.current.push({ category: "A", value: 10 })
+          ref.current.pushMany([{ category: "B", value: 20 }])
+          ref.current.clear()
+        })
+      }).not.toThrow()
     })
 
-    it("getData returns empty array when frame ref is not connected", () => {
+    it("getData and getScales delegate to the frame handle", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
@@ -435,6 +553,7 @@ describe("BarChart", () => {
         </TooltipProvider>
       )
       expect(ref.current.getData()).toEqual([])
+      expect(ref.current.getScales()).toBeNull()
     })
   })
 

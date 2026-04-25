@@ -138,7 +138,6 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
 
   const safeData = data || []
   const effectiveColorBy = colorBy || subcategoryAccessor
-  const isPushMode = data === undefined
 
   // Mode-aware `barPadding`: sparkline uses 1px by default (or less when so
   // many categories are present that 1px would shrink each lane below 2px).
@@ -240,10 +239,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   })
 
   const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
-    ref, frameRef, isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme, showLegend,
-    legendPosition: legendPositionProp,
+    ref, frameRef,
     setup,
   })
 

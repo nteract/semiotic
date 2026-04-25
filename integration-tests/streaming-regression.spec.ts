@@ -154,10 +154,14 @@ test.describe("Streaming Legend Regression", () => {
       const testCase = page.locator(`[data-testid="${testId}"]`)
       // Legend renders as SVG overlay with legend items
       const legendItems = testCase.locator('[role="option"], .legend-item, text')
-      const count = await legendItems.count()
 
-      // Should have at least 2 legend items
-      expect(count).toBeGreaterThanOrEqual(2)
+      // The streaming examples push categories over time. First canvas paint
+      // can happen after one datum, so poll until enough category domains have
+      // reached the legend instead of sampling the DOM once.
+      await expect.poll(
+        async () => legendItems.count(),
+        { timeout: 8000, message: `${name}: streaming legend never reached 2 items` }
+      ).toBeGreaterThanOrEqual(2)
     })
   }
 })

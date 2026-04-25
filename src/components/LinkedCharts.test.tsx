@@ -1,8 +1,8 @@
 import React from "react"
-import { render, fireEvent, act as rtlAct } from "@testing-library/react"
+import { render, fireEvent, act as rtlAct, waitFor } from "@testing-library/react"
 import { renderHook, act } from "@testing-library/react"
-import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, estimateLegendRowCount } from "./LinkedCharts"
-import { CategoryColorProvider } from "./CategoryColors"
+import { LinkedCharts, useSelection, useLinkedHover, useLinkedLegendSuppression, useLinkedChartCategories, estimateLegendRowCount } from "./LinkedCharts"
+import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import type { Datum } from "./charts/shared/datumTypes"
 
 describe("LinkedCharts", () => {
@@ -127,6 +127,27 @@ describe("LinkedCharts", () => {
     expect(result.current).toBe(true)
   })
 
+  it("useLinkedLegendSuppression returns false when LinkedCharts has no categories yet (no unified legend would render)", () => {
+    // Suppression now activates only once the unified legend has categories
+    // to render — otherwise child legends would silence themselves while
+    // <LinkedLegend> returns null on empty input, leaving no legend at all.
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <LinkedCharts>{children}</LinkedCharts>
+    )
+    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    expect(result.current).toBe(false)
+  })
+
+  it("useLinkedLegendSuppression returns true once categories are present", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <CategoryColorProvider colors={{ A: "#f00", B: "#0f0" }}>
+        <LinkedCharts>{children}</LinkedCharts>
+      </CategoryColorProvider>
+    )
+    const { result } = renderHook(() => useLinkedLegendSuppression(), { wrapper })
+    expect(result.current).toBe(true)
+  })
+
   it("useLinkedLegendSuppression returns false when LinkedCharts has showLegend={false}", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LinkedCharts showLegend={false}>{children}</LinkedCharts>
@@ -146,6 +167,73 @@ describe("LinkedCharts", () => {
     expect(container.querySelector("svg")).toBeTruthy()
     expect(container.textContent).toContain("North")
     expect(container.textContent).toContain("South")
+  })
+
+  it("builds and shrinks unified legend categories from child chart registrations", async () => {
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories)
+      return <div>child</div>
+    }
+
+    const { container, rerender } = render(
+      <LinkedCharts>
+        <RegisteringChart categories={["A", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("A")
+      expect(container.textContent).toContain("B")
+    })
+
+    rerender(
+      <LinkedCharts>
+        <RegisteringChart categories={["A"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("A")
+      expect(container.textContent).not.toContain("B")
+    })
+  })
+
+  it("keeps generated category colors stable when registered category order changes", async () => {
+    function ColorSnapshot() {
+      const colors = useCategoryColors()
+      return <pre data-testid="colors">{JSON.stringify(colors)}</pre>
+    }
+
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories)
+      return <ColorSnapshot />
+    }
+
+    const { getByTestId, rerender } = render(
+      <LinkedCharts>
+        <RegisteringChart categories={["A", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      const colors = JSON.parse(getByTestId("colors").textContent || "{}")
+      expect(colors.B).toBeTruthy()
+    })
+    const firstColors = JSON.parse(getByTestId("colors").textContent || "{}")
+    const bColor = firstColors.B
+
+    rerender(
+      <LinkedCharts>
+        <RegisteringChart categories={["C", "B"]} />
+      </LinkedCharts>
+    )
+
+    await waitFor(() => {
+      const colors = JSON.parse(getByTestId("colors").textContent || "{}")
+      expect(colors.A).toBeUndefined()
+      expect(colors.B).toBe(bColor)
+      expect(colors.C).toBeTruthy()
+    })
   })
 
   it("does not render legend when showLegend is false", () => {

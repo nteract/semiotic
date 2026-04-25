@@ -202,29 +202,18 @@ Curated categorical sequences maximizing neighbor contrast, and per-role typogra
 
 **Status**: Not scoped. `remove()`/`update()` return previous values — caller can push them back manually. A built-in `ref.current.undo()` needs an operation log with inverse operations. May be better as a userland wrapper.
 
-### Legend auto-population from pushed categories [YELLOW]
+### Legend auto-population from pushed categories [GREEN]
 
-**Status**: short-circuited at 3.4.1 (empty legends no longer reserve margin); real auto-population deferred.
+**Status**: implemented. Empty push-mode legends still start suppressed (no ghost margin), but `StreamOrdinalFrame` and `StreamXYFrame` now accept `legendCategoryAccessor` + `onCategoriesChange` and emit the live legend-category domain after scene rebuilds. The callback is domain-deduped and fires for first push, `pushMany`, `remove`, `update`, and `clear`, so legends now shrink and relabel when the underlying frame domain changes.
 
-**Symptom**: A push-API chart (`<BarChart colorBy="category">`, no `data` prop) mounts before any categories exist, so `useChartLegendAndMargin` → `createLegend` produces a shell with `legendGroups: [{ items: [], label: "" }]`. Pre-3.4.1 that reserved 110px of right-margin for a legend and rendered only the empty header bar ("neatline"). 3.4.1 treats zero-item legends as absent — margin stays tight, no ghost header — but the legend still never populates as categories arrive via `push()`, which is the behavior users actually want.
+`useChartSetup` wires the frame-domain props for HOCs that use the shared setup path. Manual XY streaming HOCs (`LineChart`, `AreaChart`, `BubbleChart`, `StackedAreaChart`) use the same `useStreamingLegend` domain props. `useChartLegendAndMargin` is also the common LinkedCharts registration point for static legends, so chart categories flow into unified legend/color state instead of requiring each HOC to opt in separately.
 
-**What's missing**: a subscription from the frame to the HOC telling it "the category list changed, rebuild the legend from the new domain". Current data flow is one-way (HOC → frame via props / ref imperatives); legend construction lives entirely in `useChartLegendAndMargin` and is memo'd against the `data` prop, which stays `undefined` forever under push API.
+`LinkedCharts` now owns a live category registry. Child charts register their current domains; LinkedCharts merges those with any parent `CategoryColorProvider` colors, provides stable shared colors to children, and renders/shrinks the unified legend from the live category set.
 
-**Sketched design**:
-1. Add `onCategoriesChange?: (categories: string[]) => void` prop to `StreamOrdinalFrame` (and, for XY charts that face the same latent issue with `colorBy`, `StreamXYFrame`). Fires after each `computeScene` when the relevant scale domain differs from last fire.
-2. `useChartSetup` holds a `const [pushedCategories, setPushedCategories] = useState<string[]>([])`, wires a stable `onCategoriesChange` handler that calls `setPushedCategories`, and threads `categories: pushedCategories` into `useChartLegendAndMargin`. The hook's `categories` param already exists (and short-circuits the data-based unique-values path inside `createLegend`), but no HOC surfaces it as a public prop yet — this design piggybacks on it for the internal push-tracking path.
-3. Debounce by identity: fire the callback only when the sorted category list is not shallow-equal to the prior one. Otherwise we'd re-render on every rAF.
-4. Document: declaring `colorBy` + pushing categories is now enough; passing an explicit `categories` prop remains supported for the case where users want a legend populated before any data arrives (e.g. categorical color consistency across a dashboard).
-
-**Known landmines**:
-- Make sure the callback fires after FIRST ingest, not just on subsequent changes — otherwise the initial push batch never triggers legend population.
-- Identity-based dedupe has to compare sorted arrays, not just `===`, since `oScale.domain()` returns a fresh array each call in OrdinalPipelineStore.
-- XY's colorBy-as-categorical case is analogous but uses `groupAccessor` in the store; same pattern but different accessor path.
-- `LinkedCharts` + `CategoryColorProvider` already handle shared-category legends across charts — make sure the auto-populated categories flow into the provider's shared list too, otherwise charts under `LinkedCharts` with push API would get mismatched colors across the shared legend.
-
-**Effort**: ~150 LOC across StreamOrdinalFrame / StreamXYFrame / useChartSetup / OrdinalPipelineStore (domain-change detection) / PipelineStore. Three or four tests: first-push fires, repeated pushes without domain change don't fire, domain shrinkage (category removed) fires with the reduced list, LinkedCharts share state.
-
-**Workaround until implemented**: pass the full dataset via `data` on first render (then use push for subsequent updates), OR accept that push-API + `colorBy` produces a category-less legend (current behavior post-3.4.1). Surfacing the hook-internal `categories` param as an HOC prop would be a smaller middle-ground change — one line per HOC — if an escape hatch is needed before the full auto-population work lands.
+Regression coverage:
+- `StreamOrdinalFrame.test.tsx` and `StreamXYFrame.test.tsx`: first push, remove, update, clear domain emissions.
+- `BarChart.test.tsx`: push-mode legend populates, shrinks, relabels, and clears through the public ref.
+- `LinkedCharts.test.tsx`: unified legend builds and shrinks from child category registrations.
 
 ---
 

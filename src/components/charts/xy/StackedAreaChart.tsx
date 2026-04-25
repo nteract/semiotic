@@ -359,7 +359,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     return Array.from(vals)
   }, [safeData, colorBy])
 
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
+  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
 
   // Merge legend selection with cross-chart selection
   const effectiveSelectionHook = useMemo(() => {
@@ -504,6 +505,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
+    ...streaming.categoryDomainProps,
     ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
       legendHoverBehavior: legendState.onLegendHover,

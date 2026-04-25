@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState, useId, useEffect } from "react"
 import { useCategoryColors } from "../../CategoryColors"
-import { useLinkedLegendSuppression } from "../../LinkedCharts"
+import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
@@ -440,14 +440,28 @@ export function useChartLegendAndMargin({
   legendPosition: LegendPosition
 } {
   const linkedLegendActive = useLinkedLegendSuppression()
+  const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
   // Suppress child legend when LinkedCharts is handling it, unless explicitly overridden
   const shouldShowLegend = showLegend !== undefined
     ? showLegend
     : linkedLegendActive ? false : !!colorBy
+  const shouldResolveCategories = !!colorBy && (shouldShowLegend || linkedCategoryRegistryActive)
+
+  const legendCategories = useMemo(() => {
+    if (!shouldResolveCategories) return []
+    if (categories !== undefined) return categories
+    const vals = new Set<string>()
+    for (const d of data) {
+      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
+      if (v != null) vals.add(String(v))
+    }
+    return Array.from(vals)
+  }, [categories, colorBy, data, shouldResolveCategories])
+  useLinkedChartCategories(linkedCategoryRegistryActive && colorBy ? legendCategories : [])
 
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-    const built = createLegend({ data, colorBy, colorScale, getColor, categories })
+    const built = createLegend({ data, colorBy, colorScale, getColor, categories: legendCategories })
     // Suppress empty legends — when a chart using the push API mounts with no
     // `data` yet and no explicit `categories`, createLegend returns a shell
     // with zero items. Returning it would reserve margin for a legend that
@@ -456,7 +470,7 @@ export function useChartLegendAndMargin({
     const totalItems = built.legendGroups.reduce((sum, g) => sum + g.items.length, 0)
     if (totalItems === 0) return undefined
     return built
-  }, [shouldShowLegend, colorBy, data, colorScale, categories])
+  }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const margin = useMemo<MarginType>(() => {
     const userSides: Partial<MarginType> = typeof userMargin === "number"
