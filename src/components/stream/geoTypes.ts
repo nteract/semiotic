@@ -216,6 +216,15 @@ export interface StreamGeoFrameProps<T = Datum> {
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
+  /**
+   * Categorical color field. For ChoroplethMap reads from area `properties`
+   * (or top-level fallback); for ProportionalSymbolMap reads from each point.
+   * Server-side legend auto-build groups by this field when `showLegend` is
+   * set and no explicit `legend` prop is provided. The function form accepts
+   * either the point datum `T` or a GeoJSON Feature so choropleth callers can
+   * write `(f) => f.properties.region` without a cast.
+   */
+  colorBy?: string | ((d: T | GeoJSON.Feature) => string)
 
   // ── Interaction ──
   enableHover?: boolean

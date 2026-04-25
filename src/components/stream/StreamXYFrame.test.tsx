@@ -256,6 +256,7 @@ describe("StreamXYFrame", () => {
           { id: "a", t: 1, v: 10, series: "A" },
           { id: "b", t: 2, v: 20, series: "B" },
         ])
+        await Promise.resolve()
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
 

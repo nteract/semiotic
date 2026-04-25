@@ -3,7 +3,7 @@ import type { Datum } from "./datumTypes"
 
 import { useRef, useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
-import { createColorScale, getColor } from "./colorUtils"
+import { createColorScale, getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor } from "./types"
 import { useThemeCategorical, type LegendPosition } from "./hooks"
 import { useLinkedChartCategories } from "../../LinkedCharts"
@@ -122,11 +122,10 @@ export function useStreamingLegend({
   const linkedCategories = isPushMode && colorBy ? orderedRef.current : []
   useLinkedChartCategories(linkedCategories)
 
-  // Build legend from discovered categories. Color resolution mirrors
-  // `useColorScale` (categoryColors → user colorScheme → theme categorical
-  // → d3 "category10") so legend swatches always match the marks the
-  // chart's own colorScale produces — including the case where neither
-  // CategoryColorProvider nor LinkedCharts is wrapping the chart.
+  // Build legend from discovered categories. Color resolution mirrors the
+  // push-mode mark path: CategoryColorProvider/LinkedCharts colors win; if
+  // there is no provider, the stream frame falls back to explicit palette,
+  // then theme categorical, then STREAMING_PALETTE.
   const streamingLegend = useMemo(() => {
     if (!isPushMode || !colorBy || showLegend === false) return undefined
     // Use version to trigger recompute (consumed by useMemo dep)
@@ -134,9 +133,16 @@ export function useStreamingLegend({
     const categories = orderedRef.current
     if (categories.length === 0) return undefined
 
-    const effectiveScheme: string | string[] = colorScheme
-      ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
-      ?? "category10"
+    // Resolution order matches `useColorScale` so the legend swatch and the
+    // mark always agree: explicit array `colorScheme` → string scheme name
+    // (e.g. "category10") → theme categorical → STREAMING_PALETTE. The string
+    // case was previously ignored — `createColorScale` resolves it via d3
+    // `scaleOrdinal` which understands the named schemes.
+    const effectiveScheme: string | string[] = Array.isArray(colorScheme) && colorScheme.length > 0
+      ? colorScheme
+      : (typeof colorScheme === "string" && colorScheme.length > 0)
+        ? colorScheme
+        : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
 
     // Build synthetic data so createLegend can extract categories
     const syntheticColorBy = typeof colorBy === "string" ? colorBy : "__streamCat"

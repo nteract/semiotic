@@ -1,16 +1,33 @@
 #!/usr/bin/env node
 /**
  * Check SSR alignment — verifies that serverChartConfigs.ts covers all HOC
- * chart types and that key props are threaded through.
+ * chart types, that key props are threaded through, AND that every scene-node
+ * type emitted by a canvas scene builder has a matching SVG converter case.
+ *
+ * The third check is the load-bearing one: client renders via canvas (using
+ * scene builders + canvas renderers); server renders via `SceneToSVG.tsx`
+ * which converts the same scene-node values to SVG. If a new node type lands
+ * on canvas without a corresponding case in `*SceneNodeToSVG`, server renders
+ * silently drop those marks. The bar `gradientFill` near-miss in 3.4.2 was
+ * exactly this class of bug — caught by the developer who shipped it; the
+ * next contributor needs the safety net.
  *
  * Fails CI if:
  * 1. An HOC chart exists but has no SSR config entry
  * 2. An SSR config entry references a chart that doesn't exist as an HOC
  * 3. Checked key props (currently oSort and cornerRadius) are missing from
  *    SSR configs for charts that support them
+ * 4. A scene builder emits a `type: "X"` value that no `*SceneNodeToSVG`
+ *    converter handles (canvas-only rendering — SSR drops the mark silently)
+ * 5. A `*SceneNodeToSVG` converter has a `case "X":` for a node type no
+ *    scene builder ever emits (dead SVG branch — usually means the scene
+ *    type was renamed/removed and the SVG side wasn't updated)
  *
  * Usage:
  *   node scripts/check-ssr-alignment.js
+ *
+ * Tests can point the scene parity pass at a temporary SceneToSVG copy via:
+ *   SEMIOTIC_SCENE_TO_SVG=/tmp/SceneToSVG.tsx node scripts/check-ssr-alignment.js
  */
 
 const fs = require("fs")
@@ -134,7 +151,158 @@ for (const { prop, charts, label } of PROP_CHECKS) {
   }
 }
 
-// ── 7. Report ──────────────────────────────────────────────────────────
+// ── 7. Scene type ↔ SceneToSVG parity ──────────────────────────────────
+//
+// The contract: every `type: "X"` discriminant in a frame's scene-node union
+// must have a matching `case "X":` branch in the corresponding
+// `*SceneNodeToSVG` converter, and vice versa. Drift in either direction is
+// a bug — canvas-only types render blank under SSR; SVG-only branches are
+// dead code or rename leftovers.
+//
+// Source of truth: the four scene-node type-union files. Each frame's union
+// (e.g. `OrdinalSceneNode = | RectSceneNode | PointSceneNode | …`) names its
+// member interfaces; each interface body declares its `type: "X"` literal.
+// We parse those, not the scene-builder files, because most builders call
+// shared helpers (`buildLineNode`, `buildRectNode` in SceneGraph.ts) where
+// the literal lives — the union is the only single point of truth.
+
+const STREAM_DIR = path.join(ROOT, "src/components/stream")
+const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
+  ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
+  : path.join(STREAM_DIR, "SceneToSVG.tsx")
+
+const FRAMES = {
+  xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG" },
+  ordinal: { typesFile: "ordinalTypes.ts", unionName: "OrdinalSceneNode", svgFn: "ordinalSceneNodeToSVG" },
+  network: { typesFile: "networkTypes.ts", unionName: "NetworkSceneNode", svgFn: "networkSceneNodeToSVG" },
+  geo:     { typesFile: "geoTypes.ts",     unionName: "GeoSceneNode",     svgFn: "geoSceneNodeToSVG" },
+}
+
+// Type-discriminant strings that legitimately appear on one side only.
+// Each entry needs a one-line justification.
+const PARITY_EXCEPTIONS = {
+  // canvas-only (no SSR equivalent yet) — none currently.
+  canvasOnly: new Set([]),
+  // SVG-only — case branches that aren't scene-node `type` discriminants.
+  svgOnly: new Set([
+    // "top" / "bottom" / "left" / "right" are `roundedEdge` discriminator
+    // values inside the ordinal rect branch's inner `switch (roundedEdge)`,
+    // not top-level scene types. The case-label parser walks the whole
+    // function body so it picks them up; this exemption tells the parity
+    // check to ignore them. Network edge sub-types (`bezier` / `curved` /
+    // `ribbon`) live in `networkSceneEdgeToSVG`, which the parity pass does
+    // not parse today — if/when edge parity is added, those will need
+    // separate handling, not a one-sided exception here.
+    "top", "bottom", "left", "right",
+  ]),
+}
+
+/** Type-files that hold scene-node interfaces, indexed by unqualified file name. */
+const TYPES_FILES = Object.values(FRAMES).map(f => f.typesFile)
+
+/**
+ * Build a global map of `interfaceName → type-discriminant string` by
+ * scanning every scene-node interface across all four type files. Cross-
+ * frame reuse (e.g. ordinal's union references PointSceneNode declared in
+ * types.ts) resolves through this map.
+ */
+function buildInterfaceTypeMap() {
+  const map = new Map()
+  for (const file of TYPES_FILES) {
+    const src = fs.readFileSync(path.join(STREAM_DIR, file), "utf8")
+    // Match `export interface NAME { ... type: "X" ... }` non-greedily on
+    // the body — the [^}]* prevents bleeding into the next interface.
+    const re = /export\s+interface\s+(\w+(?:Node|Edge))\s*\{[^}]*?\btype:\s*"(\w+)"/gs
+    let m
+    while ((m = re.exec(src))) {
+      map.set(m[1], m[2])
+    }
+  }
+  return map
+}
+
+/** Parse the named union to a list of member interface names. */
+function extractUnionMembers(source, unionName) {
+  // `export type NAME = | A | B | ...` or `= A | B`. Match until the next
+  // top-level `\n\n` or `\nexport` to avoid running past the union.
+  const re = new RegExp(`export\\s+type\\s+${unionName}\\s*=([\\s\\S]*?)(?:\\n\\n|\\nexport)`, "m")
+  const m = re.exec(source)
+  if (!m) return []
+  // Members appear as `| FooNode` or just `FooNode`. Pull everything that
+  // looks like a SceneNode/Edge interface name.
+  return m[1].match(/\w+(?:Node|Edge)/g) || []
+}
+
+/** Extract every `case "X":` literal inside a named function body. */
+function extractCaseLabels(source, functionName) {
+  const declRe = new RegExp(`(?:export\\s+)?function\\s+${functionName}\\b`, "g")
+  const declMatch = declRe.exec(source)
+  if (!declMatch) return new Set()
+  // Brace-balance walk from the start of the function body.
+  let i = source.indexOf("{", declMatch.index)
+  if (i < 0) return new Set()
+  let depth = 0
+  const start = i
+  for (; i < source.length; i++) {
+    if (source[i] === "{") depth++
+    else if (source[i] === "}") {
+      depth--
+      if (depth === 0) break
+    }
+  }
+  const body = source.slice(start, i + 1)
+  const cases = new Set()
+  const caseRe = /\bcase\s+"(\w+)":/g
+  let cm
+  while ((cm = caseRe.exec(body))) cases.add(cm[1])
+  return cases
+}
+
+console.log("\n[scene parity] checking each frame's canvas ↔ SVG type coverage")
+
+const sceneToSvgSrc = fs.readFileSync(SCENE_TO_SVG, "utf8")
+const interfaceToType = buildInterfaceTypeMap()
+
+for (const [frame, { typesFile, unionName, svgFn }] of Object.entries(FRAMES)) {
+  const typesPath = path.join(STREAM_DIR, typesFile)
+  if (!fs.existsSync(typesPath)) continue
+  const typesSrc = fs.readFileSync(typesPath, "utf8")
+
+  const memberNames = extractUnionMembers(typesSrc, unionName)
+  const emitted = new Set()
+  for (const memberName of memberNames) {
+    const t = interfaceToType.get(memberName)
+    if (t) emitted.add(t)
+    else {
+      // Member referenced in the union but no interface body found — could
+      // be a re-export or namespace import we can't resolve statically.
+      // Surface it as a check-script limitation, not a hard failure.
+      console.warn(`  · ${frame}: union member "${memberName}" has no resolvable type discriminant — coverage may be incomplete for this type.`)
+    }
+  }
+
+  const handled = extractCaseLabels(sceneToSvgSrc, svgFn)
+
+  // Canvas-only drift — emitted by a scene builder, not handled in SVG
+  for (const type of emitted) {
+    if (PARITY_EXCEPTIONS.canvasOnly.has(type)) continue
+    if (!handled.has(type)) {
+      errors.push(`Scene type "${type}" is part of the ${frame} ${unionName} union but ${svgFn} has no \`case "${type}":\` branch — SSR will drop these marks. Add a branch in src/components/stream/SceneToSVG.tsx, or list the type in PARITY_EXCEPTIONS.canvasOnly with justification.`)
+    }
+  }
+
+  // SVG-only drift — handled in SVG, not emitted by any builder
+  for (const type of handled) {
+    if (PARITY_EXCEPTIONS.svgOnly.has(type)) continue
+    if (!emitted.has(type)) {
+      errors.push(`${svgFn} has a \`case "${type}":\` branch but no scene-node interface in the ${frame} ${unionName} union declares \`type: "${type}"\` — likely dead code. Remove the case, or list the type in PARITY_EXCEPTIONS.svgOnly with justification.`)
+    }
+  }
+
+  console.log(`  ${frame}: ${emitted.size} emitted / ${handled.size} handled (${[...emitted].sort().join(", ")})`)
+}
+
+// ── 8. Report ──────────────────────────────────────────────────────────
 
 if (errors.length > 0) {
   console.error("\nSSR Alignment Check FAILED:\n")
@@ -142,10 +310,10 @@ if (errors.length > 0) {
     console.error(`  ✗ ${err}`)
   }
   console.error(`\n${errors.length} issue(s) found.`)
-  console.error("Fix these in src/components/server/serverChartConfigs.ts and/or validationMap.ts")
+  console.error("Fix in src/components/server/serverChartConfigs.ts, validationMap.ts, or src/components/stream/SceneToSVG.tsx.")
   process.exit(1)
 } else {
-  console.log("✅ SSR alignment check passed")
+  console.log("\n✅ SSR alignment check passed")
   console.log(`   ${hocsOnDisk.size} HOC charts on disk`)
   console.log(`   ${ssrNames.size} SSR configs (+ ${SSR_EXCLUDED.size} intentionally excluded)`)
   console.log(`   ${validationNames.size} validation map entries`)

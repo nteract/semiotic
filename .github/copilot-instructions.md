@@ -137,7 +137,7 @@ Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations
 - **GroupedBarChart** — `data`, `categoryAccessor`, `valueAccessor`, `groupBy` (required).
 - **PieChart/DonutChart** — `data`, `categoryAccessor`, `valueAccessor`.
 - **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"). Renders with trapezoid connectors, no axes.
-- **GaugeChart** — `value`, `thresholds` (array of `{value, color, label}`). Optional: `min`, `max`, `sweep`, `arcWidth`.
+- **GaugeChart** — `value`. Optional: `thresholds` (array of `{value, color, label}`), `min`, `max`, `sweep`, `arcWidth`.
 - **SwimlaneChart** — `data`, `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`.
 - **ForceDirectedGraph** — `edges` (required). `nodes` optional (inferred from edges).
 - **SankeyDiagram** — `edges` (required), `valueAccessor`.

@@ -21,6 +21,12 @@ interface AnnotationScales {
   o?: { (v: string): number | undefined; bandwidth?: () => number }
   /** For ordinal charts: value scale */
   r?: (v: number) => number
+  /**
+   * For geo charts: projects [lon, lat] → [x, y] pixel coords. Set by
+   * `renderGeoFrame` from the resolved `GeoPipelineStore` projection.
+   * Annotations that carry `coordinates: [lon, lat]` resolve through this.
+   */
+  geoProjection?: (coords: [number, number]) => [number, number] | null
 }
 
 interface AnnotationLayout {
@@ -41,6 +47,30 @@ export interface StaticAnnotationConfig {
   projection?: "vertical" | "horizontal" | "radial"
 }
 
+/**
+ * Resolve the (x, y) pixel for an annotation. Order:
+ *   1. `coordinates: [lon, lat]` + `geoProjection` (geo frame)
+ *   2. `x`/`y` data values + `scales.x`/`scales.y` (XY/ordinal frames)
+ *   3. accessor lookup on the annotation
+ *   4. raw `x`/`y` numbers as pixel passthrough (network frame, or any
+ *      annotation pre-projected to pixel coords by the caller)
+ */
+function resolveCoords(
+  ann: Datum,
+  scales: AnnotationScales,
+  xAccessor?: string,
+  yAccessor?: string
+): { x: number | null; y: number | null } {
+  // Geo projection first — coordinates is the documented field for geo
+  // annotations and bypasses the x/y scale entirely.
+  if (Array.isArray(ann.coordinates) && ann.coordinates.length >= 2 && scales.geoProjection) {
+    const projected = scales.geoProjection([ann.coordinates[0], ann.coordinates[1]])
+    if (projected) return { x: projected[0], y: projected[1] }
+  }
+
+  return { x: resolveXPixel(ann, scales, xAccessor), y: resolveYPixel(ann, scales, yAccessor) }
+}
+
 function resolveXPixel(
   ann: Datum,
   scales: AnnotationScales,
@@ -48,6 +78,9 @@ function resolveXPixel(
 ): number | null {
   if (ann.x != null && scales.x) return scales.x(ann.x)
   if (xAccessor && ann[xAccessor] != null && scales.x) return scales.x(ann[xAccessor])
+  // Pixel passthrough for frames without a continuous x scale (e.g. network)
+  // or annotations that have already been projected by the caller.
+  if (typeof ann.x === "number") return ann.x
   return null
 }
 
@@ -58,6 +91,7 @@ function resolveYPixel(
 ): number | null {
   if (ann.y != null && scales.y) return scales.y(ann.y)
   if (yAccessor && ann[yAccessor] != null && scales.y) return scales.y(ann[yAccessor])
+  if (typeof ann.y === "number") return ann.y
   return null
 }
 
@@ -227,8 +261,9 @@ function renderAnnotation(
 
     case "label":
     case "text": {
-      const px = resolveXPixel(ann, scales, xAccessor)
-      const py = resolveYPixel(ann, scales, yAccessor)
+      // Use resolveCoords so geo annotations with `coordinates: [lon, lat]`
+      // and network annotations with raw pixel x/y both flow through.
+      const { x: px, y: py } = resolveCoords(ann, scales, xAccessor, yAccessor)
       if (px == null || py == null) return null
       const dx = ann.dx || 0
       const dy = ann.dy || 0

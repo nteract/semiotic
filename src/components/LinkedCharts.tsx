@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
 import type { ResolutionMode } from "./store/SelectionStore"
 import { ObservationProvider } from "./store/ObservationStore"
@@ -47,6 +47,7 @@ interface LinkedCategoryRegistry {
 }
 
 const LinkedCategoryRegistryContext = createContext<LinkedCategoryRegistry | null>(null)
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 function uniqueCategories(categories: string[]): string[] {
   const seen = new Set<string>()
@@ -78,12 +79,12 @@ export function useLinkedChartCategories(categories: string[]): void {
   }
   const stableCategories = stableCategoriesRef.current
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!registry) return
     return () => registry.unregisterCategories(id)
   }, [registry, id])
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!registry) return
     registry.registerCategories(id, stableCategories)
   }, [registry, id, stableCategories])

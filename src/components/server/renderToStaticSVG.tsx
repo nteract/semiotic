@@ -403,8 +403,11 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     idPrefix: idPfx,
   }) : null
 
-  // Legend
-  const legend = props.showLegend ? (() => {
+  // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
+  // honor a caller-supplied pre-rendered ReactNode. Config-object form
+  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; the
+  // categorical auto-build covers that case. Tracked in OUTSTANDING_WORK.md.
+  const xyAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.groupAccessor
     const categories = extractCategories(props.data || [], colorAccessor)
     if (categories.length === 0) return null
@@ -419,13 +422,18 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
       hasTitle: !!props.title,
     })
   })() : null
+  const legend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : xyAutoLegend
 
   const content = (
     <>
+      {props.backgroundGraphics}
       {grid}
-      {annotationNodes}
       {dataMarks}
       {axes}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -494,6 +502,15 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
   const margin = { ...defaultMargin, ...props.margin }
+  // Match the XY frame: reserve legend space BEFORE computing inner dims so
+  // the layout doesn't draw under the legend.
+  const legendPos = props.legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top, 40)
+  }
   const innerWidth = size[0] - margin.left - margin.right
   const innerHeight = size[1] - margin.top - margin.bottom
 
@@ -621,11 +638,74 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     .map((label, i) => networkLabelToSVG(label, i))
     .filter(Boolean)
 
+  // Network annotations: layout assigns absolute pixel coords to nodes, so
+  // overlay annotations use raw `x`/`y` numbers directly. `staticAnnotations`
+  // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
+  const annotationNodes = props.annotations ? renderStaticAnnotations({
+    annotations: props.annotations,
+    scales: {},
+    layout: { width: innerWidth, height: innerHeight },
+    theme,
+    idPrefix: props._idPrefix,
+  }) : null
+
+  // Network legend: parity with the XY/Ordinal auto-build. Source is the
+  // node list (one entry per unique colorBy/nodeIDAccessor value); layout-
+  // produced node positions are irrelevant here, only the categorical set
+  // matters. When nodes weren't supplied directly, fall back to the
+  // ALREADY-RESOLVED `edges` array — that's the output of
+  // `buildRealtimeEdges` which applied `sourceAccessor` / `targetAccessor`,
+  // so source/target are always normalized strings regardless of input shape.
+  //
+  // Both string and function accessors are honored — `extractCategories`
+  // accepts either form, and stripping functions to undefined would silently
+  // drop the legend for any caller using a typed accessor function.
+  const networkLegend = props.showLegend ? (() => {
+    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+      typeof a === "string" || typeof a === "function"
+    const colorAccessor = isAccessor(props.colorBy)
+      ? props.colorBy
+      : isAccessor(props.nodeIDAccessor) ? props.nodeIDAccessor : undefined
+    const legendSource = props.nodes && props.nodes.length > 0
+      ? (props.nodes as any[])
+      : Array.from(new Set(
+        edges.flatMap((e) => {
+          const src = typeof e.source === "string" ? e.source : (e.source as any)?.id
+          const tgt = typeof e.target === "string" ? e.target : (e.target as any)?.id
+          return [src, tgt]
+        }).filter(Boolean)
+      )).map((id) => ({ id }))
+    const categories = extractCategories(legendSource, colorAccessor as any)
+    if (categories.length === 0) return null
+    return renderStaticLegend({
+      categories,
+      colorScheme: props.colorScheme,
+      theme,
+      position: props.legendPosition || "right",
+      totalWidth: size[0],
+      totalHeight: size[1],
+      margin,
+      hasTitle: !!props.title,
+    })
+  })() : null
+
+  // If the caller supplied a pre-rendered legend element, prefer it over
+  // the auto-build. The frame's `legend` prop also accepts a config-object
+  // form ({legendGroups} or {gradient}) — those are SVGOverlay-side concerns
+  // and aren't yet wired through SSR; auto-build covers the categorical case
+  // either way. Tracked in OUTSTANDING_WORK.md → SSR feature parity.
+  const networkLegendOut = React.isValidElement((props as any).legend)
+    ? (props as any).legend as React.ReactNode
+    : networkLegend
+
   const content = (
     <>
+      {props.backgroundGraphics}
       {edgeElements}
       {nodeElements}
       {labelElements}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -636,7 +716,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
-        idPrefix: props._idPrefix,
+      legend: networkLegendOut,
+      idPrefix: props._idPrefix,
     })
   )
 }
@@ -888,8 +969,10 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     idPrefix: idPfx,
   }) : null
 
-  // Legend
-  const legend = props.showLegend ? (() => {
+  // Legend — auto-build from colorAccessor/stackBy/groupBy + showLegend, OR
+  // honor caller-supplied pre-rendered ReactNode. See XY block for the
+  // contract; same pattern. Config-object form deferred (OUTSTANDING_WORK).
+  const ordinalAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.stackBy || props.groupBy
     const categories = extractCategories(props.data || [], colorAccessor)
     if (categories.length === 0) return null
@@ -904,16 +987,21 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       hasTitle: !!props.title,
     })
   })() : null
+  const legend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : ordinalAutoLegend
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top
 
   const content = (
     <>
+      {props.backgroundGraphics}
       {grid}
-      {annotationNodes}
       {dataMarks}
       {axes}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -938,6 +1026,15 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
   const margin = { ...defaultMargin, ...props.margin }
+  // Reserve legend space BEFORE computing inner dims so the geo projection
+  // fits inside the post-legend area. Same shape as XY/Network.
+  const legendPos = props.legendPosition
+  if (props.showLegend) {
+    if (!legendPos || legendPos === "right") margin.right = Math.max(margin.right ?? 0, 100)
+    else if (legendPos === "left") margin.left = Math.max(margin.left ?? 0, 100)
+    else if (legendPos === "bottom") margin.bottom = Math.max(margin.bottom ?? 0, 70)
+    else if (legendPos === "top") margin.top = Math.max(margin.top ?? 0, 40)
+  }
   const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
   const height = size[1] - (margin.top ?? 0) - (margin.bottom ?? 0)
 
@@ -975,8 +1072,30 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   store.computeScene({ width, height })
 
   if (store.scene.length === 0) {
+    // Even when the data scene is empty, bg/fg graphics and annotations are
+    // valid surfaces a caller may have legitimately set. Pipe them through
+    // so the empty-data path doesn't silently drop them.
+    const emptyContent = (props.backgroundGraphics || props.foregroundGraphics || props.annotations)
+      ? (
+        <>
+          {props.backgroundGraphics}
+          {props.annotations ? renderStaticAnnotations({
+            annotations: props.annotations,
+            scales: {
+              geoProjection: store.scales?.projectedPoint
+                ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
+                : undefined,
+            },
+            layout: { width, height },
+            theme,
+            idPrefix: props._idPrefix,
+          }) : null}
+          {props.foregroundGraphics}
+        </>
+      )
+      : null
     return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(null, {
+      wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
         title: props.title, description: props.description, background: props.background,
@@ -991,9 +1110,70 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     .map((node, i) => geoSceneNodeToSVG(node, i))
     .filter(Boolean)
 
+  // Geo annotations: `coordinates: [lon, lat]` flows through the resolved
+  // projection from the store's scales; raw `x`/`y` numbers remain valid via
+  // staticAnnotations' pixel passthrough for callers who pre-projected.
+  const annotationNodes = props.annotations ? renderStaticAnnotations({
+    annotations: props.annotations,
+    scales: {
+      geoProjection: store.scales?.projectedPoint
+        ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
+        : undefined,
+    },
+    layout: { width, height },
+    theme,
+    idPrefix: props._idPrefix,
+  }) : null
+
+  // Geo legend: auto-build from `colorBy` on either points (proportional
+  // symbol maps) or areas (choropleth maps). `colorBy` is now declared on
+  // `StreamGeoFrameProps`; the previous `(props as any)` cast is gone.
+  // Matches the XY/Network auto-build pattern; categories come from whichever
+  // data input is present.
+  const geoAutoLegend = props.showLegend ? (() => {
+    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+      typeof a === "string" || typeof a === "function"
+    const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
+    const legendSource: any[] = (() => {
+      if (Array.isArray(props.points) && props.points.length > 0) return props.points as any[]
+      if (Array.isArray(props.areas) && props.areas.length > 0) {
+        // For string accessors, GeoJSON features carry attributes under
+        // `properties` — flatten so `extractCategories` can read the field.
+        // Function accessors get raw features so they can decide what to read.
+        if (typeof colorAccessor === "string") {
+          return (props.areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+        }
+        return props.areas as any[]
+      }
+      return []
+    })()
+    const categories = extractCategories(legendSource, colorAccessor as any)
+    if (categories.length === 0) return null
+    return renderStaticLegend({
+      categories,
+      colorScheme: props.colorScheme,
+      theme,
+      position: props.legendPosition || "right",
+      totalWidth: size[0],
+      totalHeight: size[1],
+      margin,
+      hasTitle: !!props.title,
+    })
+  })() : null
+
+  // Honor caller-supplied pre-rendered legend element. Config-object form
+  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; auto-build
+  // covers the categorical case. Tracked in OUTSTANDING_WORK.md.
+  const geoLegend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : geoAutoLegend
+
   const content = (
     <>
+      {props.backgroundGraphics}
       {dataMarks}
+      {annotationNodes}
+      {props.foregroundGraphics}
     </>
   )
 
@@ -1004,7 +1184,8 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
-        idPrefix: props._idPrefix,
+      legend: geoLegend,
+      idPrefix: props._idPrefix,
     })
   )
 }
