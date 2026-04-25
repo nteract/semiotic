@@ -656,10 +656,16 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // ALREADY-RESOLVED `edges` array — that's the output of
   // `buildRealtimeEdges` which applied `sourceAccessor` / `targetAccessor`,
   // so source/target are always normalized strings regardless of input shape.
+  //
+  // Both string and function accessors are honored — `extractCategories`
+  // accepts either form, and stripping functions to undefined would silently
+  // drop the legend for any caller using a typed accessor function.
   const networkLegend = props.showLegend ? (() => {
-    const accessorName = (a: any): string | undefined =>
-      typeof a === "string" ? a : undefined
-    const colorAccessor = accessorName(props.colorBy) || accessorName(props.nodeIDAccessor)
+    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+      typeof a === "string" || typeof a === "function"
+    const colorAccessor = isAccessor(props.colorBy)
+      ? props.colorBy
+      : isAccessor(props.nodeIDAccessor) ? props.nodeIDAccessor : undefined
     const legendSource = props.nodes && props.nodes.length > 0
       ? (props.nodes as any[])
       : Array.from(new Set(
@@ -669,7 +675,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
           return [src, tgt]
         }).filter(Boolean)
       )).map((id) => ({ id }))
-    const categories = extractCategories(legendSource, colorAccessor)
+    const categories = extractCategories(legendSource, colorAccessor as any)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,
@@ -1125,17 +1131,23 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   // Matches the XY/Network auto-build pattern; categories come from whichever
   // data input is present.
   const geoAutoLegend = props.showLegend ? (() => {
-    const colorAccessor = typeof props.colorBy === "string" ? props.colorBy : undefined
+    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+      typeof a === "string" || typeof a === "function"
+    const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
     const legendSource: any[] = (() => {
       if (Array.isArray(props.points) && props.points.length > 0) return props.points as any[]
       if (Array.isArray(props.areas) && props.areas.length > 0) {
-        // GeoJSON features carry attributes under `properties` — flatten so
-        // `extractCategories` can read the colorBy field.
-        return (props.areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+        // For string accessors, GeoJSON features carry attributes under
+        // `properties` — flatten so `extractCategories` can read the field.
+        // Function accessors get raw features so they can decide what to read.
+        if (typeof colorAccessor === "string") {
+          return (props.areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+        }
+        return props.areas as any[]
       }
       return []
     })()
-    const categories = extractCategories(legendSource, colorAccessor)
+    const categories = extractCategories(legendSource, colorAccessor as any)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,

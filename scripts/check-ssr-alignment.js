@@ -185,14 +185,14 @@ const PARITY_EXCEPTIONS = {
   canvasOnly: new Set([]),
   // SVG-only — case branches that aren't scene-node `type` discriminants.
   svgOnly: new Set([
-    // Network edge sub-types live on a separate union (`NetworkSceneEdge`)
-    // and are handled by `networkSceneEdgeToSVG`. They appear in the rect/
-    // node converter only as imported references, so the parity check
-    // shouldn't expect them in `networkSceneNodeToSVG`.
-    "bezier", "curved", "ribbon",
     // "top" / "bottom" / "left" / "right" are `roundedEdge` discriminator
-    // values inside the rect branch's inner switch, not top-level scene
-    // types. The case-label parser can't distinguish nested switches.
+    // values inside the ordinal rect branch's inner `switch (roundedEdge)`,
+    // not top-level scene types. The case-label parser walks the whole
+    // function body so it picks them up; this exemption tells the parity
+    // check to ignore them. Network edge sub-types (`bezier` / `curved` /
+    // `ribbon`) live in `networkSceneEdgeToSVG`, which the parity pass does
+    // not parse today — if/when edge parity is added, those will need
+    // separate handling, not a one-sided exception here.
     "top", "bottom", "left", "right",
   ]),
 }
