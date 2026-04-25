@@ -42,10 +42,9 @@ function themeToStoreUpdate(
   const preset = resolveThemePreset(theme)
   if (preset) return preset
 
-  // Plain JS consumers can pass an unknown preset string despite the TS
-  // typing. Warn and fall back to "light" rather than passing the string
-  // through — `resolveThemeUpdate` would otherwise treat it as an object
-  // and corrupt the theme via spread.
+  // Plain JS consumers can still pass an unknown preset string despite the TS
+  // typing. Warn and fall back to "light" instead of forwarding the invalid
+  // preset so the provider always initializes with a known theme.
   if (typeof console !== "undefined") {
     console.warn(`[ThemeProvider] Unknown theme preset "${theme}". Falling back to light theme.`)
   }
