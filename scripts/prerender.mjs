@@ -139,7 +139,7 @@ export function generatePage(shellHtml, routePath) {
     previousShell = normalizedShell
     normalizedShell = normalizedShell
       .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
-      .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>\{"@context":"https:\/\/schema\.org","@type":"SoftwareApplication"[\s\S]*?<\/script>/g, "")
+      .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']semiotic["'])[^>]*>[\s\S]*?<\/script>/g, "")
   } while (normalizedShell !== previousShell)
 
   return normalizedShell

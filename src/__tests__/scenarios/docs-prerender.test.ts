@@ -104,4 +104,14 @@ describe("docs prerender helpers", () => {
     expect(twice).toContain('property="og:url" content="https://semiotic3.nteract.io/theming/styling"')
     expect(twice).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
   })
+
+  it("preserves unrelated JSON-LD scripts", () => {
+    const unrelatedJsonLd = '<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Other App"}</script>'
+    const shell = `<html><head><title>Shell</title>${unrelatedJsonLd}<meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>`
+    const html = generatePage(shell, "")
+
+    expect(html).toContain(unrelatedJsonLd)
+    expect(html.match(/data-jsonld="semiotic"/g)).toHaveLength(1)
+    expect(html.match(/"@type":"SoftwareApplication"/g)).toHaveLength(2)
+  })
 })
