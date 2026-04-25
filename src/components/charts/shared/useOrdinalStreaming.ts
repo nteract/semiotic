@@ -84,7 +84,8 @@ export function useOrdinalStreaming({
       streaming.resetCategories()
       frameRef.current?.clear()
     },
-    getData: () => frameRef.current?.getData() ?? []
+    getData: () => frameRef.current?.getData() ?? [],
+    getScales: () => frameRef.current?.getScales() ?? null
   }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
 
   const effectiveLegendProps = useMemo(() => {

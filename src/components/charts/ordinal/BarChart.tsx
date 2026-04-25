@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -17,6 +17,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
 /**
  * BarChart component props
@@ -88,15 +89,6 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
 
   const {
     data,
@@ -147,6 +139,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const valueLabel = resolved.valueLabel
 
   const safeData = data || []
+  const isPushMode = data === undefined
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
@@ -172,6 +165,17 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     emptyContent,
     width,
     height,
+  })
+
+  const { effectiveLegendProps, effectiveMargin } = useOrdinalStreaming({
+    ref,
+    frameRef,
+    isPushMode,
+    colorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+    setup,
   })
 
   if (setup.earlyReturn) return setup.earlyReturn
@@ -247,7 +251,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: setup.margin,
+    margin: effectiveMargin,
     barPadding,
     ...(roundedTop != null && { roundedTop }),
     // Resolve boolean `true` to the same default opacities AreaChart uses
@@ -269,7 +273,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     showGrid,
     showCategoryTicks,
     oSort: sort,
-    ...setup.legendBehaviorProps,
+    ...effectiveLegendProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),

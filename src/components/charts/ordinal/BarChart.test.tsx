@@ -1,6 +1,6 @@
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { BarChart } from "./BarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import {
@@ -11,14 +11,24 @@ import {
   NAMED_COUNT_DATA as customData,
 } from "../../../test-utils/ordinalFixtures"
 import type { Datum } from "../shared/datumTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef((props: any, ref: any) => {
       lastOrdinalFrameProps = props
+      React.useImperativeHandle(ref, () => ({
+        push: vi.fn(),
+        pushMany: vi.fn(),
+        remove: vi.fn(() => []),
+        update: vi.fn(() => []),
+        clear: vi.fn(),
+        getData: vi.fn(() => []),
+        getScales: vi.fn(() => null),
+      }))
       return <div className="stream-ordinal-frame"><svg /></div>
     })
   }
@@ -320,6 +330,27 @@ describe("BarChart", () => {
       expect(lastOrdinalFrameProps.legend).toBeUndefined()
       expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
     })
+
+    it("populates legend categories from pushed data", async () => {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      render(
+        <TooltipProvider>
+          <BarChart ref={ref} colorBy="category" />
+        </TooltipProvider>
+      )
+
+      expect(lastOrdinalFrameProps.legend).toBeUndefined()
+      expect(lastOrdinalFrameProps.margin.right).toBeLessThan(110)
+
+      await act(async () => {
+        ref.current!.push({ category: "A", value: 10 })
+        ref.current!.push({ category: "B", value: 20 })
+      })
+
+      const labels = lastOrdinalFrameProps.legend.legendGroups[0].items.map((item: { label: string }) => item.label)
+      expect(labels).toEqual(["A", "B"])
+      expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(110)
+    })
   })
 
   describe("hoverAnnotation", () => {
@@ -401,7 +432,7 @@ describe("BarChart", () => {
   })
 
   describe("push API", () => {
-    it("ref exposes push, pushMany, getData, and clear", () => {
+    it("ref exposes push, pushMany, getData, getScales, and clear", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
@@ -412,22 +443,27 @@ describe("BarChart", () => {
       expect(typeof ref.current.push).toBe("function")
       expect(typeof ref.current.pushMany).toBe("function")
       expect(typeof ref.current.getData).toBe("function")
+      expect(typeof ref.current.getScales).toBe("function")
       expect(typeof ref.current.clear).toBe("function")
     })
 
-    it("push does not throw when frame ref is not connected", () => {
+    it("push methods remain safe through the streaming legend wrapper", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
           <BarChart ref={ref} categoryAccessor="category" valueAccessor="value" />
         </TooltipProvider>
       )
-      expect(() => ref.current.push({ category: "A", value: 10 })).not.toThrow()
-      expect(() => ref.current.pushMany([{ category: "B", value: 20 }])).not.toThrow()
-      expect(() => ref.current.clear()).not.toThrow()
+      expect(() => {
+        act(() => {
+          ref.current.push({ category: "A", value: 10 })
+          ref.current.pushMany([{ category: "B", value: 20 }])
+          ref.current.clear()
+        })
+      }).not.toThrow()
     })
 
-    it("getData returns empty array when frame ref is not connected", () => {
+    it("getData and getScales delegate to the frame handle", () => {
       const ref = React.createRef<any>()
       render(
         <TooltipProvider>
@@ -435,6 +471,7 @@ describe("BarChart", () => {
         </TooltipProvider>
       )
       expect(ref.current.getData()).toEqual([])
+      expect(ref.current.getScales()).toBeNull()
     })
   })
 

@@ -204,7 +204,9 @@ Curated categorical sequences maximizing neighbor contrast, and per-role typogra
 
 ### Legend auto-population from pushed categories [YELLOW]
 
-**Status**: short-circuited at 3.4.1 (empty legends no longer reserve margin); real auto-population deferred.
+**Status**: partially addressed. 3.4.1 short-circuited empty legends so they no longer reserve margin. Post-prerender follow-up wired `BarChart` to the shared `useOrdinalStreaming` path: `<BarChart colorBy="category">` with omitted `data` now starts tight, then populates its legend and reserves legend margin after categories arrive through `ref.current.push()` / `pushMany()`. Regression coverage lives in `BarChart.test.tsx`.
+
+**Still open**: the full frame-domain subscription design below is not landed. The current shared streaming-legend path discovers categories from pushed inserts and resets on `clear()`, but it does not yet shrink on `remove()` / `update()` domain changes, and it is not wired uniformly across every HOC or through `LinkedCharts` shared-category state.
 
 **Symptom**: A push-API chart (`<BarChart colorBy="category">`, no `data` prop) mounts before any categories exist, so `useChartLegendAndMargin` → `createLegend` produces a shell with `legendGroups: [{ items: [], label: "" }]`. Pre-3.4.1 that reserved 110px of right-margin for a legend and rendered only the empty header bar ("neatline"). 3.4.1 treats zero-item legends as absent — margin stays tight, no ghost header — but the legend still never populates as categories arrive via `push()`, which is the behavior users actually want.
 
