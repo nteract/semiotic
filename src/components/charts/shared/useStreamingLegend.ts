@@ -3,7 +3,7 @@ import type { Datum } from "./datumTypes"
 
 import { useRef, useState, useCallback, useMemo } from "react"
 import { createLegend } from "./legendUtils"
-import { getColor, STREAMING_PALETTE } from "./colorUtils"
+import { createColorScale, getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor } from "./types"
 import { useThemeCategorical, type LegendPosition } from "./hooks"
 import { useLinkedChartCategories } from "../../LinkedCharts"
@@ -133,18 +133,22 @@ export function useStreamingLegend({
     const categories = orderedRef.current
     if (categories.length === 0) return undefined
 
-    const palette = Array.isArray(colorScheme) && colorScheme.length > 0
+    // Resolution order matches `useColorScale` so the legend swatch and the
+    // mark always agree: explicit array `colorScheme` → string scheme name
+    // (e.g. "category10") → theme categorical → STREAMING_PALETTE. The string
+    // case was previously ignored — `createColorScale` resolves it via d3
+    // `scaleOrdinal` which understands the named schemes.
+    const effectiveScheme: string | string[] = Array.isArray(colorScheme) && colorScheme.length > 0
       ? colorScheme
-      : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
-    const colorMap = new Map<string, string>()
-    for (let i = 0; i < categories.length; i++) {
-      colorMap.set(categories[i], palette[i % palette.length])
-    }
+      : (typeof colorScheme === "string" && colorScheme.length > 0)
+        ? colorScheme
+        : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
 
     // Build synthetic data so createLegend can extract categories
     const syntheticColorBy = typeof colorBy === "string" ? colorBy : "__streamCat"
     const syntheticData = categories.map(cat => ({ [syntheticColorBy]: cat }))
-    const syntheticScale = (v: string) => categoryColors?.[v] || colorMap.get(v) || "#999"
+    const fallbackScale = createColorScale(syntheticData, syntheticColorBy, effectiveScheme)
+    const syntheticScale = (v: string) => categoryColors?.[v] || fallbackScale(v) || "#999"
 
     return createLegend({
       data: syntheticData,

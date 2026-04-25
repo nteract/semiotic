@@ -232,7 +232,7 @@ function wrapSVG(
           {titleText}
         </text>
       )}
-      {opts.legend && <g id={`${pfx}legend`}>{opts.legend}</g>}
+      {opts.legend && <g id={`${pfx}legend`} className="semiotic-legend">{opts.legend}</g>}
       {opts.outerElements}
     </svg>
   )
@@ -403,8 +403,11 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     idPrefix: idPfx,
   }) : null
 
-  // Legend
-  const legend = props.showLegend ? (() => {
+  // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
+  // honor a caller-supplied pre-rendered ReactNode. Config-object form
+  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; the
+  // categorical auto-build covers that case. Tracked in OUTSTANDING_WORK.md.
+  const xyAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.groupAccessor
     const categories = extractCategories(props.data || [], colorAccessor)
     if (categories.length === 0) return null
@@ -419,6 +422,9 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
       hasTitle: !!props.title,
     })
   })() : null
+  const legend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : xyAutoLegend
 
   const content = (
     <>
@@ -646,20 +652,22 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // Network legend: parity with the XY/Ordinal auto-build. Source is the
   // node list (one entry per unique colorBy/nodeIDAccessor value); layout-
   // produced node positions are irrelevant here, only the categorical set
-  // matters. `extractCategories` operates on the raw input data.
+  // matters. When nodes weren't supplied directly, fall back to the
+  // ALREADY-RESOLVED `edges` array — that's the output of
+  // `buildRealtimeEdges` which applied `sourceAccessor` / `targetAccessor`,
+  // so source/target are always normalized strings regardless of input shape.
   const networkLegend = props.showLegend ? (() => {
     const accessorName = (a: any): string | undefined =>
       typeof a === "string" ? a : undefined
     const colorAccessor = accessorName(props.colorBy) || accessorName(props.nodeIDAccessor)
     const legendSource = props.nodes && props.nodes.length > 0
       ? (props.nodes as any[])
-      // Fall back to deriving categories from edge endpoints when nodes
-      // weren't provided directly (a common shape for force charts).
       : Array.from(new Set(
-        (Array.isArray(props.edges) ? props.edges : []).flatMap((e: any) => [
-          typeof e.source === "string" ? e.source : e.source?.id,
-          typeof e.target === "string" ? e.target : e.target?.id,
-        ]).filter(Boolean)
+        edges.flatMap((e) => {
+          const src = typeof e.source === "string" ? e.source : (e.source as any)?.id
+          const tgt = typeof e.target === "string" ? e.target : (e.target as any)?.id
+          return [src, tgt]
+        }).filter(Boolean)
       )).map((id) => ({ id }))
     const categories = extractCategories(legendSource, colorAccessor)
     if (categories.length === 0) return null
@@ -674,6 +682,15 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       hasTitle: !!props.title,
     })
   })() : null
+
+  // If the caller supplied a pre-rendered legend element, prefer it over
+  // the auto-build. The frame's `legend` prop also accepts a config-object
+  // form ({legendGroups} or {gradient}) — those are SVGOverlay-side concerns
+  // and aren't yet wired through SSR; auto-build covers the categorical case
+  // either way. Tracked in OUTSTANDING_WORK.md → SSR feature parity.
+  const networkLegendOut = React.isValidElement((props as any).legend)
+    ? (props as any).legend as React.ReactNode
+    : networkLegend
 
   const content = (
     <>
@@ -693,7 +710,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       title: props.title, description: props.description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth, innerHeight,
-      legend: networkLegend,
+      legend: networkLegendOut,
       idPrefix: props._idPrefix,
     })
   )
@@ -946,8 +963,10 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
     idPrefix: idPfx,
   }) : null
 
-  // Legend
-  const legend = props.showLegend ? (() => {
+  // Legend — auto-build from colorAccessor/stackBy/groupBy + showLegend, OR
+  // honor caller-supplied pre-rendered ReactNode. See XY block for the
+  // contract; same pattern. Config-object form deferred (OUTSTANDING_WORK).
+  const ordinalAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.stackBy || props.groupBy
     const categories = extractCategories(props.data || [], colorAccessor)
     if (categories.length === 0) return null
@@ -962,6 +981,9 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
       hasTitle: !!props.title,
     })
   })() : null
+  const legend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : ordinalAutoLegend
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top
@@ -1097,14 +1119,13 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     idPrefix: props._idPrefix,
   }) : null
 
-  // Geo legend: auto-build from colorBy on either points (proportional
-  // symbol maps) or areas (choropleth maps), or accept a fully-formed
-  // `legend` prop the caller pre-built. Matches the XY/Network pattern but
-  // sources categories from whichever data input is present.
-  const geoLegend = props.showLegend ? (() => {
-    const accessorName = (a: any): string | undefined =>
-      typeof a === "string" ? a : undefined
-    const colorAccessor = accessorName((props as any).colorBy)
+  // Geo legend: auto-build from `colorBy` on either points (proportional
+  // symbol maps) or areas (choropleth maps). `colorBy` is now declared on
+  // `StreamGeoFrameProps`; the previous `(props as any)` cast is gone.
+  // Matches the XY/Network auto-build pattern; categories come from whichever
+  // data input is present.
+  const geoAutoLegend = props.showLegend ? (() => {
+    const colorAccessor = typeof props.colorBy === "string" ? props.colorBy : undefined
     const legendSource: any[] = (() => {
       if (Array.isArray(props.points) && props.points.length > 0) return props.points as any[]
       if (Array.isArray(props.areas) && props.areas.length > 0) {
@@ -1127,6 +1148,13 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       hasTitle: !!props.title,
     })
   })() : null
+
+  // Honor caller-supplied pre-rendered legend element. Config-object form
+  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; auto-build
+  // covers the categorical case. Tracked in OUTSTANDING_WORK.md.
+  const geoLegend = React.isValidElement(props.legend)
+    ? (props.legend as React.ReactNode)
+    : geoAutoLegend
 
   const content = (
     <>

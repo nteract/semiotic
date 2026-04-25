@@ -216,6 +216,13 @@ export interface StreamGeoFrameProps<T = Datum> {
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   colorScheme?: string | string[]
+  /**
+   * Categorical color field. For ChoroplethMap reads from area `properties`
+   * (or top-level fallback); for ProportionalSymbolMap reads from each point.
+   * Server-side legend auto-build groups by this field when `showLegend` is
+   * set and no explicit `legend` prop is provided.
+   */
+  colorBy?: string | ((d: T) => string)
 
   // ── Interaction ──
   enableHover?: boolean

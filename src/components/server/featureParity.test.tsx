@@ -40,13 +40,6 @@ import {
 const xyData = [{ x: 0, y: 10, s: "a" }, { x: 1, y: 20, s: "a" }, { x: 0, y: 5, s: "b" }, { x: 1, y: 25, s: "b" }]
 const ordinalData = [{ c: "A", v: 10 }, { c: "B", v: 20 }, { c: "C", v: 15 }]
 const networkEdges = [{ source: "a", target: "b" }, { source: "b", target: "c" }]
-const explicitLegend = {
-  legendGroups: [{
-    label: "Series",
-    type: "fill" as const,
-    items: [{ label: "a", color: "#ff0000" }, { label: "b", color: "#00ff00" }],
-  }],
-}
 
 // ── Per-frame render helpers — keep the call shape uniform so the matrix
 //    body reads as feature-x-frame, not props-shape-x-frame.
@@ -176,16 +169,36 @@ describe("SSR feature parity: annotations", () => {
 
 // ── Legend ─────────────────────────────────────────────────────────────
 //
-// Ordinal: builds the legend from `colorAccessor` + `showLegend`. XY:
-// requires an explicit `legend` prop (auto-construction from colorAccessor
-// + data isn't wired through SSR). Network/Geo: no SSR legend support today.
+// All four frames now auto-build a categorical legend from a color-by
+// accessor + `showLegend`. Each also honors a caller-supplied pre-rendered
+// ReactNode passed via `props.legend` (the legend from a config object form
+// like `{legendGroups}` is not yet wired through SSR — see OUTSTANDING_WORK).
+// The "explicit ReactNode wins over auto-build" tests below assert that
+// contract by using a marker only the explicit ReactNode would produce.
+
+const EXPLICIT_LEGEND_MARKER = "data-explicit-legend-marker"
+const explicitReactNodeLegend = (<g data-explicit-legend-marker="yes"><text>Custom</text></g>)
 
 describe("SSR feature parity: legend", () => {
-  it("xy renders legend when an explicit `legend` prop is provided", () => {
+  it("xy: explicit ReactNode `legend` prop wins over auto-build", () => {
+    // If SSR ignored `props.legend` and only used auto-build, the marker
+    // wouldn't appear in the output. Asserting the marker locks down the
+    // passthrough contract.
     const svg = FRAME_RENDERERS.xy({
-      colorAccessor: "s", showLegend: true, legend: explicitLegend,
+      colorAccessor: "s",
+      showLegend: true,
+      legend: explicitReactNodeLegend,
     })
     expect(svg).toContain("semiotic-legend")
+    expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
+  })
+
+  it("xy: auto-build includes the legend group element when no explicit legend", () => {
+    const svg = FRAME_RENDERERS.xy({ colorAccessor: "s", showLegend: true })
+    expect(svg).toContain("semiotic-legend")
+    // Marker absent → confirms this came from the auto-build, not a leaked
+    // explicit legend from a previous test.
+    expect(svg).not.toContain(EXPLICIT_LEGEND_MARKER)
   })
 
   it("xy auto-constructs legend from colorAccessor + showLegend (no explicit legend prop)", () => {
