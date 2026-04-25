@@ -189,8 +189,13 @@ describe("SSR feature parity: legend", () => {
       showLegend: true,
       legend: explicitReactNodeLegend,
     })
-    expect(svg).toContain("semiotic-legend")
+    // Wrapper provides the stable `id="legend"` slot; the user's ReactNode is
+    // inside it. The auto-built `semiotic-legend` class would only appear if
+    // SSR also ran the auto-build path — assert it's absent to lock down the
+    // "explicit wins over auto" contract.
+    expect(svg).toContain(`id="legend"`)
     expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
+    expect(svg).not.toContain("semiotic-legend")
   })
 
   it("xy: auto-build includes the legend group element when no explicit legend", () => {

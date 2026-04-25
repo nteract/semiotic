@@ -232,7 +232,7 @@ function wrapSVG(
           {titleText}
         </text>
       )}
-      {opts.legend && <g id={`${pfx}legend`} className="semiotic-legend">{opts.legend}</g>}
+      {opts.legend && <g id={`${pfx}legend`}>{opts.legend}</g>}
       {opts.outerElements}
     </svg>
   )
