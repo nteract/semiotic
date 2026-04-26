@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Shared AI/MCP component metadata** — `ai/componentMetadata.cjs` is now the shared source for component category, import, renderability, and registry metadata across the CLI, MCP resources, and surface-parity checks. `check:surface` is wired into release gates so schema, `semiotic/ai`, MCP renderability, and server-renderer support cannot drift silently.
+- **Shared chart recommendation engine** — `ai/chartSuggestions.cjs` powers both MCP `suggestChart` and `npx semiotic-ai --suggest`, with recommendations for network, hierarchy, geographic, temporal, categorical, and magnitude data shapes. The CLI supports stdin on all platforms via fd `0`.
+- **MCP protocol smoke coverage** — `src/__tests__/scenarios/mcp-protocol.test.ts` exercises stdio JSON-RPC and Streamable HTTP initialization/tools-list flows, including robust parsing for JSON and SSE responses.
+- **Streaming legend frame-domain subscriptions** — `StreamOrdinalFrame` and `StreamXYFrame` expose `legendCategoryAccessor` and `onCategoriesChange`; pushed legends now populate, shrink, relabel, and clear after insert/remove/update/clear. `LinkedCharts` has a live category registry so unified legends and shared category colors update from child chart domains.
+- **ThemeProvider first-render coverage** — new tests prove preset/object themes, CSS custom properties, prop changes, and forced-colors initialization are visible to children on the first render.
+- **PipelineStore config-only cache regressions** — cache tests now cover scene rebuilds from `themeSemantic.primary`, `themeSequential`, and `barColors` changes without data ingest.
+
+### Changed
+
+- **Docs prerendering pipeline** — route extraction handles nested and multiline route declarations, root and nested pages get idempotent canonical/LLM alternate/JSON-LD/noscript metadata, homepage metadata is normalized consistently, and prerender functions can be imported directly for scenario tests.
+- **ThemeProvider initialization** — the scoped ThemeStore is seeded with the resolved initial theme before children render. This removes the previous light-theme-first path for `useTheme()`, chart color defaults, and CSS variables.
+- **Canvas theme bridge** — `useFrame` owns theme-change invalidation from a layout-timed effect: clear CSS-var color cache, mark the frame dirty, and schedule a repaint whenever the ThemeStore theme changes.
+- **Streaming legends and linked colors** — push-mode legends now source swatch colors from the same provider/theme/color-scale path as rendered marks, so child legends and unified `LinkedCharts` legends agree.
+- **OUTSTANDING_WORK.md** — collapsed into an active priority backlog only; completed dependency migrations, theming milestones, AI/MCP work, prerendering, streaming legend work, quadtree work, and cache/theme fixes were removed from the backlog and recorded here instead.
+
+### Fixed
+
+- **AI chart suggestions copy/paste correctness** — ForceDirectedGraph suggestions no longer imply nodes are optional, hierarchy suggestions reference the provided data shape, heatmap recommendations require two dimensions plus a value, sample inputs are capped, and generated JSX string props are escaped safely with `JSON.stringify`.
+- **MCP HTTP test robustness** — startup retries wait for child-process exit before rebinding; response parsing handles plain JSON and SSE data events instead of assuming a single `data:` line.
+- **Prerender structured-data duplication** — injected JSON-LD now carries the same `data-jsonld="semiotic"` marker the client hook checks, preventing duplicate runtime scripts. De-duplication is scoped to Semiotic-owned JSON-LD rather than all SoftwareApplication schemas.
+- **Prerender metadata consistency** — canonical and `og:url` metadata are normalized together, including the homepage URL shape.
+- **SSR alignment test isolation** — `ssr-alignment.test.ts` checks a temporary SceneToSVG copy instead of mutating tracked source files during parallel Vitest runs.
+- **GaugeChart LLM docs** — machine-readable docs now correctly list `thresholds` as optional, matching the TypeScript API.
+- **`validateProps` data shape handling** — the `"none"` data shape is handled explicitly so no-data components do not accidentally fall through realtime validation assumptions.
+
+### Tooling
+
+- **3324 unit tests pass** after the latest backlog cleanup and cache regression additions.
+
 ## [3.4.2] - 2026-04-23
 
 ### Added
