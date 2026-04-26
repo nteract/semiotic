@@ -330,6 +330,7 @@ describe("MCP protocol round-trip", () => {
     expect(result.result).toBeDefined()
     const uris = result.result.resources.map((r: { uri: string }) => r.uri).sort()
     expect(uris).toEqual([
+      "semiotic://behavior-contracts",
       "semiotic://components",
       "semiotic://examples",
       "semiotic://schema",
@@ -357,6 +358,19 @@ describe("MCP protocol round-trip", () => {
     // renderable wiring still fail visibly.
     expect(text).toContain('"name": "GaugeChart"')
     expect(text).toContain('"category": "ordinal"')
+  })
+
+  it("resources/read returns behavior contracts", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://behavior-contracts",
+    }, "resources-read-behavior-contracts")
+
+    expect(result.result).toBeDefined()
+    const parsed = JSON.parse(result.result.contents[0].text)
+    const ids = parsed.contracts.map((contract: { id: string }) => contract.id)
+    expect(ids).toContain("color.category-precedence")
+    expect(ids).toContain("streaming.push-mode-data")
+    expect(ids).toContain("props.required-combinations")
   })
 
   it("prompts/list exposes chart build and debug workflows", async () => {
@@ -404,6 +418,7 @@ describe("MCP protocol round-trip", () => {
     expect(text).toContain("GaugeChart [renderable]")
     expect(text).toContain("LikertChart [renderable]")
     expect(text).toContain("SwimlaneChart [renderable]")
+    expect(text).toContain("semiotic://behavior-contracts")
   })
 
   it("getSchema with specific component returns schema", async () => {
@@ -417,6 +432,7 @@ describe("MCP protocol round-trip", () => {
     const text = result.result.content[0].text
     expect(text).toContain("BarChart")
     expect(text).toContain("renderChart")
+    expect(text).toContain("Behavior contracts")
   })
 
   it("getSchema with unknown component returns error", async () => {

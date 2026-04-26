@@ -26,12 +26,11 @@ Next work:
 
 ### AI Surface Behavior Contracts
 
-`check:schema` and `check:surface` catch missing entries and metadata drift, but not semantic drift.
+Baseline exists: `ai/behaviorContracts.cjs`, `check:ai-contracts`, `semiotic-ai --doctor` behavior-rule output, MCP `semiotic://behavior-contracts`, generated AI docs sections, and scenario tests for color precedence, required prop combinations, and push/ref behavior.
 
 Next work:
-- Add behavior-contract tests for agent-visible rules, for example color precedence, required prop combinations, and streaming/ref behavior.
-- Move the most important behavior rules into structured metadata consumed by `--doctor`, MCP resources, and docs generation.
 - Periodically regenerate examples from runtime fixtures and diff them against `CLAUDE.md`, `docs/public/llms-full.txt`, and MCP guidance.
+- Expand the metadata beyond the first critical rules when new semantic contracts prove agent-visible in real usage.
 
 ### Test Quality Gate
 

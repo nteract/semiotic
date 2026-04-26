@@ -19,7 +19,7 @@ const MINIMAL_VALID_PROPS: Record<string, Datum> = {
   // XY charts
   LineChart: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
   AreaChart: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
-  StackedAreaChart: { data: [{ x: 1, y: 2, g: "A" }], xAccessor: "x", yAccessor: "y" },
+  StackedAreaChart: { data: [{ x: 1, y: 2, g: "A" }], xAccessor: "x", yAccessor: "y", areaBy: "g" },
   Scatterplot: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
   BubbleChart: { data: [{ x: 1, y: 2, s: 5 }], xAccessor: "x", yAccessor: "y", sizeBy: "s" },
   ConnectedScatterplot: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },

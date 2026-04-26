@@ -16,6 +16,10 @@ const {
   formatSuggestionReport,
   suggestCharts,
 } = require("./chartSuggestions.cjs")
+const {
+  behaviorContractsFor,
+  formatDoctorBehaviorContracts,
+} = require("./behaviorContracts.cjs")
 
 const FILES = {
   default: path.join(pkgRoot, "CLAUDE.md"),
@@ -166,6 +170,17 @@ function printSchemaOnlyDoctorResult(component, props) {
       console.log(`  • ${err}`)
     }
   }
+  printDoctorBehaviorContracts(component, props)
+}
+
+function printDoctorBehaviorContracts(component, props) {
+  const formatted = formatDoctorBehaviorContracts(
+    behaviorContractsFor({ component, props })
+  )
+  if (formatted) {
+    console.log("")
+    console.log(formatted)
+  }
 }
 
 function readJSONInput(usage) {
@@ -264,6 +279,7 @@ if (flag === "--doctor") {
           if (d.fix) console.log(`    Fix: ${d.fix}`)
         }
       }
+      printDoctorBehaviorContracts(component, props)
     } else {
       // Fallback to validateProps only
       const result = validateProps(component, props)
@@ -275,9 +291,10 @@ if (flag === "--doctor") {
           console.log(`  • ${err}`)
         }
       }
+      printDoctorBehaviorContracts(component, props)
     }
   } catch (err) {
-    console.error(`Failed to parse input: ${err.message}`)
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
     process.exit(1)
   }
   process.exit(0)

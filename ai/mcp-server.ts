@@ -67,6 +67,15 @@ const {
   formatSuggestionReport: (result: SuggestChartResult) => string
   suggestCharts: (args: { data?: any[]; intent?: string }) => SuggestChartResult
 }
+const {
+  BEHAVIOR_CONTRACTS,
+  behaviorContractsFor,
+  formatDoctorBehaviorContracts,
+} = require("./behaviorContracts.cjs") as {
+  BEHAVIOR_CONTRACTS: Array<Record<string, unknown>>
+  behaviorContractsFor: (args: { component?: string; props?: Record<string, any> }) => Array<Record<string, unknown>>
+  formatDoctorBehaviorContracts: (contracts: Array<Record<string, unknown>>) => string
+}
 
 // Load schema.json for version info
 const schemaPath = path.resolve(__dirname, "../schema.json")
@@ -148,7 +157,7 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   if (!component) {
     const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
     return {
-      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
     }
   }
 
@@ -162,8 +171,12 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   }
 
   const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart."
+  const contracts = behaviorContractsFor({ component, props: {} })
+  const contractText = contracts.length > 0
+    ? `\n\nBehavior contracts:\n${JSON.stringify(contracts, null, 2)}`
+    : ""
   return {
-    content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}` }],
+    content: [{ type: "text" as const, text: `${renderableNote}\n\n${JSON.stringify(entry, null, 2)}${contractText}` }],
   }
 }
 
@@ -273,7 +286,8 @@ async function diagnoseConfigHandler(args: { component?: string; props?: Record<
     const msg = warnings.length > 0
       ? `Configuration looks good with ${warnings.length} warning(s):\n${warnings.map((w: any) => `⚠ [${w.code}] ${w.message}\n  Fix: ${w.fix}`).join("\n")}`
       : `✓ Configuration looks good — no issues detected.`
-    return { content: [{ type: "text" as const, text: msg }] }
+    const contracts = formatDoctorBehaviorContracts(behaviorContractsFor({ component, props }))
+    return { content: [{ type: "text" as const, text: contracts ? `${msg}\n\n${contracts}` : msg }] }
   }
 
   const lines = result.diagnoses.map((d: any) => {
@@ -282,7 +296,10 @@ async function diagnoseConfigHandler(args: { component?: string; props?: Record<
     return `${icon} [${d.code}] ${d.message}${fixLine}`
   })
   return {
-    content: [{ type: "text" as const, text: lines.join("\n") }],
+    content: [{ type: "text" as const, text: [
+      lines.join("\n"),
+      formatDoctorBehaviorContracts(behaviorContractsFor({ component, props })),
+    ].filter(Boolean).join("\n\n") }],
     isError: true,
   }
 }
@@ -416,6 +433,20 @@ function createServer(): McpServer {
   )
 
   srv.registerResource(
+    "semiotic-behavior-contracts",
+    "semiotic://behavior-contracts",
+    {
+      title: "Semiotic AI Behavior Contracts",
+      description: "Agent-visible semantic rules for color precedence, required prop combinations, streaming refs, and renderability.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify({
+      version: schema.version,
+      contracts: BEHAVIOR_CONTRACTS,
+    }, null, 2))
+  )
+
+  srv.registerResource(
     "semiotic-system-prompt",
     "semiotic://system-prompt",
     {
@@ -457,11 +488,12 @@ function createServer(): McpServer {
       "",
       "Use this MCP workflow:",
       "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
-      "2. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
-      "3. Call getSchema for the selected component before writing JSX or renderChart props.",
-      "4. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
-      "5. If the component is renderable, call renderChart once to verify it returns SVG.",
-      "6. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "2. Read semiotic://behavior-contracts for semantic rules that schema shape alone cannot express.",
+      "3. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "4. Call getSchema for the selected component before writing JSX or renderChart props.",
+      "5. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
+      "6. If the component is renderable, call renderChart once to verify it returns SVG.",
+      "7. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
       "",
       "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation.",
     ].join("\n"))
@@ -487,10 +519,11 @@ function createServer(): McpServer {
       "",
       "Use this MCP workflow:",
       "1. Call getSchema for the component and compare the provided props against required props and accessor names.",
-      "2. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
-      "3. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
-      "4. Check semiotic://examples for a nearby working pattern before inventing new props.",
-      "5. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
+      "2. Read semiotic://behavior-contracts for semantic rules around colors, required combinations, streaming refs, and renderability.",
+      "3. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
+      "4. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
+      "5. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "6. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
       "",
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step.",
     ].join("\n"))
@@ -621,7 +654,7 @@ async function main() {
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
       console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme")
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples")
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples")
     })
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.

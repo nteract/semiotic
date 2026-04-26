@@ -123,6 +123,26 @@ describe("semiotic-ai CLI", () => {
     expect(result.stdout).toContain('"value" is required for GaugeChart')
   })
 
+  it("--doctor includes behavior contracts from structured metadata", () => {
+    const result = runCLI(
+      ["--doctor", JSON.stringify({
+        component: "LineChart",
+        props: {
+          data: [{ x: 1, y: 2, series: "A" }],
+          xAccessor: "x",
+          yAccessor: "y",
+          colorBy: "series",
+        },
+      })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("Behavior contracts:")
+    expect(result.stdout).toContain("color.category-precedence")
+    expect(result.stdout).toContain("streaming.push-mode-data")
+  })
+
   it("--suggest recommends charts from sample data", () => {
     const result = runCLI([
       "--suggest",

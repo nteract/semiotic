@@ -105,7 +105,7 @@ All charts respond to CSS custom properties on any ancestor:
 ```
 Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"tufte-dark"`, `"pastels"`, `"bi-tool"`, `"italian"`, `"journalist"`, `"playful"` (each with `-dark` variant), `"dark"`, `"high-contrast"`.
 
-**Color resolution**: When `colorBy` is set, charts use: explicit `colorScheme` prop > ThemeProvider `colors.categorical` > `"category10"`. No need to pass `colorScheme` on every chart when using ThemeProvider.
+**Color resolution**: When `colorBy` is set, charts use: CategoryColorProvider/LinkedCharts category map > explicit `colorScheme` fallback > ThemeProvider `colors.categorical` > `"category10"`. No need to pass `colorScheme` on every chart when using ThemeProvider.
 
 `semiotic/themes` entry point: `themeToCSS(theme, selector)` generates CSS string, `themeToTokens(theme)` generates DTCG design tokens, `resolveThemePreset("tufte")` returns theme object by name. Theme objects: `TUFTE_LIGHT`, `TUFTE_DARK`, `PASTELS_LIGHT`, `BI_TOOL_LIGHT`, `ITALIAN_LIGHT`, `JOURNALIST_LIGHT`, `PLAYFUL_LIGHT`, etc.
 
@@ -113,11 +113,27 @@ Or use ThemeProvider with 15 named presets: `<ThemeProvider theme="tufte">`, `"t
 
 **Scoped CSS cascade override** (per-subtree, no ThemeProvider needed): wrap in `<div style={{ "--semiotic-danger": "#c00" }}>` — every chart beneath inherits the override via canvas CSS-var lookup (`getComputedStyle` on the canvas's DOM ancestor). Use CSS vars for **single-role** overrides, nested `ThemeProvider` for **array/scale** overrides.
 
-`COLOR_BLIND_SAFE_CATEGORICAL` — 8-color accessible palette (Wong 2011). Import from `semiotic`.
+`COLOR_BLIND_SAFE_CATEGORICAL` — 8-color accessible palette (Wong 2011). Import from `semiotic/themes`.
+
+
+## Behavior Contracts
+
+<!-- semiotic-behavior-contracts:start -->
+
+These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `semiotic-ai --doctor`, MCP resources, and docs checks.
+
+- **Categorical color precedence** (`color.category-precedence`): When colorBy is set, CategoryColorProvider/LinkedCharts category maps win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback.
+- **Required prop combinations** (`props.required-combinations`): Some chart families need semantic props beyond data. These combinations are enforced by validation/schema and should be present in generated JSX or renderChart props.
+  Required combinations: StackedAreaChart: data + areaBy. Stacked areas need a flat data array plus areaBy to identify the stacked series. BubbleChart: data + sizeBy. Bubbles need sizeBy in addition to x/y accessors so radius encodes data rather than a constant point size. StackedBarChart: data + stackBy. Stacked bars need stackBy to split each category into stack segments. GroupedBarChart: data + groupBy. Grouped bars need groupBy to split each category into side-by-side bars. SwimlaneChart: subcategoryAccessor. Swimlanes need subcategoryAccessor; colorBy defaults to the same field when not provided. GaugeChart: value. GaugeChart is value-only. thresholds, min, max, sweep, and arcWidth are optional. ForceDirectedGraph: nodes + edges. ForceDirectedGraph schema/rendering requires nodes and edges. If an agent infers nodes from edge endpoints, it must materialize a nodes array before returning code.
+- **Push mode omits data** (`streaming.push-mode-data`): HOC push mode is selected by omitting the data prop entirely. Passing data={[]} is static empty data and can clear/reinitialize the frame on render.
+- **Ref mutations need stable IDs** (`streaming.ref-mutations-require-id-accessors`): push() and pushMany() can append without IDs, but remove(id) and update(id, updater) require a stable ID accessor: pointIdAccessor for XY/realtime charts, dataIdAccessor for ordinal charts, and nodeIDAccessor/edgeIdAccessor for network operations.
+- **renderChart uses static props only** (`rendering.renderchart-static-props`): MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.
+
+<!-- semiotic-behavior-contracts:end -->
 
 ## Key Patterns
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
 - **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `"Sparkline"` (no axes, 2px margins). `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`. Required props: StackedBarChart needs `stackBy`, GroupedBarChart needs `groupBy`, StackedAreaChart needs `areaBy`, BubbleChart needs `sizeBy`, FunnelChart uses `stepAccessor`, GaugeChart needs `value` (`thresholds` optional).
-- **CLI**: `npx semiotic-ai --list` shows components/import paths/renderability; `npx semiotic-ai --schema GaugeChart` prints one component schema with metadata; `--doctor` validates props JSON.
-- **MCP**: `npx semiotic-mcp` exposes tools (`getSchema`, `suggestChart`, `diagnoseConfig`, `renderChart`, `applyTheme`, `reportIssue`), resources (`semiotic://schema`, `semiotic://components`, `semiotic://system-prompt`, `semiotic://examples`), and prompts (`build-semiotic-chart`, `debug-semiotic-chart`).
+- **CLI**: `npx semiotic-ai --list` shows components/import paths/renderability; `npx semiotic-ai --schema GaugeChart` prints one component schema with metadata; `--doctor` validates props JSON and behavior contracts.
+- **MCP**: `npx semiotic-mcp` exposes tools (`getSchema`, `suggestChart`, `diagnoseConfig`, `renderChart`, `applyTheme`, `reportIssue`), resources (`semiotic://schema`, `semiotic://components`, `semiotic://behavior-contracts`, `semiotic://system-prompt`, `semiotic://examples`), and prompts (`build-semiotic-chart`, `debug-semiotic-chart`).
 - **exportChart**: Pass the wrapper div, not the SVG element: `exportChart(wrapperDiv, { format: "png" })`. It finds canvas+SVG internally.

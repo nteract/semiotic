@@ -466,7 +466,8 @@
             }
           },
           "required": [
-            "data"
+            "data",
+            "areaBy"
           ]
         }
       }
