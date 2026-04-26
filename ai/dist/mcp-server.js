@@ -7224,6 +7224,272 @@ For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import fr
   }
 });
 
+// ai/behaviorContracts.cjs
+var require_behaviorContracts = __commonJS({
+  "ai/behaviorContracts.cjs"(exports2, module2) {
+    "use strict";
+    var path2 = require("path");
+    var fs2 = require("fs");
+    var DOC_MARKER_START = "<!-- semiotic-behavior-contracts:start -->";
+    var DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->";
+    function loadStaticDataComponentsFromSchema() {
+      const candidates = [
+        path2.join(__dirname, "schema.json"),
+        path2.join(__dirname, "..", "schema.json")
+      ];
+      for (const schemaPath2 of candidates) {
+        try {
+          const schema2 = JSON.parse(fs2.readFileSync(schemaPath2, "utf8"));
+          const out = /* @__PURE__ */ new Set();
+          for (const tool of schema2.tools || []) {
+            const required2 = tool.function?.parameters?.required || [];
+            if (required2.includes("data")) out.add(tool.function.name);
+          }
+          if (out.size > 0) return out;
+        } catch {
+        }
+      }
+      return /* @__PURE__ */ new Set();
+    }
+    var REQUIRED_COMBINATIONS = [
+      {
+        component: "StackedAreaChart",
+        required: ["areaBy"],
+        staticRequired: ["data", "areaBy"],
+        pushRequired: ["areaBy"],
+        summary: "Stacked areas need a flat data array plus areaBy to identify the stacked series."
+      },
+      {
+        component: "BubbleChart",
+        required: ["sizeBy"],
+        staticRequired: ["data", "sizeBy"],
+        pushRequired: ["sizeBy"],
+        summary: "Bubbles need sizeBy in addition to x/y accessors so radius encodes data rather than a constant point size."
+      },
+      {
+        component: "StackedBarChart",
+        required: ["stackBy"],
+        staticRequired: ["data", "stackBy"],
+        pushRequired: ["stackBy"],
+        summary: "Stacked bars need stackBy to split each category into stack segments."
+      },
+      {
+        component: "GroupedBarChart",
+        required: ["groupBy"],
+        staticRequired: ["data", "groupBy"],
+        pushRequired: ["groupBy"],
+        summary: "Grouped bars need groupBy to split each category into side-by-side bars."
+      },
+      {
+        component: "SwimlaneChart",
+        required: ["subcategoryAccessor"],
+        staticRequired: ["data", "subcategoryAccessor"],
+        pushRequired: ["subcategoryAccessor"],
+        summary: "Swimlanes need subcategoryAccessor; colorBy defaults to the same field when not provided."
+      },
+      {
+        component: "GaugeChart",
+        required: ["value"],
+        staticRequired: ["value"],
+        pushRequired: [],
+        summary: "GaugeChart is value-only. thresholds, min, max, sweep, and arcWidth are optional."
+      },
+      {
+        component: "ForceDirectedGraph",
+        required: ["nodes", "edges"],
+        staticRequired: ["nodes", "edges"],
+        pushRequired: ["nodes", "edges"],
+        summary: "ForceDirectedGraph schema/rendering requires nodes and edges. If an agent infers nodes from edge endpoints, it must materialize a nodes array before returning code."
+      }
+    ];
+    var PUSH_MODE_COMPONENTS = [
+      "LineChart",
+      "AreaChart",
+      "StackedAreaChart",
+      "Scatterplot",
+      "BubbleChart",
+      "ConnectedScatterplot",
+      "BarChart",
+      "StackedBarChart",
+      "GroupedBarChart",
+      "SwarmPlot",
+      "BoxPlot",
+      "Histogram",
+      "ViolinPlot",
+      "RidgelinePlot",
+      "DotPlot",
+      "PieChart",
+      "DonutChart",
+      "LikertChart",
+      "SwimlaneChart",
+      "ForceDirectedGraph",
+      "SankeyDiagram",
+      "ChordDiagram",
+      "ProportionalSymbolMap",
+      "DistanceCartogram"
+    ];
+    var STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema();
+    var BEHAVIOR_CONTRACTS2 = [
+      {
+        id: "props.data-required-by-usage-mode",
+        category: "required-props",
+        title: "Data required by usage mode",
+        severity: "error",
+        appliesTo: {
+          components: PUSH_MODE_COMPONENTS
+        },
+        summary: "Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.",
+        agentAction: 'Pass usageMode="push" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode="static" or omit it for renderChart/MCP/static configs where data must be present.'
+      },
+      {
+        id: "color.category-precedence",
+        category: "color",
+        title: "Categorical color precedence",
+        severity: "info",
+        appliesTo: {
+          propsAny: ["colorBy", "colorScheme"]
+        },
+        summary: "When colorBy is set, CategoryColorProvider/LinkedCharts category maps win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback.",
+        agentAction: "Use colorBy for categorical encodings. Use CategoryColorProvider or LinkedCharts for cross-chart consistency, colorScheme for per-chart fallback palettes, and avoid frameProps style functions unless intentionally bypassing HOC color resolution."
+      },
+      {
+        id: "props.required-combinations",
+        category: "required-props",
+        title: "Required prop combinations",
+        severity: "error",
+        appliesTo: {
+          components: REQUIRED_COMBINATIONS.map((entry) => entry.component)
+        },
+        summary: "Some chart families need semantic props beyond data. These combinations are enforced by validation/schema for static configs and remain required in push mode unless explicitly noted.",
+        agentAction: "Before returning code, check the selected component against the required combinations list. For push mode, omit data but keep semantic props such as areaBy, sizeBy, stackBy, and groupBy.",
+        combinations: REQUIRED_COMBINATIONS
+      },
+      {
+        id: "streaming.push-mode-data",
+        category: "streaming",
+        title: "Push mode omits data",
+        severity: "warning",
+        appliesTo: {
+          components: PUSH_MODE_COMPONENTS
+        },
+        summary: "HOC push mode is selected by omitting the data prop entirely. Passing data={[]} is static empty data and can clear/reinitialize the frame on render.",
+        agentAction: "For live charts, create a ref, omit data, then call ref.current.push() or pushMany(). For static renderChart/MCP snapshots, provide data because renderChart cannot push later."
+      },
+      {
+        id: "streaming.ref-mutations-require-id-accessors",
+        category: "streaming",
+        title: "Ref mutations need stable IDs",
+        severity: "warning",
+        appliesTo: {
+          components: PUSH_MODE_COMPONENTS
+        },
+        summary: "push() and pushMany() can append without IDs, but remove(id) and update(id, updater) require a stable ID accessor: pointIdAccessor for XY/realtime charts, dataIdAccessor for ordinal charts, and nodeIDAccessor/edgeIdAccessor for network operations.",
+        agentAction: "When generating code that calls remove() or update(), include the matching ID accessor and make sure pushed rows carry that ID field."
+      },
+      {
+        id: "rendering.renderchart-static-props",
+        category: "rendering",
+        title: "renderChart uses static props only",
+        severity: "warning",
+        appliesTo: {},
+        summary: "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
+        agentAction: "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output."
+      }
+    ];
+    function hasOwn(value, key) {
+      return Object.prototype.hasOwnProperty.call(value, key);
+    }
+    function normalizeProps(props) {
+      return props && typeof props === "object" && !Array.isArray(props) ? props : {};
+    }
+    function appliesToComponent(contract, component) {
+      if (!component) return !contract.appliesTo?.components;
+      const components = contract.appliesTo?.components;
+      return !components || components.includes(component);
+    }
+    function appliesToProps(contract, props) {
+      const propsAny = contract.appliesTo?.propsAny;
+      if (!propsAny || propsAny.length === 0) return true;
+      return propsAny.some((prop) => hasOwn(props, prop) && props[prop] !== void 0);
+    }
+    function behaviorContractsFor2({ component, props } = {}) {
+      const normalizedProps = normalizeProps(props);
+      return BEHAVIOR_CONTRACTS2.filter(
+        (contract) => appliesToComponent(contract, component) && appliesToProps(contract, normalizedProps)
+      );
+    }
+    function normalizeUsageMode2(usageMode) {
+      if (usageMode === "push") return "push";
+      if (usageMode === "static" || usageMode === "renderChart" || usageMode === "server") return "static";
+      return "static";
+    }
+    function dataRequiredForUsageMode2(component, usageMode) {
+      if (!STATIC_DATA_COMPONENTS.has(component)) return false;
+      if (normalizeUsageMode2(usageMode) === "push" && PUSH_MODE_COMPONENTS.includes(component)) return false;
+      return true;
+    }
+    function requiredCombinationsFor(component) {
+      return REQUIRED_COMBINATIONS.filter((entry) => !component || entry.component === component);
+    }
+    function formatRequiredCombination(entry) {
+      const staticRequired = entry.staticRequired || entry.required;
+      const pushRequired = entry.pushRequired || entry.required.filter((prop) => prop !== "data");
+      const pushText = pushRequired.length > 0 ? pushRequired.join(" + ") : "not supported";
+      return `${entry.component}: static ${staticRequired.join(" + ")}; push ${pushText}. ${entry.summary}`;
+    }
+    function formatDoctorBehaviorContracts2(contracts) {
+      if (!contracts || contracts.length === 0) return "";
+      const lines = ["Behavior contracts:"];
+      for (const contract of contracts) {
+        lines.push(`  - [${contract.id}] ${contract.summary}`);
+        if (contract.combinations) {
+          for (const combo of contract.combinations) {
+            lines.push(`    ${formatRequiredCombination(combo)}`);
+          }
+        }
+        lines.push(`    Action: ${contract.agentAction}`);
+      }
+      return lines.join("\n");
+    }
+    function formatBehaviorContractsMarkdown({ compact = false } = {}) {
+      const lines = [
+        compact ? "## Behavior Contracts" : "## AI Behavior Contracts",
+        "",
+        DOC_MARKER_START,
+        "",
+        "These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `semiotic-ai --doctor`, MCP resources, and docs checks.",
+        ""
+      ];
+      for (const contract of BEHAVIOR_CONTRACTS2) {
+        lines.push(`- **${contract.title}** (\`${contract.id}\`): ${contract.summary}`);
+        if (!compact) {
+          lines.push(`  Agent action: ${contract.agentAction}`);
+        }
+        if (contract.combinations) {
+          const combos = contract.combinations.map(formatRequiredCombination).join(" ");
+          lines.push(`  Required combinations: ${combos}`);
+        }
+      }
+      lines.push("", DOC_MARKER_END);
+      return lines.join("\n");
+    }
+    module2.exports = {
+      BEHAVIOR_CONTRACTS: BEHAVIOR_CONTRACTS2,
+      DOC_MARKER_END,
+      DOC_MARKER_START,
+      PUSH_MODE_COMPONENTS,
+      REQUIRED_COMBINATIONS,
+      STATIC_DATA_COMPONENTS,
+      behaviorContractsFor: behaviorContractsFor2,
+      dataRequiredForUsageMode: dataRequiredForUsageMode2,
+      formatBehaviorContractsMarkdown,
+      formatDoctorBehaviorContracts: formatDoctorBehaviorContracts2,
+      normalizeUsageMode: normalizeUsageMode2,
+      requiredCombinationsFor
+    };
+  }
+});
+
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
@@ -31962,6 +32228,13 @@ var {
   formatSuggestionReport,
   suggestCharts
 } = require_chartSuggestions();
+var {
+  BEHAVIOR_CONTRACTS,
+  behaviorContractsFor,
+  dataRequiredForUsageMode,
+  formatDoctorBehaviorContracts,
+  normalizeUsageMode
+} = require_behaviorContracts();
 var schemaPath = path.resolve(__dirname, "../schema.json");
 var schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 var schemaByComponent = {};
@@ -32010,9 +32283,9 @@ ${list.join(", ")}
 
 Components marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.
 
-For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples.
+For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.
 
-All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic) for accessible color palettes.
+All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.
 
 Pass { component: '<name>' } to get the prop schema for a specific component.` }]
     };
@@ -32026,10 +32299,15 @@ Pass { component: '<name>' } to get the prop schema for a specific component.` }
     };
   }
   const renderableNote = metadataForComponent(component).renderable ? "This component can be rendered to SVG via renderChart." : "This component requires a browser environment and cannot be rendered via renderChart.";
+  const contracts = behaviorContractsFor({ component, props: {} });
+  const contractText = contracts.length > 0 ? `
+
+Behavior contracts:
+${JSON.stringify(contracts, null, 2)}` : "";
   return {
     content: [{ type: "text", text: `${renderableNote}
 
-${JSON.stringify(entry, null, 2)}` }]
+${JSON.stringify(entry, null, 2)}${contractText}` }]
   };
 }
 async function suggestChartHandler(args) {
@@ -32110,9 +32388,16 @@ ${svg}` }],
     content: [{ type: "text", text: svg }]
   };
 }
+function filterUsageModeDiagnoses(component, usageMode, diagnoses) {
+  if (dataRequiredForUsageMode(component, usageMode)) return diagnoses;
+  return diagnoses.filter(
+    (d) => d.code !== "VALIDATION" || d.message !== `"data" is required for ${component}.`
+  );
+}
 async function diagnoseConfigHandler(args) {
   const component = args.component;
   const props = args.props ?? {};
+  const usageMode = normalizeUsageMode(args.usageMode);
   if (!component) {
     return {
       content: [{ type: "text", text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
@@ -32120,21 +32405,31 @@ async function diagnoseConfigHandler(args) {
     };
   }
   const result = (0, import_ai3.diagnoseConfig)(component, props);
-  if (result.ok) {
-    const warnings = result.diagnoses.filter((d) => d.severity === "warning");
+  const diagnoses = filterUsageModeDiagnoses(component, usageMode, result.diagnoses);
+  const ok = diagnoses.every((d) => d.severity === "warning");
+  const usageModeNote = usageMode === "push" ? "Usage mode: push (data prop may be omitted; use a ref to push data).\n\n" : "";
+  if (ok) {
+    const warnings = diagnoses.filter((d) => d.severity === "warning");
     const msg = warnings.length > 0 ? `Configuration looks good with ${warnings.length} warning(s):
 ${warnings.map((w) => `\u26A0 [${w.code}] ${w.message}
   Fix: ${w.fix}`).join("\n")}` : `\u2713 Configuration looks good \u2014 no issues detected.`;
-    return { content: [{ type: "text", text: msg }] };
+    const contracts = formatDoctorBehaviorContracts(behaviorContractsFor({ component, props }));
+    return { content: [{ type: "text", text: `${usageModeNote}${contracts ? `${msg}
+
+${contracts}` : msg}` }] };
   }
-  const lines = result.diagnoses.map((d) => {
+  const lines = diagnoses.map((d) => {
     const icon = d.severity === "error" ? "\u2717" : "\u26A0";
     const fixLine = d.fix ? `
   Fix: ${d.fix}` : "";
     return `${icon} [${d.code}] ${d.message}${fixLine}`;
   });
   return {
-    content: [{ type: "text", text: lines.join("\n") }],
+    content: [{ type: "text", text: [
+      usageModeNote.trim(),
+      lines.join("\n"),
+      formatDoctorBehaviorContracts(behaviorContractsFor({ component, props }))
+    ].filter(Boolean).join("\n\n") }],
     isError: true
   };
 }
@@ -32264,6 +32559,19 @@ function createServer2() {
     (uri) => textResource(uri, "application/json", componentIndexJSON())
   );
   srv.registerResource(
+    "semiotic-behavior-contracts",
+    "semiotic://behavior-contracts",
+    {
+      title: "Semiotic AI Behavior Contracts",
+      description: "Agent-visible semantic rules for color precedence, required prop combinations, streaming refs, and renderability.",
+      mimeType: "application/json"
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify({
+      version: schema.version,
+      contracts: BEHAVIOR_CONTRACTS
+    }, null, 2))
+  );
+  srv.registerResource(
     "semiotic-system-prompt",
     "semiotic://system-prompt",
     {
@@ -32303,11 +32611,13 @@ function createServer2() {
       "",
       "Use this MCP workflow:",
       "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
-      "2. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
-      "3. Call getSchema for the selected component before writing JSX or renderChart props.",
-      "4. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
-      "5. If the component is renderable, call renderChart once to verify it returns SVG.",
-      "6. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "2. Read semiotic://behavior-contracts for semantic rules that schema shape alone cannot express.",
+      "3. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "4. Call getSchema for the selected component before writing JSX or renderChart props.",
+      '5. Call diagnoseConfig with usageMode="static" for renderChart/static data, or usageMode="push" for ref-based React code that intentionally omits data.',
+      "6. Fix all diagnoseConfig errors before presenting code.",
+      "7. If the component is renderable and has static data, call renderChart once to verify it returns SVG.",
+      "8. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
       "",
       "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation."
     ].join("\n"))
@@ -32332,10 +32642,12 @@ function createServer2() {
       "",
       "Use this MCP workflow:",
       "1. Call getSchema for the component and compare the provided props against required props and accessor names.",
-      "2. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
-      "3. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
-      "4. Check semiotic://examples for a nearby working pattern before inventing new props.",
-      "5. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
+      "2. Read semiotic://behavior-contracts for semantic rules around colors, required combinations, streaming refs, and renderability.",
+      '3. Call diagnoseConfig with usageMode="push" if the code intentionally omits data for a ref-push HOC; otherwise use usageMode="static".',
+      "4. Treat diagnoseConfig errors as blockers and warnings as review items.",
+      "5. If renderable and static data is available, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
+      "6. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "7. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
       "",
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step."
     ].join("\n"))
@@ -32357,7 +32669,7 @@ function createServer2() {
   );
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
@@ -32368,10 +32680,11 @@ function createServer2() {
   );
   srv.tool(
     "diagnoseConfig",
-    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
+    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Pass usageMode='push' for ref-based React HOCs that intentionally omit data; omit usageMode or pass 'static' for renderChart/MCP/server configs where data is required. Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
     {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }.")
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
+      usageMode: external_exports3.enum(["static", "push", "renderChart", "server"]).optional().describe("Validation mode. Use 'push' for ref-based React HOCs that omit data; use 'static' or omit for renderChart/MCP/static data configs.")
     },
     diagnoseConfigHandler
   );
@@ -32440,7 +32753,7 @@ async function main() {
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
       console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme");
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://system-prompt, semiotic://examples");
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples");
     });
   } else {
     const srv = createServer2();

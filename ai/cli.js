@@ -16,6 +16,12 @@ const {
   formatSuggestionReport,
   suggestCharts,
 } = require("./chartSuggestions.cjs")
+const {
+  behaviorContractsFor,
+  dataRequiredForUsageMode,
+  formatDoctorBehaviorContracts,
+  normalizeUsageMode,
+} = require("./behaviorContracts.cjs")
 
 const FILES = {
   default: path.join(pkgRoot, "CLAUDE.md"),
@@ -41,7 +47,7 @@ Usage:
   npx semiotic-ai --suggest     Recommend charts from { data, intent? } JSON
   npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
-  npx semiotic-ai --doctor     Validate component + props JSON from stdin
+  npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
   npx semiotic-ai --help       Show this help message
 `.trim()
 
@@ -87,7 +93,20 @@ function printSingleComponentSchema(componentName) {
 
   const payload = {
     ...component,
-    metadata: metadataForComponent(component),
+    metadata: {
+      ...metadataForComponent(component),
+      usageModes: {
+        static: {
+          dataRequired: dataRequiredForUsageMode(component.name, "static"),
+          note: "Use for renderChart, MCP previews, SSR snapshots, and static JSX examples.",
+        },
+        push: {
+          dataRequired: dataRequiredForUsageMode(component.name, "push"),
+          note: "Use for ref-based React HOCs. Omit data and push via ref.current when supported.",
+        },
+      },
+    },
+    behaviorContracts: behaviorContractsFor({ component: component.name, props: {} }),
   }
   console.log(JSON.stringify(payload, null, 2))
 }
@@ -110,7 +129,16 @@ function describeActualType(value) {
   return typeof value
 }
 
-function validatePropsWithSchema(componentName, props) {
+function shouldSkipMissingRequiredProp(componentName, propName, usageMode) {
+  return propName === "data" && !dataRequiredForUsageMode(componentName, usageMode)
+}
+
+function filterUsageModeErrors(componentName, errors, usageMode) {
+  if (dataRequiredForUsageMode(componentName, usageMode)) return errors
+  return errors.filter((err) => err !== `"data" is required for ${componentName}.`)
+}
+
+function validatePropsWithSchema(componentName, props, usageMode = "static") {
   const schema = loadSchema()
   const component = findComponent(schema, componentName)
   if (!component) {
@@ -127,6 +155,7 @@ function validatePropsWithSchema(componentName, props) {
   const errors = []
 
   for (const propName of required) {
+    if (shouldSkipMissingRequiredProp(component.name, propName, usageMode)) continue
     if (props[propName] === undefined || props[propName] === null) {
       errors.push(`"${propName}" is required for ${component.name}.`)
     }
@@ -156,8 +185,11 @@ function validatePropsWithSchema(componentName, props) {
   }
 }
 
-function printSchemaOnlyDoctorResult(component, props) {
-  const result = validatePropsWithSchema(component, props)
+function printSchemaOnlyDoctorResult(component, props, usageMode) {
+  const result = validatePropsWithSchema(component, props, usageMode)
+  if (usageMode === "push") {
+    console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
+  }
   if (result.valid) {
     console.log(`✓ ${component}: schema-only validation passed.`)
   } else {
@@ -165,6 +197,17 @@ function printSchemaOnlyDoctorResult(component, props) {
     for (const err of result.errors) {
       console.log(`  • ${err}`)
     }
+  }
+  printDoctorBehaviorContracts(component, props)
+}
+
+function printDoctorBehaviorContracts(component, props) {
+  const formatted = formatDoctorBehaviorContracts(
+    behaviorContractsFor({ component, props })
+  )
+  if (formatted) {
+    console.log("")
+    console.log(formatted)
   }
 }
 
@@ -210,14 +253,15 @@ if (flag === "--suggest") {
 
 // --doctor: validate component + props from stdin or argv
 if (flag === "--doctor") {
-  const input = readJSONInput("Usage: npx semiotic-ai --doctor '{\"component\":\"LineChart\",\"props\":{\"data\":[...]}}'\n       echo '{...}' | npx semiotic-ai --doctor")
+  const input = readJSONInput("Usage: npx semiotic-ai --doctor '{\"component\":\"LineChart\",\"props\":{\"data\":[...]},\"usageMode\":\"static\"}'\n       echo '{\"component\":\"LineChart\",\"props\":{\"xAccessor\":\"x\",\"yAccessor\":\"y\"},\"usageMode\":\"push\"}' | npx semiotic-ai --doctor")
 
   try {
-    const { component, props } = JSON.parse(input)
+    const { component, props, usageMode: rawUsageMode } = JSON.parse(input)
     if (!component || !props) {
       console.error("Input must be JSON with { component, props } fields.")
       process.exit(1)
     }
+    const usageMode = normalizeUsageMode(rawUsageMode)
 
     // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
     const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
@@ -234,13 +278,21 @@ if (flag === "--doctor") {
     }
 
     if (!diagnoseConfig && !validateProps) {
-      printSchemaOnlyDoctorResult(component, props)
+      printSchemaOnlyDoctorResult(component, props, usageMode)
       process.exit(0)
     }
 
     if (diagnoseConfig) {
       // Use the full anti-pattern detector
       const result = diagnoseConfig(component, props)
+      const diagnoses = usageMode === "push"
+        ? result.diagnoses.filter((d) => d.code !== "VALIDATION" || !shouldSkipMissingRequiredProp(component, "data", usageMode) || d.message !== `"data" is required for ${component}.`)
+        : result.diagnoses
+      const ok = diagnoses.every((d) => d.severity === "warning")
+
+      if (usageMode === "push") {
+        console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
+      }
 
       // Show data shape summary
       if (props.data && Array.isArray(props.data) && props.data.length > 0) {
@@ -248,36 +300,42 @@ if (flag === "--doctor") {
         console.log(`  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`)
       }
 
-      if (result.ok && result.diagnoses.length === 0) {
+      if (ok && diagnoses.length === 0) {
         console.log(`✓ ${component}: configuration looks good.`)
-      } else if (result.ok) {
+      } else if (ok) {
         console.log(`✓ ${component}: configuration OK with warnings:`)
-        for (const d of result.diagnoses) {
+        for (const d of diagnoses) {
           console.log(`  ⚠ [${d.code}] ${d.message}`)
           if (d.fix) console.log(`    Fix: ${d.fix}`)
         }
       } else {
         console.log(`✗ ${component}: issues detected.`)
-        for (const d of result.diagnoses) {
+        for (const d of diagnoses) {
           const icon = d.severity === "error" ? "✗" : "⚠"
           console.log(`  ${icon} [${d.code}] ${d.message}`)
           if (d.fix) console.log(`    Fix: ${d.fix}`)
         }
       }
+      printDoctorBehaviorContracts(component, props)
     } else {
       // Fallback to validateProps only
       const result = validateProps(component, props)
-      if (result.valid) {
+      const errors = filterUsageModeErrors(component, result.errors, usageMode)
+      if (usageMode === "push") {
+        console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
+      }
+      if (errors.length === 0) {
         console.log(`✓ ${component}: props are valid.`)
       } else {
         console.log(`✗ ${component}: validation failed.`)
-        for (const err of result.errors) {
+        for (const err of errors) {
           console.log(`  • ${err}`)
         }
       }
+      printDoctorBehaviorContracts(component, props)
     }
   } catch (err) {
-    console.error(`Failed to parse input: ${err.message}`)
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
     process.exit(1)
   }
   process.exit(0)

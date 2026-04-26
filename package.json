@@ -88,6 +88,7 @@
     "ai/system-prompt.md",
     "ai/examples.md",
     "ai/componentMetadata.cjs",
+    "ai/behaviorContracts.cjs",
     "ai/chartSuggestions.cjs",
     "ai/cli.js",
     "ai/dist/*.js",
@@ -135,12 +136,14 @@
     "check:pack": "node scripts/smoke-pack.mjs",
     "check:api-surface": "node scripts/check-api-surface.mjs",
     "docs:api-surface": "node scripts/generate-api-surface.mjs",
+    "docs:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs",
     "check:schema": "node scripts/check-schema-freshness.js",
     "check:surface": "node scripts/check-surface-parity.js",
+    "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ssr && npm run dist:prod && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ssr && rm -rf dist && npm run dist:prod"
+    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run dist:prod && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && rm -rf dist && npm run dist:prod"
   },
   "targets": {
     "website": {

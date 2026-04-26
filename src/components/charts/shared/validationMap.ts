@@ -99,7 +99,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   },
 
   StackedAreaChart: {
-    required: ["data"],
+    required: ["data", "areaBy"],
     dataShape: "array",
     dataAccessors: ["xAccessor", "yAccessor"],
     props: {
