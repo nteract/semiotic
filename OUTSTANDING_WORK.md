@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-25.
+Last updated 2026-04-26.
 
 This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, not here.
 
@@ -23,7 +23,6 @@ Baseline exists: `typedoc.json`, `docs:api:json`, `/api/charts`, and `/api/typed
 Next work:
 - Add source-level JSDoc examples to high-traffic HOCs that still rely on schema summaries instead of component comments.
 - Decide whether `/api/charts`, `/api/typedoc`, AI schema, and MCP metadata should share one generated chart registry.
-- Add a docs-route smoke test that runs after a clean `website:build` and checks the API routes load from prerendered output.
 
 ### AI Surface Behavior Contracts
 

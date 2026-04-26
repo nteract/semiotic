@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { extractRoutesFromSource, generatePage } from "../../../scripts/prerender.mjs"
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { extractRoutesFromSource, generatePage, copyDocsApiAssets } from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
   it("extracts nested docs routes without leaking the previous parent", () => {
@@ -113,5 +116,22 @@ describe("docs prerender helpers", () => {
     expect(html).toContain(unrelatedJsonLd)
     expect(html.match(/data-jsonld="semiotic"/g)).toHaveLength(1)
     expect(html.match(/"@type":"SoftwareApplication"/g)).toHaveLength(2)
+  })
+
+  it("copies generated API JSON assets into the static build", () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), "semiotic-docs-prerender-"))
+    const publicApiDir = join(tmpRoot, "public", "api")
+    const buildDir = join(tmpRoot, "build")
+    mkdirSync(publicApiDir, { recursive: true })
+
+    writeFileSync(join(publicApiDir, "api.json"), '{"name":"Semiotic API Reference","children":[]}\n')
+    writeFileSync(join(publicApiDir, "component-descriptions.json"), '{"LineChart":"Line chart"}\n')
+    writeFileSync(join(publicApiDir, "notes.txt"), "not copied\n")
+
+    const copied = copyDocsApiAssets(publicApiDir, buildDir)
+
+    expect(copied).toEqual(["api/api.json", "api/component-descriptions.json"])
+    expect(readFileSync(join(buildDir, "api", "api.json"), "utf8")).toContain("Semiotic API Reference")
+    expect(readFileSync(join(buildDir, "api", "component-descriptions.json"), "utf8")).toContain("LineChart")
   })
 })
