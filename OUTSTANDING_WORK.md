@@ -21,8 +21,8 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 Baseline exists: `typedoc.json`, `docs:api:json`, `/api/charts`, and `/api/typedoc`.
 
 Next work:
-- Improve component summaries and examples so TypeDoc output is useful without reading source.
-- Strengthen prop extraction for HOC props composed from shared interfaces.
+- Add source-level JSDoc examples to high-traffic HOCs that still rely on schema summaries instead of component comments.
+- Decide whether `/api/charts`, `/api/typedoc`, AI schema, and MCP metadata should share one generated chart registry.
 - Add a docs-route smoke test that runs after a clean `website:build` and checks the API routes load from prerendered output.
 
 ### AI Surface Behavior Contracts
@@ -155,6 +155,12 @@ Potential work:
 
 ## P4 — Product Extensions
 
+### Design System Research
+
+Potential work:
+- Curated categorical palettes that maximize neighbor contrast.
+- Per-role typography tokens beyond sizes, for example title, legend, axis, and tick font families.
+
 ### Server Export Formats
 
 Potential work:
@@ -181,9 +187,3 @@ Potential work:
 - Geographic minimap.
 - Temporal animation on cartograms.
 - Richer edge encodings, including tapered and animated dashed lines.
-
-### Design System Research
-
-Potential work:
-- Curated categorical palettes that maximize neighbor contrast.
-- Per-role typography tokens beyond sizes, for example title, legend, axis, and tick font families.
