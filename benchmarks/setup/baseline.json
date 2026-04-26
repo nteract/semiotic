@@ -1,74 +1,482 @@
 {
-  "timestamp": "2026-01-10T04:21:48.693Z",
-  "git_commit": "f8bbdaa",
-  "node_version": "v18.12.0",
+  "timestamp": "2026-04-26T17:39:31.556Z",
+  "git_commit": "cc951223",
+  "node_version": "v22.22.0",
   "benchmarks": {
-    "swarmLayout-small-50-120iter": {
-      "mean": 4.77,
-      "unit": "ms"
-    },
-    "swarmLayout-medium-200-120iter": {
-      "mean": 24.71,
-      "unit": "ms"
-    },
-    "swarmLayout-large-1000-120iter": {
-      "mean": 178.73,
-      "unit": "ms"
-    },
-    "force-layout-small-50-500iter": {
-      "mean": 78.67,
-      "unit": "ms"
-    },
-    "force-layout-medium-100-500iter": {
-      "mean": 198.24,
-      "unit": "ms"
-    },
-    "force-layout-medium-200-500iter": {
-      "mean": 487.22,
-      "unit": "ms"
-    },
-    "force-layout-large-500-500iter": {
-      "mean": 1714.24,
-      "unit": "ms"
-    },
     "chord-matrix-20-nodes-400ops": {
-      "mean": 0.0496,
+      "mean": 0.030930548001980036,
       "unit": "ms"
     },
     "chord-matrix-50-nodes-2500ops": {
-      "mean": 0.3129,
+      "mean": 0.2116505154464644,
       "unit": "ms"
     },
     "chord-matrix-100-nodes-10000ops": {
-      "mean": 1.2957,
+      "mean": 0.8208286901639432,
       "unit": "ms"
     },
     "chord-matrix-200-nodes-40000ops": {
-      "mean": 4.9229,
+      "mean": 3.388767729729724,
       "unit": "ms"
     },
     "chord-matrix-500-nodes-250000ops": {
-      "mean": 37.9149,
+      "mean": 25.19587489999992,
+      "unit": "ms"
+    },
+    "chord-matrix-scaling-20": {
+      "mean": 0.03507850526020419,
+      "unit": "ms"
+    },
+    "chord-matrix-scaling-40": {
+      "mean": 0.129367600776192,
+      "unit": "ms"
+    },
+    "chord-matrix-scaling-80": {
+      "mean": 0.5210949375000012,
+      "unit": "ms"
+    },
+    "chord-matrix-100nodes-sparse-1x": {
+      "mean": 0.8300233034825769,
+      "unit": "ms"
+    },
+    "chord-matrix-100nodes-medium-3x": {
+      "mean": 0.8037492712680562,
+      "unit": "ms"
+    },
+    "chord-matrix-100nodes-dense-5x": {
+      "mean": 0.901664670270265,
       "unit": "ms"
     },
     "accessor-100pts-1x-1y-100ops": {
-      "mean": 0.001,
+      "mean": 0.0006122818686338259,
       "unit": "ms"
     },
     "accessor-1000pts-1x-1y-1000ops": {
-      "mean": 0.0133,
+      "mean": 0.00786976875737783,
       "unit": "ms"
     },
     "accessor-1000pts-2x-2y-4000ops": {
-      "mean": 0.0524,
+      "mean": 0.03184060831635074,
       "unit": "ms"
     },
     "accessor-1000pts-3x-3y-9000ops": {
-      "mean": 0.1145,
+      "mean": 0.07608604244637099,
       "unit": "ms"
     },
     "accessor-5000pts-2x-2y-20000ops": {
-      "mean": 0.2796,
+      "mean": 0.17533819845722734,
+      "unit": "ms"
+    },
+    "accessor-2x2-100pts": {
+      "mean": 0.0056089324015075135,
+      "unit": "ms"
+    },
+    "accessor-2x2-500pts": {
+      "mean": 0.02954290387001655,
+      "unit": "ms"
+    },
+    "accessor-2x2-1000pts": {
+      "mean": 0.055691882601923794,
+      "unit": "ms"
+    },
+    "accessor-2x2-5000pts": {
+      "mean": 0.32264823935483655,
+      "unit": "ms"
+    },
+    "accessor-1000pts-1x1y": {
+      "mean": 0.01572912733964279,
+      "unit": "ms"
+    },
+    "accessor-1000pts-2x2y": {
+      "mean": 0.06225808590637718,
+      "unit": "ms"
+    },
+    "accessor-1000pts-3x3y": {
+      "mean": 0.1413976663839509,
+      "unit": "ms"
+    },
+    "accessor-1000pts-4x4y": {
+      "mean": 0.271746237499981,
+      "unit": "ms"
+    },
+    "accessor-1000pts-simple": {
+      "mean": 0.01598327791451632,
+      "unit": "ms"
+    },
+    "accessor-1000pts-complex": {
+      "mean": 0.023197568571966323,
+      "unit": "ms"
+    },
+    "accessor-1000pts-very-complex": {
+      "mean": 0.04765858539839862,
+      "unit": "ms"
+    },
+    "swarmLayout-small-50-120iter": {
+      "mean": 1.5716341504702196,
+      "unit": "ms"
+    },
+    "swarmLayout-medium-200-120iter": {
+      "mean": 8.509540983050856,
+      "unit": "ms"
+    },
+    "swarmLayout-large-1000-120iter": {
+      "mean": 65.68919579999996,
+      "unit": "ms"
+    },
+    "swarmLayout-200pts-30iter": {
+      "mean": 2.2150565973451397,
+      "unit": "ms"
+    },
+    "swarmLayout-200pts-60iter": {
+      "mean": 4.2477856525423805,
+      "unit": "ms"
+    },
+    "swarmLayout-200pts-120iter": {
+      "mean": 8.394271483333341,
+      "unit": "ms"
+    },
+    "swarmLayout-200pts-240iter": {
+      "mean": 16.43132522580653,
+      "unit": "ms"
+    },
+    "force-layout-small-50-500iter": {
+      "mean": 25.97493545000002,
+      "unit": "ms"
+    },
+    "force-layout-medium-100-500iter": {
+      "mean": 65.82954999999993,
+      "unit": "ms"
+    },
+    "force-layout-medium-200-500iter": {
+      "mean": 162.62369990000025,
+      "unit": "ms"
+    },
+    "force-layout-large-500-500iter": {
+      "mean": 581.5037667999999,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-100iter": {
+      "mean": 14.714573529411663,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-250iter": {
+      "mean": 35.2070388666667,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-500iter": {
+      "mean": 69.91664590000036,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-1000iter": {
+      "mean": 136.34371660000033,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-sparse-1.5x-250iter": {
+      "mean": 34.195102733332895,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-medium-3x-250iter": {
+      "mean": 33.09484362499916,
+      "unit": "ms"
+    },
+    "force-layout-100nodes-dense-5x-250iter": {
+      "mean": 34.324230466666386,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-small-d3-b3": {
+      "mean": 0.006101284697986799,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-medium-d4-b4": {
+      "mean": 0.043545225028303866,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-large-d5-b4": {
+      "mean": 0.18650633271167205,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-xlarge-d5-b5": {
+      "mean": 0.4738704176136265,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-raw-json": {
+      "mean": 0.043329140876798976,
+      "unit": "ms"
+    },
+    "nodesEdgesFromHierarchy-pre-built": {
+      "mean": 0.037910424444613754,
+      "unit": "ms"
+    },
+    "tree-layout": {
+      "mean": 0.031906249633078955,
+      "unit": "ms"
+    },
+    "treemap-layout": {
+      "mean": 0.04059104075336771,
+      "unit": "ms"
+    },
+    "partition-layout": {
+      "mean": 0.02650536856612851,
+      "unit": "ms"
+    },
+    "circlepack-layout": {
+      "mean": 0.0993001008737128,
+      "unit": "ms"
+    },
+    "treemap-small-d3-b3": {
+      "mean": 0.005710354233046152,
+      "unit": "ms"
+    },
+    "partition-small-d3-b3": {
+      "mean": 0.003254219581248544,
+      "unit": "ms"
+    },
+    "treemap-medium-d4-b4": {
+      "mean": 0.04242281522015351,
+      "unit": "ms"
+    },
+    "partition-medium-d4-b4": {
+      "mean": 0.026615627807948704,
+      "unit": "ms"
+    },
+    "treemap-large-d5-b4": {
+      "mean": 0.18865585439456384,
+      "unit": "ms"
+    },
+    "partition-large-d5-b4": {
+      "mean": 0.11590173047507504,
+      "unit": "ms"
+    },
+    "full-pipeline-tree-small": {
+      "mean": 0.011816047688816844,
+      "unit": "ms"
+    },
+    "full-pipeline-treemap-small": {
+      "mean": 0.01909474562743724,
+      "unit": "ms"
+    },
+    "full-pipeline-tree-medium": {
+      "mean": 0.12231861056754163,
+      "unit": "ms"
+    },
+    "full-pipeline-treemap-medium": {
+      "mean": 0.1407473656065179,
+      "unit": "ms"
+    },
+    "full-pipeline-tree-large": {
+      "mean": 0.5391822672414072,
+      "unit": "ms"
+    },
+    "full-pipeline-treemap-large": {
+      "mean": 0.6162085640394185,
+      "unit": "ms"
+    },
+    "csv-parse-1k-rows": {
+      "mean": 0.3571480621428595,
+      "unit": "ms"
+    },
+    "csv-parse-10k-rows": {
+      "mean": 3.548419893617009,
+      "unit": "ms"
+    },
+    "csv-parse-50k-rows": {
+      "mean": 23.715484636363644,
+      "unit": "ms"
+    },
+    "transform-1k-points": {
+      "mean": 0.050017952285686215,
+      "unit": "ms"
+    },
+    "transform-10k-points": {
+      "mean": 0.5042051653225786,
+      "unit": "ms"
+    },
+    "transform-50k-points": {
+      "mean": 2.6915772688172006,
+      "unit": "ms"
+    },
+    "project-points-1k": {
+      "mean": 0.005720682985709219,
+      "unit": "ms"
+    },
+    "project-points-10k": {
+      "mean": 0.05363744625616428,
+      "unit": "ms"
+    },
+    "project-points-50k": {
+      "mean": 0.38168571624713865,
+      "unit": "ms"
+    },
+    "extent-xy-1k": {
+      "mean": 0.002570711941963435,
+      "unit": "ms"
+    },
+    "extent-xy-10k": {
+      "mean": 0.02439936431951748,
+      "unit": "ms"
+    },
+    "extent-xy-50k": {
+      "mean": 0.12231876149706498,
+      "unit": "ms"
+    },
+    "full-scatter-pipeline-1k": {
+      "mean": 0.4447803315555777,
+      "unit": "ms"
+    },
+    "full-scatter-pipeline-10k": {
+      "mean": 4.60614137614684,
+      "unit": "ms"
+    },
+    "full-scatter-pipeline-50k": {
+      "mean": 30.096602941176517,
+      "unit": "ms"
+    },
+    "scatter-1k": {
+      "mean": 0.016544625802395452,
+      "unit": "ms"
+    },
+    "scatter-10k": {
+      "mean": 0.17442835367980467,
+      "unit": "ms"
+    },
+    "scatter-50k": {
+      "mean": 2.053644799180334,
+      "unit": "ms"
+    },
+    "line-1k-single-series": {
+      "mean": 0.02928280638360198,
+      "unit": "ms"
+    },
+    "line-10k-single-series": {
+      "mean": 0.2675917335473597,
+      "unit": "ms"
+    },
+    "line-10k-across-5-series": {
+      "mean": 0.31205248596381363,
+      "unit": "ms"
+    },
+    "line-10k-across-20-series": {
+      "mean": 0.2863702875143183,
+      "unit": "ms"
+    },
+    "area-1k-single": {
+      "mean": 0.030231993107203745,
+      "unit": "ms"
+    },
+    "area-10k-single": {
+      "mean": 0.2763095690607674,
+      "unit": "ms"
+    },
+    "area-10k-across-5-series": {
+      "mean": 0.32701696535948205,
+      "unit": "ms"
+    },
+    "stacked-area-500x5 (2.5k points)": {
+      "mean": 0.24171426099564558,
+      "unit": "ms"
+    },
+    "stacked-area-1kx10 (10k points)": {
+      "mean": 1.0627446292372629,
+      "unit": "ms"
+    },
+    "stacked-area-2kx5 (10k points)": {
+      "mean": 1.2346176049383184,
+      "unit": "ms"
+    },
+    "stacked-area-2kx5-with-points": {
+      "mean": 2.589103103092834,
+      "unit": "ms"
+    },
+    "stacked-area-1kx10-normalized": {
+      "mean": 1.4928201283582025,
+      "unit": "ms"
+    },
+    "heatmap-static-1k": {
+      "mean": 0.4750500094966438,
+      "unit": "ms"
+    },
+    "heatmap-static-10k": {
+      "mean": 7.4102260735293495,
+      "unit": "ms"
+    },
+    "heatmap-static-50k": {
+      "mean": 49.207503636364315,
+      "unit": "ms"
+    },
+    "heatmap-stream-10k-20x20": {
+      "mean": 0.07530924789155352,
+      "unit": "ms"
+    },
+    "heatmap-stream-50k-20x20": {
+      "mean": 0.32439155058365654,
+      "unit": "ms"
+    },
+    "heatmap-stream-50k-50x50": {
+      "mean": 0.451347686823099,
+      "unit": "ms"
+    },
+    "heatmap-stream-50k-100x100-mean": {
+      "mean": 0.6816182397820288,
+      "unit": "ms"
+    },
+    "push-1k-into-10k-buffer": {
+      "mean": 0.007048296250353846,
+      "unit": "ms"
+    },
+    "push-10k-into-10k-buffer (eviction)": {
+      "mean": 0.059103373522455205,
+      "unit": "ms"
+    },
+    "pushMany-10k-batch": {
+      "mean": 0.35899577602294674,
+      "unit": "ms"
+    },
+    "resize-10k-to-20k": {
+      "mean": 0.12694899314547323,
+      "unit": "ms"
+    },
+    "resize-50k-to-100k": {
+      "mean": 0.7993396629392631,
+      "unit": "ms"
+    },
+    "push-1k-then-build-scatter-scene": {
+      "mean": 0.0317389940967372,
+      "unit": "ms"
+    },
+    "push-10k-then-build-scatter-scene": {
+      "mean": 0.2944147898763904,
+      "unit": "ms"
+    },
+    "push-2k-then-build-stacked-area-5-groups": {
+      "mean": 1.3517262513514012,
+      "unit": "ms"
+    },
+    "push-10k-then-build-line-5-series": {
+      "mean": 0.424240820186612,
+      "unit": "ms"
+    },
+    "steady-state-scatter-10k (push 100 + evict + rebuild)": {
+      "mean": 0.299074311602871,
+      "unit": "ms"
+    },
+    "steady-state-line-5-series (push 50 + rebuild)": {
+      "mean": 0.3563330299145136,
+      "unit": "ms"
+    },
+    "10k pushes into 1k-capacity buffer (10x eviction)": {
+      "mean": 0.43042382788295985,
+      "unit": "ms"
+    },
+    "50k pushes into 5k-capacity buffer": {
+      "mean": 2.1992421973684158,
+      "unit": "ms"
+    },
+    "RingBuffer forEach after 10k pushes (iteration cost)": {
+      "mean": 0.4595274380165257,
+      "unit": "ms"
+    },
+    "50k push/evict cycles maintain constant buffer size": {
+      "mean": 2.466882591132995,
       "unit": "ms"
     }
   }

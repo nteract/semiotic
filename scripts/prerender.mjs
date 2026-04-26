@@ -13,13 +13,14 @@
  * demos render as empty containers in the static HTML (expected).
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs"
 import { resolve, dirname } from "path"
 import { fileURLToPath, pathToFileURL } from "url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
 const APP_SRC = resolve(__dirname, "../docs/src/App.js")
+const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const SITE_URL = "https://semiotic3.nteract.io"
 
 // ── Extract routes from App.js ──────────────────────────────────────────
@@ -109,6 +110,22 @@ function extractRoutes() {
   return extractRoutesFromSource(readFileSync(APP_SRC, "utf-8"))
 }
 
+export function copyDocsApiAssets(publicApiDir = PUBLIC_API_DIR, buildDir = BUILD_DIR) {
+  if (!existsSync(publicApiDir)) return []
+
+  const outDir = resolve(buildDir, "api")
+  mkdirSync(outDir, { recursive: true })
+
+  const copied = []
+  for (const fileName of readdirSync(publicApiDir).sort()) {
+    if (!fileName.endsWith(".json")) continue
+    copyFileSync(resolve(publicApiDir, fileName), resolve(outDir, fileName))
+    copied.push(`api/${fileName}`)
+  }
+
+  return copied
+}
+
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
 export function generatePage(shellHtml, routePath) {
@@ -178,9 +195,13 @@ export function prerender() {
     .map(r => `https://semiotic3.nteract.io/${r}`)
     .join("\n")
   writeFileSync(resolve(BUILD_DIR, "sitemap.txt"), `https://semiotic3.nteract.io/\n${sitemapPaths}\n`)
+  const copiedApiAssets = copyDocsApiAssets()
 
   console.log(`\u2705 ${created} pages pre-rendered`)
   console.log(`\u2705 sitemap.txt written`)
+  if (copiedApiAssets.length > 0) {
+    console.log(`\u2705 copied API assets: ${copiedApiAssets.join(", ")}`)
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
