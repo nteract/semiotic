@@ -1,7 +1,51 @@
 "use strict"
 
+const path = require("path")
+const fs = require("fs")
+
 const DOC_MARKER_START = "<!-- semiotic-behavior-contracts:start -->"
 const DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->"
+
+// Components whose static config requires `data` are derived from
+// `ai/schema.json` rather than maintained as a hand-curated list. The schema
+// already declares which components require data — duplicating that here led
+// to drift (Heatmap, FunnelChart, MinimapChart, ScatterplotMatrix, and the
+// hierarchy charts were schema-required but missing from the local list,
+// which made `dataRequiredForUsageMode` incorrectly return `false` and
+// suppressed the "data is required" error in --doctor / MCP diagnoseConfig
+// even when usageMode wasn't `push`).
+//
+// `STATIC_DATA_COMPONENTS` stays exported as a Set for test/legacy callers
+// that probe the surface, and is rebuilt from disk at module load time.
+function loadStaticDataComponentsFromSchema() {
+  // Source layout has this file at `<repo>/ai/behaviorContracts.cjs` and the
+  // schema at `<repo>/ai/schema.json` — `__dirname` works directly.
+  // The MCP server bundles this module into `<repo>/ai/dist/mcp-server.js`
+  // via esbuild, so when invoked from there `__dirname` is `<repo>/ai/dist/`
+  // and the schema lives one directory up. Try both layouts; use whichever
+  // resolves first.
+  const candidates = [
+    path.join(__dirname, "schema.json"),
+    path.join(__dirname, "..", "schema.json"),
+  ]
+  for (const schemaPath of candidates) {
+    try {
+      const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"))
+      const out = new Set()
+      for (const tool of schema.tools || []) {
+        const required = tool.function?.parameters?.required || []
+        if (required.includes("data")) out.add(tool.function.name)
+      }
+      if (out.size > 0) return out
+    } catch {
+      // try next candidate
+    }
+  }
+  // Defensive fallback: if schema.json is unavailable (e.g. unusual install
+  // layout), fall back to an empty set so callers fail safe — they'll see
+  // "data not required" everywhere, which is permissive but won't crash.
+  return new Set()
+}
 
 const REQUIRED_COMBINATIONS = [
   {
@@ -82,27 +126,7 @@ const PUSH_MODE_COMPONENTS = [
   "DistanceCartogram",
 ]
 
-const STATIC_DATA_COMPONENTS = [
-  "LineChart",
-  "AreaChart",
-  "StackedAreaChart",
-  "Scatterplot",
-  "BubbleChart",
-  "ConnectedScatterplot",
-  "BarChart",
-  "StackedBarChart",
-  "GroupedBarChart",
-  "SwarmPlot",
-  "BoxPlot",
-  "Histogram",
-  "ViolinPlot",
-  "RidgelinePlot",
-  "DotPlot",
-  "PieChart",
-  "DonutChart",
-  "LikertChart",
-  "SwimlaneChart",
-]
+const STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema()
 
 const BEHAVIOR_CONTRACTS = [
   {
@@ -206,7 +230,7 @@ function normalizeUsageMode(usageMode) {
 }
 
 function dataRequiredForUsageMode(component, usageMode) {
-  if (!STATIC_DATA_COMPONENTS.includes(component)) return false
+  if (!STATIC_DATA_COMPONENTS.has(component)) return false
   if (normalizeUsageMode(usageMode) === "push" && PUSH_MODE_COMPONENTS.includes(component)) return false
   return true
 }

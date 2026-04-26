@@ -77,6 +77,21 @@ describe("AI behavior contract metadata", () => {
     expect(dataRequiredForUsageMode("LineChart", "push")).toBe(false)
     expect(dataRequiredForUsageMode("GaugeChart", "push")).toBe(false)
   })
+
+  it("keeps data required for components that don't support push mode, regardless of usageMode", () => {
+    // These components are schema-required to have data but aren't part of
+    // the push-mode allowlist — Heatmap/FunnelChart/MinimapChart/ScatterplotMatrix
+    // are HOCs without a ref-push API, and the hierarchy charts (Treemap,
+    // CirclePack, TreeDiagram, OrbitDiagram) take a single root object.
+    // Passing usageMode="push" must NOT suppress the "data is required"
+    // error for them (regression test for the static-data list silently
+    // omitting these components and letting agents skip required data).
+    for (const c of ["Heatmap", "FunnelChart", "MinimapChart", "ScatterplotMatrix",
+                     "Treemap", "CirclePack", "TreeDiagram", "OrbitDiagram"]) {
+      expect(dataRequiredForUsageMode(c, "static")).toBe(true)
+      expect(dataRequiredForUsageMode(c, "push")).toBe(true)
+    }
+  })
 })
 
 describe("AI behavior contracts — color precedence", () => {

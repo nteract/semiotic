@@ -7228,8 +7228,29 @@ For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import fr
 var require_behaviorContracts = __commonJS({
   "ai/behaviorContracts.cjs"(exports2, module2) {
     "use strict";
+    var path2 = require("path");
+    var fs2 = require("fs");
     var DOC_MARKER_START = "<!-- semiotic-behavior-contracts:start -->";
     var DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->";
+    function loadStaticDataComponentsFromSchema() {
+      const candidates = [
+        path2.join(__dirname, "schema.json"),
+        path2.join(__dirname, "..", "schema.json")
+      ];
+      for (const schemaPath2 of candidates) {
+        try {
+          const schema2 = JSON.parse(fs2.readFileSync(schemaPath2, "utf8"));
+          const out = /* @__PURE__ */ new Set();
+          for (const tool of schema2.tools || []) {
+            const required2 = tool.function?.parameters?.required || [];
+            if (required2.includes("data")) out.add(tool.function.name);
+          }
+          if (out.size > 0) return out;
+        } catch {
+        }
+      }
+      return /* @__PURE__ */ new Set();
+    }
     var REQUIRED_COMBINATIONS = [
       {
         component: "StackedAreaChart",
@@ -7307,27 +7328,7 @@ var require_behaviorContracts = __commonJS({
       "ProportionalSymbolMap",
       "DistanceCartogram"
     ];
-    var STATIC_DATA_COMPONENTS = [
-      "LineChart",
-      "AreaChart",
-      "StackedAreaChart",
-      "Scatterplot",
-      "BubbleChart",
-      "ConnectedScatterplot",
-      "BarChart",
-      "StackedBarChart",
-      "GroupedBarChart",
-      "SwarmPlot",
-      "BoxPlot",
-      "Histogram",
-      "ViolinPlot",
-      "RidgelinePlot",
-      "DotPlot",
-      "PieChart",
-      "DonutChart",
-      "LikertChart",
-      "SwimlaneChart"
-    ];
+    var STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema();
     var BEHAVIOR_CONTRACTS2 = [
       {
         id: "props.data-required-by-usage-mode",
@@ -7423,7 +7424,7 @@ var require_behaviorContracts = __commonJS({
       return "static";
     }
     function dataRequiredForUsageMode2(component, usageMode) {
-      if (!STATIC_DATA_COMPONENTS.includes(component)) return false;
+      if (!STATIC_DATA_COMPONENTS.has(component)) return false;
       if (normalizeUsageMode2(usageMode) === "push" && PUSH_MODE_COMPONENTS.includes(component)) return false;
       return true;
     }
