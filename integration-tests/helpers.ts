@@ -57,21 +57,75 @@ function canvasHasContentEval(id: string): boolean {
  * event-driven, so fast machines don't pay an arbitrary wait and slow
  * CI doesn't flake.
  *
- * `timeout` covers both the canvas-visible step and the pixel-content
- * poll. Defaults to 10 seconds — the lion's share is the framework
- * warm-up on cold starts.
+ * After detecting non-blank pixels, this helper also waits for the canvas
+ * to be *visually stable* (pixel sum unchanged across consecutive frames).
+ * Charts default to a 300ms intro animation — without this stability
+ * check, `toHaveScreenshot` on the first chart of a page can race the
+ * intro and Playwright's 5s "element to be stable" timer expires while
+ * the canvas is still repainting. CSS-animation disabling does not help
+ * here because the animation drives canvas rAF, not CSS transitions.
+ *
+ * Pass `{ stable: false }` for streaming/realtime charts whose canvas is
+ * intentionally never stable — the stability poll would otherwise time
+ * out. Use `waitForStreamingUpdate` for streaming-update assertions.
+ *
+ * `timeout` covers every poll. Defaults to 10 seconds — the lion's share
+ * is the framework warm-up on cold starts.
  */
 export async function waitForChartReady(
   page: Page,
   testId: string,
-  options: { timeout?: number } = {}
+  options: { timeout?: number; stable?: boolean } = {}
 ): Promise<void> {
   const timeout = options.timeout ?? 10_000
+  const stable = options.stable ?? true
   const testCase = page.locator(`[data-testid="${testId}"]`)
   await expect(testCase).toBeVisible({ timeout })
   const canvas = testCase.locator("canvas").first()
   await expect(canvas).toBeVisible({ timeout })
   await page.waitForFunction(canvasHasContentEval, testId, { timeout })
+  if (!stable) return
+
+  // Wait for visual stability: poll a cheap canvas pixel-sum until it
+  // stays constant for `stableFrames` consecutive polls. The sum is a
+  // coarse fingerprint — close enough for "is the animation still
+  // running?" without copying full image data on every poll. Polling
+  // state lives on `window.__chartStable` so multiple `waitForFunction`
+  // invocations carry over between polls within a single test.
+  await page.waitForFunction(
+    ({ id, stableFrames }: { id: string; stableFrames: number }) => {
+      const w = window as unknown as {
+        __chartStable?: Map<string, { lastSum: number; stableCount: number }>
+      }
+      if (!w.__chartStable) w.__chartStable = new Map()
+      const state = w.__chartStable.get(id) ?? { lastSum: -1, stableCount: 0 }
+      const container = document.querySelector(`[data-testid="${id}"]`)
+      if (!container) return false
+      const canvas = container.querySelector("canvas") as HTMLCanvasElement | null
+      if (!canvas || canvas.width === 0 || canvas.height === 0) return false
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return false
+      let sum = 0
+      try {
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+        for (let i = 0; i < data.length; i += 64) {
+          sum = (sum + data[i] + data[i + 1] + data[i + 2] + data[i + 3]) | 0
+        }
+      } catch {
+        return false
+      }
+      if (sum === state.lastSum) {
+        state.stableCount++
+      } else {
+        state.lastSum = sum
+        state.stableCount = 0
+      }
+      w.__chartStable.set(id, state)
+      return state.stableCount >= stableFrames
+    },
+    { id: testId, stableFrames: 3 },
+    { timeout, polling: 50 },
+  )
 }
 
 /**

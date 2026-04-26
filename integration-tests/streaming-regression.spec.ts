@@ -105,7 +105,7 @@ test.describe("Streaming Color Regression", () => {
 
   for (const { testId, name, minColors } of colorTestCases) {
     test(`${name} streaming uses colored fills, not grey`, async ({ page }) => {
-      await waitForStreaming(page, testId)
+      await waitForStreaming(page, testId, { stable: false })
       // The streaming examples push a category every 100ms over ~600–1200ms.
       // `waitForStreaming` returns as soon as ANY pixel content paints (often
       // after the first push), so poll until enough categories have been
@@ -125,7 +125,7 @@ test.describe("Streaming Color Regression", () => {
   }
 
   test("Chord streaming uses multiple colors, not single blue", async ({ page }) => {
-    await waitForStreaming(page, "regression-chord-streaming")
+    await waitForStreaming(page, "regression-chord-streaming", { stable: false })
     const colors = await getCanvasColors(page, "regression-chord-streaming")
     expect(colors.hasColor).toBe(true)
     // Chord should have distinct colors for different nodes
@@ -149,7 +149,7 @@ test.describe("Streaming Legend Regression", () => {
 
   for (const { testId, name } of legendTestCases) {
     test(`${name} streaming renders a legend`, async ({ page }) => {
-      await waitForStreaming(page, testId)
+      await waitForStreaming(page, testId, { stable: false })
 
       const testCase = page.locator(`[data-testid="${testId}"]`)
       // Legend renders as SVG overlay with legend items
@@ -174,7 +174,7 @@ test.describe("Area Chart Tooltip Regression", () => {
   })
 
   test("area chart tooltip shows field values, not dashes", async ({ page }) => {
-    await waitForStreaming(page, "regression-area-tooltip")
+    await waitForStreaming(page, "regression-area-tooltip", { stable: false })
 
     const testCase = page.locator('[data-testid="regression-area-tooltip"]')
     const canvas = testCase.locator("canvas").first()
@@ -211,7 +211,7 @@ test.describe("LineChart Streaming Stability", () => {
     const errors: string[] = []
     page.on("pageerror", (err) => errors.push(err.message))
 
-    await waitForStreaming(page, "regression-line-streaming")
+    await waitForStreaming(page, "regression-line-streaming", { stable: false })
 
     // Should have no "Maximum update depth exceeded" errors
     const loopErrors = errors.filter((e) => e.includes("Maximum update depth"))
@@ -236,7 +236,7 @@ test.describe("Force Graph Centering Regression", () => {
 
   test("force-directed graph nodes are centered in the canvas", async ({ page }) => {
     // Give the force simulation time to settle
-    await waitForStreaming(page, "regression-force-centering")
+    await waitForStreaming(page, "regression-force-centering", { stable: false })
 
     const centered = await page.evaluate(() => {
       const container = document.querySelector('[data-testid="regression-force-centering"]')

@@ -7,14 +7,14 @@ test.describe("Realtime Charts - Line Chart", () => {
   })
 
   test("RealtimeLineChart renders canvas", async ({ page }) => {
-    await waitForChartReady(page, "realtime-line")
+    await waitForChartReady(page, "realtime-line", { stable: false })
     const testCase = page.locator('[data-testid="realtime-line"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("RealtimeLineChart updates over time", async ({ page }) => {
-    await waitForChartReady(page, "realtime-line")
+    await waitForChartReady(page, "realtime-line", { stable: false })
     const testCase = page.locator('[data-testid="realtime-line"]')
     const canvas = testCase.locator("canvas").first()
 
@@ -43,14 +43,14 @@ test.describe("Realtime Charts - Histogram", () => {
   })
 
   test("RealtimeHistogram renders canvas", async ({ page }) => {
-    await waitForChartReady(page, "realtime-histogram")
+    await waitForChartReady(page, "realtime-histogram", { stable: false })
     const testCase = page.locator('[data-testid="realtime-histogram"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
   })
 
   test("RealtimeHistogram has a visible chart area", async ({ page }) => {
-    await waitForChartReady(page, "realtime-histogram")
+    await waitForChartReady(page, "realtime-histogram", { stable: false })
     const testCase = page.locator('[data-testid="realtime-histogram"]')
     const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
@@ -66,7 +66,7 @@ test.describe("Realtime Charts - Waterfall", () => {
   })
 
   test("RealtimeWaterfallChart renders canvas", async ({ page }) => {
-    await waitForChartReady(page, "realtime-waterfall")
+    await waitForChartReady(page, "realtime-waterfall", { stable: false })
     const testCase = page.locator('[data-testid="realtime-waterfall"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
@@ -79,7 +79,7 @@ test.describe("Realtime Charts - Swarm", () => {
   })
 
   test("RealtimeSwarmChart renders canvas", async ({ page }) => {
-    await waitForChartReady(page, "realtime-swarm")
+    await waitForChartReady(page, "realtime-swarm", { stable: false })
     const testCase = page.locator('[data-testid="realtime-swarm"]')
     const canvases = testCase.locator("canvas")
     expect(await canvases.count()).toBeGreaterThan(0)
