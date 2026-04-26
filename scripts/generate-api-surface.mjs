@@ -12,7 +12,7 @@
  * To intentionally change the surface: run `npm run docs:api-surface` and
  * commit the resulting `etc/api-surface/*.api.md` files.
  */
-import { writeFileSync, mkdirSync, readFileSync, readdirSync, existsSync } from "node:fs"
+import { writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import ts from "typescript"
