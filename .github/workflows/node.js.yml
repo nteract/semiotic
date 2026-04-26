@@ -13,12 +13,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v6
-        with:
-          # The PR-vs-main bench gate worktrees `origin/main` to capture a
-          # CI-native baseline in the same job. Default checkout is shallow
-          # to the triggering ref only; the gate's `git fetch origin main`
-          # works on a shallow clone but worktree-add wants the ref locally.
-          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v6
@@ -109,15 +103,36 @@ jobs:
           fi
           echo "All canvas methods are stubbed"
 
-      - name: Bench regression gate (PR vs main, CI-native baseline)
-        # PR-only: captures main's bench numbers in the same job on the same
-        # hardware, then compares the PR's results against them. Avoids the
-        # cross-architecture noise that plagued the committed-baseline
-        # approach (M-series Mac local capture vs. x86 Linux CI runner
-        # produced uniform 60–90% "slowdowns" across every benchmark).
-        # On `push: main` this step is skipped — there's nothing to compare
-        # main against, and the committed baseline is informational only.
-        if: github.event_name == 'pull_request'
+  bench:
+    name: Performance regression
+    runs-on: ubuntu-latest
+    # PR-only: captures main's bench numbers in the same job on the same
+    # hardware, then compares the PR's results against them. Avoids the
+    # cross-architecture noise that plagues a committed-baseline approach
+    # (M-series Mac local capture vs. x86 Linux CI runner produces uniform
+    # 60–90% "slowdowns" across every benchmark). On `push: main` there's
+    # nothing to compare main against, so the job is skipped.
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+        with:
+          # `bench:pr-vs-main` worktrees `origin/main` to capture a
+          # CI-native baseline. Default checkout is shallow to the
+          # triggering ref only; full history makes worktree-add reliable
+          # without needing extra fetch plumbing.
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compare PR vs main on identical hardware
         run: npm run bench:pr-vs-main
 
   e2e:
