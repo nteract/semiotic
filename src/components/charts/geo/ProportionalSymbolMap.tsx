@@ -8,15 +8,15 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -147,19 +147,29 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: points,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: false,
     onObservation,
     onClick,
     chartType: "ProportionalSymbolMap",
-    chartId
+    chartId,
+    showLegend: resolved.showLegend,
+    userMargin,
+    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    loading,
+    emptyContent,
+    width: resolved.width,
+    height: resolved.height,
   })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Compute size domain for scaling
   const sizeDomain = useMemo(() => {
@@ -172,42 +182,18 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const pointStyleFn = useMemo(() => {
     const base = (d: Datum): Style & { r?: number } => ({
-      fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR,
+      fill: colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR,
       fillOpacity: 0.7,
       stroke: "#fff",
       strokeWidth: 0.5,
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : 6
     })
     const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
-    if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style & { r?: number }
+    if (setup.effectiveSelectionHook) {
+      return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
-
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const acc = typeof colorBy === "function" ? colorBy : (d: Datum) => d?.[colorBy as string]
-    const vals = new Set<string>()
-    for (const d of safeData) {
-      if (!d) continue
-      const v = acc(d)
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeData,
-    colorBy,
-    colorScale,
-    showLegend: resolved.showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: { top: 10, bottom: 10, left: 10, right: 10 }
-  })
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, stroke, strokeWidth, opacity])
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point
@@ -217,7 +203,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     const sizeVal = sizeAcc(d)
 
     // Format numbers: use toLocaleString for large integers, limit decimals for floats
-    const formatValue = (v: any): string => {
+    const formatValue = (v: unknown): string => {
       if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
       if (Number.isInteger(v)) return v.toLocaleString()
       return v.toLocaleString(undefined, { maximumFractionDigits: 2 })
@@ -246,18 +232,14 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     )
   }, [sizeBy, colorBy])
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  const emptyEl = !loadingEl ? renderEmptyState(points, resolved.width, resolved.height, emptyContent) : null
-
   warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
   warnMissingField("ProportionalSymbolMap", safeData, "yAccessor", yAccessor)
 
   const streamProps: StreamGeoFrameProps = {
     projection,
     ...(points != null && { points: safeData }),
-    xAccessor: xAccessor as any,
-    yAccessor: yAccessor as any,
+    xAccessor,
+    yAccessor,
     pointStyle: pointStyleFn,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     ...(resolvedAreas && { areas: resolvedAreas, areaStyle }),
@@ -271,20 +253,14 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
-    margin,
+    margin: setup.margin,
     enableHover: true,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
-    ...(legend && { legend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...setup.legendBehaviorProps,
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
@@ -296,8 +272,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="ProportionalSymbolMap" width={resolved.width} height={resolved.height}>

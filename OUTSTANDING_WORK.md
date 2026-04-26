@@ -47,11 +47,13 @@ Next work:
 
 ### HOC To `useChartSetup` Unification
 
-Several HOCs still compose shared hooks manually rather than using `useChartSetup`: LineChart, AreaChart, StackedAreaChart, BubbleChart, QuadrantChart, Heatmap, ConnectedScatterplot, ChoroplethMap, ProportionalSymbolMap, FlowMap, and DistanceCartogram.
+Baseline exists: `BubbleChart` and `ProportionalSymbolMap` now use `useChartSetup`, validating the shared setup shape across one XY HOC and one Geo HOC.
+
+Decision: keep dual-axis, projection, and value-color legend behavior explicit for now. `useChartSetup` should continue to own categorical color, legend/category domain, selection/hover/click behavior, margin, and loading/empty setup until a second concrete use case proves those specialized inputs belong in the shared hook.
 
 Next work:
-- Decide whether `useChartSetup` should accept optional inputs for dual-axis, projection, and value-color cases.
-- Convert one XY and one Geo HOC first to validate the shape before broad rollout.
+- Convert the remaining straightforward categorical HOCs first: LineChart, AreaChart, StackedAreaChart, QuadrantChart, ConnectedScatterplot, FlowMap, and DistanceCartogram.
+- Keep value-color charts explicit unless a shared gradient/value-legend contract emerges: Heatmap and ChoroplethMap.
 - Keep deviations explicit where shared setup would obscure real chart-specific behavior.
 
 ### TypeScript Surface Cleanup
