@@ -1,13 +1,25 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { REQUIRED_DOCS_ROUTES, validateDocsBuild } from "../../../scripts/check-docs-routes.mjs"
 import { generatePage } from "../../../scripts/prerender.mjs"
 
 const shell = '<html><head><title>Semiotic</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript><div id="root"></div></body></html>'
 
+// Track every temp dir created in this file so afterEach can clean them up.
+// Without this, repeated CI/local runs leave a stack of semiotic-docs-routes-*
+// directories in the OS temp folder.
+const createdDirs: string[] = []
+
 describe("docs route smoke check", () => {
+  afterEach(() => {
+    while (createdDirs.length > 0) {
+      const dir = createdDirs.pop()!
+      try { rmSync(dir, { recursive: true, force: true }) } catch { /* best-effort */ }
+    }
+  })
+
   it("passes when prerendered API routes and generated API assets exist", () => {
     const buildDir = makeBuildDir()
     writeDocsBuildFixture(buildDir)
@@ -48,7 +60,9 @@ describe("docs route smoke check", () => {
 })
 
 function makeBuildDir() {
-  return mkdtempSync(join(tmpdir(), "semiotic-docs-routes-"))
+  const dir = mkdtempSync(join(tmpdir(), "semiotic-docs-routes-"))
+  createdDirs.push(dir)
+  return dir
 }
 
 function writeDocsBuildFixture(buildDir: string) {
