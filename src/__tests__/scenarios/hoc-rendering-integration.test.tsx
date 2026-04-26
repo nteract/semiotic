@@ -117,7 +117,7 @@ describe("XY HOC rendering integration", () => {
         xAccessor="x"
         yAccessor="y"
         annotations={[
-          { type: "y-threshold", y: 18, label: "Target" },
+          { type: "y-threshold", value: 18, label: "Target" },
         ]}
         width={400}
         height={300}

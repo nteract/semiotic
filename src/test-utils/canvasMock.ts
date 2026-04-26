@@ -159,11 +159,18 @@ export interface SetupCanvasMockOptions {
  */
 export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => void {
   const { stubRaf = true } = options
-  const ctx = createMockCanvasContext();
+  const ctx = createMockCanvasContext()
 
-  (HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ctx)
+  // Capture originals so cleanup is symmetric — without this, the canvas
+  // getContext stub and a freshly-installed Path2D leak into later test
+  // files via the shared HTMLCanvasElement.prototype / globalThis. The
+  // helper's "restore the mocked globals" docstring is now accurate.
+  const originalGetContext = HTMLCanvasElement.prototype.getContext
+  const path2DWasMissing = !(globalThis as any).Path2D
 
-  if (!(globalThis as any).Path2D) {
+  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ctx)
+
+  if (path2DWasMissing) {
     (globalThis as any).Path2D = class { constructor() {} }
   }
 
@@ -182,6 +189,10 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
   }
 
   return () => {
+    HTMLCanvasElement.prototype.getContext = originalGetContext
+    if (path2DWasMissing) {
+      delete (globalThis as any).Path2D
+    }
     if (rafSpy?.mockRestore) rafSpy.mockRestore()
     if (cafSpy?.mockRestore) cafSpy.mockRestore()
   }

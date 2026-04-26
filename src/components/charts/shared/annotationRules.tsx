@@ -94,7 +94,16 @@ export function createDefaultAnnotationRules(
 
       // ── X-threshold (vertical line) ───────────────────────────────────
       case "x-threshold": {
-        const px = resolveX(ann, context)
+        // Standardize on `value` for threshold-style annotations to match
+        // server `staticAnnotations`, ordinal frame, animated GIF helper,
+        // and the rest of the test surface. `x` is preserved as a fallback
+        // for back-compat. Done at the rule level rather than in
+        // `resolveX` itself so non-threshold annotations (label, widget,
+        // text) don't accidentally interpret a payload `value` field as a
+        // coordinate.
+        const px = ann.value != null
+          ? resolveX({ ...ann, x: ann.value }, context)
+          : resolveX(ann, context)
         if (px == null) return null
         const color = ann.color || "#f97316"
         const labelPos = ann.labelPosition || "top"
@@ -130,7 +139,12 @@ export function createDefaultAnnotationRules(
 
       // ── Y-threshold (horizontal line) ─────────────────────────────────
       case "y-threshold": {
-        const py = resolveY(ann, context)
+        // Standardize on `value` for threshold annotations (see x-threshold
+        // comment). Falls through to legacy `y` so existing annotations
+        // continue to render.
+        const py = ann.value != null
+          ? resolveY({ ...ann, y: ann.value }, context)
+          : resolveY(ann, context)
         if (py == null) return null
         const color = ann.color || "#f97316"
         const labelPos = ann.labelPosition || "right"
