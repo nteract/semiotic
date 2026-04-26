@@ -217,21 +217,29 @@ function buildDeclarations() {
     "semiotic-geo", "semiotic-themes", "semiotic-utils"
   ]
   for (const name of entryPoints) {
+    const src = `dist/components/${name}.d.ts`
+    const dst = `dist/${name}.d.ts`
+    let text
     try {
-      const src = `dist/components/${name}.d.ts`
-      const dst = `dist/${name}.d.ts`
-      const text = readFileSync(src, "utf8")
-      // Match `from "./..."` and `from '../...'` in import/export specifiers.
-      // Only the leading `./` form needs adjusting — the file moves up one
-      // level, so `./X` becomes `./components/X`. `../` (parent-relative)
-      // forms aren't expected at the entry-point level, but if any appear
-      // they're left alone.
-      const rewritten = text.replace(
-        /(from\s+['"])\.\/([^'"]+)(['"])/g,
-        (_m, lead, path, trail) => `${lead}./components/${path}${trail}`
-      )
-      writeFileSync(dst, rewritten)
-    } catch { /* may not exist */ }
+      text = readFileSync(src, "utf8")
+    } catch (err) {
+      // ENOENT is the only expected failure here — declaration generation
+      // can legitimately skip an entry (e.g. a future entry point not yet
+      // exported). Anything else (permission error, partial read) should
+      // surface so packaging doesn't silently emit incomplete types.
+      if (err?.code !== "ENOENT") throw err
+      continue
+    }
+    // Match `from "./..."` and `from '../...'` in import/export specifiers.
+    // Only the leading `./` form needs adjusting — the file moves up one
+    // level, so `./X` becomes `./components/X`. `../` (parent-relative)
+    // forms aren't expected at the entry-point level, but if any appear
+    // they're left alone.
+    const rewritten = text.replace(
+      /(from\s+['"])\.\/([^'"]+)(['"])/g,
+      (_m, lead, path, trail) => `${lead}./components/${path}${trail}`
+    )
+    writeFileSync(dst, rewritten)
   }
   console.log("\u2705 declarations emitted")
 }

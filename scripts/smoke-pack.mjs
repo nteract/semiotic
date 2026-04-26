@@ -12,7 +12,7 @@
  * built (`npm run dist`). Exits non-zero on any import failure.
  */
 import { execSync } from "node:child_process"
-import { mkdtempSync, rmSync, writeFileSync, readdirSync, existsSync } from "node:fs"
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readdirSync, existsSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -38,6 +38,14 @@ function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: "pipe", encoding: "utf8", ...opts })
 }
 
+// `execSync` errors carry `stderr`/`stdout` as Buffers when no encoding is
+// applied to the failing channel. Coerce explicitly so `.split` etc. don't
+// crash while we're already in an error path.
+function firstLine(err) {
+  const raw = err?.stderr ?? err?.stdout ?? err?.message ?? String(err)
+  return String(raw).split("\n").find((l) => l.trim().length > 0) ?? ""
+}
+
 function findTarball(dir) {
   const files = readdirSync(dir)
   const tarball = files.find((f) => f.startsWith("semiotic-") && f.endsWith(".tgz"))
@@ -58,9 +66,10 @@ try {
   const tarball = findTarball(tmp)
   console.log(`  tarball: ${tarball}`)
 
-  // Set up a throwaway project that consumes it.
+  // Set up a throwaway project that consumes it. Use Node's mkdir rather
+  // than spawning a shell builtin so this runs on Windows too.
   const proj = join(tmp, "consumer")
-  run(`mkdir -p "${proj}"`)
+  mkdirSync(proj, { recursive: true })
   writeFileSync(join(proj, "package.json"), JSON.stringify({
     name: "semiotic-smoke-consumer",
     version: "0.0.0",
@@ -98,7 +107,7 @@ try {
         console.log(`  ✓ ${importPath} (ESM): ${exportCount} exports`)
       }
     } catch (err) {
-      failures.push(`${importPath} (ESM): ${(err.stderr || err.message).split("\n")[0]}`)
+      failures.push(`${importPath} (ESM): ${firstLine(err)}`)
     }
 
     // CJS require — many entries publish a `require` field.
@@ -113,7 +122,7 @@ try {
           console.log(`  ✓ ${importPath} (CJS): ${exportCount} exports`)
         }
       } catch (err) {
-        failures.push(`${importPath} (CJS): ${(err.stderr || err.message).split("\n")[0]}`)
+        failures.push(`${importPath} (CJS): ${firstLine(err)}`)
       }
     }
 

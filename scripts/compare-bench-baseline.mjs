@@ -8,14 +8,24 @@
  * the goal is to catch real regressions (e.g. 68ms → 5000ms), not noise.
  */
 import { execSync } from "node:child_process"
-import { readFileSync, existsSync } from "node:fs"
+import { readFileSync, existsSync, rmSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { tmpdir } from "node:os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
-const baselinePath = join(repoRoot, "benchmarks/setup/baseline.json")
+
+// `--baseline=<path>` and `--current=<path>` let the PR-vs-main orchestrator
+// compare two captured runs without re-running benches inline. Useful for
+// CI flows where main's baseline is captured fresh in the same run on the
+// same hardware (apples-to-apples).
+const argFor = (name) => {
+  const a = process.argv.find((x) => x.startsWith(`--${name}=`))
+  return a ? resolve(process.cwd(), a.slice(`--${name}=`.length)) : null
+}
+const baselinePath = argFor("baseline") || join(repoRoot, "benchmarks/setup/baseline.json")
+const currentPath = argFor("current")
 
 // Per-benchmark slowdown thresholds. Means: a single benchmark that's
 // >FAIL_PCT% slower than baseline fails the run; >WARN_PCT% logs a warning
@@ -36,20 +46,52 @@ if (!existsSync(baselinePath)) {
 const baseline = JSON.parse(readFileSync(baselinePath, "utf8"))
 console.log(`▶ comparing against baseline ${baseline.git_commit} (${new Date(baseline.timestamp).toLocaleString()})`)
 
-const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
-execSync(`npx vitest bench --run --outputJson="${tmpJson}"`, {
-  cwd: repoRoot,
-  stdio: "inherit",
-})
-
-const raw = JSON.parse(readFileSync(tmpJson, "utf8"))
+// Either consume a pre-captured `--current` JSON (PR-vs-main orchestrator)
+// or run vitest bench inline. Both paths produce the same `current` shape:
+// `{ [benchmarkName]: meanMs }`.
 const current = {}
-for (const file of raw.files || []) {
-  for (const group of file.groups || []) {
-    for (const b of group.benchmarks || []) {
-      current[b.name] = b.mean
+const collectCurrent = (raw) => {
+  for (const file of raw.files || []) {
+    for (const group of file.groups || []) {
+      for (const b of group.benchmarks || []) {
+        // Only record benchmarks vitest actually timed — siblings without a
+        // mean (see comment in save-bench-baseline.mjs) would otherwise read
+        // back as `undefined` and silently disable the gate for that name.
+        if (Number.isFinite(b.mean)) current[b.name] = b.mean
+      }
     }
   }
+}
+
+if (currentPath) {
+  if (!existsSync(currentPath)) {
+    console.error(`✗ --current path does not exist: ${currentPath}`)
+    process.exit(2)
+  }
+  // The orchestrator passes the output of save-bench-baseline.mjs which is
+  // a `{ benchmarks: { [name]: { mean, unit } } }` object, not vitest's raw
+  // JSON. Handle both shapes.
+  const captured = JSON.parse(readFileSync(currentPath, "utf8"))
+  if (captured.benchmarks && !captured.files) {
+    for (const [name, entry] of Object.entries(captured.benchmarks)) {
+      if (Number.isFinite(entry?.mean)) current[name] = entry.mean
+    }
+  } else {
+    collectCurrent(captured)
+  }
+} else {
+  const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
+  execSync(`npx vitest bench --run --outputJson="${tmpJson}"`, {
+    cwd: repoRoot,
+    stdio: "inherit",
+  })
+  let raw
+  try {
+    raw = JSON.parse(readFileSync(tmpJson, "utf8"))
+  } finally {
+    try { rmSync(tmpJson, { force: true }) } catch { /* best-effort */ }
+  }
+  collectCurrent(raw)
 }
 
 const fails = []
@@ -60,7 +102,14 @@ const skipped = []
 for (const name of Object.keys(baseline.benchmarks)) {
   const baseMean = baseline.benchmarks[name].mean
   const currMean = current[name]
-  if (typeof currMean !== "number") {
+  // Defensive guard: an incomplete baseline entry (mean missing/non-finite)
+  // would otherwise silently disable the gate for that benchmark via NaN
+  // comparison short-circuiting. Surface it explicitly instead.
+  if (!Number.isFinite(baseMean)) {
+    skipped.push(`${name}: baseline mean is missing or non-numeric — regenerate baseline`)
+    continue
+  }
+  if (!Number.isFinite(currMean)) {
     skipped.push(`${name}: baseline has it but current run produced no result`)
     continue
   }

@@ -13,6 +13,12 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v6
+        with:
+          # The PR-vs-main bench gate worktrees `origin/main` to capture a
+          # CI-native baseline in the same job. Default checkout is shallow
+          # to the triggering ref only; the gate's `git fetch origin main`
+          # works on a shallow clone but worktree-add wants the ref locally.
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v6
@@ -103,12 +109,16 @@ jobs:
           fi
           echo "All canvas methods are stubbed"
 
-      - name: Bench regression gate
-        # Fails the run if any benchmark is >30% slower than the committed
-        # baseline at benchmarks/setup/baseline.json. To intentionally
-        # accept a perf change, run `npm run bench:baseline` locally and
-        # commit the regenerated baseline.
-        run: npm run bench:compare
+      - name: Bench regression gate (PR vs main, CI-native baseline)
+        # PR-only: captures main's bench numbers in the same job on the same
+        # hardware, then compares the PR's results against them. Avoids the
+        # cross-architecture noise that plagued the committed-baseline
+        # approach (M-series Mac local capture vs. x86 Linux CI runner
+        # produced uniform 60–90% "slowdowns" across every benchmark).
+        # On `push: main` this step is skipped — there's nothing to compare
+        # main against, and the committed baseline is informational only.
+        if: github.event_name == 'pull_request'
+        run: npm run bench:pr-vs-main
 
   e2e:
     runs-on: ubuntu-latest
