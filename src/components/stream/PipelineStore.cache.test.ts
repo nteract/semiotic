@@ -9,6 +9,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 
 import { PipelineStore } from "./PipelineStore"
+import type { HeatcellSceneNode, PointSceneNode, RectSceneNode } from "./types"
 
 function makeStore(overrides: Datum = {}) {
   return new PipelineStore({
@@ -27,6 +28,18 @@ function setData(store: PipelineStore, data: Datum[]) {
   store.ingest({ inserts: data, bounded: true })
 }
 
+function pointNodes(store: PipelineStore): PointSceneNode[] {
+  return store.scene.filter((node): node is PointSceneNode => node.type === "point")
+}
+
+function heatcellNodes(store: PipelineStore): HeatcellSceneNode[] {
+  return store.scene.filter((node): node is HeatcellSceneNode => node.type === "heatcell")
+}
+
+function rectNodes(store: PipelineStore): RectSceneNode[] {
+  return store.scene.filter((node): node is RectSceneNode => node.type === "rect")
+}
+
 // ── Color resolution via scene ───────────────────────────────────────────
 
 describe("resolveGroupColor after data changes", () => {
@@ -40,7 +53,7 @@ describe("resolveGroupColor after data changes", () => {
       { x: 2, y: 20, group: "B" },
       { x: 3, y: 30, group: "C" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
 
     // resolveGroupColor should return distinct colors for each group
     const colorA = store.resolveGroupColor("A")
@@ -63,7 +76,7 @@ describe("resolveGroupColor after data changes", () => {
       { x: 1, y: 10, group: "A" },
       { x: 2, y: 20, group: "B" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.resolveGroupColor("A")).toBeDefined()
 
     store.clear()
@@ -71,7 +84,7 @@ describe("resolveGroupColor after data changes", () => {
       { x: 1, y: 10, group: "X" },
       { x: 2, y: 20, group: "Y" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
 
     // New groups should get colors (X and Y are valid)
     const colorX = store.resolveGroupColor("X")
@@ -145,7 +158,7 @@ describe("stacked area extent cache invalidation", () => {
       { x: 2, y: 15, group: "A" },
       { x: 2, y: 25, group: "B" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
 
     // Re-set with data that has higher cumulative sum
     setData(store, [
@@ -156,7 +169,7 @@ describe("stacked area extent cache invalidation", () => {
       { x: 3, y: 50, group: "A" },
       { x: 3, y: 60, group: "B" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
 
     // Scene should have been rebuilt with new extent (max now 110 at x=3)
     // The scene node count or positions should differ
@@ -223,7 +236,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 1, y: 10, val: 100 },
       { x: 2, y: 20, val: 200 },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const sceneBefore = store.scene.length
 
     // Change the y accessor
@@ -235,7 +248,7 @@ describe("scene rebuilds after config changes", () => {
       windowMode: "sliding" as const,
       extentPadding: 0,
     })
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
 
     // Scene should still have nodes (data is still in the buffer)
     expect(store.scene.length).toBeGreaterThan(0)
@@ -253,7 +266,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 1, y: 10, group: "A" },
       { x: 2, y: 20, group: "B" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const colorBefore = store.resolveGroupColor("A")
 
     // Change color scheme — this should invalidate the color cache
@@ -267,7 +280,7 @@ describe("scene rebuilds after config changes", () => {
       colorAccessor: "group",
       colorScheme: ["green", "orange"],
     })
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const colorAfter = store.resolveGroupColor("A")
 
     // Color should have changed from red to green
@@ -285,7 +298,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 1, y: 10, group: "A" },
       { x: 2, y: 20, group: "B" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const before = store.resolveGroupColor("A")
 
     store.updateConfig({
@@ -298,7 +311,7 @@ describe("scene rebuilds after config changes", () => {
       colorAccessor: "group",
       themeCategorical: ["#111", "#222", "#333"],
     })
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const after = store.resolveGroupColor("A")
 
     expect(after).not.toBe(before)
@@ -314,7 +327,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 2, y: 20, group: "B", region: "south" },
       { x: 3, y: 30, group: "B", region: "north" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     // Warm the cache for group "B" so the subsequent colorAccessor swap has
     // something stale to invalidate. Return value intentionally unused.
     store.resolveGroupColor("B")
@@ -331,7 +344,7 @@ describe("scene rebuilds after config changes", () => {
       colorAccessor: "region",
       colorScheme: ["red", "blue", "green"],
     })
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     // After the swap, "B" is no longer a valid category in the colorAccessor,
     // but resolveGroupColor falls back to _groupColorMap which should also have
     // been reset. The fact that we don't return the stale "B" color is the key.
@@ -339,6 +352,86 @@ describe("scene rebuilds after config changes", () => {
     const southColor = store.resolveGroupColor("south")
     expect(northColor).not.toBe(southColor)
     expect([northColor, southColor]).toContain("red")
+  })
+
+  it("scatter scene rebuilds when themeSemantic.primary changes without ingest", () => {
+    const store = makeStore({
+      themeSemantic: { primary: "#111111" },
+    })
+    setData(store, [
+      { x: 1, y: 10 },
+      { x: 2, y: 20 },
+    ])
+    store.computeScene({ width: 400, height: 300 })
+    const pointsBefore = pointNodes(store)
+    expect(pointsBefore.length).toBeGreaterThan(0)
+    expect(pointsBefore[0].style.fill).toBe("#111111")
+
+    store.updateConfig({
+      themeSemantic: { primary: "#222222" },
+    })
+    store.computeScene({ width: 400, height: 300 })
+
+    const pointsAfter = pointNodes(store)
+    expect(pointsAfter).toHaveLength(pointsBefore.length)
+    expect(pointsAfter[0].style.fill).toBe("#222222")
+  })
+
+  it("heatmap scene rebuilds when themeSequential changes without ingest", () => {
+    const store = makeStore({
+      chartType: "heatmap",
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+      themeSequential: "blues",
+    })
+    setData(store, [
+      { x: 0, y: 0, value: 0 },
+      { x: 1, y: 0, value: 100 },
+    ])
+    store.computeScene({ width: 400, height: 300 })
+    const beforeNodes = heatcellNodes(store)
+    expect(beforeNodes.length).toBeGreaterThan(0)
+    const before = beforeNodes.map(node => node.fill)
+
+    store.updateConfig({
+      themeSequential: "viridis",
+    })
+    store.computeScene({ width: 400, height: 300 })
+    const afterNodes = heatcellNodes(store)
+    expect(afterNodes).toHaveLength(beforeNodes.length)
+    const after = afterNodes.map(node => node.fill)
+
+    expect(after).not.toEqual(before)
+  })
+
+  it("bar scene rebuilds when barColors values change without ingest", () => {
+    const store = makeStore({
+      chartType: "bar",
+      runtimeMode: "streaming",
+      binSize: 10,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      categoryAccessor: "category",
+      barColors: { A: "#111111", B: "#222222" },
+    })
+    setData(store, [
+      { time: 1, value: 10, category: "A" },
+      { time: 2, value: 20, category: "B" },
+    ])
+    store.computeScene({ width: 400, height: 300 })
+    const beforeGroupARect = rectNodes(store).find(node => node.group === "A")
+    expect(beforeGroupARect).toBeDefined()
+    expect(beforeGroupARect!.style.fill).toBe("#111111")
+
+    store.updateConfig({
+      barColors: { A: "#333333", B: "#444444" },
+    })
+    store.computeScene({ width: 400, height: 300 })
+
+    const afterGroupARect = rectNodes(store).find(node => node.group === "A")
+    expect(afterGroupARect).toBeDefined()
+    expect(afterGroupARect!.style.fill).toBe("#333333")
   })
 })
 
@@ -353,7 +446,7 @@ describe("rapid push/clear cycles", () => {
 
     // First cycle
     setData(store, [{ x: 1, y: 10, group: "A" }])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.getData()).toHaveLength(1)
     const scene1 = store.scene.filter(n => n.type === "point")
     expect(scene1.length).toBe(1)
@@ -367,7 +460,7 @@ describe("rapid push/clear cycles", () => {
       { x: 1, y: 10, group: "X" },
       { x: 2, y: 20, group: "Y" },
     ])
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.getData()).toHaveLength(2)
 
     // Group color map should reflect new categories, not stale from cycle 1

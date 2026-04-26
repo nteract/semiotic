@@ -20,7 +20,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript-typescript"]
+        # Use the `javascript` identifier (legacy alias that still analyzes
+        # both JS and TS) so the produced check name is `analyze (javascript)`,
+        # matching the configured branch-protection rule on main.
+        language: ["javascript"]
 
     steps:
       - name: Checkout repository

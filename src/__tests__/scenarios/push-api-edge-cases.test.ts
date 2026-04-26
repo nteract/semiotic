@@ -60,7 +60,7 @@ describe("remove all data leaves store in valid state", () => {
     store.remove("b")
 
     expect(store.getData()).toHaveLength(0)
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.scene).toHaveLength(0)
   })
 
@@ -72,7 +72,7 @@ describe("remove all data leaves store in valid state", () => {
     ], bounded: true })
     store.remove("a")
     store.remove("b")
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.scene).toHaveLength(0)
   })
 })
@@ -132,12 +132,12 @@ describe("update extent recalculation", () => {
       { id: "a", x: 1, y: 10 },
       { id: "b", x: 2, y: 100 },
     ], bounded: true })
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const sceneBefore = store.scene.filter(n => n.type === "point")
 
     // Reduce the max value
     store.update("b", d => ({ ...d, y: 20 }))
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     const sceneAfter = store.scene.filter(n => n.type === "point")
 
     // Scene should still have 2 points
@@ -221,7 +221,7 @@ describe("rapid mutation sequences", () => {
     store.ingest({ inserts: [{ id: "c", x: 3, y: 30 }], bounded: false })
 
     // Scene should be valid
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.scene.length).toBeGreaterThan(0)
     expect(store.getData()).toHaveLength(2)
   })
@@ -251,7 +251,7 @@ describe("rapid mutation sequences", () => {
     // Store should accept new data after clear
     store.ingest({ inserts: [{ id: "x", x: 5, y: 50 }], bounded: true })
     expect(store.getData()).toHaveLength(1)
-    store.computeScene([400, 300])
+    store.computeScene({ width: 400, height: 300 })
     expect(store.scene.length).toBeGreaterThan(0)
   })
 })
