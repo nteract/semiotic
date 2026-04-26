@@ -102,7 +102,7 @@ export function validateDocsBuild({
   } else {
     const sitemap = readFileSync(sitemapPath, "utf8")
     for (const route of routes) {
-      expectIncludes(failures, sitemap, route.canonicalUrl, "sitemap.txt", route.routePath || "homepage")
+      expectIncludes(failures, sitemap, route.canonicalUrl, route.routePath, "sitemap entry")
     }
   }
 

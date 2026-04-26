@@ -47,8 +47,14 @@ jobs:
       - name: Check SSR alignment
         run: npm run check:ssr
 
+      - name: Check public API surface (no breaking changes)
+        run: npm run check:api-surface
+
       - name: Build production bundles
         run: npm run dist:prod
+
+      - name: Pack smoke test (verify all entry points resolve)
+        run: npm run check:pack
 
       - name: Verify TypeScript declarations
         run: |
@@ -97,8 +103,12 @@ jobs:
           fi
           echo "All canvas methods are stubbed"
 
-      - name: Run benchmarks
-        run: npx vitest bench --reporter=verbose
+      - name: Bench regression gate
+        # Fails the run if any benchmark is >30% slower than the committed
+        # baseline at benchmarks/setup/baseline.json. To intentionally
+        # accept a perf change, run `npm run bench:baseline` locally and
+        # commit the regenerated baseline.
+        run: npm run bench:compare
 
   e2e:
     runs-on: ubuntu-latest

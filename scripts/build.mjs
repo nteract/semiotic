@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { copyFileSync, existsSync } from "fs"
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from "fs"
 import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
 import typescript from "@rollup/plugin-typescript"
@@ -204,14 +204,34 @@ function buildDeclarations() {
     return
   }
   // Copy entry-point declarations from dist/components/ to dist/ so package.json
-  // "types" fields resolve correctly (tsc emits into dist/components/ due to rootDir)
+  // "types" fields resolve correctly (tsc emits into dist/components/ due to
+  // rootDir). The copy moves the file up one directory, so any `./foo` import
+  // that previously resolved relative to `dist/components/foo` would resolve
+  // to `dist/foo` — which doesn't exist. Rewrite each relative specifier to
+  // include the missing `components/` segment so consumers using Node-style
+  // module resolution (TypeScript with `moduleResolution: "node"`) can follow
+  // the re-export graph through the leaf declaration files.
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
     "semiotic-geo", "semiotic-themes", "semiotic-utils"
   ]
   for (const name of entryPoints) {
-    try { copyFileSync(`dist/components/${name}.d.ts`, `dist/${name}.d.ts`) } catch { /* may not exist */ }
+    try {
+      const src = `dist/components/${name}.d.ts`
+      const dst = `dist/${name}.d.ts`
+      const text = readFileSync(src, "utf8")
+      // Match `from "./..."` and `from '../...'` in import/export specifiers.
+      // Only the leading `./` form needs adjusting — the file moves up one
+      // level, so `./X` becomes `./components/X`. `../` (parent-relative)
+      // forms aren't expected at the entry-point level, but if any appear
+      // they're left alone.
+      const rewritten = text.replace(
+        /(from\s+['"])\.\/([^'"]+)(['"])/g,
+        (_m, lead, path, trail) => `${lead}./components/${path}${trail}`
+      )
+      writeFileSync(dst, rewritten)
+    } catch { /* may not exist */ }
   }
   console.log("\u2705 declarations emitted")
 }

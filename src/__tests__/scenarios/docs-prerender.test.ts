@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { extractRoutesFromSource, generatePage, copyDocsApiAssets } from "../../../scripts/prerender.mjs"
@@ -120,18 +120,22 @@ describe("docs prerender helpers", () => {
 
   it("copies generated API JSON assets into the static build", () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), "semiotic-docs-prerender-"))
-    const publicApiDir = join(tmpRoot, "public", "api")
-    const buildDir = join(tmpRoot, "build")
-    mkdirSync(publicApiDir, { recursive: true })
+    try {
+      const publicApiDir = join(tmpRoot, "public", "api")
+      const buildDir = join(tmpRoot, "build")
+      mkdirSync(publicApiDir, { recursive: true })
 
-    writeFileSync(join(publicApiDir, "api.json"), '{"name":"Semiotic API Reference","children":[]}\n')
-    writeFileSync(join(publicApiDir, "component-descriptions.json"), '{"LineChart":"Line chart"}\n')
-    writeFileSync(join(publicApiDir, "notes.txt"), "not copied\n")
+      writeFileSync(join(publicApiDir, "api.json"), '{"name":"Semiotic API Reference","children":[]}\n')
+      writeFileSync(join(publicApiDir, "component-descriptions.json"), '{"LineChart":"Line chart"}\n')
+      writeFileSync(join(publicApiDir, "notes.txt"), "not copied\n")
 
-    const copied = copyDocsApiAssets(publicApiDir, buildDir)
+      const copied = copyDocsApiAssets(publicApiDir, buildDir)
 
-    expect(copied).toEqual(["api/api.json", "api/component-descriptions.json"])
-    expect(readFileSync(join(buildDir, "api", "api.json"), "utf8")).toContain("Semiotic API Reference")
-    expect(readFileSync(join(buildDir, "api", "component-descriptions.json"), "utf8")).toContain("LineChart")
+      expect(copied).toEqual(["api/api.json", "api/component-descriptions.json"])
+      expect(readFileSync(join(buildDir, "api", "api.json"), "utf8")).toContain("Semiotic API Reference")
+      expect(readFileSync(join(buildDir, "api", "component-descriptions.json"), "utf8")).toContain("LineChart")
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true })
+    }
   })
 })
