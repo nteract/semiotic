@@ -7,7 +7,9 @@
  * issues that component-level tests miss.
  */
 
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
+import { afterEach, beforeEach } from "vitest"
+import { createMockCanvasContext } from "../../test-utils/canvasMock"
 
 // XY
 import { LineChart } from "../../components/charts/xy/LineChart"
@@ -55,10 +57,59 @@ const heatmapData = [
   { x: 1, y: 1, value: 40 },
 ]
 
+let restoreCanvasContext: (() => void) | undefined
+type Path2DConstructor = new (path?: string) => Path2D
+const globalWithPath2D = globalThis as typeof globalThis & { Path2D?: Path2DConstructor }
+
+beforeEach(() => {
+  const originalGetContext = HTMLCanvasElement.prototype.getContext
+  const originalPath2D = globalWithPath2D.Path2D
+  const ctx = createMockCanvasContext() as unknown as CanvasRenderingContext2D
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    contextId: string
+  ) {
+    if (contextId === "2d") return ctx
+    return null
+  } as typeof HTMLCanvasElement.prototype.getContext
+  if (!originalPath2D) {
+    globalWithPath2D.Path2D = class {
+      readonly path?: string
+      constructor(path?: string) {
+        this.path = path
+      }
+    } as unknown as Path2DConstructor
+  }
+  restoreCanvasContext = () => {
+    HTMLCanvasElement.prototype.getContext = originalGetContext
+    if (originalPath2D) {
+      globalWithPath2D.Path2D = originalPath2D
+    } else {
+      delete globalWithPath2D.Path2D
+    }
+  }
+})
+
+afterEach(() => {
+  restoreCanvasContext?.()
+  restoreCanvasContext = undefined
+})
+
+async function expectCanvasSummary(container: HTMLElement, expectedParts: string[]) {
+  await waitFor(() => {
+    const canvas = container.querySelector("canvas[aria-label]")
+    expect(canvas).not.toBeNull() // test-quality-gate: allow-mount-only - precondition for semantic aria-label assertions below.
+    const label = canvas?.getAttribute("aria-label") ?? ""
+    for (const part of expectedParts) {
+      expect(label).toContain(part)
+    }
+  })
+}
+
 // ── XY Charts ──────────────────────────────────────────────────────────
 
 describe("XY HOC rendering integration", () => {
-  it("LineChart with all common props", () => {
+  it("LineChart with all common props", async () => {
     const { container } = render(
       <LineChart
         data={lineData}
@@ -73,26 +124,35 @@ describe("XY HOC rendering integration", () => {
         showLegend
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["line chart", "2 lines"])
+    const legendLabels = Array.from(container.querySelectorAll(".legend-item text"))
+      .map(node => node.textContent)
+    expect(legendLabels).toEqual(expect.arrayContaining(["A", "B"]))
   })
 
-  it("LineChart with annotations", () => {
+  it("LineChart with annotations", async () => {
     const { container } = render(
       <LineChart
         data={lineData}
         xAccessor="x"
         yAccessor="y"
         annotations={[
-          { type: "y-threshold", value: 18, label: "Target" },
+          { type: "y-threshold", y: 18, label: "Target" },
         ]}
         width={400}
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["line chart", "1 lines"])
+    await waitFor(() => {
+      const svgText = Array.from(container.querySelectorAll("svg"))
+        .map(svg => svg.textContent ?? "")
+        .join("\n")
+      expect(svgText).toContain("Target")
+    })
   })
 
-  it("Scatterplot with colorBy + sizeBy", () => {
+  it("Scatterplot with colorBy + sizeBy", async () => {
     const { container } = render(
       <Scatterplot
         data={scatterData}
@@ -105,10 +165,10 @@ describe("XY HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["scatter chart", "3 points"])
   })
 
-  it("StackedAreaChart with normalize", () => {
+  it("StackedAreaChart with normalize", async () => {
     const { container } = render(
       <StackedAreaChart
         data={lineData}
@@ -120,10 +180,10 @@ describe("XY HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["stackedarea chart", "2 areas"])
   })
 
-  it("Heatmap with colorScheme", () => {
+  it("Heatmap with colorScheme", async () => {
     const { container } = render(
       <Heatmap
         data={heatmapData}
@@ -135,14 +195,14 @@ describe("XY HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["heatmap chart", "4 cells"])
   })
 })
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
 
 describe("Ordinal HOC rendering integration", () => {
-  it("BarChart with color + orientation", () => {
+  it("BarChart with color + orientation", async () => {
     const { container } = render(
       <BarChart
         data={barData}
@@ -155,10 +215,10 @@ describe("Ordinal HOC rendering integration", () => {
         margin={{ left: 100, top: 20, right: 20, bottom: 30 }}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["bar chart", "2 bars"])
   })
 
-  it("StackedBarChart with normalize", () => {
+  it("StackedBarChart with normalize", async () => {
     const { container } = render(
       <StackedBarChart
         data={barData}
@@ -170,10 +230,10 @@ describe("Ordinal HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["bar chart", "4 bars"])
   })
 
-  it("GroupedBarChart with legend", () => {
+  it("GroupedBarChart with legend", async () => {
     const { container } = render(
       <GroupedBarChart
         data={barData}
@@ -187,10 +247,13 @@ describe("Ordinal HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["bar chart", "4 bars"])
+    const legendLabels = Array.from(container.querySelectorAll(".legend-item text"))
+      .map(node => node.textContent)
+    expect(legendLabels).toEqual(expect.arrayContaining(["Americas", "EMEA"]))
   })
 
-  it("PieChart with colorBy", () => {
+  it("PieChart with colorBy", async () => {
     const { container } = render(
       <PieChart
         data={[
@@ -205,10 +268,10 @@ describe("Ordinal HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["pie chart", "3 wedges"])
   })
 
-  it("GaugeChart with thresholds", () => {
+  it("GaugeChart with thresholds", async () => {
     const { container } = render(
       <GaugeChart
         value={72}
@@ -223,7 +286,8 @@ describe("Ordinal HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["donut chart", "4 wedges"])
+    expect(container.textContent).toContain("72")
   })
 })
 
@@ -236,7 +300,7 @@ describe("Network HOC rendering integration", () => {
     { source: "B", target: "C" },
   ]
 
-  it("ForceDirectedGraph with labels", () => {
+  it("ForceDirectedGraph with labels", async () => {
     const { container } = render(
       <ForceDirectedGraph
         nodes={nodes}
@@ -249,10 +313,10 @@ describe("Network HOC rendering integration", () => {
         height={400}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["Network chart", "3 nodes", "2 edges"])
   })
 
-  it("SankeyDiagram with value", () => {
+  it("SankeyDiagram with value", async () => {
     const { container } = render(
       <SankeyDiagram
         edges={[
@@ -266,7 +330,7 @@ describe("Network HOC rendering integration", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["Network chart", "3 nodes", "2 edges"])
   })
 })
 
@@ -283,11 +347,11 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    // Should render something (empty state or placeholder)
-    expect(container.firstChild).not.toBeNull()
+    expect(container.textContent).toContain("No data available")
+    expect(container.querySelector("canvas")).toBeNull()
   })
 
-  it("single data point renders", () => {
+  it("single data point renders", async () => {
     const { container } = render(
       <LineChart
         data={[{ x: 1, y: 10 }]}
@@ -297,7 +361,7 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["line chart", "1 lines"])
   })
 
   it("loading state renders skeleton", () => {
@@ -311,11 +375,11 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    // Loading skeleton should render, not canvas
-    expect(container.firstChild).not.toBeNull()
+    expect(container.querySelectorAll(".semiotic-loading-bar")).toHaveLength(5)
+    expect(container.querySelector("canvas")).toBeNull()
   })
 
-  it("hoverHighlight does not crash without colorBy", () => {
+  it("hoverHighlight does not crash without colorBy", async () => {
     const { container } = render(
       <LineChart
         data={lineData}
@@ -326,10 +390,10 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    expect(container.querySelector("canvas")).toBeInTheDocument()
+    await expectCanvasSummary(container, ["line chart", "1 lines"])
   })
 
-  it("responsive width renders", () => {
+  it("responsive width renders semantic chart shell", () => {
     const { container } = render(
       <div style={{ width: 500 }}>
         <BarChart
@@ -341,6 +405,8 @@ describe("HOC edge cases", () => {
         />
       </div>
     )
-    expect(container.firstChild).not.toBeNull()
+    const frame = container.querySelector(".stream-ordinal-frame")
+    expect(frame).toHaveAttribute("role", "group")
+    expect(frame).toHaveAttribute("aria-label", "Ordinal chart")
   })
 })
