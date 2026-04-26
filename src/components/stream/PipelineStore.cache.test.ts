@@ -363,14 +363,18 @@ describe("scene rebuilds after config changes", () => {
       { x: 2, y: 20 },
     ])
     store.computeScene([400, 300])
-    expect(pointNodes(store)[0].style.fill).toBe("#111111")
+    const pointsBefore = pointNodes(store)
+    expect(pointsBefore.length).toBeGreaterThan(0)
+    expect(pointsBefore[0].style.fill).toBe("#111111")
 
     store.updateConfig({
       themeSemantic: { primary: "#222222" },
     })
     store.computeScene([400, 300])
 
-    expect(pointNodes(store)[0].style.fill).toBe("#222222")
+    const pointsAfter = pointNodes(store)
+    expect(pointsAfter).toHaveLength(pointsBefore.length)
+    expect(pointsAfter[0].style.fill).toBe("#222222")
   })
 
   it("heatmap scene rebuilds when themeSequential changes without ingest", () => {
@@ -386,13 +390,17 @@ describe("scene rebuilds after config changes", () => {
       { x: 1, y: 0, value: 100 },
     ])
     store.computeScene([400, 300])
-    const before = heatcellNodes(store).map(node => node.fill)
+    const beforeNodes = heatcellNodes(store)
+    expect(beforeNodes.length).toBeGreaterThan(0)
+    const before = beforeNodes.map(node => node.fill)
 
     store.updateConfig({
       themeSequential: "viridis",
     })
     store.computeScene([400, 300])
-    const after = heatcellNodes(store).map(node => node.fill)
+    const afterNodes = heatcellNodes(store)
+    expect(afterNodes).toHaveLength(beforeNodes.length)
+    const after = afterNodes.map(node => node.fill)
 
     expect(after).not.toEqual(before)
   })
@@ -412,14 +420,18 @@ describe("scene rebuilds after config changes", () => {
       { time: 2, value: 20, category: "B" },
     ])
     store.computeScene([400, 300])
-    expect(rectNodes(store).find(node => node.group === "A")?.style.fill).toBe("#111111")
+    const beforeGroupARect = rectNodes(store).find(node => node.group === "A")
+    expect(beforeGroupARect).toBeDefined()
+    expect(beforeGroupARect!.style.fill).toBe("#111111")
 
     store.updateConfig({
       barColors: { A: "#333333", B: "#444444" },
     })
     store.computeScene([400, 300])
 
-    expect(rectNodes(store).find(node => node.group === "A")?.style.fill).toBe("#333333")
+    const afterGroupARect = rectNodes(store).find(node => node.group === "A")
+    expect(afterGroupARect).toBeDefined()
+    expect(afterGroupARect!.style.fill).toBe("#333333")
   })
 })
 
