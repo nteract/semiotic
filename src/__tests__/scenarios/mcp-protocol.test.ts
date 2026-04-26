@@ -536,6 +536,36 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.content[0].text).toContain("Unknown component")
   })
 
+  it("renderChart is strict about data: HOCs without a data prop fail to render", async () => {
+    // Push-mode is a *guidance* concept (diagnoseConfig accepts usageMode='push'),
+    // not a rendering concept. renderChart can never push data later — it produces
+    // a single static SVG snapshot — so a HOC config that omits data must fail
+    // here regardless of how an agent thinks about the chart's lifecycle.
+    const result = await sendRequest(proc, "tools/call", {
+      name: "renderChart",
+      arguments: {
+        component: "LineChart",
+        props: { xAccessor: "x", yAccessor: "y" },
+      },
+    }, "render-strict-no-data")
+
+    expect(result.result.isError).toBe(true)
+    expect(result.result.content[0].text).toContain('"data" is required for LineChart')
+  })
+
+  it("renderChart does not advertise a usageMode parameter (only diagnoseConfig does)", async () => {
+    // The split-contract design: diagnoseConfig is for guidance and accepts
+    // usageMode; renderChart is for static snapshots and does not. Lock that
+    // down by inspecting the advertised input schema so it can't drift.
+    const result = await sendRequest(proc, "tools/list", {}, "list-render-shape")
+
+    const tools = result.result.tools as Array<{ name: string; inputSchema?: { properties?: Record<string, unknown> } }>
+    const render = tools.find((t) => t.name === "renderChart")!
+    const diagnose = tools.find((t) => t.name === "diagnoseConfig")!
+    expect(Object.keys(render.inputSchema?.properties ?? {})).not.toContain("usageMode")
+    expect(Object.keys(diagnose.inputSchema?.properties ?? {})).toContain("usageMode")
+  })
+
   it("renderChart with theme injects CSS variables", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "renderChart",
@@ -569,6 +599,24 @@ describe("MCP protocol round-trip", () => {
     // Missing data should produce a diagnostic
     const text = result.result.content[0].text
     expect(text.length).toBeGreaterThan(0)
+    expect(text).toContain('"data" is required for LineChart')
+  })
+
+  it("diagnoseConfig usageMode=push allows omitted data for ref-based HOCs", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "diagnoseConfig",
+      arguments: {
+        component: "LineChart",
+        usageMode: "push",
+        props: { xAccessor: "x", yAccessor: "y" },
+      },
+    }, "diag-push")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.isError).toBeFalsy()
+    const text = result.result.content[0].text
+    expect(text).toContain("Usage mode: push")
+    expect(text).not.toContain('"data" is required for LineChart')
   })
 
   it("diagnoseConfig with valid config returns ok", async () => {

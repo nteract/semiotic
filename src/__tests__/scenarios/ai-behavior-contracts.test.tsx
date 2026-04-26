@@ -24,12 +24,14 @@ const {
   DOC_MARKER_END,
   DOC_MARKER_START,
   behaviorContractsFor,
+  dataRequiredForUsageMode,
   requiredCombinationsFor,
 } = require("../../../ai/behaviorContracts.cjs") as {
   BEHAVIOR_CONTRACTS: Array<{ id: string; title: string }>
   DOC_MARKER_END: string
   DOC_MARKER_START: string
   behaviorContractsFor: (args: { component?: string; props?: Record<string, unknown> }) => Array<{ id: string }>
+  dataRequiredForUsageMode: (component: string, usageMode?: string) => boolean
   requiredCombinationsFor: (component?: string) => Array<{ component: string; required: string[] }>
 }
 const schema = require("../../../ai/schema.json") as {
@@ -41,6 +43,7 @@ describe("AI behavior contract metadata", () => {
     const ids = BEHAVIOR_CONTRACTS.map((contract) => contract.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).toEqual(expect.arrayContaining([
+      "props.data-required-by-usage-mode",
       "color.category-precedence",
       "props.required-combinations",
       "streaming.push-mode-data",
@@ -66,6 +69,13 @@ describe("AI behavior contract metadata", () => {
 
     expect(colorRules).toContain("color.category-precedence")
     expect(colorRules).toContain("streaming.push-mode-data")
+  })
+
+  it("treats data as required for static configs but optional for push-mode HOCs", () => {
+    expect(dataRequiredForUsageMode("LineChart", "static")).toBe(true)
+    expect(dataRequiredForUsageMode("LineChart", "renderChart")).toBe(true)
+    expect(dataRequiredForUsageMode("LineChart", "push")).toBe(false)
+    expect(dataRequiredForUsageMode("GaugeChart", "push")).toBe(false)
   })
 })
 
@@ -132,6 +142,7 @@ describe("AI behavior contracts — required prop combinations", () => {
 
     for (const [component, prop] of expected) {
       expect(requiredCombinationsFor(component)[0]?.required).toContain(prop)
+      expect(requiredCombinationsFor(component)[0]?.required).not.toContain("data")
       const schemaEntry = schema.tools.find((tool) => tool.function.name === component)!
       expect(schemaEntry.function.parameters.required).toContain(prop)
     }

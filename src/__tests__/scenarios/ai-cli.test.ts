@@ -79,7 +79,13 @@ describe("semiotic-ai CLI", () => {
     const schema = JSON.parse(result.stdout) as {
       name: string
       parameters: { required: string[] }
-      metadata: { category: string; importPath: string; renderable: boolean }
+      metadata: {
+        category: string
+        importPath: string
+        renderable: boolean
+        usageModes: { static: { dataRequired: boolean }; push: { dataRequired: boolean } }
+      }
+      behaviorContracts: Array<{ id: string }>
     }
 
     expect(schema.name).toBe("GaugeChart")
@@ -91,6 +97,9 @@ describe("semiotic-ai CLI", () => {
         renderable: true,
       })
     )
+    expect(schema.metadata.usageModes.static.dataRequired).toBe(false)
+    expect(schema.metadata.usageModes.push.dataRequired).toBe(false)
+    expect(schema.behaviorContracts.map((contract) => contract.id)).toContain("rendering.renderchart-static-props")
   })
 
   it("--schema unknown component exits non-zero with available components", () => {
@@ -141,6 +150,43 @@ describe("semiotic-ai CLI", () => {
     expect(result.stdout).toContain("Behavior contracts:")
     expect(result.stdout).toContain("color.category-precedence")
     expect(result.stdout).toContain("streaming.push-mode-data")
+  })
+
+  it("--doctor usageMode=push allows HOC configs that omit data", () => {
+    const result = runCLI(
+      ["--doctor", JSON.stringify({
+        component: "LineChart",
+        usageMode: "push",
+        props: {
+          xAccessor: "x",
+          yAccessor: "y",
+          colorBy: "series",
+        },
+      })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("Usage mode: push")
+    expect(result.stdout).toContain("LineChart: schema-only validation passed")
+    expect(result.stdout).not.toContain('"data" is required for LineChart')
+  })
+
+  it("--doctor static mode still requires data for HOC configs", () => {
+    const result = runCLI(
+      ["--doctor", JSON.stringify({
+        component: "LineChart",
+        props: {
+          xAccessor: "x",
+          yAccessor: "y",
+        },
+      })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("LineChart: schema-only validation failed")
+    expect(result.stdout).toContain('"data" is required for LineChart')
   })
 
   it("--suggest recommends charts from sample data", () => {

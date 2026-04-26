@@ -70,11 +70,15 @@ const {
 const {
   BEHAVIOR_CONTRACTS,
   behaviorContractsFor,
+  dataRequiredForUsageMode,
   formatDoctorBehaviorContracts,
+  normalizeUsageMode,
 } = require("./behaviorContracts.cjs") as {
   BEHAVIOR_CONTRACTS: Array<Record<string, unknown>>
+  dataRequiredForUsageMode: (component: string, usageMode?: string) => boolean
   behaviorContractsFor: (args: { component?: string; props?: Record<string, any> }) => Array<Record<string, unknown>>
   formatDoctorBehaviorContracts: (contracts: Array<Record<string, unknown>>) => string
+  normalizeUsageMode: (usageMode?: string) => "static" | "push"
 }
 
 // Load schema.json for version info
@@ -269,9 +273,17 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   }
 }
 
-async function diagnoseConfigHandler(args: { component?: string; props?: Record<string, any> }): Promise<ToolResult> {
+function filterUsageModeDiagnoses(component: string, usageMode: "static" | "push", diagnoses: any[]) {
+  if (dataRequiredForUsageMode(component, usageMode)) return diagnoses
+  return diagnoses.filter((d: any) =>
+    d.code !== "VALIDATION" || d.message !== `"data" is required for ${component}.`
+  )
+}
+
+async function diagnoseConfigHandler(args: { component?: string; props?: Record<string, any>; usageMode?: string }): Promise<ToolResult> {
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
+  const usageMode = normalizeUsageMode(args.usageMode)
 
   if (!component) {
     return {
@@ -281,22 +293,29 @@ async function diagnoseConfigHandler(args: { component?: string; props?: Record<
   }
 
   const result = diagnoseConfig(component, props)
-  if (result.ok) {
-    const warnings = result.diagnoses.filter((d: any) => d.severity === "warning")
+  const diagnoses = filterUsageModeDiagnoses(component, usageMode, result.diagnoses)
+  const ok = diagnoses.every((d: any) => d.severity === "warning")
+  const usageModeNote = usageMode === "push"
+    ? "Usage mode: push (data prop may be omitted; use a ref to push data).\n\n"
+    : ""
+
+  if (ok) {
+    const warnings = diagnoses.filter((d: any) => d.severity === "warning")
     const msg = warnings.length > 0
       ? `Configuration looks good with ${warnings.length} warning(s):\n${warnings.map((w: any) => `⚠ [${w.code}] ${w.message}\n  Fix: ${w.fix}`).join("\n")}`
       : `✓ Configuration looks good — no issues detected.`
     const contracts = formatDoctorBehaviorContracts(behaviorContractsFor({ component, props }))
-    return { content: [{ type: "text" as const, text: contracts ? `${msg}\n\n${contracts}` : msg }] }
+    return { content: [{ type: "text" as const, text: `${usageModeNote}${contracts ? `${msg}\n\n${contracts}` : msg}` }] }
   }
 
-  const lines = result.diagnoses.map((d: any) => {
+  const lines = diagnoses.map((d: any) => {
     const icon = d.severity === "error" ? "✗" : "⚠"
     const fixLine = d.fix ? `\n  Fix: ${d.fix}` : ""
     return `${icon} [${d.code}] ${d.message}${fixLine}`
   })
   return {
     content: [{ type: "text" as const, text: [
+      usageModeNote.trim(),
       lines.join("\n"),
       formatDoctorBehaviorContracts(behaviorContractsFor({ component, props })),
     ].filter(Boolean).join("\n\n") }],
@@ -491,9 +510,10 @@ function createServer(): McpServer {
       "2. Read semiotic://behavior-contracts for semantic rules that schema shape alone cannot express.",
       "3. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
       "4. Call getSchema for the selected component before writing JSX or renderChart props.",
-      "5. Call diagnoseConfig with the proposed props and fix all errors before presenting code.",
-      "6. If the component is renderable, call renderChart once to verify it returns SVG.",
-      "7. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
+      "5. Call diagnoseConfig with usageMode=\"static\" for renderChart/static data, or usageMode=\"push\" for ref-based React code that intentionally omits data.",
+      "6. Fix all diagnoseConfig errors before presenting code.",
+      "7. If the component is renderable and has static data, call renderChart once to verify it returns SVG.",
+      "8. Prefer sub-path imports such as semiotic/xy, semiotic/ordinal, semiotic/network, semiotic/geo, or semiotic/ai depending on the surrounding code.",
       "",
       "Return the final JSX or renderChart call plus any assumptions about fields, accessors, or aggregation.",
     ].join("\n"))
@@ -520,10 +540,11 @@ function createServer(): McpServer {
       "Use this MCP workflow:",
       "1. Call getSchema for the component and compare the provided props against required props and accessor names.",
       "2. Read semiotic://behavior-contracts for semantic rules around colors, required combinations, streaming refs, and renderability.",
-      "3. Call diagnoseConfig with the component and props; treat errors as blockers and warnings as review items.",
-      "4. If renderable, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
-      "5. Check semiotic://examples for a nearby working pattern before inventing new props.",
-      "6. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
+      "3. Call diagnoseConfig with usageMode=\"push\" if the code intentionally omits data for a ref-push HOC; otherwise use usageMode=\"static\".",
+      "4. Treat diagnoseConfig errors as blockers and warnings as review items.",
+      "5. If renderable and static data is available, call renderChart with a minimal reproduction to separate configuration issues from rendering bugs.",
+      "6. Check semiotic://examples for a nearby working pattern before inventing new props.",
+      "7. If the result looks like a Semiotic bug, call reportIssue with the component, props summary, diagnoseConfig output, and renderChart result.",
       "",
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step.",
     ].join("\n"))
@@ -548,7 +569,7 @@ function createServer(): McpServer {
 
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
@@ -560,10 +581,11 @@ function createServer(): McpServer {
 
   srv.tool(
     "diagnoseConfig",
-    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
+    "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Pass usageMode='push' for ref-based React HOCs that intentionally omit data; omit usageMode or pass 'static' for renderChart/MCP/server configs where data is required. Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
+      usageMode: z.enum(["static", "push", "renderChart", "server"]).optional().describe("Validation mode. Use 'push' for ref-based React HOCs that omit data; use 'static' or omit for renderChart/MCP/static data configs."),
     },
     diagnoseConfigHandler
   )

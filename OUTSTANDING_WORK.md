@@ -26,7 +26,7 @@ Next work:
 
 ### AI Surface Behavior Contracts
 
-Baseline exists: `ai/behaviorContracts.cjs`, `check:ai-contracts`, `semiotic-ai --doctor` behavior-rule output, MCP `semiotic://behavior-contracts`, generated AI docs sections, and scenario tests for color precedence, required prop combinations, and push/ref behavior.
+Baseline exists: `ai/behaviorContracts.cjs`, `check:ai-contracts`, `semiotic-ai --doctor` / MCP `diagnoseConfig` `usageMode` handling, MCP `semiotic://behavior-contracts`, generated AI docs sections, and scenario tests for color precedence, required prop combinations, static-vs-push data requirements, and push/ref behavior.
 
 Next work:
 - Periodically regenerate examples from runtime fixtures and diff them against `CLAUDE.md`, `docs/public/llms-full.txt`, and MCP guidance.

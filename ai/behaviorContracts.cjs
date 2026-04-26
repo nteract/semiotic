@@ -6,37 +6,51 @@ const DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->"
 const REQUIRED_COMBINATIONS = [
   {
     component: "StackedAreaChart",
-    required: ["data", "areaBy"],
+    required: ["areaBy"],
+    staticRequired: ["data", "areaBy"],
+    pushRequired: ["areaBy"],
     summary: "Stacked areas need a flat data array plus areaBy to identify the stacked series.",
   },
   {
     component: "BubbleChart",
-    required: ["data", "sizeBy"],
+    required: ["sizeBy"],
+    staticRequired: ["data", "sizeBy"],
+    pushRequired: ["sizeBy"],
     summary: "Bubbles need sizeBy in addition to x/y accessors so radius encodes data rather than a constant point size.",
   },
   {
     component: "StackedBarChart",
-    required: ["data", "stackBy"],
+    required: ["stackBy"],
+    staticRequired: ["data", "stackBy"],
+    pushRequired: ["stackBy"],
     summary: "Stacked bars need stackBy to split each category into stack segments.",
   },
   {
     component: "GroupedBarChart",
-    required: ["data", "groupBy"],
+    required: ["groupBy"],
+    staticRequired: ["data", "groupBy"],
+    pushRequired: ["groupBy"],
     summary: "Grouped bars need groupBy to split each category into side-by-side bars.",
   },
   {
     component: "SwimlaneChart",
     required: ["subcategoryAccessor"],
+    staticRequired: ["data", "subcategoryAccessor"],
+    pushRequired: ["subcategoryAccessor"],
     summary: "Swimlanes need subcategoryAccessor; colorBy defaults to the same field when not provided.",
   },
   {
     component: "GaugeChart",
     required: ["value"],
+    staticRequired: ["value"],
+    pushRequired: [],
     summary: "GaugeChart is value-only. thresholds, min, max, sweep, and arcWidth are optional.",
   },
   {
     component: "ForceDirectedGraph",
     required: ["nodes", "edges"],
+    staticRequired: ["nodes", "edges"],
+    pushRequired: ["nodes", "edges"],
     summary: "ForceDirectedGraph schema/rendering requires nodes and edges. If an agent infers nodes from edge endpoints, it must materialize a nodes array before returning code.",
   },
 ]
@@ -68,7 +82,40 @@ const PUSH_MODE_COMPONENTS = [
   "DistanceCartogram",
 ]
 
+const STATIC_DATA_COMPONENTS = [
+  "LineChart",
+  "AreaChart",
+  "StackedAreaChart",
+  "Scatterplot",
+  "BubbleChart",
+  "ConnectedScatterplot",
+  "BarChart",
+  "StackedBarChart",
+  "GroupedBarChart",
+  "SwarmPlot",
+  "BoxPlot",
+  "Histogram",
+  "ViolinPlot",
+  "RidgelinePlot",
+  "DotPlot",
+  "PieChart",
+  "DonutChart",
+  "LikertChart",
+  "SwimlaneChart",
+]
+
 const BEHAVIOR_CONTRACTS = [
+  {
+    id: "props.data-required-by-usage-mode",
+    category: "required-props",
+    title: "Data required by usage mode",
+    severity: "error",
+    appliesTo: {
+      components: PUSH_MODE_COMPONENTS,
+    },
+    summary: "Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.",
+    agentAction: "Pass usageMode=\"push\" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode=\"static\" or omit it for renderChart/MCP/static configs where data must be present.",
+  },
   {
     id: "color.category-precedence",
     category: "color",
@@ -88,8 +135,8 @@ const BEHAVIOR_CONTRACTS = [
     appliesTo: {
       components: REQUIRED_COMBINATIONS.map((entry) => entry.component),
     },
-    summary: "Some chart families need semantic props beyond data. These combinations are enforced by validation/schema and should be present in generated JSX or renderChart props.",
-    agentAction: "Before returning code, check the selected component against the required combinations list and include the missing semantic prop instead of relying on defaults that do not exist.",
+    summary: "Some chart families need semantic props beyond data. These combinations are enforced by validation/schema for static configs and remain required in push mode unless explicitly noted.",
+    agentAction: "Before returning code, check the selected component against the required combinations list. For push mode, omit data but keep semantic props such as areaBy, sizeBy, stackBy, and groupBy.",
     combinations: REQUIRED_COMBINATIONS,
   },
   {
@@ -152,12 +199,27 @@ function behaviorContractsFor({ component, props } = {}) {
   )
 }
 
+function normalizeUsageMode(usageMode) {
+  if (usageMode === "push") return "push"
+  if (usageMode === "static" || usageMode === "renderChart" || usageMode === "server") return "static"
+  return "static"
+}
+
+function dataRequiredForUsageMode(component, usageMode) {
+  if (!STATIC_DATA_COMPONENTS.includes(component)) return false
+  if (normalizeUsageMode(usageMode) === "push" && PUSH_MODE_COMPONENTS.includes(component)) return false
+  return true
+}
+
 function requiredCombinationsFor(component) {
   return REQUIRED_COMBINATIONS.filter((entry) => !component || entry.component === component)
 }
 
 function formatRequiredCombination(entry) {
-  return `${entry.component}: ${entry.required.join(" + ")}. ${entry.summary}`
+  const staticRequired = entry.staticRequired || entry.required
+  const pushRequired = entry.pushRequired || entry.required.filter((prop) => prop !== "data")
+  const pushText = pushRequired.length > 0 ? pushRequired.join(" + ") : "not supported"
+  return `${entry.component}: static ${staticRequired.join(" + ")}; push ${pushText}. ${entry.summary}`
 }
 
 function formatDoctorBehaviorContracts(contracts) {
@@ -207,8 +269,11 @@ module.exports = {
   DOC_MARKER_START,
   PUSH_MODE_COMPONENTS,
   REQUIRED_COMBINATIONS,
+  STATIC_DATA_COMPONENTS,
   behaviorContractsFor,
+  dataRequiredForUsageMode,
   formatBehaviorContractsMarkdown,
   formatDoctorBehaviorContracts,
+  normalizeUsageMode,
   requiredCombinationsFor,
 }
