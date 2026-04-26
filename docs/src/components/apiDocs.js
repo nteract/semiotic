@@ -84,12 +84,21 @@ export function getComponentDocs(apiData, componentName) {
   const index = buildReflectionIndex(apiData)
   const candidates = index.byName.get(componentName) || []
   const resolved = uniqueById(candidates.map((candidate) => resolveReflection(candidate, index)))
-  const reflection = resolved.find((candidate) => commentSummary(candidate.comment))
-    || resolved.find((candidate) => commentSummary(candidate.signatures?.[0]?.comment))
+
+  // A reflection is useful if EITHER its comment has a summary OR at least
+  // one `@example` block tag — components that document only via examples
+  // (no leading summary) should still surface those examples here.
+  const hasUsefulComment = (comment) =>
+    Boolean(commentSummary(comment)) || blockTagTexts(comment, "@example").length > 0
+
+  const reflection = resolved.find((candidate) => hasUsefulComment(candidate.comment))
+    || resolved.find((candidate) => hasUsefulComment(candidate.signatures?.[0]?.comment))
 
   if (!reflection) return null
 
-  const comment = reflection.comment || reflection.signatures?.[0]?.comment
+  const comment = hasUsefulComment(reflection.comment)
+    ? reflection.comment
+    : reflection.signatures?.[0]?.comment
   return {
     summary: commentSummary(comment),
     examples: blockTagTexts(comment, "@example").map(cleanExampleText),
