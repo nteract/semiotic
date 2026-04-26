@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import PageLayout from "../../components/PageLayout"
 import { ApiComponentDocs, ApiPropTable } from "../../components/ApiPropTable"
-import schema from "../../../../ai/schema.json"
 
 const CHART_CATEGORIES = [
   {
@@ -44,12 +43,13 @@ const CHART_CATEGORIES = [
 ]
 
 const ALL_COMPONENTS = CHART_CATEGORIES.flatMap((c) => c.components)
-const SCHEMA_DESCRIPTIONS = Object.fromEntries(
-  schema.tools.map((tool) => [tool.function.name, tool.function.description])
-)
 
 export default function ApiReferencePage() {
   const [apiData, setApiData] = useState(null)
+  // Descriptions ship as a small (~6KB) generated JSON instead of being
+  // bundled from the full ai/schema.json (~177KB) into this page chunk.
+  // Built by `scripts/generate-component-descriptions.mjs`.
+  const [descriptions, setDescriptions] = useState({})
   const [filter, setFilter] = useState("")
   const [loadError, setLoadError] = useState(false)
 
@@ -61,6 +61,13 @@ export default function ApiReferencePage() {
       })
       .then(setApiData)
       .catch(() => setLoadError(true))
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/component-descriptions.json")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then(setDescriptions)
+      .catch(() => setDescriptions({}))
   }, [])
 
   const filterLower = filter.toLowerCase()
@@ -129,7 +136,7 @@ export default function ApiReferencePage() {
                 <ApiComponentDocs
                   componentName={name}
                   apiData={apiData}
-                  fallbackSummary={SCHEMA_DESCRIPTIONS[name]}
+                  fallbackSummary={descriptions[name]}
                 />
                 <ApiPropTable componentName={name} apiData={apiData} />
               </div>

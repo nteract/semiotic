@@ -7,7 +7,18 @@ export const COMPONENT_PROPS_NAME_MAP = {
   RealtimeHistogram: "RealtimeTemporalHistogramProps",
 }
 
+// Per-apiData index cache. The reflection index is expensive to build
+// (full TypeDoc tree walk) and ApiReferencePage renders ~40 components in a
+// loop; a WeakMap keyed on the apiData object lets every caller in a page
+// pass share a single index without changing the public function signatures.
+const _indexCache = new WeakMap()
+
 export function buildReflectionIndex(apiData) {
+  if (apiData && typeof apiData === "object") {
+    const cached = _indexCache.get(apiData)
+    if (cached) return cached
+  }
+
   const byId = new Map()
   const byName = new Map()
 
@@ -27,7 +38,11 @@ export function buildReflectionIndex(apiData) {
   }
 
   visit(apiData)
-  return { byId, byName }
+  const index = { byId, byName }
+  if (apiData && typeof apiData === "object") {
+    _indexCache.set(apiData, index)
+  }
+  return index
 }
 
 export function resolveReflection(reflection, index, seen = new Set()) {
