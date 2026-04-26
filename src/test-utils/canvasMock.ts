@@ -126,10 +126,24 @@ export function recordCanvasOps(ctx: CanvasContextMock): CanvasOpLog {
   return log
 }
 
+export interface SetupCanvasMockOptions {
+  /**
+   * Stub `requestAnimationFrame`/`cancelAnimationFrame` so callbacks fire
+   * synchronously. Default: `true`.
+   *
+   * Set to `false` for tests that exercise components driving an animation
+   * loop through rAF — force simulations (ForceDirectedGraph, SankeyDiagram)
+   * re-schedule themselves on every tick, and a synchronous-fire stub
+   * causes unbounded recursion. With the stub disabled, jsdom's default
+   * (setTimeout-based) rAF runs the loop deterministically and tests can
+   * `waitFor` the resulting paint.
+   */
+  stubRaf?: boolean
+}
+
 /**
- * Sets up the canvas getContext mock on HTMLCanvasElement.prototype,
- * mocks requestAnimationFrame to execute callbacks synchronously,
- * and mocks cancelAnimationFrame.
+ * Sets up the canvas getContext mock on HTMLCanvasElement.prototype, the
+ * Path2D global, and (optionally) synchronous rAF/cAF stubs.
  *
  * @returns A cleanup function that restores the mocked globals.
  *
@@ -138,9 +152,13 @@ export function recordCanvasOps(ctx: CanvasContextMock): CanvasOpLog {
  * let cleanup: () => void
  * beforeEach(() => { cleanup = setupCanvasMock() })
  * afterEach(() => { cleanup() })
+ *
+ * // Network/force-simulation specs:
+ * beforeEach(() => { cleanup = setupCanvasMock({ stubRaf: false }) })
  * ```
  */
-export function setupCanvasMock(): () => void {
+export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => void {
+  const { stubRaf = true } = options
   const ctx = createMockCanvasContext();
 
   (HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ctx)
@@ -149,19 +167,22 @@ export function setupCanvasMock(): () => void {
     (globalThis as any).Path2D = class { constructor() {} }
   }
 
-  const rafSpy = vi
-    .spyOn(window, "requestAnimationFrame")
-    .mockImplementation((cb) => {
-      cb(performance.now())
-      return 0
-    })
-
-  const cafSpy = vi
-    .spyOn(window, "cancelAnimationFrame")
-    .mockImplementation(() => {})
+  let rafSpy: ReturnType<typeof vi.spyOn> | undefined
+  let cafSpy: ReturnType<typeof vi.spyOn> | undefined
+  if (stubRaf) {
+    rafSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb) => {
+        cb(performance.now())
+        return 0
+      })
+    cafSpy = vi
+      .spyOn(window, "cancelAnimationFrame")
+      .mockImplementation(() => {})
+  }
 
   return () => {
-    if (rafSpy.mockRestore) rafSpy.mockRestore()
-    if (cafSpy.mockRestore) cafSpy.mockRestore()
+    if (rafSpy?.mockRestore) rafSpy.mockRestore()
+    if (cafSpy?.mockRestore) cafSpy.mockRestore()
   }
 }
