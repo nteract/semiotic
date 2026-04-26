@@ -1,4 +1,5 @@
 import React from "react"
+import { extractProps, findPropsInterface, getComponentDocs } from "./apiDocs"
 
 /**
  * Renders a prop table from TypeDoc JSON for a given component.
@@ -34,14 +35,47 @@ export function ApiPropTable({ componentName, apiData }) {
               <td style={tdStyle}>
                 <code style={{ fontFamily: "var(--font-code)", fontSize: "0.9em" }}>{prop.name}</code>
                 {prop.required && <span style={{ color: "#e53e3e", marginLeft: 4 }}>*</span>}
+                {prop.inheritedFrom && (
+                  <div style={metaStyle}>from {prop.inheritedFrom}</div>
+                )}
               </td>
-              <td style={tdStyle}><code style={{ fontSize: 12 }}>{prop.type}</code></td>
+              <td style={tdStyle}><code style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>{prop.type}</code></td>
               <td style={tdStyle}>{prop.defaultValue ? <code>{prop.defaultValue}</code> : <span style={{ color: "var(--text-muted)" }}>{"\u2014"}</span>}</td>
-              <td style={tdStyle}>{prop.description}</td>
+              <td style={tdStyle}>
+                {prop.description}
+                {prop.examples.length > 0 && (
+                  <details style={{ marginTop: 8 }}>
+                    <summary style={summaryStyle}>Example</summary>
+                    {prop.examples.map((example, exampleIndex) => (
+                      <pre key={exampleIndex} style={preStyle}><code>{example}</code></pre>
+                    ))}
+                  </details>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+export function ApiComponentDocs({ componentName, apiData, fallbackSummary = "" }) {
+  const docs = getComponentDocs(apiData, componentName)
+  const summary = docs?.summary || fallbackSummary
+  if (!summary && !docs?.examples?.length) return null
+
+  return (
+    <div style={componentDocsStyle}>
+      {summary && <p style={componentSummaryStyle}>{summary}</p>}
+      {docs?.examples?.length > 0 && (
+        <details>
+          <summary style={summaryStyle}>Component example</summary>
+          {docs.examples.map((example, index) => (
+            <pre key={index} style={preStyle}><code>{example}</code></pre>
+          ))}
+        </details>
+      )}
     </div>
   )
 }
@@ -64,52 +98,38 @@ const tdStyle = {
   borderBottom: "1px solid var(--surface-3)",
 }
 
-// Map components whose props interface names do not follow the `${componentName}Props` convention
-const COMPONENT_PROPS_NAME_MAP = {
-  RealtimeHistogram: "RealtimeTemporalHistogramProps",
+const metaStyle = {
+  color: "var(--text-muted)",
+  fontSize: 11,
+  marginTop: 4,
 }
 
-function findPropsInterface(apiData, componentName) {
-  const propsName = COMPONENT_PROPS_NAME_MAP[componentName] || `${componentName}Props`
-  // Search through TypeDoc children recursively
-  function search(node) {
-    if (!node) return null
-    if (node.name === propsName && (node.kindString === "Interface" || node.kind === 256)) return node
-    if (node.children) {
-      for (const child of node.children) {
-        const found = search(child)
-        if (found) return found
-      }
-    }
-    return null
-  }
-  return search(apiData)
+const summaryStyle = {
+  cursor: "pointer",
+  color: "var(--accent)",
+  fontSize: 12,
+  fontWeight: 600,
 }
 
-function extractProps(iface) {
-  if (!iface.children) return []
-  return iface.children
-    .filter((c) => c.kindString === "Property" || c.kind === 1024)
-    .map((c) => ({
-      name: c.name,
-      type: formatType(c.type),
-      description: c.comment?.summary?.map((s) => s.text).join("") || "",
-      defaultValue: c.comment?.blockTags?.find((t) => t.tag === "@default")?.content?.map((s) => s.text).join("") || "",
-      required: !c.flags?.isOptional,
-    }))
+const preStyle = {
+  margin: "8px 0 0",
+  padding: "10px 12px",
+  overflowX: "auto",
+  borderRadius: 6,
+  background: "var(--surface-2)",
+  fontSize: 12,
 }
 
-function formatType(type) {
-  if (!type) return "unknown"
-  if (type.type === "intrinsic") return type.name
-  if (type.type === "literal") return JSON.stringify(type.value)
-  if (type.type === "union") return type.types.map(formatType).join(" | ")
-  if (type.type === "reference") return type.name + (type.typeArguments ? `<${type.typeArguments.map(formatType).join(", ")}>` : "")
-  if (type.type === "array") return `${formatType(type.elementType)}[]`
-  if (type.type === "reflection") return "object"
-  if (type.type === "intersection") return type.types.map(formatType).join(" & ")
-  if (type.type === "tuple") return `[${type.elements.map(formatType).join(", ")}]`
-  return type.name || "unknown"
+const componentDocsStyle = {
+  marginBottom: 16,
+}
+
+const componentSummaryStyle = {
+  margin: "0 0 8px",
+  color: "var(--text-secondary)",
+  fontSize: 14,
+  lineHeight: 1.6,
+  whiteSpace: "pre-wrap",
 }
 
 export default ApiPropTable

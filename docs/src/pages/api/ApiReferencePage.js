@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react"
 import PageLayout from "../../components/PageLayout"
-import { ApiPropTable } from "../../components/ApiPropTable"
+import { ApiComponentDocs, ApiPropTable } from "../../components/ApiPropTable"
+import schema from "../../../../ai/schema.json"
 
 const CHART_CATEGORIES = [
   {
     title: "XY Charts",
     components: [
-      "LineChart", "AreaChart", "StackedAreaChart", "Scatterplot", "BubbleChart",
-      "ConnectedScatterplot", "Heatmap",
+      "LineChart", "AreaChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
+      "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap",
+      "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart",
     ],
   },
   {
     title: "Categorical Charts",
     components: [
-      "BarChart", "StackedBarChart", "GroupedBarChart", "PieChart", "DonutChart",
-      "Histogram", "SwarmPlot", "BoxPlot", "ViolinPlot", "DotPlot",
+      "BarChart", "StackedBarChart", "LikertChart", "GroupedBarChart",
+      "SwarmPlot", "BoxPlot", "Histogram", "ViolinPlot", "RidgelinePlot",
+      "DotPlot", "PieChart", "DonutChart", "GaugeChart", "FunnelChart",
+      "SwimlaneChart",
     ],
   },
   {
@@ -40,6 +44,9 @@ const CHART_CATEGORIES = [
 ]
 
 const ALL_COMPONENTS = CHART_CATEGORIES.flatMap((c) => c.components)
+const SCHEMA_DESCRIPTIONS = Object.fromEntries(
+  schema.tools.map((tool) => [tool.function.name, tool.function.description])
+)
 
 export default function ApiReferencePage() {
   const [apiData, setApiData] = useState(null)
@@ -67,7 +74,8 @@ export default function ApiReferencePage() {
       ]}
     >
       <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 24, maxWidth: "72ch" }}>
-        Auto-generated prop tables extracted from TypeScript source via TypeDoc.
+        Auto-generated prop tables for {ALL_COMPONENTS.length} chart components,
+        extracted from TypeScript source via TypeDoc.
         Run <code>npm run docs:api:json</code> to regenerate after source changes.
       </p>
 
@@ -118,6 +126,11 @@ export default function ApiReferencePage() {
                 <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginTop: 0, marginBottom: 12 }}>
                   {name}
                 </h3>
+                <ApiComponentDocs
+                  componentName={name}
+                  apiData={apiData}
+                  fallbackSummary={SCHEMA_DESCRIPTIONS[name]}
+                />
                 <ApiPropTable componentName={name} apiData={apiData} />
               </div>
             ))}
