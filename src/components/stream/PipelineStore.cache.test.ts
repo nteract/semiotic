@@ -9,6 +9,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 
 import { PipelineStore } from "./PipelineStore"
+import type { HeatcellSceneNode, PointSceneNode, RectSceneNode } from "./types"
 
 function makeStore(overrides: Datum = {}) {
   return new PipelineStore({
@@ -25,6 +26,18 @@ function makeStore(overrides: Datum = {}) {
 /** Ingest as bounded data (replaces entire buffer) */
 function setData(store: PipelineStore, data: Datum[]) {
   store.ingest({ inserts: data, bounded: true })
+}
+
+function pointNodes(store: PipelineStore): PointSceneNode[] {
+  return store.scene.filter((node): node is PointSceneNode => node.type === "point")
+}
+
+function heatcellNodes(store: PipelineStore): HeatcellSceneNode[] {
+  return store.scene.filter((node): node is HeatcellSceneNode => node.type === "heatcell")
+}
+
+function rectNodes(store: PipelineStore): RectSceneNode[] {
+  return store.scene.filter((node): node is RectSceneNode => node.type === "rect")
 }
 
 // ── Color resolution via scene ───────────────────────────────────────────
@@ -339,6 +352,74 @@ describe("scene rebuilds after config changes", () => {
     const southColor = store.resolveGroupColor("south")
     expect(northColor).not.toBe(southColor)
     expect([northColor, southColor]).toContain("red")
+  })
+
+  it("scatter scene rebuilds when themeSemantic.primary changes without ingest", () => {
+    const store = makeStore({
+      themeSemantic: { primary: "#111111" },
+    })
+    setData(store, [
+      { x: 1, y: 10 },
+      { x: 2, y: 20 },
+    ])
+    store.computeScene([400, 300])
+    expect(pointNodes(store)[0].style.fill).toBe("#111111")
+
+    store.updateConfig({
+      themeSemantic: { primary: "#222222" },
+    })
+    store.computeScene([400, 300])
+
+    expect(pointNodes(store)[0].style.fill).toBe("#222222")
+  })
+
+  it("heatmap scene rebuilds when themeSequential changes without ingest", () => {
+    const store = makeStore({
+      chartType: "heatmap",
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+      themeSequential: "blues",
+    })
+    setData(store, [
+      { x: 0, y: 0, value: 0 },
+      { x: 1, y: 0, value: 100 },
+    ])
+    store.computeScene([400, 300])
+    const before = heatcellNodes(store).map(node => node.fill)
+
+    store.updateConfig({
+      themeSequential: "viridis",
+    })
+    store.computeScene([400, 300])
+    const after = heatcellNodes(store).map(node => node.fill)
+
+    expect(after).not.toEqual(before)
+  })
+
+  it("bar scene rebuilds when barColors values change without ingest", () => {
+    const store = makeStore({
+      chartType: "bar",
+      runtimeMode: "streaming",
+      binSize: 10,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      categoryAccessor: "category",
+      barColors: { A: "#111111", B: "#222222" },
+    })
+    setData(store, [
+      { time: 1, value: 10, category: "A" },
+      { time: 2, value: 20, category: "B" },
+    ])
+    store.computeScene([400, 300])
+    expect(rectNodes(store).find(node => node.group === "A")?.style.fill).toBe("#111111")
+
+    store.updateConfig({
+      barColors: { A: "#333333", B: "#444444" },
+    })
+    store.computeScene([400, 300])
+
+    expect(rectNodes(store).find(node => node.group === "A")?.style.fill).toBe("#333333")
   })
 })
 

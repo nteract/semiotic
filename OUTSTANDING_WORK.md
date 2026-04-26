@@ -243,9 +243,9 @@ Regression coverage:
 
 ## Bugs & Code Quality
 
-### PipelineStore cache invalidation [YELLOW]
+### PipelineStore cache invalidation [DONE]
 
-Implicit cache invalidation keyed by `bufferSize:_ingestVersion`. No test verifies caches invalidate correctly. Cache invalidation tests added in 3.3.x cover color maps, extents, and push-clear cycles, but combinatorial paths remain untested.
+Cache invalidation coverage now includes data mutation paths, color maps, stacked extents, buffer materialization, push-clear cycles, and config-only scene rebuilds. Regressions cover `themeSemantic.primary`, `themeSequential`, and `barColors` updates without data ingest so theme/config changes cannot silently reuse stale scene output.
 
 ### Canvas renderer combinatorial paths [YELLOW]
 
