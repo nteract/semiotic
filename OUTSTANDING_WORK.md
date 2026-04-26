@@ -34,12 +34,12 @@ Next work:
 
 ### Test Quality Gate
 
-Several tests still prove mountability rather than correctness.
+Baseline exists: `check:test-quality` blocks new frame/canvas mount-only assertions, and `hoc-rendering-integration.test.tsx` now asserts scene summaries, legends, annotation labels, and explicit empty/loading behavior.
 
 Next work:
-- Flag new tests that assert only existence, for example `.stream-xy-frame` mounted without checking scene output or behavior.
-- Convert high-value mount tests into semantic assertions against scene props, rendered canvas/SVG output, or user-visible behavior.
-- Prioritize validation-adjacent tests: accepted props should also prove rendered effect.
+- Continue burning down the existing `scripts/test-quality-baseline.json` candidates by replacing mount checks with scene props, rendered SVG/canvas output, callbacks, or user-visible behavior.
+- Prioritize validation-adjacent tests where accepted props should also prove a rendered effect.
+- Add higher-level coverage for Playwright specs that still count canvases/SVGs without verifying chart content or interaction state.
 
 ---
 
