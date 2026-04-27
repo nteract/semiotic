@@ -143,7 +143,20 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  const safeData = points || []
+  // Drop null/non-object entries up-front. `points` is a public prop that
+  // accepts sparse arrays (e.g. some loaders emit `null` for unresolved
+  // rows), and useChartSetup iterates the data for category extraction
+  // without null-checks — the unsafe iteration would crash on render.
+  // Preserve referential identity when nothing is dropped so consumers
+  // doing `===` checks against the original `points` array still match.
+  const safeData = useMemo(() => {
+    const src = points || []
+    const hasInvalid = (src as Array<Datum | null | undefined>)
+      .some((p) => p == null || typeof p !== "object")
+    if (!hasInvalid) return src as Datum[]
+    return (src as Array<Datum | null | undefined>)
+      .filter((p) => p != null && typeof p === "object") as Datum[]
+  }, [points])
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 

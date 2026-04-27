@@ -19,8 +19,10 @@
 import type { Datum } from "./datumTypes"
 
 import { useCallback, useMemo, useState } from "react"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
+import { useCategoryColors } from "../../CategoryColors"
+import { createColorScale, STREAMING_PALETTE } from "./colorUtils"
 import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin } from "../../types/marginType"
@@ -224,11 +226,37 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // Per-chart `selection.unselectedOpacity` wins; theme supplies the default.
   const resolvedSelection = useResolvedSelection(selection)
 
+  // ── Push-mode legend color synchronization ────────────────────────────
+  // `useColorScale` returns `undefined` in push mode without a
+  // CategoryColorProvider — `data` is empty so there's nothing to build
+  // an ordinal scale over. `createLegend` then falls back to
+  // `STREAMING_PALETTE` for swatches, which mismatches the frame's mark
+  // colors when the consumer set an explicit `colorScheme` (or relies on
+  // the theme categorical palette). Synthesize a legend-only scale from
+  // the discovered categories using the same precedence as `useColorScale`
+  // (provider → explicit scheme → theme → STREAMING_PALETTE) so legend
+  // swatches and rendered marks agree even before any data is pushed.
+  const themeCategorical = useThemeCategorical()
+  const categoryColors = useCategoryColors()
+  const legendColorScale = useMemo<((v: string) => string) | undefined>(() => {
+    if (colorScale) return colorScale
+    if (!colorBy || activeCategories.length === 0) return undefined
+    const effectiveScheme: string | string[] = Array.isArray(colorScheme) && colorScheme.length > 0
+      ? colorScheme
+      : (typeof colorScheme === "string" && colorScheme.length > 0)
+        ? colorScheme
+        : (themeCategorical && themeCategorical.length > 0 ? themeCategorical : STREAMING_PALETTE)
+    const syntheticField = "__streamCat"
+    const syntheticData = activeCategories.map(cat => ({ [syntheticField]: cat }))
+    const fallbackScale = createColorScale(syntheticData, syntheticField, effectiveScheme)
+    return (v: string) => categoryColors?.[v] || fallbackScale(v) || "#999"
+  }, [colorScale, colorBy, activeCategories, colorScheme, themeCategorical, categoryColors])
+
   // ── Legend & margin ────────────────────────────────────────────────────
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
     data,
     colorBy,
-    colorScale,
+    colorScale: legendColorScale,
     showLegend,
     legendPosition: legendPositionProp,
     userMargin,

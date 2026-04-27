@@ -160,12 +160,20 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // Drop null/non-object entries up-front. `flows` is a public prop that
   // accepts sparse arrays (some loaders emit `null` for unresolved rows),
   // and useChartSetup iterates it for color extraction without null-checks.
-  const safeFlows = (flows || []).filter(
-    (f): f is Datum => f != null && typeof f === "object"
-  ) as Datum[]
-  const safeNodes = (nodes || []).filter(
-    (n): n is Datum => n != null && typeof n === "object"
-  ) as Datum[]
+  // Preserve referential identity when nothing is dropped so consumers
+  // doing identity checks against the original arrays still match.
+  const safeFlows = useMemo(() => {
+    const src = (flows || []) as Array<Datum | null | undefined>
+    const hasInvalid = src.some((f) => f == null || typeof f !== "object")
+    if (!hasInvalid) return src as Datum[]
+    return src.filter((f) => f != null && typeof f === "object") as Datum[]
+  }, [flows])
+  const safeNodes = useMemo(() => {
+    const src = (nodes || []) as Array<Datum | null | undefined>
+    const hasInvalid = src.some((n) => n == null || typeof n !== "object")
+    if (!hasInvalid) return src as Datum[]
+    return src.filter((n) => n != null && typeof n === "object") as Datum[]
+  }, [nodes])
 
   // ── Shared setup (color, legend, selection, margin, loading/empty) ───
   // Setup owns categorical color (`edgeColorBy`), legend rendering, line
@@ -176,7 +184,11 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // doesn't belong inside the shared hook.
   const setup = useChartSetup({
     data: safeFlows,
-    rawData: flows,
+    // Mirror push-mode detection (rawData === undefined) on the original
+    // `flows` prop, but feed the *sanitized* array to renderEmptyState so
+    // a `flows` array of only nulls fires the empty-state path instead
+    // of rendering a blank chart on a non-empty-but-all-invalid prop.
+    rawData: flows == null ? undefined : safeFlows,
     colorBy: edgeColorBy,
     colorScheme,
     legendInteraction,

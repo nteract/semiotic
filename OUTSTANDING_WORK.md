@@ -47,13 +47,12 @@ Next work:
 
 ### HOC To `useChartSetup` Unification
 
-Baseline exists: `BubbleChart` and `ProportionalSymbolMap` now use `useChartSetup`, validating the shared setup shape across one XY HOC and one Geo HOC.
-
-Decision: keep dual-axis, projection, and value-color legend behavior explicit for now. `useChartSetup` should continue to own categorical color, legend/category domain, selection/hover/click behavior, margin, and loading/empty setup until a second concrete use case proves those specialized inputs belong in the shared hook.
+All categorical HOCs in the original target list now use `useChartSetup`: `LineChart`, `AreaChart`, `StackedAreaChart`, `QuadrantChart`, `ConnectedScatterplot`, `BubbleChart`, `ProportionalSymbolMap`, `FlowMap`, and `DistanceCartogram`. The shared hook owns categorical color, legend/category domain, selection/hover/click behavior, margin, and loading/empty setup; chart-specific logic (statistical overlays, gap handling, direct-label margin, size-domain, projection, flow point→edge hover translation, cartogram layout) stays explicit per the original deviation guidance. `useChartSetup` also synthesizes a push-mode legend color scale so legend swatches and rendered marks agree on every converted chart without each one needing to layer `useStreamingLegend`.
 
 Next work:
-- Convert the remaining straightforward categorical HOCs first: LineChart, AreaChart, StackedAreaChart, QuadrantChart, ConnectedScatterplot, FlowMap, and DistanceCartogram.
-- Keep value-color charts explicit unless a shared gradient/value-legend contract emerges: Heatmap and ChoroplethMap.
+- Reduce push-mode plumbing further: only `LineChart` still calls `useStreamingLegend` directly, for `useLinkedChartCategories` cross-chart consistency. If `useChartSetup` grows linked-chart category registration, that direct call goes away too.
+- Keep value-color charts explicit unless a shared gradient/value-legend contract emerges: `Heatmap` and `ChoroplethMap`.
+- Decide whether `useChartSetup` should accept optional inputs for dual-axis (`MultiAxisLineChart`) and projection (geo charts that need pre-projected coordinates) cases. Current charts in those families stay explicit.
 - Keep deviations explicit where shared setup would obscure real chart-specific behavior.
 
 ### TypeScript Surface Cleanup

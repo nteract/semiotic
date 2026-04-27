@@ -710,8 +710,13 @@ export const LineChart = forwardRef(
       const coords: Datum[] = line[lineDataAccessor] || []
       if (coords.length === 0) continue
       const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
-      const label = colorAcc(endpoint) ?? colorAcc(line) ?? ""
-      if (label) seen.add(String(label))
+      // Coalesce nullish but keep falsy-but-valid values like 0 or false —
+      // a categorical chart with numeric category values must still get a
+      // direct label and have its margin estimated.
+      const raw = colorAcc(endpoint) ?? colorAcc(line)
+      if (raw == null) continue
+      const label = String(raw)
+      if (label !== "") seen.add(label)
     }
     return Array.from(seen)
   }, [directLabel, colorBy, gapProcessedLineData, lineDataAccessor, directLabelPosition])
@@ -872,15 +877,19 @@ export const LineChart = forwardRef(
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
     const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
 
-    // Get the endpoint of each line (by group)
+    // Get the endpoint of each line (by group). Mirror the null-aware
+    // logic in `directLabelLabelTexts` so a `0`/`false` category value
+    // still gets an annotation rather than being silently dropped.
     const groupEndpoints = new Map<string, Datum>()
     for (const line of gapProcessedLineData) {
       const coords: Datum[] = line[lineDataAccessor] || []
       if (coords.length === 0) continue
       const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
-      const label = colorAcc(endpoint) ?? colorAcc(line) ?? ""
-      if (label && !groupEndpoints.has(String(label))) {
-        groupEndpoints.set(String(label), endpoint)
+      const raw = colorAcc(endpoint) ?? colorAcc(line)
+      if (raw == null) continue
+      const label = String(raw)
+      if (label !== "" && !groupEndpoints.has(label)) {
+        groupEndpoints.set(label, endpoint)
       }
     }
 
