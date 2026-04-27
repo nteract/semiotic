@@ -2,9 +2,12 @@
 /**
  * Check AI/MCP surface parity.
  *
- * Schema freshness verifies schema <-> validation drift. This script covers the
- * adjacent AI surfaces that agents rely on: semiotic/ai exports, MCP renderable
- * registry entries, and server renderChart configs.
+ * `check:chart-specs` verifies schema/validation/metadata round-trip from the
+ * Chart Spec Registry. This script covers the adjacent AI surfaces that the
+ * registry does not generate: `semiotic/ai` chart exports, the MCP
+ * renderable registry, AI component metadata, and server renderChart
+ * configs. The schema↔validation per-name parity check used to live here too
+ * but is now redundant — the registry round-trip locks both sides.
  */
 
 const fs = require("fs")
@@ -143,8 +146,9 @@ function assertNoUnexpected(label, actual, expected) {
   if (unexpected.length) errors.push(`${label} unexpected: ${unexpected.join(", ")}`)
 }
 
-assertNoMissing("schema.json", schema, validation)
-assertNoUnexpected("schema.json", schema, validation)
+// schema↔validation name parity is locked by check:chart-specs (registry
+// round-trip). We still load schema below to cross-check MCP registry
+// entries, but no longer assert parity here.
 
 assertNoMissing("semiotic/ai chart exports", semioticAI, expectedAIExports)
 assertNoUnexpected("semiotic/ai chart exports", semioticAI, expectedAIExports)

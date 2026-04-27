@@ -53,7 +53,7 @@ GitHub Actions workflow (`.github/workflows/node.js.yml`):
 2. Build MCP server (`npm run build:mcp`)
 3. Run unit tests (`npm test`)
 4. TypeScript type check (`npm run typescript`)
-5. Schema freshness check (`npm run check:schema`)
+5. Chart Spec Registry round-trip (`npm run check:chart-specs`) and CLAUDE.md coverage (`npm run check:claude-md-coverage`)
 
 **`e2e` job** (depends on `testing`):
 1. Install Playwright Chromium
@@ -97,7 +97,8 @@ npm run bench:compare             # compare against baseline
 
 # Other checks
 npm run typescript                # type check
-npm run check:schema              # verify schema/CLAUDE.md/validateProps sync
+npm run check:chart-specs         # registry round-trip (schema/validation/metadata)
+npm run check:claude-md-coverage  # CLAUDE.md mentions every component
 npm run lint                      # ESLint
 ```
 

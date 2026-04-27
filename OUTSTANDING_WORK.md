@@ -25,6 +25,8 @@ Next work:
 
 ### Chart Spec Registry (Schema/Validation/MCP Consolidation)
 
+**Phase 1 + Phase 2 shipped (2026-04-26).** `chartSpecs.ts` exists with all 15 ordinal charts, three pure-function generators (`generateSchemaToolEntry`, `generateValidationMapEntry`, `generateMetadataEntry`), and a 45-test round-trip suite that locks in deep structural validationMap equivalence per chart. `check:chart-specs` is wired up. Drift annotations preserve canonical schema during the migration; Phase 3 re-baselines schema.json to match registry output.
+
 Three files describe each chart's prop surface in different shapes today, and adding a chart means three coordinated edits plus three drift-detection checks (`check:schema`, `check:surface`, `check:ai-contracts`). The hand-curation cost compounds: schema enums, validation type unions, and MCP renderability flags all encode the same "what props does this chart accept?" knowledge in three places.
 
 Plan: introduce a single TypeScript registry as the source of truth for the chart spec triad and emit the existing files via generators. TypeDoc continues to read `.tsx` source for per-prop types (no change). Docs pages (`docs/src/pages/charts/*.js`) stay handwritten because their value is per-chart narrative, not bullet-list coverage. `behaviorContracts.cjs` stays separate — cross-cutting semantic rules don't fit a per-chart spec.
@@ -64,13 +66,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = { /* one entry per HOC */ 
 
 **Phased migration** so the diff is reviewable at each step:
 
-1. **Phase 1 — Shape proof.** Land `chartSpecs.ts` with one chart spec (BarChart) plus the three generators. Show the generators emit byte-identical content for BarChart's slice of each existing file. Wire up `npm run docs:chart-specs`. ~400 LOC, single PR.
+1. ✅ **Phase 1 — Shape proof (shipped).** `chartSpecs.ts` with BarChart, three generators, three round-trip tests. `check:chart-specs` gate.
 
-2. **Phase 2 — Categorical family.** Convert the ordinal chart family (BarChart through GaugeChart, ~15 specs). Run generators, accept resulting diff (should be whitespace/ordering-only). Add `check:chart-specs` covering only the migrated subset; the other `check:schema`/`check:surface` gates keep covering the rest. ~600 LOC of spec content + ~50 LOC of CI.
+2. ✅ **Phase 2 — Categorical family (shipped).** All 15 ordinal charts in `chartSpecs.ts`. 45 round-trip tests. `validationMap` round-trip is byte-for-byte; schema round-trip asserts structural envelope only (canonical schema entries are individually hand-curated and inconsistent — Phase 3 re-baselines).
 
-3. **Phase 3 — XY, network, geo.** Convert the remaining ~25 specs in three smaller PRs by family. Each PR runs the generators, regenerates the three files, and the round-trip diff is the review surface.
+3. ✅ **Phase 3 — Re-baseline schema.json + XY/network/geo migration (shipped).** All 38 non-realtime charts (15 ordinal + 12 XY + 7 network + 4 geo) registered in `chartSpecs.ts`. Schema round-trip is byte-for-byte. `ai/schema.json` regenerates 38 of 43 entries from CHART_SPECS; the remaining 5 are the realtime charts, preserved canonical-only at this point.
 
-4. **Phase 4 — Retire compensating gates.** Once all charts are migrated and `check:chart-specs` covers the full set, remove the inputs to `check:schema` (it can no longer drift) and trim `check:surface` to its remaining unique responsibility (renderability vs. registry import map). Update CHANGELOG to note the new authoring path.
+4. ✅ **Phase 4 — Realtime migration + retire compensating gates (shipped).** All 5 realtime charts (`RealtimeLineChart`, `RealtimeHistogram`, `RealtimeSwarmChart`, `RealtimeWaterfallChart`, `RealtimeHeatmap`) registered via a new `realtime` prop bag; round-trip suite is now 129 tests covering the full 43-chart surface. `check:schema` / `scripts/check-schema-freshness.js` removed — its schema↔validation parity work is construction-guaranteed by the registry; the CLAUDE.md component-coverage cross-check is preserved as a slim, focused `check:claude-md-coverage` gate. `check:surface` trimmed to drop the redundant schema↔validation parity assertions while keeping the `semiotic/ai` / MCP registry / metadata / serverChartConfigs cross-checks it uniquely owns. `check:chart-specs` and `check:claude-md-coverage` are wired into release/prepublish scripts and the CI workflow.
 
 **Risks and friction**:
 

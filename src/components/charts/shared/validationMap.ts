@@ -6,7 +6,8 @@
  * via spread to keep individual entries concise.
  *
  * Consumed by: validateProps.ts (validation engine), diagnoseConfig.ts,
- *              chartConfig.ts, check-schema-freshness.js
+ *              chartConfig.ts. Schema/validation parity is locked by the
+ *              Chart Spec Registry (`check:chart-specs`).
  */
 import type { PropDef, ComponentSpec } from "./validateProps"
 
