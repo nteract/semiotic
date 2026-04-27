@@ -141,6 +141,7 @@
     "check:surface": "node scripts/check-surface-parity.js",
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
+    "check:chart-specs": "node scripts/check-chart-specs.mjs",
     "check:test-quality": "node scripts/check-test-quality-gate.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
     "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:schema && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run dist:prod && npm pack --dry-run",
