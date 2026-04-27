@@ -162,7 +162,11 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const setup = useChartSetup({
     data: safeData,
-    rawData: points,
+    // Mirror push-mode detection (rawData === undefined) on the original
+    // `points` prop, but feed the sanitized array to renderEmptyState so a
+    // `points` array of only nulls fires the empty-state path instead of
+    // rendering a blank chart on a non-empty-but-all-invalid prop.
+    rawData: points == null ? undefined : safeData,
     colorBy,
     colorScheme,
     legendInteraction,

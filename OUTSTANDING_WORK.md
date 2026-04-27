@@ -41,26 +41,51 @@ Next work:
 - Prioritize validation-adjacent tests where accepted props should also prove a rendered effect.
 - Add higher-level coverage for Playwright specs that still count canvases/SVGs without verifying chart content or interaction state.
 
+### Push-Mode Legend Color Regression Test
+
+`useChartSetup` now synthesizes a legend color scale from discovered categories using the same precedence as `useColorScale` (provider → explicit scheme → theme → STREAMING_PALETTE), so legend swatches match rendered marks in push mode without each chart layering `useStreamingLegend`. There is no scenario test that exercises this end-to-end: a regression that mis-orders precedence or returns the wrong palette would currently ship silently because all color-related unit tests use bounded data.
+
+Next work:
+- Add a scenario test per palette source: provider-only, explicit `colorScheme` array, explicit string scheme name, theme categorical, and bare push-mode (STREAMING_PALETTE).
+- Each test should mount the HOC in push mode, push two categories, and assert that the rendered legend swatches and the canvas pixels at known mark positions agree.
+- Cover one XY HOC and one Geo HOC at minimum (`LineChart` and `ProportionalSymbolMap`).
+
+### Sparse-Array Prop Hardening Sweep
+
+`FlowMap` and `ProportionalSymbolMap` now defensively filter `null`/non-object entries from their array props before handing data to `useChartSetup`, which iterates without null-checks. CSV-parsed and lookup-failed inputs commonly contain such entries. The same vulnerability likely exists in other HOCs that take array props (`BarChart`, `LineChart`, `Scatterplot`, `SankeyDiagram`, etc.).
+
+Next work:
+- Audit every public HOC that accepts an array prop for the same crash mode by mounting with `[null, validObject, undefined]` and observing whether `useChartSetup`/the scene builder throws.
+- Add the identity-preserving `useMemo` filter pattern (skip allocation when nothing to drop) to each affected HOC.
+- Either fold the filter into `useChartSetup` itself (so HOCs don't need to remember) or add a regression test that runs the sparse-input matrix.
+
 ---
 
 ## P1 — Architecture & API Coherence
 
-### HOC To `useChartSetup` Unification
+### HOC To `useChartSetup` Unification — Remaining Pieces
 
-All categorical HOCs in the original target list now use `useChartSetup`: `LineChart`, `AreaChart`, `StackedAreaChart`, `QuadrantChart`, `ConnectedScatterplot`, `BubbleChart`, `ProportionalSymbolMap`, `FlowMap`, and `DistanceCartogram`. The shared hook owns categorical color, legend/category domain, selection/hover/click behavior, margin, and loading/empty setup; chart-specific logic (statistical overlays, gap handling, direct-label margin, size-domain, projection, flow point→edge hover translation, cartogram layout) stays explicit per the original deviation guidance. `useChartSetup` also synthesizes a push-mode legend color scale so legend swatches and rendered marks agree on every converted chart without each one needing to layer `useStreamingLegend`.
+The bulk conversion is done (see CHANGELOG). Two follow-ups remain.
 
 Next work:
-- Reduce push-mode plumbing further: only `LineChart` still calls `useStreamingLegend` directly, for `useLinkedChartCategories` cross-chart consistency. If `useChartSetup` grows linked-chart category registration, that direct call goes away too.
-- Keep value-color charts explicit unless a shared gradient/value-legend contract emerges: `Heatmap` and `ChoroplethMap`.
-- Decide whether `useChartSetup` should accept optional inputs for dual-axis (`MultiAxisLineChart`) and projection (geo charts that need pre-projected coordinates) cases. Current charts in those families stay explicit.
-- Keep deviations explicit where shared setup would obscure real chart-specific behavior.
+- Add `useLinkedChartCategories` integration to `useChartSetup` so `LineChart` can drop its standalone `useStreamingLegend` call. After that change, `useStreamingLegend` either ships only as a low-level utility for advanced consumers or is removed entirely.
+- Decide whether `useChartSetup` should accept optional inputs for dual-axis (`MultiAxisLineChart`) and projection (geo charts that need pre-projected coordinates) cases. Current charts in those families stay explicit; a second concrete consumer would justify the shared inputs.
+
+### `setupCanvasMock` Adoption Sweep
+
+`src/test-utils/canvasMock.ts` exposes `setupCanvasMock({ stubRaf })` covering canvas + Path2D + optional rAF/cAF stubs with symmetric cleanup. `hoc-rendering-integration.test.tsx` was the first scenario file to adopt it; older test files still reimplement parts of the canvas mock inline.
+
+Next work:
+- Migrate the remaining test files that reimplement canvas/Path2D setup to `setupCanvasMock`.
+- Pass `stubRaf: false` for any spec that exercises a force-simulation tick loop (otherwise the synchronous-fire stub recurses).
+- Verify cleanup actually fires by re-running the suite in a different order; canvas/Path2D leaks across files now restore correctly via the helper.
 
 ### TypeScript Surface Cleanup
 
 `no-explicit-any` remains warning-level debt and should be reduced by modeling real shapes, not by mechanical replacement.
 
 Next work:
-- Reduce `any` in highest-leverage hotspots: StreamGeoFrame d3 types, SceneToSVG d3-shape arc invocations, sankey/chord layout boundaries, and test utilities.
+- Reduce `any` in highest-leverage hotspots: `StreamGeoFrame` d3 types, `SceneToSVG` d3-shape arc invocations, sankey/chord layout boundaries, and test utilities.
 - Replace bare `string` or deprecated accessor aliases with `ChartAccessor<TDatum, T>` across HOC props.
 - Make `ColorConfig` and `SizeConfig` generic so `colorBy` and `sizeBy` can infer from `keyof TDatum`.
 
@@ -72,6 +97,46 @@ Next work:
 - Maintain a tracked-consumers list for API-change checks where access allows.
 - Audit realtime chart usage for `windowSize={data.length}` or other bounded-mode workarounds.
 - Consider first-class bounded mode on realtime HOCs where static-data use is common.
+
+### HOC-Layer Boilerplate Reduction
+
+Two cross-cutting helpers would eliminate the bulk of remaining HOC boilerplate. Both are pure extraction, behavior-preserving, no API changes, no type-system cost. Estimated total: ~1,060 lines saved across the 38 published HOCs.
+
+Step 1 — `useFrameImperativeHandle(ref, { frameRef, isNetwork? })` (~520 lines saved):
+- Every HOC implements the same 7-method `useImperativeHandle` bridge to `frameRef`: `push`, `pushMany`, `remove`, `update`, `clear`, `getData`, `getScales`.
+- Network charts route `remove`/`update` through `removeNode`/`updateNode`; an `isNetwork` flag handles that.
+- Ship as `src/components/charts/shared/useFrameImperativeHandle.ts`. Replace site-by-site; each HOC's diff drops ~10 lines.
+
+Step 2 — `useChartModeAliases(resolved)` (~540 lines saved):
+- Every HOC unpacks `width`, `height`, `enableHover`, `showGrid`, `showLegend`, `title`, `description`, `summary`, `accessibleTable` into local consts after `useChartMode`.
+- Helper returns the alias bundle; chart-specific extras (`xLabel`, `yLabel`, `categoryLabel`, etc.) keep destructuring from `resolved` directly.
+- Ship as `src/components/charts/shared/useChartModeAliases.ts`. Site diffs are ~10 lines per HOC.
+
+Risk: low. Both helpers preserve identity of returned values across renders provided `resolved` is stable (it is — `useChartMode` already memoizes). Ship in two PRs so each diff is reviewable.
+
+### `streamProps` Construction Helpers
+
+Three small spreads recur in every HOC's `streamProps = {...}` object. Best done *after* the two HOC-layer helpers above, because once each HOC is 20+ lines lighter the construction site becomes the obvious next focal point. Estimated ~240 lines saved across 28 occurrences.
+
+Next work:
+- `buildBaseMetadataProps({ title, description, summary, className, animate })` — the `...(title && { title })` chain (~110 lines).
+- `buildCustomBehaviorProps({ linkedHover, onObservation, onClick, hoverHighlight, customHoverBehavior, customClickBehavior })` — the conditional hover/click spread pair (~40 lines).
+- `buildTooltipProps({ tooltip, defaultTooltipContent })` — the `tooltip === false ? () => null : (normalizeTooltip(tooltip) || defaultTooltipContent)` line (~90 lines).
+- Group all three into one `src/components/charts/shared/streamPropsHelpers.ts` module so the import cost amortizes.
+
+Risk: none. Each helper is a pure function over already-named locals.
+
+### `validationMap` Composition
+
+`src/components/charts/shared/validationMap.ts` (951 lines) declares 40+ component specs. Every entry repeats `required: ["data"]`, `dataShape: "array"`, identical `dataAccessors` per family, plus a `commonProps + axisProps` spread. Estimated ~210–260 lines saved.
+
+Next work:
+- Add `xyChartBaseSpec(specificProps)` and `ordinalChartBaseSpec(specificProps, required?)` composition helpers.
+- Add a `selectiveProps` bag (`showGrid`, `enableHover`, `showAxes`, `legend`, `legendPosition`, etc.) and spread it once per spec instead of redeclaring 8 keys per entry.
+- Each entry collapses from ~25 lines to ~5–8.
+- New chart families add a one-line family-base helper and reuse `selectiveProps` for free.
+
+Risk: none — the helpers are mechanical and the existing `commonProps` pattern already proves the composition works.
 
 ---
 
@@ -114,6 +179,24 @@ Next work:
 ---
 
 ## P3 — Performance & Scale
+
+### Renderer & Hit-Tester Boilerplate Reduction
+
+Two helper extractions in the canvas-rendering layer. Lower priority than the HOC-layer work because they don't change the public surface and the duplication isn't actively causing pain — but together they remove ~330–400 lines of mechanical boilerplate that recurs every time a new mark type is added.
+
+Step 1 — Canvas render-helper module (~180–220 lines saved):
+- `bar/area/line/pointCanvasRenderer` each repeat: opacity setup → resolve fill → resolve stroke → build gradient → reset alpha. Same 5-step dance, slightly different shapes drawn in between.
+- Extract into `src/components/stream/renderers/canvasRenderHelpers.ts`:
+  - `setupNodeStyle(ctx, node) → cleanup()` — global alpha + restore.
+  - `resolveNodeFill(ctx, fill, fallback)` — handles string/Pattern/undefined.
+  - `buildLinearGradient(ctx, baseColor, config, x0, y0, x1, y1)` — frame-agnostic, replaces both `buildBarGradient` and the inline area-gradient (~90% byte-identical).
+
+Step 2 — Generic `findNearestSceneNode` factory (~150–180 lines saved):
+- `CanvasHitTester`, `OrdinalCanvasHitTester`, `NetworkCanvasHitTester`, `GeoCanvasHitTester` each have a 60-line `findNearestNode` whose only difference is the `case node.type:` dispatch.
+- Generic factory: `findNearestSceneNode(scene, px, py, maxDistance, typeDispatcher, pointQuadtree?, maxPointRadius?)`.
+- Each frame's hit tester becomes a thin `typeDispatcher` plus a one-line call. Return types share a `{ datum, x, y, distance }` base so no `any` is needed.
+
+Risk: low — both extractions are mechanical. Behavior must match byte-for-byte; cover with the existing `*HitTester.test.ts` suites and any canvas-pixel regression tests.
 
 ### Network Decay Style Allocation
 
@@ -186,3 +269,11 @@ Potential work:
 - Geographic minimap.
 - Temporal animation on cartograms.
 - Richer edge encodings, including tapered and animated dashed lines.
+
+### CodeQL Re-Evaluation
+
+CodeQL was removed because the workflow-managed config kept producing stale-baseline warnings on every PR even after the language identifier was aligned. GitHub's "default setup" mode (Repo Settings → Security → Code scanning) manages the configuration outside the workflow file, which avoids the drift class entirely.
+
+Potential work:
+- Decide whether the security scanning value (a JS/TS library that's mostly DOM/canvas/d3 surface — not high-CWE territory) justifies re-enabling.
+- If yes, enable default setup and verify it produces a single check name that matches the configured branch protection rule.
