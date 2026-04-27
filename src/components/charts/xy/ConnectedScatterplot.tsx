@@ -70,11 +70,35 @@ function viridisColor(i: number, n: number): string {
  *
  * @example
  * ```tsx
+ * // Country trajectory over time
  * <ConnectedScatterplot
  *   data={trajectory}
  *   xAccessor="gdp"
  *   yAccessor="lifeExpectancy"
  *   pointRadius={4}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Explicit ordering field — sorts before connecting
+ * <ConnectedScatterplot
+ *   data={observations}
+ *   xAccessor="x"
+ *   yAccessor="y"
+ *   orderAccessor="timestamp"
+ *   orderLabel="Time"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Date-based ordering (Date or numeric values both work)
+ * <ConnectedScatterplot
+ *   data={dataByDate}
+ *   xAccessor="metric"
+ *   yAccessor="cost"
+ *   orderAccessor={(d) => new Date(d.month)}
  * />
  * ```
  */

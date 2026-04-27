@@ -52,6 +52,38 @@ export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChart
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * ViolinPlot - Mirrored density curves per category for distribution shape.
+ *
+ * Each category gets a symmetric kernel density estimate, optionally with
+ * a {@link BoxPlot}-style IQR overlay (`showIQR`). Compare with
+ * {@link RidgelinePlot} (stacked, single-sided), {@link BoxPlot} (summary
+ * only), or {@link SwarmPlot} (every observation visible).
+ *
+ * @example
+ * ```tsx
+ * // Reaction-time distribution per cohort
+ * <ViolinPlot
+ *   data={observations}
+ *   categoryAccessor="cohort"
+ *   valueAccessor="reactionTime"
+ *   bins={40}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Smoother curve + IQR overlay
+ * <ViolinPlot
+ *   data={observations}
+ *   categoryAccessor="condition"
+ *   valueAccessor="score"
+ *   curve="monotoneX"
+ *   showIQR
+ *   colorBy="condition"
+ * />
+ * ```
+ */
 export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

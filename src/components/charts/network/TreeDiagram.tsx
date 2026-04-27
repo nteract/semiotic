@@ -39,9 +39,44 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
 }
 
 /**
- * TreeDiagram - Visualize hierarchical data structures
+ * TreeDiagram - Visualize a hierarchy as connected node-link diagram.
  *
- * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
+ * `data` is a single root object whose children are walked via
+ * `childrenAccessor`. `layout` chooses between classic tidy-tree
+ * (`"tree"`), partition (`"partition"`), or radial (`"radial"`)
+ * arrangements; `orientation` flips horizontal/vertical for the linear
+ * layouts.
+ *
+ * For nested-rectangle encodings of the same data shape use
+ * {@link Treemap}; for nested circles use {@link CirclePack}; for
+ * concentric-orbit encodings use {@link OrbitDiagram}.
+ *
+ * @example
+ * ```tsx
+ * // Org chart
+ * <TreeDiagram
+ *   data={{
+ *     name: "CEO",
+ *     reports: [
+ *       { name: "VP Eng", reports: [{ name: "EM 1" }, { name: "EM 2" }] },
+ *       { name: "VP Product" },
+ *     ],
+ *   }}
+ *   childrenAccessor="reports"
+ *   orientation="vertical"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Radial layout colored by depth
+ * <TreeDiagram
+ *   data={hierarchyRoot}
+ *   childrenAccessor="children"
+ *   layout="radial"
+ *   colorByDepth
+ * />
+ * ```
  */
 export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
 

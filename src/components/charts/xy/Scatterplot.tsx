@@ -64,14 +64,46 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
 }
 
 /**
- * Scatterplot - Visualize relationships between two continuous variables
+ * Scatterplot - Visualize relationships between two continuous variables.
+ *
+ * Each row becomes a circle at `(xAccessor, yAccessor)`. Add a third
+ * dimension via {@link BubbleChart} (size encoding) or
+ * {@link ConnectedScatterplot} (point ordering). For matrix views of every
+ * pairwise combination, use {@link ScatterplotMatrix}.
  *
  * @example
  * ```tsx
+ * // Simple scatter
  * <Scatterplot
- *   data={[{x: 1, y: 10}, {x: 2, y: 20}]}
+ *   data={[{ x: 1, y: 10 }, { x: 2, y: 20 }]}
  *   xLabel="Time"
  *   yLabel="Value"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by category, marginal histograms in axis margins
+ * <Scatterplot
+ *   data={observations}
+ *   xAccessor="age"
+ *   yAccessor="income"
+ *   colorBy="region"
+ *   showLegend
+ *   marginalGraphics={{ x: "histogram", y: "histogram" }}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Hover-highlight non-hovered series + click handler
+ * <Scatterplot
+ *   data={observations}
+ *   xAccessor="x"
+ *   yAccessor="y"
+ *   colorBy="cluster"
+ *   hoverHighlight
+ *   onClick={(d) => console.log(d)}
  * />
  * ```
  */

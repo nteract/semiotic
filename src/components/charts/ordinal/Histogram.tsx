@@ -18,11 +18,45 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 
+/**
+ * Histogram component props
+ */
 export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
+  /**
+   * Array of rows. Either pre-binned (one row per bar with a category +
+   * count) or raw observations the chart will bin via `valueAccessor`.
+   * @example
+   * ```ts
+   * // Raw observations — chart bins them
+   * [{ value: 12 }, { value: 18 }, { value: 22 }, ...]
+   * // Or pre-binned
+   * [{ bucket: "0–10", count: 3 }, { bucket: "10–20", count: 7 }]
+   * ```
+   */
   data?: TDatum[]
+  /**
+   * Field name or function returning the bin label (used when data is
+   * already binned). Ignored when binning raw values.
+   * @default "category"
+   */
   categoryAccessor?: ChartAccessor<TDatum, string>
+  /**
+   * Field name or function returning the numeric value to bin (raw mode)
+   * or the count for each bin (pre-binned mode).
+   * @default "value"
+   */
   valueAccessor?: ChartAccessor<TDatum, number>
+  /**
+   * Number of equal-width bins for raw-data mode. Ignored when data is
+   * already binned.
+   * @default 25
+   */
   bins?: number
+  /**
+   * Render bin heights as fraction of total instead of absolute counts.
+   * Y-axis becomes [0, 1].
+   * @default false
+   */
   relative?: boolean
   categoryLabel?: string
   valueLabel?: string
@@ -49,6 +83,67 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * Histogram - Visualize the distribution of a continuous variable as bars.
+ *
+ * Always horizontal-bars-by-value-axis style. Either bin raw observations
+ * via `bins` and `valueAccessor`, or pass pre-binned rows directly. Use
+ * `relative` to convert counts to a fraction of total.
+ *
+ * For comparison across multiple distributions overlaid, prefer
+ * {@link RidgelinePlot} (one row per group, stacked) or
+ * {@link ViolinPlot} (mirrored density per group).
+ *
+ * @example
+ * ```tsx
+ * // Bin raw observations
+ * <Histogram
+ *   data={observations}        // [{ value: 12 }, { value: 18 }, ...]
+ *   valueAccessor="value"
+ *   bins={20}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Pre-binned data
+ * <Histogram
+ *   data={[
+ *     { bucket: "0–10", count: 3 },
+ *     { bucket: "10–20", count: 7 },
+ *     { bucket: "20–30", count: 5 },
+ *   ]}
+ *   categoryAccessor="bucket"
+ *   valueAccessor="count"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Brush to select a value range; receives the brushed extent
+ * <Histogram
+ *   data={observations}
+ *   valueAccessor="value"
+ *   brush
+ *   onBrush={(extent) => console.log(extent?.r)}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Relative frequencies (fractions of total)
+ * <Histogram
+ *   data={observations}
+ *   valueAccessor="value"
+ *   bins={30}
+ *   relative
+ * />
+ * ```
+ *
+ * @remarks
+ * For streaming distributions (window-based binning over a live data
+ * stream), use {@link RealtimeHistogram} from `semiotic/realtime` instead.
+ */
 export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

@@ -23,14 +23,47 @@ import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
  * BarChart component props
  */
 export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
+  /**
+   * Array of data rows. Each row should have a category and a numeric value.
+   * Omit when using the push API.
+   * @example
+   * ```ts
+   * [{ region: "EMEA", revenue: 120 }, { region: "Americas", revenue: 85 }]
+   * ```
+   */
   data?: TDatum[]
+  /**
+   * Field name or function returning the category for each row.
+   * @default "category"
+   */
   categoryAccessor?: ChartAccessor<TDatum, string>
+  /**
+   * Field name or function returning the bar value.
+   * @default "value"
+   */
   valueAccessor?: ChartAccessor<TDatum, number>
+  /**
+   * Bar direction. Horizontal puts categories on the y-axis; usually needs
+   * a wider left margin to fit the category labels.
+   * @default "vertical"
+   */
   orientation?: "vertical" | "horizontal"
+  /** Label rendered next to the category axis. */
   categoryLabel?: string
+  /** Label rendered next to the value axis. */
   valueLabel?: string
+  /** Custom formatter for value-axis ticks and tooltip values. */
   valueFormat?: (d: number | string) => string
+  /**
+   * Field or function that determines bar color. Defaults to a single
+   * color when omitted. Setting `colorBy` also enables the legend.
+   */
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Color scheme for `colorBy`. Either a d3 scheme name (`"category10"`,
+   * `"set2"`, etc.) or an explicit array of colors. Falls back to the
+   * theme's categorical palette when omitted.
+   */
   colorScheme?: string | string[]
   /** Category ordering. `false` (default) = insertion order. `"asc"` /
    *  `"desc"` sorts by total value. `"auto"` preserves insertion order
@@ -69,7 +102,84 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
 }
 
 /**
- * BarChart - Visualize categorical data with bars.
+ * BarChart - Visualize categorical data with vertical or horizontal bars.
+ *
+ * One bar per category. For multiple values per category use
+ * {@link StackedBarChart} (stacked segments) or {@link GroupedBarChart}
+ * (side-by-side bars).
+ *
+ * @example
+ * ```tsx
+ * // Simple bar chart
+ * <BarChart
+ *   data={[
+ *     { region: "EMEA", revenue: 120 },
+ *     { region: "Americas", revenue: 85 },
+ *     { region: "APAC", revenue: 60 },
+ *   ]}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by category, sorted descending by value
+ * <BarChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   colorBy="region"
+ *   sort="desc"
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Horizontal orientation — usually wants extra left margin for labels
+ * <BarChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   orientation="horizontal"
+ *   margin={{ left: 120 }}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Gradient fill from bar tip toward baseline
+ * <BarChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   color="steelblue"
+ *   gradientFill
+ *   roundedTop={4}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Push API — omit `data`, mutate via ref
+ * const ref = useRef<RealtimeFrameHandle>(null)
+ * useEffect(() => {
+ *   ref.current?.push({ region: "EMEA", revenue: 120 })
+ * }, [])
+ *
+ * <BarChart
+ *   ref={ref}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ * />
+ * ```
+ *
+ * @remarks
+ * Wraps {@link StreamOrdinalFrame} with sensible bar defaults. For custom
+ * marks, advanced annotations, or non-standard layouts, pass through via
+ * `frameProps` or use StreamOrdinalFrame directly. See
+ * {@link https://semiotic.nteract.io/charts/bar-chart} for live demos.
  */
 export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {

@@ -52,10 +52,31 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
   turbo: interpolateTurbo,
 }
 
+/**
+ * ChoroplethMap component props
+ */
 export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
-  /** GeoJSON features or a reference string ("world-110m", "world-50m", "land-110m", "land-50m") */
+  /**
+   * Either a `GeoJSON.Feature[]` array (one feature per region) or a
+   * reference string the library resolves into bundled topology:
+   * `"world-110m"`, `"world-50m"`, `"land-110m"`, `"land-50m"`. To pass a
+   * custom geography stored as a `FeatureCollection`, hand its `.features`
+   * array in. Each feature's `properties` should carry the value
+   * `valueAccessor` reads.
+   * @example
+   * ```ts
+   * areas="world-110m"                  // bundled world borders
+   * areas={features}                     // GeoJSON.Feature[]
+   * areas={featureCollection.features}   // FeatureCollection → unwrap to .features
+   * areas={mergeData(world, rows, { featureKey: "iso", dataKey: "iso" })}
+   * ```
+   */
   areas: AreasProp
-  /** Accessor for the numeric value to encode as color */
+  /**
+   * Field name or function returning the numeric value for each feature.
+   * Read from `feature.properties` after merging or directly off the
+   * feature when values are baked in.
+   */
   valueAccessor: ChartAccessor<TDatum, number>
   /** Sequential color scheme @default "blues" */
   colorScheme?: string
@@ -96,6 +117,76 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
   frameProps?: Partial<Omit<StreamGeoFrameProps, "areas" | "projection">>
 }
 
+/**
+ * ChoroplethMap - Encode a numeric value per region with a sequential color scale.
+ *
+ * Each feature in `areas` is filled with a color derived from its
+ * `valueAccessor` value, scaled across the data extent. For point-based
+ * geographic data use {@link ProportionalSymbolMap}; for flow data use
+ * {@link FlowMap}.
+ *
+ * @example
+ * ```tsx
+ * // World choropleth from a bundled topology, values merged in.
+ * // `resolveReferenceGeography` is async, so resolve it in an effect
+ * // before merging — or pass the reference string directly to `areas`
+ * // if your topology already carries the values you need.
+ * import * as React from "react"
+ * import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
+ *
+ * function WorldGDPMap({ gdpRows }) {
+ *   const [areas, setAreas] = React.useState([])
+ *   React.useEffect(() => {
+ *     let cancelled = false
+ *     resolveReferenceGeography("world-110m").then(world => {
+ *       if (cancelled) return
+ *       setAreas(mergeData(world, gdpRows, { featureKey: "iso_a3", dataKey: "iso" }))
+ *     })
+ *     return () => { cancelled = true }
+ *   }, [gdpRows])
+ *
+ *   return (
+ *     <ChoroplethMap
+ *       areas={areas}
+ *       valueAccessor={(f) => f.properties.gdp}
+ *       colorScheme="viridis"
+ *       projection="equalEarth"
+ *     />
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Custom GeoJSON + graticule + zoom/pan
+ * <ChoroplethMap
+ *   areas={statesGeoJson}
+ *   valueAccessor="population_density"
+ *   colorScheme="oranges"
+ *   projection="albersUsa"
+ *   graticule
+ *   zoomable
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Tile basemap underlay (Mercator only) with semi-transparent areas
+ * <ChoroplethMap
+ *   areas={countiesGeoJson}
+ *   valueAccessor="rate"
+ *   projection="mercator"
+ *   tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+ *   tileAttribution="© OpenStreetMap contributors"
+ *   areaOpacity={0.7}
+ * />
+ * ```
+ *
+ * @remarks
+ * The legend defaults to a sequential gradient legend matching the chosen
+ * `colorScheme`. For diverging data (positive/negative around zero), use
+ * a diverging scheme name and pass `frameProps={{ colorDomain: [-max, max] }}`.
+ */
 export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {

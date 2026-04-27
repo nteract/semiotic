@@ -128,6 +128,48 @@ export interface LikertChartHandle extends RealtimeFrameHandle {
 
 // ── Component ────────────────────────────────────────────────────────────
 
+/**
+ * LikertChart - Diverging stacked bars for ordered survey responses.
+ *
+ * Each category (question) gets a horizontal bar where positive responses
+ * extend right and negative responses extend left, centered on the
+ * midpoint of the `levels` ordering. Best for 5-point or 7-point Likert
+ * scales where you want to see net sentiment at a glance.
+ *
+ * Two data shapes are supported: pre-aggregated (one row per
+ * category × level via `levelAccessor` + `countAccessor`) or raw
+ * observations (one row per response via `valueAccessor`).
+ *
+ * @example
+ * ```tsx
+ * // Pre-aggregated: question × level × count
+ * <LikertChart
+ *   data={[
+ *     { question: "Easy to use", level: "Strongly Agree", count: 12 },
+ *     { question: "Easy to use", level: "Agree",          count: 30 },
+ *     { question: "Easy to use", level: "Neutral",        count: 8 },
+ *     { question: "Easy to use", level: "Disagree",       count: 4 },
+ *     { question: "Easy to use", level: "Strongly Disagree", count: 1 },
+ *   ]}
+ *   categoryAccessor="question"
+ *   levelAccessor="level"
+ *   countAccessor="count"
+ *   levels={["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Raw observations: one row per response
+ * <LikertChart
+ *   data={surveyResponses}
+ *   categoryAccessor="question"
+ *   valueAccessor="response"
+ *   levels={["Never", "Rarely", "Sometimes", "Often", "Always"]}
+ *   colorScheme="RdYlGn"
+ * />
+ * ```
+ */
 export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum = Datum>(
   props: LikertChartProps<TDatum>,
   ref: React.Ref<LikertChartHandle>

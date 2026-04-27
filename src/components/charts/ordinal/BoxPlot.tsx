@@ -44,6 +44,37 @@ export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * BoxPlot - Five-number summary (min, Q1, median, Q3, max) per category.
+ *
+ * Each category gets a box from Q1 to Q3 with a median line, whiskers to
+ * the min/max within 1.5×IQR, and individual outlier dots beyond that
+ * range. Use {@link ViolinPlot} for full distribution shape or
+ * {@link RidgelinePlot} for stacked overlapping densities.
+ *
+ * @example
+ * ```tsx
+ * // Distribution of test scores per class
+ * <BoxPlot
+ *   data={observations}
+ *   categoryAccessor="class"
+ *   valueAccessor="score"
+ *   showOutliers
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Hide outliers and color the boxes
+ * <BoxPlot
+ *   data={observations}
+ *   categoryAccessor="region"
+ *   valueAccessor="latency_ms"
+ *   colorBy="region"
+ *   showOutliers={false}
+ * />
+ * ```
+ */
 export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

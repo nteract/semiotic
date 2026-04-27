@@ -19,21 +19,90 @@ import { validateNetworkData } from "../shared/validateChartData"
  * ForceDirectedGraph component props
  */
 export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
+  /**
+   * Array of node objects. Each node must have a unique id (or other field
+   * named by `nodeIDAccessor`).
+   *
+   * **Required for static rendering**: when `edges` is provided, `nodes`
+   * must be too — even if it could be inferred from edge endpoints, pass
+   * an explicit list so layout can run.
+   *
+   * **Push mode**: omit BOTH `nodes` and `edges` to opt into ref-based
+   * push mode. Validation skips both arrays in that case and the chart
+   * accumulates topology from `ref.current.push(...)` calls.
+   * @example
+   * ```ts
+   * [{ id: "A", group: "core" }, { id: "B", group: "leaf" }]
+   * ```
+   */
   nodes?: TNode[]
+  /**
+   * Array of edge objects. Each edge must reference two node ids via
+   * `sourceAccessor` and `targetAccessor`. Required for static rendering;
+   * omit together with `nodes` for push mode (see above).
+   * @example
+   * ```ts
+   * [{ source: "A", target: "B", weight: 3 }]
+   * ```
+   */
   edges?: TEdge[]
+  /**
+   * Field name or function returning the node's unique id. Edge sources
+   * and targets reference this value.
+   * @default "id"
+   */
   nodeIDAccessor?: ChartAccessor<TNode, string>
+  /** @default "source" */
   sourceAccessor?: ChartAccessor<TEdge, string>
+  /** @default "target" */
   targetAccessor?: ChartAccessor<TEdge, string>
+  /**
+   * Field or function for the label text rendered next to a node when
+   * `showLabels` is true.
+   * @default nodeIDAccessor
+   */
   nodeLabel?: ChartAccessor<TNode, string>
+  /**
+   * Field or function that determines node color. Set together with
+   * `showLegend` for a legend.
+   */
   colorBy?: ChartAccessor<TNode, string>
+  /** d3 scheme name or explicit color array; falls back to theme. */
   colorScheme?: string | string[]
+  /**
+   * Constant pixel radius, or a function/field returning a numeric value
+   * scaled into `nodeSizeRange`.
+   * @default 8
+   */
   nodeSize?: number | ChartAccessor<TNode, number>
+  /**
+   * Min/max pixel radius when `nodeSize` is data-driven.
+   * @default [5, 20]
+   */
   nodeSizeRange?: [number, number]
+  /**
+   * Constant pixel width, or a function/field returning a numeric value
+   * scaled to a default width range.
+   * @default 1
+   */
   edgeWidth?: number | ChartAccessor<TEdge, number>
   edgeColor?: string
   edgeOpacity?: number
+  /**
+   * Number of force-simulation ticks before the layout settles.
+   * @default 300
+   */
   iterations?: number
+  /**
+   * Magnitude of the repulsion force between nodes; higher values spread
+   * the graph more.
+   * @default 0.1
+   */
   forceStrength?: number
+  /**
+   * Render labels next to nodes. Uses `nodeLabel` accessor (defaulting to
+   * `nodeIDAccessor`).
+   */
   showLabels?: boolean
   enableHover?: boolean
   showLegend?: boolean
@@ -44,9 +113,59 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
 }
 
 /**
- * ForceDirectedGraph - Visualize network relationships with force-directed layout
+ * ForceDirectedGraph - Visualize network relationships with a force-directed layout.
  *
- * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
+ * Nodes are positioned by simulating attraction along edges and repulsion
+ * between unconnected nodes; the layout settles after `iterations` ticks.
+ * Wraps {@link StreamNetworkFrame} (canvas-first rendering for large graphs).
+ *
+ * For ordered hierarchical data prefer {@link TreeDiagram}; for flow
+ * relationships prefer {@link SankeyDiagram}; for nested grouping prefer
+ * {@link CirclePack} or {@link Treemap}.
+ *
+ * @example
+ * ```tsx
+ * // Simple network with explicit nodes and edges
+ * <ForceDirectedGraph
+ *   nodes={[{ id: "A" }, { id: "B" }, { id: "C" }]}
+ *   edges={[
+ *     { source: "A", target: "B" },
+ *     { source: "B", target: "C" },
+ *   ]}
+ *   showLabels
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by group, edge width from weight, sized nodes
+ * <ForceDirectedGraph
+ *   nodes={nodes}
+ *   edges={edges}
+ *   colorBy="group"
+ *   nodeSize="degree"
+ *   nodeSizeRange={[6, 24]}
+ *   edgeWidth="weight"
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Tighter clustering for dense graphs
+ * <ForceDirectedGraph
+ *   nodes={nodes}
+ *   edges={edges}
+ *   forceStrength={0.4}
+ *   iterations={500}
+ * />
+ * ```
+ *
+ * @remarks
+ * Force simulation runs synchronously to `iterations`; for very large
+ * graphs (>2k nodes) consider lowering `iterations` so layout settles in
+ * a reasonable frame budget. Hover, click, and selection wiring follow
+ * the same patterns as the rest of the library.
  */
 export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)

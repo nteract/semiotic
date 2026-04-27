@@ -40,9 +40,43 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
 }
 
 /**
- * Treemap - Visualize hierarchical data as nested rectangles.
+ * Treemap - Visualize a hierarchy as nested rectangles sized by value.
  *
- * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
+ * Each leaf becomes a rectangle whose area is proportional to
+ * `valueAccessor`; ancestors enclose their descendants. Better than
+ * {@link CirclePack} when precise area comparison matters; better than
+ * {@link TreeDiagram} when leaf count is large.
+ *
+ * @example
+ * ```tsx
+ * // Department budgets
+ * <Treemap
+ *   data={{
+ *     name: "Total",
+ *     children: [
+ *       { name: "Eng", children: [
+ *         { name: "Frontend", value: 120 },
+ *         { name: "Platform", value: 90 },
+ *       ]},
+ *       { name: "Sales", value: 200 },
+ *       { name: "Marketing", value: 60 },
+ *     ],
+ *   }}
+ *   valueAccessor="value"
+ *   childrenAccessor="children"
+ *   showLabels
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color leaves by their parent (each top-level branch gets its own color)
+ * <Treemap
+ *   data={hierarchyRoot}
+ *   valueAccessor="size"
+ *   colorBy="parent"
+ * />
+ * ```
  */
 export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>) {
 

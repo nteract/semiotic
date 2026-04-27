@@ -49,6 +49,44 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * GroupedBarChart - Multiple bars per category, side by side.
+ *
+ * Each row contributes to one bar inside the group named by
+ * `categoryAccessor`; `groupBy` splits each category into the
+ * side-by-side series. Use {@link StackedBarChart} when group totals
+ * matter more than individual values.
+ *
+ * @example
+ * ```tsx
+ * // Quarterly revenue by region
+ * <GroupedBarChart
+ *   data={[
+ *     { quarter: "Q1", region: "EMEA",     revenue: 120 },
+ *     { quarter: "Q1", region: "Americas", revenue: 95 },
+ *     { quarter: "Q2", region: "EMEA",     revenue: 140 },
+ *     { quarter: "Q2", region: "Americas", revenue: 110 },
+ *   ]}
+ *   categoryAccessor="quarter"
+ *   valueAccessor="revenue"
+ *   groupBy="region"
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Custom palette + sorted categories
+ * <GroupedBarChart
+ *   data={data}
+ *   categoryAccessor="quarter"
+ *   valueAccessor="revenue"
+ *   groupBy="region"
+ *   colorScheme={["#3b82f6", "#22c55e", "#ef4444"]}
+ *   sort="asc"
+ * />
+ * ```
+ */
 export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

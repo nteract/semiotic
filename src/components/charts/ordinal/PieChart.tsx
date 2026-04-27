@@ -19,14 +19,51 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 
+/**
+ * PieChart component props
+ */
 export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
+  /**
+   * Array of category rows. Each row should have a category and a numeric
+   * value; values determine relative wedge size. Omit when using the push API.
+   * @example
+   * ```ts
+   * [{ region: "EMEA", revenue: 120 }, { region: "Americas", revenue: 85 }]
+   * ```
+   */
   data?: TDatum[]
+  /**
+   * Field name or function returning the wedge label.
+   * @default "category"
+   */
   categoryAccessor?: ChartAccessor<TDatum, string>
+  /**
+   * Field name or function returning the wedge value (slice size). Values
+   * are aggregated by absolute magnitude (`Math.abs`), so negative inputs
+   * render as positive-sized wedges. If your data has signed values you
+   * need to differentiate, sign-encode via `colorBy` or pre-process.
+   * @default "value"
+   */
   valueAccessor?: ChartAccessor<TDatum, number>
+  /**
+   * Field or function that determines wedge color. Defaults to coloring by
+   * `categoryAccessor` since pies are inherently categorical.
+   */
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Color scheme for `colorBy`. Either a d3 scheme name (`"category10"`,
+   * `"set2"`, etc.) or an explicit array of colors. Falls back to the
+   * theme's categorical palette when omitted.
+   */
   colorScheme?: string | string[]
+  /**
+   * Rotation in **degrees** applied to the first wedge. `0` starts at 12
+   * o'clock and proceeds clockwise; `90` starts at 3 o'clock, `180` at 6
+   * o'clock, `270` at 9 o'clock.
+   * @default 0
+   */
   startAngle?: number
-  /** Rounded corner radius on wedge arcs */
+  /** Rounded corner radius on wedge arcs (pixels). */
   cornerRadius?: number
   enableHover?: boolean
   showCategoryTicks?: boolean
@@ -38,6 +75,58 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * PieChart - Visualize a single categorical distribution as wedges of a circle.
+ *
+ * Each row becomes one wedge sized by `valueAccessor`. Best for ≤7 categories;
+ * with more, prefer {@link BarChart} or {@link DonutChart} for legibility.
+ *
+ * For a pie with a hole and center content, use {@link DonutChart}.
+ *
+ * @example
+ * ```tsx
+ * // Simple pie
+ * <PieChart
+ *   data={[
+ *     { region: "EMEA", revenue: 120 },
+ *     { region: "Americas", revenue: 85 },
+ *     { region: "APAC", revenue: 60 },
+ *   ]}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Custom palette + rounded wedges + start angle
+ * <PieChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   colorScheme={["#1f77b4", "#ff7f0e", "#2ca02c"]}
+ *   cornerRadius={4}
+ *   startAngle={90}
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Hover highlight + click handler
+ * <PieChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   hoverHighlight
+ *   onClick={(d) => console.log("clicked region:", d)}
+ * />
+ * ```
+ *
+ * @remarks
+ * Wraps {@link StreamOrdinalFrame} with pie-specific defaults. See
+ * {@link https://semiotic.nteract.io/charts/pie-chart} for live demos.
+ */
 export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,

@@ -53,6 +53,42 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * SwarmPlot - Show every individual observation per category as a beeswarm.
+ *
+ * Points are placed along the value axis and offset perpendicular to it
+ * to avoid overlap, producing a packed cluster per category. Best for
+ * datasets where you want both the distribution shape AND the individual
+ * observations visible — typically dozens to a few thousand points.
+ *
+ * For aggregate distribution shape only, prefer {@link ViolinPlot},
+ * {@link BoxPlot}, or {@link RidgelinePlot}.
+ *
+ * @example
+ * ```tsx
+ * // Reaction-time observations per cohort
+ * <SwarmPlot
+ *   data={observations}
+ *   categoryAccessor="cohort"
+ *   valueAccessor="reactionTime"
+ *   pointRadius={3}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by group within each category, sized by weight
+ * <SwarmPlot
+ *   data={observations}
+ *   categoryAccessor="condition"
+ *   valueAccessor="score"
+ *   colorBy="group"
+ *   sizeBy="weight"
+ *   sizeRange={[2, 10]}
+ *   showLegend
+ * />
+ * ```
+ */
 export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

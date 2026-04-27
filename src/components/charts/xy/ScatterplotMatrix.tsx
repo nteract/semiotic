@@ -816,12 +816,28 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
  *
  * @example
  * ```tsx
+ * // Iris dataset — every pairwise field combination
  * <ScatterplotMatrix
  *   data={iris}
  *   fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
  *   colorBy="species"
  *   cellSize={160}
  *   diagonal="histogram"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Brush mode: drag in any cell to highlight matching points across the
+ * // matrix. The `crossfilter` mode excludes the brushed cell from its own
+ * // filter so it stays fully visible while the others dim non-matches.
+ * // Brush selections live in the matrix's internal selection store and do
+ * // not propagate to charts rendered outside the component.
+ * <ScatterplotMatrix
+ *   data={observations}
+ *   fields={["x", "y", "z"]}
+ *   hoverMode={false}
+ *   brushMode="crossfilter"
  * />
  * ```
  */

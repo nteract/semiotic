@@ -97,6 +97,43 @@ const DEPTH_COLORS = DEPTH_PALETTE_COLORS
 
 // ── Component ───────────────────────────────────────────────────────────
 
+/**
+ * OrbitDiagram - Visualize a hierarchy as concentric orbits with optional rotation.
+ *
+ * Each level of the hierarchy becomes an orbit ring at a different radius;
+ * children are placed around their parent's orbit. With `animated` set
+ * (the default), nodes rotate continuously at `speed`, producing a
+ * planet-system feel.
+ *
+ * @example
+ * ```tsx
+ * // Static orbits
+ * <OrbitDiagram
+ *   data={{
+ *     name: "Sun",
+ *     children: [
+ *       { name: "Mercury" },
+ *       { name: "Venus" },
+ *       { name: "Earth", children: [{ name: "Moon" }] },
+ *       { name: "Mars" },
+ *     ],
+ *   }}
+ *   childrenAccessor="children"
+ *   animated={false}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Animated, depth-colored, slower rotation
+ * <OrbitDiagram
+ *   data={hierarchyRoot}
+ *   childrenAccessor="children"
+ *   colorByDepth
+ *   speed={0.2}
+ * />
+ * ```
+ */
 export function OrbitDiagram<TDatum extends Datum = Datum>(
   props: OrbitDiagramProps<TDatum>
 ) {
