@@ -82,9 +82,16 @@ const commonProps: Record<string, ChartPropSpec> = {
   showGrid: { type: "boolean", default: false },
   colorBy: { type: ["string", "function"] },
   colorScheme: { type: ["string", "array"], default: "category10" },
-  tooltip: { type: ["boolean", "function", "object"], omitFromSchema: true },
+  // Tooltip surfaces in schema as a type union including "function" —
+  // canonical schema entries for `tooltip` already use this shape (e.g.
+  // `RidgelinePlot.tooltip: ["function", "object"]`). LLMs that can't
+  // supply functions choose the boolean/object variant.
+  tooltip: { type: ["boolean", "function", "object"] },
   annotations: { type: "array" },
+  // `frameProps` is a typed pass-through for advanced StreamFrame
+  // overrides — too unstructured to be useful in LLM tool definitions.
   frameProps: { type: "object", omitFromSchema: true },
+  // `onClick` is a function-only handler; LLMs can't populate it.
   onClick: { type: "function", omitFromSchema: true },
 }
 
@@ -98,7 +105,10 @@ const xyAxisProps: Record<string, ChartPropSpec> = {
 const ordinalAxisProps: Record<string, ChartPropSpec> = {
   categoryLabel: { type: "string" },
   valueLabel: { type: "string" },
-  valueFormat: { type: "function", omitFromSchema: true },
+  // `valueFormat` surfaces in schema as a function type — canonical
+  // GaugeChart already uses this shape. LLMs use it as a hint that
+  // numeric formatting is overridable; they can't populate it directly.
+  valueFormat: { type: "function" },
   categoryFormat: { type: "function", omitFromSchema: true },
 }
 
@@ -115,9 +125,14 @@ export const PROP_BAGS = {
 export const ORIENTATION_ENUM = ["vertical", "horizontal"] as const
 export const HORIZONTAL_VERTICAL_ENUM = ["horizontal", "vertical"] as const
 export const LEGEND_POSITION_ENUM = ["right", "left", "top", "bottom"] as const
+export const CURVE_ENUM = [
+  "linear", "monotoneX", "monotoneY", "step",
+  "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom",
+] as const
+export const CHART_MODE_ENUM = ["primary", "context", "sparkline"] as const
 
 // ---------------------------------------------------------------------------
-// Chart specs (Phase 2: BarChart + 14 ordinal charts)
+// Chart specs (Phase 3: ordinal + XY families)
 // ---------------------------------------------------------------------------
 //
 // Drift annotations (`omitFromSchema: true`) preserve the canonical Phase 2
@@ -377,11 +392,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       sweep: { type: "number", default: 240, description: "Arc sweep angle in degrees (gap centered at bottom)" },
       showNeedle: { type: "boolean", default: true },
       needleColor: { type: "string" },
-      // `valueFormat` and `centerContent` carry function-only types in
-      // validationMap; schema exposes valueFormat as string-only via the
-      // shared bag. centerContent and backgroundColor are runtime-only.
+      // GaugeChart only uses the `common` bag (no ordinalAxis), so
+      // `valueFormat` is an explicit ownProp. Both canonical schema and
+      // validationMap expose it. `centerContent` accepts ReactNode which
+      // can't be serialized into a tool definition; same for backgroundColor
+      // — kept runtime-only.
+      valueFormat: { type: "function" },
       centerContent: { type: ["object", "string", "number", "function"], omitFromSchema: true },
-      valueFormat: { type: "function", omitFromSchema: true },
       showScaleLabels: { type: "boolean", default: true },
       backgroundColor: { type: "string", omitFromSchema: true },
     },
@@ -455,6 +472,492 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // passes; the schema test relies on schema's value being identical.
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       barPadding: { type: "number", default: 20 },
+    },
+  },
+
+  // ─── XY family ────────────────────────────────────────────────────────
+
+  LineChart: {
+    name: "LineChart",
+    category: "xy",
+    description: "Line traces with curve interpolation, area fill, and point markers. Use for time series, trends, and continuous data.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x", description: "Key or accessor function for x-axis values" },
+      yAccessor: { type: ["string", "function"], default: "y", description: "Key or accessor function for y-axis values" },
+      lineBy: { type: ["string", "function"], description: "Key to group data into separate lines" },
+      lineDataAccessor: { type: "string", default: "coordinates", description: "Key for the coordinates array within each line object" },
+      curve: { type: "string", enum: CURVE_ENUM, default: "linear", description: "Curve interpolation method" },
+      lineWidth: { type: "number", default: 2, description: "Stroke width of the line" },
+      showPoints: { type: "boolean", default: false, description: "Show data point markers on the line" },
+      pointRadius: { type: "number", default: 3, description: "Radius of point markers when showPoints is true" },
+      fillArea: { type: "boolean", default: false, description: "Fill the area under the line" },
+      areaOpacity: { type: "number", default: 0.3, description: "Opacity of the filled area (0-1)" },
+    },
+  },
+
+  AreaChart: {
+    name: "AreaChart",
+    category: "xy",
+    description: "Filled area chart with optional stroke line. Use for showing volume or magnitude over time.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x", description: "Key for x-axis values" },
+      yAccessor: { type: ["string", "function"], default: "y", description: "Key for y-axis values" },
+      areaBy: { type: ["string", "function"], description: "Key to group data into separate areas" },
+      lineDataAccessor: { type: "string", default: "coordinates", description: "Key for the coordinates array within each area object" },
+      curve: { type: "string", enum: CURVE_ENUM, default: "monotoneX" },
+      areaOpacity: { type: "number", default: 0.7, description: "Area fill opacity (0-1)" },
+      showLine: { type: "boolean", default: true, description: "Show stroke line on top of area" },
+      lineWidth: { type: "number", default: 2 },
+    },
+  },
+
+  StackedAreaChart: {
+    name: "StackedAreaChart",
+    category: "xy",
+    description: "Stacked area chart with optional normalization to 100%. Use for part-to-whole trends over time.",
+    required: ["data", "areaBy"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y" },
+      areaBy: { type: ["string", "function"], description: "Key to group data into stacked areas" },
+      lineDataAccessor: { type: "string", default: "coordinates" },
+      curve: { type: "string", enum: CURVE_ENUM, default: "monotoneX" },
+      areaOpacity: { type: "number", default: 0.7 },
+      showLine: { type: "boolean", default: true },
+      lineWidth: { type: "number", default: 2 },
+      normalize: { type: "boolean", default: false, description: "Normalize stacks to 100%" },
+    },
+  },
+
+  Scatterplot: {
+    name: "Scatterplot",
+    category: "xy",
+    description: "Individual data points plotted by x/y position with optional size and color encoding.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y" },
+      sizeBy: { type: ["string", "function"], description: "Key for variable point sizing" },
+      sizeRange: { type: "array", default: [3, 15], description: "Min and max radius for sizeBy scaling" },
+      pointRadius: { type: "number", default: 5, description: "Fixed point radius" },
+      pointOpacity: { type: "number", default: 0.8 },
+    },
+  },
+
+  BubbleChart: {
+    name: "BubbleChart",
+    category: "xy",
+    description: "Scatterplot with required size dimension for three-variable comparison. Bubble area encodes a numeric value.",
+    required: ["data", "sizeBy"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      sizeBy: { type: ["string", "function"], description: "Key for bubble size (required)" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y" },
+      sizeRange: { type: "array", default: [5, 40] },
+      bubbleOpacity: { type: "number", default: 0.6 },
+      bubbleStrokeWidth: { type: "number", default: 1 },
+      bubbleStrokeColor: { type: "string", default: "white" },
+    },
+  },
+
+  Heatmap: {
+    name: "Heatmap",
+    category: "xy",
+    description: "Grid/matrix visualization with color-encoded cell values. Use for correlation matrices, time-frequency analysis.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor", "valueAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects with x, y, and value" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y" },
+      valueAccessor: { type: ["string", "function"], default: "value", description: "Key for the cell value" },
+      // Heatmap's colorScheme is a sequential scheme name (different enum
+      // from the categorical "category10"-family). Override common bag.
+      colorScheme: { type: "string", enum: ["blues", "reds", "greens", "viridis", "custom"] as const },
+      // `customColorScale` is a value-color escape hatch — runtime only.
+      customColorScale: { type: ["object", "function"], omitFromSchema: true },
+      showValues: { type: "boolean", default: false, description: "Display numeric values in cells" },
+      // Heatmap is XY-shaped but has a valueAccessor (not yAccessor), so
+      // it carries `valueFormat` for cell-value formatting — pulled from
+      // the ordinalAxis concept rather than the xyAxis bag.
+      valueFormat: { type: "function" },
+      cellBorderColor: { type: "string", default: "#fff" },
+      cellBorderWidth: { type: "number", default: 1 },
+      legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM, default: "right", description: "Position of the gradient legend" },
+    },
+  },
+
+  QuadrantChart: {
+    name: "QuadrantChart",
+    category: "xy",
+    description: "Scatterplot divided into four labeled, colored quadrants by center lines. Use for BCG matrices, priority matrices, and any 2x2 strategic framework.",
+    required: ["quadrants"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y" },
+      xCenter: { type: "number", description: "X-coordinate of the vertical center line. Defaults to midpoint of x domain." },
+      yCenter: { type: "number", description: "Y-coordinate of the horizontal center line. Defaults to midpoint of y domain." },
+      quadrants: { type: "object", description: "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with { label, color, opacity? }" },
+      // `centerlineStyle` is a runtime-only style escape hatch (similar
+      // shape to `frameProps`).
+      centerlineStyle: { type: "object", omitFromSchema: true },
+      showQuadrantLabels: { type: "boolean", default: true },
+      quadrantLabelSize: { type: "number", default: 12 },
+      sizeBy: { type: ["string", "function"], description: "Key for variable point sizing" },
+      sizeRange: { type: "array", default: [3, 15] },
+      pointRadius: { type: "number", default: 5 },
+      pointOpacity: { type: "number", default: 0.8 },
+    },
+  },
+
+  MultiAxisLineChart: {
+    name: "MultiAxisLineChart",
+    category: "xy",
+    description: "Dual Y-axis line chart for comparing two series with different scales on the same x axis. Data is unitized (normalized to [0,1]) internally; left axis shows series[0] values and right axis shows series[1] values in original units. Falls back to standard multi-line if not exactly 2 series.",
+    required: ["series"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects shared by both series" },
+      xAccessor: { type: ["string", "function"], default: "x", description: "Key for x values" },
+      series: { type: "array", description: "Exactly 2 series configs for dual-axis mode. Each: { yAccessor, label?, color?, format?, extent? }" },
+      // Override common-bag colorScheme: MultiAxis can take a string name OR an array.
+      colorScheme: { type: ["string", "array"] },
+      curve: { type: "string", default: "monotoneX" },
+      lineWidth: { type: "number", default: 2 },
+    },
+  },
+
+  CandlestickChart: {
+    name: "CandlestickChart",
+    category: "xy",
+    description: "OHLC candlestick bars, or a range chart when open/close are omitted. Honors mode (primary/context/sparkline). Range variant degrades cleanly: endpoint dots + wick, sized against canvas height so sparkline rows don't render marble-sized dots.",
+    required: ["highAccessor", "lowAccessor"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "highAccessor", "lowAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array" },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      highAccessor: { type: ["string", "function"], default: "high", description: "Required. Upper bound (candlestick high or range top)." },
+      lowAccessor: { type: ["string", "function"], default: "low", description: "Required. Lower bound (candlestick low or range bottom)." },
+      openAccessor: { type: ["string", "function"], description: "Optional. Pair with closeAccessor for OHLC; omit both to render a range chart." },
+      closeAccessor: { type: ["string", "function"], description: "Optional. See openAccessor." },
+      candlestickStyle: { type: "object", description: "Style overrides." },
+      mode: { type: "string", enum: CHART_MODE_ENUM },
+    },
+  },
+
+  ConnectedScatterplot: {
+    name: "ConnectedScatterplot",
+    category: "xy",
+    description: "Scatterplot where points are connected in order, showing trajectories through 2D space. Viridis-colored start→end, white halo under lines.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of data objects" },
+      xAccessor: { type: ["string", "function"], default: "x", description: "Key for x-axis values" },
+      yAccessor: { type: ["string", "function"], default: "y", description: "Key for y-axis values" },
+      orderAccessor: { type: ["string", "function"], description: "Key for point ordering (number or Date field)" },
+      orderLabel: { type: "string", description: "Label for the ordering metric in tooltips" },
+      pointRadius: { type: "number", default: 4, description: "Point radius" },
+      pointIdAccessor: { type: ["string", "function"], description: "Accessor for unique point IDs, used by point-anchored annotations" },
+    },
+  },
+
+  ScatterplotMatrix: {
+    name: "ScatterplotMatrix",
+    category: "xy",
+    description: "Multi-panel scatterplot grid with crossfilter brushing. Requires data array with numeric fields.",
+    required: ["data", "fields"],
+    dataShape: "array",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "array" },
+      fields: { type: "array" },
+    },
+  },
+
+  MinimapChart: {
+    name: "MinimapChart",
+    category: "xy",
+    description: "Overview + detail chart with linked zoom. Wraps an XY chart with a minimap navigation pane.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "array" },
+    },
+  },
+
+  // ─── Network family ──────────────────────────────────────────────────
+
+  ForceDirectedGraph: {
+    name: "ForceDirectedGraph",
+    category: "network",
+    description: "Physics-based node-link diagram. Use for relationships, social networks, knowledge graphs.",
+    required: ["nodes", "edges"],
+    dataShape: "network",
+    dataAccessors: ["nodeIDAccessor", "sourceAccessor", "targetAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      nodes: { type: "array", description: "Array of node objects" },
+      edges: { type: "array", description: "Array of edge objects with source and target" },
+      nodeIDAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
+      sourceAccessor: { type: ["string", "function"], default: "source", description: "Key for edge source node ID" },
+      targetAccessor: { type: ["string", "function"], default: "target", description: "Key for edge target node ID" },
+      nodeLabel: { type: ["string", "function"], description: "Key or accessor for node labels" },
+      nodeSize: { type: ["number", "string", "function"], default: 8, description: "Fixed node radius or key for variable sizing" },
+      nodeSizeRange: { type: "array", default: [5, 20] },
+      edgeWidth: { type: ["number", "string", "function"], default: 1, description: "Fixed edge width or key for variable width" },
+      edgeColor: { type: "string", default: "#999" },
+      edgeOpacity: { type: "number", default: 0.6 },
+      iterations: { type: "number", default: 300, description: "Force simulation iterations" },
+      forceStrength: { type: "number", default: 0.1 },
+      showLabels: { type: "boolean", default: false },
+    },
+  },
+
+  SankeyDiagram: {
+    name: "SankeyDiagram",
+    category: "network",
+    description: "Flow diagram showing weighted connections between nodes. Use for flows, budgets, process mapping.",
+    required: ["edges"],
+    dataShape: "network",
+    dataAccessors: ["sourceAccessor", "targetAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      edges: { type: "array", description: "Array of edge objects with source, target, and value" },
+      nodes: { type: "array", description: "Optional array of node objects (auto-derived from edges if omitted)" },
+      sourceAccessor: { type: ["string", "function"], default: "source" },
+      targetAccessor: { type: ["string", "function"], default: "target" },
+      valueAccessor: { type: ["string", "function"], default: "value", description: "Key for edge flow value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "id" },
+      edgeColorBy: { type: ["string", "function"], enum: ["source", "target", "gradient"] as const, default: "source", description: "How to color edges" },
+      orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
+      nodeAlign: { type: "string", enum: ["justify", "left", "right", "center"] as const, default: "justify" },
+      nodePaddingRatio: { type: "number", default: 0.05 },
+      nodeWidth: { type: "number", default: 15 },
+      nodeLabel: { type: ["string", "function"], description: "Key for node labels" },
+      showLabels: { type: "boolean", default: true },
+      edgeOpacity: { type: "number", default: 0.5 },
+      // `edgeSort` is a comparator function — runtime-only.
+      edgeSort: { type: "function", omitFromSchema: true },
+    },
+  },
+
+  ChordDiagram: {
+    name: "ChordDiagram",
+    category: "network",
+    description: "Circular diagram showing inter-relationships and flow volumes between groups.",
+    required: ["edges"],
+    dataShape: "network",
+    dataAccessors: ["sourceAccessor", "targetAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      edges: { type: "array", description: "Array of edge objects with source, target, and value" },
+      nodes: { type: "array", description: "Optional array of node objects" },
+      sourceAccessor: { type: ["string", "function"], default: "source" },
+      targetAccessor: { type: ["string", "function"], default: "target" },
+      valueAccessor: { type: ["string", "function"], default: "value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "id" },
+      edgeColorBy: { type: ["string", "function"], enum: ["source", "target"] as const, default: "source" },
+      padAngle: { type: "number", default: 0.01 },
+      groupWidth: { type: "number", default: 20 },
+      // `sortGroups` is a comparator function — runtime-only.
+      sortGroups: { type: "function", omitFromSchema: true },
+      nodeLabel: { type: ["string", "function"] },
+      showLabels: { type: "boolean", default: true },
+      edgeOpacity: { type: "number", default: 0.5 },
+    },
+  },
+
+  TreeDiagram: {
+    name: "TreeDiagram",
+    category: "network",
+    description: "Hierarchical tree layout. Supports tree, cluster, partition, and radial orientations. Data is a single root node with children.",
+    required: ["data"],
+    dataShape: "object",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "object", description: "Root node object with nested children" },
+      layout: { type: "string", enum: ["tree", "cluster", "partition", "treemap", "circlepack"] as const, default: "tree" },
+      orientation: { type: "string", enum: ["vertical", "horizontal", "radial"] as const, default: "vertical" },
+      childrenAccessor: { type: ["string", "function"], default: "children", description: "Key for the children array in each node" },
+      valueAccessor: { type: ["string", "function"], default: "value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "name" },
+      colorByDepth: { type: "boolean", default: false, description: "Color nodes by their depth in the hierarchy" },
+      edgeStyle: { type: "string", enum: ["line", "curve"] as const, default: "curve" },
+      nodeLabel: { type: ["string", "function"] },
+      showLabels: { type: "boolean", default: true },
+      nodeSize: { type: "number", default: 5 },
+    },
+  },
+
+  Treemap: {
+    name: "Treemap",
+    category: "network",
+    description: "Space-filling rectangular hierarchy visualization. Data is a single root node with nested children.",
+    required: ["data"],
+    dataShape: "object",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "object", description: "Root node object with nested children" },
+      childrenAccessor: { type: ["string", "function"], default: "children" },
+      valueAccessor: { type: ["string", "function"], default: "value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "name" },
+      colorByDepth: { type: "boolean", default: false },
+      showLabels: { type: "boolean", default: true },
+      nodeLabel: { type: ["string", "function"] },
+    },
+  },
+
+  CirclePack: {
+    name: "CirclePack",
+    category: "network",
+    description: "Nested circles representing hierarchical data. Data is a single root node with nested children.",
+    required: ["data"],
+    dataShape: "object",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "object", description: "Root node object with nested children" },
+      childrenAccessor: { type: ["string", "function"], default: "children" },
+      valueAccessor: { type: ["string", "function"], default: "value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "name" },
+      colorByDepth: { type: "boolean", default: false },
+      showLabels: { type: "boolean", default: true },
+      nodeLabel: { type: ["string", "function"] },
+      circleOpacity: { type: "number", default: 0.7 },
+    },
+  },
+
+  OrbitDiagram: {
+    name: "OrbitDiagram",
+    category: "network",
+    description: "Animated orbital diagram showing hierarchical data as nodes orbiting a center. Supports flat, solar, atomic, and custom ring arrangements.",
+    required: ["data"],
+    dataShape: "object",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      data: { type: "object", description: "Hierarchical root object with children: { name: 'root', children: [...] }" },
+      childrenAccessor: { type: ["string", "function"], default: "children", description: "Key to access children from each datum" },
+      nodeIdAccessor: { type: ["string", "function"], default: "name", description: "Key to identify each node" },
+      colorByDepth: { type: "boolean", default: false, description: "Color by hierarchy depth" },
+      orbitMode: { type: ["string", "array"], default: "flat", description: "Ring arrangement: 'flat', 'solar', 'atomic', or number[]" },
+      orbitSize: { type: ["number", "function"], default: 2.95, description: "Ring size divisor per depth" },
+      speed: { type: "number", default: 0.25, description: "Orbit speed in degrees per frame" },
+      eccentricity: { type: ["number", "function"], default: 1, description: "Vertical squash for elliptical orbits (1 = circle)" },
+      showRings: { type: "boolean", default: true, description: "Show orbital ring paths" },
+      nodeRadius: { type: ["number", "function"], default: 6, description: "Node radius" },
+      showLabels: { type: "boolean", default: false, description: "Show node labels" },
+      animated: { type: "boolean", default: true, description: "Enable animation" },
+      // `revolution` is a per-node phase override — runtime-only.
+      revolution: { type: "function", omitFromSchema: true },
+      // `foregroundGraphics` is a render-on-top escape hatch (StreamFrame
+      // pass-through), runtime-only.
+      foregroundGraphics: { type: "object", omitFromSchema: true },
+    },
+  },
+
+  // ─── Geo family ──────────────────────────────────────────────────────
+
+  ChoroplethMap: {
+    name: "ChoroplethMap",
+    category: "geo",
+    description: "Geographic choropleth map with colored regions based on data values.",
+    required: ["areas"],
+    dataShape: "array",
+    dataAccessors: ["valueAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      areas: { type: ["array", "string"], description: "GeoJSON features or reference geography name" },
+      valueAccessor: { type: ["string", "function"] },
+      colorScheme: { type: ["string", "array"] },
+      projection: { type: "string", default: "equalEarth" },
+    },
+  },
+
+  ProportionalSymbolMap: {
+    name: "ProportionalSymbolMap",
+    category: "geo",
+    description: "Geographic map with sized symbols at point locations.",
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      points: { type: "array" },
+      xAccessor: { type: ["string", "function"], default: "lon" },
+      yAccessor: { type: ["string", "function"], default: "lat" },
+      sizeBy: { type: ["string", "function"] },
+      areas: { type: ["array", "string"] },
+    },
+  },
+
+  FlowMap: {
+    name: "FlowMap",
+    category: "geo",
+    description: "Geographic flow map showing movement between locations with animated particles.",
+    required: ["flows"],
+    dataShape: "array",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      flows: { type: "array" },
+      nodes: { type: "array" },
+      valueAccessor: { type: ["string", "function"] },
+    },
+  },
+
+  DistanceCartogram: {
+    name: "DistanceCartogram",
+    category: "geo",
+    description: "Cartogram distorting geographic positions based on travel time or cost from a center point.",
+    required: ["points"],
+    dataShape: "array",
+    dataAccessors: [],
+    propBags: ["common"],
+    ownProps: {
+      points: { type: "array" },
+      center: { type: "array" },
+      costAccessor: { type: ["string", "function"] },
     },
   },
 }

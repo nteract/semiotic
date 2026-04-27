@@ -54,28 +54,16 @@ describe("Chart Spec Registry round-trip", () => {
     describe(name, () => {
       const composed = composeProps(spec)
 
-      it("generates a schema tool entry with matching top-level structure", () => {
-        // Phase 2 acceptance: only the structural envelope (name,
-        // description, required, parameters.type) is asserted byte-for-byte
-        // against the canonical schema. Per-prop equivalence is intentionally
-        // NOT checked here — the canonical schema entries were hand-curated
-        // chart-by-chart with inconsistent prop coverage, default values,
-        // and enum orderings (see drift annotations in chartSpecs.ts). Phase
-        // 3 re-baselines schema.json to match the registry's deterministic
-        // output, at which point this test can tighten to byte-for-byte
-        // per-prop equivalence.
+      it("generates a schema tool entry that matches the canonical schema.json byte-for-byte", () => {
+        // Phase 3a tightened this from the Phase 2 structural-only check.
+        // `ai/schema.json` is now regenerated from `chartSpecs.ts` via
+        // `npx tsx scripts/regenerate-schema.ts`. Edits to chartSpecs.ts
+        // must be paired with a regeneration commit; this test fails the
+        // build otherwise.
         const generated = generateSchemaToolEntry(spec, composed)
         const canonical = schema.tools.find((t) => t.function.name === name)!
         expect(canonical, `${name} present in canonical schema`).toBeDefined()
-
-        expect(generated.type).toBe(canonical.type)
-        expect(generated.function.name).toBe(canonical.function.name)
-        expect(generated.function.description, `${name} description`).toBe(canonical.function.description)
-        expect(generated.function.parameters.required, `${name} required`).toEqual(canonical.function.parameters.required)
-        expect(generated.function.parameters.type).toBe("object")
-        // Generated schema must produce SOME properties. (Catches the
-        // degenerate case where a registry edit drops every prop.)
-        expect(Object.keys(generated.function.parameters.properties).length, `${name} has at least one schema prop`).toBeGreaterThan(0)
+        expect(generated, `${name} schema entry round-trips`).toEqual(canonical)
       })
 
       it("generates a validationMap entry that matches the canonical VALIDATION_MAP", () => {

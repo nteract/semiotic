@@ -6,15 +6,18 @@
  * full files.
  */
 
-// JSON-Schema-friendly subset of the runtime type set.
-// "function" is dropped because LLMs can't supply function values, and
-// any prop typed as exclusively "function" is omitted entirely (those
-// are handler/callback props the LLM shouldn't be asked to populate).
+// Schema types are kept as-is from the registry, including `"function"`
+// in union types. Canonical schema entries like
+// `RidgelinePlot.tooltip: ["function", "object"]` and
+// `SwimlaneChart.onBrush: "function"` already use this convention — LLMs
+// can read the type union and choose a non-function alternative when
+// they can't supply a function value. Use `omitFromSchema: true` on a
+// spec to hide a prop from schema entirely (e.g. `frameProps`).
 function toSchemaType(typeOrTypes) {
-  const types = Array.isArray(typeOrTypes) ? typeOrTypes : [typeOrTypes]
-  const filtered = types.filter((t) => t !== "function")
-  if (filtered.length === 0) return null  // function-only → omit prop
-  return filtered.length === 1 ? filtered[0] : filtered
+  if (Array.isArray(typeOrTypes)) {
+    return typeOrTypes.length === 1 ? typeOrTypes[0] : typeOrTypes
+  }
+  return typeOrTypes
 }
 
 // Annotation prop spec is a single shared blob across every chart that
@@ -51,7 +54,6 @@ export function generateSchemaToolEntry(spec, composedProps) {
   for (const [propName, propSpec] of Object.entries(composedProps)) {
     if (propSpec.omitFromSchema) continue
     const schemaType = toSchemaType(propSpec.type)
-    if (schemaType === null) continue
 
     if (propName === "annotations") {
       // Use the shared annotations blob rather than the bare

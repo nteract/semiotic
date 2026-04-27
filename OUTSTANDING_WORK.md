@@ -70,11 +70,9 @@ export const CHART_SPECS: Record<string, ChartSpec> = { /* one entry per HOC */ 
 
 2. ✅ **Phase 2 — Categorical family (shipped).** All 15 ordinal charts in `chartSpecs.ts`. 45 round-trip tests. `validationMap` round-trip is byte-for-byte; schema round-trip asserts structural envelope only (canonical schema entries are individually hand-curated and inconsistent — Phase 3 re-baselines).
 
-3. **Phase 3 — Re-baseline schema.json + XY/network/geo migration.** Two intertwined deliverables:
-   - Tighten the schema round-trip test to byte-for-byte per-prop equivalence. Run the schema generator to regenerate `ai/schema.json` from CHART_SPECS. Diff will surface cases where the registry exposes props canonical missed (showGrid on PieChart, common metadata on GaugeChart, etc.). Accept the diff or annotate with `omitFromSchema` per chart.
-   - Convert remaining ~23 specs in three smaller PRs by family (XY, network, geo).
+3. ✅ **Phase 3 — Re-baseline schema.json + XY/network/geo migration (shipped).** All 38 non-realtime charts (15 ordinal + 12 XY + 7 network + 4 geo) registered in `chartSpecs.ts`. Schema round-trip is byte-for-byte. `ai/schema.json` regenerates 38 of 43 entries from CHART_SPECS; the remaining 5 are the realtime charts (`RealtimeLineChart`, `RealtimeHistogram`, `RealtimeSwarmChart`, `RealtimeWaterfallChart`, `RealtimeHeatmap`), which `regenerate-schema.ts` preserves as canonical-only. Round-trip suite is now 114 tests (38 × 3).
 
-4. **Phase 4 — Retire compensating gates.** Once all charts are migrated and `check:chart-specs` covers the full set, remove the inputs to `check:schema` (it can no longer drift) and trim `check:surface` to its remaining unique responsibility (renderability vs. registry import map). Update CHANGELOG to note the new authoring path.
+4. **Phase 4 — Retire compensating gates.** Once all charts are migrated and `check:chart-specs` covers the full set, remove the inputs to `check:schema` (it can no longer drift) and trim `check:surface` to its remaining unique responsibility (renderability vs. registry import map). Decide whether to bring the 5 realtime charts into the registry or keep `check:schema` as their drift gate. Update CHANGELOG to note the new authoring path.
 
 **Risks and friction**:
 
