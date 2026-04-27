@@ -30,6 +30,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { extractGeoNavPoints, nextIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -228,6 +229,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       legendClickBehavior,
       legendHighlightedCategory,
       legendIsolatedCategories,
+      legendCategoryAccessor,
+      onCategoriesChange,
       showAxes,
       accessibleTable = true,
       description,
@@ -359,6 +362,30 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // Staleness
     const [isStale, setIsStale] = useState(false)
+
+    // ── Push-mode legend category emission ───────────────────────────
+    // Mirrors StreamXYFrame: keep the latest accessor + callback in
+    // refs so the renderFn closure (recomputed via dirtyRef) reads
+    // current values without rebinding. Each rebuild of the scene
+    // diffs the discovered category list against the last emit and
+    // fires `onCategoriesChange` only on change. Empty data, missing
+    // accessor, or no callback are all no-ops; this is safe to call
+    // unconditionally inside the render loop.
+    const lastLegendCategoriesRef = useRef<string[]>([])
+    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
+    const onCategoriesChangeRef = useRef(onCategoriesChange)
+    legendCategoryAccessorRef.current = legendCategoryAccessor
+    onCategoriesChangeRef.current = onCategoriesChange
+
+    const emitLegendCategories = useCallback(() => {
+      const accessor = legendCategoryAccessorRef.current
+      const onChange = onCategoriesChangeRef.current
+      if (!onChange || !accessor) return
+      const categories = extractCategoryDomain(storeRef.current?.getPoints() ?? [], accessor)
+      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
+      lastLegendCategoriesRef.current = categories
+      onChange(categories)
+    }, [])
 
     // scheduleRender comes from useFrame above.
 
@@ -693,6 +720,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
         // Update canvas aria-label imperatively after scene changes
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
+
+        // Emit live category domain for push-mode legend synthesis.
+        // Runs after the scene rebuild so HOC-side `useChartSetup` /
+        // `useStreamingLegend` see the same category set the renderer
+        // just drew.
+        emitLegendCategories()
       }
 
       const dpr = getDevicePixelRatio()

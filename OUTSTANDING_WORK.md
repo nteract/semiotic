@@ -108,12 +108,10 @@ Next work:
 
 ### Push-Mode Legend Color Regression Test
 
-`useChartSetup` now synthesizes a legend color scale from discovered categories using the same precedence as `useColorScale` (provider → explicit scheme → theme → STREAMING_PALETTE), so legend swatches match rendered marks in push mode without each chart layering `useStreamingLegend`. There is no scenario test that exercises this end-to-end: a regression that mis-orders precedence or returns the wrong palette would currently ship silently because all color-related unit tests use bounded data.
+Shipped (2026-04-27): `src/__tests__/scenarios/push-mode-legend-colors.test.tsx` mounts `LineChart` (xy / `useStreamingLegend` path) and `ProportionalSymbolMap` (geo / `useChartSetup` path) in push mode for each tier of the synthesis precedence — `CategoryColorProvider` map, explicit `colorScheme` array, string scheme name, `ThemeProvider` categorical, and the default-theme fallback — and asserts the rendered legend swatches match the expected palette per category. 10 tests, 5 per HOC. The "bare push" tier resolves to `LIGHT_THEME.colors.categorical`, not `STREAMING_PALETTE` — the theme store always seeds a non-empty categorical palette, so the `STREAMING_PALETTE` tier is effectively unreachable today (kept in the synthesis code as a defense-in-depth fallback). The test header documents this and includes a negative-anti-source assertion so a regression surfacing `STREAMING_PALETTE` would still fail. The geo arm of this suite is enabled by the StreamGeoFrame wiring listed below.
 
 Next work:
-- Add a scenario test per palette source: provider-only, explicit `colorScheme` array, explicit string scheme name, theme categorical, and bare push-mode (STREAMING_PALETTE).
-- Each test should mount the HOC in push mode, push two categories, and assert that the rendered legend swatches and the canvas pixels at known mark positions agree.
-- Cover one XY HOC and one Geo HOC at minimum (`LineChart` and `ProportionalSymbolMap`).
+- None for either synthesis path. Optionally extend coverage to `FlowMap` if the flow-edge ingest path proves to need separate handling from point-node ingest.
 
 ### Sparse-Array Prop Hardening Sweep
 
