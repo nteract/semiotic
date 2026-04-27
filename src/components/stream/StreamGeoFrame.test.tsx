@@ -103,28 +103,25 @@ describe("StreamGeoFrame — legend category emission", () => {
       />
     )
 
-    await act(async () => {
+    act(() => {
       ref.current!.pushMany([
         { id: "a", lon: 0, lat: 0, cat: "A" },
         { id: "b", lon: 10, lat: 10, cat: "B" },
       ])
-      await new Promise((r) => setTimeout(r, 50))
     })
     await waitFor(() => {
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
     })
 
-    await act(async () => {
+    act(() => {
       ref.current!.removePoint("b")
-      await new Promise((r) => setTimeout(r, 50))
     })
     await waitFor(() => {
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
     })
 
-    await act(async () => {
+    act(() => {
       ref.current!.clear()
-      await new Promise((r) => setTimeout(r, 50))
     })
     await waitFor(() => {
       expect(onCategoriesChange).toHaveBeenLastCalledWith([])

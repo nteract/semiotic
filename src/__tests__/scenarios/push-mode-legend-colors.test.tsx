@@ -67,9 +67,9 @@ afterEach(() => {
 // group containing every category in a legend group; each category is a
 // nested `<g aria-label="...">` with the colored swatch as its first
 // `<rect>`. styleFn writes the category color to `rect.style.fill`.
-// `expectedCount` covers the streaming gap: a push fires its own paint
-// before the category-domain callback updates state, so reading too
-// early can return a partial legend.
+// `expectedCount` is the polled condition that drives the timing — the
+// rAF-driven render loop pushes the new categories asynchronously, so we
+// wait on the observable DOM rather than guessing at a sleep interval.
 async function readLegendSwatches(
   container: HTMLElement,
   expectedCount: number,
@@ -138,12 +138,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { x: 0, y: 0, cat: "A" },
           { x: 1, y: 1, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -171,12 +170,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { x: 0, y: 0, cat: "A" },
           { x: 1, y: 1, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -186,7 +184,7 @@ describe("push-mode legend color regression", () => {
       expect(swatches[0]).not.toBe(normalizeColor(STREAMING_PALETTE[0]))
     })
 
-    it("string colorScheme name resolves and matches canvas marks", async () => {
+    it("string colorScheme name resolves to a distinct per-category swatch", async () => {
       const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
       const { container } = render(
         <TooltipProvider>
@@ -204,12 +202,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { x: 0, y: 0, cat: "A" },
           { x: 1, y: 1, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -236,12 +233,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { x: 0, y: 0, cat: "A" },
           { x: 1, y: 1, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -274,12 +270,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { x: 0, y: 0, cat: "A" },
           { x: 1, y: 1, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -319,12 +314,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -346,12 +340,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -360,7 +353,7 @@ describe("push-mode legend color regression", () => {
       expect(swatches[0]).not.toBe(normalizeColor(STREAMING_PALETTE[0]))
     })
 
-    it("string colorScheme name resolves and matches canvas marks", async () => {
+    it("string colorScheme name resolves to a distinct per-category swatch", async () => {
       const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
       const { container } = render(
         <TooltipProvider>
@@ -372,12 +365,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -395,12 +387,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
@@ -417,12 +408,11 @@ describe("push-mode legend color regression", () => {
         </TooltipProvider>,
       )
 
-      await act(async () => {
+      act(() => {
         ref.current!.pushMany([
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
         ])
-        await new Promise((r) => setTimeout(r, 200))
       })
 
       const swatches = (await readLegendSwatches(container, 2)).map(normalizeColor)
