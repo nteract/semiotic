@@ -11,8 +11,17 @@
  * Runs in milliseconds (no vitest spin-up), so it's safe to chain after
  * `npm run test` in release/prepublish without re-paying vitest startup.
  *
- * Run via `npm run check:chart-specs`. Fix drift by editing
- * `chartSpecs.ts` and running `npm run docs:chart-specs:schema`.
+ * Run via `npm run check:chart-specs`. Drift can come from any of the
+ * four sources, so fix accordingly:
+ *   - schema drift  → edit `chartSpecs.ts`, then run
+ *                      `npm run docs:chart-specs:schema` to refresh
+ *                      `ai/schema.json` from the registry.
+ *   - validationMap → edit `src/components/charts/shared/validationMap.ts`
+ *                      to match the spec (the registry's `composeProps`
+ *                      output is the source of truth).
+ *   - componentMetadata
+ *                   → edit `ai/componentMetadata.cjs` so the chart appears
+ *                      under the bucket named by `spec.category`.
  */
 import { createRequire } from "node:module"
 import { readFileSync } from "node:fs"
@@ -130,7 +139,12 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
 if (errors.length) {
   console.error("\n✗ chart-specs drift detected:\n")
   for (const err of errors) console.error(`  - ${err}`)
-  console.error("\nFix: edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`.\n")
+  console.error(
+    "\nFix:" +
+      "\n  - schema drift           → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
+      "\n  - validationMap drift    → edit src/components/charts/shared/validationMap.ts to match composeProps()" +
+      "\n  - componentMetadata drift → edit ai/componentMetadata.cjs to bucket the chart under spec.category\n",
+  )
   process.exit(1)
 }
 

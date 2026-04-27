@@ -179,12 +179,15 @@ export const CURVE_ENUM = [
 export const CHART_MODE_ENUM = ["primary", "context", "sparkline"] as const
 
 // ---------------------------------------------------------------------------
-// Chart specs (Phase 3: ordinal + XY families)
+// Chart specs (XY, ordinal, network, geo, and realtime families)
 // ---------------------------------------------------------------------------
 //
-// Drift annotations (`omitFromSchema: true`) preserve the canonical Phase 2
-// surface. Phase 3+ can drop these omits to expose the prop to LLM tools
-// once we've audited each addition individually.
+// Drift annotations (`omitFromSchema: true`) tag props that are runtime-only
+// — callbacks, escape hatches, comparator functions an LLM can't supply.
+// They appear in validationMap (so the runtime accepts them) but are
+// dropped from `ai/schema.json` (so tool-calling models don't try to fill
+// them). Drop the annotation if a prop becomes meaningfully callable from
+// a structured config.
 
 export const CHART_SPECS: Record<string, ChartSpec> = {
   BarChart: {

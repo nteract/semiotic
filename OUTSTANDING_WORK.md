@@ -25,7 +25,7 @@ Next work:
 
 ### Chart Spec Registry (Schema/Validation/MCP Consolidation)
 
-**Phase 1 + Phase 2 shipped (2026-04-26).** `chartSpecs.ts` exists with all 15 ordinal charts, three pure-function generators (`generateSchemaToolEntry`, `generateValidationMapEntry`, `generateMetadataEntry`), and a 45-test round-trip suite that locks in byte-for-byte validationMap equivalence per chart. `check:chart-specs` is wired up. Drift annotations preserve canonical schema during the migration; Phase 3 re-baselines schema.json to match registry output.
+**Phase 1 + Phase 2 shipped (2026-04-26).** `chartSpecs.ts` exists with all 15 ordinal charts, three pure-function generators (`generateSchemaToolEntry`, `generateValidationMapEntry`, `generateMetadataEntry`), and a 45-test round-trip suite that locks in deep structural validationMap equivalence per chart. `check:chart-specs` is wired up. Drift annotations preserve canonical schema during the migration; Phase 3 re-baselines schema.json to match registry output.
 
 Three files describe each chart's prop surface in different shapes today, and adding a chart means three coordinated edits plus three drift-detection checks (`check:schema`, `check:surface`, `check:ai-contracts`). The hand-curation cost compounds: schema enums, validation type unions, and MCP renderability flags all encode the same "what props does this chart accept?" knowledge in three places.
 
