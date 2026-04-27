@@ -21,9 +21,15 @@ import { validateNetworkData } from "../shared/validateChartData"
 export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
   /**
    * Array of node objects. Each node must have a unique id (or other field
-   * named by `nodeIDAccessor`). Required: a `nodes` array must be provided
-   * even if it can be inferred from edge endpoints — pass an explicit list
-   * so layout can run.
+   * named by `nodeIDAccessor`).
+   *
+   * **Required for static rendering**: when `edges` is provided, `nodes`
+   * must be too — even if it could be inferred from edge endpoints, pass
+   * an explicit list so layout can run.
+   *
+   * **Push mode**: omit BOTH `nodes` and `edges` to opt into ref-based
+   * push mode. Validation skips both arrays in that case and the chart
+   * accumulates topology from `ref.current.push(...)` calls.
    * @example
    * ```ts
    * [{ id: "A", group: "core" }, { id: "B", group: "leaf" }]
@@ -32,7 +38,8 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
   nodes?: TNode[]
   /**
    * Array of edge objects. Each edge must reference two node ids via
-   * `sourceAccessor` and `targetAccessor`. Required.
+   * `sourceAccessor` and `targetAccessor`. Required for static rendering;
+   * omit together with `nodes` for push mode (see above).
    * @example
    * ```ts
    * [{ source: "A", target: "B", weight: 3 }]

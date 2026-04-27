@@ -38,8 +38,10 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    */
   categoryAccessor?: ChartAccessor<TDatum, string>
   /**
-   * Field name or function returning the wedge value (slice size). Negative
-   * values are not supported.
+   * Field name or function returning the wedge value (slice size). Values
+   * are aggregated by absolute magnitude (`Math.abs`), so negative inputs
+   * render as positive-sized wedges. If your data has signed values you
+   * need to differentiate, sign-encode via `colorBy` or pre-process.
    * @default "value"
    */
   valueAccessor?: ChartAccessor<TDatum, number>

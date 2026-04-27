@@ -215,41 +215,53 @@ function BrushOverlay({
 // ── MinimapChart ────────────────────────────────────────────────────────
 
 /**
- * MinimapChart - Pair an overview chart with a brushable detail chart.
+ * MinimapChart - Line chart paired with a brushable overview minimap.
  *
- * Renders the wrapped XY chart twice: once at full data extent (the
- * minimap), once zoomed into the brushed range (the detail). Drag in the
- * minimap to update the detail's domain; the two views stay linked via
- * `brushDirection` ("x" by default, "y" for vertical scrolling).
+ * Renders the same line data twice: a compressed overview (the minimap)
+ * and a zoomed detail view of the brushed range. Drag in the minimap to
+ * update the detail's domain. The minimap configuration (height, axes,
+ * brush direction) is nested under the `minimap` prop; brush state is
+ * exposed via `onBrush` (callback) and `brushExtent` (controlled value).
  *
  * Useful for long time series where the user needs both context and
- * detail without losing track of where they are in the full range.
+ * detail without losing their place in the full range.
  *
  * @example
  * ```tsx
- * // Time series with minimap below detail
+ * // Time series with default minimap below the detail view
  * <MinimapChart
- *   chart="LineChart"
  *   data={timeSeries}
  *   xAccessor="date"
  *   yAccessor="value"
- *   brushDirection="x"
- *   minimapHeight={80}
  *   xScaleType="time"
+ *   minimap={{ height: 80, brushDirection: "x" }}
  * />
  * ```
  *
  * @example
  * ```tsx
- * // Scatter detail + minimap with starting brush selection
+ * // Multi-series with a starting brush selection and an onBrush callback
  * <MinimapChart
- *   chart="Scatterplot"
- *   data={observations}
- *   xAccessor="x"
- *   yAccessor="y"
- *   colorBy="cluster"
- *   initialExtent={[100, 500]}
- *   onBrushChange={(extent) => console.log(extent)}
+ *   data={timeSeries}
+ *   xAccessor="t"
+ *   yAccessor="v"
+ *   lineBy="series"
+ *   colorBy="series"
+ *   minimap={{ height: 60, showAxes: true }}
+ *   brushExtent={[100, 500]}
+ *   onBrush={(extent) => console.log("brushed:", extent)}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Render the minimap above the detail rather than below
+ * <MinimapChart
+ *   data={timeSeries}
+ *   xAccessor="date"
+ *   yAccessor="value"
+ *   renderBefore
+ *   minimap={{ height: 50, background: "#f8fafc" }}
  * />
  * ```
  */
