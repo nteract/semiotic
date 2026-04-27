@@ -65,12 +65,12 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
   /**
    * Constant pixel radius, or a function/field returning a numeric value
    * scaled into `nodeSizeRange`.
-   * @default 6
+   * @default 8
    */
   nodeSize?: number | ChartAccessor<TNode, number>
   /**
    * Min/max pixel radius when `nodeSize` is data-driven.
-   * @default [4, 20]
+   * @default [5, 20]
    */
   nodeSizeRange?: [number, number]
   /**

@@ -57,15 +57,17 @@ const SCHEME_MAP: Record<string, (t: number) => string> = {
  */
 export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /**
-   * GeoJSON Features (one per region) or a reference string the library
-   * resolves into bundled topology: `"world-110m"`, `"world-50m"`,
-   * `"land-110m"`, `"land-50m"`. For custom geographies, pass a
-   * `FeatureCollection` directly. Each feature's `properties` should carry
-   * the value `valueAccessor` reads.
+   * Either a `GeoJSON.Feature[]` array (one feature per region) or a
+   * reference string the library resolves into bundled topology:
+   * `"world-110m"`, `"world-50m"`, `"land-110m"`, `"land-50m"`. To pass a
+   * custom geography stored as a `FeatureCollection`, hand its `.features`
+   * array in. Each feature's `properties` should carry the value
+   * `valueAccessor` reads.
    * @example
    * ```ts
-   * areas="world-110m"           // bundled world borders
-   * areas={features}              // GeoJSON.Feature[]
+   * areas="world-110m"                  // bundled world borders
+   * areas={features}                     // GeoJSON.Feature[]
+   * areas={featureCollection.features}   // FeatureCollection → unwrap to .features
    * areas={mergeData(world, rows, { featureKey: "iso", dataKey: "iso" })}
    * ```
    */

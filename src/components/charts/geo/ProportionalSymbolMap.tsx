@@ -113,10 +113,11 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
  *
  * @example
  * ```tsx
- * // Push API — stream new observations onto the map
+ * // Push API — stream new observations onto the map.
+ * // Include the id field in pushed data so remove()/update() can target it.
  * const ref = useRef<RealtimeFrameHandle>(null)
  * useEffect(() => {
- *   ref.current?.push({ lon: -73.9, lat: 40.7, magnitude: 5.2 })
+ *   ref.current?.push({ id: "evt-1", lon: -73.9, lat: 40.7, magnitude: 5.2 })
  * }, [])
  *
  * <ProportionalSymbolMap

@@ -134,7 +134,8 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
  *
  * @example
  * ```tsx
- * // Auto-center on the data's mean using xCenter/yCenter expressions
+ * // Effort vs. impact prioritization with a fixed 5×5 split.
+ * // Omit `xCenter`/`yCenter` to let the chart center on the domain midpoint.
  * <QuadrantChart
  *   data={features}
  *   xAccessor="impact"

@@ -18,11 +18,74 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ### API Reference Documentation
 
-Baseline exists: `typedoc.json`, `docs:api:json`, `/api/charts`, and `/api/typedoc`.
+Baseline exists: `typedoc.json`, `docs:api:json`, `/api/charts`, `/api/typedoc`, and source-level JSDoc with at least 2 `@example` blocks on every HOC (38/38 covered as of 2026-04-26).
 
 Next work:
-- Add source-level JSDoc examples to high-traffic HOCs that still rely on schema summaries instead of component comments.
-- Decide whether `/api/charts`, `/api/typedoc`, AI schema, and MCP metadata should share one generated chart registry.
+- Periodic JSDoc audit: when a new prop ships without an `@example`/`@default`, the test-quality baseline should flag it. Today the only check is "TypeDoc resolves the type" — no minimum doc surface enforced.
+
+### Chart Spec Registry (Schema/Validation/MCP Consolidation)
+
+Three files describe each chart's prop surface in different shapes today, and adding a chart means three coordinated edits plus three drift-detection checks (`check:schema`, `check:surface`, `check:ai-contracts`). The hand-curation cost compounds: schema enums, validation type unions, and MCP renderability flags all encode the same "what props does this chart accept?" knowledge in three places.
+
+Plan: introduce a single TypeScript registry as the source of truth for the chart spec triad and emit the existing files via generators. TypeDoc continues to read `.tsx` source for per-prop types (no change). Docs pages (`docs/src/pages/charts/*.js`) stay handwritten because their value is per-chart narrative, not bullet-list coverage. `behaviorContracts.cjs` stays separate — cross-cutting semantic rules don't fit a per-chart spec.
+
+**Source-of-truth shape** (`src/components/charts/shared/chartSpecs.ts`):
+
+```ts
+export interface ChartSpec {
+  name: string                                       // "BarChart"
+  category: "xy" | "ordinal" | "network" | "geo"
+  importPath: string                                 // "semiotic/ordinal"
+  renderable: boolean                                // can MCP renderChart use it?
+  description: string                                // schema.tools[].function.description
+  props: Record<string, ChartPropSpec>               // every public prop
+  required: string[]                                 // schema-level required (push mode handled separately)
+  dataShape: "array" | "object" | "network" | "realtime" | "none"
+  dataAccessors: string[]                            // accessor props validated against data shape
+}
+
+export interface ChartPropSpec {
+  type: PropType | PropType[]
+  enum?: readonly string[]
+  default?: unknown                                  // shows in schema + JSDoc generation later
+  description?: string                               // surfaces in schema + MCP getSchema
+}
+
+export const CHART_SPECS: Record<string, ChartSpec> = { /* one entry per HOC */ }
+```
+
+**Generators** (each emits an existing file, byte-identical to today's hand-edited version):
+
+- `scripts/generate-schema-json.mjs` → `ai/schema.json`. Walks `CHART_SPECS`, emits the JSON Schema tool array. Keeps existing structure so MCP and `--doctor` don't change.
+- `scripts/generate-validation-map.mjs` → `src/components/charts/shared/validationMap.ts`. Emits the `VALIDATION_MAP` const using existing composition helpers (`commonProps`, axis prop bags). The `dataShape` and `dataAccessors` fields drive the runtime `validateArrayData`/`validateNetworkData` dispatch.
+- `scripts/generate-component-metadata.mjs` → `ai/componentMetadata.cjs`. Emits the `COMPONENT_METADATA` map plus the `componentIndexFromSchema` helper.
+
+**CI gate**: a new `check:chart-specs` runs all three generators into temp files and `git diff`s against the committed copies. Non-empty diff = fail with "run `npm run docs:chart-specs` and commit". Replaces the now-redundant `check:schema` (drift between `schema.json` and `validationMap.ts` becomes impossible by construction). `check:surface` stays — it covers parity beyond the registry's scope (renderability vs. actual `componentRegistry.ts` keys).
+
+**Phased migration** so the diff is reviewable at each step:
+
+1. **Phase 1 — Shape proof.** Land `chartSpecs.ts` with one chart spec (BarChart) plus the three generators. Show the generators emit byte-identical content for BarChart's slice of each existing file. Wire up `npm run docs:chart-specs`. ~400 LOC, single PR.
+
+2. **Phase 2 — Categorical family.** Convert the ordinal chart family (BarChart through GaugeChart, ~15 specs). Run generators, accept resulting diff (should be whitespace/ordering-only). Add `check:chart-specs` covering only the migrated subset; the other `check:schema`/`check:surface` gates keep covering the rest. ~600 LOC of spec content + ~50 LOC of CI.
+
+3. **Phase 3 — XY, network, geo.** Convert the remaining ~25 specs in three smaller PRs by family. Each PR runs the generators, regenerates the three files, and the round-trip diff is the review surface.
+
+4. **Phase 4 — Retire compensating gates.** Once all charts are migrated and `check:chart-specs` covers the full set, remove the inputs to `check:schema` (it can no longer drift) and trim `check:surface` to its remaining unique responsibility (renderability vs. registry import map). Update CHANGELOG to note the new authoring path.
+
+**Risks and friction**:
+
+- The schema's `description` strings carry hand-tuned wording that surfaces inside MCP responses and LLM tool definitions. Keep these in `chartSpecs.ts` directly (not derived from JSDoc) so they're explicit and reviewable.
+- `validationMap.ts` may have JSDoc comments, debug commentary, or per-chart logic that doesn't fit a flat spec. Audit before migration; either move incidental comments into `chartSpecs.ts` as `// ` lines on the spec object, or accept that generated output drops them.
+- JSON property ordering matters for diff reviewability. The schema generator should sort keys deterministically (alphabetical within each tool) and match the existing file's indentation (`JSON.stringify(value, null, 2)` + a trailing newline).
+- Some props share definitions across charts (`title`, `description`, `width`, `enableHover`, etc.). Reuse existing `commonProps`/`xyAxisProps`/`ordinalAxisProps` bags from `validationMap.ts` directly in the registry — don't redefine them. The registry just composes the shared bag with chart-specific overrides.
+- Required-combination rules that depend on `usageMode` (StackedAreaChart's `areaBy`, ForceDirectedGraph's `nodes`+`edges`) live in `behaviorContracts.cjs` and stay there. The registry's `required` list is the static-mode shape only.
+
+**Acceptance criteria**:
+
+- All four files (`schema.json`, `validationMap.ts`, `componentMetadata.cjs`, `chartSpecs.ts`) round-trip cleanly: edit `chartSpecs.ts`, run `docs:chart-specs`, the other three update; running again produces no further diff.
+- `check:chart-specs` is wired into `release:check` and `prepublishOnly`.
+- Adding a new chart requires editing `chartSpecs.ts` and the chart's `.tsx` file. No other manual edits.
+- All existing tests (3349) pass after each phase.
 
 ### AI Surface Behavior Contracts
 
@@ -128,15 +191,9 @@ Risk: none. Each helper is a pure function over already-named locals.
 
 ### `validationMap` Composition
 
-`src/components/charts/shared/validationMap.ts` (951 lines) declares 40+ component specs. Every entry repeats `required: ["data"]`, `dataShape: "array"`, identical `dataAccessors` per family, plus a `commonProps + axisProps` spread. Estimated ~210–260 lines saved.
+**Likely superseded by the P0 Chart Spec Registry plan** — validationMap becomes a generated file from `chartSpecs.ts`, so hand-rewriting its composition would be wasted effort. Skip this unless the registry plan slips.
 
-Next work:
-- Add `xyChartBaseSpec(specificProps)` and `ordinalChartBaseSpec(specificProps, required?)` composition helpers.
-- Add a `selectiveProps` bag (`showGrid`, `enableHover`, `showAxes`, `legend`, `legendPosition`, etc.) and spread it once per spec instead of redeclaring 8 keys per entry.
-- Each entry collapses from ~25 lines to ~5–8.
-- New chart families add a one-line family-base helper and reuse `selectiveProps` for free.
-
-Risk: none — the helpers are mechanical and the existing `commonProps` pattern already proves the composition works.
+For reference: `src/components/charts/shared/validationMap.ts` (951 lines) declares 40+ component specs. Every entry repeats `required: ["data"]`, `dataShape: "array"`, identical `dataAccessors` per family, plus a `commonProps + axisProps` spread. A composition helper (`xyChartBaseSpec`, `ordinalChartBaseSpec`) plus a shared `selectiveProps` bag would save ~210–260 lines, but the registry plan eliminates hand-editing the file entirely.
 
 ---
 

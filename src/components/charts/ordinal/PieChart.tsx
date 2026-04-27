@@ -55,8 +55,9 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    */
   colorScheme?: string | string[]
   /**
-   * Rotation in radians applied to the first wedge. `0` starts at 12 o'clock
-   * and proceeds clockwise.
+   * Rotation in **degrees** applied to the first wedge. `0` starts at 12
+   * o'clock and proceeds clockwise; `90` starts at 3 o'clock, `180` at 6
+   * o'clock, `270` at 9 o'clock.
    * @default 0
    */
   startAngle?: number
@@ -103,7 +104,7 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
  *   valueAccessor="revenue"
  *   colorScheme={["#1f77b4", "#ff7f0e", "#2ca02c"]}
  *   cornerRadius={4}
- *   startAngle={Math.PI / 2}
+ *   startAngle={90}
  *   showLegend
  * />
  * ```
