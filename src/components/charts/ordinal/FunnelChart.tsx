@@ -64,6 +64,46 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
  * **Vertical** (`orientation="vertical"`): vertical bars with hatched
  * dropoff stacking. Each bar shows retained (solid) + dropoff from
  * previous step (hatched). Multi-category renders grouped bars.
+ *
+ * For multi-step many-source flows prefer {@link SankeyDiagram}.
+ *
+ * @example
+ * ```tsx
+ * // Classic conversion funnel
+ * <FunnelChart
+ *   data={[
+ *     { step: "Visit",    users: 5000 },
+ *     { step: "Signup",   users: 3200 },
+ *     { step: "Activate", users: 1800 },
+ *     { step: "Upgrade",  users: 240 },
+ *   ]}
+ *   stepAccessor="step"
+ *   valueAccessor="users"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Vertical orientation showing absolute drop-off
+ * <FunnelChart
+ *   data={steps}
+ *   stepAccessor="step"
+ *   valueAccessor="users"
+ *   orientation="vertical"
+ *   connectorOpacity={0.3}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Multi-category funnel — one funnel per cohort
+ * <FunnelChart
+ *   data={cohortSteps}
+ *   stepAccessor="step"
+ *   valueAccessor="users"
+ *   categoryAccessor="cohort"
+ * />
+ * ```
  */
 export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {

@@ -93,6 +93,56 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
+/**
+ * FlowMap - Visualize directed flows between geographic locations.
+ *
+ * Each `flow` connects two `nodes` by id; line width encodes
+ * `valueAccessor` and (optionally) color encodes `edgeColorBy`. Use
+ * `flowStyle="arc"` for curved lines or `"offset"` for bidirectional pairs
+ * that don't overlap. Toggle `showParticles` for animated traffic along
+ * each line.
+ *
+ * For static value-per-region maps use {@link ChoroplethMap}; for
+ * point-size encodings use {@link ProportionalSymbolMap}.
+ *
+ * @example
+ * ```tsx
+ * // Migration flows between cities
+ * <FlowMap
+ *   nodes={cities}                 // [{ id, lon, lat, name }]
+ *   flows={migrations}             // [{ source, target, value }]
+ *   nodeIdAccessor="id"
+ *   valueAccessor="value"
+ *   projection="albersUsa"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Curved arcs colored by source country, particles for live feel
+ * <FlowMap
+ *   nodes={airports}
+ *   flows={routes}
+ *   valueAccessor="passengers"
+ *   flowStyle="arc"
+ *   edgeColorBy="origin_country"
+ *   showParticles
+ *   areas="world-110m"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Bidirectional offset so A→B and B→A are visible separately
+ * <FlowMap
+ *   nodes={hubs}
+ *   flows={trades}
+ *   flowStyle="offset"
+ *   lineType="line"
+ *   edgeOpacity={0.8}
+ * />
+ * ```
+ */
 export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum>) {
 
   const resolved = useChartMode(props.mode, {

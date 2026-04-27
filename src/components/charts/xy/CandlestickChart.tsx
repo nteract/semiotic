@@ -42,13 +42,40 @@ export interface CandlestickChartProps<TDatum extends Datum = Datum> extends Bas
  *
  * @example
  * ```tsx
- * // Full OHLC
- * <CandlestickChart data={data} xAccessor="date"
- *   openAccessor="o" highAccessor="h" lowAccessor="l" closeAccessor="c" />
+ * // Full OHLC candlesticks
+ * <CandlestickChart
+ *   data={prices}
+ *   xAccessor="date"
+ *   openAccessor="o"
+ *   highAccessor="h"
+ *   lowAccessor="l"
+ *   closeAccessor="c"
+ * />
+ * ```
  *
- * // Range-only (e.g. min/max over a window)
- * <CandlestickChart data={data} xAccessor="date"
- *   highAccessor="max" lowAccessor="min" />
+ * @example
+ * ```tsx
+ * // Range-only (e.g. min/max bands per period)
+ * <CandlestickChart
+ *   data={data}
+ *   xAccessor="date"
+ *   highAccessor="max"
+ *   lowAccessor="min"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Custom up/down colors and bar width
+ * <CandlestickChart
+ *   data={prices}
+ *   xAccessor="date"
+ *   openAccessor="o"
+ *   highAccessor="h"
+ *   lowAccessor="l"
+ *   closeAccessor="c"
+ *   candlestickStyle={{ upColor: "#22c55e", downColor: "#ef4444", bodyWidth: 8 }}
+ * />
  * ```
  */
 export const CandlestickChart = forwardRef(function CandlestickChart<TDatum extends Datum = Datum>(

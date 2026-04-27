@@ -52,6 +52,37 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * DotPlot - One dot per category, positioned along the value axis.
+ *
+ * Lighter-weight than {@link BarChart} for sorted comparisons; emphasizes
+ * exact values rather than magnitude perception. Defaults to insertion
+ * order while streaming (so categories don't shuffle as values change)
+ * and value-descending on static data via `sort: "auto"`.
+ *
+ * @example
+ * ```tsx
+ * // Sorted ranking by metric
+ * <DotPlot
+ *   data={teams}
+ *   categoryAccessor="name"
+ *   valueAccessor="score"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by group + grid for axis reading
+ * <DotPlot
+ *   data={features}
+ *   categoryAccessor="feature"
+ *   valueAccessor="adoption"
+ *   colorBy="team"
+ *   showGrid
+ *   showLegend
+ * />
+ * ```
+ */
 export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

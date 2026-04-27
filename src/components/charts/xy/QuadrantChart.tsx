@@ -131,6 +131,26 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
  *   }}
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // Auto-center on the data's mean using xCenter/yCenter expressions
+ * <QuadrantChart
+ *   data={features}
+ *   xAccessor="impact"
+ *   yAccessor="effort"
+ *   xCenter={5}
+ *   yCenter={5}
+ *   quadrants={{
+ *     topRight:    { label: "Quick wins",  color: "#22c55e" },
+ *     topLeft:     { label: "Maybe later", color: "#94a3b8" },
+ *     bottomRight: { label: "Big bets",    color: "#3b82f6" },
+ *     bottomLeft:  { label: "Skip",        color: "#ef4444" },
+ *   }}
+ *   colorBy="team"
+ *   sizeBy="estimate"
+ * />
+ * ```
  */
 export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)

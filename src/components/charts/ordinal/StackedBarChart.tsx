@@ -50,6 +50,44 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * StackedBarChart - Categorical bars split into stacked segments.
+ *
+ * Each row contributes one segment of the bar named by `categoryAccessor`;
+ * `stackBy` chooses which series the segment belongs to. Use
+ * {@link GroupedBarChart} when individual segment values matter more than
+ * the total; pass `normalize` to compare composition rather than absolute
+ * size.
+ *
+ * @example
+ * ```tsx
+ * // Quarterly revenue split by region
+ * <StackedBarChart
+ *   data={[
+ *     { quarter: "Q1", region: "EMEA",     revenue: 120 },
+ *     { quarter: "Q1", region: "Americas", revenue: 95 },
+ *     { quarter: "Q2", region: "EMEA",     revenue: 140 },
+ *     { quarter: "Q2", region: "Americas", revenue: 110 },
+ *   ]}
+ *   categoryAccessor="quarter"
+ *   valueAccessor="revenue"
+ *   stackBy="region"
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Normalized to 100% — focus on composition
+ * <StackedBarChart
+ *   data={data}
+ *   categoryAccessor="quarter"
+ *   valueAccessor="revenue"
+ *   stackBy="region"
+ *   normalize
+ * />
+ * ```
+ */
 export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

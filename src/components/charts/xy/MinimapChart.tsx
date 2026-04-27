@@ -214,6 +214,45 @@ function BrushOverlay({
 
 // ── MinimapChart ────────────────────────────────────────────────────────
 
+/**
+ * MinimapChart - Pair an overview chart with a brushable detail chart.
+ *
+ * Renders the wrapped XY chart twice: once at full data extent (the
+ * minimap), once zoomed into the brushed range (the detail). Drag in the
+ * minimap to update the detail's domain; the two views stay linked via
+ * `brushDirection` ("x" by default, "y" for vertical scrolling).
+ *
+ * Useful for long time series where the user needs both context and
+ * detail without losing track of where they are in the full range.
+ *
+ * @example
+ * ```tsx
+ * // Time series with minimap below detail
+ * <MinimapChart
+ *   chart="LineChart"
+ *   data={timeSeries}
+ *   xAccessor="date"
+ *   yAccessor="value"
+ *   brushDirection="x"
+ *   minimapHeight={80}
+ *   xScaleType="time"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Scatter detail + minimap with starting brush selection
+ * <MinimapChart
+ *   chart="Scatterplot"
+ *   data={observations}
+ *   xAccessor="x"
+ *   yAccessor="y"
+ *   colorBy="cluster"
+ *   initialExtent={[100, 500]}
+ *   onBrushChange={(extent) => console.log(extent)}
+ * />
+ * ```
+ */
 export function MinimapChart<TDatum extends Datum = Datum>(
   props: MinimapChartProps<TDatum>
 ) {

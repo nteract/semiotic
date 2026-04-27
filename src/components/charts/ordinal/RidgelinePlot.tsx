@@ -50,6 +50,33 @@ export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseCh
  *
  * Each category shows its value distribution as a filled area extending from a
  * baseline. The amplitude prop controls overlap between rows.
+ *
+ * Compare with {@link ViolinPlot} (mirrored, side-by-side) and
+ * {@link BoxPlot} (five-number summaries only). Best for ≤30 categories
+ * with enough observations per category to estimate density.
+ *
+ * @example
+ * ```tsx
+ * // Test scores per class — distributions stacked vertically
+ * <RidgelinePlot
+ *   data={observations}
+ *   categoryAccessor="class"
+ *   valueAccessor="score"
+ *   bins={30}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // More overlap (denser packing) + smooth curve
+ * <RidgelinePlot
+ *   data={observations}
+ *   categoryAccessor="month"
+ *   valueAccessor="temperature"
+ *   amplitude={2.5}
+ *   curve="monotoneX"
+ * />
+ * ```
  */
 export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {

@@ -87,6 +87,54 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
 
+/**
+ * DistanceCartogram - Distort a map so distances reflect cost/time, not geography.
+ *
+ * Points are repositioned so their pixel distance from `center` is
+ * proportional to `costAccessor` (commute time, fare, hops, etc.) rather
+ * than great-circle distance. `strength` interpolates between the
+ * geographic positions (0) and the fully-distorted cartogram (1).
+ * Concentric rings show iso-cost contours by default.
+ *
+ * @example
+ * ```tsx
+ * // Cities by travel-time from NYC
+ * <DistanceCartogram
+ *   points={cities}
+ *   xAccessor="lon"
+ *   yAccessor="lat"
+ *   nodeIdAccessor="iata"
+ *   center="JFK"
+ *   costAccessor="hours_from_jfk"
+ *   costLabel="hrs"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Half-distorted view + colored points + custom ring intervals
+ * <DistanceCartogram
+ *   points={cities}
+ *   center="JFK"
+ *   costAccessor="hours_from_jfk"
+ *   strength={0.5}
+ *   colorBy="region"
+ *   showRings={[1, 3, 6, 12]}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With route lines connecting source→target by cost
+ * <DistanceCartogram
+ *   points={airports}
+ *   lines={routes}
+ *   center="JFK"
+ *   costAccessor="cost"
+ *   lineMode="fractional"
+ * />
+ * ```
+ */
 export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

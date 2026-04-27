@@ -64,6 +64,51 @@ export interface GaugeChartProps extends BaseChartProps {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
+/**
+ * GaugeChart - A single-value indicator with an optional needle and threshold zones.
+ *
+ * Pass a `value` between `min` and `max`; threshold zones color the arc
+ * by status. Useful for KPI tiles, health-check displays, and scorecards.
+ *
+ * @example
+ * ```tsx
+ * // Simple gauge with threshold zones
+ * <GaugeChart
+ *   value={72}
+ *   min={0}
+ *   max={100}
+ *   thresholds={[
+ *     { value: 60, color: "#22c55e", label: "ok" },
+ *     { value: 80, color: "#f59e0b", label: "warn" },
+ *     { value: 100, color: "#ef4444", label: "crit" },
+ *   ]}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Half-sweep gauge with center value text
+ * <GaugeChart
+ *   value={42}
+ *   min={0}
+ *   max={100}
+ *   sweep={Math.PI}
+ *   arcWidth={20}
+ *   centerContent={<text fontSize={32}>42%</text>}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Hide needle, fill the zone-of-current-value instead
+ * <GaugeChart
+ *   value={87}
+ *   thresholds={[{ value: 50, color: "#22c55e" }, { value: 90, color: "#f59e0b" }, { value: 100, color: "#ef4444" }]}
+ *   showNeedle={false}
+ *   fillZones
+ * />
+ * ```
+ */
 export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
   // the mode default (context: 400×250, sparkline: 120×24). Primary-mode

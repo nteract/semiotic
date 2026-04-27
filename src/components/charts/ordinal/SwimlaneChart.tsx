@@ -75,6 +75,44 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * SwimlaneChart - Range bars per category (swim lane), one segment per row.
+ *
+ * Each row becomes a horizontal segment in the lane named by
+ * `categoryAccessor`; `subcategoryAccessor` chooses the segment label
+ * within the lane. Useful for project timelines, status histories,
+ * Gantt-like views, and per-resource workloads.
+ *
+ * @example
+ * ```tsx
+ * // Project task ranges per assignee
+ * <SwimlaneChart
+ *   data={[
+ *     { team: "Design", task: "Spec",   value: 8 },
+ *     { team: "Design", task: "Mocks",  value: 12 },
+ *     { team: "Eng",    task: "API",    value: 16 },
+ *     { team: "Eng",    task: "Client", value: 10 },
+ *     { team: "QA",     task: "Plan",   value: 4 },
+ *   ]}
+ *   categoryAccessor="team"
+ *   subcategoryAccessor="task"
+ *   valueAccessor="value"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by subcategory + custom label rotation
+ * <SwimlaneChart
+ *   data={data}
+ *   categoryAccessor="team"
+ *   subcategoryAccessor="task"
+ *   valueAccessor="hours"
+ *   colorBy="task"
+ *   showLegend
+ * />
+ * ```
+ */
 export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,

@@ -119,6 +119,33 @@ function invertUnitized(unitized: number, extent: [number, number]): number {
  *
  * If `series` does not contain exactly 2 entries, renders as a standard
  * multi-line chart with a dev-mode console warning.
+ *
+ * @example
+ * ```tsx
+ * // Revenue (left axis, $) vs. signups (right axis, count)
+ * <MultiAxisLineChart
+ *   data={metrics}
+ *   xAccessor="month"
+ *   series={[
+ *     { yAccessor: "revenue", label: "Revenue", color: "#3b82f6", format: (v) => `$${v}` },
+ *     { yAccessor: "signups", label: "Signups", color: "#22c55e" },
+ *   ]}
+ *   legendPosition="bottom"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Pinning each axis extent independently
+ * <MultiAxisLineChart
+ *   data={metrics}
+ *   xAccessor="t"
+ *   series={[
+ *     { yAccessor: "tempC",   label: "°C", color: "#ef4444", extent: [-10, 40] },
+ *     { yAccessor: "humidity", label: "%", color: "#06b6d4", extent: [0, 100] },
+ *   ]}
+ * />
+ * ```
  */
 export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
   props: MultiAxisLineChartProps<TDatum>,

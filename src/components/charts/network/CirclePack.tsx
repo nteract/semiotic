@@ -39,7 +39,42 @@ export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartP
 /**
  * CirclePack - Visualize hierarchical data as nested circles.
  *
- * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
+ * Each leaf becomes a circle sized by `valueAccessor`; parents enclose
+ * their children. Best for hierarchies where size encoding matters more
+ * than precise comparisons.
+ *
+ * For rectangular tiling of the same data shape use {@link Treemap}; for
+ * radial parent→child connections use {@link TreeDiagram}.
+ *
+ * @example
+ * ```tsx
+ * // Filesystem-style hierarchy sized by file size
+ * <CirclePack
+ *   data={{
+ *     name: "src",
+ *     children: [
+ *       { name: "components", children: [
+ *         { name: "Chart.tsx", value: 1200 },
+ *         { name: "Frame.tsx", value: 800 },
+ *       ]},
+ *       { name: "utils", children: [{ name: "color.ts", value: 400 }] },
+ *     ],
+ *   }}
+ *   valueAccessor="value"
+ *   childrenAccessor="children"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by depth instead of by leaf identity
+ * <CirclePack
+ *   data={hierarchyRoot}
+ *   valueAccessor="size"
+ *   colorByDepth
+ *   showLabels
+ * />
+ * ```
  */
 export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>) {
 

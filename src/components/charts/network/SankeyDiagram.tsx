@@ -45,9 +45,58 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
 }
 
 /**
- * SankeyDiagram - Visualize flow and magnitude of movement between nodes
+ * SankeyDiagram - Visualize directed many-step flow between nodes.
  *
- * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
+ * Each `edge` is a ribbon whose width encodes `valueAccessor`. The layout
+ * positions nodes in vertical columns (`orientation: "horizontal"`) or
+ * horizontal rows (`orientation: "vertical"`) so flows always run in a
+ * single direction.
+ *
+ * For bidirectional same-tier flows prefer {@link ChordDiagram}; for
+ * unstructured many-to-many networks prefer {@link ForceDirectedGraph}.
+ *
+ * @example
+ * ```tsx
+ * // User funnel
+ * <SankeyDiagram
+ *   nodes={[
+ *     { id: "Visit" }, { id: "Signup" }, { id: "Activate" }, { id: "Drop" },
+ *   ]}
+ *   edges={[
+ *     { source: "Visit",   target: "Signup",   value: 320 },
+ *     { source: "Visit",   target: "Drop",     value: 180 },
+ *     { source: "Signup",  target: "Activate", value: 240 },
+ *     { source: "Signup",  target: "Drop",     value: 80 },
+ *   ]}
+ *   valueAccessor="value"
+ *   showLabels
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color edges by source, vertical orientation
+ * <SankeyDiagram
+ *   nodes={nodes}
+ *   edges={edges}
+ *   valueAccessor="value"
+ *   edgeColorBy="source"
+ *   orientation="vertical"
+ *   nodeAlign="justify"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Tighter nodes for many categories
+ * <SankeyDiagram
+ *   nodes={nodes}
+ *   edges={edges}
+ *   valueAccessor="value"
+ *   nodeWidth={6}
+ *   nodePaddingRatio={0.3}
+ * />
+ * ```
  */
 export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)

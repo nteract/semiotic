@@ -816,12 +816,25 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
  *
  * @example
  * ```tsx
+ * // Iris dataset — every pairwise field combination
  * <ScatterplotMatrix
  *   data={iris}
  *   fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
  *   colorBy="species"
  *   cellSize={160}
  *   diagonal="histogram"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Brush mode: drag in any cell to crossfilter across the matrix
+ * <ScatterplotMatrix
+ *   data={observations}
+ *   fields={["x", "y", "z"]}
+ *   hoverMode={false}
+ *   brushMode="crossfilter"
+ *   onBrushChange={(cellSelections) => console.log(cellSelections)}
  * />
  * ```
  */

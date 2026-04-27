@@ -74,6 +74,58 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
   frameProps?: Partial<Omit<StreamGeoFrameProps, "points" | "projection">>
 }
 
+/**
+ * ProportionalSymbolMap - Plot points on a map sized by a numeric value.
+ *
+ * Each row in `points` becomes a circle whose pixel radius is scaled from
+ * `sizeBy`. Optional `colorBy` adds a categorical encoding; an optional
+ * `areas` background gives geographic context.
+ *
+ * For value-per-region encodings use {@link ChoroplethMap}; for
+ * directed-flow encodings use {@link FlowMap}.
+ *
+ * @example
+ * ```tsx
+ * // Cities sized by population
+ * <ProportionalSymbolMap
+ *   points={cities}                // [{ lon, lat, population, country }]
+ *   xAccessor="lon"
+ *   yAccessor="lat"
+ *   sizeBy="population"
+ *   sizeRange={[3, 30]}
+ *   areas="world-110m"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color by region + tile basemap (Mercator)
+ * <ProportionalSymbolMap
+ *   points={cities}
+ *   sizeBy="population"
+ *   colorBy="region"
+ *   projection="mercator"
+ *   tileURL="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+ *   tileAttribution="© OpenStreetMap contributors"
+ *   showLegend
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Push API — stream new observations onto the map
+ * const ref = useRef<RealtimeFrameHandle>(null)
+ * useEffect(() => {
+ *   ref.current?.push({ lon: -73.9, lat: 40.7, magnitude: 5.2 })
+ * }, [])
+ *
+ * <ProportionalSymbolMap
+ *   ref={ref}
+ *   sizeBy="magnitude"
+ *   pointIdAccessor="id"
+ * />
+ * ```
+ */
 export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
   useImperativeHandle(ref, () => ({

@@ -40,6 +40,42 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
+/**
+ * DonutChart - Pie chart with a hole; supports center content.
+ *
+ * Same data shape as {@link PieChart}, but the inner radius leaves room
+ * for a value, label, or icon at the center via `centerContent`. Useful
+ * when the headline number is the total or a key fraction.
+ *
+ * @example
+ * ```tsx
+ * // Donut with the total in the center
+ * <DonutChart
+ *   data={[
+ *     { region: "EMEA", revenue: 120 },
+ *     { region: "Americas", revenue: 85 },
+ *     { region: "APAC", revenue: 60 },
+ *   ]}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   innerRadius={70}
+ *   centerContent={<text fontSize={28}>$265</text>}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Thin ring with rounded wedges
+ * <DonutChart
+ *   data={data}
+ *   categoryAccessor="region"
+ *   valueAccessor="revenue"
+ *   innerRadius={120}
+ *   cornerRadius={4}
+ *   showLegend
+ * />
+ * ```
+ */
 export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
   // the mode default (context: 400×250, sparkline: 120×24). Primary-mode

@@ -42,9 +42,41 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
 }
 
 /**
- * ChordDiagram - Visualize directed relationships with circular chord layout
+ * ChordDiagram - Visualize bidirectional flows between a small set of categories.
  *
- * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
+ * Each node is a wedge around a circle; ribbons inside connect nodes whose
+ * `valueAccessor` describes the flow magnitude. Best for ≤30 categories
+ * with a square many-to-many relationship matrix.
+ *
+ * For directed many-step flows prefer {@link SankeyDiagram}; for
+ * unbounded networks prefer {@link ForceDirectedGraph}.
+ *
+ * @example
+ * ```tsx
+ * // Trade flows between regions
+ * <ChordDiagram
+ *   nodes={[{ id: "EMEA" }, { id: "Americas" }, { id: "APAC" }]}
+ *   edges={[
+ *     { source: "EMEA", target: "Americas", value: 32 },
+ *     { source: "Americas", target: "APAC", value: 18 },
+ *     { source: "APAC", target: "EMEA", value: 24 },
+ *   ]}
+ *   valueAccessor="value"
+ *   showLabels
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Color ribbons by source, custom padAngle
+ * <ChordDiagram
+ *   nodes={nodes}
+ *   edges={edges}
+ *   valueAccessor="value"
+ *   edgeColorBy="source"
+ *   padAngle={0.04}
+ * />
+ * ```
  */
 export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
