@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 /**
- * Phase 1 chart-specs gate.
+ * Chart-specs round-trip gate.
  *
- * Runs the round-trip test that asserts each spec in `chartSpecs.ts`
- * generates the same shape as the canonical schema.json /
- * validationMap.ts / componentMetadata.cjs entries. If they drift, the
- * test fails and CI blocks the merge.
- *
- * Phase 2+ will swap this for direct file emission and a `git diff`
- * gate; for now the test-driven check is sufficient since the registry
- * is still a parallel source of truth (only one chart in CHART_SPECS).
+ * Runs the round-trip test that asserts every spec in `chartSpecs.ts`
+ * generates the same shape as the canonical `ai/schema.json`,
+ * `validationMap.ts`, and `ai/componentMetadata.cjs` entries. If they
+ * drift, the test fails and CI blocks the merge. The registry is the
+ * source of truth for the full 43-chart surface (XY + ordinal + network
+ * + geo + realtime); fix drift by editing `chartSpecs.ts` and running
+ * `npm run docs:chart-specs:schema` to refresh `ai/schema.json`.
  */
 import { spawnSync } from "node:child_process"
 import { dirname, resolve } from "node:path"

@@ -1679,7 +1679,7 @@
             },
             "barPadding": {
               "type": "number",
-              "default": 5
+              "default": 40
             }
           },
           "required": [
@@ -1827,7 +1827,7 @@
             },
             "barPadding": {
               "type": "number",
-              "default": 5
+              "default": 40
             }
           },
           "required": [
@@ -2127,7 +2127,7 @@
             },
             "barPadding": {
               "type": "number",
-              "default": 5
+              "default": 60
             }
           },
           "required": [

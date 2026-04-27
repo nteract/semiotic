@@ -14,14 +14,18 @@
  *   - Shared prop bags (common, xyAxis, ordinalAxis) live in `PROP_BAGS` and
  *     are referenced by name in each spec so common surface stays in one place.
  *   - The runtime PropType set ("string" | "number" | "boolean" | "array" |
- *     "object" | "function") is broader than JSON Schema's. The schema
- *     generator strips "function" before emitting because LLMs cannot supply
- *     function values; validationMap keeps all types because runtime callers do.
- *   - Props relevant only at runtime (e.g. `tooltip`, `onClick`, `frameProps`)
- *     are tagged `omitFromSchema: true` so they appear in validationMap but
- *     not in schema.json. Conversely, `description` and `default` annotations
- *     surface in schema.json (and MCP responses) but are dropped from
- *     validationMap (which only reads `type` and `enum`).
+ *     "object" | "function") is broader than JSON Schema's, but the schema
+ *     generator emits whatever types this registry declares — including
+ *     "function" inside type unions (canonical entries like
+ *     `RidgelinePlot.tooltip: ["function", "object"]` and
+ *     `SwimlaneChart.onBrush: "function"` already use this convention; LLMs
+ *     read the union and pick a non-function alternative when they can't
+ *     supply a function value). For props that are purely callbacks or
+ *     escape hatches an LLM cannot meaningfully populate, tag the spec
+ *     with `omitFromSchema: true` to keep it in validationMap but out of
+ *     schema.json. `description` and `default` annotations surface in
+ *     schema.json (and MCP responses) but are dropped from validationMap
+ *     (which only reads `type` and `enum`).
  */
 
 export type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
@@ -192,7 +196,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: { type: ["string", "function"], default: "value", description: "Key for bar values" },
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "vertical" },
       sort: { type: ["boolean", "string", "function"], default: false, description: "Sort bars: false, true, 'asc', 'desc', or comparator function" },
-      barPadding: { type: "number", default: 5 },
+      barPadding: { type: "number", default: 40 },
       // `roundedTop` is in validationMap but absent from schema.json —
       // hand-curation oversight. Phase 3 can re-baseline schema with it
       // exposed; for now match the canonical surface.
@@ -216,7 +220,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "vertical" },
       normalize: { type: "boolean", default: false, description: "Normalize stacks to 100%" },
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
-      barPadding: { type: "number", default: 5 },
+      barPadding: { type: "number", default: 40 },
       roundedTop: { type: "number", omitFromSchema: true },
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
@@ -238,7 +242,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: { type: ["string", "function"], default: "value" },
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "vertical" },
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
-      barPadding: { type: "number", default: 5 },
+      barPadding: { type: "number", default: 60 },
       roundedTop: { type: "number", omitFromSchema: true },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
