@@ -46,6 +46,24 @@ const componentMetadata = require("../../../ai/componentMetadata.cjs") as {
 }
 
 describe("Chart Spec Registry round-trip", () => {
+  // Set-parity gate: every chart present in the canonical files must
+  // have a registry entry, and the registry must not list charts that
+  // aren't in the canonical files. Without this, a chart could be added
+  // directly to validationMap.ts (or removed from it) without
+  // `check:chart-specs` failing — leaving us back in the pre-registry
+  // hand-curation regime for new charts.
+  it("CHART_SPECS keys match every canonical source exactly", () => {
+    const registryNames = new Set(Object.keys(CHART_SPECS))
+    const schemaNames = new Set(schema.tools.map((t) => t.function.name))
+    const validationNames = new Set(Object.keys(VALIDATION_MAP))
+    const metadataNames = new Set(
+      Object.values(componentMetadata.COMPONENTS_BY_CATEGORY).flat(),
+    )
+    expect(schemaNames, "ai/schema.json names").toEqual(registryNames)
+    expect(validationNames, "VALIDATION_MAP names").toEqual(registryNames)
+    expect(metadataNames, "componentMetadata.cjs names").toEqual(registryNames)
+  })
+
   // Iterate over every chart registered in CHART_SPECS so a new entry
   // automatically gets the same equivalence checks. The bigger the
   // registry grows, the more ground this matrix covers without test edits.

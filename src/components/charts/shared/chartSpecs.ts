@@ -6,9 +6,14 @@
  *   - `src/components/charts/shared/validationMap.ts`     (runtime prop validation)
  *   - `ai/componentMetadata.cjs`                          (category buckets)
  *
- * Generators in `scripts/generate-*.mjs` walk `CHART_SPECS` and emit those
- * three files. `npm run docs:chart-specs` regenerates them; `check:chart-specs`
- * fails the build on drift between this registry and the generated files.
+ * Today, `ai/schema.json` is generated from this registry — run
+ * `npm run docs:chart-specs:schema` to refresh it after editing a spec.
+ * `validationMap.ts` and `ai/componentMetadata.cjs` are still hand-edited
+ * but are gated for parity by the registry: `check:chart-specs` (run via
+ * `npm run check:chart-specs`) regenerates each chart's schema/
+ * validation/metadata entries with the pure functions in
+ * `scripts/lib/chart-specs-generators.mjs` and fails the build on any
+ * drift, including unexpected adds or removes that bypass the registry.
  *
  * Design notes:
  *   - Shared prop bags (common, xyAxis, ordinalAxis) live in `PROP_BAGS` and

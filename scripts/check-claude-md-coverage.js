@@ -67,9 +67,14 @@ for (const name of validationComponents) {
     warn(`"${name}" is in VALIDATION_MAP but not documented in CLAUDE.md`)
   }
 }
+// Case-insensitive suffix match catches PascalCase geo components like
+// `ChoroplethMap` / `FlowMap` / `ProportionalSymbolMap` that the
+// previous all-lowercase `endsWith("map")` quietly skipped.
+const CHART_SUFFIXES = ["chart", "plot", "diagram", "pack", "map", "treemap", "scatterplot"]
 for (const name of claudeComponents) {
   if (!validationComponents.has(name)) {
-    if (name.endsWith("Chart") || name.endsWith("Plot") || name.endsWith("Diagram") || name.endsWith("Pack") || name.endsWith("map") || name.endsWith("Treemap") || name.endsWith("Scatterplot")) {
+    const lower = name.toLowerCase()
+    if (CHART_SUFFIXES.some((suffix) => lower.endsWith(suffix))) {
       warn(`"${name}" is in CLAUDE.md but missing from VALIDATION_MAP`)
     }
   }
