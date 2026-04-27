@@ -162,9 +162,9 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
  * ```
  *
  * @remarks
- * Force simulation runs synchronously to `iterations`; for very large graphs
- * (>2k nodes) consider lowering `iterations` and pre-positioning nodes via
- * `frameProps.initialPositions`. Hover, click, and selection wiring follow
+ * Force simulation runs synchronously to `iterations`; for very large
+ * graphs (>2k nodes) consider lowering `iterations` so layout settles in
+ * a reasonable frame budget. Hover, click, and selection wiring follow
  * the same patterns as the rest of the library.
  */
 export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {

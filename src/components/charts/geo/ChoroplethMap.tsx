@@ -127,18 +127,33 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
  *
  * @example
  * ```tsx
- * // World choropleth from a bundled topology, values merged in
+ * // World choropleth from a bundled topology, values merged in.
+ * // `resolveReferenceGeography` is async, so resolve it in an effect
+ * // before merging — or pass the reference string directly to `areas`
+ * // if your topology already carries the values you need.
+ * import * as React from "react"
  * import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
  *
- * const world = resolveReferenceGeography("world-110m")
- * const areas = mergeData(world, gdpRows, { featureKey: "iso_a3", dataKey: "iso" })
+ * function WorldGDPMap({ gdpRows }) {
+ *   const [areas, setAreas] = React.useState([])
+ *   React.useEffect(() => {
+ *     let cancelled = false
+ *     resolveReferenceGeography("world-110m").then(world => {
+ *       if (cancelled) return
+ *       setAreas(mergeData(world, gdpRows, { featureKey: "iso_a3", dataKey: "iso" }))
+ *     })
+ *     return () => { cancelled = true }
+ *   }, [gdpRows])
  *
- * <ChoroplethMap
- *   areas={areas}
- *   valueAccessor={(f) => f.properties.gdp}
- *   colorScheme="viridis"
- *   projection="equalEarth"
- * />
+ *   return (
+ *     <ChoroplethMap
+ *       areas={areas}
+ *       valueAccessor={(f) => f.properties.gdp}
+ *       colorScheme="viridis"
+ *       projection="equalEarth"
+ *     />
+ *   )
+ * }
  * ```
  *
  * @example

@@ -828,18 +828,17 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
  *
  * @example
  * ```tsx
- * // Brush mode: drag in any cell to crossfilter the rest of the matrix.
- * // Selection state propagates through the shared selection store —
- * // wrap in <LinkedCharts> to read brushed points from sibling charts.
- * <LinkedCharts>
- *   <ScatterplotMatrix
- *     data={observations}
- *     fields={["x", "y", "z"]}
- *     hoverMode={false}
- *     brushMode="crossfilter"
- *   />
- *   <BarChart data={summary} categoryAccessor="bucket" valueAccessor="count" />
- * </LinkedCharts>
+ * // Brush mode: drag in any cell to highlight matching points across the
+ * // matrix. The `crossfilter` mode excludes the brushed cell from its own
+ * // filter so it stays fully visible while the others dim non-matches.
+ * // Brush selections live in the matrix's internal selection store and do
+ * // not propagate to charts rendered outside the component.
+ * <ScatterplotMatrix
+ *   data={observations}
+ *   fields={["x", "y", "z"]}
+ *   hoverMode={false}
+ *   brushMode="crossfilter"
+ * />
  * ```
  */
 export function ScatterplotMatrix<TDatum extends Datum = Datum>(
