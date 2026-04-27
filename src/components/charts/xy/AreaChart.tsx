@@ -6,18 +6,17 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * AreaChart component props
@@ -290,38 +289,11 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = data || []
-  const isPushMode = data === undefined
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
-  })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("AreaChart", safeData, "xAccessor", xAccessor)
   warnMissingField("AreaChart", safeData, "yAccessor", yAccessor)
-
-  // ── Selection hooks (always called, conditional logic inside) ──────────
-
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "AreaChart", chartId,
-    hoverHighlight,
-    colorByField: typeof colorBy === "string" ? colorBy : undefined,
-  })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -358,29 +330,31 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     return [{ [lineDataAccessor]: safeData }]
   }, [safeData, areaBy, lineDataAccessor, isAreaObjectFormat])
 
-  // Create color scale if colorBy is specified
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
-  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartType: "AreaChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
@@ -390,8 +364,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
       // Apply color — skip fill/stroke when colorScale unavailable (push API)
       // so the frame's own color map can fill in
       if (colorBy) {
-        if (colorScale) {
-          const color = getColor(d, colorBy, colorScale)
+        if (setup.colorScale) {
+          const color = getColor(d, colorBy, setup.colorScale)
           baseStyle.fill = color
           if (showLine) {
             baseStyle.stroke = color
@@ -414,7 +388,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
 
       return baseStyle
     }
-  }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth])
+  }, [colorBy, setup.colorScale, color, areaOpacity, showLine, lineWidth])
 
   const baseLineStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
@@ -422,8 +396,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   )
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Point style function (if showPoints is true)
@@ -432,36 +406,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
       if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+        if (setup.colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, setup.colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }
       return baseStyle
     }
-  }, [showPoints, pointRadius, colorBy, colorScale])
-
-  // Legend + margin
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: areaData,
-    colorBy,
-    colorScale,
-    showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults,
-  })
-  const effectiveLegend = streaming.streamingLegend || legend
-  const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
-    }
-    return margin
-  }, [margin, streaming.streamingMarginAdjust])
+  }, [showPoints, pointRadius, colorBy, setup.colorScale])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -512,7 +463,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: effectiveMargin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -521,14 +472,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
-    ...streaming.categoryDomainProps,
-    ...(effectiveLegend && { legend: effectiveLegend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
@@ -538,16 +482,15 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="AreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

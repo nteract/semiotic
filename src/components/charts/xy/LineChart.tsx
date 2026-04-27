@@ -6,17 +6,17 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { useChartSetup } from "../shared/useChartSetup"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
@@ -387,10 +387,6 @@ export const LineChart = forwardRef(
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = data || []
   const isPushMode = data === undefined
   const streaming = useStreamingLegend({
@@ -558,22 +554,6 @@ export const LineChart = forwardRef(
     return [min, max] as [number, number]
   }, [forecast, statisticalResult, safeData, yAccessor])
 
-  // ── Selection hooks (always called, conditional logic inside) ──────────
-
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "LineChart", chartId,
-    hoverHighlight,
-    colorByField: typeof colorBy === "string" ? colorBy : undefined,
-  })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  // Linked crosshair config (x-position mode)
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
-
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Datum) => {
     const xVal = typeof xAccessor === "function" ? xAccessor(d) : d[xAccessor as string]
@@ -712,29 +692,90 @@ export const LineChart = forwardRef(
     return { gapProcessedLineData: lineData, hasGaps: false }
   }, [lineData, gapStrategy, lineDataAccessor, isGap, effectiveGroupAccessor, yAccessor])
 
-  // Create color scale if colorBy is specified
-  const colorScale = useColorScale(effectiveData as Datum[], colorBy, colorScheme)
+  // ── Direct-label pre-computation (texts only, no colors) ──────────────
+  // Splitting label texts from full annotations lets the margin estimate
+  // run before useChartSetup (which needs `marginDefaults`), while the
+  // fully-styled annotations (with color from setup.colorScale) are
+  // assembled after setup. The texts depend only on accessors and shape,
+  // not on the color scale.
+  const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
+  const directLabelPosition = directLabelConfig.position || "end"
+  const directLabelFontSize = directLabelConfig.fontSize || 11
 
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of effectiveData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
+  const directLabelLabelTexts = useMemo(() => {
+    if (!directLabel || !colorBy) return []
+    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
+    const seen = new Set<string>()
+    for (const line of gapProcessedLineData) {
+      const coords: Datum[] = line[lineDataAccessor] || []
+      if (coords.length === 0) continue
+      const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
+      // Coalesce nullish but keep falsy-but-valid values like 0 or false —
+      // a categorical chart with numeric category values must still get a
+      // direct label and have its margin estimated.
+      const raw = colorAcc(endpoint) ?? colorAcc(line)
+      if (raw == null) continue
+      const label = String(raw)
+      if (label !== "") seen.add(label)
     }
-    return Array.from(vals)
-  }, [effectiveData, colorBy])
+    return Array.from(seen)
+  }, [directLabel, colorBy, gapProcessedLineData, lineDataAccessor, directLabelPosition])
 
-  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
-  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
+  const directLabelMarginDefaults = useMemo(() => {
+    if (!directLabel) return resolved.marginDefaults
+    const maxLabelWidth = directLabelLabelTexts.reduce((max, label) => {
+      return Math.max(max, label.length * (directLabelFontSize * 0.6))
+    }, 0)
+    const extra = maxLabelWidth + 10
+    const side = directLabelPosition === "end" ? "right" : "left"
+    return {
+      ...resolved.marginDefaults,
+      [side]: Math.max(resolved.marginDefaults[side] || 0, extra),
+    }
+  }, [directLabel, directLabelLabelTexts, directLabelFontSize, directLabelPosition, resolved.marginDefaults])
 
-  // Merge hover highlight > legend selection > cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
+  // Suppress legend when directLabel is active (unless explicitly overridden)
+  const effectiveShowLegend = directLabel && showLegend === undefined ? false : showLegend
+
+  // ── Shared setup (color, legend, selection, margin, loading/empty) ────
+  // Owns: useColorScale, useChartSelection, useLegendInteraction, the
+  // hover/legend/selection precedence merge, useChartLegendAndMargin,
+  // useResolvedSelection, getCrosshairProps, renderEmptyState/loadingState.
+  // LineChart layers `useStreamingLegend` on top for cross-chart linked
+  // categories and the synthetic streaming-legend element.
+  const setup = useChartSetup({
+    data: effectiveData as Datum[],
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartType: "LineChart",
+    chartId,
+    showLegend: effectiveShowLegend,
+    userMargin,
+    marginDefaults: directLabelMarginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
+
+  // Aliases so the rest of the file reads naturally — the existing render
+  // logic was written against locally-named bindings.
+  const colorScale = setup.colorScale
+  const effectiveSelectionHook = setup.effectiveSelectionHook
+  const resolvedSelection = setup.resolvedSelection
+  const customHoverBehavior = setup.customHoverBehavior
+  const customClickBehavior = setup.customClickBehavior
+  const crosshairFrameProps = setup.crosshairProps
 
   // Line style function
   const baseLineStyle = useMemo(() => {
@@ -826,26 +867,29 @@ export const LineChart = forwardRef(
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
 
-  // Direct labeling — generate annotations at line endpoints
-  const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
-  const directLabelPosition = directLabelConfig.position || "end"
-  const directLabelFontSize = directLabelConfig.fontSize || 11
-
+  // Direct labeling — generate full annotations at line endpoints. The
+  // text-only pre-pass (`directLabelLabelTexts`) ran earlier so the margin
+  // estimate could feed into useChartSetup; this pass adds the colors
+  // from the resolved color scale.
   const directLabelAnnotations = useMemo(() => {
     if (!directLabel || !colorBy) return []
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
     const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
 
-    // Get the endpoint of each line (by group)
+    // Get the endpoint of each line (by group). Mirror the null-aware
+    // logic in `directLabelLabelTexts` so a `0`/`false` category value
+    // still gets an annotation rather than being silently dropped.
     const groupEndpoints = new Map<string, Datum>()
     for (const line of gapProcessedLineData) {
       const coords: Datum[] = line[lineDataAccessor] || []
       if (coords.length === 0) continue
       const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
-      const label = colorAcc(endpoint) ?? colorAcc(line) ?? ""
-      if (label && !groupEndpoints.has(String(label))) {
-        groupEndpoints.set(String(label), endpoint)
+      const raw = colorAcc(endpoint) ?? colorAcc(line)
+      if (raw == null) continue
+      const label = String(raw)
+      if (label !== "" && !groupEndpoints.has(label)) {
+        groupEndpoints.set(label, endpoint)
       }
     }
 
@@ -881,46 +925,23 @@ export const LineChart = forwardRef(
     return labels
   }, [directLabel, colorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
 
-  // Suppress legend when directLabel is active (unless explicitly overridden)
-  const effectiveShowLegend = directLabel && showLegend === undefined ? false : showLegend
-
-  // Legend + margin — add extra right/left margin for direct labels
-  const directLabelMarginDefaults = useMemo(() => {
-    if (!directLabel) return resolved.marginDefaults
-    // Estimate the widest label to calculate needed margin
-    const maxLabelWidth = directLabelAnnotations.reduce((max, a) => {
-      const est = (a.label?.length || 0) * (directLabelFontSize * 0.6)
-      return Math.max(max, est)
-    }, 0)
-    const extra = maxLabelWidth + 10
-    const side = directLabelPosition === "end" ? "right" : "left"
-    return {
-      ...resolved.marginDefaults,
-      [side]: Math.max(resolved.marginDefaults[side] || 0, extra),
-    }
-  }, [directLabel, directLabelAnnotations, directLabelFontSize, directLabelPosition, resolved.marginDefaults])
-
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: gapProcessedLineData,
-    colorBy,
-    colorScale,
-    showLegend: effectiveShowLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: directLabelMarginDefaults,
-  })
-  const effectiveLegend = streaming.streamingLegend || legend
+  // ── Layered legend/margin overrides on top of useChartSetup outputs ────
+  // `useStreamingLegend` provides a synthetic legend element (with its
+  // cross-chart linked-categories integration) that wins when present in
+  // push mode; otherwise setup.legend (built by useChartLegendAndMargin
+  // inside setup) is used. Streaming margin adjustments stack on top of
+  // setup.margin so the legend slot is preserved.
+  const effectiveLegend = streaming.streamingLegend || setup.legend
+  const legendPosition = setup.legendPosition
   const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
+    if (!streaming.streamingMarginAdjust) return setup.margin
+    const m = { ...setup.margin }
+    for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
+      const k = key as keyof typeof m
+      if (m[k] < val) m[k] = val
     }
-    return margin
-  }, [margin, streaming.streamingMarginAdjust])
+    return m
+  }, [setup.margin, streaming.streamingMarginAdjust])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -991,13 +1012,16 @@ export const LineChart = forwardRef(
     yFormat,
     enableHover,
     showGrid,
+    // streaming.categoryDomainProps overrides setup's onCategoriesChange
+    // (which both feed the same store-shaped data, but streaming also
+    // wires `useLinkedChartCategories` for cross-chart consistency).
     ...streaming.categoryDomainProps,
     ...(effectiveLegend && { legend: effectiveLegend, legendPosition }),
     ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
+      legendHoverBehavior: setup.legendState.onLegendHover,
+      legendClickBehavior: setup.legendState.onLegendClick,
+      legendHighlightedCategory: setup.legendState.highlightedCategory,
+      legendIsolatedCategories: setup.legendState.isolatedCategories,
     }),
     ...(title && { title }),
     ...(description && { description }),
@@ -1022,8 +1046,7 @@ export const LineChart = forwardRef(
   }
 
   // ── Loading / empty / validation guards (deferred to after all hooks) ──
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="LineChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

@@ -6,19 +6,18 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { useBrushSelection } from "../../store/useSelection"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * BubbleChart component props
@@ -276,12 +275,34 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = data || []
   const isPushMode = data === undefined
+
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartType: "BubbleChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
 
   // ── Streaming size domain — track min/max from pushed data ───────────
   const streamingSizeDomainRef = useRef<[number, number] | null>(null)
@@ -304,27 +325,19 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     if (changed) setSizeDomainVersion(v => v + 1)
   }, [isPushMode, sizeBy])
 
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
-  })
-
   const wrappedPush = useCallback(
-    streaming.wrapPush((d: Datum) => {
+    (d: Datum) => {
       updateSizeDomain([d])
       frameRef.current?.push(d)
-    }),
-    [streaming.wrapPush, updateSizeDomain]
+    },
+    [updateSizeDomain]
   )
   const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => {
+    (d: Datum[]) => {
       updateSizeDomain(d)
       frameRef.current?.pushMany(d)
-    }),
-    [streaming.wrapPushMany, updateSizeDomain]
+    },
+    [updateSizeDomain]
   )
 
   useImperativeHandle(ref, () => ({
@@ -333,29 +346,13 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
     clear: () => {
-      streaming.resetCategories()
       streamingSizeDomainRef.current = null
       setSizeDomainVersion(v => v + 1)
       frameRef.current?.clear()
     },
     getData: () => frameRef.current?.getData() ?? [],
     getScales: () => frameRef.current?.getScales() ?? null
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
-
-  // ── Selection hooks (always called, conditional logic inside) ──────────
-
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "BubbleChart", chartId,
-    hoverHighlight,
-    colorByField: typeof colorBy === "string" ? colorBy : undefined,
-  })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
+  }), [wrappedPush, wrappedPushMany])
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
 
@@ -366,30 +363,6 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
-
-  // Create color scale if colorBy is specified
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
-  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // Calculate size domain (bounded mode from data, push mode from tracked range)
   const sizeDomain = useMemo(() => {
@@ -419,7 +392,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
       // Apply color — skip fill when colorScale unavailable (push API)
       // so the frame's own color map can fill in
       if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
+        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
       } else {
         baseStyle.fill = color || DEFAULT_COLOR
       }
@@ -429,7 +402,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
 
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
+  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
 
   const basePointStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
@@ -437,37 +410,9 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   )
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
-
-  // Legend + margin
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeData,
-    colorBy,
-    colorScale,
-    showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults,
-  })
-
-  // Merge streaming legend when in push API mode
-  const effectiveLegend = streaming.streamingLegend || legend
-  const effectiveLegendPosition = legendPositionProp || legendPosition
-
-  // Adjust margin for streaming legend
-  const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
-    }
-    return margin
-  }, [margin, streaming.streamingMarginAdjust])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -504,7 +449,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: effectiveMargin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -512,14 +457,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     yFormat,
     enableHover,
     showGrid,
-    ...streaming.categoryDomainProps,
-    ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
@@ -529,18 +467,17 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
 
   return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {
