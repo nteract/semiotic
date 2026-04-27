@@ -31,6 +31,7 @@ import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 import { extractGeoNavPoints, nextIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -414,14 +415,21 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Push API ──────────────────────────────────────────────────────
 
+    // Drop sparse entries before they reach `GeoPipelineStore` —
+    // mirrors the bounded-ingest hardening. `ref.push(null)` or
+    // `ref.pushMany([null, valid])` would otherwise crash extent /
+    // accessor reads inside the store.
     const pushPoint = useCallback((datum: Datum) => {
+      if (datum == null || typeof datum !== "object") return
       storeRef.current?.pushPoint(datum)
       dirtyRef.current = true
       scheduleRender()
     }, [scheduleRender])
 
     const pushMany = useCallback((data: Datum[]) => {
-      storeRef.current?.pushMany(data)
+      const safe = filterSparseArray(data)
+      if (safe.length === 0) return
+      storeRef.current?.pushMany(safe)
       dirtyRef.current = true
       scheduleRender()
     }, [scheduleRender])

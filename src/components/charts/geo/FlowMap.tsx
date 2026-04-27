@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { EMPTY_ARRAY, filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -207,23 +208,12 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  // Drop null/non-object entries up-front. `flows` is a public prop that
-  // accepts sparse arrays (some loaders emit `null` for unresolved rows),
-  // and useChartSetup iterates it for color extraction without null-checks.
-  // Preserve referential identity when nothing is dropped so consumers
-  // doing identity checks against the original arrays still match.
-  const safeFlows = useMemo(() => {
-    const src = (flows || []) as Array<Datum | null | undefined>
-    const hasInvalid = src.some((f) => f == null || typeof f !== "object")
-    if (!hasInvalid) return src as Datum[]
-    return src.filter((f) => f != null && typeof f === "object") as Datum[]
-  }, [flows])
-  const safeNodes = useMemo(() => {
-    const src = (nodes || []) as Array<Datum | null | undefined>
-    const hasInvalid = src.some((n) => n == null || typeof n !== "object")
-    if (!hasInvalid) return src as Datum[]
-    return src.filter((n) => n != null && typeof n === "object") as Datum[]
-  }, [nodes])
+  // `nodes` is its own lookup table (not chart data) — useChartSetup
+  // doesn't see it, so we have to sparse-filter it here ourselves.
+  // `flows` is forwarded raw to useChartSetup, which sparse-filters
+  // and exposes the result as `setup.data` (aliased below as
+  // `safeFlows`) to avoid a redundant pre-setup pass.
+  const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
 
   // ── Shared setup (color, legend, selection, margin, loading/empty) ───
   // Setup owns categorical color (`edgeColorBy`), legend rendering, line
@@ -233,12 +223,11 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // store fires — `nodeFlowLookup` is a chart-specific concern that
   // doesn't belong inside the shared hook.
   const setup = useChartSetup({
-    data: safeFlows,
-    // Mirror push-mode detection (rawData === undefined) on the original
-    // `flows` prop, but feed the *sanitized* array to renderEmptyState so
-    // a `flows` array of only nulls fires the empty-state path instead
-    // of rendering a blank chart on a non-empty-but-all-invalid prop.
-    rawData: flows == null ? undefined : safeFlows,
+    // Stable empty fallback for push mode (`flows === undefined`) — see
+    // matching note on ProportionalSymbolMap. Avoids fresh-array
+    // churn on every parent render.
+    data: flows ?? (EMPTY_ARRAY as Datum[]),
+    rawData: flows,
     colorBy: edgeColorBy,
     colorScheme,
     legendInteraction,
@@ -259,6 +248,10 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     width: resolved.width,
     height: resolved.height,
   })
+
+  // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest
+  // of this HOC body still reads `safeFlows`.
+  const safeFlows = setup.data
 
   // FlowMap's hover handler reads the linkedHover store directly so it can
   // emit a translated *flow* datum after a point hover. Setup also wires a

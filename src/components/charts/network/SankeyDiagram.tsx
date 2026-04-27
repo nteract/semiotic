@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -179,17 +180,26 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   const summary = resolved.summary
   const accessibleTable = resolved.accessibleTable
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(edges, width, height, emptyContent) : null
+  // Safe data defaults (hooks must always run). Identity-preserving
+  // sparse-array filter drops `null`/non-object entries before any
+  // iteration; downstream `inferNodesFromEdges` and color paths
+  // dereference fields without null-checks.
+  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
+  const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
 
-  // Safe data defaults (hooks must always run)
-  const safeEdges = edges || []
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  // Drive empty-state off the filtered edge list so a sparse-only
+  // `[null, undefined]` triggers the empty UI rather than rendering
+  // a blank chart over zero valid edges.
+  const loadingEl = renderLoadingState(loading, width, height)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(edges === undefined ? undefined : safeEdges, width, height, emptyContent)
+    : null
 
   // Infer nodes from edges if not provided
   const inferredNodes = useMemo(
-    () => inferNodesFromEdges(nodes, safeEdges, sourceAccessor, targetAccessor),
-    [nodes, safeEdges, sourceAccessor, targetAccessor]
+    () => inferNodesFromEdges(safeInputNodes, safeEdges, sourceAccessor, targetAccessor),
+    [safeInputNodes, safeEdges, sourceAccessor, targetAccessor]
   )
 
   // Create color scale if colorBy is specified

@@ -29,6 +29,7 @@ import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
+import { filterSparseArray } from "./sparseArray"
 import type { ReactElement, ReactNode } from "react"
 
 /**
@@ -89,6 +90,14 @@ export interface ChartSetupInput {
  * Output from useChartSetup.
  */
 export interface ChartSetupResult {
+  /**
+   * The input `data` array with `null`/non-object entries removed. Use
+   * this in place of the raw `data` prop when forwarding to the frame
+   * or doing any per-row iteration in the HOC body — it is identity-
+   * equal to the original prop when nothing was dropped, so consumer
+   * memo cache hits are preserved in the common case.
+   */
+  data: Array<Datum>
   /** Color scale function, or undefined if no colorBy */
   colorScale: ((v: string) => string) | undefined
   /** All unique category values from colorBy */
@@ -166,6 +175,29 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     height,
   } = input
   const isPushMode = rawData === undefined
+
+  // Identity-preserving sparse-array filter. CSV-parsed and
+  // lookup-failed inputs commonly hand us `[null, validRow, undefined]`
+  // through public array props. Every iteration below — color extraction,
+  // category discovery, legend domain, selection match, scene builder —
+  // dereferences `d[field]` without null-checks. Filtering once at the
+  // setup boundary so all downstream consumers see clean data is the
+  // single load-bearing fix; HOCs forward `setup.data` (or, for shapes
+  // not routed through setup, the equivalent helper directly) into the
+  // StreamFrame so the frame side is also clean. `filterSparseArray`
+  // returns the original reference when nothing is dropped, preserving
+  // memo cache hits in the (overwhelmingly common) clean-input case.
+  //
+  // Pattern recommendation for HOCs: when the HOC has no logic that
+  // touches `data` before `useChartSetup` runs (no early
+  // `warnMissingField`, no statistical pre-processing, no extent scan
+  // for chart-specific axes), pass the raw `data` prop in and read
+  // `setup.data` for everything downstream. A redundant
+  // `useMemo(() => filterSparseArray(data), [data])` in the HOC body
+  // plus the filter inside this hook means two passes per data update
+  // — both O(n) reads, no allocations in the clean case, but worth
+  // skipping when the HOC doesn't need a pre-setup safe array.
+  const safeData = useMemo(() => filterSparseArray(data), [data])
   const [frameCategories, setFrameCategories] = useState<string[]>([])
 
   const onCategoriesChange = useCallback((categories: string[]) => {
@@ -194,18 +226,18 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const crosshairProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
   // ── Color scale ────────────────────────────────────────────────────────
-  const colorScale = useColorScale(data, colorBy, colorScheme)
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // ── Category extraction ────────────────────────────────────────────────
   const allCategories = useMemo(() => {
     if (!colorBy) return []
     const vals = new Set<string>()
-    for (const d of data as Datum[]) {
+    for (const d of safeData as Datum[]) {
       const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
       if (v != null) vals.add(String(v))
     }
     return Array.from(vals)
-  }, [data, colorBy])
+  }, [safeData, colorBy])
 
   const activeCategories = useMemo(() => {
     if (isPushMode && frameCategories.length > 0) return frameCategories
@@ -254,7 +286,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   // ── Legend & margin ────────────────────────────────────────────────────
   const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data,
+    data: safeData,
     colorBy,
     colorScale: legendColorScale,
     showLegend,
@@ -285,11 +317,21 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   }, [legend, legendPosition, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
 
   // ── Loading / empty state (computed after all hooks) ───────────────────
+  // Empty-state UI is driven by `rawData` (the user's original prop) so
+  // push mode (`rawData === undefined`) keeps its no-empty-state
+  // semantics, and post-processing emptiness — e.g. LikertChart's
+  // levels-driven aggregator producing zero output rows from real input
+  // — defers to the chart's own validation/ChartError path. We still
+  // need to catch sparse-but-nonempty input like `[null, undefined]`
+  // that fails to render anything; filter `rawData` itself for the
+  // emptiness check so the user's array is the source of truth.
+  const emptyStateInput = Array.isArray(rawData) ? filterSparseArray(rawData) : rawData
   const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = loadingEl ? null : renderEmptyState(rawData, width, height, emptyContent)
+  const emptyEl = loadingEl ? null : renderEmptyState(emptyStateInput, width, height, emptyContent)
   const earlyReturn = loadingEl || emptyEl || null
 
   return {
+    data: safeData,
     colorScale,
     allCategories: activeCategories,
     legendState,

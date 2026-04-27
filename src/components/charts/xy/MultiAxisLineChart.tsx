@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -154,51 +155,61 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const frameRef = useRef<StreamXYFrameHandle>(null)
   const extentsRef = useRef<[number, number][]>([])
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => {
-      if (!frameRef.current) return
-      const raw = point as Datum
-      // Transform point into unitized series points
-      for (let i = 0; i < props.series.length && i < 2; i++) {
-        const s = props.series[i]
-        const extent = s.extent || extentsRef.current[i]
-        if (!extent) continue
-        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
-        const val = fn(raw)
-        if (val == null || !isFinite(val)) continue
-        frameRef.current.push({
-          ...raw,
-          [UNITIZED_FIELD]: unitize(val, extent),
-          [SERIES_FIELD]: s.label || `Series ${i + 1}`
-        })
-      }
-    },
-    pushMany: (points) => {
-      if (!frameRef.current) return
-      const transformed: Datum[] = []
-      for (const raw of points as Datum[]) {
-        for (let i = 0; i < props.series.length && i < 2; i++) {
-          const s = props.series[i]
+  useImperativeHandle(ref, () => {
+    // Filter sparse `series` entries once per factory invocation.
+    // useImperativeHandle re-runs the factory each render, so this
+    // captures the latest props; both push and pushMany reuse the same
+    // safe array. We can't reach the hook-scope `series` shadow defined
+    // later in the function body from here.
+    const safeSeriesProp = (props.series ?? []).filter(
+      (s): s is MultiAxisSeriesConfig<TDatum> => s != null && typeof s === "object",
+    )
+    return {
+      push: (point) => {
+        if (!frameRef.current) return
+        const raw = point as Datum
+        // Transform point into unitized series points
+        for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
+          const s = safeSeriesProp[i]
           const extent = s.extent || extentsRef.current[i]
           if (!extent) continue
           const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
           const val = fn(raw)
           if (val == null || !isFinite(val)) continue
-          transformed.push({
+          frameRef.current.push({
             ...raw,
             [UNITIZED_FIELD]: unitize(val, extent),
             [SERIES_FIELD]: s.label || `Series ${i + 1}`
           })
         }
-      }
-      frameRef.current.pushMany(transformed)
-    },
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+      },
+      pushMany: (points) => {
+        if (!frameRef.current) return
+        const transformed: Datum[] = []
+        for (const raw of points as Datum[]) {
+          for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
+            const s = safeSeriesProp[i]
+            const extent = s.extent || extentsRef.current[i]
+            if (!extent) continue
+            const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
+            const val = fn(raw)
+            if (val == null || !isFinite(val)) continue
+            transformed.push({
+              ...raw,
+              [UNITIZED_FIELD]: unitize(val, extent),
+              [SERIES_FIELD]: s.label || `Series ${i + 1}`
+            })
+          }
+        }
+        frameRef.current.pushMany(transformed)
+      },
+      remove: (id) => frameRef.current?.remove(id) ?? [],
+      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
+      clear: () => frameRef.current?.clear(),
+      getData: () => frameRef.current?.getData() ?? [],
+      getScales: () => frameRef.current?.getScales() ?? null
+    }
+  })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -217,7 +228,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     className,
     xFormat,
     xAccessor = "x",
-    series,
+    series: rawSeries,
     colorScheme,
     curve = "monotoneX",
     lineWidth = 2,
@@ -250,11 +261,23 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const accessibleTable = resolved.accessibleTable
   const xLabel = resolved.xLabel
 
+  const safeData = useMemo(() => filterSparseArray(data), [data])
+  // `series` is its own public array prop — same sparse-input crash mode
+  // as `data`. CSV/loader pipelines that emit `null` series rows need
+  // the same identity-preserving filter; downstream iteration reads
+  // `s.yAccessor` / `s.color` without null-checks. Shadow the destructured
+  // `rawSeries` with `series` so the rest of the function body uses the
+  // safe array without per-call rewrites. Defined ahead of the dual-axis
+  // check so sparse input like `[null, s1, undefined, s2]` correctly
+  // counts as two valid series rather than four entries.
+  const series = useMemo(() => filterSparseArray(rawSeries), [rawSeries])
+  const safeSeries = series
+
   const isDualAxis = series.length === 2
 
   // Warn in dev mode if not exactly 2 series
   if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production" && !isDualAxis) {
-     
+
     console.warn(
       `[MultiAxisLineChart] Expected exactly 2 series for dual-axis mode, got ${series.length}. ` +
       `Rendering as a standard multi-line chart.`
@@ -264,8 +287,6 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
-  const safeData = data || []
 
   // ── Resolve colors from theme ─────────────────────────────────────────
   const themeCategorical = useThemeCategorical()
@@ -282,8 +303,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       palette = Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
     }
 
-    return series.map((s, i) => s.color || palette[i % palette.length])
-  }, [series, colorScheme, themeCategorical])
+    return safeSeries.map((s, i) => s.color || palette[i % palette.length])
+  }, [safeSeries, colorScheme, themeCategorical])
 
   // ── Series labels ─────────────────────────────────────────────────────
   const seriesLabels = useMemo(

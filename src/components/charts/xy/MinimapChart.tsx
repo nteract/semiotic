@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { brushX, brushY } from "d3-brush"
@@ -311,7 +312,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   // ── Brush state ─────────────────────────────────────────────────────
   const [internalExtent, setInternalExtent] = useState<[number, number] | null>(null)

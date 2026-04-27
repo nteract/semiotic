@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -248,7 +249,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({

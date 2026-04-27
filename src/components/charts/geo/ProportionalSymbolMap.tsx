@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { EMPTY_ARRAY } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -196,30 +197,19 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  // Drop null/non-object entries up-front. `points` is a public prop that
-  // accepts sparse arrays (e.g. some loaders emit `null` for unresolved
-  // rows), and useChartSetup iterates the data for category extraction
-  // without null-checks — the unsafe iteration would crash on render.
-  // Preserve referential identity when nothing is dropped so consumers
-  // doing `===` checks against the original `points` array still match.
-  const safeData = useMemo(() => {
-    const src = points || []
-    const hasInvalid = (src as Array<Datum | null | undefined>)
-      .some((p) => p == null || typeof p !== "object")
-    if (!hasInvalid) return src as Datum[]
-    return (src as Array<Datum | null | undefined>)
-      .filter((p) => p != null && typeof p === "object") as Datum[]
-  }, [points])
-
   // ── All hooks must be called unconditionally (before any early returns) ──
-
+  // `useChartSetup` filters `data` and `rawData` for `null`/non-object
+  // entries internally and exposes the sanitized array as `setup.data`,
+  // so we forward the raw `points` prop here (push mode is signaled by
+  // `rawData === undefined`) and read `setup.data` for downstream
+  // iteration. Avoids a redundant pre-setup filter pass per render.
   const setup = useChartSetup({
-    data: safeData,
-    // Mirror push-mode detection (rawData === undefined) on the original
-    // `points` prop, but feed the sanitized array to renderEmptyState so a
-    // `points` array of only nulls fires the empty-state path instead of
-    // rendering a blank chart on a non-empty-but-all-invalid prop.
-    rawData: points == null ? undefined : safeData,
+    // Stable empty fallback so push mode (`points === undefined`)
+    // doesn't hand `useChartSetup` a fresh `[]` per render — which
+    // would invalidate its sparse-filter `useMemo` and downstream
+    // color/legend memos every parent render.
+    data: points ?? (EMPTY_ARRAY as Datum[]),
+    rawData: points,
     colorBy,
     colorScheme,
     legendInteraction,
@@ -240,6 +230,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     width: resolved.width,
     height: resolved.height,
   })
+
+  // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest
+  // of this HOC body still reads `safeData`.
+  const safeData = setup.data
 
   // Compute size domain for scaling
   const sizeDomain = useMemo(() => {

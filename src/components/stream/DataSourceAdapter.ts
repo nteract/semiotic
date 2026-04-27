@@ -1,5 +1,6 @@
 import type { Changeset } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 /**
  * DataSourceAdapter normalizes all data ingestion paths into uniform changesets:
@@ -71,6 +72,16 @@ export class DataSourceAdapter<T = Datum> {
    * animation frames (bounded: false so they append without clearing).
    */
   setBoundedData(data: T[]): void {
+    // Drop sparse interlopers (`null`/non-object entries) before
+    // ingestion. Public chart props are forwarded straight from CSV
+    // parsers, lookup-failed pipelines, or filter-early-returns and
+    // commonly carry `null` rows. Every downstream consumer (extents,
+    // scale building, scene composition, hit-testing) dereferences
+    // accessors without null-checking, so unfiltered sparse input
+    // crashes the frame on first paint. `filterSparseArray` is
+    // identity-preserving in the clean case so the dedup cache
+    // (`lastBoundedData === data`) on the next render still hits.
+    data = filterSparseArray(data) as T[]
     this.lastBoundedData = data
 
     // Cancel any in-flight progressive ingestion
@@ -135,6 +146,14 @@ export class DataSourceAdapter<T = Datum> {
    * the streaming-mode branch.
    */
   setReplacementData(data: T[]): void {
+    // Same sparse-array hardening as `setBoundedData`. Aggregator
+    // replace() flows (e.g. LikertChart re-aggregating streaming input)
+    // hand the input array straight from upstream loaders, so a sparse
+    // `[null, validRow, undefined]` would crash the bounded-replace
+    // ingestion path the same way it would crash a normal bounded
+    // ingest. Identity-preserving filter keeps the dedup cache fast
+    // path when the input is already clean.
+    data = filterSparseArray(data) as T[]
     this.lastBoundedData = data
     if (this.chunkTimer) {
       cancelAnimationFrame(this.chunkTimer)
@@ -211,8 +230,13 @@ export class DataSourceAdapter<T = Datum> {
    * Data is buffered and flushed as a single changeset via microtask,
    * so rapid sequential push() calls within the same task are batched
    * into one callback invocation.
+   *
+   * Drops `null`/non-object data so a `ref.push(null)` (typically from a
+   * loader returning a falsy row) doesn't reach extent/accessor reads
+   * inside the pipeline store. Mirrors the bounded-ingest hardening.
    */
   push(datum: T): void {
+    if (datum == null || typeof datum !== "object") return
     this.pushBuffer.push(datum)
     this.scheduleFlush()
   }
@@ -221,12 +245,22 @@ export class DataSourceAdapter<T = Datum> {
    * Push multiple data (streaming batch).
    * Like push(), data is buffered and flushed via microtask. Multiple
    * pushMany() calls within the same task are coalesced.
+   *
+   * Sparse entries are dropped during the buffer copy. Mirrors the
+   * bounded-ingest hardening — `ref.pushMany([null, valid])` lands the
+   * valid row and silently skips the null instead of crashing the
+   * pipeline. The early `length === 0` short-circuit still applies.
    */
   pushMany(data: T[]): void {
     if (data.length === 0) return
+    let appended = 0
     for (let i = 0; i < data.length; i++) {
-      this.pushBuffer.push(data[i])
+      const d = data[i]
+      if (d == null || typeof d !== "object") continue
+      this.pushBuffer.push(d)
+      appended++
     }
+    if (appended === 0) return
     this.scheduleFlush()
   }
 

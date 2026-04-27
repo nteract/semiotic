@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -137,7 +138,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   const setup = useChartSetup({
     data: safeData,

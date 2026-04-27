@@ -106,22 +106,6 @@ Next work:
 - Prioritize validation-adjacent tests where accepted props should also prove a rendered effect.
 - Add higher-level coverage for Playwright specs that still count canvases/SVGs without verifying chart content or interaction state.
 
-### Push-Mode Legend Color Regression Test
-
-Shipped (2026-04-27): `src/__tests__/scenarios/push-mode-legend-colors.test.tsx` mounts `LineChart` (xy / `useStreamingLegend` path) and `ProportionalSymbolMap` (geo / `useChartSetup` path) in push mode for each tier of the synthesis precedence — `CategoryColorProvider` map, explicit `colorScheme` array, string scheme name, `ThemeProvider` categorical, and the default-theme fallback — and asserts the rendered legend swatches match the expected palette per category. 10 tests, 5 per HOC. The "bare push" tier resolves to `LIGHT_THEME.colors.categorical`, not `STREAMING_PALETTE` — the theme store always seeds a non-empty categorical palette, so the `STREAMING_PALETTE` tier is effectively unreachable today (kept in the synthesis code as a defense-in-depth fallback). The test header documents this and includes a negative-anti-source assertion so a regression surfacing `STREAMING_PALETTE` would still fail. The geo arm of this suite is enabled by the StreamGeoFrame wiring listed below.
-
-Next work:
-- None for either synthesis path. Optionally extend coverage to `FlowMap` if the flow-edge ingest path proves to need separate handling from point-node ingest.
-
-### Sparse-Array Prop Hardening Sweep
-
-`FlowMap` and `ProportionalSymbolMap` now defensively filter `null`/non-object entries from their array props before handing data to `useChartSetup`, which iterates without null-checks. CSV-parsed and lookup-failed inputs commonly contain such entries. The same vulnerability likely exists in other HOCs that take array props (`BarChart`, `LineChart`, `Scatterplot`, `SankeyDiagram`, etc.).
-
-Next work:
-- Audit every public HOC that accepts an array prop for the same crash mode by mounting with `[null, validObject, undefined]` and observing whether `useChartSetup`/the scene builder throws.
-- Add the identity-preserving `useMemo` filter pattern (skip allocation when nothing to drop) to each affected HOC.
-- Either fold the filter into `useChartSetup` itself (so HOCs don't need to remember) or add a regression test that runs the sparse-input matrix.
-
 ---
 
 ## P1 — Architecture & API Coherence

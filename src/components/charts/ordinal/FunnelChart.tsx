@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -179,7 +180,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     ? { top: title ? 60 : 40, right: 20, bottom: 60, left: 60 }
     : { top: title ? 40 : 10, right: 10, bottom: 10, left: 10 }
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   // colorBy only applies when explicitly set or when categoryAccessor is present.
   // Single-category funnel (no categoryAccessor, no colorBy) should be uniform color.
