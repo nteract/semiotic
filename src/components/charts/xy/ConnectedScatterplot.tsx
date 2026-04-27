@@ -8,15 +8,15 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useChartSelection, useChartMode, useLegendInteraction, getCrosshairProps } from "../shared/hooks"
+import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { interpolateViridis } from "d3-scale-chromatic"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * ConnectedScatterplot component props
@@ -103,7 +103,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const {
     data,
-    margin: _userMargin,
+    margin: userMargin,
     className,
     xFormat,
     yFormat,
@@ -182,29 +182,30 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   warnMissingField("ConnectedScatterplot", safeData, "xAccessor", xAccessor)
   warnMissingField("ConnectedScatterplot", safeData, "yAccessor", yAccessor)
 
-  // ── Selection hooks ───────────────────────────────────────────────────
-
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection, linkedHover,
+  // ── Shared setup (selection, loading/empty, margins) ──────────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy: undefined,
+    colorScheme: undefined,
+    legendInteraction,
+    selection,
+    linkedHover,
     fallbackFields: [],
-    onObservation, onClick, chartType: "ConnectedScatterplot", chartId,
+    unwrapData: false,
+    onObservation,
+    onClick,
     hoverHighlight,
-    colorByField: undefined,
+    chartType: "ConnectedScatterplot",
+    chartId,
+    showLegend: undefined,
+    userMargin,
+    marginDefaults: { top: 50, right: 40, bottom: 60, left: 70 },
+    loading,
+    emptyContent,
+    width,
+    height,
   })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
-
-  // Legend interaction (no-op for ConnectedScatterplot since no colorBy)
-  const legendState = useLegendInteraction(legendInteraction, undefined, [])
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Canvas pre-renderer for connecting lines (drawn under points) ─────
   //
@@ -212,15 +213,15 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   // single source of truth for visible data (respects windowing, eviction,
   // etc.). Computes viridis colors on the fly from scene node order.
 
-  const dimOpacity = resolvedSelection?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
+  const dimOpacity = setup.resolvedSelection?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
 
   const connectingLineRenderer = useMemo(() => {
-    return (ctx: CanvasRenderingContext2D, nodes: any[]) => {
-      const pts = nodes.filter((n: any) => n.type === "point")
+    return (ctx: CanvasRenderingContext2D, nodes: SceneNode[]) => {
+      const pts = nodes.filter((n): n is SceneNode & { type: "point"; x: number; y: number; datum?: Datum } => n.type === "point")
       if (pts.length < 2) return
 
-      const selActive = effectiveSelectionHook?.isActive
-      const selPredicate = effectiveSelectionHook?.predicate
+      const selActive = setup.effectiveSelectionHook?.isActive
+      const selPredicate = setup.effectiveSelectionHook?.predicate
       const halo = pts.length < 100
       const count = pts.length
 
@@ -232,7 +233,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
         const color = viridisColor(i, count)
 
         const segmentSelected = selActive && selPredicate
-          ? selPredicate(p0.datum ?? p0) || selPredicate(p1.datum ?? p1)
+          ? selPredicate((p0.datum ?? p0) as Datum) || selPredicate((p1.datum ?? p1) as Datum)
           : true
         const segmentOpacity = selActive ? (segmentSelected ? 1 : dimOpacity) : 1
 
@@ -257,7 +258,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
       ctx.globalAlpha = 1
     }
-  }, [pointRadius, effectiveSelectionHook, dimOpacity])
+  }, [pointRadius, setup.effectiveSelectionHook, dimOpacity])
 
   const canvasPreRenderers = useMemo(
     () => [connectingLineRenderer],
@@ -268,7 +269,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   // Reads point node style.opacity to respect selection dimming in SSR output.
   const connectingLineSVGRenderer = useMemo(() => {
     return (nodes: SceneNode[], _scales: StreamScales, _layout: StreamLayout): React.ReactNode => {
-      const pts = nodes.filter((n) => n.type === "point") as Array<{ x: number; y: number; style?: { opacity?: number }; datum?: any }>
+      const pts = nodes.filter((n): n is SceneNode & { type: "point"; x: number; y: number; style?: { opacity?: number }; datum?: Datum } => n.type === "point")
       if (pts.length < 2) return null
       const count = pts.length
       const halo = count < 100
@@ -326,18 +327,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   )
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
-
-  // ── Margin ────────────────────────────────────────────────────────────
-
-  const margin = {
-    top: 50, right: 40, bottom: 60, left: 70,
-    ...(typeof props.margin === "number"
-      ? { top: props.margin, bottom: props.margin, left: props.margin, right: props.margin }
-      : props.margin),
-  }
 
   // ── Tooltip ───────────────────────────────────────────────────────────
 
@@ -357,10 +349,6 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     accessors: { xAccessor, yAccessor },
   })
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   // ── Render ────────────────────────────────────────────────────────────
 
   const streamProps: StreamXYFrameProps = {
@@ -372,7 +360,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -389,19 +377,18 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
     svgPreRenderers,
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />
 
   return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

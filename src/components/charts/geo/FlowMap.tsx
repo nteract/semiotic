@@ -7,16 +7,16 @@ import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
-import type { SelectionHookResult } from "../shared/selectionUtils"
-import { useSelection, useLinkedHover } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { ChartObservation } from "../../store/ObservationStore"
 import type { Style } from "../../stream/types"
+import { useChartSetup } from "../shared/useChartSetup"
 import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
 import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
@@ -64,6 +64,10 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   tooltip?: TooltipProp
   /** Show legend */
   showLegend?: boolean
+  /** Legend interaction mode */
+  legendInteraction?: LegendInteractionMode
+  /** Legend position */
+  legendPosition?: LegendPosition
   /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
   fitPadding?: number
   /** Enable zoom/pan. Defaults to true when tileURL is set, false otherwise. */
@@ -141,6 +145,8 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     loading,
     emptyContent,
     frameProps = {},
+    legendInteraction,
+    legendPosition: legendPositionProp,
     stroke,
     strokeWidth,
     opacity,
@@ -151,16 +157,54 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  // ── Selection hooks (custom for flow-aware hover) ───────────────────
-  // All hooks must be called unconditionally (before any early returns)
+  // Drop null/non-object entries up-front. `flows` is a public prop that
+  // accepts sparse arrays (some loaders emit `null` for unresolved rows),
+  // and useChartSetup iterates it for color extraction without null-checks.
+  const safeFlows = (flows || []).filter(
+    (f): f is Datum => f != null && typeof f === "object"
+  ) as Datum[]
+  const safeNodes = (nodes || []).filter(
+    (n): n is Datum => n != null && typeof n === "object"
+  ) as Datum[]
 
-  const hoverConfig = normalizeLinkedHover(linkedHover)
-
-  const selectionHook = useSelection({
-    name: selection?.name || "__unused__",
-    fields: hoverConfig?.fields || []
+  // ── Shared setup (color, legend, selection, margin, loading/empty) ───
+  // Setup owns categorical color (`edgeColorBy`), legend rendering, line
+  // dimming via `effectiveSelectionHook`, margin, and empty/loading.
+  // FlowMap keeps its own `customHoverBehavior` because point hovers need
+  // to be translated into the underlying flow before the linkedHover
+  // store fires — `nodeFlowLookup` is a chart-specific concern that
+  // doesn't belong inside the shared hook.
+  const setup = useChartSetup({
+    data: safeFlows,
+    rawData: flows,
+    colorBy: edgeColorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: edgeColorBy ? [typeof edgeColorBy === "string" ? edgeColorBy : ""] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    chartType: "FlowMap",
+    chartId,
+    showLegend: resolved.showLegend,
+    userMargin,
+    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    loading,
+    emptyContent,
+    width: resolved.width,
+    height: resolved.height,
   })
 
+  // FlowMap's hover handler reads the linkedHover store directly so it can
+  // emit a translated *flow* datum after a point hover. Setup also wires a
+  // linkedHover subscription for its own customHoverBehavior; calling the
+  // hook a second time here just adds another subscriber on the same
+  // store, which is cheap. We override `customHoverBehavior` below so the
+  // setup's plain pass-through is never used.
+  const hoverConfig = normalizeLinkedHover(linkedHover)
   const linkedHoverHook = useLinkedHover({
     name: hoverConfig?.name || "hover",
     fields: hoverConfig?.fields || []
@@ -169,15 +213,6 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   const pushObservation = useObservationSelector(
     (state: any) => state.pushObservation
   ) as ((obs: ChartObservation) => void) | undefined
-
-  const activeSelectionHook: SelectionHookResult | null = selection
-    ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
-    : null
-
-  const safeFlows = flows || []
-  const safeNodes = (nodes || []) as Datum[]
-
-  const colorScale = useColorScale(safeFlows, edgeColorBy, colorScheme)
 
   // Build node lookup
   const nodeLookup = useMemo(() => {
@@ -247,29 +282,8 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     [linkedHover, linkedHoverHook, nodeIdAccessor, nodeFlowLookup, onObservation, chartId, pushObservation]
   )
 
-  const customClickBehavior = useCallback(
-    (d: Datum | null) => {
-      if (d && onClick) {
-        let datum = d.data || d.datum || d
-        if (Array.isArray(datum)) datum = datum[0]
-        onClick(datum, { x: d.x ?? 0, y: d.y ?? 0 })
-      }
-      // Emit click observation
-      if (d && (onObservation || pushObservation)) {
-        let datum = d.data || d.datum || d
-        if (Array.isArray(datum)) datum = datum[0]
-        const now = Date.now()
-        const obs: ChartObservation = {
-          timestamp: now, chartType: "FlowMap", chartId,
-          type: "click",
-          datum: datum || {}, x: d.x ?? 0, y: d.y ?? 0,
-        }
-        if (onObservation) onObservation(obs)
-        if (pushObservation) pushObservation(obs)
-      }
-    },
-    [onClick, onObservation, pushObservation, chartId]
-  )
+  // Click behavior is the standard pass-through — no translation needed.
+  const customClickBehavior = setup.customClickBehavior
 
   // Convert flows to line data
   const lineData = useMemo(() => {
@@ -301,13 +315,11 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   }, [safeFlows, valueAccessor, edgeWidthRange])
 
   const baseLineStyleFn = useMemo(() => (d: Datum): Style => ({
-    stroke: edgeColorBy ? getColor(d, edgeColorBy, colorScale) : DEFAULT_COLOR,
+    stroke: edgeColorBy ? getColor(d, edgeColorBy, setup.colorScale) : DEFAULT_COLOR,
     strokeWidth: widthScale(d[valueAccessor] ?? 0),
     strokeLinecap: edgeLinecap,
     opacity: edgeOpacity
-  }), [edgeColorBy, colorScale, widthScale, valueAccessor, edgeOpacity, edgeLinecap])
-
-  const resolvedSelection = useResolvedSelection(selection)
+  }), [edgeColorBy, setup.colorScale, widthScale, valueAccessor, edgeOpacity, edgeLinecap])
 
   // Wrap line style with selection awareness so non-matching flows dim.
   // `fillOpacity: 0` is load-bearing — the line renderer interprets
@@ -316,16 +328,16 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // per-chart `selection.unselectedOpacity` or theme value takes effect.
   const lineStyleFn = useMemo(() => {
     const withPrimitives = mergeShapeStyle(baseLineStyleFn, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
-    if (!activeSelectionHook) return withPrimitives
+    if (!setup.effectiveSelectionHook) return withPrimitives
     const mergedUnselectedStyle = {
-      ...(resolvedSelection?.unselectedStyle || {}),
+      ...(setup.resolvedSelection?.unselectedStyle || {}),
       fillOpacity: 0,
     }
-    return wrapStyleWithSelection(withPrimitives, activeSelectionHook, {
-      ...((resolvedSelection as any) || {}),
+    return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, {
+      ...((setup.resolvedSelection as any) || {}),
       unselectedStyle: mergedUnselectedStyle,
     }) as (d: Datum) => Style
-  }, [baseLineStyleFn, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
+  }, [baseLineStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection, stroke, strokeWidth, opacity])
 
   // Point style — not selection-wrapped because node datums lack flow
   // fields (source/target). Flow lines carry the selection visual signal.
@@ -374,15 +386,6 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     return null
   }, [valueAccessor, nodeIdAccessor])
 
-  const margin = useMemo(() => ({
-    top: 10, right: 10, bottom: 10, left: 10,
-    ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin)
-  }), [userMargin])
-
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  const emptyEl = !loadingEl ? renderEmptyState(flows, resolved.width, resolved.height, emptyContent) : null
-
   const streamProps: StreamGeoFrameProps = {
     projection,
     lines: lineData,
@@ -407,11 +410,12 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
-    margin,
+    margin: setup.margin,
     enableHover: true,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
+    ...setup.legendBehaviorProps,
     ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
     ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
@@ -425,8 +429,7 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>

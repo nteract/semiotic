@@ -1,23 +1,22 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * StackedAreaChart component props
@@ -257,58 +256,18 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = data || []
   const actualColorBy = colorBy || areaBy
-  const isPushMode = data === undefined
-
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy: actualColorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
-  })
-
-  const wrappedPush = useCallback(
-    streaming.wrapPush((d: Datum) => frameRef.current?.push(d)),
-    [streaming.wrapPush]
-  )
-  const wrappedPushMany = useCallback(
-    streaming.wrapPushMany((d: any[]) => frameRef.current?.pushMany(d)),
-    [streaming.wrapPushMany]
-  )
 
   useImperativeHandle(ref, () => ({
-    push: wrappedPush,
-    pushMany: wrappedPushMany,
+    push: (point) => frameRef.current?.push(point),
+    pushMany: (points) => frameRef.current?.pushMany(points),
     remove: (id) => frameRef.current?.remove(id) ?? [],
     update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => {
-      streaming.resetCategories()
-      frameRef.current?.clear()
-    },
+    clear: () => frameRef.current?.clear(),
     getData: () => frameRef.current?.getData() ?? [],
     getScales: () => frameRef.current?.getScales() ?? null
-  }), [wrappedPush, wrappedPushMany, streaming.resetCategories])
-
-  // ── Selection hooks (always called, conditional logic inside) ──────────
-
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "StackedAreaChart", chartId,
-    hoverHighlight,
-    colorByField: typeof colorBy === "string" ? colorBy : undefined,
-  })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
+  }))
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -345,29 +304,31 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     return [{ [lineDataAccessor]: safeData }]
   }, [safeData, areaBy, lineDataAccessor, isAreaObjectFormat])
 
-  // Create color scale if colorBy is specified
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const activeCategories = isPushMode && streaming.categories.length > 0 ? streaming.categories : allCategories
-  const legendState = useLegendInteraction(legendInteraction, colorBy, activeCategories)
-
-  // Merge legend selection with cross-chart selection
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy: actualColorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartType: "StackedAreaChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
 
   // Area/line style function
   const baseLineStyle = useMemo(() => {
@@ -376,8 +337,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
       // Apply color — skip when colorScale unavailable (push API)
       // so the frame's own color resolution can fill in
-      if (colorBy && colorScale) {
-        const color = getColor(d, colorBy, colorScale)
+      if (actualColorBy && setup.colorScale) {
+        const color = getColor(d, actualColorBy, setup.colorScale)
         baseStyle.fill = color
         if (showLine) {
           baseStyle.stroke = color
@@ -385,7 +346,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
         } else {
           baseStyle.stroke = "none"
         }
-      } else if (!colorBy) {
+      } else if (!actualColorBy) {
         const uniformColor = color || DEFAULT_COLOR
         baseStyle.fill = uniformColor
         baseStyle.stroke = showLine ? uniformColor : "none"
@@ -395,7 +356,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
       return baseStyle
     }
-  }, [colorBy, colorScale, areaOpacity, showLine, lineWidth, color])
+  }, [actualColorBy, setup.colorScale, areaOpacity, showLine, lineWidth, color])
 
   const baseLineStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
@@ -403,8 +364,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   )
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
 
   // Point style function (if showPoints is true)
@@ -412,42 +373,14 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     if (!showPoints) return undefined
     return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
-      if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+      if (actualColorBy) {
+        if (setup.colorScale) baseStyle.fill = getColor(d.parentLine || d, actualColorBy, setup.colorScale)
       } else {
         baseStyle.fill = color || DEFAULT_COLOR
       }
       return baseStyle
     }
-  }, [showPoints, pointRadius, colorBy, colorScale, color])
-
-  // Legend + margin
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: areaData,
-    colorBy,
-    colorScale,
-    showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults,
-  })
-
-  // Merge streaming legend when in push API mode
-  const effectiveLegend = streaming.streamingLegend || legend
-  const effectiveLegendPosition = legendPositionProp || legendPosition
-
-  // Adjust margin for streaming legend
-  const effectiveMargin = useMemo(() => {
-    if (streaming.streamingMarginAdjust) {
-      const m = { ...margin }
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
-      return m
-    }
-    return margin
-  }, [margin, streaming.streamingMarginAdjust])
+  }, [showPoints, pointRadius, actualColorBy, setup.colorScale, color])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -496,7 +429,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: effectiveMargin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -505,14 +438,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
-    ...streaming.categoryDomainProps,
-    ...(effectiveLegend && { legend: effectiveLegend, legendPosition: effectiveLegendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
@@ -522,15 +448,14 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps
   }
 
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="StackedAreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

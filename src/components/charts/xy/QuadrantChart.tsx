@@ -9,14 +9,14 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, DEFAULT_COLOR, getCrosshairProps } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { useChartSetup } from "../shared/useChartSetup"
 
 /**
  * Quadrant label and color configuration
@@ -208,50 +208,39 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = data || []
+
+  // ── Shared setup (color, legend, selection, loading/empty) ────────────
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy,
+    colorScheme,
+    legendInteraction,
+    legendPosition: legendPositionProp,
+    selection,
+    linkedHover,
+    fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
+    unwrapData: false,
+    onObservation,
+    onClick,
+    hoverHighlight,
+    chartType: "QuadrantChart",
+    chartId,
+    showLegend,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("QuadrantChart", safeData, "xAccessor", xAccessor)
   warnMissingField("QuadrantChart", safeData, "yAccessor", yAccessor)
 
-  // ── Selection hooks ───────────────────────────────────────────────────
-  const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
-    onObservation, onClick, chartType: "QuadrantChart", chartId,
-    hoverHighlight,
-    colorByField: typeof colorBy === "string" ? colorBy : undefined,
-  })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
-
   // ── Core chart logic ──────────────────────────────────────────────────
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
-
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeData as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeData, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  const effectiveSelectionHook = useMemo(() => {
-    if (hoverSelectionHook) return hoverSelectionHook
-    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
-    return activeSelectionHook
-  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
 
   // ── Compute explicit extents from data + center point ────────────────
   // This ensures PipelineStore builds correct scales immediately. Without this,
@@ -306,7 +295,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     return (d: Datum) => {
       const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
       if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d, colorBy, colorScale)
+        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
         // else: let frame use its own color scheme (push API)
       } else {
         // Color by quadrant: determine which quadrant the point falls in
@@ -327,7 +316,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
         : pointRadius
       return baseStyle
     }
-  }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
+  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
   const basePointStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
@@ -335,20 +324,9 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   )
 
   const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [basePointStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
+    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
+    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
-
-  // Legend + margin
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeData,
-    colorBy,
-    colorScale,
-    showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults,
-  })
 
   // Default tooltip
   // Auto-detect a title field: first string-valued field not used as an accessor
@@ -392,7 +370,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       dashArray: centerlineStyle.strokeDasharray || [],
     }
 
-    return [(ctx: CanvasRenderingContext2D, _nodes: any[], scales: StreamScales, layout: StreamLayout) => {
+    return [(ctx: CanvasRenderingContext2D, _nodes: SceneNode[], scales: StreamScales, layout: StreamLayout) => {
       if (!scales?.x || !scales?.y) return
 
       const w = layout.width
@@ -583,7 +561,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin,
+    margin: setup.margin,
     showAxes: resolved.showAxes,
     xLabel,
     yLabel,
@@ -592,13 +570,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     enableHover,
     showGrid,
     ...(dataExtents && { xExtent: dataExtents.xExtent, yExtent: dataExtents.yExtent }),
-    ...(legend && { legend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: legendState.onLegendHover,
-      legendClickBehavior: legendState.onLegendClick,
-      legendHighlightedCategory: legendState.highlightedCategory,
-      legendIsolatedCategories: legendState.isolatedCategories,
-    }),
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
@@ -610,12 +582,12 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps,
     // Override pre-renderers after spread so user can't clobber quadrant renderers
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
@@ -623,8 +595,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="QuadrantChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

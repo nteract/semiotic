@@ -7,21 +7,21 @@ import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp, Distanc
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
   points?: TDatum[]
   /** Route/edge data with source/target fields */
-  lines?: { source: string; target: string; coordinates?: any[]; [key: string]: any }[]
+  lines?: Array<{ source: string; target: string; coordinates?: Datum[] } & Record<string, unknown>>
   /** Longitude accessor @default "lon" */
   xAccessor?: ChartAccessor<TDatum, number>
   /** Latitude accessor @default "lat" */
@@ -151,44 +151,44 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior } = useChartSelection({
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: points,
+    colorBy,
+    colorScheme,
+    legendInteraction: undefined,
+    legendPosition: legendPositionProp,
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: false,
     onObservation,
     onClick,
     chartType: "DistanceCartogram",
-    chartId
+    chartId,
+    showLegend: resolved.showLegend,
+    userMargin,
+    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+    loading,
+    emptyContent,
+    width: resolved.width,
+    height: resolved.height,
   })
-
-  const resolvedSelection = useResolvedSelection(selection)
-
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   const pointStyleFn = useMemo(() => {
     const base = (d: Datum): Style & { r?: number } => ({
-      fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR,
+      fill: colorBy ? getColor(d, colorBy, setup.colorScale) : DEFAULT_COLOR,
       fillOpacity: 0.8,
       stroke: "#fff",
       strokeWidth: 1,
       r: pointRadius
     })
     const withPrimitives = mergeShapeStyle(base, { stroke, strokeWidth, opacity }) as (d: Datum) => Style & { r?: number }
-    if (activeSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, activeSelectionHook, resolvedSelection) as (d: Datum) => Style & { r?: number }
+    if (setup.effectiveSelectionHook) {
+      return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, colorScale, pointRadius, activeSelectionHook, resolvedSelection, stroke, strokeWidth, opacity])
-
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeData,
-    colorBy,
-    colorScale,
-    showLegend: resolved.showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: { top: 10, bottom: 10, left: 10, right: 10 }
-  })
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, pointRadius, stroke, strokeWidth, opacity])
 
   // Build cartogram config
   const cartogramConfig: DistanceCartogramConfig = useMemo(() => ({
@@ -308,8 +308,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     }
 
     // Adjust positions for margin
-    const mx = margin.left ?? 10
-    const my = margin.top ?? 10
+    const mx = setup.margin.left ?? 10
+    const my = setup.margin.top ?? 10
 
     return (
       <g>
@@ -374,11 +374,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
         {frameProps.foregroundGraphics}
       </g>
     )
-  }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, margin, frameProps.foregroundGraphics])
-
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
-  const emptyEl = !loadingEl ? renderEmptyState(points, resolved.width, resolved.height, emptyContent) : null
+  }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, setup.margin, frameProps.foregroundGraphics])
 
   warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
   warnMissingField("DistanceCartogram", safeData, "yAccessor", yAccessor)
@@ -387,8 +383,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     projection,
     ...(points != null && { points: safeData }),
     ...(lineData && { lines: lineData, lineDataAccessor: "coordinates" }),
-    xAccessor: xAccessor as any,
-    yAccessor: yAccessor as any,
+    xAccessor,
+    yAccessor,
     pointIdAccessor: nodeIdAccessor,
     pointStyle: pointStyleFn,
     projectionTransform: cartogramConfig,
@@ -403,14 +399,14 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
     size: [resolved.width, resolved.height],
-    margin,
+    margin: setup.margin,
     enableHover: true,
     tooltipContent: tooltip === false
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
-    ...(legend && { legend, legendPosition }),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...setup.legendBehaviorProps,
+    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
+    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
@@ -424,8 +420,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="DistanceCartogram" width={resolved.width} height={resolved.height}>
