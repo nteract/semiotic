@@ -15,8 +15,18 @@
  * deps inside `useChartSetup` / `useColorScale` — keep their fast
  * paths in the common case where the input is already clean.
  */
+/**
+ * Singleton empty array. Use as a stable default when a caller needs
+ * to satisfy a non-optional `T[]` parameter without allocating a fresh
+ * `[]` on every render — which would invalidate any downstream
+ * `useMemo` keyed on the array reference (e.g. `useChartSetup`'s
+ * sparse-array filter, color-scale memos). Frozen so accidental
+ * mutation throws in strict mode rather than corrupting later reads.
+ */
+export const EMPTY_ARRAY: readonly unknown[] = Object.freeze([])
+
 export function filterSparseArray<T>(input: readonly T[] | undefined | null): T[] {
-  if (!input) return []
+  if (!input) return EMPTY_ARRAY as T[]
   let hasInvalid = false
   for (let i = 0; i < input.length; i++) {
     const v = input[i]

@@ -230,8 +230,13 @@ export class DataSourceAdapter<T = Datum> {
    * Data is buffered and flushed as a single changeset via microtask,
    * so rapid sequential push() calls within the same task are batched
    * into one callback invocation.
+   *
+   * Drops `null`/non-object data so a `ref.push(null)` (typically from a
+   * loader returning a falsy row) doesn't reach extent/accessor reads
+   * inside the pipeline store. Mirrors the bounded-ingest hardening.
    */
   push(datum: T): void {
+    if (datum == null || typeof datum !== "object") return
     this.pushBuffer.push(datum)
     this.scheduleFlush()
   }
@@ -240,12 +245,22 @@ export class DataSourceAdapter<T = Datum> {
    * Push multiple data (streaming batch).
    * Like push(), data is buffered and flushed via microtask. Multiple
    * pushMany() calls within the same task are coalesced.
+   *
+   * Sparse entries are dropped during the buffer copy. Mirrors the
+   * bounded-ingest hardening — `ref.pushMany([null, valid])` lands the
+   * valid row and silently skips the null instead of crashing the
+   * pipeline. The early `length === 0` short-circuit still applies.
    */
   pushMany(data: T[]): void {
     if (data.length === 0) return
+    let appended = 0
     for (let i = 0; i < data.length; i++) {
-      this.pushBuffer.push(data[i])
+      const d = data[i]
+      if (d == null || typeof d !== "object") continue
+      this.pushBuffer.push(d)
+      appended++
     }
+    if (appended === 0) return
     this.scheduleFlush()
   }
 

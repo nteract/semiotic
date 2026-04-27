@@ -1,6 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
-import { filterSparseArray } from "../shared/sparseArray"
+import { EMPTY_ARRAY, filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -223,7 +223,10 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // store fires — `nodeFlowLookup` is a chart-specific concern that
   // doesn't belong inside the shared hook.
   const setup = useChartSetup({
-    data: flows ?? [],
+    // Stable empty fallback for push mode (`flows === undefined`) — see
+    // matching note on ProportionalSymbolMap. Avoids fresh-array
+    // churn on every parent render.
+    data: flows ?? (EMPTY_ARRAY as Datum[]),
     rawData: flows,
     colorBy: edgeColorBy,
     colorScheme,

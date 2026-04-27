@@ -27,6 +27,9 @@ import { render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 
+import * as React from "react"
+import { act } from "@testing-library/react"
+
 import { LineChart } from "../../components/charts/xy/LineChart"
 import { Scatterplot } from "../../components/charts/xy/Scatterplot"
 import { StackedAreaChart } from "../../components/charts/xy/StackedAreaChart"
@@ -243,6 +246,74 @@ describe("sparse-array prop hardening", () => {
   // separate test for every HOC sharing the same shape. New shapes
   // (e.g. an HOC that adds a third array prop) require a new entry.
   void sparseNetworkData // reserved for future per-shape additions
+
+  describe("push-mode ingestion", () => {
+    // The bounded-data path filters via `DataSourceAdapter.setBoundedData`,
+    // and the push path filters via `DataSourceAdapter.push` /
+    // `pushMany` (XY/Ordinal) and the per-frame `pushPoint` / `pushMany`
+    // callbacks (Geo/Network). All four paths must drop sparse entries
+    // so a `ref.pushMany([null, valid])` doesn't crash the pipeline
+    // store on extent / accessor reads.
+    it("LineChart ref.pushMany silently drops null entries", async () => {
+      const ref = React.createRef<{ pushMany: (rows: unknown[]) => void; getData: () => unknown[] }>()
+      render(
+        <LineChart
+          ref={ref as React.Ref<unknown>}
+          xAccessor="x"
+          yAccessor="y"
+          lineBy="cat"
+          colorBy="cat"
+          width={300}
+          height={200}
+        />,
+      )
+      act(() => {
+        ref.current!.pushMany([
+          null,
+          { x: 0, y: 0, cat: "A" },
+          undefined,
+          { x: 1, y: 1, cat: "B" },
+        ])
+      })
+      // Wait one microtask for the adapter's batched flush, then one
+      // rAF tick for the frame to ingest.
+      await new Promise((r) => setTimeout(r, 50))
+      const data = ref.current!.getData()
+      // Both valid rows landed; no nulls survived the filter.
+      expect(data).toHaveLength(2)
+      for (const d of data) {
+        expect(d).not.toBeNull()
+        expect(typeof d).toBe("object")
+      }
+    })
+
+    it("ProportionalSymbolMap ref.pushMany silently drops null entries", async () => {
+      const ref = React.createRef<{ pushMany: (rows: unknown[]) => void; getData: () => unknown[] }>()
+      render(
+        <ProportionalSymbolMap
+          ref={ref as React.Ref<unknown>}
+          xAccessor="lon"
+          yAccessor="lat"
+          sizeBy="size"
+          colorBy="cat"
+          pointIdAccessor="id"
+          width={300}
+          height={200}
+        />,
+      )
+      act(() => {
+        ref.current!.pushMany([
+          null,
+          { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
+          undefined,
+          { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
+        ])
+      })
+      await new Promise((r) => setTimeout(r, 50))
+      const data = ref.current!.getData()
+      expect(data).toHaveLength(2)
+    })
+  })
 
   describe("empty-state routing", () => {
     // `useChartSetup` decides between empty-state UI and a real render

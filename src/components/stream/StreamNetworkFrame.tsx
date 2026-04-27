@@ -623,8 +623,13 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Push API ─────────────────────────────────────────────────────────
 
+  // Drop sparse entries before they reach `NetworkPipelineStore` —
+  // mirrors the bounded-ingest hardening. `ref.push(null)` or
+  // `ref.pushMany([null, valid])` would otherwise crash node/edge
+  // accessor reads inside `ingestEdge`.
   const pushEdge = useCallback(
     (edge: EdgePush) => {
+      if (edge == null || typeof edge !== "object") return
       const store = storeRef.current
       if (!store) return
       const needsRelayout = store.ingestEdge(edge)
@@ -642,6 +647,7 @@ const StreamNetworkFrame = forwardRef<
       if (!store) return
       let needsRelayout = false
       for (const edge of edges) {
+        if (edge == null || typeof edge !== "object") continue
         if (store.ingestEdge(edge)) {
           needsRelayout = true
         }

@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { EMPTY_ARRAY } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -203,7 +204,11 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
   // `rawData === undefined`) and read `setup.data` for downstream
   // iteration. Avoids a redundant pre-setup filter pass per render.
   const setup = useChartSetup({
-    data: points ?? [],
+    // Stable empty fallback so push mode (`points === undefined`)
+    // doesn't hand `useChartSetup` a fresh `[]` per render — which
+    // would invalidate its sparse-filter `useMemo` and downstream
+    // color/legend memos every parent render.
+    data: points ?? (EMPTY_ARRAY as Datum[]),
     rawData: points,
     colorBy,
     colorScheme,
