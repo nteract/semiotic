@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -174,7 +175,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   const categoryLabel = resolved.categoryLabel
   const valueLabel = resolved.valueLabel
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
   const effectiveColorBy = colorBy || subcategoryAccessor
 
   // Mode-aware `barPadding`: sparkline uses 1px by default (or less when so

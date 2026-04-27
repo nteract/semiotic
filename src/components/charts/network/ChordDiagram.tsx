@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -161,12 +162,15 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(edges, width, height, emptyContent) : null
 
-  const safeEdges = edges || []
+  // Identity-preserving sparse-array filter for both edges and nodes
+  // before downstream iteration (`inferNodesFromEdges`, color extraction).
+  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
+  const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
 
   // Infer nodes from edges if not provided
   const inferredNodes = useMemo(
-    () => inferNodesFromEdges(nodes, safeEdges, sourceAccessor, targetAccessor),
-    [nodes, safeEdges, sourceAccessor, targetAccessor]
+    () => inferNodesFromEdges(safeInputNodes, safeEdges, sourceAccessor, targetAccessor),
+    [safeInputNodes, safeEdges, sourceAccessor, targetAccessor]
   )
 
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)

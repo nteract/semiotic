@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -167,7 +168,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   const summary = resolved.summary
   const accessibleTable = resolved.accessibleTable
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
   const effectiveColorBy = colorBy || categoryAccessor
 
   const setup = useChartSetup({

@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -207,23 +208,12 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  // Drop null/non-object entries up-front. `flows` is a public prop that
-  // accepts sparse arrays (some loaders emit `null` for unresolved rows),
-  // and useChartSetup iterates it for color extraction without null-checks.
-  // Preserve referential identity when nothing is dropped so consumers
-  // doing identity checks against the original arrays still match.
-  const safeFlows = useMemo(() => {
-    const src = (flows || []) as Array<Datum | null | undefined>
-    const hasInvalid = src.some((f) => f == null || typeof f !== "object")
-    if (!hasInvalid) return src as Datum[]
-    return src.filter((f) => f != null && typeof f === "object") as Datum[]
-  }, [flows])
-  const safeNodes = useMemo(() => {
-    const src = (nodes || []) as Array<Datum | null | undefined>
-    const hasInvalid = src.some((n) => n == null || typeof n !== "object")
-    if (!hasInvalid) return src as Datum[]
-    return src.filter((n) => n != null && typeof n === "object") as Datum[]
-  }, [nodes])
+  // Drop null/non-object entries up-front. Both `flows` and `nodes` are
+  // public props accepting sparse arrays (some loaders emit `null` for
+  // unresolved rows). Identity-preserving filter keeps the input
+  // reference when nothing is dropped so consumer memo deps still hit.
+  const safeFlows = useMemo(() => filterSparseArray(flows), [flows])
+  const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
 
   // ── Shared setup (color, legend, selection, margin, loading/empty) ───
   // Setup owns categorical color (`edgeColorBy`), legend rendering, line

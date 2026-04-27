@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -254,8 +255,12 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(nodes, width, height, emptyContent) : null
 
-  const safeNodes = nodes || []
-  const safeEdges = edges || []
+  // Identity-preserving sparse-array filter: drop `null`/non-object
+  // entries before any iteration. CSV/loader pipelines commonly emit
+  // such interlopers, and the network color/legend/scene paths read
+  // `n.id` / `e.source` without null-checks.
+  const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
+  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
 
   const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
 

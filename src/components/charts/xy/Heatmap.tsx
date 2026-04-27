@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import { scaleSequential } from "d3-scale"
@@ -304,7 +305,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   // Color scheme resolution priority:
   //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"

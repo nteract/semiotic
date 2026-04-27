@@ -2,6 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef, useImperativeHandle } from "react"
+import { filterSparseArray } from "../shared/sparseArray"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -387,7 +388,10 @@ export const LineChart = forwardRef(
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  const safeData = data || []
+  // `useMemo`'d sparse-array filter — drops `null`/non-object entries
+  // that data loaders commonly emit. Identity-preserving when nothing
+  // is dropped so downstream memo deps still cache-hit.
+  const safeData = useMemo(() => filterSparseArray(data), [data])
   const isPushMode = data === undefined
   const streaming = useStreamingLegend({
     isPushMode,

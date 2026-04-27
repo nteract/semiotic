@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useRef, useState, useEffect, useCallback, useImperativeHandle, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -195,7 +196,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
   // Tile maps default to zoomable; non-tile maps default to not zoomable
   const zoomable = zoomableProp ?? (tileURL ? true : false)
 
-  const safeData = points || []
+  const safeData = useMemo(() => filterSparseArray(points), [points])
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 

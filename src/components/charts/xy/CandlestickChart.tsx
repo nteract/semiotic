@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -145,7 +146,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
 
   // Range mode: either side of open/close missing collapses to high/low band.
   // Providing only one of the two is treated as "no OHLC" rather than an error —

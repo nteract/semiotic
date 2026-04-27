@@ -1,5 +1,6 @@
 import type { Changeset } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 /**
  * DataSourceAdapter normalizes all data ingestion paths into uniform changesets:
@@ -71,6 +72,16 @@ export class DataSourceAdapter<T = Datum> {
    * animation frames (bounded: false so they append without clearing).
    */
   setBoundedData(data: T[]): void {
+    // Drop sparse interlopers (`null`/non-object entries) before
+    // ingestion. Public chart props are forwarded straight from CSV
+    // parsers, lookup-failed pipelines, or filter-early-returns and
+    // commonly carry `null` rows. Every downstream consumer (extents,
+    // scale building, scene composition, hit-testing) dereferences
+    // accessors without null-checking, so unfiltered sparse input
+    // crashes the frame on first paint. `filterSparseArray` is
+    // identity-preserving in the clean case so the dedup cache
+    // (`lastBoundedData === data`) on the next render still hits.
+    data = filterSparseArray(data) as T[]
     this.lastBoundedData = data
 
     // Cancel any in-flight progressive ingestion

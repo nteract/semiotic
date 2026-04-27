@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -239,8 +240,16 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   // Tile maps default to zoomable; non-tile maps default to not zoomable
   const zoomable = zoomableProp ?? (tileURL ? true : false)
 
-  // Resolve string reference ("world-110m") or use features directly
-  const resolvedAreas = useReferenceAreas(areas)
+  // Resolve string reference ("world-110m") or use features directly,
+  // then drop `null`/non-object entries before validation and color
+  // extraction. Loaders that emit a sparse `areas` array would
+  // otherwise short-circuit the geometry sentinel check on a null
+  // sample and crash the value-accessor map below.
+  const resolvedAreasRaw = useReferenceAreas(areas)
+  const resolvedAreas = useMemo(
+    () => (resolvedAreasRaw ? filterSparseArray(resolvedAreasRaw) : resolvedAreasRaw),
+    [resolvedAreasRaw],
+  )
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 

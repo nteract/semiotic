@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
+import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -275,7 +276,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   const xLabel = resolved.xLabel
   const yLabel = resolved.yLabel
 
-  const safeData = data || []
+  const safeData = useMemo(() => filterSparseArray(data), [data])
   const isPushMode = data === undefined
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
