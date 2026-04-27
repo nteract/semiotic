@@ -243,4 +243,23 @@ describe("sparse-array prop hardening", () => {
   // separate test for every HOC sharing the same shape. New shapes
   // (e.g. an HOC that adds a third array prop) require a new entry.
   void sparseNetworkData // reserved for future per-shape additions
+
+  describe("empty-state routing", () => {
+    // `useChartSetup` decides between empty-state UI and a real render
+    // by checking `rawData`. Sparse-but-nonempty input (`[null,
+    // undefined]`) used to slip through that check because the array
+    // was non-empty before filtering, even though it produced zero
+    // valid rows downstream. The filter inside `useChartSetup` now
+    // applies to `rawData` itself for the empty-state decision so the
+    // user sees the empty-state UI instead of a blank chart canvas.
+    it("LineChart shows empty-state UI when every data row is sparse", () => {
+      const onlySparse = [null, undefined, null] as unknown as { x: number; y: number }[]
+      const { container } = render(
+        <LineChart data={onlySparse} xAccessor="x" yAccessor="y" />,
+      )
+      // Empty-state element renders without a canvas
+      expect(container.querySelector("canvas")).toBeNull()
+      expect(container.textContent ?? "").toContain("No data")
+    })
+  })
 })

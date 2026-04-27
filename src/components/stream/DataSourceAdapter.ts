@@ -146,6 +146,14 @@ export class DataSourceAdapter<T = Datum> {
    * the streaming-mode branch.
    */
   setReplacementData(data: T[]): void {
+    // Same sparse-array hardening as `setBoundedData`. Aggregator
+    // replace() flows (e.g. LikertChart re-aggregating streaming input)
+    // hand the input array straight from upstream loaders, so a sparse
+    // `[null, validRow, undefined]` would crash the bounded-replace
+    // ingestion path the same way it would crash a normal bounded
+    // ingest. Identity-preserving filter keeps the dedup cache fast
+    // path when the input is already clean.
+    data = filterSparseArray(data) as T[]
     this.lastBoundedData = data
     if (this.chunkTimer) {
       cancelAnimationFrame(this.chunkTimer)

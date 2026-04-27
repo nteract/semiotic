@@ -307,8 +307,17 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   }, [legend, legendPosition, legendInteraction, legendState.onLegendHover, legendState.onLegendClick, legendState.highlightedCategory, legendState.isolatedCategories, isPushMode, colorBy, onCategoriesChange])
 
   // ── Loading / empty state (computed after all hooks) ───────────────────
+  // Empty-state UI is driven by `rawData` (the user's original prop) so
+  // push mode (`rawData === undefined`) keeps its no-empty-state
+  // semantics, and post-processing emptiness — e.g. LikertChart's
+  // levels-driven aggregator producing zero output rows from real input
+  // — defers to the chart's own validation/ChartError path. We still
+  // need to catch sparse-but-nonempty input like `[null, undefined]`
+  // that fails to render anything; filter `rawData` itself for the
+  // emptiness check so the user's array is the source of truth.
+  const emptyStateInput = Array.isArray(rawData) ? filterSparseArray(rawData) : rawData
   const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = loadingEl ? null : renderEmptyState(rawData, width, height, emptyContent)
+  const emptyEl = loadingEl ? null : renderEmptyState(emptyStateInput, width, height, emptyContent)
   const earlyReturn = loadingEl || emptyEl || null
 
   return {
