@@ -187,6 +187,16 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // StreamFrame so the frame side is also clean. `filterSparseArray`
   // returns the original reference when nothing is dropped, preserving
   // memo cache hits in the (overwhelmingly common) clean-input case.
+  //
+  // Pattern recommendation for HOCs: when the HOC has no logic that
+  // touches `data` before `useChartSetup` runs (no early
+  // `warnMissingField`, no statistical pre-processing, no extent scan
+  // for chart-specific axes), pass the raw `data` prop in and read
+  // `setup.data` for everything downstream. A redundant
+  // `useMemo(() => filterSparseArray(data), [data])` in the HOC body
+  // plus the filter inside this hook means two passes per data update
+  // — both O(n) reads, no allocations in the clean case, but worth
+  // skipping when the HOC doesn't need a pre-setup safe array.
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const [frameCategories, setFrameCategories] = useState<string[]>([])
 

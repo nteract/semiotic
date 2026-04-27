@@ -158,14 +158,18 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   const summary = resolved.summary
   const accessibleTable = resolved.accessibleTable
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(edges, width, height, emptyContent) : null
-
   // Identity-preserving sparse-array filter for both edges and nodes
   // before downstream iteration (`inferNodesFromEdges`, color extraction).
   const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
   const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
+
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  // Drive empty-state off the filtered edge list so a sparse-only
+  // `[null, undefined]` triggers the empty UI instead of a blank chord.
+  const loadingEl = renderLoadingState(loading, width, height)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(edges === undefined ? undefined : safeEdges, width, height, emptyContent)
+    : null
 
   // Infer nodes from edges if not provided
   const inferredNodes = useMemo(

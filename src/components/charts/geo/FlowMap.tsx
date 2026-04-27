@@ -208,11 +208,11 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   const resolvedAreas = useReferenceAreas(areas)
 
-  // Drop null/non-object entries up-front. Both `flows` and `nodes` are
-  // public props accepting sparse arrays (some loaders emit `null` for
-  // unresolved rows). Identity-preserving filter keeps the input
-  // reference when nothing is dropped so consumer memo deps still hit.
-  const safeFlows = useMemo(() => filterSparseArray(flows), [flows])
+  // `nodes` is its own lookup table (not chart data) — useChartSetup
+  // doesn't see it, so we have to sparse-filter it here ourselves.
+  // `flows` is forwarded raw to useChartSetup, which sparse-filters
+  // and exposes the result as `setup.data` (aliased below as
+  // `safeFlows`) to avoid a redundant pre-setup pass.
   const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
 
   // ── Shared setup (color, legend, selection, margin, loading/empty) ───
@@ -223,12 +223,8 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // store fires — `nodeFlowLookup` is a chart-specific concern that
   // doesn't belong inside the shared hook.
   const setup = useChartSetup({
-    data: safeFlows,
-    // Mirror push-mode detection (rawData === undefined) on the original
-    // `flows` prop, but feed the *sanitized* array to renderEmptyState so
-    // a `flows` array of only nulls fires the empty-state path instead
-    // of rendering a blank chart on a non-empty-but-all-invalid prop.
-    rawData: flows == null ? undefined : safeFlows,
+    data: flows ?? [],
+    rawData: flows,
     colorBy: edgeColorBy,
     colorScheme,
     legendInteraction,
@@ -249,6 +245,10 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     width: resolved.width,
     height: resolved.height,
   })
+
+  // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest
+  // of this HOC body still reads `safeFlows`.
+  const safeFlows = setup.data
 
   // FlowMap's hover handler reads the linkedHover store directly so it can
   // emit a translated *flow* datum after a point hover. Setup also wires a

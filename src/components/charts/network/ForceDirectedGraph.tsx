@@ -251,16 +251,21 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   const summary = resolved.summary
   const accessibleTable = resolved.accessibleTable
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl ? renderEmptyState(nodes, width, height, emptyContent) : null
-
   // Identity-preserving sparse-array filter: drop `null`/non-object
   // entries before any iteration. CSV/loader pipelines commonly emit
   // such interlopers, and the network color/legend/scene paths read
   // `n.id` / `e.source` without null-checks.
   const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
   const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
+
+  // ── Loading / empty states (computed early, returned after all hooks) ───
+  // Drive the empty-state decision off the filtered node list so a
+  // sparse-only input like `[null, undefined]` lands on the empty UI
+  // instead of rendering a blank canvas.
+  const loadingEl = renderLoadingState(loading, width, height)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(nodes === undefined ? undefined : safeNodes, width, height, emptyContent)
+    : null
 
   const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
 
