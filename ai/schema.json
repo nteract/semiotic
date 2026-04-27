@@ -4551,64 +4551,7 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "description": "[width, height] in pixels",
-              "default": [
-                500,
-                300
-              ]
-            },
-            "timeAccessor": {
-              "type": "string",
-              "description": "Key for time/x values"
-            },
-            "valueAccessor": {
-              "type": "string",
-              "description": "Key for y values"
-            },
-            "windowSize": {
-              "type": "number",
-              "description": "Number of data points visible",
-              "default": 200
-            },
-            "windowMode": {
-              "type": "string",
-              "enum": [
-                "sliding",
-                "stepping"
-              ],
-              "default": "sliding"
-            },
-            "arrowOfTime": {
-              "type": "string",
-              "enum": [
-                "left",
-                "right"
-              ],
-              "default": "right"
-            },
-            "stroke": {
-              "type": "string",
-              "default": "#007bff"
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 2
-            },
-            "showAxes": {
-              "type": "boolean",
-              "default": true
-            },
-            "background": {
-              "type": "string"
-            },
-            "margin": {
-              "type": "object"
-            },
-            "className": {
-              "type": "string"
+              "description": "[width, height] in pixels"
             },
             "width": {
               "type": "number",
@@ -4618,28 +4561,71 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "timeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
+            },
+            "windowSize": {
+              "type": "number",
+              "description": "Number of data points visible"
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ]
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ]
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
             "tooltip": {
               "type": [
                 "function",
                 "object"
               ],
               "description": "Tooltip content function or config"
-            },
-            "decay": {
-              "type": "object",
-              "description": "Decay config: { type, halfLife, minOpacity }"
-            },
-            "pulse": {
-              "type": "object",
-              "description": "Pulse config: { duration, color, glowRadius }"
-            },
-            "staleness": {
-              "type": "object",
-              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
-            },
-            "transition": {
-              "type": "object",
-              "description": "Transition config: { duration, easing }"
             },
             "annotations": {
               "type": "array",
@@ -4673,6 +4659,31 @@
                   "type"
                 ]
               }
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "strokeDasharray": {
+              "type": "string"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
             }
           },
           "required": []
@@ -4687,59 +4698,152 @@
         "parameters": {
           "type": "object",
           "properties": {
-            "binSize": {
-              "type": "number",
-              "description": "Time bin size in milliseconds (required)"
-            },
             "size": {
               "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "default": [
-                500,
-                300
-              ]
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
             },
             "timeAccessor": {
-              "type": "string"
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
             },
             "valueAccessor": {
-              "type": "string"
-            },
-            "categoryAccessor": {
-              "type": "string",
-              "description": "Key for category grouping"
-            },
-            "colors": {
-              "type": "object",
-              "description": "Map of category to color string"
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
             },
             "windowSize": {
               "type": "number",
-              "default": 200
+              "description": "Number of data points visible"
             },
             "windowMode": {
               "type": "string",
               "enum": [
                 "sliding",
                 "stepping"
-              ],
-              "default": "sliding"
+              ]
             },
             "arrowOfTime": {
               "type": "string",
               "enum": [
                 "left",
                 "right"
+              ]
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
               ],
-              "default": "right"
+              "description": "Tooltip content function or config"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "binSize": {
+              "type": "number",
+              "description": "Time bin size in milliseconds (required)"
+            },
+            "categoryAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for category grouping"
+            },
+            "colors": {
+              "type": "object",
+              "description": "Map of category to color string"
             },
             "fill": {
               "type": "string"
             },
             "stroke": {
               "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
             },
             "gap": {
               "type": "number"
@@ -4763,82 +4867,9 @@
               ],
               "description": "Cross-chart brush coordination via LinkedCharts. String: selection name. Object: { name, xField, yField }."
             },
-            "showAxes": {
-              "type": "boolean",
-              "default": true
-            },
-            "background": {
-              "type": "string"
-            },
-            "margin": {
-              "type": "object"
-            },
-            "className": {
-              "type": "string"
-            },
-            "width": {
-              "type": "number",
-              "description": "Alias for size[0]"
-            },
-            "height": {
-              "type": "number",
-              "description": "Alias for size[1]"
-            },
-            "tooltip": {
-              "type": [
-                "function",
-                "object"
-              ],
-              "description": "Tooltip content function or config"
-            },
-            "decay": {
-              "type": "object",
-              "description": "Decay config: { type, halfLife, minOpacity }"
-            },
-            "pulse": {
-              "type": "object",
-              "description": "Pulse config: { duration, color, glowRadius }"
-            },
-            "staleness": {
-              "type": "object",
-              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
-            },
             "transition": {
               "type": "object",
               "description": "Transition config: { duration, easing }"
-            },
-            "annotations": {
-              "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "widget",
-                      "label",
-                      "callout",
-                      "text",
-                      "bracket",
-                      "y-threshold",
-                      "x-threshold",
-                      "band",
-                      "enclose",
-                      "rect-enclose",
-                      "highlight",
-                      "trend",
-                      "envelope",
-                      "anomaly-band",
-                      "forecast"
-                    ],
-                    "description": "Annotation type"
-                  }
-                },
-                "required": [
-                  "type"
-                ]
-              }
             }
           },
           "required": [
@@ -4857,70 +4888,7 @@
           "properties": {
             "size": {
               "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "default": [
-                500,
-                300
-              ]
-            },
-            "timeAccessor": {
-              "type": "string"
-            },
-            "valueAccessor": {
-              "type": "string"
-            },
-            "categoryAccessor": {
-              "type": "string"
-            },
-            "colors": {
-              "type": "object"
-            },
-            "windowSize": {
-              "type": "number",
-              "default": 200
-            },
-            "windowMode": {
-              "type": "string",
-              "enum": [
-                "sliding",
-                "stepping"
-              ],
-              "default": "sliding"
-            },
-            "arrowOfTime": {
-              "type": "string",
-              "enum": [
-                "left",
-                "right"
-              ],
-              "default": "right"
-            },
-            "radius": {
-              "type": "number"
-            },
-            "fill": {
-              "type": "string"
-            },
-            "opacity": {
-              "type": "number"
-            },
-            "stroke": {
-              "type": "string"
-            },
-            "showAxes": {
-              "type": "boolean",
-              "default": true
-            },
-            "background": {
-              "type": "string"
-            },
-            "margin": {
-              "type": "object"
-            },
-            "className": {
-              "type": "string"
+              "description": "[width, height] in pixels"
             },
             "width": {
               "type": "number",
@@ -4930,28 +4898,71 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "timeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
+            },
+            "windowSize": {
+              "type": "number",
+              "description": "Number of data points visible"
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ]
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ]
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
             "tooltip": {
               "type": [
                 "function",
                 "object"
               ],
               "description": "Tooltip content function or config"
-            },
-            "decay": {
-              "type": "object",
-              "description": "Decay config: { type, halfLife, minOpacity }"
-            },
-            "pulse": {
-              "type": "object",
-              "description": "Pulse config: { duration, color, glowRadius }"
-            },
-            "staleness": {
-              "type": "object",
-              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
-            },
-            "transition": {
-              "type": "object",
-              "description": "Transition config: { duration, easing }"
             },
             "annotations": {
               "type": "array",
@@ -4985,6 +4996,46 @@
                   "type"
                 ]
               }
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "categoryAccessor": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "colors": {
+              "type": "object"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "transition": {
+              "type": "object",
+              "description": "Transition config: { duration, easing }"
             }
           },
           "required": []
@@ -4995,45 +5046,132 @@
       "type": "function",
       "function": {
         "name": "RealtimeWaterfallChart",
-        "description": "Streaming waterfall chart showing positive/negative changes over time.",
+        "description": "Streaming waterfall chart with positive/negative bars and connectors.",
         "parameters": {
           "type": "object",
           "properties": {
             "size": {
               "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "default": [
-                500,
-                300
-              ]
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
             },
             "timeAccessor": {
-              "type": "string"
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
             },
             "valueAccessor": {
-              "type": "string"
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
             },
             "windowSize": {
               "type": "number",
-              "default": 200
+              "description": "Number of data points visible"
             },
             "windowMode": {
               "type": "string",
               "enum": [
                 "sliding",
                 "stepping"
-              ],
-              "default": "sliding"
+              ]
             },
             "arrowOfTime": {
               "type": "string",
               "enum": [
                 "left",
                 "right"
+              ]
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
               ],
-              "default": "right"
+              "description": "Tooltip content function or config"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
             },
             "positiveColor": {
               "type": "string"
@@ -5053,82 +5191,12 @@
             "stroke": {
               "type": "string"
             },
-            "showAxes": {
-              "type": "boolean",
-              "default": true
-            },
-            "background": {
-              "type": "string"
-            },
-            "margin": {
-              "type": "object"
-            },
-            "className": {
-              "type": "string"
-            },
-            "width": {
-              "type": "number",
-              "description": "Alias for size[0]"
-            },
-            "height": {
-              "type": "number",
-              "description": "Alias for size[1]"
-            },
-            "tooltip": {
-              "type": [
-                "function",
-                "object"
-              ],
-              "description": "Tooltip content function or config"
-            },
-            "decay": {
-              "type": "object",
-              "description": "Decay config: { type, halfLife, minOpacity }"
-            },
-            "pulse": {
-              "type": "object",
-              "description": "Pulse config: { duration, color, glowRadius }"
-            },
-            "staleness": {
-              "type": "object",
-              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            "strokeWidth": {
+              "type": "number"
             },
             "transition": {
               "type": "object",
               "description": "Transition config: { duration, easing }"
-            },
-            "annotations": {
-              "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "widget",
-                      "label",
-                      "callout",
-                      "text",
-                      "bracket",
-                      "y-threshold",
-                      "x-threshold",
-                      "band",
-                      "enclose",
-                      "rect-enclose",
-                      "highlight",
-                      "trend",
-                      "envelope",
-                      "anomaly-band",
-                      "forecast"
-                    ],
-                    "description": "Annotation type"
-                  }
-                },
-                "required": [
-                  "type"
-                ]
-              }
             }
           },
           "required": []
@@ -5139,77 +5207,13 @@
       "type": "function",
       "function": {
         "name": "RealtimeHeatmap",
-        "description": "Streaming 2D heatmap with grid binning and configurable aggregation (count, sum, mean). Uses ref-based push API.",
+        "description": "Streaming 2D heatmap with binned time and value aggregation.",
         "parameters": {
           "type": "object",
           "properties": {
             "size": {
               "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "default": [
-                500,
-                300
-              ]
-            },
-            "timeAccessor": {
-              "type": "string"
-            },
-            "valueAccessor": {
-              "type": "string"
-            },
-            "heatmapXBins": {
-              "type": "number",
-              "default": 20,
-              "description": "Number of horizontal bins"
-            },
-            "heatmapYBins": {
-              "type": "number",
-              "default": 20,
-              "description": "Number of vertical bins"
-            },
-            "aggregation": {
-              "type": "string",
-              "enum": [
-                "count",
-                "sum",
-                "mean"
-              ],
-              "default": "count"
-            },
-            "windowSize": {
-              "type": "number",
-              "default": 200
-            },
-            "windowMode": {
-              "type": "string",
-              "enum": [
-                "sliding",
-                "stepping"
-              ],
-              "default": "sliding"
-            },
-            "arrowOfTime": {
-              "type": "string",
-              "enum": [
-                "left",
-                "right"
-              ],
-              "default": "right"
-            },
-            "showAxes": {
-              "type": "boolean",
-              "default": true
-            },
-            "background": {
-              "type": "string"
-            },
-            "margin": {
-              "type": "object"
-            },
-            "className": {
-              "type": "string"
+              "description": "[width, height] in pixels"
             },
             "width": {
               "type": "number",
@@ -5219,24 +5223,71 @@
               "type": "number",
               "description": "Alias for size[1]"
             },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "timeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
+            },
+            "windowSize": {
+              "type": "number",
+              "description": "Number of data points visible"
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "stepping"
+              ]
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right"
+              ]
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
             "tooltip": {
               "type": [
                 "function",
                 "object"
               ],
               "description": "Tooltip content function or config"
-            },
-            "decay": {
-              "type": "object",
-              "description": "Decay config: { type, halfLife, minOpacity }"
-            },
-            "pulse": {
-              "type": "object",
-              "description": "Pulse config: { duration, color, glowRadius }"
-            },
-            "staleness": {
-              "type": "object",
-              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
             },
             "annotations": {
               "type": "array",
@@ -5270,6 +5321,32 @@
                   "type"
                 ]
               }
+            },
+            "decay": {
+              "type": "object",
+              "description": "Decay config: { type, halfLife, minOpacity }"
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Pulse config: { duration, color, glowRadius }"
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Staleness config: { threshold, dimOpacity, showBadge }"
+            },
+            "heatmapXBins": {
+              "type": "number"
+            },
+            "heatmapYBins": {
+              "type": "number"
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "count",
+                "sum",
+                "mean"
+              ]
             }
           },
           "required": []

@@ -38,8 +38,11 @@ jobs:
       - name: Run MCP type check
         run: npm run typescript:mcp
 
-      - name: Check schema freshness
-        run: npm run check:schema
+      - name: Check chart spec registry round-trip
+        run: npm run check:chart-specs
+
+      - name: Check CLAUDE.md component coverage
+        run: npm run check:claude-md-coverage
 
       - name: Check AI/MCP surface parity
         run: npm run check:surface

@@ -112,10 +112,48 @@ const ordinalAxisProps: Record<string, ChartPropSpec> = {
   categoryFormat: { type: "function", omitFromSchema: true },
 }
 
+// Realtime charts share a different prop surface than static charts:
+// `size` is the canonical sizing prop (with `width`/`height` aliases),
+// they don't expose `colorBy`/`colorScheme`/`title`/`showLegend`/`showGrid`,
+// and they add streaming-window controls (`windowSize`, `windowMode`,
+// `arrowOfTime`) plus the encoding configs (`decay`, `pulse`, `staleness`).
+// Push-only — `dataShape: "realtime"` and `required: []` (data arrives via
+// the ref API, not props).
+const realtimeProps: Record<string, ChartPropSpec> = {
+  size: { type: "array", description: "[width, height] in pixels" },
+  width: { type: "number", description: "Alias for size[0]" },
+  height: { type: "number", description: "Alias for size[1]" },
+  margin: { type: "object" },
+  className: { type: "string" },
+  timeAccessor: { type: ["string", "function"], description: "Key for time/x values" },
+  valueAccessor: { type: ["string", "function"], description: "Key for y values" },
+  windowSize: { type: "number", description: "Number of data points visible" },
+  windowMode: { type: "string", enum: ["sliding", "stepping"] as const },
+  arrowOfTime: { type: "string", enum: ["left", "right"] as const },
+  timeExtent: { type: "array" },
+  valueExtent: { type: "array" },
+  extentPadding: { type: "number" },
+  showAxes: { type: "boolean" },
+  background: { type: "string" },
+  enableHover: { type: ["boolean", "object"] },
+  tooltip: { type: ["function", "object"], description: "Tooltip content function or config" },
+  // `tooltipContent` and `onHover` are function-only callbacks — runtime-only.
+  tooltipContent: { type: "function", omitFromSchema: true },
+  onHover: { type: "function", omitFromSchema: true },
+  annotations: { type: "array" },
+  svgAnnotationRules: { type: "function", omitFromSchema: true },
+  tickFormatTime: { type: "function", omitFromSchema: true },
+  tickFormatValue: { type: "function", omitFromSchema: true },
+  decay: { type: "object", description: "Decay config: { type, halfLife, minOpacity }" },
+  pulse: { type: "object", description: "Pulse config: { duration, color, glowRadius }" },
+  staleness: { type: "object", description: "Staleness config: { threshold, dimOpacity, showBadge }" },
+}
+
 export const PROP_BAGS = {
   common: commonProps,
   xyAxis: xyAxisProps,
   ordinalAxis: ordinalAxisProps,
+  realtime: realtimeProps,
 } as const
 
 // ---------------------------------------------------------------------------
@@ -958,6 +996,105 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       points: { type: "array" },
       center: { type: "array" },
       costAccessor: { type: ["string", "function"] },
+    },
+  },
+
+  // ─── Realtime family ────────────────────────────────────────────────
+  // Push-only HOCs: data arrives via the ref API, not props. dataShape is
+  // "realtime" and `required` is empty since the schema describes the
+  // initial config, not a static dataset.
+
+  RealtimeLineChart: {
+    name: "RealtimeLineChart",
+    category: "realtime",
+    description: "Streaming line chart rendered on canvas. Uses ref-based push API for high-frequency data.",
+    required: [],
+    dataShape: "realtime",
+    dataAccessors: [],
+    propBags: ["realtime"],
+    ownProps: {
+      stroke: { type: "string" },
+      strokeWidth: { type: "number" },
+      strokeDasharray: { type: "string" },
+      transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+  },
+
+  RealtimeHistogram: {
+    name: "RealtimeHistogram",
+    category: "realtime",
+    description: "Streaming bar chart with binned aggregation. Uses ref-based push API.",
+    required: ["binSize"],
+    dataShape: "realtime",
+    dataAccessors: [],
+    propBags: ["realtime"],
+    ownProps: {
+      binSize: { type: "number", description: "Time bin size in milliseconds (required)" },
+      categoryAccessor: { type: ["string", "function"], description: "Key for category grouping" },
+      colors: { type: "object", description: "Map of category to color string" },
+      fill: { type: "string" },
+      stroke: { type: "string" },
+      strokeWidth: { type: "number" },
+      gap: { type: "number" },
+      brush: { type: ["boolean", "string", "object"], description: "Enable brush selection. true defaults to { dimension: \"x\", snap: \"bin\" }. String: \"x\". Object: { dimension, snap: \"continuous\"|\"bin\", snapDuring }." },
+      onBrush: { type: "function", description: "Callback when brush extent changes: (extent | null) => void" },
+      linkedBrush: { type: ["string", "object"], description: "Cross-chart brush coordination via LinkedCharts. String: selection name. Object: { name, xField, yField }." },
+      transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+  },
+
+  RealtimeSwarmChart: {
+    name: "RealtimeSwarmChart",
+    category: "realtime",
+    description: "Streaming swarm/scatter chart showing individual data points over time.",
+    required: [],
+    dataShape: "realtime",
+    dataAccessors: [],
+    propBags: ["realtime"],
+    ownProps: {
+      categoryAccessor: { type: ["string", "function"] },
+      colors: { type: "object" },
+      radius: { type: "number" },
+      fill: { type: "string" },
+      opacity: { type: "number" },
+      stroke: { type: "string" },
+      strokeWidth: { type: "number" },
+      transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+  },
+
+  RealtimeWaterfallChart: {
+    name: "RealtimeWaterfallChart",
+    category: "realtime",
+    description: "Streaming waterfall chart with positive/negative bars and connectors.",
+    required: [],
+    dataShape: "realtime",
+    dataAccessors: [],
+    propBags: ["realtime"],
+    ownProps: {
+      positiveColor: { type: "string" },
+      negativeColor: { type: "string" },
+      connectorStroke: { type: "string" },
+      connectorWidth: { type: "number" },
+      gap: { type: "number" },
+      stroke: { type: "string" },
+      strokeWidth: { type: "number" },
+      transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+  },
+
+  RealtimeHeatmap: {
+    name: "RealtimeHeatmap",
+    category: "realtime",
+    description: "Streaming 2D heatmap with binned time and value aggregation.",
+    required: [],
+    dataShape: "realtime",
+    dataAccessors: [],
+    propBags: ["realtime"],
+    ownProps: {
+      heatmapXBins: { type: "number" },
+      heatmapYBins: { type: "number" },
+      aggregation: { type: "string", enum: ["count", "sum", "mean"] as const },
     },
   },
 }
