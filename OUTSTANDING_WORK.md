@@ -25,6 +25,8 @@ Next work:
 
 ### Chart Spec Registry (Schema/Validation/MCP Consolidation)
 
+**Phase 1 + Phase 2 shipped (2026-04-26).** `chartSpecs.ts` exists with all 15 ordinal charts, three pure-function generators (`generateSchemaToolEntry`, `generateValidationMapEntry`, `generateMetadataEntry`), and a 45-test round-trip suite that locks in byte-for-byte validationMap equivalence per chart. `check:chart-specs` is wired up. Drift annotations preserve canonical schema during the migration; Phase 3 re-baselines schema.json to match registry output.
+
 Three files describe each chart's prop surface in different shapes today, and adding a chart means three coordinated edits plus three drift-detection checks (`check:schema`, `check:surface`, `check:ai-contracts`). The hand-curation cost compounds: schema enums, validation type unions, and MCP renderability flags all encode the same "what props does this chart accept?" knowledge in three places.
 
 Plan: introduce a single TypeScript registry as the source of truth for the chart spec triad and emit the existing files via generators. TypeDoc continues to read `.tsx` source for per-prop types (no change). Docs pages (`docs/src/pages/charts/*.js`) stay handwritten because their value is per-chart narrative, not bullet-list coverage. `behaviorContracts.cjs` stays separate — cross-cutting semantic rules don't fit a per-chart spec.
@@ -64,11 +66,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = { /* one entry per HOC */ 
 
 **Phased migration** so the diff is reviewable at each step:
 
-1. **Phase 1 — Shape proof.** Land `chartSpecs.ts` with one chart spec (BarChart) plus the three generators. Show the generators emit byte-identical content for BarChart's slice of each existing file. Wire up `npm run docs:chart-specs`. ~400 LOC, single PR.
+1. ✅ **Phase 1 — Shape proof (shipped).** `chartSpecs.ts` with BarChart, three generators, three round-trip tests. `check:chart-specs` gate.
 
-2. **Phase 2 — Categorical family.** Convert the ordinal chart family (BarChart through GaugeChart, ~15 specs). Run generators, accept resulting diff (should be whitespace/ordering-only). Add `check:chart-specs` covering only the migrated subset; the other `check:schema`/`check:surface` gates keep covering the rest. ~600 LOC of spec content + ~50 LOC of CI.
+2. ✅ **Phase 2 — Categorical family (shipped).** All 15 ordinal charts in `chartSpecs.ts`. 45 round-trip tests. `validationMap` round-trip is byte-for-byte; schema round-trip asserts structural envelope only (canonical schema entries are individually hand-curated and inconsistent — Phase 3 re-baselines).
 
-3. **Phase 3 — XY, network, geo.** Convert the remaining ~25 specs in three smaller PRs by family. Each PR runs the generators, regenerates the three files, and the round-trip diff is the review surface.
+3. **Phase 3 — Re-baseline schema.json + XY/network/geo migration.** Two intertwined deliverables:
+   - Tighten the schema round-trip test to byte-for-byte per-prop equivalence. Run the schema generator to regenerate `ai/schema.json` from CHART_SPECS. Diff will surface cases where the registry exposes props canonical missed (showGrid on PieChart, common metadata on GaugeChart, etc.). Accept the diff or annotate with `omitFromSchema` per chart.
+   - Convert remaining ~23 specs in three smaller PRs by family (XY, network, geo).
 
 4. **Phase 4 — Retire compensating gates.** Once all charts are migrated and `check:chart-specs` covers the full set, remove the inputs to `check:schema` (it can no longer drift) and trim `check:surface` to its remaining unique responsibility (renderability vs. registry import map). Update CHANGELOG to note the new authoring path.
 
