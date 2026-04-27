@@ -256,6 +256,10 @@ export interface StreamGeoFrameProps<T = Datum> {
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  /** Accessor used to report the current legend category domain in push mode. */
+  legendCategoryAccessor?: string | ((d: T) => string)
+  /** Fires when the current legend category domain changes after scene rebuilds. */
+  onCategoriesChange?: (categories: string[]) => void
   showAxes?: boolean
 
   // ── Accessibility ─────────────────────────────────

@@ -1,7 +1,9 @@
+import * as React from "react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import { render } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createMockCanvasContext } from "../../test-utils/canvasMock"
+import type { StreamGeoFrameHandle } from "./geoTypes"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
@@ -61,6 +63,71 @@ describe("StreamGeoFrame", () => {
       } finally {
         updateSpy.mockRestore()
       }
+    })
+  })
+})
+
+// Push-mode legend category emission. The outer suite stubs rAF as a
+// no-op for cheap pipelineConfig assertions; the emission test needs the
+// actual render loop to fire so it lives in a sibling describe with the
+// jsdom default rAF. Mirrors the equivalent test on `StreamXYFrame` /
+// `StreamOrdinalFrame` so a regression in any frame's wiring is caught
+// at the frame level, not just through HOC scenarios.
+describe("StreamGeoFrame — legend category emission", () => {
+  let getContextSpy: ReturnType<typeof vi.spyOn> | null = null
+
+  beforeEach(() => {
+    const ctx = createMockCanvasContext()
+    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as any)
+    if (!(globalThis as any).Path2D) {
+      (globalThis as any).Path2D = class { constructor() {} } as any
+    }
+  })
+  afterEach(() => {
+    getContextSpy?.mockRestore()
+  })
+
+  it("emits legend category domain changes after push, remove, and clear", async () => {
+    const ref = React.createRef<StreamGeoFrameHandle>()
+    const onCategoriesChange = vi.fn()
+    render(
+      <StreamGeoFrame
+        ref={ref}
+        size={[300, 200]}
+        projection="equalEarth"
+        xAccessor="lon"
+        yAccessor="lat"
+        pointIdAccessor="id"
+        legendCategoryAccessor="cat"
+        onCategoriesChange={onCategoriesChange}
+      />
+    )
+
+    await act(async () => {
+      ref.current!.pushMany([
+        { id: "a", lon: 0, lat: 0, cat: "A" },
+        { id: "b", lon: 10, lat: 10, cat: "B" },
+      ])
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    await waitFor(() => {
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
+    })
+
+    await act(async () => {
+      ref.current!.removePoint("b")
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    await waitFor(() => {
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
+    })
+
+    await act(async () => {
+      ref.current!.clear()
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    await waitFor(() => {
+      expect(onCategoriesChange).toHaveBeenLastCalledWith([])
     })
   })
 })
