@@ -88,6 +88,20 @@ describe("BarChart", () => {
     lastOrdinalFrameProps = null
   })
 
+  // Guards against confusing "Cannot read properties of null" failures
+  // when an early-return path (loading / empty / ChartError) prevents
+  // the mocked StreamOrdinalFrame from rendering and capturing props.
+  // Use this before reading `lastOrdinalFrameProps.X` in test bodies
+  // that assume the frame mounted; the explicit message makes failures
+  // actionable.
+  function frameProps() {
+    expect(
+      lastOrdinalFrameProps,
+      "mocked StreamOrdinalFrame did not capture props — BarChart likely hit an early-return path"
+    ).not.toBeNull()
+    return lastOrdinalFrameProps as Record<string, any>
+  }
+
   it("renders with minimal props and forwards data + accessors to the frame", () => {
     render(
       <TooltipProvider>
@@ -95,10 +109,11 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.chartType).toBe("bar")
-    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
-    expect(lastOrdinalFrameProps.oAccessor).toBe("category")
-    expect(lastOrdinalFrameProps.rAccessor).toBe("value")
+    const props = frameProps()
+    expect(props.chartType).toBe("bar")
+    expect(props.data).toEqual(sampleData)
+    expect(props.oAccessor).toBe("category")
+    expect(props.rAccessor).toBe("value")
   })
 
   it("handles empty data gracefully", () => {

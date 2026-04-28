@@ -23,15 +23,27 @@ describe("StackedBarChart", () => {
     lastOrdinalFrameProps = null
   })
 
+  // Guards against confusing null-deref failures when an early-return
+  // path prevents the mocked StreamOrdinalFrame from rendering. See
+  // BarChart.test.tsx for the same helper.
+  function frameProps() {
+    expect(
+      lastOrdinalFrameProps,
+      "mocked StreamOrdinalFrame did not capture props — StackedBarChart likely hit an early-return path"
+    ).not.toBeNull()
+    return lastOrdinalFrameProps as Record<string, any>
+  }
+
   it("forwards data + accessors and the stack accessor to the frame", () => {
     render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.chartType).toBe("bar")
-    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
-    expect(lastOrdinalFrameProps.stackBy).toBe("product")
+    const props = frameProps()
+    expect(props.chartType).toBe("bar")
+    expect(props.data).toEqual(sampleData)
+    expect(props.stackBy).toBe("product")
   })
 
   it("handles empty data gracefully", () => {
@@ -112,14 +124,22 @@ describe("StackedBarChart", () => {
   })
 
   it("applies color encoding", () => {
+    // StackedBarChart resolves color via `effectiveColorBy = colorBy || stackBy`.
+    // Pass a colorBy that DIFFERS from stackBy so the legend's labels
+    // are load-bearing for the colorBy path: a regression that ignored
+    // colorBy and fell through to stackBy would emit ["A", "B"]
+    // (product values) here instead of ["Q1", "Q2"] (category values).
     render(
       <TooltipProvider>
-        <StackedBarChart data={sampleData} stackBy="product" colorBy="product" />
+        <StackedBarChart data={sampleData} stackBy="product" colorBy="category" />
       </TooltipProvider>
     )
-    // colorBy enables a per-piece style fn and emits a derived legend.
     expect(typeof lastOrdinalFrameProps.pieceStyle).toBe("function")
-    expect(lastOrdinalFrameProps.legend).toBeDefined()
+    const labels = lastOrdinalFrameProps.legend?.legendGroups?.[0]?.items?.map(
+      (i: { label: string }) => i.label,
+    )
+    expect(labels).toEqual(expect.arrayContaining(["Q1", "Q2"]))
+    expect(labels).not.toEqual(expect.arrayContaining(["A"])) // stackBy values shouldn't bleed in
   })
 
   it("allows OrdinalFrame prop overrides via frameProps", () => {

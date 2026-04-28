@@ -25,6 +25,17 @@ describe("GroupedBarChart", () => {
     lastOrdinalFrameProps = null
   })
 
+  // Guards against confusing null-deref failures when an early-return
+  // path prevents the mocked StreamOrdinalFrame from rendering. See
+  // BarChart.test.tsx for the same helper.
+  function frameProps() {
+    expect(
+      lastOrdinalFrameProps,
+      "mocked StreamOrdinalFrame did not capture props — GroupedBarChart likely hit an early-return path"
+    ).not.toBeNull()
+    return lastOrdinalFrameProps as Record<string, any>
+  }
+
   it("forwards data + accessors and the group accessor to the frame", () => {
     render(
       <TooltipProvider>
@@ -32,9 +43,10 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
     // GroupedBarChart routes through the frame's clustered-bar layout.
-    expect(lastOrdinalFrameProps.chartType).toBe("clusterbar")
-    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
-    expect(lastOrdinalFrameProps.groupBy).toBe("product")
+    const props = frameProps()
+    expect(props.chartType).toBe("clusterbar")
+    expect(props.data).toEqual(sampleData)
+    expect(props.groupBy).toBe("product")
   })
 
   it("handles empty data gracefully", () => {
