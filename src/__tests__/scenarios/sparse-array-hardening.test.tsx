@@ -85,6 +85,9 @@ const sparseAreas = [
 async function expectCanvasMounts(container: HTMLElement) {
   await waitFor(() => {
     const canvas = container.querySelector("canvas")
+    // test-quality-gate: allow-mount-only — this suite's whole purpose is
+    // to prove sparse input doesn't crash the chart, so the mount itself
+    // IS the load-bearing assertion.
     expect(canvas, "chart canvas should mount without throwing").not.toBeNull()
   })
 }

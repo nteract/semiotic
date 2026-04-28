@@ -23,15 +23,15 @@ describe("StackedBarChart", () => {
     lastOrdinalFrameProps = null
   })
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
+  it("forwards data + accessors and the stack accessor to the frame", () => {
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.chartType).toBe("bar")
+    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+    expect(lastOrdinalFrameProps.stackBy).toBe("product")
   })
 
   it("handles empty data gracefully", () => {
@@ -58,14 +58,12 @@ describe("StackedBarChart", () => {
   })
 
   it("applies custom width and height", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" width={800} height={600} />
       </TooltipProvider>
     )
-
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    expect(lastOrdinalFrameProps.size).toEqual([800, 600])
   })
 
   it("accepts categoryLabel and valueLabel props", () => {
@@ -87,51 +85,45 @@ describe("StackedBarChart", () => {
   })
 
   it("supports vertical orientation (default)", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" orientation="vertical" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.projection).toBe("vertical")
   })
 
   it("supports horizontal orientation", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" orientation="horizontal" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.projection).toBe("horizontal")
   })
 
   it("supports normalized (100%) mode", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" normalize={true} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.normalize).toBe(true)
   })
 
   it("applies color encoding", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" colorBy="product" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // colorBy enables a per-piece style fn and emits a derived legend.
+    expect(typeof lastOrdinalFrameProps.pieceStyle).toBe("function")
+    expect(lastOrdinalFrameProps.legend).toBeDefined()
   })
 
   it("allows OrdinalFrame prop overrides via frameProps", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart
           data={sampleData}
@@ -142,20 +134,16 @@ describe("StackedBarChart", () => {
         />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
   })
 
   it("disables hover when enableHover is false", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy="product" enableHover={false} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.enableHover).toBe(false)
   })
 
   describe("hoverAnnotation", () => {

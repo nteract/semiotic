@@ -99,12 +99,10 @@ Next work:
 
 ### Test Quality Gate
 
-Baseline exists: `check:test-quality` blocks new frame/canvas mount-only assertions, and `hoc-rendering-integration.test.tsx` now asserts scene summaries, legends, annotation labels, and explicit empty/loading behavior.
+Baseline exists: `check:test-quality` blocks new frame/canvas mount-only assertions, and `hoc-rendering-integration.test.tsx` now asserts scene summaries, legends, annotation labels, and explicit empty/loading behavior. The 2026-04-27 burn-down passes brought the baseline from 190 → 156 mount-only candidates (~18% reduction) across the ordinal bar family (BarChart/StackedBarChart/GroupedBarChart, semantic prop-forwarding assertions on `lastOrdinalFrameProps`) and all 8 Playwright integration specs (semantic `aria-label` regex matches that require real paint, plus a hover-triggers-tooltip check).
 
-Next work:
-- Continue burning down the existing `scripts/test-quality-baseline.json` candidates by replacing mount checks with scene props, rendered SVG/canvas output, callbacks, or user-visible behavior.
-- Prioritize validation-adjacent tests where accepted props should also prove a rendered effect.
-- Add higher-level coverage for Playwright specs that still count canvases/SVGs without verifying chart content or interaction state.
+Next work (low priority — diminishing returns):
+- The gate's load-bearing job is preventing **new** mount-only checks; the remaining 156 candidates are unit-test cleanup with adjacent semantic coverage in the same file. Burning the rest of them down is mechanical and unlikely to catch regressions the existing assertions don't already cover. Treat this as opportunistic — if a specific file is being touched for another reason, take the candidates with you; otherwise leave them and let the gate hold the line.
 
 ---
 

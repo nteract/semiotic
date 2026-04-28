@@ -25,15 +25,16 @@ describe("GroupedBarChart", () => {
     lastOrdinalFrameProps = null
   })
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
+  it("forwards data + accessors and the group accessor to the frame", () => {
+    render(
       <TooltipProvider>
         <GroupedBarChart data={sampleData} groupBy="product" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // GroupedBarChart routes through the frame's clustered-bar layout.
+    expect(lastOrdinalFrameProps.chartType).toBe("clusterbar")
+    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+    expect(lastOrdinalFrameProps.groupBy).toBe("product")
   })
 
   it("handles empty data gracefully", () => {

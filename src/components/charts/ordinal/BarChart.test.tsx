@@ -88,15 +88,17 @@ describe("BarChart", () => {
     lastOrdinalFrameProps = null
   })
 
-  it("renders without crashing with minimal props", () => {
-    const { container } = render(
+  it("renders with minimal props and forwards data + accessors to the frame", () => {
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.chartType).toBe("bar")
+    expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+    expect(lastOrdinalFrameProps.oAccessor).toBe("category")
+    expect(lastOrdinalFrameProps.rAccessor).toBe("value")
   })
 
   it("handles empty data gracefully", () => {
@@ -112,14 +114,13 @@ describe("BarChart", () => {
   })
 
   it("applies custom width and height", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} width={800} height={600} />
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    expect(lastOrdinalFrameProps.size).toEqual([800, 600])
   })
 
   it("accepts categoryLabel and valueLabel props", () => {
@@ -140,7 +141,7 @@ describe("BarChart", () => {
   })
 
   it("accepts custom accessors", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart
           data={customData}
@@ -150,81 +151,79 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.oAccessor).toBe("name")
+    expect(lastOrdinalFrameProps.rAccessor).toBe("count")
+    expect(lastOrdinalFrameProps.data).toEqual(customData)
   })
 
   it("supports vertical orientation (default)", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} orientation="vertical" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.projection).toBe("vertical")
   })
 
   it("supports horizontal orientation", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} orientation="horizontal" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.projection).toBe("horizontal")
   })
 
   it("sorts data in ascending order", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} sort="asc" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.oSort).toBe("asc")
+    // HOC pre-sorts the data array under "asc"; values should be increasing.
+    const values = lastOrdinalFrameProps.data.map((d: Datum) => d.value as number)
+    for (let i = 1; i < values.length; i++) expect(values[i]).toBeGreaterThanOrEqual(values[i - 1])
   })
 
   it("sorts data in descending order", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} sort="desc" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.oSort).toBe("desc")
+    const values = lastOrdinalFrameProps.data.map((d: Datum) => d.value as number)
+    for (let i = 1; i < values.length; i++) expect(values[i]).toBeLessThanOrEqual(values[i - 1])
   })
 
   it("sorts with custom function", () => {
-    const { container } = render(
+    const cmp = (a: Datum, b: Datum) => (a.value as number) - (b.value as number)
+    render(
       <TooltipProvider>
-        <BarChart
-          data={sampleData}
-          sort={(a, b) => a.value - b.value}
-        />
+        <BarChart data={sampleData} sort={cmp} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // Function-form `sort` is forwarded to the frame as `oSort` rather
+    // than pre-sorting at the HOC level (the frame's resolveCategories
+    // owns the visual order). Validate identity so a refactor that
+    // accidentally swallowed the comparator would fail this assertion.
+    expect(lastOrdinalFrameProps.oSort).toBe(cmp)
   })
 
   it("applies color encoding", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} colorBy="category" />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // colorBy enables a per-piece style fn and a derived legend.
+    expect(typeof lastOrdinalFrameProps.pieceStyle).toBe("function")
+    expect(lastOrdinalFrameProps.legend).toBeDefined()
   })
 
   it("applies custom color scheme", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart
           data={sampleData}
@@ -233,24 +232,26 @@ describe("BarChart", () => {
         />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // The derived legend's swatches reflect the named scheme — assert
+    // distinct colors emerged for distinct categories rather than a
+    // single fallback fill.
+    const items = lastOrdinalFrameProps.legend?.legendGroups?.[0]?.items ?? []
+    expect(items.length).toBeGreaterThan(1)
+    const colors = new Set(items.map((i: { color: string }) => i.color))
+    expect(colors.size).toBeGreaterThan(1)
   })
 
   it("accepts custom bar padding", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} barPadding={10} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.barPadding).toBe(10)
   })
 
   it("allows OrdinalFrame prop overrides via frameProps", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart
           data={sampleData}
@@ -261,52 +262,46 @@ describe("BarChart", () => {
         />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    // frameProps spreads last (escape hatch) so its keys win.
+    expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("category")
   })
 
   it("updates when data changes", () => {
-    const { container, rerender } = render(
+    const { rerender } = render(
       <TooltipProvider>
         <BarChart data={initialData} />
       </TooltipProvider>
     )
+    expect(lastOrdinalFrameProps.data).toEqual(initialData)
 
-    const initialFrame = container.querySelector(".stream-ordinal-frame")
-    expect(initialFrame).toBeTruthy()
-
-    // Update with more data
     rerender(
       <TooltipProvider>
         <BarChart data={newData} />
       </TooltipProvider>
     )
-
-    const updatedFrame = container.querySelector(".stream-ordinal-frame")
-    expect(updatedFrame).toBeTruthy()
+    // Same chart, fresh data — the frame's `data` prop reflects the
+    // new array, not the old one or a cached reference.
+    expect(lastOrdinalFrameProps.data).toEqual(newData)
+    expect(lastOrdinalFrameProps.data).not.toBe(initialData)
   })
 
   it("disables hover when enableHover is false", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} enableHover={false} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.enableHover).toBe(false)
   })
 
   it("respects showGrid prop", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart data={sampleData} showGrid={true} />
       </TooltipProvider>
     )
-
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
+    expect(lastOrdinalFrameProps.showGrid).toBe(true)
   })
 
   // Legend Tests

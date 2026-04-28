@@ -499,10 +499,14 @@ test.describe("Accessibility - ChartContainer toolbar buttons", () => {
 // ─── 7. Automated axe-core accessibility scanning ───────────────────────────
 
 test.describe("Accessibility - axe-core automated scanning", () => {
-  // Wait for canvas-based charts to render before running axe scan
+  // Wait for canvas-based charts to render before running axe scan.
+  // `aria-label` is populated by `computeCanvasAriaLabel` only after the
+  // scene draws (it carries a node count like `scatter, 50 points`),
+  // so a label that includes a digit is a load-bearing signal that the
+  // chart actually painted — not just that the element mounted.
   async function waitForChartsToRender(page: Page) {
-    const canvas = page.locator("canvas").first()
-    await expect(canvas).toBeVisible({ timeout: 10000 })
+    const canvas = page.locator("canvas[aria-label]").first()
+    await expect(canvas).toHaveAttribute("aria-label", /\d+/, { timeout: 10000 })
   }
 
   const axeScanRoutes = [

@@ -134,8 +134,11 @@ test.describe("Geo Charts - Hover interaction", () => {
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6)
       await waitForRafs(page)
 
-      // Chart should still be visible (no crash)
-      await expect(canvas).toBeVisible()
+      // Chart should still have its scene drawn after the hover sweep —
+      // `aria-label` from `computeCanvasAriaLabel` carries a region
+      // count that only stays populated while the geo scene survives.
+      const dataCanvas = testCase.locator("canvas[aria-label]").first()
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
     }
   })
 })

@@ -217,13 +217,16 @@ test.describe("LineChart Streaming Stability", () => {
     const loopErrors = errors.filter((e) => e.includes("Maximum update depth"))
     expect(loopErrors).toHaveLength(0)
 
-    // The chart should still be alive (canvas visible, no error indicator)
+    // The chart should still be alive — no error indicator, and the
+    // data canvas still has a populated `aria-label` (proves the
+    // pipeline survived the streaming churn rather than just keeping
+    // the element mounted with no scene).
     const testCase = page.locator('[data-testid="regression-line-streaming"]')
     const errorIndicator = testCase.locator(".error-indicator")
     expect(await errorIndicator.count()).toBe(0)
 
-    const canvas = testCase.locator("canvas").first()
-    await expect(canvas).toBeVisible()
+    const dataCanvas = testCase.locator("canvas[aria-label]").first()
+    await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
   })
 })
 
@@ -331,8 +334,12 @@ test.describe("Streaming Error-Free Regression", () => {
     for (const testId of testIds) {
       const testCase = page.locator(`[data-testid="${testId}"]`)
       await expect(testCase).toBeVisible()
-      const canvas = testCase.locator("canvas").first()
-      await expect(canvas).toBeVisible({ timeout: 8000 })
+      // Force-directed and chord regressions render to network frames
+      // whose interaction canvas can sit at index 0 with no
+      // `aria-label`; query the data canvas explicitly via the
+      // attribute and assert its scene is populated.
+      const dataCanvas = testCase.locator("canvas[aria-label]").first()
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/, { timeout: 8000 })
     }
   })
 })
