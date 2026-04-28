@@ -122,15 +122,6 @@ Next work (low priority — diminishing returns):
 
 ## P1 — Architecture & API Coherence
 
-### `setupCanvasMock` Adoption Sweep
-
-`src/test-utils/canvasMock.ts` exposes `setupCanvasMock({ stubRaf })` covering canvas + Path2D + optional rAF/cAF stubs with symmetric cleanup. `hoc-rendering-integration.test.tsx` was the first scenario file to adopt it; older test files still reimplement parts of the canvas mock inline.
-
-Next work:
-- Migrate the remaining test files that reimplement canvas/Path2D setup to `setupCanvasMock`.
-- Pass `stubRaf: false` for any spec that exercises a force-simulation tick loop (otherwise the synchronous-fire stub recurses).
-- Verify cleanup actually fires by re-running the suite in a different order; canvas/Path2D leaks across files now restore correctly via the helper.
-
 ### TypeScript Surface Cleanup
 
 `no-explicit-any` remains warning-level debt and should be reduced by modeling real shapes, not by mechanical replacement.
