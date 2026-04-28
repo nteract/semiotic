@@ -1,5 +1,13 @@
 "use strict"
 
+// Maintenance note: when you change the agent-facing rules in this
+// file (especially anything in CONTRACTS), update the parallel `rules`
+// array in `context7.json` so the Context7 index stays in sync. The
+// `check:context7` gate validates format (255-char-per-rule limit,
+// folder references, sub-path drift vs `package.json` exports) but
+// can't detect *content* drift between this file and the manifest —
+// keeping them aligned is part of the same edit.
+
 const path = require("path")
 const fs = require("fs")
 

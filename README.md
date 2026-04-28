@@ -356,6 +356,8 @@ const gif = await renderToAnimatedGif("line", data, { ... }, { fps: 12 })
 
 ## MCP Server
 
+mcp-name: io.github.nteract/semiotic
+
 Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, read packaged AI guidance, and get chart recommendations via tool calls.
 
 ### Setup
@@ -480,6 +482,21 @@ npx semiotic-ai --compact      # compact schema (fewer tokens)
 ```
 
 `--doctor` uses the full `diagnoseConfig` checks when `dist` is available and falls back to schema-only validation in clean source checkouts.
+
+## Where to find Semiotic for AI assistants
+
+Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Claude Code, Cursor, Cline, Copilot, etc.) can pull current docs and tools without copy-paste:
+
+- **Context7** — [context7.com/nteract/semiotic](https://context7.com/nteract/semiotic) (configured via `context7.json`)
+- **DeepWiki** — [deepwiki.com/nteract/semiotic](https://deepwiki.com/nteract/semiotic)
+- **GitMCP** — [gitmcp.io/nteract/semiotic](https://gitmcp.io/nteract/semiotic) (exposes the repo as an MCP endpoint directly)
+- **Official MCP Registry** — search "semiotic" at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io)
+- **Smithery** — [smithery.ai/server/nteract/semiotic](https://smithery.ai/server/nteract/semiotic)
+
+Agent-facing API surface:
+
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, known pitfalls); `ai/schema.json` is the JSON Schema for every chart's prop surface (43 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation
 

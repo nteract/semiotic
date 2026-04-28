@@ -44,6 +44,12 @@ jobs:
       - name: Check CLAUDE.md component coverage
         run: npm run check:claude-md-coverage
 
+      - name: Check context7.json freshness
+        run: npm run check:context7
+
+      - name: Check MCP Registry submission cross-references
+        run: npm run check:mcp-registry
+
       - name: Check AI/MCP surface parity
         run: npm run check:surface
 

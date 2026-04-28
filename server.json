@@ -1,17 +1,20 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nteract/semiotic",
-  "description": "React data visualization MCP server with 5 tools: chart rendering to SVG, schema lookup, chart recommendation, config diagnostics, and issue reporting. 30 chart types including XY, ordinal, network, and geographic.",
+  "title": "Semiotic",
+  "description": "React data visualization MCP server. Render and validate charts (43 types across XY, ordinal, network, geo, and realtime families) from agent-supplied JSON specs. Includes schema lookup, chart recommendation, and config diagnostics tools.",
+  "websiteUrl": "https://semiotic.nteract.io",
   "repository": {
     "url": "https://github.com/nteract/semiotic",
     "source": "github"
   },
-  "version": "3.3.1",
+  "version": "3.4.2",
   "packages": [
     {
       "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "semiotic",
-      "version": "3.3.1",
+      "version": "3.4.2",
       "transport": {
         "type": "stdio"
       }
