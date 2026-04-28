@@ -130,10 +130,14 @@ export function buildLinearFillGradient(
     for (const s of validStops) grad.addColorStop(s.offset, s.color)
     return grad
   }
+  const { topOpacity, bottomOpacity } = fillGradient
+  if (!Number.isFinite(topOpacity) || !Number.isFinite(bottomOpacity)) return null
+  const top = Math.max(0, Math.min(1, topOpacity))
+  const bottom = Math.max(0, Math.min(1, bottomOpacity))
   const grad = ctx.createLinearGradient(x0, y0, x1, y1)
   const [r, g, b] = parseCanvasColor(ctx, baseFill)
-  grad.addColorStop(0, `rgba(${r},${g},${b},${fillGradient.topOpacity})`)
-  grad.addColorStop(1, `rgba(${r},${g},${b},${fillGradient.bottomOpacity})`)
+  grad.addColorStop(0, `rgba(${r},${g},${b},${top})`)
+  grad.addColorStop(1, `rgba(${r},${g},${b},${bottom})`)
   return grad
 }
 
@@ -154,10 +158,21 @@ export function buildColorStopGradient(
   x1: number,
   y1: number,
 ): CanvasGradient | null {
-  if (strokeGradient.colorStops.length < 2) return null
+  // Filter non-finite offsets *before* the count check — `addColorStop`
+  // throws `IndexSizeError` on NaN, and `Math.max/min` propagates NaN
+  // through unchanged. Mirrors `buildLinearFillGradient`'s contract:
+  // `< 2` valid stops returns null rather than building a degenerate or
+  // throwing gradient.
+  const validStops = strokeGradient.colorStops
+    .filter((stop) => Number.isFinite(stop.offset))
+    .map((stop) => ({
+      offset: Math.max(0, Math.min(1, stop.offset)),
+      color: stop.color,
+    }))
+  if (validStops.length < 2) return null
   const grad = ctx.createLinearGradient(x0, y0, x1, y1)
-  for (const stop of strokeGradient.colorStops) {
-    grad.addColorStop(Math.max(0, Math.min(1, stop.offset)), stop.color)
+  for (const stop of validStops) {
+    grad.addColorStop(stop.offset, stop.color)
   }
   return grad
 }

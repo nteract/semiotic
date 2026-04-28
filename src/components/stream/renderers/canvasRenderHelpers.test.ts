@@ -40,11 +40,17 @@ describe("canvasRenderHelpers", () => {
       expect(resolveCanvasFill(ctx, pattern, "#fallback")).toBe(pattern)
     })
 
-    it("hands strings to resolveCSSColor", () => {
-      // jsdom's mock canvas doesn't resolve CSS vars; the helper falls
-      // back to the provided fallback when resolveCSSColor returns null.
-      const result = resolveCanvasFill(ctx, "#abcdef", "#fallback")
-      expect(result === "#abcdef" || result === "#fallback").toBe(true)
+    it("uses the inline var() fallback when CSS resolution can't reach a canvas", () => {
+      // The mock context has no DOM `canvas` ancestor, so
+      // `resolveCSSColor` short-circuits to `match[2]?.trim() || value`:
+      // `var(--x, #abcdef)` resolves to `#abcdef`, but `var(--x)` returns
+      // the original literal string (which is truthy and so is passed
+      // through by `resolveCanvasFill` rather than swapped for the
+      // helper's fallback). Matches the pre-extraction inline form
+      // `(resolveCSSColor(ctx, X)) || fallback` — the fallback only
+      // engages on a falsy result, not on a "still unresolved" string.
+      expect(resolveCanvasFill(ctx, "var(--missing, #abcdef)", "#fallback")).toBe("#abcdef")
+      expect(resolveCanvasFill(ctx, "var(--missing)", "#fallback")).toBe("var(--missing)")
     })
   })
 
@@ -95,6 +101,15 @@ describe("canvasRenderHelpers", () => {
       )
       expect(grad).toBeTruthy()
     })
+
+    it("returns null for non-finite opacities (NaN-→broken-rgba protection)", () => {
+      expect(
+        buildLinearFillGradient(ctx, { topOpacity: NaN, bottomOpacity: 0 }, "#000", 0, 0, 0, 100),
+      ).toBeNull()
+      expect(
+        buildLinearFillGradient(ctx, { topOpacity: 1, bottomOpacity: Infinity }, "#000", 0, 0, 0, 100),
+      ).toBeNull()
+    })
   })
 
   describe("buildColorStopGradient", () => {
@@ -117,6 +132,18 @@ describe("canvasRenderHelpers", () => {
         0, 0, 100, 0,
       )
       expect(grad).toBeTruthy()
+    })
+
+    it("filters non-finite offsets before the 2-stop minimum (avoids addColorStop IndexSizeError)", () => {
+      const grad = buildColorStopGradient(
+        ctx,
+        { colorStops: [
+          { offset: 0, color: "red" },
+          { offset: NaN, color: "green" },
+        ]},
+        0, 0, 100, 0,
+      )
+      expect(grad).toBeNull()
     })
   })
 })
