@@ -117,6 +117,15 @@ function makeVariantDefaults(
   }
   if (variant === "network") {
     const r = frameRef as RefObject<NetworkFrameLike | null>
+    // `getScales` is intentionally absent. The pre-migration inline
+    // network handles in `ForceDirectedGraph`, `SankeyDiagram`, and
+    // `ChordDiagram` omitted it entirely, and `RealtimeFrameHandle`
+    // marks the method optional precisely so network/geo frames can
+    // skip it ("may not implement this method at all"). Returning a
+    // `() => null` stub instead would silently flip
+    // `typeof handle.getScales === "function"` checks consumers may
+    // use to branch — preserve the prior runtime shape by not
+    // assigning the key at all.
     return {
       // Network HOCs ingest edges, not points — the `RealtimeFrameHandle`
       // surface uses `Datum` for both, so the cast at the boundary is
@@ -144,13 +153,12 @@ function makeVariantDefaults(
       clear: () => r.current?.clear(),
       getData: () =>
         r.current?.getTopology()?.nodes?.map((n) => n.data ?? {}) ?? [],
-      // Network frames don't expose `getScales` — return null. Consumers
-      // that documented this behavior in their inline handles get the
-      // same shape from this default.
-      getScales: () => null,
     }
   }
   // variant === "geo-points"
+  // Same rationale as the network variant: pre-migration geo HOCs
+  // (`ProportionalSymbolMap`, `DistanceCartogram`) omitted `getScales`
+  // entirely, so the helper does too.
   const r = frameRef as RefObject<GeoPointsFrameLike | null>
   return {
     push: (point) => r.current?.push(point),
@@ -166,8 +174,5 @@ function makeVariantDefaults(
     },
     clear: () => r.current?.clear(),
     getData: () => r.current?.getData() ?? [],
-    // Geo frames don't have a meaningful scales concept either —
-    // return null for consistency.
-    getScales: () => null,
   }
 }
