@@ -113,14 +113,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
+  const { width, height, enableHover, showLegend, title, description, summary, accessibleTable } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const effectiveColorBy = colorBy || categoryAccessor

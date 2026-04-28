@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, useRef, useState, useEffect, useCallback, useImperativeHandle, forwardRef } from "react"
+import { useMemo, useRef, useState, useEffect, useCallback, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp, DistanceCartogramConfig } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -17,6 +17,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -289,18 +290,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
 
   // ── Ref + layout state for overlay rendering ─────────────────────
   const geoRef = useRef<StreamGeoFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => geoRef.current?.push(point),
-    pushMany: (points) => geoRef.current?.pushMany(points),
-    remove: (id) => geoRef.current?.removePoint(id) ?? [],
-    update: (id, updater) => {
-      const removed = geoRef.current?.removePoint(id) ?? []
-      for (const old of removed) geoRef.current?.push(updater(old))
-      return removed
-    },
-    clear: () => geoRef.current?.clear(),
-    getData: () => geoRef.current?.getData() ?? []
-  }))
+  useFrameImperativeHandle(ref, { variant: "geo-points", frameRef: geoRef })
 
   const [cartogramLayout, setCartogramLayout] = useState<{
     cx: number; cy: number; maxCost: number; availableRadius: number

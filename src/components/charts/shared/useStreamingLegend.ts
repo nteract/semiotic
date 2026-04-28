@@ -10,19 +10,27 @@ import { useLinkedChartCategories } from "../../LinkedCharts"
 import { useCategoryColors } from "../../CategoryColors"
 
 /**
- * Hook that discovers categories from streamed (pushed) data and builds
- * a legend dynamically.
+ * Low-level push-API category-discovery wrapper.
  *
- * When the `data` prop is provided (bounded mode), this hook is inert —
- * the legend is built by `useChartSetup` from the full dataset.
+ * Most HOCs do NOT need this hook anymore. `useChartSetup` already
+ * synthesizes a push-mode legend from categories the StreamFrame emits
+ * via `onCategoriesChange`, applies the same provider/scheme/theme/
+ * STREAMING_PALETTE precedence the marks resolve through, and registers
+ * those categories with the parent `LinkedCharts` via
+ * `useChartLegendAndMargin` → `useLinkedChartCategories`. For HOCs that
+ * just want a working push-mode legend, that is enough.
  *
- * When `data` is undefined (push API mode), this hook:
- * 1. Wraps push/pushMany to intercept incoming data
- * 2. Extracts category values via `colorBy`
- * 3. Builds a legend config when new categories are discovered
+ * This hook is kept as the escape hatch for HOCs that must intercept
+ * the push call BEFORE the frame ingests it — typically aggregator HOCs
+ * like `LikertChart` that re-aggregate streamed rows into a different
+ * shape (level × count) before the frame sees them. `wrapPush` /
+ * `wrapPushMany` give those charts a place to run their accumulator
+ * code; the wrapped function then forwards to the original push.
  *
- * Returns `wrapPush` / `wrapPushMany` callbacks to wrap the imperative handle,
- * plus a `streamingLegend` that should override the (empty) legend from useChartSetup.
+ * Returned `streamingLegend` and `streamingMarginAdjust` are vestigial
+ * for these consumers — they're produced for backward compatibility,
+ * but new code should rely on `setup.legend` / `setup.margin` from
+ * `useChartSetup` instead.
  */
 export function useStreamingLegend({
   isPushMode,

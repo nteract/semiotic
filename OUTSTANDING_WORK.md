@@ -108,14 +108,6 @@ Next work (low priority — diminishing returns):
 
 ## P1 — Architecture & API Coherence
 
-### HOC To `useChartSetup` Unification — Remaining Pieces
-
-The bulk conversion is done (see CHANGELOG). Two follow-ups remain.
-
-Next work:
-- Add `useLinkedChartCategories` integration to `useChartSetup` so `LineChart` can drop its standalone `useStreamingLegend` call. After that change, `useStreamingLegend` either ships only as a low-level utility for advanced consumers or is removed entirely.
-- Decide whether `useChartSetup` should accept optional inputs for dual-axis (`MultiAxisLineChart`) and projection (geo charts that need pre-projected coordinates) cases. Current charts in those families stay explicit; a second concrete consumer would justify the shared inputs.
-
 ### `setupCanvasMock` Adoption Sweep
 
 `src/test-utils/canvasMock.ts` exposes `setupCanvasMock({ stubRaf })` covering canvas + Path2D + optional rAF/cAF stubs with symmetric cleanup. `hoc-rendering-integration.test.tsx` was the first scenario file to adopt it; older test files still reimplement parts of the canvas mock inline.
@@ -142,22 +134,6 @@ Next work:
 - Maintain a tracked-consumers list for API-change checks where access allows.
 - Audit realtime chart usage for `windowSize={data.length}` or other bounded-mode workarounds.
 - Consider first-class bounded mode on realtime HOCs where static-data use is common.
-
-### HOC-Layer Boilerplate Reduction
-
-Two cross-cutting helpers would eliminate the bulk of remaining HOC boilerplate. Both are pure extraction, behavior-preserving, no API changes, no type-system cost. Estimated total: ~1,060 lines saved across the 38 published HOCs.
-
-Step 1 — `useFrameImperativeHandle(ref, { frameRef, isNetwork? })` (~520 lines saved):
-- Every HOC implements the same 7-method `useImperativeHandle` bridge to `frameRef`: `push`, `pushMany`, `remove`, `update`, `clear`, `getData`, `getScales`.
-- Network charts route `remove`/`update` through `removeNode`/`updateNode`; an `isNetwork` flag handles that.
-- Ship as `src/components/charts/shared/useFrameImperativeHandle.ts`. Replace site-by-site; each HOC's diff drops ~10 lines.
-
-Step 2 — `useChartModeAliases(resolved)` (~540 lines saved):
-- Every HOC unpacks `width`, `height`, `enableHover`, `showGrid`, `showLegend`, `title`, `description`, `summary`, `accessibleTable` into local consts after `useChartMode`.
-- Helper returns the alias bundle; chart-specific extras (`xLabel`, `yLabel`, `categoryLabel`, etc.) keep destructuring from `resolved` directly.
-- Ship as `src/components/charts/shared/useChartModeAliases.ts`. Site diffs are ~10 lines per HOC.
-
-Risk: low. Both helpers preserve identity of returned values across renders provided `resolved` is stable (it is — `useChartMode` already memoizes). Ship in two PRs so each diff is reviewable.
 
 ### `streamProps` Construction Helpers
 

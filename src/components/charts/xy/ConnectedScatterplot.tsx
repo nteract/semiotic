@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -17,6 +17,7 @@ import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/sel
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { interpolateViridis } from "d3-scale-chromatic"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
  * ConnectedScatterplot component props
@@ -105,15 +106,7 @@ function viridisColor(i: number, n: number): string {
 export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -154,16 +147,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const rawData = (data || []) as Datum[]
 

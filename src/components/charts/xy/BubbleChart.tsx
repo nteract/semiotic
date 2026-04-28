@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, useState } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -19,6 +19,7 @@ import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectio
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
  * BubbleChart component props
@@ -264,17 +265,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const isPushMode = data === undefined
@@ -341,19 +332,23 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     [updateSizeDomain]
   )
 
-  useImperativeHandle(ref, () => ({
-    push: wrappedPush,
-    pushMany: wrappedPushMany,
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => {
-      streamingSizeDomainRef.current = null
-      setSizeDomainVersion(v => v + 1)
-      frameRef.current?.clear()
+  // Wrapped push/pushMany add streaming-size-domain tracking; clear
+  // also resets that domain. Other 5 methods get the vanilla XY
+  // defaults from the helper. `deps` matches the inline form.
+  useFrameImperativeHandle(ref, {
+    variant: "xy",
+    frameRef,
+    overrides: {
+      push: wrappedPush,
+      pushMany: wrappedPushMany,
+      clear: () => {
+        streamingSizeDomainRef.current = null
+        setSizeDomainVersion(v => v + 1)
+        frameRef.current?.clear()
+      },
     },
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }), [wrappedPush, wrappedPushMany])
+    deps: [wrappedPush, wrappedPushMany],
+  })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
 
