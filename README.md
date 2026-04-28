@@ -493,12 +493,10 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 - **Official MCP Registry** — search "semiotic" at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io)
 - **Smithery** — [smithery.ai/server/nteract/semiotic](https://smithery.ai/server/nteract/semiotic)
 
-Agent-facing API guides ship in the package itself:
+Agent-facing API surface:
 
-- **`CLAUDE.md`** — quick-start cheat sheet for HOC props, push API, theming, and known pitfalls
-- **`docs/public/llms.txt`** + **`docs/public/llms-full.txt`** — [llms.txt standard](https://llmstxt.org) navigation map and full inlined docs
-- **`ai/schema.json`** — JSON Schema for every chart's prop surface (43 charts)
-- **`ai/behaviorContracts.cjs`** — agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts)
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, known pitfalls); `ai/schema.json` is the JSON Schema for every chart's prop surface (43 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation
 

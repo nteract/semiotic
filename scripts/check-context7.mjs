@@ -34,13 +34,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
 const manifestPath = join(repoRoot, "context7.json")
 
-let exitCode = 0
 const errors = []
 const warnings = []
 
 function fail(msg) {
   errors.push(msg)
-  exitCode = 1
 }
 
 function warn(msg) {
