@@ -67,7 +67,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.chartType).toBe("clusterbar")
+    expect(frameProps().chartType).toBe("clusterbar")
   })
 
   it("sets pieceIDAccessor from groupBy", () => {
@@ -77,7 +77,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.groupBy).toBe("product")
+    expect(frameProps().groupBy).toBe("product")
   })
 
   it("supports vertical orientation (default)", () => {
@@ -87,7 +87,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.projection).toBe("vertical")
+    expect(frameProps().projection).toBe("vertical")
   })
 
   it("supports horizontal orientation", () => {
@@ -97,7 +97,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.projection).toBe("horizontal")
+    expect(frameProps().projection).toBe("horizontal")
   })
 
   it("accepts custom accessors", () => {
@@ -112,9 +112,9 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.oAccessor).toBe("group")
-    expect(lastOrdinalFrameProps.rAccessor).toBe("count")
-    expect(lastOrdinalFrameProps.groupBy).toBe("series")
+    expect(frameProps().oAccessor).toBe("group")
+    expect(frameProps().rAccessor).toBe("count")
+    expect(frameProps().groupBy).toBe("series")
   })
 
   it("shows legend by default", () => {
@@ -124,7 +124,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.legend).toBeDefined()
+    expect(frameProps().legend).toBeDefined()
   })
 
   it("hides legend when showLegend is false", () => {
@@ -134,7 +134,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.legend).toBeUndefined()
+    expect(frameProps().legend).toBeUndefined()
   })
 
   it("provides a default tooltipContent function", () => {
@@ -144,7 +144,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+    expect(typeof frameProps().tooltipContent).toBe("function")
   })
 
   it("allows OrdinalFrame prop overrides via frameProps", () => {
@@ -158,6 +158,6 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.oLabel).toBe("category")
+    expect(frameProps().oLabel).toBe("category")
   })
 })

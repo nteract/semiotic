@@ -75,7 +75,7 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" width={800} height={600} />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.size).toEqual([800, 600])
+    expect(frameProps().size).toEqual([800, 600])
   })
 
   it("accepts categoryLabel and valueLabel props", () => {
@@ -91,9 +91,9 @@ describe("StackedBarChart", () => {
     )
 
     // Should pass axis labels to StreamOrdinalFrame
-    expect(lastOrdinalFrameProps.showAxes).toBe(true)
-    expect(lastOrdinalFrameProps.oLabel).toBe("Quarter")
-    expect(lastOrdinalFrameProps.rLabel).toBe("Sales")
+    expect(frameProps().showAxes).toBe(true)
+    expect(frameProps().oLabel).toBe("Quarter")
+    expect(frameProps().rLabel).toBe("Sales")
   })
 
   it("supports vertical orientation (default)", () => {
@@ -102,7 +102,7 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" orientation="vertical" />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.projection).toBe("vertical")
+    expect(frameProps().projection).toBe("vertical")
   })
 
   it("supports horizontal orientation", () => {
@@ -111,7 +111,7 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" orientation="horizontal" />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.projection).toBe("horizontal")
+    expect(frameProps().projection).toBe("horizontal")
   })
 
   it("supports normalized (100%) mode", () => {
@@ -120,7 +120,7 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" normalize={true} />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.normalize).toBe(true)
+    expect(frameProps().normalize).toBe(true)
   })
 
   it("applies color encoding", () => {
@@ -134,8 +134,8 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" colorBy="category" />
       </TooltipProvider>
     )
-    expect(typeof lastOrdinalFrameProps.pieceStyle).toBe("function")
-    const labels = lastOrdinalFrameProps.legend?.legendGroups?.[0]?.items?.map(
+    expect(typeof frameProps().pieceStyle).toBe("function")
+    const labels = frameProps().legend?.legendGroups?.[0]?.items?.map(
       (i: { label: string }) => i.label,
     )
     expect(labels).toEqual(expect.arrayContaining(["Q1", "Q2"]))
@@ -154,7 +154,7 @@ describe("StackedBarChart", () => {
         />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
+    expect(frameProps().hoverAnnotation).toBe(true)
   })
 
   it("disables hover when enableHover is false", () => {
@@ -163,7 +163,7 @@ describe("StackedBarChart", () => {
         <StackedBarChart data={sampleData} stackBy="product" enableHover={false} />
       </TooltipProvider>
     )
-    expect(lastOrdinalFrameProps.enableHover).toBe(false)
+    expect(frameProps().enableHover).toBe(false)
   })
 
   describe("hoverAnnotation", () => {
@@ -174,8 +174,8 @@ describe("StackedBarChart", () => {
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.enableHover).toBe(true)
-      expect(lastOrdinalFrameProps.pieceHoverAnnotation).toBeUndefined()
+      expect(frameProps().enableHover).toBe(true)
+      expect(frameProps().pieceHoverAnnotation).toBeUndefined()
     })
 
     it("disables enableHover when enableHover is false", () => {
@@ -185,7 +185,7 @@ describe("StackedBarChart", () => {
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.enableHover).toBe(false)
+      expect(frameProps().enableHover).toBe(false)
     })
 
     it("provides a default tooltipContent function", () => {
@@ -195,7 +195,7 @@ describe("StackedBarChart", () => {
         </TooltipProvider>
       )
 
-      expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+      expect(typeof frameProps().tooltipContent).toBe("function")
     })
 
     it("default tooltip renders stackBy value, category, and value", () => {
@@ -205,7 +205,7 @@ describe("StackedBarChart", () => {
         </TooltipProvider>
       )
 
-      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const tooltipFn = frameProps().tooltipContent
       const pieceData = {
         category: "Q1",
         product: "A",
@@ -229,7 +229,7 @@ describe("StackedBarChart", () => {
         </TooltipProvider>
       )
 
-      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const tooltipFn = frameProps().tooltipContent
       const { container } = render(<>{tooltipFn({ product: "B" })}</>)
 
       expect(container.textContent).toContain("custom: B")
