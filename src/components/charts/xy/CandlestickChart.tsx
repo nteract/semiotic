@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
@@ -10,7 +11,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CandlestickStyle } from "../../stream/types"
 import { useChartSelection, useChartMode, getCrosshairProps } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName, type TooltipFieldConfig } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -232,17 +233,14 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     enableHover,
     showGrid,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      // CandlestickChart has no `hoverHighlight` prop, but the click
+      // predicate still includes `linkedHover` (cross-chart click-to-lock).
+      linkedHover, onObservation, onClick,
+      customHoverBehavior, customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...crosshairFrameProps,
     ...frameProps,

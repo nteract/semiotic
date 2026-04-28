@@ -6,7 +6,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -17,6 +17,7 @@ import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/sel
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { interpolateViridis } from "d3-scale-chromatic"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
@@ -376,17 +377,13 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     yFormat,
     enableHover,
     showGrid,
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover, onObservation, onClick, hoverHighlight,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
     svgPreRenderers,

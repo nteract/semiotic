@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -8,7 +9,7 @@ import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } 
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -314,17 +315,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     enableHover,
     showGrid,
     ...setup.legendBehaviorProps,
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover, onObservation, onClick, hoverHighlight,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

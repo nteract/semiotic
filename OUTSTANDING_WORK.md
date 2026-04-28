@@ -135,18 +135,6 @@ Next work:
 - Audit realtime chart usage for `windowSize={data.length}` or other bounded-mode workarounds.
 - Consider first-class bounded mode on realtime HOCs where static-data use is common.
 
-### `streamProps` Construction Helpers
-
-Three small spreads recur in every HOC's `streamProps = {...}` object. Best done *after* the two HOC-layer helpers above, because once each HOC is 20+ lines lighter the construction site becomes the obvious next focal point. Estimated ~240 lines saved across 28 occurrences.
-
-Next work:
-- `buildBaseMetadataProps({ title, description, summary, className, animate })` — the `...(title && { title })` chain (~110 lines).
-- `buildCustomBehaviorProps({ linkedHover, onObservation, onClick, hoverHighlight, customHoverBehavior, customClickBehavior })` — the conditional hover/click spread pair (~40 lines).
-- `buildTooltipProps({ tooltip, defaultTooltipContent })` — the `tooltip === false ? () => null : (normalizeTooltip(tooltip) || defaultTooltipContent)` line (~90 lines).
-- Group all three into one `src/components/charts/shared/streamPropsHelpers.ts` module so the import cost amortizes.
-
-Risk: none. Each helper is a pure function over already-named locals.
-
 ### `validationMap` Composition
 
 **Likely superseded by the P0 Chart Spec Registry plan** — validationMap becomes a generated file from `chartSpecs.ts`, so hand-rewriting its composition would be wasted effort. Skip this unless the registry plan slips.

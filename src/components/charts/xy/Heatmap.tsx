@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
@@ -26,7 +27,7 @@ import { useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInte
 import type { GradientLegendConfig } from "../../types/legendTypes"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -432,17 +433,12 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     ...(gradientLegend && { legend: gradientLegend, legendPosition }),
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover, onObservation, onClick, hoverHighlight,
+      customHoverBehavior, customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...crosshairFrameProps,
     ...frameProps
