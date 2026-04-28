@@ -1,4 +1,3 @@
-import { vi } from "vitest"
 /**
  * StrictMode compatibility test suite.
  *
@@ -13,33 +12,7 @@ import { vi } from "vitest"
  */
 import React from "react"
 import { render } from "@testing-library/react"
-import { createMockCanvasContext } from "../../test-utils/canvasMock"
-
-// ── Canvas + rAF mocks ──────────────────────────────────────────────────
-
-function setupMocks() {
-  (HTMLCanvasElement.prototype as any).getContext = vi.fn(() => createMockCanvasContext())
-  // Path2D not available in jsdom — mock it for network edge rendering
-  if (!(globalThis as any).Path2D) {
-    (globalThis as any).Path2D = class { constructor() {} }
-  }
-
-  let rafId = 0
-  vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-    const id = ++rafId
-    // Execute asynchronously to avoid recursive scheduleRender stack overflow
-    Promise.resolve().then(() => cb(performance.now()))
-    return id
-  })
-  vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
-}
-
-function teardownMocks() {
-  if ((window.requestAnimationFrame as any).mockRestore)
-    (window.requestAnimationFrame as any).mockRestore()
-  if ((window.cancelAnimationFrame as any).mockRestore)
-    (window.cancelAnimationFrame as any).mockRestore()
-}
+import { setupCanvasMock } from "../../test-utils/canvasMock"
 
 // ── Test data ────────────────────────────────────────────────────────────
 
@@ -102,8 +75,12 @@ import { CirclePack } from "./network/CirclePack"
 // ── Tests ────────────────────────────────────────────────────────────────
 
 describe("StrictMode compatibility", () => {
-  beforeEach(() => setupMocks())
-  afterEach(() => teardownMocks())
+  // Microtask rAF: synchronous fire would recurse `scheduleRender` for
+  // continuous-render frames; jsdom's setTimeout cadence introduces
+  // ~16ms latency per double-mount. A microtask defer is the sweet spot.
+  let restoreCanvas: (() => void) | null = null
+  beforeEach(() => { restoreCanvas = setupCanvasMock({ stubRaf: "microtask" }) })
+  afterEach(() => { restoreCanvas?.(); restoreCanvas = null })
 
   // XY charts
   const xyCharts: [string, React.ComponentType<any>][] = [

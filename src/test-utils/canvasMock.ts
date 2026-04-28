@@ -126,19 +126,33 @@ export function recordCanvasOps(ctx: CanvasContextMock): CanvasOpLog {
   return log
 }
 
+/**
+ * rAF stubbing flavor:
+ *
+ * - `true` — synchronous fire: the rAF callback runs immediately when
+ *   scheduled. Default. Right for most tests that just want a paint
+ *   to happen before assertions, but recurses indefinitely for
+ *   components that re-schedule rAF inside the callback (force
+ *   simulations, continuous render loops).
+ *
+ * - `false` — leave jsdom's default rAF in place (setTimeout-backed,
+ *   ~16ms). Right for tests that exercise the actual rAF cadence and
+ *   use `waitFor` to settle. Pairs with force-simulation specs.
+ *
+ * - `"noop"` — install a stub that returns an id but never fires the
+ *   callback. Right for "observe initial state" regression tests that
+ *   want a single mount-time render and nothing else (the frame
+ *   regression suites that spy on `updateConfig` use this).
+ *
+ * - `"microtask"` — fire the callback on a `Promise.resolve().then(...)`
+ *   microtask. Right for tests where synchronous fire would recurse
+ *   `scheduleRender` but jsdom's setTimeout cadence introduces
+ *   undesirable latency (StrictMode double-mount tests use this).
+ */
+export type StubRafMode = boolean | "noop" | "microtask"
+
 export interface SetupCanvasMockOptions {
-  /**
-   * Stub `requestAnimationFrame`/`cancelAnimationFrame` so callbacks fire
-   * synchronously. Default: `true`.
-   *
-   * Set to `false` for tests that exercise components driving an animation
-   * loop through rAF — force simulations (ForceDirectedGraph, SankeyDiagram)
-   * re-schedule themselves on every tick, and a synchronous-fire stub
-   * causes unbounded recursion. With the stub disabled, jsdom's default
-   * (setTimeout-based) rAF runs the loop deterministically and tests can
-   * `waitFor` the resulting paint.
-   */
-  stubRaf?: boolean
+  stubRaf?: StubRafMode
 }
 
 /**
@@ -150,11 +164,11 @@ export interface SetupCanvasMockOptions {
  * @example
  * ```ts
  * let cleanup: () => void
- * beforeEach(() => { cleanup = setupCanvasMock() })
+ * beforeEach(() => { cleanup = setupCanvasMock() })          // sync rAF (default)
+ * beforeEach(() => { cleanup = setupCanvasMock({ stubRaf: false }) })       // jsdom rAF (force-sim specs)
+ * beforeEach(() => { cleanup = setupCanvasMock({ stubRaf: "noop" }) })      // never fires (mount-only regression)
+ * beforeEach(() => { cleanup = setupCanvasMock({ stubRaf: "microtask" }) }) // Promise.resolve fire (StrictMode)
  * afterEach(() => { cleanup() })
- *
- * // Network/force-simulation specs:
- * beforeEach(() => { cleanup = setupCanvasMock({ stubRaf: false }) })
  * ```
  */
 export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => void {
@@ -176,16 +190,31 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
 
   let rafSpy: ReturnType<typeof vi.spyOn> | undefined
   let cafSpy: ReturnType<typeof vi.spyOn> | undefined
-  if (stubRaf) {
-    rafSpy = vi
-      .spyOn(window, "requestAnimationFrame")
-      .mockImplementation((cb) => {
-        cb(performance.now())
-        return 0
-      })
-    cafSpy = vi
-      .spyOn(window, "cancelAnimationFrame")
-      .mockImplementation(() => {})
+  if (stubRaf !== false) {
+    let nextRafId = 0
+    const impl = (cb: FrameRequestCallback): number => {
+      if (stubRaf === "noop") {
+        // Schedule nothing — the test wants a single mount-time render.
+        return ++nextRafId
+      }
+      if (stubRaf === "microtask") {
+        Promise.resolve().then(() => cb(performance.now()))
+        return ++nextRafId
+      }
+      // `stubRaf === true` (default): synchronous fire. Return 0 so
+      // callers treating rAF id as a truthy "pending" flag (e.g.
+      // useFrame.scheduleRender's `if (rafRef.current) return` guard)
+      // don't see a stale assignment lock out subsequent renders. The
+      // sequence is: scheduleRender → rafRef.current = requestAnimationFrame(cb)
+      // → cb fires synchronously → renderFn resets rafRef.current = 0
+      // → impl returns 0 → assignment writes 0. Returning a non-zero id
+      // here would overwrite the reset and silently coalesce the next
+      // scheduleRender into a phantom pending rAF.
+      cb(performance.now())
+      return 0
+    }
+    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation(impl)
+    cafSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   }
 
   return () => {

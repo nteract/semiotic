@@ -1,31 +1,22 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
-import { createMockCanvasContext } from "../../test-utils/canvasMock"
+import { setupCanvasMock } from "../../test-utils/canvasMock"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
 describe("StreamNetworkFrame", () => {
-  // Note: use a bespoke setup (not setupCanvasMock) because Network's
-  // continuous-render loop + the shared mock's synchronous rAF invocation
-  // produce infinite recursion on first paint. For regression-test scope
-  // we only need a working canvas context; rAF is deliberately a no-op
-  // so the loop doesn't fire at all.
-  let getContextSpy: ReturnType<typeof vi.spyOn> | null = null
-  let rafSpy: ReturnType<typeof vi.spyOn> | null = null
+  // No-op rAF: Network's continuous-render loop would recurse if rAF
+  // fired synchronously. The regression scope only needs the initial
+  // pipelineConfig that reaches the store, not subsequent paints.
+  let restoreCanvas: (() => void) | null = null
 
   beforeEach(() => {
-    const ctx = createMockCanvasContext()
-    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as any)
-    if (!(globalThis as any).Path2D) {
-      (globalThis as any).Path2D = class { constructor() {} } as any
-    }
-    // No-op rAF — we don't want the render loop to actually run.
-    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 0)
+    restoreCanvas = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => {
-    getContextSpy?.mockRestore()
-    rafSpy?.mockRestore()
+    restoreCanvas?.()
+    restoreCanvas = null
   })
 
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────

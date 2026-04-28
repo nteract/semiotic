@@ -2,30 +2,24 @@ import * as React from "react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { act, render, waitFor } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
-import { createMockCanvasContext } from "../../test-utils/canvasMock"
+import { createMockCanvasContext, setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamGeoFrameHandle } from "./geoTypes"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
 describe("StreamGeoFrame", () => {
-  // Same rationale as StreamNetworkFrame.test.tsx: bespoke mock setup with
-  // a no-op rAF to avoid the continuous-render loop recursing on a
-  // synchronous mock implementation. The regression-test scope only needs
-  // to observe the initial pipelineConfig that reaches the store.
-  let getContextSpy: ReturnType<typeof vi.spyOn> | null = null
-  let rafSpy: ReturnType<typeof vi.spyOn> | null = null
+  // No-op rAF: the regression-test scope only needs to observe the
+  // initial pipelineConfig that reaches the store, not subsequent
+  // render passes. A synchronous-fire stub would recurse the
+  // continuous render loop.
+  let restoreCanvas: (() => void) | null = null
 
   beforeEach(() => {
-    const ctx = createMockCanvasContext()
-    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as any)
-    if (!(globalThis as any).Path2D) {
-      (globalThis as any).Path2D = class { constructor() {} } as any
-    }
-    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 0)
+    restoreCanvas = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => {
-    getContextSpy?.mockRestore()
-    rafSpy?.mockRestore()
+    restoreCanvas?.()
+    restoreCanvas = null
   })
 
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────
