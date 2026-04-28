@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -10,7 +11,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
@@ -457,17 +458,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     ...setup.legendBehaviorProps,
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover, onObservation, onClick, hoverHighlight,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...setup.crosshairProps,
     ...frameProps

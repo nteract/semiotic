@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nteract/semiotic",
   "title": "Semiotic",
-  "description": "React data visualization MCP server. Render and validate charts (43 types across XY, ordinal, network, geo, and realtime families) from agent-supplied JSON specs. Includes schema lookup, chart recommendation, and config diagnostics tools.",
+  "description": "Render React data visualizations from JSON. 43 chart types; validate, diagnose, suggest tools.",
   "websiteUrl": "https://semiotic.nteract.io",
   "repository": {
     "url": "https://github.com/nteract/semiotic",

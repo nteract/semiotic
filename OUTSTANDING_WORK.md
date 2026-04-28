@@ -14,7 +14,21 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ---
 
-## P0 — Release Confidence
+## P0
+
+### Type issue
+src/components/charts/shared/streamPropsHelpers.ts
+Comment on lines +68 to +75
+export function buildBaseMetadataProps(input: {
+  title?: string | ReactNode
+  description?: string
+  summary?: string
+  accessibleTable?: boolean
+  className?: string
+  animate?: AnimateProp
+}): Record<string, unknown> {
+
+buildBaseMetadataProps returns Record<string, unknown>, which introduces an index signature and loses type safety for the specific frame props you’re constructing (e.g. title, description, animate). This makes it easier for the helper to drift from the actual prop types without TypeScript catching it. Consider returning an explicit object type with these optional keys (e.g. { title?: string | ReactNode; description?: string; ...; animate?: AnimateProp }) instead of a generic record.
 
 ### API Reference Documentation
 
@@ -134,18 +148,6 @@ Next work:
 - Maintain a tracked-consumers list for API-change checks where access allows.
 - Audit realtime chart usage for `windowSize={data.length}` or other bounded-mode workarounds.
 - Consider first-class bounded mode on realtime HOCs where static-data use is common.
-
-### `streamProps` Construction Helpers
-
-Three small spreads recur in every HOC's `streamProps = {...}` object. Best done *after* the two HOC-layer helpers above, because once each HOC is 20+ lines lighter the construction site becomes the obvious next focal point. Estimated ~240 lines saved across 28 occurrences.
-
-Next work:
-- `buildBaseMetadataProps({ title, description, summary, className, animate })` — the `...(title && { title })` chain (~110 lines).
-- `buildCustomBehaviorProps({ linkedHover, onObservation, onClick, hoverHighlight, customHoverBehavior, customClickBehavior })` — the conditional hover/click spread pair (~40 lines).
-- `buildTooltipProps({ tooltip, defaultTooltipContent })` — the `tooltip === false ? () => null : (normalizeTooltip(tooltip) || defaultTooltipContent)` line (~90 lines).
-- Group all three into one `src/components/charts/shared/streamPropsHelpers.ts` module so the import cost amortizes.
-
-Risk: none. Each helper is a pure function over already-named locals.
 
 ### `validationMap` Composition
 

@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
@@ -9,7 +10,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -235,17 +236,13 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     ...effectiveLegendProps,
-    ...(title && { title }),
-    ...(description && { description }),
-    ...(summary && { summary }),
-    ...(accessibleTable !== undefined && { accessibleTable }),
-    ...(className && { className }),
-    ...(props.animate != null && { animate: props.animate }),
-    tooltipContent: tooltip === false
-      ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...buildCustomBehaviorProps({
+      linkedHover, onObservation, onClick, hoverHighlight,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
