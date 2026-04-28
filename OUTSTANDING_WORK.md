@@ -16,20 +16,6 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ## P0
 
-### Type issue
-src/components/charts/shared/streamPropsHelpers.ts
-Comment on lines +68 to +75
-export function buildBaseMetadataProps(input: {
-  title?: string | ReactNode
-  description?: string
-  summary?: string
-  accessibleTable?: boolean
-  className?: string
-  animate?: AnimateProp
-}): Record<string, unknown> {
-
-buildBaseMetadataProps returns Record<string, unknown>, which introduces an index signature and loses type safety for the specific frame props you’re constructing (e.g. title, description, animate). This makes it easier for the helper to drift from the actual prop types without TypeScript catching it. Consider returning an explicit object type with these optional keys (e.g. { title?: string | ReactNode; description?: string; ...; animate?: AnimateProp }) instead of a generic record.
-
 ### API Reference Documentation
 
 Baseline exists: `typedoc.json`, `docs:api:json`, `/api/charts`, `/api/typedoc`, and source-level JSDoc with at least 2 `@example` blocks on every HOC (38/38 covered as of 2026-04-26).
@@ -188,23 +174,13 @@ Next work:
 
 ## P3 — Performance & Scale
 
-### Renderer & Hit-Tester Boilerplate Reduction
+### Hit-Tester Factory (assessed and skipped)
 
-Two helper extractions in the canvas-rendering layer. Lower priority than the HOC-layer work because they don't change the public surface and the duplication isn't actively causing pain — but together they remove ~330–400 lines of mechanical boilerplate that recurs every time a new mark type is added.
+The OUTSTANDING_WORK companion plan to the canvas render-helper module proposed a generic `findNearestSceneNode(scene, px, py, maxDistance, typeDispatcher, pointQuadtree?, maxPointRadius?)` shared across `CanvasHitTester` / `OrdinalCanvasHitTester` / `NetworkCanvasHitTester` / `GeoCanvasHitTester`, with an estimated 150–180-line savings.
 
-Step 1 — Canvas render-helper module (~180–220 lines saved):
-- `bar/area/line/pointCanvasRenderer` each repeat: opacity setup → resolve fill → resolve stroke → build gradient → reset alpha. Same 5-step dance, slightly different shapes drawn in between.
-- Extract into `src/components/stream/renderers/canvasRenderHelpers.ts`:
-  - `setupNodeStyle(ctx, node) → cleanup()` — global alpha + restore.
-  - `resolveNodeFill(ctx, fill, fallback)` — handles string/Pattern/undefined.
-  - `buildLinearGradient(ctx, baseColor, config, x0, y0, x1, y1)` — frame-agnostic, replaces both `buildBarGradient` and the inline area-gradient (~90% byte-identical).
+Audited in 2026-04-28 and the savings don't materialize. Only the XY + Ordinal hit testers share a `quadtree-fast-path → linear-scan-with-dispatch → closest-wins` shape, and even there the duplicated portion is ~10 lines (the closest-wins reduce). Network's two-loop nodes-then-edges structure with a smallest-area override for nested treemap rects, and Geo's three-phase points → reverse-order areas → lines structure with offscreen `hitCtx.isPointInPath`, are genuinely different shapes. A factory broad enough to absorb all four would be abstraction, not extraction. The bulk of each tester is per-mark hit functions (`hitTestPoint`, `hitTestWedge`, `hitTestBezierEdge`, `isPointInPath` for geoarea Path2D, etc.) that don't share regardless.
 
-Step 2 — Generic `findNearestSceneNode` factory (~150–180 lines saved):
-- `CanvasHitTester`, `OrdinalCanvasHitTester`, `NetworkCanvasHitTester`, `GeoCanvasHitTester` each have a 60-line `findNearestNode` whose only difference is the `case node.type:` dispatch.
-- Generic factory: `findNearestSceneNode(scene, px, py, maxDistance, typeDispatcher, pointQuadtree?, maxPointRadius?)`.
-- Each frame's hit tester becomes a thin `typeDispatcher` plus a one-line call. Return types share a `{ datum, x, y, distance }` base so no `any` is needed.
-
-Risk: low — both extractions are mechanical. Behavior must match byte-for-byte; cover with the existing `*HitTester.test.ts` suites and any canvas-pixel regression tests.
+Re-open only if a future hit-tester scenario shows up with ≥80% structural overlap with one of the existing four.
 
 ### Network Decay Style Allocation
 

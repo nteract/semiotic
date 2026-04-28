@@ -1,41 +1,13 @@
-import type { AreaSceneNode, CurveType } from "../types"
+import type { AreaSceneNode } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { parseCanvasColor } from "./colorUtils"
 import type { StreamRendererFn } from "./types"
 import { renderPathPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import {
-  curveMonotoneX,
-  curveMonotoneY,
-  curveCardinal,
-  curveCatmullRom,
-  curveStep,
-  curveStepBefore,
-  curveStepAfter,
-  curveBasis,
-  curveNatural
-} from "d3-shape"
-import type { CurveFactory } from "d3-shape"
-
-/** Map CurveType strings to d3-shape curve factories. */
-function resolveCurveFactory(curve: CurveType | undefined): CurveFactory | null {
-  switch (curve) {
-    case "monotoneX": return curveMonotoneX
-    case "monotoneY": return curveMonotoneY
-    case "cardinal": return curveCardinal
-    case "catmullRom": return curveCatmullRom
-    case "step": return curveStep
-    case "stepBefore": return curveStepBefore
-    case "stepAfter": return curveStepAfter
-    case "basis": return curveBasis
-    case "natural": return curveNatural
-    case "linear":
-    case undefined:
-      return null
-    default:
-      return null
-  }
-}
+  buildColorStopGradient,
+  buildLinearFillGradient,
+  resolveCurveFactory,
+} from "./canvasRenderHelpers"
 
 /**
  * Canvas area renderer.
@@ -144,21 +116,10 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
       let bottomY = -Infinity
       for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
-      const grad = ctx.createLinearGradient(0, topY, 0, bottomY)
-
-      if ("colorStops" in node.fillGradient) {
-        for (const stop of node.fillGradient.colorStops) {
-          const offset = Math.max(0, Math.min(1, stop.offset))
-          if (!isNaN(offset)) grad.addColorStop(offset, stop.color)
-        }
-      } else if ("topOpacity" in node.fillGradient) {
-        // Canvas-normalized so named colors ("steelblue"), hsl(), etc. all
-        // round-trip to an rgba gradient that matches the area's actual fill.
-        const [r, g, b] = parseCanvasColor(ctx, typeof fillColor === "string" ? fillColor : "#4e79a7")
-        grad.addColorStop(0, `rgba(${r},${g},${b},${node.fillGradient.topOpacity})`)
-        grad.addColorStop(1, `rgba(${r},${g},${b},${node.fillGradient.bottomOpacity})`)
-      }
-      ctx.fillStyle = grad
+      const baseFill = typeof fillColor === "string" ? fillColor : "#4e79a7"
+      const grad = buildLinearFillGradient(ctx, node.fillGradient, baseFill, 0, topY, 0, bottomY)
+      if (grad) ctx.fillStyle = grad
+      else ctx.fillStyle = fillColor
       ctx.globalAlpha = nodeOpacity
     } else {
       const fillOpacity = node.style.fillOpacity ?? 0.7
@@ -176,17 +137,15 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     // Stroke on top
     if (node.style.stroke && node.style.stroke !== "none") {
       ctx.globalAlpha = nodeOpacity
-      if (node.strokeGradient && node.strokeGradient.colorStops.length >= 2 && node.topPath.length >= 2) {
-        const x0 = node.topPath[0][0]
-        const x1 = node.topPath[node.topPath.length - 1][0]
-        const grad = ctx.createLinearGradient(x0, 0, x1, 0)
-        for (const stop of node.strokeGradient.colorStops) {
-          grad.addColorStop(Math.max(0, Math.min(1, stop.offset)), stop.color)
-        }
-        ctx.strokeStyle = grad
-      } else {
-        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
-      }
+      const strokeGrad = node.strokeGradient && node.topPath.length >= 2
+        ? buildColorStopGradient(
+            ctx,
+            node.strokeGradient,
+            node.topPath[0][0], 0,
+            node.topPath[node.topPath.length - 1][0], 0,
+          )
+        : null
+      ctx.strokeStyle = strokeGrad || resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = node.style.strokeWidth || 2
       ctx.setLineDash([])
 
