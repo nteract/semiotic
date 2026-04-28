@@ -1,0 +1,35 @@
+{
+  "projectTitle": "Semiotic",
+  "description": "React data visualization library — HOC charts (XY, ordinal, network, geo, realtime), Stream Frames, push API, theming, and an AI/MCP surface for agent-driven chart authoring.",
+  "folders": [
+    "CLAUDE.md",
+    "README.md",
+    "CHANGELOG.md",
+    "docs/public/llms-full.txt",
+    "docs/src/pages/charts",
+    "ai"
+  ],
+  "excludeFolders": [
+    "**/dist",
+    "**/build",
+    "**/node_modules",
+    "**/.parcel-cache",
+    "**/test-results",
+    "integration-tests/*-snapshots"
+  ],
+  "excludeFiles": [
+    "*.test.tsx",
+    "*.test.ts",
+    "*.spec.ts"
+  ],
+  "rules": [
+    "Use sub-path imports — `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/geo`, `semiotic/realtime`, `semiotic/server`, `semiotic/utils`, `semiotic/themes`, `semiotic/data`, `semiotic/ai`. Importing from bare `semiotic` pulls the full 158KB-gz bundle.",
+    "Default to HOC charts (LineChart, BarChart, Scatterplot, ForceDirectedGraph, etc.) over the lower-level Stream Frames unless the consumer needs control the HOC doesn't expose. Stream Frames pass `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not your data.",
+    "Push-mode charts: omit the `data` prop entirely. Never pass `data={[]}` — that is static empty data and clears the frame on every render. Use a ref and call `ref.current.push(datum)` / `pushMany(rows)` / `clear()`.",
+    "`remove(id)` and `update(id, updater)` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts, `nodeIDAccessor`/`edgeIdAccessor` for network operations.",
+    "Categorical color precedence with `colorBy` is fixed: `CategoryColorProvider`/`LinkedCharts` category map → explicit `colorScheme` → `ThemeProvider` `colors.categorical` → built-in fallback. For cross-chart consistency wrap charts in `CategoryColorProvider`; do not use `frameProps` style functions to override unless intentionally bypassing HOC color resolution.",
+    "Geo imports must come from `semiotic/geo`, never bare `semiotic`, to avoid pulling d3-geo into non-geo bundles.",
+    "Required prop combinations enforced by validation: `StackedAreaChart` needs `areaBy`; `BubbleChart` needs `sizeBy`; `StackedBarChart` needs `stackBy`; `GroupedBarChart` needs `groupBy`; `SwimlaneChart` needs `subcategoryAccessor`; `ForceDirectedGraph` needs both `nodes` and `edges`. Push mode preserves these requirements (omit `data`/`points`/`flows` only — keep the semantic accessors).",
+    "Server-side rendering uses `semiotic/server` (`renderChart`, `renderToImage`, `renderToAnimatedGif`, `renderDashboard`). MCP `renderChart` and `semiotic/server` `renderChart` produce static SVG/PNG snapshots — they cannot ingest pushed data. For live behavior return React HOC code with a ref."
+  ]
+}
