@@ -356,6 +356,8 @@ const gif = await renderToAnimatedGif("line", data, { ... }, { fps: 12 })
 
 ## MCP Server
 
+mcp-name: io.github.nteract/semiotic
+
 Semiotic ships with an [MCP server](https://modelcontextprotocol.io) that lets AI coding assistants render charts, diagnose configuration problems, discover schemas, read packaged AI guidance, and get chart recommendations via tool calls.
 
 ### Setup
@@ -480,6 +482,23 @@ npx semiotic-ai --compact      # compact schema (fewer tokens)
 ```
 
 `--doctor` uses the full `diagnoseConfig` checks when `dist` is available and falls back to schema-only validation in clean source checkouts.
+
+## Where to find Semiotic for AI assistants
+
+Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Claude Code, Cursor, Cline, Copilot, etc.) can pull current docs and tools without copy-paste:
+
+- **Context7** — [context7.com/nteract/semiotic](https://context7.com/nteract/semiotic) (configured via `context7.json`)
+- **DeepWiki** — [deepwiki.com/nteract/semiotic](https://deepwiki.com/nteract/semiotic)
+- **GitMCP** — [gitmcp.io/nteract/semiotic](https://gitmcp.io/nteract/semiotic) (exposes the repo as an MCP endpoint directly)
+- **Official MCP Registry** — search "semiotic" at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io)
+- **Smithery** — [smithery.ai/server/nteract/semiotic](https://smithery.ai/server/nteract/semiotic)
+
+Agent-facing API guides ship in the package itself:
+
+- **`CLAUDE.md`** — quick-start cheat sheet for HOC props, push API, theming, and known pitfalls
+- **`docs/public/llms.txt`** + **`docs/public/llms-full.txt`** — [llms.txt standard](https://llmstxt.org) navigation map and full inlined docs
+- **`ai/schema.json`** — JSON Schema for every chart's prop surface (43 charts)
+- **`ai/behaviorContracts.cjs`** — agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts)
 
 ## Documentation
 
