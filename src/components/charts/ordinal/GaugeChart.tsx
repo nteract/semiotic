@@ -157,12 +157,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
+  const { width, height, title, description, summary, accessibleTable } = resolved
 
   // Clamp value to [min, max]
   const clampedValue = Math.max(min, Math.min(max, value))

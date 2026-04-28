@@ -250,16 +250,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const showLegend = resolved.showLegend ?? true
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
+  const { width, height, enableHover, showGrid, showLegend = true, title, description, summary, accessibleTable, xLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
   // `series` is its own public array prop — same sparse-input crash mode

@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -17,6 +17,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
  * FunnelChart component props
@@ -121,15 +122,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const {
     data,
@@ -165,14 +158,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
 
   const isVertical = orientation === "vertical"
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
+  const { width, height, enableHover, showLegend, title, description, summary, accessibleTable } = resolved
 
   // Horizontal funnel has no axes — tight margins.
   // Vertical bar-funnel needs room for axis labels and floating labels above bars.

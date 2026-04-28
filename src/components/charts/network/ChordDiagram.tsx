@@ -1,8 +1,9 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -81,30 +82,16 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
  */
 export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point as any),
-    pushMany: (points) => frameRef.current?.pushMany(points as any),
-    remove: (id) => {
-      const ids = Array.isArray(id) ? id : [id]
-      const nodes = frameRef.current?.getTopology()?.nodes ?? []
-      const results: Datum[] = []
-      for (const nodeId of ids) {
-        const node = nodes.find(n => n.id === nodeId)
-        if (node) results.push({ ...(node.data ?? {}), id: nodeId })
-        frameRef.current?.removeNode(nodeId)
-      }
-      return results
+  // Chord's `getData` returns edges (the chart's primary data shape)
+  // rather than nodes — override the helper's node-default.
+  useFrameImperativeHandle(ref, {
+    variant: "network",
+    frameRef,
+    overrides: {
+      getData: () =>
+        frameRef.current?.getTopology()?.edges?.map((e: { data?: Datum }) => e.data ?? {}) ?? [],
     },
-    update: (id, updater) => {
-      const ids = Array.isArray(id) ? id : [id]
-      return ids.flatMap(nodeId => {
-        const prev = frameRef.current?.updateNode(nodeId, updater)
-        return prev ? [{ ...prev, id: nodeId }] : []
-      })
-    },
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getTopology()?.edges?.map((e: any) => e.data) ?? []
-  }))
+  })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -149,14 +136,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showLabels = resolved.showLabels ?? true
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
+  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // Identity-preserving sparse-array filter for both edges and nodes
   // before downstream iteration (`inferNodesFromEdges`, color extraction).

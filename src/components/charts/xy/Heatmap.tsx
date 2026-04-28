@@ -1,8 +1,9 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import { scaleSequential } from "d3-scale"
 import {
   interpolateBlues,
@@ -229,15 +230,7 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
 export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -291,15 +284,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     opacity: _opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(loading, width, height)

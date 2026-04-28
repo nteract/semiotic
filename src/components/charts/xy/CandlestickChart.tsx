@@ -1,8 +1,9 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -85,15 +86,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
 ) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null,
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -132,16 +125,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     emptyContent,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const loadingEl = renderLoadingState(loading, width, height)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null

@@ -237,17 +237,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     dataIdAccessor,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const categoryLabel = resolved.categoryLabel
-  const valueLabel = resolved.valueLabel
+  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, categoryLabel, valueLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
 

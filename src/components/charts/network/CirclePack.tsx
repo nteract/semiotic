@@ -116,14 +116,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showLabels = resolved.showLabels ?? true
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
+  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // ── Loading state (computed early, returned after all hooks) ─────────────
   const loadingEl = renderLoadingState(loading, width, height)

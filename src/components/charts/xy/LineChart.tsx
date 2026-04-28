@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
-import { useMemo, useCallback, useState, useEffect, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
 import { filterSparseArray } from "../shared/sparseArray"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
@@ -18,9 +18,9 @@ import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
 
 /**
  * LineChart component props
@@ -306,15 +306,7 @@ export const LineChart = forwardRef(
   function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -376,30 +368,13 @@ export const LineChart = forwardRef(
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   // `useMemo`'d sparse-array filter — drops `null`/non-object entries
   // that data loaders commonly emit. Identity-preserving when nothing
   // is dropped so downstream memo deps still cache-hit.
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const isPushMode = data === undefined
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy,
-    colorScheme,
-    showLegend: directLabel && showLegend === undefined ? false : showLegend,
-    legendPosition: legendPositionProp,
-  })
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("LineChart", safeData, "xAccessor", xAccessor)
@@ -743,10 +718,11 @@ export const LineChart = forwardRef(
 
   // ── Shared setup (color, legend, selection, margin, loading/empty) ────
   // Owns: useColorScale, useChartSelection, useLegendInteraction, the
-  // hover/legend/selection precedence merge, useChartLegendAndMargin,
-  // useResolvedSelection, getCrosshairProps, renderEmptyState/loadingState.
-  // LineChart layers `useStreamingLegend` on top for cross-chart linked
-  // categories and the synthetic streaming-legend element.
+  // hover/legend/selection precedence merge, useChartLegendAndMargin
+  // (which calls `useLinkedChartCategories` for cross-chart legend
+  // coordination), useResolvedSelection, getCrosshairProps,
+  // renderEmptyState/loadingState, and the push-mode legend
+  // synthesis path.
   const setup = useChartSetup({
     data: effectiveData as Datum[],
     rawData: data,
@@ -929,23 +905,14 @@ export const LineChart = forwardRef(
     return labels
   }, [directLabel, colorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
 
-  // ── Layered legend/margin overrides on top of useChartSetup outputs ────
-  // `useStreamingLegend` provides a synthetic legend element (with its
-  // cross-chart linked-categories integration) that wins when present in
-  // push mode; otherwise setup.legend (built by useChartLegendAndMargin
-  // inside setup) is used. Streaming margin adjustments stack on top of
-  // setup.margin so the legend slot is preserved.
-  const effectiveLegend = streaming.streamingLegend || setup.legend
-  const legendPosition = setup.legendPosition
-  const effectiveMargin = useMemo(() => {
-    if (!streaming.streamingMarginAdjust) return setup.margin
-    const m = { ...setup.margin }
-    for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-      const k = key as keyof typeof m
-      if (m[k] < val) m[k] = val
-    }
-    return m
-  }, [setup.margin, streaming.streamingMarginAdjust])
+  // `useChartSetup` now synthesizes the push-mode legend (using the
+  // same provider → scheme → theme → STREAMING_PALETTE precedence the
+  // marks resolve through), reserves margin for it, and registers the
+  // live category domain with the parent `LinkedCharts` via
+  // `useChartLegendAndMargin` → `useLinkedChartCategories`. LineChart no
+  // longer layers a separate `useStreamingLegend` call on top — setup
+  // owns the full legend pipeline for both bounded and push modes.
+  const effectiveMargin = setup.margin
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -1016,17 +983,13 @@ export const LineChart = forwardRef(
     yFormat,
     enableHover,
     showGrid,
-    // streaming.categoryDomainProps overrides setup's onCategoriesChange
-    // (which both feed the same store-shaped data, but streaming also
-    // wires `useLinkedChartCategories` for cross-chart consistency).
-    ...streaming.categoryDomainProps,
-    ...(effectiveLegend && { legend: effectiveLegend, legendPosition }),
-    ...(legendInteraction && legendInteraction !== "none" && {
-      legendHoverBehavior: setup.legendState.onLegendHover,
-      legendClickBehavior: setup.legendState.onLegendClick,
-      legendHighlightedCategory: setup.legendState.highlightedCategory,
-      legendIsolatedCategories: setup.legendState.isolatedCategories,
-    }),
+    // `setup.legendBehaviorProps` carries the legend slot, legend
+    // interaction handlers, and the push-mode category-domain props
+    // (`legendCategoryAccessor` + `onCategoriesChange`) the frame uses
+    // to feed `setup.activeCategories`. Spreading it as a single block
+    // replaces the previous `useStreamingLegend.categoryDomainProps`
+    // wiring.
+    ...setup.legendBehaviorProps,
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),

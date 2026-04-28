@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { EMPTY_ARRAY } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, useRef, useImperativeHandle, forwardRef } from "react"
+import { useMemo, useRef, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "../../stream/geoTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -18,6 +18,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -130,18 +131,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
  */
 export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.removePoint(id) ?? [],
-    update: (id, updater) => {
-      const removed = frameRef.current?.removePoint(id) ?? []
-      for (const old of removed) frameRef.current?.push(updater(old))
-      return removed
-    },
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? []
-  }))
+  useFrameImperativeHandle(ref, { variant: "geo-points", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,

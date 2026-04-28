@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -18,6 +18,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
  * StackedAreaChart component props
@@ -245,30 +246,12 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     opacity,
   } = props
 
-  const width = resolved.width
-  const height = resolved.height
-  const enableHover = resolved.enableHover
-  const showGrid = resolved.showGrid
-  const showLegend = resolved.showLegend
-  const title = resolved.title
-  const description = resolved.description
-  const summary = resolved.summary
-  const accessibleTable = resolved.accessibleTable
-  const xLabel = resolved.xLabel
-  const yLabel = resolved.yLabel
+  const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const actualColorBy = colorBy || areaBy
 
-  useImperativeHandle(ref, () => ({
-    push: (point) => frameRef.current?.push(point),
-    pushMany: (points) => frameRef.current?.pushMany(points),
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null
-  }))
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
