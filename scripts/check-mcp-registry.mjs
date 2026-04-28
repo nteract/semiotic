@@ -77,6 +77,26 @@ if (server.name && !/^[a-z0-9.-]+\/[a-z0-9.-]+$/i.test(server.name)) {
   )
 }
 
+// ── server.json field-length limits the registry validator enforces ──
+// Discovered the hard way: the registry caps `description` at 100 chars
+// and returns a 422 at publish time. Catching it here moves the
+// rejection from "after auth + after file read" to local-dev time.
+const FIELD_MAX_LENGTHS = {
+  description: 100,
+  // Add more as we discover them. The registry's published schema
+  // doesn't list all length caps explicitly, so we extend this map
+  // each time `mcp-publisher publish` returns a 422 length error.
+}
+for (const [field, max] of Object.entries(FIELD_MAX_LENGTHS)) {
+  const value = server[field]
+  if (typeof value === "string" && value.length > max) {
+    fail(
+      `server.json#${field} is ${value.length} chars; the MCP Registry validator rejects values > ${max}. ` +
+        `Trim it and re-run.`,
+    )
+  }
+}
+
 // ── package.json#mcpName matches server.json#name ─────────────────────
 if (pkg.mcpName == null) {
   fail(

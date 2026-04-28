@@ -1,11 +1,10 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/nteract-semiotic-badge.png)](https://mseep.ai/app/nteract-semiotic)
-
 [![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://semiotic.nteract.io)
 
 [![CI](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
 [![npm version](https://img.shields.io/npm/v/semiotic.svg)](https://www.npmjs.com/package/semiotic)
 [![TypeScript](https://img.shields.io/badge/TypeScript-built--in-blue.svg)](https://www.typescriptlang.org/)
 [![semiotic MCP server](https://glama.ai/mcp/servers/nteract/semiotic/badges/card.svg)](https://glama.ai/mcp/servers/nteract/semiotic)
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/nteract-semiotic-badge.png)](https://mseep.ai/app/nteract-semiotic)
 
 A React data visualization library designed for AI-assisted development.
 

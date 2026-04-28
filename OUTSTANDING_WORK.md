@@ -14,7 +14,21 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ---
 
-## P0 — Release Confidence
+## P0
+
+### Type issue
+src/components/charts/shared/streamPropsHelpers.ts
+Comment on lines +68 to +75
+export function buildBaseMetadataProps(input: {
+  title?: string | ReactNode
+  description?: string
+  summary?: string
+  accessibleTable?: boolean
+  className?: string
+  animate?: AnimateProp
+}): Record<string, unknown> {
+
+buildBaseMetadataProps returns Record<string, unknown>, which introduces an index signature and loses type safety for the specific frame props you’re constructing (e.g. title, description, animate). This makes it easier for the helper to drift from the actual prop types without TypeScript catching it. Consider returning an explicit object type with these optional keys (e.g. { title?: string | ReactNode; description?: string; ...; animate?: AnimateProp }) instead of a generic record.
 
 ### API Reference Documentation
 

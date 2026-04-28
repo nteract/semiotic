@@ -27,6 +27,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
 import type { LinkedHoverProp, SelectionConfig } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 
 /**
  * The frames accept `tooltipContent: (d: HoverData) => ReactNode`,
@@ -44,11 +45,6 @@ import type { OnObservationCallback } from "../../store/ObservationStore"
  */
 type FrameTooltipContent = (d: HoverData) => ReactNode
 
-// Animate prop covers `boolean | { duration?, easing?, intro? }`. Kept
-// as `unknown` here so the helper stays compatible with HOCs that pass
-// either form without forcing a type import in this shared module.
-type AnimateProp = unknown
-
 /**
  * Returns the spreadable subset of base metadata props for the frame.
  *
@@ -65,16 +61,23 @@ type AnimateProp = unknown
  * The returned object is suitable for `...spread` into a frame-props
  * object literal.
  */
-export function buildBaseMetadataProps(input: {
+export interface BaseMetadataProps {
   title?: string | ReactNode
   description?: string
   summary?: string
   accessibleTable?: boolean
   className?: string
   animate?: AnimateProp
-}): Record<string, unknown> {
+}
+
+export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataProps {
   const { title, description, summary, accessibleTable, className, animate } = input
-  const out: Record<string, unknown> = {}
+  // Returning `BaseMetadataProps` rather than `Record<string, unknown>`
+  // preserves per-key types on the spread site, so a typo like
+  // `{ titel }` in this helper body would fail the return contract
+  // and a consumer mis-spreading the result into a frame prop would
+  // get the same field-by-field check it had before the extraction.
+  const out: BaseMetadataProps = {}
   if (title) out.title = title
   if (description) out.description = description
   if (summary) out.summary = summary
