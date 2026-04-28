@@ -40,9 +40,15 @@ test.describe("Coordinated Views", () => {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
       await waitForRafs(page)
 
-      // Verify the interaction canvas exists and is layered on top
-      const interactionCanvas = testCase.locator("canvas").nth(1)
-      await expect(interactionCanvas).toBeVisible()
+      // Hover over a populated scatter should surface a tooltip (the
+      // interaction-canvas hit test resolved a point and the
+      // FlippingTooltip wrapper rendered into the DOM). The tooltip's
+      // existence after hover IS the load-bearing assertion — checking
+      // count=1 (rather than visibility) makes the semantic claim
+      // explicit: hover wired up, hit-tester resolved a point, and the
+      // tooltip mounted as a result.
+      const tooltip = testCase.locator(".stream-frame-tooltip")
+      await expect(tooltip).toHaveCount(1, { timeout: 2000 })
     }
   })
 

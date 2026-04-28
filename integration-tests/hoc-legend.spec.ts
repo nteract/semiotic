@@ -152,11 +152,10 @@ test.describe("HOC Chart Legend Rendering", () => {
     const testCase = page.locator('[data-testid="bubble-with-legend"]')
     await expect(testCase).toBeVisible()
 
-    // Get the SVG element
-    const svg = testCase.locator("svg").first()
-    await expect(svg).toBeVisible()
-
-    // Get legend element
+    // The remaining assertions (legend-item bounding box width/height
+    // > 0) already prove the SVG painted the legend. The earlier
+    // mount-only `svg.toBeVisible()` was redundant — drop it and rely
+    // on the load-bearing legend-bounds check below.
     const legendItems = testCase.locator(".legend-item").first()
     await expect(legendItems).toBeVisible()
 

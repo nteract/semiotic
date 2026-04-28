@@ -117,8 +117,14 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
     for (const testId of testIds) {
       const testCase = page.locator(`[data-testid="${testId}"]`)
       await expect(testCase).toBeVisible()
-      const canvas = testCase.locator("canvas").first()
-      await expect(canvas).toBeVisible({ timeout: 8000 })
+      // Realtime charts paint their data canvas with `aria-label` set
+      // by `computeCanvasAriaLabel` — it only carries a node count
+      // (`realtime line, 200 points` etc.) once the streaming pipeline
+      // has actually drawn frames. A regression that wires the canvas
+      // up but never paints would slip past `toBeVisible()`; the
+      // attribute regex catches it.
+      const dataCanvas = testCase.locator("canvas[aria-label]").first()
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/, { timeout: 8000 })
     }
   })
 })

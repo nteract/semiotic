@@ -53,8 +53,12 @@ test.describe("Brush & Selection - Coordinated hover", () => {
       await page.mouse.move(0, 0)
       await waitForRafs(page)
 
-      // Chart should still be rendered
-      await expect(canvas).toBeVisible()
+      // Chart should still have its scene drawn — the data canvas's
+      // `aria-label` carries a node count from `computeCanvasAriaLabel`
+      // and only stays populated when the scene survived the
+      // hover-clear path. A blank-canvas regression would empty it.
+      const dataCanvas = testCase.locator("canvas[aria-label]").first()
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
     }
   })
 })
@@ -158,8 +162,11 @@ test.describe("Brush & Selection - Accessibility examples coordinated views", ()
         await waitForRafs(page)
       }
 
-      // Chart should still be intact
-      await expect(canvas).toBeVisible()
+      // Chart should still be intact — assert the data canvas's
+      // `aria-label` still carries a populated node count, proving
+      // the sweep didn't tear the scene down.
+      const dataCanvas = testCase.locator("canvas[aria-label]").first()
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
     }
   })
 })
