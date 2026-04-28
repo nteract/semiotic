@@ -192,14 +192,31 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
   let cafSpy: ReturnType<typeof vi.spyOn> | undefined
   if (stubRaf !== false) {
     let nextRafId = 0
+    // Track cancellation state for the deferred-fire flavors. Real
+    // browsers honor `cancelAnimationFrame(id)` by skipping the
+    // pending callback; production code (`useFrame` cleanup,
+    // `DataSourceAdapter` chunk timers, `MinimapChart` polling) relies
+    // on that to avoid post-unmount state updates and runaway loops.
+    // The sync-fire flavor doesn't need this — its callback has already
+    // run by the time `requestAnimationFrame` returns — so `cancelled`
+    // only ever matters for `"microtask"`. (`"noop"` doesn't schedule
+    // anything either.)
+    const cancelled = new Set<number>()
     const impl = (cb: FrameRequestCallback): number => {
       if (stubRaf === "noop") {
         // Schedule nothing — the test wants a single mount-time render.
         return ++nextRafId
       }
       if (stubRaf === "microtask") {
-        Promise.resolve().then(() => cb(performance.now()))
-        return ++nextRafId
+        const id = ++nextRafId
+        Promise.resolve().then(() => {
+          if (cancelled.has(id)) {
+            cancelled.delete(id)
+            return
+          }
+          cb(performance.now())
+        })
+        return id
       }
       // `stubRaf === true` (default): synchronous fire. Return 0 so
       // callers treating rAF id as a truthy "pending" flag (e.g.
@@ -214,7 +231,12 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
       return 0
     }
     rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation(impl)
-    cafSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+    cafSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation((id) => {
+      // id 0 means "no rAF pending" in the sync-fire flavor's id
+      // contract; ignore so we don't pollute the cancelled set with
+      // sentinel values.
+      if (id) cancelled.add(id)
+    })
   }
 
   return () => {
