@@ -198,16 +198,19 @@ describe("BarChart", () => {
   })
 
   it("sorts with custom function", () => {
-    const cmp = (a: Datum, b: Datum) => (a.value as number) - (b.value as number)
+    // BarChart's `sort` comparator runs against category keys (strings),
+    // not data rows — see the prop type
+    // `(a: string, b: string) => number`. The frame's
+    // `resolveCategories` owns the visual order; the HOC just forwards
+    // the comparator as `oSort`. Use a string comparator so the test
+    // exercises the real public-API shape, then assert identity so a
+    // refactor that accidentally swallowed the comparator fails here.
+    const cmp = (a: string, b: string) => a.localeCompare(b)
     render(
       <TooltipProvider>
         <BarChart data={sampleData} sort={cmp} />
       </TooltipProvider>
     )
-    // Function-form `sort` is forwarded to the frame as `oSort` rather
-    // than pre-sorting at the HOC level (the frame's resolveCategories
-    // owns the visual order). Validate identity so a refactor that
-    // accidentally swallowed the comparator would fail this assertion.
     expect(lastOrdinalFrameProps.oSort).toBe(cmp)
   })
 
