@@ -104,13 +104,15 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   // Sankey's `getData` returns edges (the chart's primary data shape)
   // rather than nodes — override the helper's node-default with the
-  // edge variant the inline implementation used.
+  // edge variant. Returns `e.data` as-is (no `?? {}` fallback) so
+  // edges without a payload still surface as `undefined`, matching
+  // the pre-migration inline handle's runtime shape.
   useFrameImperativeHandle(ref, {
     variant: "network",
     frameRef,
     overrides: {
       getData: () =>
-        frameRef.current?.getTopology()?.edges?.map((e: { data?: Datum }) => e.data ?? {}) ?? [],
+        (frameRef.current?.getTopology()?.edges?.map((e: { data?: Datum }) => e.data) as Datum[] | undefined) ?? [],
     },
   })
 

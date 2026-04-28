@@ -41,9 +41,14 @@ interface NetworkFrameLike {
   push(edge: unknown): void
   pushMany(edges: unknown[]): void
   removeNode(id: string): boolean
-  updateNode(id: string, updater: (d: Datum) => Datum): Datum | undefined
+  // `null`, not `undefined`, to match `StreamNetworkFrameHandle.updateNode`.
+  // `prev ? […] : []` below treats both as falsy, so the consumer-facing
+  // semantics are unchanged regardless — typing it correctly here just
+  // lets a future maintainer plug another network frame into this helper
+  // without wondering whether the contract is `null` or `undefined`.
+  updateNode(id: string, updater: (d: Datum) => Datum): Datum | null
   clear(): void
-  getTopology(): { nodes: Array<{ id: string; data?: Datum }> } | null
+  getTopology(): { nodes: Array<{ id: string; data?: Datum | null }> } | null
 }
 
 /** Minimal shape the helper expects of a geo (point-only) frame ref. */
@@ -64,8 +69,9 @@ interface Options {
    * trusts the caller here rather than fighting TypeScript's
    * discriminated-union narrowing across heterogeneous frame handle
    * types (`StreamXYFrameHandle` vs `StreamNetworkFrameHandle` vs
-   * `StreamGeoFrameHandle`). Test fixtures cover each variant's
-   * methods end-to-end.
+   * `StreamGeoFrameHandle`). A regression test in
+   * `useFrameImperativeHandle.test.ts` exercises each variant's
+   * defaults plus the `getScales` omission for network/geo.
    */
   variant: FrameVariant
   frameRef: RefObject<unknown>
@@ -151,8 +157,13 @@ function makeVariantDefaults(
         })
       },
       clear: () => r.current?.clear(),
+      // Preserve the pre-migration inline behavior: nodes without a
+      // `data` payload surface as `undefined` entries in the returned
+      // array. The `RealtimeFrameHandle.getData()` signature is
+      // `Datum[]`, so we cast at the boundary to keep that type
+      // contract; consumers get the same runtime shape they had before.
       getData: () =>
-        r.current?.getTopology()?.nodes?.map((n) => n.data ?? {}) ?? [],
+        (r.current?.getTopology()?.nodes?.map((n) => n.data) as Datum[] | undefined) ?? [],
     }
   }
   // variant === "geo-points"

@@ -83,13 +83,16 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
 export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   // Chord's `getData` returns edges (the chart's primary data shape)
-  // rather than nodes — override the helper's node-default.
+  // rather than nodes — override the helper's node-default. Returns
+  // `e.data` as-is (no `?? {}` fallback) so edges without a payload
+  // still surface as `undefined`, matching the pre-migration inline
+  // handle's runtime shape.
   useFrameImperativeHandle(ref, {
     variant: "network",
     frameRef,
     overrides: {
       getData: () =>
-        frameRef.current?.getTopology()?.edges?.map((e: { data?: Datum }) => e.data ?? {}) ?? [],
+        (frameRef.current?.getTopology()?.edges?.map((e: { data?: Datum }) => e.data) as Datum[] | undefined) ?? [],
     },
   })
 
