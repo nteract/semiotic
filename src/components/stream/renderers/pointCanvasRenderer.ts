@@ -28,7 +28,7 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
       ctx.fill()
 
       if (node.style.stroke) {
-        ctx.strokeStyle = resolveCanvasFill(ctx, node.style.stroke, node.style.stroke as string)
+        ctx.strokeStyle = resolveCanvasFill(ctx, node.style.stroke, node.style.stroke)
         ctx.lineWidth = node.style.strokeWidth || 1
         ctx.stroke()
       }

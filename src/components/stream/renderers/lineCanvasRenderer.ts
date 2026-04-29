@@ -265,6 +265,12 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     if (node.style.fill && node.style.fillOpacity && node.style.fillOpacity > 0) {
       ctx.beginPath()
       ctx.globalAlpha = node.style.fillOpacity
+      // `LineSceneNode.style.fill` is `string | CanvasPattern`, so the
+      // string-typed fallback can't accept it without a narrowing
+      // assertion. Falsy patterns can't reach this branch (the
+      // `node.style.fill &&` guard above filters them), and a
+      // CanvasPattern resolved by `resolveCanvasFill` won't trigger
+      // this fallback path either, so the cast is safe in practice.
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, node.style.fill as string)
 
       if (curveFactory && !hasThresholds) {

@@ -122,7 +122,7 @@ jobs:
           "
           rm -rf "$TMPDIR"
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         # Pulls the matching CHANGELOG section so the GH release page
         # mirrors the version's entry. Falls back to `--generate-notes`
         # (auto-built from PR titles) if the section is missing or empty
@@ -130,6 +130,12 @@ jobs:
         # step a successful npm publish leaves the GitHub Releases page
         # stuck on the previous version (the v3.2.3 → v3.4.2 backfill
         # in 2026-04-28 fixed exactly that gap).
+        #
+        # Idempotent on workflow re-runs: if the release for this tag
+        # already exists, `gh release edit` updates the title/notes in
+        # place rather than failing on the conflict. Without that, a
+        # re-run for any reason (transient infra failure, manually
+        # re-triggered after a fix) would error out at this step.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -142,16 +148,29 @@ jobs:
             flag { print }
           ' CHANGELOG.md > "$NOTES_FILE"
 
-          if [ -s "$NOTES_FILE" ]; then
-            gh release create "$GITHUB_REF_NAME" \
-              --title "Semiotic $GITHUB_REF_NAME" \
-              --notes-file "$NOTES_FILE" \
-              --verify-tag
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; updating in place"
+            if [ -s "$NOTES_FILE" ]; then
+              gh release edit "$GITHUB_REF_NAME" \
+                --title "Semiotic $GITHUB_REF_NAME" \
+                --notes-file "$NOTES_FILE"
+            else
+              echo "No CHANGELOG section for $VERSION; leaving existing notes unchanged"
+              gh release edit "$GITHUB_REF_NAME" \
+                --title "Semiotic $GITHUB_REF_NAME"
+            fi
           else
-            echo "No CHANGELOG section for $VERSION; falling back to --generate-notes"
-            gh release create "$GITHUB_REF_NAME" \
-              --title "Semiotic $GITHUB_REF_NAME" \
-              --generate-notes \
-              --verify-tag
+            if [ -s "$NOTES_FILE" ]; then
+              gh release create "$GITHUB_REF_NAME" \
+                --title "Semiotic $GITHUB_REF_NAME" \
+                --notes-file "$NOTES_FILE" \
+                --verify-tag
+            else
+              echo "No CHANGELOG section for $VERSION; falling back to --generate-notes"
+              gh release create "$GITHUB_REF_NAME" \
+                --title "Semiotic $GITHUB_REF_NAME" \
+                --generate-notes \
+                --verify-tag
+            fi
           fi
           rm -f "$NOTES_FILE"
