@@ -139,15 +139,16 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
- * // Multi-series via lineBy + colorBy; push rows tagged with a series field
+ * // Decay + pulse — older points fade, newly-pushed points flash
  * <RealtimeLineChart
  *   ref={ref}
- *   lineBy="series"
- *   colorBy="series"
- *   xAccessor="t"
- *   yAccessor="v"
+ *   timeAccessor="t"
+ *   valueAccessor="v"
+ *   stroke="#0b5fff"
+ *   strokeWidth={2}
+ *   decay={{ type: "linear" }}
+ *   pulse={{ type: "fade", durationMs: 400 }}
  *   windowSize={500}
- *   showLegend
  * />
  * ```
  */

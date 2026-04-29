@@ -139,7 +139,7 @@ Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations
 - **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"). Renders with trapezoid connectors, no axes.
 - **GaugeChart** — `value`. Optional: `thresholds` (array of `{value, color, label}`), `min`, `max`, `sweep`, `arcWidth`.
 - **SwimlaneChart** — `data`, `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`.
-- **ForceDirectedGraph** — `edges` (required). `nodes` optional (inferred from edges).
+- **ForceDirectedGraph** — `nodes`, `edges` (both required). If deriving nodes from edge endpoints, materialize `nodes` before returning JSX/renderChart props.
 - **SankeyDiagram** — `edges` (required), `valueAccessor`.
 - **ChoroplethMap** — `areas` (GeoJSON features, pre-resolved).
 
@@ -165,7 +165,7 @@ CSS custom properties: `--semiotic-bg`, `--semiotic-text`, `--semiotic-text-seco
 <ThemeProvider theme={{ mode: "dark", colors: { categorical: [...] } }}> {/* Merge onto dark base */}
 ```
 
-**Color priority** (with `colorBy`): explicit `colorScheme` > ThemeProvider `colors.categorical` > `"category10"`.
+**Color priority** (with `colorBy`): CategoryColorProvider/LinkedCharts category map > explicit `colorScheme` fallback > ThemeProvider `colors.categorical` > `"category10"`.
 Presets: `light`, `dark`, `high-contrast`, `pastels`(-dark), `bi-tool`(-dark), `italian`(-dark), `tufte`(-dark), `journalist`(-dark), `playful`(-dark), `carbon`(-dark).
 Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveThemePreset(name)`.
 
@@ -181,6 +181,29 @@ Canvas scene builders read CSS variables via `getComputedStyle` on the canvas DO
 
 ## AI Features
 `onObservation`/`useChartObserver`, `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`, `validateProps(component, props)`, `diagnoseConfig(component, props)`, `exportChart(div, { format })`, `npx semiotic-ai --doctor`
+
+
+## AI Behavior Contracts
+
+<!-- semiotic-behavior-contracts:start -->
+
+These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `semiotic-ai --doctor`, MCP resources, and docs checks.
+
+- **Data required by usage mode** (`props.data-required-by-usage-mode`): Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.
+  Agent action: Pass usageMode="push" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode="static" or omit it for renderChart/MCP/static configs where data must be present.
+- **Categorical color precedence** (`color.category-precedence`): When colorBy is set, CategoryColorProvider/LinkedCharts category maps win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback.
+  Agent action: Use colorBy for categorical encodings. Use CategoryColorProvider or LinkedCharts for cross-chart consistency, colorScheme for per-chart fallback palettes, and avoid frameProps style functions unless intentionally bypassing HOC color resolution.
+- **Required prop combinations** (`props.required-combinations`): Some chart families need semantic props beyond data. These combinations are enforced by validation/schema for static configs and remain required in push mode unless explicitly noted.
+  Agent action: Before returning code, check the selected component against the required combinations list. For push mode, omit data but keep semantic props such as areaBy, sizeBy, stackBy, and groupBy.
+  Required combinations: StackedAreaChart: static data + areaBy; push areaBy. Stacked areas need a flat data array plus areaBy to identify the stacked series. BubbleChart: static data + sizeBy; push sizeBy. Bubbles need sizeBy in addition to x/y accessors so radius encodes data rather than a constant point size. StackedBarChart: static data + stackBy; push stackBy. Stacked bars need stackBy to split each category into stack segments. GroupedBarChart: static data + groupBy; push groupBy. Grouped bars need groupBy to split each category into side-by-side bars. SwimlaneChart: static data + subcategoryAccessor; push subcategoryAccessor. Swimlanes need subcategoryAccessor; colorBy defaults to the same field when not provided. GaugeChart: static value; push not supported. GaugeChart is value-only. thresholds, min, max, sweep, and arcWidth are optional. ForceDirectedGraph: static nodes + edges; push nodes + edges. ForceDirectedGraph schema/rendering requires nodes and edges. If an agent infers nodes from edge endpoints, it must materialize a nodes array before returning code.
+- **Push mode omits data** (`streaming.push-mode-data`): HOC push mode is selected by omitting the data prop entirely. Passing data={[]} is static empty data and can clear/reinitialize the frame on render.
+  Agent action: For live charts, create a ref, omit data, then call ref.current.push() or pushMany(). For static renderChart/MCP snapshots, provide data because renderChart cannot push later.
+- **Ref mutations need stable IDs** (`streaming.ref-mutations-require-id-accessors`): push() and pushMany() can append without IDs, but remove(id) and update(id, updater) require a stable ID accessor: pointIdAccessor for XY/realtime charts, dataIdAccessor for ordinal charts, and nodeIDAccessor/edgeIdAccessor for network operations.
+  Agent action: When generating code that calls remove() or update(), include the matching ID accessor and make sure pushed rows carry that ID field.
+- **renderChart uses static props only** (`rendering.renderchart-static-props`): MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.
+  Agent action: Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.
+
+<!-- semiotic-behavior-contracts:end -->
 
 ## Accessibility
 

@@ -6,7 +6,7 @@ import {
   sankeyJustify
 } from "../../../vendor/sankey-plus/index.js"
 
-import { schemeCategory10 } from "d3-scale-chromatic"
+import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { areaLink, circularAreaLink } from "../../geometry/sankeyLinks"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {

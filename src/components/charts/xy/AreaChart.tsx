@@ -231,13 +231,17 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
  *
  * @example
  * ```tsx
- * // Push mode — omit `data`, drive the chart through a ref
+ * // Push mode — omit `data`, drive the chart through a ref. Use a
+ * // stable string id so `remove(id)` / `update(id, ...)` work later.
  * const ref = useRef<RealtimeFrameHandle>(null)
  * useEffect(() => {
- *   const id = setInterval(() => ref.current?.push({ x: Date.now(), y: Math.random() }), 200)
+ *   const id = setInterval(() => {
+ *     const t = Date.now()
+ *     ref.current?.push({ id: String(t), x: t, y: Math.random() })
+ *   }, 200)
  *   return () => clearInterval(id)
  * }, [])
- * return <AreaChart ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="x" />
+ * return <AreaChart ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
  * ```
  */
 export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

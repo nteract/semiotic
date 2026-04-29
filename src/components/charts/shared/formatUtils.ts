@@ -1,6 +1,6 @@
 import * as React from "react"
-import { timeFormat } from "d3-time-format"
-import { format as d3Format } from "d3-format"
+import { timeFormat } from "./timeFormat"
+import { format as d3Format } from "./numberFormat"
 import type { Datum } from "./datumTypes"
 
 /**
