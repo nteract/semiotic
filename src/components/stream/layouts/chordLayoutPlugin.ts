@@ -1,6 +1,6 @@
-import { chord, ribbon } from "d3-chord"
+import { chord, ribbon, type Chord } from "d3-chord"
 import { wrapWithDataHint } from "../devDataAccessWarning"
-import { arc } from "d3-shape"
+import { arc, type DefaultArcObject } from "d3-shape"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import type {
   NetworkLayoutPlugin,
@@ -88,15 +88,27 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Set node positions from arc centroids ────────────────────────
     for (const group of groups) {
       const node = nodes[group.index]
-      const centroid = arcGenerator.centroid(group as any)
+      // ChordGroup carries startAngle/endAngle but no innerRadius/outerRadius;
+      // construct an explicit DefaultArcObject so the centroid call
+      // satisfies d3-shape's typed accessor contract.
+      const arcArg: DefaultArcObject = {
+        innerRadius,
+        outerRadius: radius,
+        startAngle: group.startAngle,
+        endAngle: group.endAngle,
+      }
+      const centroid = arcGenerator.centroid(arcArg)
 
       node.x = centroid[0] + cx
       node.y = centroid[1] + cy
 
-      // Stash arc data on the node for buildScene
-      ;(node as any).arcData = {
+      // Stash arc data on the node for buildScene. `__arcData` is
+      // declared on RealtimeNode with this concrete shape — chord is
+      // the only writer, so no narrowing-at-read is needed (unlike
+      // `__hierarchyNode` whose shape varies per layout).
+      node.__arcData = {
         startAngle: group.startAngle,
-        endAngle: group.endAngle
+        endAngle: group.endAngle,
       }
     }
 
@@ -136,7 +148,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         edgeLookup.get(`${targetId}\0${sourceId}`)
 
       if (matchedEdge) {
-        (matchedEdge as any).chordData = generatedChord
+        matchedEdge.__chordData = generatedChord
       }
     }
   },
@@ -186,7 +198,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Build arc nodes ──────────────────────────────────────────────
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      const arcData = (node as any).arcData
+      const arcData = node.__arcData
       if (!arcData) continue
 
       let fill: string
@@ -226,13 +238,23 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // d3-chord ribbon paths are centered at (0,0). Offset every
     // coordinate by (cx, cy) so they align with the arc nodes.
     for (const edge of edges) {
-      const chordData = (edge as any).chordData
+      // `edge.__chordData` is `unknown` on RealtimeEdge — narrow at
+      // the read site rather than coupling networkTypes to d3-chord's
+      // `Chord`.
+      const chordData = edge.__chordData as Chord | undefined
       if (!chordData) continue
 
       // d3-chord's ribbon() internally subtracts PI/2 from all angles
       // (converting from d3's 12-o'clock convention to standard math coords),
       // so we must NOT pre-offset here — otherwise we double-subtract.
-      const rawPath = ribbonGenerator(chordData) as string | undefined
+      //
+      // The cast through `unknown` is the boundary between d3-chord's
+      // `Chord` (no per-subgroup `radius`) and the generator's `Ribbon`
+      // input type (which carries `radius`). At runtime our generator
+      // is configured with `.radius(innerRadius)` as a constant, so the
+      // per-`Ribbon` `radius` field is never read — `Chord` is
+      // structurally sufficient.
+      const rawPath = ribbonGenerator(chordData as unknown as Parameters<typeof ribbonGenerator>[0]) as string | undefined
       if (!rawPath) continue
 
       const pathD = translateSvgPath(rawPath, cx, cy)
@@ -280,7 +302,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const labelRadius = radius + 12
 
       for (const node of nodes) {
-        const arcData = (node as any).arcData
+        const arcData = node.__arcData
         if (!arcData) continue
 
         const text = labelFn ? labelFn(node) : node.id

@@ -113,9 +113,9 @@ function isCssColor(value: string): boolean {
  * ```
  */
 export function getColor(
-  dataPoint: any,
+  dataPoint: Datum,
   colorBy: string | ((d: Datum) => string),
-  colorScale?: (v: any) => string
+  colorScale?: (v: string) => string
 ): string {
   if (typeof colorBy === "function") {
     const value = colorBy(dataPoint)
@@ -126,14 +126,18 @@ export function getColor(
     return value
   }
 
-  const colorValue = dataPoint?.[colorBy]
+  // `dataPoint[colorBy]` is `unknown` at this seam — Datum is a loose
+  // record. Coerce to string for the scale call (d3 ordinal scales
+  // stringify their domain values internally anyway, so the runtime
+  // behavior is unchanged).
+  const colorValue = String(dataPoint?.[colorBy])
 
   if (colorScale) {
     return colorScale(colorValue)
   }
 
   // Default: return a hash-based color
-  return DEFAULT_COLORS[Math.abs(hashString(String(colorValue))) % DEFAULT_COLORS.length]
+  return DEFAULT_COLORS[Math.abs(hashString(colorValue)) % DEFAULT_COLORS.length]
 }
 
 /**
@@ -155,18 +159,24 @@ export function createColorScale(
   colorBy: string,
   scheme: string | string[] = "category10"
 ): (v: string) => string {
-  // Get unique values
-  const uniqueValues = Array.from(new Set(data.map(d => d?.[colorBy]).filter(v => v != null)))
+  // Get unique stringified values. d3 ordinal scales stringify domain
+  // entries internally (it's how the lookup table is keyed), so we do
+  // it explicitly here to thread a `string[]` through the typed
+  // `scaleOrdinal<string, string>` constructor without an `as any`
+  // cast at the seam.
+  const uniqueValues = Array.from(
+    new Set(data.map(d => d?.[colorBy]).filter(v => v != null).map(v => String(v))),
+  )
 
   // Check if values are numeric for sequential scale
-  const isNumeric = uniqueValues.every(v => typeof v === "number" || !isNaN(Number(v)))
+  const isNumeric = uniqueValues.every(v => !isNaN(Number(v)))
 
-  // Handle custom color array
+  // Handle custom color array.
   if (Array.isArray(scheme)) {
-    return scaleOrdinal<any, string>()
+    return scaleOrdinal<string, string>()
       .domain(uniqueValues)
       .range(scheme)
-      .unknown("#999") as (v: any) => string
+      .unknown("#999") as (v: string) => string
   }
 
   const colorScheme = COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES] || COLOR_SCHEMES.category10
@@ -175,14 +185,14 @@ export function createColorScale(
     // Use sequential scale for numeric data
     let maxVal = -Infinity
     for (const v of uniqueValues) { const n = Number(v); if (n > maxVal) maxVal = n }
-    return (v: any) => colorScheme(Number(v) / maxVal)
+    return (v: string) => colorScheme(Number(v) / maxVal)
   } else {
     // Use ordinal scale for categorical data
     const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-    return scaleOrdinal<any, string>()
+    return scaleOrdinal<string, string>()
       .domain(uniqueValues)
       .range(colors)
-      .unknown("#999") as (v: any) => string
+      .unknown("#999") as (v: string) => string
   }
 }
 
@@ -209,7 +219,7 @@ function hashString(str: string): number {
  * @returns Size value
  */
 export function getSize(
-  dataPoint: any,
+  dataPoint: Datum,
   sizeBy: string | ((d: Datum) => number),
   sizeRange: [number, number] = [3, 20],
   domain?: [number, number]

@@ -53,6 +53,26 @@ export interface RealtimeNode {
   _pulseIntensity?: number
   _pulseColor?: string
   _pulseGlowRadius?: number
+  /**
+   * @internal Hierarchy-layout-only extension fields. Set by
+   * `hierarchyLayoutPlugin` / `orbitLayoutPlugin` during layout and
+   * read by `hierarchySceneBuilders`. Typed `unknown` because the d3
+   * `HierarchyNode` shape is layout-specific (rectangular, circular,
+   * point) — consumers narrow with the structural fields they need.
+   */
+  __hierarchyNode?: unknown
+  /** @internal Circle-pack layout radius. Set by `hierarchyLayoutPlugin`. */
+  __radius?: number
+  /**
+   * @internal Chord-layout extension. Carries the start/end angles
+   * for the arc segment representing this node, computed by
+   * `chordLayoutPlugin` and read by its `buildScene`. Concretely
+   * typed (unlike `__hierarchyNode`) because chord is the only
+   * layout that writes this field, so the shape is fixed — no
+   * narrowing-at-read needed. `__` prefix matches the convention
+   * used by `__hierarchyNode` / `__radius` on this same interface.
+   */
+  __arcData?: { startAngle: number; endAngle: number }
 }
 
 export interface RealtimeEdge {
@@ -83,6 +103,17 @@ export interface RealtimeEdge {
   /** @internal Circular sankey layout fields */
   _circularWidth?: number
   _circularStub?: boolean
+  /**
+   * @internal Chord-layout extension. Carries the d3-chord-generated
+   * source/target arc spans for this edge, set by `chordLayoutPlugin`
+   * during `computeLayout` and read by its `buildScene`. Typed
+   * `unknown` because the d3 `Chord` interface lives in `d3-chord`
+   * and importing the type here would couple `networkTypes` to that
+   * dep — consumers narrow at the read site. `__` prefix matches the
+   * `_circularWidth` / `_circularStub` internal-field convention on
+   * this same interface.
+   */
+  __chordData?: unknown
 }
 
 // ── Bezier cache ───────────────────────────────────────────────────────

@@ -31,11 +31,18 @@ interface OrbitState {
 }
 
 function getOrbitState(config: NetworkPipelineConfig): OrbitState {
-  const c = config as any
-  if (!c.__orbitState) {
-    c.__orbitState = { metaMap: new Map<string, OrbitMeta>(), startTime: typeof performance !== "undefined" ? performance.now() : Date.now() }
+  // `__orbitState` is declared on `NetworkPipelineConfig` as `unknown`;
+  // narrow to `OrbitState | undefined` at the seam. The init/cache
+  // pattern keeps state per-config across plugin invocations.
+  let state = config.__orbitState as OrbitState | undefined
+  if (!state) {
+    state = {
+      metaMap: new Map<string, OrbitMeta>(),
+      startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+    }
+    config.__orbitState = state
   }
-  return c.__orbitState
+  return state
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -50,10 +57,10 @@ function resolveMode(mode: string | number[] | undefined): number[] {
   }
 }
 
-function resolveChildrenAccessor(acc: string | ((d: Datum) => any[]) | undefined): (d: Datum) => any[] | null {
+function resolveChildrenAccessor(acc: string | ((d: Datum) => Datum[]) | undefined): (d: Datum) => Datum[] | null {
   if (typeof acc === "function") return acc
   const field = acc || "children"
-  return (d: Datum) => d[field] || null
+  return (d: Datum) => (d[field] as Datum[] | undefined) || null
 }
 
 function resolveNodeIdAccessor(acc: string | ((d: Datum) => string) | undefined): (d: Datum) => string {
@@ -62,14 +69,22 @@ function resolveNodeIdAccessor(acc: string | ((d: Datum) => string) | undefined)
   return (d: Datum) => String(d[field] ?? "")
 }
 
-function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefined): (n: any) => number {
+/**
+ * Structural shape this revolution-style callback reads. We could use
+ * `RealtimeNode`'s full shape here but every consumer only reads
+ * `depth`, so the narrower contract makes the code (and the type
+ * dependency footprint) honest.
+ */
+type DepthLike = { depth?: number }
+
+function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefined): (n: DepthLike) => number {
   switch (style) {
     case "decay":
       // Each depth level is exponentially slower — outer rings wind down
-      return (n: any) => Math.pow(0.6, (n.depth ?? 0))
+      return (n) => Math.pow(0.6, (n.depth ?? 0))
     case "alternate":
       // Odd depths reverse direction — counter-rotating rings
-      return (n: any) => {
+      return (n) => {
         const d = n.depth ?? 0
         const sign = d % 2 === 0 ? 1 : -1
         return sign / (d + 1)
@@ -77,14 +92,14 @@ function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefi
     case "locked":
     default:
       // Children rotate with parent at speed proportional to 1/(depth+1)
-      return (n: any) => 1 / ((n.depth ?? 0) + 1)
+      return (n) => 1 / ((n.depth ?? 0) + 1)
   }
 }
 
 // ── Layout engine ─────────────────────────────────────────────────────
 
 function buildOrbitLayout(
-  root: any,
+  root: Datum,
   size: [number, number],
   config: NetworkPipelineConfig,
   nodes: RealtimeNode[],
@@ -130,7 +145,7 @@ function buildOrbitLayout(
   nodes.push(rootNode)
   state.metaMap.set(rootId, { ring: maxRing, angle: 0, depth: 0, parentId: null, eccentricity: 1 })
 
-  function buildTree(parentDatum: any, parentId: string, parentX: number, parentY: number, parentRing: number, depth: number, hasGrandparent: boolean) {
+  function buildTree(parentDatum: Datum, parentId: string, parentX: number, parentY: number, parentRing: number, depth: number, hasGrandparent: boolean) {
     const kids = childrenFn(parentDatum)
     if (!kids?.length) return
 
@@ -160,8 +175,8 @@ function buildOrbitLayout(
         : parentRing * ringFraction
 
       // Use d3-pie for angular spacing — heavier children (with grandchildren) get more space
-      const pieGen = d3Pie<any>()
-        .value((kid: any) => {
+      const pieGen = d3Pie<Datum>()
+        .value((kid) => {
           const hasKids = childrenFn(kid)?.length
           return hasKids ? 4 : 1
         })
@@ -268,7 +283,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     config: NetworkPipelineConfig,
     size: [number, number]
   ): void {
-    const hierarchyRoot = (config as any).__hierarchyRoot
+    const hierarchyRoot = config.__hierarchyRoot as Datum | undefined
     if (!hierarchyRoot) return
 
     buildOrbitLayout(hierarchyRoot, size, config, nodes, edges)
@@ -327,7 +342,9 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
             x2: parentX + ring * Math.sin(a2),
             y2: parentY + ring * Math.cos(a2) * ecc,
             style: ringStyle,
-            datum: null as any
+            // SceneDatum is `Datum | null`; ring segments are decorative,
+            // not data-bearing, so null is the right value.
+            datum: null
           })
         }
       }

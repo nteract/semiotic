@@ -282,7 +282,6 @@ export default function SemanticColorsPage() {
           strokeWidth={1}
           width={600}
           height={220}
-          windowSize={histogramData.length}
         />
       </div>
 

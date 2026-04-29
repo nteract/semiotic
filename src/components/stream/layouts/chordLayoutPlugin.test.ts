@@ -39,7 +39,7 @@ describe("chordLayoutPlugin", () => {
     }
   })
 
-  it("stashes arcData on nodes", () => {
+  it("stashes __arcData on nodes", () => {
     const nodes = [makeNode("A"), makeNode("B")]
     const edges = [makeEdge("A", "B", 10)]
     const config: NetworkPipelineConfig = { chartType: "chord" }
@@ -47,9 +47,9 @@ describe("chordLayoutPlugin", () => {
     chordLayoutPlugin.computeLayout(nodes, edges, config, [600, 600])
 
     for (const node of nodes) {
-      expect((node as any).arcData).toBeDefined()
-      expect((node as any).arcData.startAngle).toBeDefined()
-      expect((node as any).arcData.endAngle).toBeDefined()
+      expect(node.__arcData).toBeDefined()
+      expect(node.__arcData?.startAngle).toBeDefined()
+      expect(node.__arcData?.endAngle).toBeDefined()
     }
   })
 

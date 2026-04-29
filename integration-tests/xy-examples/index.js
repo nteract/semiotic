@@ -6,8 +6,14 @@ import { lineData, scatterData, areaData, colors } from "../test-data.js"
 const {
   LineChart,
   AreaChart,
+  StackedAreaChart,
   Scatterplot,
   BubbleChart,
+  ConnectedScatterplot,
+  QuadrantChart,
+  MultiAxisLineChart,
+  ScatterplotMatrix,
+  MinimapChart,
   StreamXYFrame
 } = Semiotic
 
@@ -231,7 +237,116 @@ const examples = [
       size: [400, 250],
       margin: { top: 20, bottom: 40, left: 50, right: 20 },
     })
-  })
+  }),
+
+  // ── Default-theme HOC coverage backfill ─────────────────────────────
+  // One snapshot per public XY HOC that didn't already have one. Keeps
+  // the regression gate honest as new chart families are added.
+
+  TestCase({
+    title: "Stacked Area Chart",
+    testId: "xy-stacked-area",
+    children: React.createElement(StackedAreaChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      areaBy: "series",
+      colorBy: "series",
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Connected Scatterplot",
+    testId: "xy-connected-scatter",
+    children: React.createElement(ConnectedScatterplot, {
+      data: scatterData.slice(0, 12),
+      xAccessor: "x",
+      yAccessor: "y",
+      orderAccessor: "x",
+      pointRadius: 5,
+      width: 400,
+      height: 300,
+    }),
+  }),
+
+  TestCase({
+    title: "Quadrant Chart",
+    testId: "xy-quadrant",
+    children: React.createElement(QuadrantChart, {
+      data: scatterData.slice(0, 30),
+      xAccessor: "x",
+      yAccessor: "y",
+      colorBy: "category",
+      // Center the quadrants on the median-ish point of the deterministic
+      // fixture so all four quadrants have at least one point.
+      xCenter: 50,
+      yCenter: 45,
+      // `quadrants` is required — the four labeled, colored backgrounds
+      // are the entire point of the chart type.
+      quadrants: {
+        topRight:    { label: "High / High", color: "#dcfce7" },
+        topLeft:     { label: "Low / High",  color: "#fef3c7" },
+        bottomRight: { label: "High / Low",  color: "#dbeafe" },
+        bottomLeft:  { label: "Low / Low",   color: "#fee2e2" },
+      },
+      pointRadius: 5,
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Multi-Axis Line Chart",
+    testId: "xy-multi-axis-line",
+    children: React.createElement(MultiAxisLineChart, {
+      data: [
+        { t: 0, revenue: 100, latency: 220 },
+        { t: 1, revenue: 140, latency: 210 },
+        { t: 2, revenue: 130, latency: 240 },
+        { t: 3, revenue: 180, latency: 200 },
+        { t: 4, revenue: 220, latency: 180 },
+      ],
+      xAccessor: "t",
+      series: [
+        { yAccessor: "revenue", label: "Revenue", color: "#1f77b4" },
+        { yAccessor: "latency", label: "Latency (ms)", color: "#d62728" },
+      ],
+      width: 400,
+      height: 300,
+    }),
+  }),
+
+  TestCase({
+    title: "Scatterplot Matrix",
+    testId: "xy-scatter-matrix",
+    children: React.createElement(ScatterplotMatrix, {
+      data: scatterData.slice(0, 30),
+      fields: ["x", "y", "size"],
+      colorBy: "category",
+      width: 400,
+      height: 400,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Minimap Chart",
+    testId: "xy-minimap",
+    children: React.createElement(MinimapChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      width: 500,
+      height: 300,
+      // Render in its default (no brush selection) state — the snapshot
+      // captures both the overview strip and the detail viewport.
+      colorScheme: colors,
+    }),
+  }),
 ]
 
 // Render all examples

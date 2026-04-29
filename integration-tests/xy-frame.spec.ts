@@ -176,3 +176,32 @@ test.describe("XY Charts - Range Plot", () => {
     expect(texts.length).toBeGreaterThan(2)
   })
 })
+
+// ── Default-theme HOC coverage backfill ──────────────────────────────
+// One snapshot per public XY HOC that didn't already have one. Pinned
+// to the default theme; theme variants are covered by themed-charts.
+// Linux baselines auto-generate via the CI smoke-fallback step; commit
+// from the `playwright-snapshots` artifact to flip the regression gate
+// on for CI.
+test.describe("XY Charts - HOC default coverage", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  for (const testId of [
+    "xy-stacked-area",
+    "xy-connected-scatter",
+    "xy-quadrant",
+    "xy-multi-axis-line",
+    "xy-scatter-matrix",
+    "xy-minimap",
+  ]) {
+    test(`renders ${testId}`, async ({ page }) => {
+      await waitForChartReady(page, testId)
+      const testCase = page.locator(`[data-testid="${testId}"]`)
+      await expect(testCase).toHaveScreenshot(`${testId}.png`, {
+        maxDiffPixels: 100,
+      })
+    })
+  }
+})

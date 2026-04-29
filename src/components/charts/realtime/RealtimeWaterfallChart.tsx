@@ -17,6 +17,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 
 export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
@@ -154,7 +155,7 @@ export const RealtimeWaterfallChart = forwardRef(
       className,
       arrowOfTime = "right",
       windowMode = "sliding",
-      windowSize = 200,
+      windowSize: windowSizeProp,
       data,
       timeAccessor,
       valueAccessor,
@@ -236,6 +237,8 @@ export const RealtimeWaterfallChart = forwardRef(
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
       : className
+
+    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
 
     // ── Loading / empty guards (deferred to after all hooks) ───────────────
     if (loadingEl) return loadingEl

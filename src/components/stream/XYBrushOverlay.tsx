@@ -20,7 +20,7 @@
 import * as React from "react"
 import { useRef, useEffect, useMemo } from "react"
 import { select as d3Select } from "d3-selection"
-import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
+import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { StreamScales } from "./types"
 
 export interface XYBrushOverlayProps {
@@ -89,7 +89,10 @@ export function XYBrushOverlay({
   streaming
 }: XYBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const brushRef = useRef<any>(null)
+  // d3-brush's `BrushBehavior` is generic over the datum bound to the
+  // brush group selection. We don't bind data to the group, so
+  // `unknown` is the right datum type at the seam.
+  const brushRef = useRef<BrushBehavior<unknown> | null>(null)
 
   const onBrushRef = useRef(onBrush)
   onBrushRef.current = onBrush
@@ -109,7 +112,10 @@ export function XYBrushOverlay({
   useEffect(() => {
     if (!svgRef.current) return
 
-    const g = d3Select(svgRef.current).select(".brush-g")
+    // Type the brush group selection as `SVGGElement` so the
+    // brush's typed `move` / behavior call signatures resolve
+    // without `as any` casts.
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
     const brushFn =
       dimension === "x"
@@ -120,7 +126,7 @@ export function XYBrushOverlay({
 
     brushFn.extent([[0, 0], [width, height]])
 
-    brushFn.on("brush end", (event: any) => {
+    brushFn.on("brush end", (event: D3BrushEvent<unknown>) => {
       if (isProgrammaticMoveRef.current) return
 
       const s = scalesRef.current
@@ -168,7 +174,7 @@ export function XYBrushOverlay({
         const snappedPx1 = s.x(xRange[1])
         isProgrammaticMoveRef.current = true
         if (dimension === "x") {
-          g.call(brushFn.move as any, [snappedPx0, snappedPx1])
+          g.call(brushFn.move, [snappedPx0, snappedPx1])
         } else if (dimension === "xy") {
           const sel = event.selection as [[number, number], [number, number]]
           g.call(brushFn.move as any, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
@@ -181,7 +187,7 @@ export function XYBrushOverlay({
       onBrushRef.current(extent)
     })
 
-    g.call(brushFn as any)
+    g.call(brushFn)
     brushRef.current = brushFn
 
     g.select(".selection")
@@ -207,12 +213,12 @@ export function XYBrushOverlay({
     const domain = scales.x.domain() as [number, number]
     const visibleMin = domain[0]
 
-    const g = d3Select(svgRef.current).select(".brush-g")
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
     // Brush fully off-screen (scrolled away)
     if (ext.x[1] <= visibleMin) {
       isProgrammaticMoveRef.current = true
-      g.call(brushRef.current.move as any, null)
+      g.call(brushRef.current.move, null)
       isProgrammaticMoveRef.current = false
       activeBrushExtentRef.current = null
       onBrushRef.current(null)
@@ -236,7 +242,7 @@ export function XYBrushOverlay({
       }
       if (effectiveMin >= ext.x[1]) {
         isProgrammaticMoveRef.current = true
-        g.call(brushRef.current.move as any, null)
+        g.call(brushRef.current.move, null)
         isProgrammaticMoveRef.current = false
         activeBrushExtentRef.current = null
         onBrushRef.current(null)
@@ -250,11 +256,11 @@ export function XYBrushOverlay({
 
     isProgrammaticMoveRef.current = true
     if (dimension === "x") {
-      g.call(brushRef.current.move as any, [px0, px1])
+      g.call(brushRef.current.move, [px0, px1])
     } else {
       const py0 = scales.y(ext.y[1])
       const py1 = scales.y(ext.y[0])
-      g.call(brushRef.current.move as any, [[px0, py0], [px1, py1]])
+      g.call(brushRef.current.move, [[px0, py0], [px1, py1]])
     }
     isProgrammaticMoveRef.current = false
 
