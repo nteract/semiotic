@@ -59,6 +59,12 @@ jobs:
       - name: Check public API surface (no breaking changes)
         run: npm run check:api-surface
 
+      - name: Check HOC JSDoc coverage (≥2 @example blocks per HOC)
+        run: npm run check:jsdoc-coverage
+
+      - name: Check ai/examples.md coverage + drift
+        run: npm run check:ai-examples-coverage
+
       - name: Build production bundles
         run: npm run dist:prod
 

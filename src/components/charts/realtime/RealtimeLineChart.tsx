@@ -120,14 +120,35 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
+ * // Single streaming series — push each datum, the chart slides
  * const ref = useRef<RealtimeFrameHandle>(null)
+ * useEffect(() => {
+ *   const id = setInterval(() => ref.current?.push({ time: Date.now(), value: Math.random() }), 100)
+ *   return () => clearInterval(id)
+ * }, [])
+ * return (
+ *   <RealtimeLineChart
+ *     ref={ref}
+ *     stroke="#007bff"
+ *     strokeWidth={2}
+ *     windowSize={200}
+ *     enableHover
+ *   />
+ * )
+ * ```
  *
+ * @example
+ * ```tsx
+ * // Decay + pulse — older points fade, newly-pushed points flash
  * <RealtimeLineChart
  *   ref={ref}
- *   stroke="#007bff"
+ *   timeAccessor="t"
+ *   valueAccessor="v"
+ *   stroke="#0b5fff"
  *   strokeWidth={2}
- *   windowSize={200}
- *   enableHover
+ *   decay={{ type: "linear" }}
+ *   pulse={{ type: "fade", durationMs: 400 }}
+ *   windowSize={500}
  * />
  * ```
  */

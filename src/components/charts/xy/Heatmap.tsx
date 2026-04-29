@@ -19,7 +19,7 @@ import {
   interpolateMagma,
   interpolateCividis,
   interpolateTurbo,
-} from "d3-scale-chromatic"
+} from "../shared/colorPalettes"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"

@@ -10,7 +10,7 @@ import {
   interpolatePurples,
   interpolateViridis,
   interpolatePlasma
-} from "d3-scale-chromatic"
+} from "./colorPalettes"
 import type { Datum } from "./datumTypes"
 
 /**

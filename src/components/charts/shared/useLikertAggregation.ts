@@ -11,7 +11,7 @@ import {
   interpolateRdYlBu,
   interpolateRdYlGn,
   interpolateSpectral,
-} from "d3-scale-chromatic"
+} from "./colorPalettes"
 import type { Datum } from "./datumTypes"
 
 /** Map d3-scale-chromatic diverging interpolator keys → interpolator fn. */

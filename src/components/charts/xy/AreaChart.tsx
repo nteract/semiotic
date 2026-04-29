@@ -202,6 +202,7 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
  *
  * @example
  * ```tsx
+ * // Multi-series areas with overlap transparency
  * <AreaChart
  *   data={[
  *     {x: 1, y: 10, category: 'A'},
@@ -214,6 +215,33 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
  *   xLabel="Time"
  *   yLabel="Value"
  * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Single series with a vertical opacity gradient (tip → baseline fade)
+ * <AreaChart
+ *   data={data}
+ *   xAccessor="t"
+ *   yAccessor="value"
+ *   color="steelblue"
+ *   gradientFill={{ topOpacity: 0.8, bottomOpacity: 0.05 }}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Push mode — omit `data`, drive the chart through a ref. Use a
+ * // stable string id so `remove(id)` / `update(id, ...)` work later.
+ * const ref = useRef<RealtimeFrameHandle>(null)
+ * useEffect(() => {
+ *   const id = setInterval(() => {
+ *     const t = Date.now()
+ *     ref.current?.push({ id: String(t), x: t, y: Math.random() })
+ *   }, 200)
+ *   return () => clearInterval(id)
+ * }, [])
+ * return <AreaChart ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
  * ```
  */
 export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

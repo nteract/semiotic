@@ -7,7 +7,7 @@
 
 import * as React from "react"
 import { scaleOrdinal } from "d3-scale"
-import { schemeCategory10 } from "d3-scale-chromatic"
+import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import type { SemioticTheme } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 

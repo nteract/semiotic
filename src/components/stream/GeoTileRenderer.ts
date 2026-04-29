@@ -1,15 +1,80 @@
 /**
  * GeoTileRenderer — fetches, caches, and renders raster map tiles on a canvas.
  *
- * Uses d3-tile to compute visible tiles from projection state.
- * Tile images are cached in an LRU map to avoid re-fetching.
+ * Inlines slippy-tile math from `d3-tile` (the v1 module is ~30 lines
+ * of math; the dependency wasn't earning its weight). The math is
+ * Web Mercator standard: each zoom level z has 2^z × 2^z 256-px tiles
+ * tiling the world; given a projection scale (in d3 units, where
+ * scale=256 puts the world in 256 px) and a translate offset, we
+ * compute the tile coordinates that cover the visible viewport and
+ * the (translate, scale) transform that maps tile coords to canvas px.
  *
  * Tiles are always in Web Mercator projection. A dev warning is
  * emitted if tiles are used with a non-Mercator projection.
  */
-import { tile as d3Tile, tileWrap } from "d3-tile"
 import type { GeoProjection } from "d3-geo"
 import { getDevicePixelRatio } from "./canvasSetup"
+
+// ── Slippy-tile math (inlined from d3-tile v1) ────────────────────────
+
+interface TileLayout {
+  /** `[x, y, z]` tile triples that cover the viewport. */
+  tiles: Array<[number, number, number]>
+  /** Translate applied in tile-coord space: `tileX_canvas = (tx + translate[0]) * scale`. */
+  translate: [number, number]
+  /** Per-tile pixel size at the chosen zoom level. */
+  scale: number
+}
+
+interface TileLayoutInput {
+  size: [number, number]
+  scale: number
+  translate: [number, number]
+  clampX?: boolean
+  clampY?: boolean
+}
+
+/**
+ * Compute the slippy-tile layout for a viewport. `scale` is in d3-tile
+ * units (matches `geoMercator().scale() * 2π`). Returns the tile triples
+ * plus the translate/scale needed to draw each tile at the right canvas
+ * pixel position. Mirrors d3-tile@1's default-options behavior with
+ * `tileSize=256` and clamping enabled by default.
+ */
+function computeTileLayout(input: TileLayoutInput): TileLayout {
+  const { size, scale, translate, clampX = true, clampY = true } = input
+  // z is the fractional zoom level; z0 is the integer level we render
+  // at (z0 = round(z) so the rendered tile size k stays close to 256 px).
+  const z = Math.max(Math.log(scale) / Math.LN2 - 8, 0)
+  const z0 = Math.round(z)
+  const j = 1 << z0 // tiles per side at z0
+  const k = Math.pow(2, z - z0 + 8) // per-tile pixel size at z0
+  const x = translate[0] - scale / 2
+  const y = translate[1] - scale / 2
+  const xMin = Math.max(clampX ? 0 : -Infinity, Math.floor((0 - x) / k))
+  const xMax = Math.min(clampX ? j : Infinity, Math.ceil((size[0] - x) / k))
+  const yMin = Math.max(clampY ? 0 : -Infinity, Math.floor((0 - y) / k))
+  const yMax = Math.min(clampY ? j : Infinity, Math.ceil((size[1] - y) / k))
+
+  const tiles: Array<[number, number, number]> = []
+  for (let ty = yMin; ty < yMax; ++ty) {
+    for (let tx = xMin; tx < xMax; ++tx) {
+      tiles.push([tx, ty, z0])
+    }
+  }
+
+  return { tiles, translate: [x / k, y / k], scale: k }
+}
+
+/**
+ * Wrap an x tile coordinate at the antimeridian. y/z pass through.
+ * Tile servers expect x in `[0, 2^z)`, so a tile at x = -1 is the
+ * tile at x = 2^z - 1. Mirrors d3-tile's `tileWrap` helper.
+ */
+function tileWrap([x, y, z]: [number, number, number]): [number, number, number] {
+  const j = 1 << z
+  return [x - Math.floor(x / j) * j, y, z]
+}
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -132,17 +197,16 @@ export function renderTiles(
   // d3-tile expects: scale = 2π * projection.scale()
   const tileScale = projScale * 2 * Math.PI
 
-  const tiles = d3Tile()
-    .size([width, height])
-    .scale(tileScale)
-    .translate(projTranslate as [number, number])
-    .clamp(true)
-    ()
+  const layout = computeTileLayout({
+    size: [width, height],
+    scale: tileScale,
+    translate: projTranslate as [number, number],
+  })
 
   const dpr = getDevicePixelRatio()
   let allLoaded = true
 
-  for (const t of tiles) {
+  for (const t of layout.tiles) {
     const [x, y, z] = tileWrap(t)
     const key = `${z}/${x}/${y}`
 
@@ -177,11 +241,12 @@ export function renderTiles(
       continue
     }
 
-    // Compute tile position on canvas
-    // t[0] and t[1] are the original (unwrapped) tile coords from d3-tile
-    const tileK = tiles.scale
-    const tileTx = tiles.translate[0]
-    const tileTy = tiles.translate[1]
+    // Compute tile position on canvas. t[0] / t[1] are the original
+    // (unwrapped) tile coords; the layout-level scale + translate
+    // turn them into canvas pixel offsets.
+    const tileK = layout.scale
+    const tileTx = layout.translate[0]
+    const tileTy = layout.translate[1]
 
     const tileX = (t[0] + tileTx) * tileK
     const tileY = (t[1] + tileTy) * tileK

@@ -22,7 +22,7 @@ import {
   interpolateMagma,
   interpolateCividis,
   interpolateTurbo,
-} from "d3-scale-chromatic"
+} from "../../charts/shared/colorPalettes"
 import type { SceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor } from "../accessorUtils"

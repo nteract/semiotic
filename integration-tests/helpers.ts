@@ -126,6 +126,19 @@ export async function waitForChartReady(
     { id: testId, stableFrames: 3 },
     { timeout, polling: 50 },
   )
+
+  // Block on `document.fonts.ready` so font loading time falls inside
+  // the 10s readiness budget rather than the 5s `toHaveScreenshot`
+  // budget. Firefox on Linux CI runners has flaked specifically here:
+  // canvas paints fine, then `toHaveScreenshot`'s internal "waiting
+  // for fonts to load…" step exceeds 5s on a slow font fetch and the
+  // test fails despite the chart being visually complete. Web fonts
+  // also affect SVG axis labels (`<text>` elements), so we need this
+  // even though the chart body is canvas. `document.fonts` is a
+  // standard FontFaceSet promise that resolves once every CSS-declared
+  // @font-face has loaded or errored — fast on warm caches, finite
+  // on cold ones.
+  await page.evaluate(() => document.fonts.ready)
 }
 
 /**

@@ -8,7 +8,7 @@ import {
 } from "d3-force"
 import { scaleLinear } from "d3-scale"
 import { min, max } from "d3-array"
-import { schemeCategory10 } from "d3-scale-chromatic"
+import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,

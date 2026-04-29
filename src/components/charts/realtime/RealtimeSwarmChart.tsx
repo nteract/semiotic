@@ -118,12 +118,24 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
+ * // Per-sensor swarm — each push is a discrete dot, color by category
  * <RealtimeSwarmChart
  *   ref={ref}
  *   radius={4}
  *   opacity={0.8}
  *   categoryAccessor="sensor"
  *   colors={{ sensor1: "#007bff", sensor2: "#28a745" }}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Threshold-coloured outliers via a y-threshold annotation
+ * <RealtimeSwarmChart
+ *   ref={ref}
+ *   radius={3}
+ *   annotations={[{ type: "y-threshold", value: 0.9, color: "#dc3545", label: "alert" }]}
+ *   windowSize={300}
  * />
  * ```
  */

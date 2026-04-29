@@ -28,7 +28,7 @@ import {
   interpolateMagma,
   interpolateCividis,
   interpolateTurbo,
-} from "d3-scale-chromatic"
+} from "../shared/colorPalettes"
 import { extent } from "d3-array"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
