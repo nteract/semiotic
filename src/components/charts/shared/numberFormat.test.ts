@@ -112,11 +112,17 @@ describe("numberFormat — d3-format subset", () => {
   })
 
   describe("malformed specs", () => {
-    it("falls back to Intl.NumberFormat for unparseable specs", () => {
-      // Doesn't throw; produces a reasonable string.
-      const out = format("not-a-spec")(1234)
-      expect(typeof out).toBe("string")
-      expect(out.length).toBeGreaterThan(0)
+    it("throws on unparseable specs (caught by formatUtils' fallback)", () => {
+      // Matches d3-format's throw-on-bad-spec contract. The existing
+      // `try/catch` in `formatNumber` handles the throw and falls
+      // back to `String(value)`. Earlier shim revisions silently
+      // returned an Intl.NumberFormat formatter, which suppressed
+      // the error AND made output runtime-locale dependent.
+      expect(() => format("not-a-spec")).toThrow(/Unsupported number format spec/)
+    })
+
+    it("throws on unsupported types like `,.2x`", () => {
+      expect(() => format(",.2x")).toThrow(/Unsupported number format type/)
     })
   })
 })

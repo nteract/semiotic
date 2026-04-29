@@ -192,23 +192,25 @@ function formatGeneral(value: number, precision: number, comma: boolean, trim: b
 
 /**
  * Build a number formatter from a d3-format-style spec string.
- * Mirrors `d3.format(spec)`: always returns a callable
- * `(value: number) => string`.
+ * Mirrors `d3.format(spec)`: returns `(value: number) => string`.
  *
- * If the spec string isn't recognized (or uses an unimplemented
- * type), the formatter falls back to `Intl.NumberFormat`. Callers
- * can rely on the return value being callable in all cases — the
- * outer `try/catch` in `formatNumber` only fires if the formatter
- * itself throws on the value (NaN, ±Infinity edge cases), not on a
- * spec parse failure.
+ * **Throws on unparseable specs and unimplemented types.** This
+ * matches d3's contract — the existing `try/catch` in
+ * `formatUtils.formatNumber` (and any consumer code that wraps a
+ * `format(spec)` call) catches the throw and falls back to
+ * `String(value)`. Earlier shim revisions silently fell back to
+ * `Intl.NumberFormat`, which (a) suppressed bad-input errors that
+ * the outer fallback was designed to handle, and (b) reintroduced a
+ * runtime-locale dependency that would shift output across CI runners
+ * and SSR snapshot baselines.
  */
 export function format(spec: string): (value: number) => string {
   const parsed = parseSpec(spec)
   if (!parsed) {
-    // Fallback: hand to Intl.NumberFormat. If THAT throws too, the
-    // outer try/catch in formatNumber catches it.
-    const formatter = new Intl.NumberFormat()
-    return (v: number) => formatter.format(v)
+    throw new Error(
+      `Unsupported number format spec: "${spec}". Recognized form is ` +
+        `[,][.precision][~][type] with type ∈ {f, %, e, d, s, r, g}.`,
+    )
   }
 
   const { comma, precision, trim, type } = parsed
@@ -248,10 +250,10 @@ export function format(spec: string): (value: number) => string {
       return (v: number) => formatGeneral(v, p, comma, trim)
     }
     default: {
-      // Unrecognized type — fall through to Intl. Same shape as the
-      // unparseable-spec branch above.
-      const formatter = new Intl.NumberFormat()
-      return (v: number) => formatter.format(v)
+      throw new Error(
+        `Unsupported number format type: "${type}" (full spec: "${spec}"). ` +
+          `Recognized types: {f, %, e, d, s, r, g}.`,
+      )
     }
   }
 }

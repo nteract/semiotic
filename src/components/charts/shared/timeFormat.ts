@@ -123,10 +123,15 @@ function applyToken(token: string, d: Date): string {
     case "j": return PAD3(dayOfYear(d))
     case "%": return "%"
     default:
-      // Unknown token — preserve `%X` literally so the user sees what
-      // they typed and can fix it. d3 throws here; we degrade to a
-      // visible string instead so a chart axis doesn't blank out.
-      return `%${token}`
+      // Throw on unrecognized tokens. This is *stricter* than
+      // d3-time-format itself, which silently emits the literal
+      // character (so `%q` produces `q` in d3) — but a chart axis
+      // showing `q` per tick is a worse failure mode than a
+      // String(value) fallback, and the existing `try/catch` in
+      // `formatUtils.formatDate` handles the throw cleanly. Matches
+      // the throw-on-unsupported-spec contract this module's
+      // companion `numberFormat.ts` uses for the same reason.
+      throw new Error(`Unsupported time format token: %${token}`)
   }
 }
 

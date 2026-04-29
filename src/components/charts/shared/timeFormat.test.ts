@@ -77,11 +77,12 @@ describe("timeFormat — strftime token subset", () => {
     expect(timeFormat("Year %Y at %H:%M")(SAMPLE)).toBe("Year 2026 at 14:33")
   })
 
-  it("preserves unknown tokens literally so the spec is debuggable", () => {
-    // d3 throws on `%q`. We degrade to `%q` so a chart axis still
-    // renders — the user sees their typo in the label rather than
-    // an empty axis.
-    expect(timeFormat("%q")(SAMPLE)).toBe("%q")
+  it("throws on unrecognized tokens (caught by formatUtils' fallback)", () => {
+    // d3-time-format silently emits the literal char (so `%q` → `q`).
+    // We're stricter: throw so `formatDate`'s outer try/catch falls
+    // back to `String(value)`. A chart axis showing `q` on every
+    // tick is worse than the date-string fallback.
+    expect(() => timeFormat("%q")(SAMPLE)).toThrow(/Unsupported time format token: %q/)
   })
 
   it("matches semiotic's default `%b %d, %Y` format", () => {
