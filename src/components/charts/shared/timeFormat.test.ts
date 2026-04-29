@@ -47,17 +47,21 @@ describe("timeFormat — strftime token subset", () => {
   })
 
   it("formats `%b` and `%B` via Intl.DateTimeFormat", () => {
-    // Intl is locale-dependent; in the en-US default `%b` is `Mar`,
-    // `%B` is `March`. The test asserts on the en-US output which
-    // matches the locale every CI runner exposes.
-    expect(timeFormat("%b")(SAMPLE)).toBe("Mar")
-    expect(timeFormat("%B")(SAMPLE)).toBe("March")
+    // Locale-agnostic: assert that the shim emits whatever the
+    // runtime's default Intl.DateTimeFormat would emit. Hard-coding
+    // "Mar" / "March" would be flaky on non-en-US CI runners.
+    const expectedShort = new Intl.DateTimeFormat(undefined, { month: "short" }).format(SAMPLE)
+    const expectedLong = new Intl.DateTimeFormat(undefined, { month: "long" }).format(SAMPLE)
+    expect(timeFormat("%b")(SAMPLE)).toBe(expectedShort)
+    expect(timeFormat("%B")(SAMPLE)).toBe(expectedLong)
   })
 
   it("formats `%a` and `%A` via Intl.DateTimeFormat", () => {
-    // 2026-03-24 is a Tuesday.
-    expect(timeFormat("%a")(SAMPLE)).toBe("Tue")
-    expect(timeFormat("%A")(SAMPLE)).toBe("Tuesday")
+    // Locale-agnostic — same approach as the month-name test above.
+    const expectedShort = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(SAMPLE)
+    const expectedLong = new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(SAMPLE)
+    expect(timeFormat("%a")(SAMPLE)).toBe(expectedShort)
+    expect(timeFormat("%A")(SAMPLE)).toBe(expectedLong)
   })
 
   it("formats `%j` (day of year, 1-based, zero-padded)", () => {
@@ -83,6 +87,11 @@ describe("timeFormat — strftime token subset", () => {
   })
 
   it("matches semiotic's default `%b %d, %Y` format", () => {
-    expect(timeFormat("%b %d, %Y")(SAMPLE)).toBe("Mar 24, 2026")
+    // Locale-agnostic: combine a runtime-derived month-short with
+    // the format's literal pieces so the assertion holds outside
+    // en-US runners. `24` and `2026` are locale-independent for
+    // `%d` (zero-padded day) and `%Y` (4-digit year).
+    const monShort = new Intl.DateTimeFormat(undefined, { month: "short" }).format(SAMPLE)
+    expect(timeFormat("%b %d, %Y")(SAMPLE)).toBe(`${monShort} 24, 2026`)
   })
 })

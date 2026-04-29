@@ -132,8 +132,18 @@ function formatExponential(value: number, precision: number, trim: boolean): str
 
 function formatRounded(value: number, precision: number, comma: boolean, trim: boolean): string {
   // d3's `r` type rounds to `precision` significant digits.
-  if (value === 0) return precision > 0 ? "0".padEnd(precision + 1, "0").replace(/^0/, "0") : "0"
-  let s = value.toPrecision(precision)
+  // toPrecision throws on precision=0 — clamp to 1 so a malformed
+  // `.0r` spec degrades to "round to 1 sig-fig" rather than crashing.
+  const safe = Math.max(1, precision)
+  if (value === 0) {
+    // For zero, render a fixed-point representation that respects
+    // sig-fig intent: precision=1 → "0", precision=3 → "0.00".
+    let s = safe > 1 ? value.toFixed(safe - 1) : "0"
+    if (trim) s = trimTrailingZeros(s)
+    if (comma) s = applyGrouping(s)
+    return s
+  }
+  let s = value.toPrecision(safe)
   // toPrecision can return exponential for very small/large numbers;
   // d3's `r` always renders fixed-point. Convert by widening.
   if (s.includes("e")) {
@@ -147,12 +157,14 @@ function formatRounded(value: number, precision: number, comma: boolean, trim: b
 function formatSI(value: number, precision: number, trim: boolean): string {
   // SI prefix: divide by the largest 10^(3k) ≤ |value|, append
   // suffix. d3's precision = significant digits in the mantissa.
-  if (value === 0) return "0".padEnd(Math.max(1, precision), "0").replace(/^00/, "0").slice(0, precision || 1)
+  // Clamp to ≥ 1 so a malformed `.0s` spec doesn't crash toPrecision.
+  const safe = Math.max(1, precision)
+  if (value === 0) return safe > 1 ? "0." + "0".repeat(safe - 1) : "0"
   const abs = Math.abs(value)
   const e = Math.floor(Math.log10(abs))
   const prefix = SI_PREFIXES.find((p) => e >= p.exp) || SI_PREFIXES[SI_PREFIXES.length - 1]
   const mantissa = value / Math.pow(10, prefix.exp)
-  let s = mantissa.toPrecision(precision)
+  let s = mantissa.toPrecision(safe)
   if (s.includes("e")) s = Number(s).toString()
   if (trim) s = trimTrailingZeros(s)
   return s + prefix.suffix
@@ -162,9 +174,11 @@ function formatGeneral(value: number, precision: number, comma: boolean, trim: b
   // d3's `g` type chooses between exponential and fixed based on
   // whether the number's exponent fits within ±precision. JS's
   // toPrecision approximates this well enough for chart labels.
-  let s = value.toPrecision(precision)
+  // Clamp to ≥ 1 so a malformed `.0g` spec doesn't crash toPrecision.
+  const safe = Math.max(1, precision)
+  let s = value.toPrecision(safe)
   if (s.includes("e")) {
-    s = formatExponential(value, precision - 1, trim)
+    s = formatExponential(value, Math.max(0, safe - 1), trim)
   } else {
     if (trim) s = trimTrailingZeros(s)
     if (comma) s = applyGrouping(s)
@@ -174,11 +188,15 @@ function formatGeneral(value: number, precision: number, comma: boolean, trim: b
 
 /**
  * Build a number formatter from a d3-format-style spec string.
- * Mirrors `d3.format(spec)`: returns a function that formats numbers.
+ * Mirrors `d3.format(spec)`: always returns a callable
+ * `(value: number) => string`.
  *
- * Returns `null` if the spec string isn't recognized — caller
- * (existing `try/catch` in `formatNumber`) falls back to
- * `String(value)`.
+ * If the spec string isn't recognized (or uses an unimplemented
+ * type), the formatter falls back to `Intl.NumberFormat`. Callers
+ * can rely on the return value being callable in all cases — the
+ * outer `try/catch` in `formatNumber` only fires if the formatter
+ * itself throws on the value (NaN, ±Infinity edge cases), not on a
+ * spec parse failure.
  */
 export function format(spec: string): (value: number) => string {
   const parsed = parseSpec(spec)

@@ -23,8 +23,10 @@
  *     cases that dominate consumer code.
  *
  * Each interpolator has the same signature as d3's: `(t: number) =>
- * string`, where `t ∈ [0, 1]` and the return is a `rgb(r, g, b)` CSS
- * color string. `t` outside [0, 1] is clamped, matching d3 behavior.
+ * string`, where `t ∈ [0, 1]` and the return is a `#rrggbb` CSS color
+ * string (matching d3-color's `Rgb#toString()` output for opaque
+ * colors, which is what flows into JSX `stroke=` / `fill=` attributes
+ * downstream). `t` outside [0, 1] is clamped, matching d3 behavior.
  *
  * Palette stops are taken from d3-scale-chromatic and ColorBrewer
  * source: https://github.com/d3/d3-scale-chromatic
@@ -148,7 +150,7 @@ export const interpolateGreys = rgbInterpolator([
 
 export const interpolateViridis = rgbInterpolator([
   "#440154", "#482878", "#3e4989", "#31688e", "#26828e",
-  "#1f9e89", "#35b779", "#6ece58", "#b5de2b", "#fde725", "#fde725",
+  "#1f9e89", "#35b779", "#6ece58", "#b5de2b", "#fde725",
 ])
 
 export const interpolatePlasma = rgbInterpolator([
@@ -173,7 +175,7 @@ export const interpolateCividis = rgbInterpolator([
 
 export const interpolateTurbo = rgbInterpolator([
   "#23171b", "#4a58dd", "#3f9ee9", "#46c7af", "#7eed5a",
-  "#cdf134", "#fbb91f", "#f56918", "#c52f06", "#7a0403", "#7a0403",
+  "#cdf134", "#fbb91f", "#f56918", "#c52f06", "#7a0403",
 ])
 
 // ── Diverging (ColorBrewer 11-stop) ───────────────────────────────────

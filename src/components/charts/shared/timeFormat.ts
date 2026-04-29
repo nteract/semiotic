@@ -75,12 +75,18 @@ function fmtWeekdayLong(d: Date): string {
 }
 
 function dayOfYear(d: Date): number {
-  // Local midnight of Jan 1 of the same year, in ms. Diff to local
-  // midnight of d gives a whole-day count starting at 0; +1 to match
-  // d3's 1-based (`%j` ranges 001–366).
-  const start = new Date(d.getFullYear(), 0, 1).getTime()
+  // Compute from local calendar components, not a millisecond delta.
+  // A naive `(d - Jan1) / 86400000` reads the local-tz wall-clock
+  // span, which is off by one across a DST boundary (a 23h or 25h
+  // local day skews the integer division). Reading the local
+  // year/month/date and projecting onto a UTC integer day count
+  // avoids the issue — UTC has no DST, so day-counting in UTC of
+  // the local calendar position is exact. Result is 1-based to
+  // match d3's `%j` range (001–366).
+  const startUtc = Date.UTC(d.getFullYear(), 0, 1)
+  const todayUtc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
   const dayMs = 24 * 60 * 60 * 1000
-  return Math.floor((d.getTime() - start) / dayMs) + 1
+  return Math.floor((todayUtc - startUtc) / dayMs) + 1
 }
 
 function applyToken(token: string, d: Date): string {

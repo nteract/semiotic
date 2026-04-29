@@ -22,8 +22,10 @@ describe("numberFormat — d3-format subset", () => {
       expect(format(",.0f")(1234567)).toBe("1,234,567")
     })
 
-    it("trims trailing zeros with `~`: `~.2f`", () => {
-      // d3's ~ semantics: 1.50 → 1.5, 1.00 → 1
+    it("trims trailing zeros with `.2~f`", () => {
+      // d3's ~ semantics: trim zeros after the precision is applied.
+      // The modifier sits AFTER `.precision` and BEFORE the type
+      // (`.2~f`, never `~.2f`): 1.50 → 1.5, 1.00 → 1.
       expect(format(".2~f")(1.5)).toBe("1.5")
       expect(format(".2~f")(1)).toBe("1")
     })
