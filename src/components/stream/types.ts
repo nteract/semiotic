@@ -682,8 +682,11 @@ export interface StreamXYFrameProps<T = Datum> {
    *  returns SceneNode[] + optional overlays. See `semiotic/recipes` for
    *  reference layouts (waffle, calendar, horizon). */
   customLayout?: import("./customLayout").CustomLayout
-  /** User-supplied config blob threaded through to LayoutContext.config. */
-  layoutConfig?: Record<string, unknown>
+  /** User-supplied config blob threaded through to LayoutContext.config.
+   *  Typed as `object` so caller-defined interfaces (without an index
+   *  signature) flow through without casts; layouts narrow via their
+   *  own `CustomLayout<TConfig>` parameterization. */
+  layoutConfig?: object
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

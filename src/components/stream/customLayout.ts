@@ -14,7 +14,7 @@ import type { SceneNode, StreamScales, Style, ThemeSemanticColors } from "./type
  * Surface is intentionally narrow. Resist adding fields until a real
  * recipe demands them.
  */
-export type CustomLayout<C = Record<string, unknown>> = (
+export type CustomLayout<C extends object = Record<string, unknown>> = (
   ctx: LayoutContext<C>
 ) => LayoutResult
 
@@ -26,7 +26,7 @@ export type CustomLayout<C = Record<string, unknown>> = (
  * always prefer it over hardcoded color literals. `--doctor` flags
  * layouts that emit nodes with literal hex/rgb fills.
  */
-export interface LayoutContext<C = Record<string, unknown>> {
+export interface LayoutContext<C extends object = Record<string, unknown>> {
   /** Buffered, post-filter data the frame is currently drawing. */
   data: Datum[]
   /** Scales constructed by the frame from the resolved x/y domains. */

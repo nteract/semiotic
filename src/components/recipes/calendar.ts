@@ -9,8 +9,9 @@ export interface CalendarConfig {
   /** Field name (or function) yielding the value used to color each day. */
   valueAccessor: string | ((d: Datum) => number)
   /**
-   * Two-stop color ramp: [low, high]. Defaults pick from the active theme's
-   * sequential scheme — pass explicit colors here for non-default ramps.
+   * Two-stop color ramp: [low, high]. By default, this uses the active
+   * theme's semantic colors from `surface` to `primary` — pass explicit
+   * colors here for non-default ramps.
    */
   colorRamp?: [string, string]
   /**

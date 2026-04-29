@@ -15,9 +15,10 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 
-export interface CustomChartProps<TDatum extends Datum = Datum, TConfig = Record<string, unknown>>
-  extends BaseChartProps,
-    AxisConfig {
+export interface CustomChartProps<
+  TDatum extends Datum = Datum,
+  TConfig extends object = Record<string, unknown>
+> extends BaseChartProps, AxisConfig {
   /** Data passed through to LayoutContext.data. */
   data?: TDatum[]
   /** The layout function. Receives LayoutContext, returns SceneNode[] + overlays. */
@@ -68,7 +69,7 @@ export interface CustomChartProps<TDatum extends Datum = Datum, TConfig = Record
  */
 export const CustomChart = forwardRef(function CustomChart<
   TDatum extends Datum = Datum,
-  TConfig = Record<string, unknown>
+  TConfig extends object = Record<string, unknown>
 >(props: CustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -149,10 +150,10 @@ export const CustomChart = forwardRef(function CustomChart<
   const streamProps: StreamXYFrameProps = {
     chartType: "custom",
     ...(data != null && { data: safeData }),
-    customLayout: layout as CustomLayout,
+    customLayout: layout as unknown as CustomLayout,
     // Pass through as-is — coercing to a fresh {} when omitted breaks the
     // pipelineConfig useMemo identity and forces a store rebuild every render.
-    layoutConfig: layoutConfig as Record<string, unknown> | undefined,
+    layoutConfig,
     xExtent,
     yExtent,
     colorScheme,
@@ -187,7 +188,10 @@ export const CustomChart = forwardRef(function CustomChart<
     </SafeRender>
   )
 }) as unknown as {
-  <TDatum extends Datum = Datum, TConfig = Record<string, unknown>>(
+  <
+    TDatum extends Datum = Datum,
+    TConfig extends object = Record<string, unknown>
+  >(
     props: CustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
   displayName?: string

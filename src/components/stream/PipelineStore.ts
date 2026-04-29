@@ -204,7 +204,7 @@ export interface PipelineConfig {
    *  and returns scene nodes plus optional overlays. */
   customLayout?: CustomLayout
   /** User-supplied config blob threaded through to LayoutContext.config. */
-  layoutConfig?: Record<string, unknown>
+  layoutConfig?: object
   /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
   layoutMargin?: MarginType
 }
@@ -804,6 +804,16 @@ export class PipelineStore {
         case "area":
           for (const p of node.topPath) { p[0] *= wRatio; p[1] *= hRatio }
           for (const p of node.bottomPath) { p[0] *= wRatio; p[1] *= hRatio }
+          // Remap user-supplied clipRect (horizon recipe) so responsive
+          // resizes don't leave the clip in stale coordinates.
+          if (node.clipRect) {
+            node.clipRect = {
+              x: node.clipRect.x * wRatio,
+              y: node.clipRect.y * hRatio,
+              width: node.clipRect.width * wRatio,
+              height: node.clipRect.height * hRatio,
+            }
+          }
           break
         case "point":
           node.x *= wRatio; node.y *= hRatio
@@ -896,7 +906,12 @@ export class PipelineStore {
           if (typeof s.fill === "string") return s.fill
           return config.themeSemantic?.primary ?? "#4e79a7"
         },
-        config: config.layoutConfig ?? {}
+        // `layoutConfig` is typed as `object` at the frame boundary so any
+        // user-defined config interface flows through without casts. The
+        // narrowing back to `C` happens through the user's typed
+        // `CustomLayout<C>` parameter — at this boundary, hand the value
+        // through as the default `Record<string, unknown>`.
+        config: (config.layoutConfig ?? {}) as Record<string, unknown>,
       }
       let result
       try {
