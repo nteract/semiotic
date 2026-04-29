@@ -120,14 +120,34 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
+ * // Single streaming series — push each datum, the chart slides
  * const ref = useRef<RealtimeFrameHandle>(null)
+ * useEffect(() => {
+ *   const id = setInterval(() => ref.current?.push({ time: Date.now(), value: Math.random() }), 100)
+ *   return () => clearInterval(id)
+ * }, [])
+ * return (
+ *   <RealtimeLineChart
+ *     ref={ref}
+ *     stroke="#007bff"
+ *     strokeWidth={2}
+ *     windowSize={200}
+ *     enableHover
+ *   />
+ * )
+ * ```
  *
+ * @example
+ * ```tsx
+ * // Multi-series via lineBy + colorBy; push rows tagged with a series field
  * <RealtimeLineChart
  *   ref={ref}
- *   stroke="#007bff"
- *   strokeWidth={2}
- *   windowSize={200}
- *   enableHover
+ *   lineBy="series"
+ *   colorBy="series"
+ *   xAccessor="t"
+ *   yAccessor="v"
+ *   windowSize={500}
+ *   showLegend
  * />
  * ```
  */

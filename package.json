@@ -146,9 +146,11 @@
     "check:chart-specs": "npx tsx scripts/check-chart-specs.ts",
     "docs:chart-specs:schema": "npx tsx scripts/regenerate-schema.ts",
     "check:test-quality": "node scripts/check-test-quality-gate.mjs",
+    "check:jsdoc-coverage": "node scripts/check-jsdoc-coverage.mjs",
+    "check:ai-examples-coverage": "node scripts/check-ai-examples-coverage.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run dist:prod && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && rm -rf dist && npm run dist:prod"
+    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod"
   },
   "targets": {
     "website": {

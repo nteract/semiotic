@@ -181,6 +181,7 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
  *
  * @example
  * ```tsx
+ * // Stacked series — each category contributes a band of height
  * <StackedAreaChart
  *   data={[
  *     {x: 1, y: 10, category: 'A'},
@@ -192,6 +193,20 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
  *   colorBy="category"
  *   xLabel="Time"
  *   yLabel="Value"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // 100% normalized stack — y axis becomes share of total
+ * <StackedAreaChart
+ *   data={data}
+ *   xAccessor="t"
+ *   yAccessor="value"
+ *   areaBy="category"
+ *   colorBy="category"
+ *   normalize
+ *   yFormat={(v) => `${(v * 100).toFixed(0)}%`}
  * />
  * ```
  */

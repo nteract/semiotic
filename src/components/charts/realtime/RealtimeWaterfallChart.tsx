@@ -117,6 +117,7 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
+ * // Trade-flow waterfall — push each delta, the chart accumulates from baseline
  * <RealtimeWaterfallChart
  *   ref={ref}
  *   positiveColor="#28a745"
@@ -124,6 +125,19 @@ export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
  *   connectorStroke="#999"
  *   windowSize={300}
  * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Themed via CSS variables — same chart, brand colors via the theme provider
+ * <ThemeProvider theme="bi-tool">
+ *   <RealtimeWaterfallChart
+ *     ref={ref}
+ *     positiveColor="var(--semiotic-success)"
+ *     negativeColor="var(--semiotic-danger)"
+ *     stroke="var(--semiotic-border)"
+ *   />
+ * </ThemeProvider>
  * ```
  */
 export const RealtimeWaterfallChart = forwardRef(

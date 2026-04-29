@@ -153,15 +153,18 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
- * // Simple histogram
+ * // Simple temporal histogram — push each event, the chart bins by time
  * <RealtimeTemporalHistogram
  *   ref={ref}
  *   binSize={20}
  *   fill="#007bff"
  *   enableHover
  * />
+ * ```
  *
- * // Stacked by category
+ * @example
+ * ```tsx
+ * // Stacked by category — same push API, color by status field
  * <RealtimeTemporalHistogram
  *   ref={ref}
  *   binSize={25}

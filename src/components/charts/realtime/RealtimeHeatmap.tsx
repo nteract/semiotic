@@ -116,16 +116,34 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
  *
  * @example
  * ```tsx
+ * // Count-aggregated heatmap — each push lands in a (time-bin × value-bin) cell
  * const ref = useRef<RealtimeFrameHandle>(null)
- * ref.current.push({ time: Date.now(), x: 42, y: 7 })
+ * useEffect(() => {
+ *   const id = setInterval(() => ref.current?.push({ time: Date.now(), y: Math.random() * 10 }), 50)
+ *   return () => clearInterval(id)
+ * }, [])
+ * return (
+ *   <RealtimeHeatmap
+ *     ref={ref}
+ *     timeAccessor="time"
+ *     valueAccessor="y"
+ *     heatmapXBins={30}
+ *     heatmapYBins={20}
+ *     aggregation="count"
+ *   />
+ * )
+ * ```
  *
+ * @example
+ * ```tsx
+ * // Mean aggregation with a sequential color scheme; useful for sensor density maps
  * <RealtimeHeatmap
  *   ref={ref}
  *   timeAccessor="time"
  *   valueAccessor="y"
- *   heatmapXBins={30}
- *   heatmapYBins={20}
- *   aggregation="count"
+ *   aggregation="mean"
+ *   colorScheme="viridis"
+ *   windowSize={500}
  * />
  * ```
  */
