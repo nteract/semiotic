@@ -347,6 +347,68 @@ const examples = [
       colorScheme: colors,
     }),
   }),
+
+  // ── Interaction-state fixtures ──────────────────────────────────────
+  // One fixture per interaction the visual snapshot suite should
+  // exercise: hoverHighlight (dim non-hovered series), brush (drag a
+  // selection rectangle), legend isolate (click a legend item to
+  // isolate its series). Mirrors the existing `xy-scatter-hover`
+  // pattern; the matching tests live in xy-frame.spec.ts under a new
+  // "Interaction states" describe.
+
+  TestCase({
+    title: "Hover Highlight (multi-line)",
+    testId: "xy-hover-highlight",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      colorBy: "series",
+      hoverHighlight: true,
+      enableHover: true,
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Brush Selection (scatter)",
+    testId: "xy-brush",
+    children: React.createElement(Scatterplot, {
+      data: scatterData,
+      xAccessor: "x",
+      yAccessor: "y",
+      colorBy: "category",
+      pointRadius: 5,
+      // `linkedBrush` enables the SVG brush overlay even with no
+      // cross-chart consumer — the brush rect renders + onBrush
+      // fires. The test drags a rect across part of the chart and
+      // snapshots the resulting selection state.
+      linkedBrush: { name: "xy-brush-fixture", xField: "x", yField: "y" },
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Legend Isolate (multi-line)",
+    testId: "xy-legend-isolate",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      colorBy: "series",
+      showLegend: true,
+      legendInteraction: "isolate",
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
 ]
 
 // Render all examples

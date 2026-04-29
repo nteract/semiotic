@@ -218,3 +218,34 @@ test.describe("Brush & Selection - No console errors", () => {
     expect(realErrors).toHaveLength(0)
   })
 })
+
+// ── Interaction-state visual snapshot ───────────────────────────────
+// Covers the linked-hover cross-highlight: hovering one chart in the
+// `LinkedCharts` group should dim the non-matching categories in the
+// sibling chart. The existing structural tests confirm the wiring is
+// alive; this snapshot pins the visual state so a regression in the
+// `selection` consumer or `wrapStyleWithSelection` opacity dim would
+// surface as a pixel diff.
+test.describe("Brush & Selection - Visual snapshots", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/coordinated-examples/")
+  })
+
+  test("linked-hover dims non-matching categories on sibling chart", async ({ page }) => {
+    await waitForChartReady(page, "linked-hover")
+    const testCase = page.locator('[data-testid="linked-hover"]')
+    // The first canvas in the linked-hover fixture is the scatter on
+    // the left; hovering it triggers the bar-chart selection dim.
+    const scatterCanvas = testCase.locator("canvas").first()
+    const box = await scatterCanvas.boundingBox()
+    if (!box) throw new Error("scatter canvas bounding box unavailable")
+    // Hover toward the upper-left where the "North" region cluster
+    // sits in the seeded fixture data — the bars for "South" and
+    // "East" should dim in the sibling chart.
+    await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("linked-hover-state.png", {
+      maxDiffPixels: 200,
+    })
+  })
+})

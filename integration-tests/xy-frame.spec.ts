@@ -205,3 +205,65 @@ test.describe("XY Charts - HOC default coverage", () => {
     })
   }
 })
+
+// ── Interaction-state visual snapshots ──────────────────────────────
+// Closes the "Interaction-State Visual Snapshots" P1 item for the XY
+// family. Each test drives the chart into a non-default visual state
+// (hoverHighlight dimming, brush selection rect, legend-isolate),
+// `waitForRafs` to settle the React commit, then snapshots. Higher
+// `maxDiffPixels` than default-state tests because pointer-driven
+// states have more anti-aliased motion edges.
+test.describe("XY Charts - Interaction states", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  test("hoverHighlight dims non-hovered series", async ({ page }) => {
+    await waitForChartReady(page, "xy-hover-highlight")
+    const testCase = page.locator('[data-testid="xy-hover-highlight"]')
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    if (!box) throw new Error("canvas bounding box unavailable")
+    // Hover over the upper portion of the chart — series A is on top
+    // (higher y values) in lineData, so this lands on series A and
+    // series B should dim.
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.25)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-hover-highlight.png", {
+      maxDiffPixels: 200,
+    })
+  })
+
+  test("brush selection draws a rect on drag", async ({ page }) => {
+    await waitForChartReady(page, "xy-brush")
+    const testCase = page.locator('[data-testid="xy-brush"]')
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    if (!box) throw new Error("canvas bounding box unavailable")
+    // Drag a rectangular selection across the middle 60% of the chart.
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.8, { steps: 10 })
+    await page.mouse.up()
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-brush.png", {
+      maxDiffPixels: 200,
+    })
+  })
+
+  test("legend isolate dims un-clicked series", async ({ page }) => {
+    await waitForChartReady(page, "xy-legend-isolate")
+    const testCase = page.locator('[data-testid="xy-legend-isolate"]')
+    // Click the legend swatch for series "A" — `legendInteraction:
+    // "isolate"` should dim series B, leaving A at full opacity.
+    // Legend swatches render inside elements with `class="legend-item"`;
+    // the first one in document order is series A given the lineData
+    // insertion sequence.
+    const legendSwatch = testCase.locator(".legend-item").first()
+    await legendSwatch.click()
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-legend-isolate.png", {
+      maxDiffPixels: 200,
+    })
+  })
+})
