@@ -13,7 +13,11 @@
  *
  *     [,][.precision][~][type]
  *
- *   - `,` — thousands grouping (locale-default group separator)
+ *   - `,` — thousands grouping using a literal comma. Matches d3's
+ *     default-locale behavior (en-US); intentionally not locale-aware,
+ *     because chart axis labels need stable output across CI runners
+ *     and SSR snapshots — a runtime-locale separator would shift to
+ *     `1.234,56` under de-DE / fr-FR and break golden-file tests.
  *   - `.N` — fractional precision (digits after the decimal for
  *     `f`/`%`, significant digits for `s`/`r`/`g`/`e`)
  *   - `~` — trim trailing zeros (matches d3's `~` modifier)

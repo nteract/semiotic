@@ -46,22 +46,20 @@ describe("timeFormat — strftime token subset", () => {
     expect(timeFormat("%e")(lateDay)).toBe("24")
   })
 
-  it("formats `%b` and `%B` via Intl.DateTimeFormat", () => {
-    // Locale-agnostic: assert that the shim emits whatever the
-    // runtime's default Intl.DateTimeFormat would emit. Hard-coding
-    // "Mar" / "March" would be flaky on non-en-US CI runners.
-    const expectedShort = new Intl.DateTimeFormat(undefined, { month: "short" }).format(SAMPLE)
-    const expectedLong = new Intl.DateTimeFormat(undefined, { month: "long" }).format(SAMPLE)
-    expect(timeFormat("%b")(SAMPLE)).toBe(expectedShort)
-    expect(timeFormat("%B")(SAMPLE)).toBe(expectedLong)
+  it("formats `%b` and `%B` via Intl.DateTimeFormat (pinned en-US)", () => {
+    // The shim pins Intl.DateTimeFormat to "en-US" so output stays
+    // stable across CI runners regardless of system locale, matching
+    // d3-time-format's default-locale behavior. Asserting on the
+    // literal strings is therefore safe.
+    expect(timeFormat("%b")(SAMPLE)).toBe("Mar")
+    expect(timeFormat("%B")(SAMPLE)).toBe("March")
   })
 
-  it("formats `%a` and `%A` via Intl.DateTimeFormat", () => {
-    // Locale-agnostic — same approach as the month-name test above.
-    const expectedShort = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(SAMPLE)
-    const expectedLong = new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(SAMPLE)
-    expect(timeFormat("%a")(SAMPLE)).toBe(expectedShort)
-    expect(timeFormat("%A")(SAMPLE)).toBe(expectedLong)
+  it("formats `%a` and `%A` via Intl.DateTimeFormat (pinned en-US)", () => {
+    // 2026-03-24 is a Tuesday in any locale, but the en-US name is
+    // what the shim emits regardless of runtime locale. See above.
+    expect(timeFormat("%a")(SAMPLE)).toBe("Tue")
+    expect(timeFormat("%A")(SAMPLE)).toBe("Tuesday")
   })
 
   it("formats `%j` (day of year, 1-based, zero-padded)", () => {
@@ -87,11 +85,7 @@ describe("timeFormat — strftime token subset", () => {
   })
 
   it("matches semiotic's default `%b %d, %Y` format", () => {
-    // Locale-agnostic: combine a runtime-derived month-short with
-    // the format's literal pieces so the assertion holds outside
-    // en-US runners. `24` and `2026` are locale-independent for
-    // `%d` (zero-padded day) and `%Y` (4-digit year).
-    const monShort = new Intl.DateTimeFormat(undefined, { month: "short" }).format(SAMPLE)
-    expect(timeFormat("%b %d, %Y")(SAMPLE)).toBe(`${monShort} 24, 2026`)
+    // Pinned-en-US output, stable across runners.
+    expect(timeFormat("%b %d, %Y")(SAMPLE)).toBe("Mar 24, 2026")
   })
 })

@@ -125,7 +125,7 @@ for (const name of referencedCharts) {
     // `Scatterplot`, `Pack`, `Treemap`, `Cartogram`. This filters out
     // section-header words like "Synced" / "Truncated" without a
     // hard-coded allowlist getting longer over time.
-    if (/^([A-Z][a-z]+)+(?:Chart|Plot|Map|Diagram|Heatmap|Histogram|Scatterplot|Pack|Treemap|Cartogram|Cartogram|Graph|Realtime[A-Z][A-Za-z]*)$/.test(name) ||
+    if (/^([A-Z][a-z]+)+(?:Chart|Plot|Map|Diagram|Heatmap|Histogram|Scatterplot|Pack|Treemap|Cartogram|Graph|Realtime[A-Z][A-Za-z]*)$/.test(name) ||
         /^Realtime[A-Z]/.test(name)) {
       stale.push(name)
     }

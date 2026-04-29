@@ -36,8 +36,13 @@
  *   - `%f` — microseconds (always 0 in JS Date anyway)
  *
  * Localized name forms (`%b`/`%B`/`%a`/`%A`) defer to
- * `Intl.DateTimeFormat` so they match the user's locale, matching
- * d3-time-format's `formatLocale` behavior under the default locale.
+ * `Intl.DateTimeFormat` pinned to `en-US`. `d3-time-format` ships
+ * with an en-US default locale (`d3-time-format`'s
+ * `timeFormatDefaultLocale` swap is opt-in), so pinning matches its
+ * default behavior — and crucially, keeps tick labels stable across
+ * environments. Using the runtime's ambient locale would change axis
+ * text per CI runner / browser system locale, which surfaces as
+ * baseline drift in pixel / SSR snapshot tests.
  *
  * This shim uses the local timezone (matching `d3-time-format`'s
  * `timeFormat`); for UTC equivalence we'd add a `utcFormat` factory
@@ -48,29 +53,32 @@
 const PAD2 = (n: number) => (n < 10 ? `0${n}` : String(n))
 const PAD3 = (n: number) => (n < 10 ? `00${n}` : n < 100 ? `0${n}` : String(n))
 
-// Cached Intl formatters — instantiating these is non-trivial and the
-// chart-axis use case calls the formatter once per tick. The locale
-// is the runtime default; users wanting a specific locale should pass
-// pre-formatted strings rather than rely on the chart's tick formatter.
+// Cached Intl formatters pinned to en-US. Pinning matches
+// d3-time-format's default-locale behavior and keeps tick labels
+// stable across environments (browser system locale / CI runner
+// locale would otherwise shift axis text and break snapshot tests).
+// Instantiating these is non-trivial and the chart-axis use case
+// calls the formatter once per tick.
+const NAME_LOCALE = "en-US"
 let monthShort: Intl.DateTimeFormat | null = null
 let monthLong: Intl.DateTimeFormat | null = null
 let weekdayShort: Intl.DateTimeFormat | null = null
 let weekdayLong: Intl.DateTimeFormat | null = null
 
 function fmtMonthShort(d: Date): string {
-  if (!monthShort) monthShort = new Intl.DateTimeFormat(undefined, { month: "short" })
+  if (!monthShort) monthShort = new Intl.DateTimeFormat(NAME_LOCALE, { month: "short" })
   return monthShort.format(d)
 }
 function fmtMonthLong(d: Date): string {
-  if (!monthLong) monthLong = new Intl.DateTimeFormat(undefined, { month: "long" })
+  if (!monthLong) monthLong = new Intl.DateTimeFormat(NAME_LOCALE, { month: "long" })
   return monthLong.format(d)
 }
 function fmtWeekdayShort(d: Date): string {
-  if (!weekdayShort) weekdayShort = new Intl.DateTimeFormat(undefined, { weekday: "short" })
+  if (!weekdayShort) weekdayShort = new Intl.DateTimeFormat(NAME_LOCALE, { weekday: "short" })
   return weekdayShort.format(d)
 }
 function fmtWeekdayLong(d: Date): string {
-  if (!weekdayLong) weekdayLong = new Intl.DateTimeFormat(undefined, { weekday: "long" })
+  if (!weekdayLong) weekdayLong = new Intl.DateTimeFormat(NAME_LOCALE, { weekday: "long" })
   return weekdayLong.format(d)
 }
 
