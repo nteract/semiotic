@@ -84,3 +84,22 @@ test.describe("Network Charts - Flow Layouts", () => {
     })
   })
 })
+
+// ── Default-theme HOC coverage backfill ──────────────────────────────
+// OrbitDiagram pinned to `animated: false` so the orbital animation
+// is frozen and the canvas is pixel-stable for the snapshot. Mirrors
+// the realtime-static pattern: turn off the continuous redraw, take
+// the snapshot of the resting layout.
+test.describe("Network Charts - HOC default coverage", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/network-examples/")
+  })
+
+  test("renders network-orbit", async ({ page }) => {
+    await waitForChartReady(page, "network-orbit")
+    const testCase = page.locator('[data-testid="network-orbit"]')
+    await expect(testCase).toHaveScreenshot("network-orbit.png", {
+      maxDiffPixels: 100,
+    })
+  })
+})

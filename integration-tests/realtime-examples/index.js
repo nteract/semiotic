@@ -7,6 +7,7 @@ const {
   RealtimeHistogram,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
+  RealtimeHeatmap,
 } = Semiotic
 
 const TestCase = ({ title, children, testId, key }) =>
@@ -139,6 +140,59 @@ function StreamingSwarm() {
   })
 }
 
+// ── Static bounded fixtures for visual snapshots ─────────────────────
+//
+// The streaming components above push data via setInterval — the
+// canvas is intentionally never visually stable, which is correct for
+// the live-streaming use case but makes pixel-diff snapshots
+// impossible. The fixtures below pass `data` (bounded mode) and omit
+// `decay` / `pulse` / `transition` / `staleness` so the canvas
+// stabilizes after the initial paint and the snapshot is reproducible.
+//
+// All 4 use a small seeded array — same shape they'd see during
+// streaming, just frozen.
+
+const seedHistData = (() => {
+  const rng = seededRandom(123)
+  const t0 = Date.UTC(2024, 0, 1)
+  const out = []
+  for (let i = 0; i < 60; i++) {
+    out.push({ time: t0 + i * 1000, value: Math.abs(rng() * 200 - 100) })
+  }
+  return out
+})()
+
+const seedWaterfallData = (() => {
+  const rng = seededRandom(456)
+  const t0 = Date.UTC(2024, 0, 1)
+  const out = []
+  for (let i = 0; i < 30; i++) {
+    out.push({ time: t0 + i * 1000, value: (rng() - 0.5) * 40 })
+  }
+  return out
+})()
+
+const seedSwarmData = (() => {
+  const rng = seededRandom(789)
+  const cats = ["A", "B", "C"]
+  const t0 = Date.UTC(2024, 0, 1)
+  const out = []
+  for (let i = 0; i < 50; i++) {
+    out.push({ time: t0 + i * 1000, value: rng() * 100, category: cats[Math.floor(rng() * 3)] })
+  }
+  return out
+})()
+
+const seedHeatmapData = (() => {
+  const rng = seededRandom(321)
+  const t0 = Date.UTC(2024, 0, 1)
+  const out = []
+  for (let i = 0; i < 200; i++) {
+    out.push({ time: t0 + Math.floor(i / 20) * 1000, y: rng() * 10 })
+  }
+  return out
+})()
+
 const examples = [
   // 1. Realtime line chart
   TestCase({
@@ -166,6 +220,67 @@ const examples = [
     title: "Realtime Swarm Chart",
     testId: "realtime-swarm",
     children: React.createElement(StreamingSwarm),
+  }),
+
+  // ── Default-theme HOC coverage backfill (static) ────────────────────
+  // Bounded `data` arrays — the 4 realtime HOCs that didn't already
+  // have a stable visual snapshot. Pixel-stable because no continuous
+  // animation props are passed.
+
+  TestCase({
+    title: "Realtime Histogram (static)",
+    testId: "realtime-histogram-static",
+    children: React.createElement(RealtimeHistogram, {
+      data: seedHistData,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      binSize: 5000,
+      width: 500,
+      height: 250,
+      fill: "#4682b4",
+    }),
+  }),
+
+  TestCase({
+    title: "Realtime Waterfall (static)",
+    testId: "realtime-waterfall-static",
+    children: React.createElement(RealtimeWaterfallChart, {
+      data: seedWaterfallData,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      positiveColor: "#4caf50",
+      negativeColor: "#f44336",
+      width: 500,
+      height: 250,
+    }),
+  }),
+
+  TestCase({
+    title: "Realtime Swarm (static)",
+    testId: "realtime-swarm-static",
+    children: React.createElement(RealtimeSwarmChart, {
+      data: seedSwarmData,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      categoryAccessor: "category",
+      width: 500,
+      height: 250,
+    }),
+  }),
+
+  TestCase({
+    title: "Realtime Heatmap (static)",
+    testId: "realtime-heatmap-static",
+    children: React.createElement(RealtimeHeatmap, {
+      data: seedHeatmapData,
+      timeAccessor: "time",
+      valueAccessor: "y",
+      heatmapXBins: 10,
+      heatmapYBins: 10,
+      aggregation: "count",
+      width: 500,
+      height: 250,
+    }),
   }),
 ]
 

@@ -142,3 +142,25 @@ test.describe("Geo Charts - Hover interaction", () => {
     }
   })
 })
+
+// ── Default-theme HOC coverage backfill ──────────────────────────────
+// FlowMap and DistanceCartogram — the two geo HOCs that didn't already
+// have a default-theme snapshot. Mirrors the XY/ordinal-family backfill.
+test.describe("Geo Charts - HOC default coverage", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/geo-examples/")
+  })
+
+  for (const testId of [
+    "geo-flowmap",
+    "geo-distance-cartogram",
+  ]) {
+    test(`renders ${testId}`, async ({ page }) => {
+      await waitForChartReady(page, testId)
+      const testCase = page.locator(`[data-testid="${testId}"]`)
+      await expect(testCase).toHaveScreenshot(`${testId}.png`, {
+        maxDiffPixels: 100,
+      })
+    })
+  }
+})

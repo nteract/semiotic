@@ -9,7 +9,8 @@ const {
   Treemap,
   CirclePack,
   SankeyDiagram,
-  ChordDiagram
+  ChordDiagram,
+  OrbitDiagram
 } = Semiotic
 
 const TestCase = ({ title, children, testId, key }) =>
@@ -136,6 +137,23 @@ const examples = [
       width: 400,
       height: 400,
       colorScheme: colors
+    })
+  }),
+
+  // ── Default-theme HOC coverage backfill ────────────────────────────
+  // OrbitDiagram with `animated: false` so the orbital rotation is
+  // frozen and the canvas is pixel-stable for the snapshot.
+
+  TestCase({
+    title: "Orbit Diagram",
+    testId: "network-orbit",
+    children: React.createElement(OrbitDiagram, {
+      data: hierarchyData,
+      childrenAccessor: "children",
+      nodeIdAccessor: "name",
+      animated: false,
+      width: 400,
+      height: 400,
     })
   })
 ]

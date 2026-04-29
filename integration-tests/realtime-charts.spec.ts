@@ -128,3 +128,30 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
     }
   })
 })
+
+// ── Default-theme HOC coverage backfill (static fixtures) ────────────
+// The streaming-mode realtime charts above can't have pixel-stable
+// snapshots — the canvas is intentionally dirty every frame. The
+// fixtures targeted here pass static `data` and omit decay/pulse/
+// transition/staleness, so the canvas stabilizes after initial paint
+// and `waitForChartReady` (with default `stable: true`) succeeds.
+test.describe("Realtime Charts - HOC default coverage (static)", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/realtime-examples/")
+  })
+
+  for (const testId of [
+    "realtime-histogram-static",
+    "realtime-waterfall-static",
+    "realtime-swarm-static",
+    "realtime-heatmap-static",
+  ]) {
+    test(`renders ${testId}`, async ({ page }) => {
+      await waitForChartReady(page, testId)
+      const testCase = page.locator(`[data-testid="${testId}"]`)
+      await expect(testCase).toHaveScreenshot(`${testId}.png`, {
+        maxDiffPixels: 100,
+      })
+    })
+  }
+})

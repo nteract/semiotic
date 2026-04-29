@@ -5,6 +5,8 @@ import { createRoot } from "react-dom/client"
 const {
   ChoroplethMap,
   ProportionalSymbolMap,
+  FlowMap,
+  DistanceCartogram,
   StreamGeoFrame,
 } = SemioticGeo
 
@@ -137,6 +139,55 @@ const examples = [
       colorScheme: "greens",
       graticule: true,
       title: "Map with Graticule",
+      width: 500,
+      height: 350,
+    }),
+  }),
+
+  // ── Default-theme HOC coverage backfill ─────────────────────────────
+  // FlowMap and DistanceCartogram — the two geo HOCs that didn't
+  // already have a default-theme snapshot. Mirrors the XY/ordinal
+  // backfill pattern.
+
+  TestCase({
+    title: "FlowMap",
+    testId: "geo-flowmap",
+    children: React.createElement(FlowMap, {
+      nodes: pointData,
+      flows: [
+        { source: "Alpha", target: "Beta", value: 50 },
+        { source: "Alpha", target: "Gamma", value: 30 },
+        { source: "Beta", target: "Epsilon", value: 75 },
+        { source: "Gamma", target: "Delta", value: 25 },
+        { source: "Delta", target: "Epsilon", value: 40 },
+      ],
+      nodeIdAccessor: "city",
+      xAccessor: "lon",
+      yAccessor: "lat",
+      areas: simpleAreas,
+      title: "Flow between cities",
+      width: 500,
+      height: 350,
+    }),
+  }),
+
+  TestCase({
+    title: "DistanceCartogram",
+    testId: "geo-distance-cartogram",
+    children: React.createElement(DistanceCartogram, {
+      points: [
+        { id: "Hub",   lon: 0,   lat: 50, cost: 0 },
+        { id: "North", lon: 5,   lat: 60, cost: 30 },
+        { id: "East",  lon: 20,  lat: 50, cost: 60 },
+        { id: "South", lon: 0,   lat: 40, cost: 90 },
+        { id: "West",  lon: -15, lat: 50, cost: 45 },
+      ],
+      nodeIdAccessor: "id",
+      xAccessor: "lon",
+      yAccessor: "lat",
+      center: "Hub",
+      costAccessor: "cost",
+      strength: 1,
       width: 500,
       height: 350,
     }),
