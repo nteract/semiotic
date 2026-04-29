@@ -48,12 +48,14 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const gutter = cfg.gutter ?? 2
 
   const totalCells = rows * columns
+  if (rows <= 0 || columns <= 0 || totalCells <= 0) return { nodes: [] }
   const { plot } = ctx.dimensions
   if (plot.width <= 0 || plot.height <= 0) return { nodes: [] }
 
   // Cell footprint includes one gutter; subtract one extra gutter at the end.
   const cellW = (plot.width - gutter * (columns - 1)) / columns
   const cellH = (plot.height - gutter * (rows - 1)) / rows
+  if (cellW <= 0 || cellH <= 0) return { nodes: [] }
 
   // Build per-category cell allocations.
   const getCategory = resolveStringOrFn(cfg.categoryAccessor) ?? (() => "_default")
@@ -63,7 +65,9 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const order: string[] = []
   for (const d of ctx.data) {
     const cat = String(getCategory(d))
-    const val = Number(getValue(d)) || 0
+    const raw = Number(getValue(d))
+    // Clamp non-finite/negative values: a waffle cell is a count and can't go below zero.
+    const val = Number.isFinite(raw) ? Math.max(0, raw) : 0
     if (!totals.has(cat)) order.push(cat)
     totals.set(cat, (totals.get(cat) ?? 0) + val)
   }
@@ -74,12 +78,13 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const finalOrder = cfg.categoryOrder && cfg.categoryOrder.length > 0
     ? cfg.categoryOrder.filter((c) => totals.has(c))
     : order
+  if (finalOrder.length === 0) return { nodes: [] }
 
   // Allocate integer cell counts proportional to category share.
   // Use largest-remainder method to avoid drift from rounding each independently.
-  const raw = finalOrder.map((c) => ({ cat: c, exact: ((totals.get(c) ?? 0) / grandTotal) * totalCells }))
-  const floored = raw.map((r) => ({ ...r, count: Math.floor(r.exact) }))
-  let assigned = floored.reduce((s, r) => s + r.count, 0)
+  const exactCounts = finalOrder.map((c) => ({ cat: c, exact: ((totals.get(c) ?? 0) / grandTotal) * totalCells }))
+  const floored = exactCounts.map((r) => ({ ...r, count: Math.floor(r.exact) }))
+  const assigned = floored.reduce((s, r) => s + r.count, 0)
   // Distribute leftover cells to categories with the highest remainder.
   const remainders = floored
     .map((r, i) => ({ i, rem: r.exact - r.count }))
@@ -87,7 +92,6 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   for (let k = 0; k < totalCells - assigned; k++) {
     floored[remainders[k % remainders.length].i].count += 1
   }
-  assigned = totalCells
 
   const nodes: RectSceneNode[] = []
   let cellIndex = 0

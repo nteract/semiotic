@@ -200,7 +200,7 @@ export interface PipelineConfig {
   // ── customLayout escape hatch ─────────────────────────────────────
   /** When provided, replaces chart-type dispatch in scene building.
    *  Receives a LayoutContext (scales, dimensions, theme, resolveColor)
-   *  and returns SceneNode[] + optional extents/overlays. */
+   *  and returns scene nodes plus optional overlays. */
   customLayout?: CustomLayout
   /** User-supplied config blob threaded through to LayoutContext.config. */
   layoutConfig?: Record<string, unknown>
@@ -875,6 +875,10 @@ export class PipelineStore {
       this.customLayoutOverlays = result.overlays ?? null
       return result.nodes ?? []
     }
+
+    // Built-in chart types: ensure stale overlays from a prior customLayout
+    // run don't bleed through after the user removes the prop.
+    this.customLayoutOverlays = null
 
     if (data.length === 0) return []
 

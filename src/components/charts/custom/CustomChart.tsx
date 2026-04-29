@@ -39,8 +39,8 @@ export interface CustomChartProps<TDatum extends Datum = Datum, TConfig = Record
   annotations?: Datum[]
   colorScheme?: string | string[]
   tooltip?: TooltipProp
-  /** Additional StreamXYFrame props for advanced customization. */
-  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size" | "customLayout">>
+  /** Additional StreamXYFrame props for advanced customization, excluding CustomChart-controlled fields. */
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size" | "customLayout" | "layoutConfig">>
 }
 
 /**

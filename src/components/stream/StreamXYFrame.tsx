@@ -1363,7 +1363,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
             foregroundGraphics={
-            storeRef.current?.customLayoutOverlays
+            storeRef.current?.customLayoutOverlays != null
               ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
               : resolvedForeground
           }
@@ -1489,7 +1489,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
           foregroundGraphics={
-            storeRef.current?.customLayoutOverlays
+            storeRef.current?.customLayoutOverlays != null
               ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
               : resolvedForeground
           }

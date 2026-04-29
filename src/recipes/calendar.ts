@@ -87,7 +87,7 @@ export const calendarLayout: CustomLayout<CalendarConfig> = (ctx) => {
 
   const [low, high] = cfg.colorRamp ?? [
     ctx.theme.semantic.surface ?? "#ebedf0",
-    ctx.resolveColor("__calendar_high__") || ctx.theme.semantic.primary || "#216e39",
+    ctx.theme.semantic.primary ?? "#216e39",
   ]
   const colorAt = (v: number) => {
     if (vMax === vMin) return low
@@ -98,7 +98,10 @@ export const calendarLayout: CustomLayout<CalendarConfig> = (ctx) => {
   // Layout math: 53 weeks × 7 days. Cell side = min so cells stay square.
   const gutter = cfg.gutter ?? 2
   const labelInset = cfg.labelInset ?? 0
-  const cols = 53
+  // 53 standard ISO weeks + 1 spillover slot for years where Jan 1 lands so
+  // late in the week that Dec 31 falls into a 54th column under a
+  // Sunday-anchored grid (e.g. leap years starting Saturday).
+  const cols = 54
   const rows = 7
   const innerW = plot.width - labelInset
   const innerH = plot.height
