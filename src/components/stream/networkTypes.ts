@@ -66,9 +66,13 @@ export interface RealtimeNode {
   /**
    * @internal Chord-layout extension. Carries the start/end angles
    * for the arc segment representing this node, computed by
-   * `chordLayoutPlugin` and read by its `buildScene`.
+   * `chordLayoutPlugin` and read by its `buildScene`. Concretely
+   * typed (unlike `__hierarchyNode`) because chord is the only
+   * layout that writes this field, so the shape is fixed — no
+   * narrowing-at-read needed. `__` prefix matches the convention
+   * used by `__hierarchyNode` / `__radius` on this same interface.
    */
-  arcData?: { startAngle: number; endAngle: number }
+  __arcData?: { startAngle: number; endAngle: number }
 }
 
 export interface RealtimeEdge {
@@ -105,9 +109,11 @@ export interface RealtimeEdge {
    * during `computeLayout` and read by its `buildScene`. Typed
    * `unknown` because the d3 `Chord` interface lives in `d3-chord`
    * and importing the type here would couple `networkTypes` to that
-   * dep — consumers narrow at the read site.
+   * dep — consumers narrow at the read site. `__` prefix matches the
+   * `_circularWidth` / `_circularStub` internal-field convention on
+   * this same interface.
    */
-  chordData?: unknown
+  __chordData?: unknown
 }
 
 // ── Bezier cache ───────────────────────────────────────────────────────

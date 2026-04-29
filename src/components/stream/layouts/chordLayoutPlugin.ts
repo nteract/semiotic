@@ -102,10 +102,11 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       node.x = centroid[0] + cx
       node.y = centroid[1] + cy
 
-      // Stash arc data on the node for buildScene. `arcData` is
-      // declared `unknown` on RealtimeNode for the same private-field
-      // pattern as `__hierarchyNode` / `__radius`.
-      node.arcData = {
+      // Stash arc data on the node for buildScene. `__arcData` is
+      // declared on RealtimeNode with this concrete shape — chord is
+      // the only writer, so no narrowing-at-read is needed (unlike
+      // `__hierarchyNode` whose shape varies per layout).
+      node.__arcData = {
         startAngle: group.startAngle,
         endAngle: group.endAngle,
       }
@@ -147,7 +148,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         edgeLookup.get(`${targetId}\0${sourceId}`)
 
       if (matchedEdge) {
-        matchedEdge.chordData = generatedChord
+        matchedEdge.__chordData = generatedChord
       }
     }
   },
@@ -197,7 +198,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Build arc nodes ──────────────────────────────────────────────
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      const arcData = node.arcData
+      const arcData = node.__arcData
       if (!arcData) continue
 
       let fill: string
@@ -237,9 +238,10 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // d3-chord ribbon paths are centered at (0,0). Offset every
     // coordinate by (cx, cy) so they align with the arc nodes.
     for (const edge of edges) {
-      // `edge.chordData` is `unknown` on RealtimeEdge — narrow at the
-      // read site rather than coupling networkTypes to d3-chord's `Chord`.
-      const chordData = edge.chordData as Chord | undefined
+      // `edge.__chordData` is `unknown` on RealtimeEdge — narrow at
+      // the read site rather than coupling networkTypes to d3-chord's
+      // `Chord`.
+      const chordData = edge.__chordData as Chord | undefined
       if (!chordData) continue
 
       // d3-chord's ribbon() internally subtracts PI/2 from all angles
@@ -300,7 +302,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const labelRadius = radius + 12
 
       for (const node of nodes) {
-        const arcData = node.arcData
+        const arcData = node.__arcData
         if (!arcData) continue
 
         const text = labelFn ? labelFn(node) : node.id
