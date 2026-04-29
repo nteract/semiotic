@@ -26,6 +26,7 @@ function ChordDiagram
 function CirclePack
 function ConnectedScatterplot
 function ContextLayout
+function CustomChart
 function DetailsPanel
 function DonutChart
 function DotPlot

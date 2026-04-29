@@ -3,8 +3,8 @@ import { scaleLinear } from "d3-scale"
 import { waffleLayout } from "./waffle"
 import { calendarLayout } from "./calendar"
 import { horizonLayout } from "./horizon"
-import type { LayoutContext } from "../components/stream/customLayout"
-import type { RectSceneNode, AreaSceneNode } from "../components/stream/types"
+import type { LayoutContext } from "../stream/customLayout"
+import type { RectSceneNode, AreaSceneNode } from "../stream/types"
 
 function makeCtx<C>(config: C, overrides?: Partial<LayoutContext<C>>): LayoutContext<C> {
   const x = scaleLinear().domain([0, 100]).range([0, 400])

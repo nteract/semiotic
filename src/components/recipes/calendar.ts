@@ -1,6 +1,6 @@
-import type { CustomLayout } from "../components/stream/customLayout"
-import type { Datum } from "../components/charts/shared/datumTypes"
-import type { RectSceneNode } from "../components/stream/types"
+import type { CustomLayout } from "../stream/customLayout"
+import type { Datum } from "../charts/shared/datumTypes"
+import type { RectSceneNode } from "../stream/types"
 import { interpolateRgb } from "d3-interpolate"
 
 export interface CalendarConfig {

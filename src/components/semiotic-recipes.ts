@@ -6,14 +6,14 @@
  * testing, transitions, decay, theme cascade, and SSR for free.
  */
 
-export { waffleLayout } from "../recipes/waffle"
-export type { WaffleConfig } from "../recipes/waffle"
+export { waffleLayout } from "./recipes/waffle"
+export type { WaffleConfig } from "./recipes/waffle"
 
-export { calendarLayout } from "../recipes/calendar"
-export type { CalendarConfig } from "../recipes/calendar"
+export { calendarLayout } from "./recipes/calendar"
+export type { CalendarConfig } from "./recipes/calendar"
 
-export { horizonLayout } from "../recipes/horizon"
-export type { HorizonConfig } from "../recipes/horizon"
+export { horizonLayout } from "./recipes/horizon"
+export type { HorizonConfig } from "./recipes/horizon"
 
 // Re-export the layout types so recipe authors don't need a second import.
 export type {

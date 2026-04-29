@@ -8,6 +8,7 @@ import {
   useMemo,
   useCallback,
   useImperativeHandle,
+  useId,
   forwardRef
 } from "react"
 import type {
@@ -450,6 +451,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       customLayout,
       layoutConfig
     } = props
+
+    // Stable per-instance prefix for SVG ids that must be unique on the
+    // page (e.g. `<clipPath id>` from area `clipRect`). React's `useId`
+    // produces an SSR-safe, hydration-stable string.
+    const svgInstanceId = useId().replace(/:/g, "")
 
     // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
     // dirtyRef is declared before useFrame so it can be threaded in for
@@ -1068,7 +1074,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             }
           }
 
-          const renderers = RENDERERS[chartType]
+          // When customLayout is provided, the user can emit any node type.
+          // Use the "custom" renderer set (every renderer, each self-filtering)
+          // regardless of chartType so a layout that emits, e.g., rects on a
+          // chartType="line" frame still draws.
+          const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType]
           if (renderers && store.scales) {
             for (const renderer of renderers) {
               renderer(
@@ -1337,7 +1347,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
               ))}
-              {scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)}
+              {scene.map((node, i) => xySceneNodeToSVG(node, i, svgInstanceId)).filter(Boolean)}
             </g>
           </svg>
           <SVGOverlay

@@ -1,6 +1,6 @@
-import type { CustomLayout } from "../components/stream/customLayout"
-import type { Datum } from "../components/charts/shared/datumTypes"
-import type { RectSceneNode } from "../components/stream/types"
+import type { CustomLayout } from "../stream/customLayout"
+import type { Datum } from "../charts/shared/datumTypes"
+import type { RectSceneNode } from "../stream/types"
 
 export interface WaffleConfig {
   /** Number of rows in the grid. @default 10 */
@@ -13,7 +13,12 @@ export interface WaffleConfig {
   categoryAccessor?: string | ((d: Datum) => string)
   /** Field name (or function) yielding the cell count per datum. If omitted, each datum counts as 1. */
   valueAccessor?: string | ((d: Datum) => number)
-  /** Optional explicit category order. If omitted, uses insertion order from data. */
+  /**
+   * Optional ordering hint. Categories listed here render first, in the
+   * order given (duplicates removed). Categories present in the data but
+   * not in this list follow in insertion order. Categories listed here
+   * but absent from the data are silently skipped.
+   */
   categoryOrder?: string[]
 }
 
@@ -27,7 +32,7 @@ export interface WaffleConfig {
  *
  * @example
  * ```tsx
- * import { CustomChart } from "semiotic"
+ * import { CustomChart } from "semiotic/xy"
  * import { waffleLayout } from "semiotic/recipes"
  *
  * <CustomChart
@@ -75,9 +80,24 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const grandTotal = Array.from(totals.values()).reduce((a, b) => a + b, 0)
   if (grandTotal <= 0) return { nodes: [] }
 
-  const finalOrder = cfg.categoryOrder && cfg.categoryOrder.length > 0
-    ? cfg.categoryOrder.filter((c) => totals.has(c))
-    : order
+  // categoryOrder is an ordering *hint*: hinted categories that exist in the
+  // data come first (in user-specified order, de-duplicated), then any
+  // remaining categories from the data follow in insertion order. Categories
+  // never get silently dropped just because they were omitted from the hint.
+  let finalOrder: string[]
+  if (cfg.categoryOrder && cfg.categoryOrder.length > 0) {
+    const seen = new Set<string>()
+    const hinted: string[] = []
+    for (const c of cfg.categoryOrder) {
+      if (totals.has(c) && !seen.has(c)) {
+        seen.add(c)
+        hinted.push(c)
+      }
+    }
+    finalOrder = [...hinted, ...order.filter((c) => !seen.has(c))]
+  } else {
+    finalOrder = order
+  }
   if (finalOrder.length === 0) return { nodes: [] }
 
   // Allocate integer cell counts proportional to category share.

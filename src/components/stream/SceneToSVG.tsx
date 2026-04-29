@@ -149,7 +149,7 @@ function buildRectSVGGradient(n: RectSceneNode, id: string): React.ReactElement 
 
 // ── XY Scene Nodes ───────────────────────────────────────────────────────
 
-export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
+export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string): React.ReactNode {
   switch (node.type) {
     case "line": {
       const n = node as LineSceneNode
@@ -176,7 +176,9 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
       // User-supplied clipRect (used by horizon recipe). Inline the clipPath
       // alongside the path to keep the SSR output a single self-contained group.
       if (n.clipRect) {
-        const cid = `area-clip-${i}`
+        // idPrefix namespaces the clipPath id so multiple charts on the same
+        // page don't collide (e.g. two horizon charts both emitting `area-clip-0`).
+        const cid = `${idPrefix ? `${idPrefix}-` : ""}area-clip-${i}`
         return (
           <g key={`area-${i}`}>
             <defs>

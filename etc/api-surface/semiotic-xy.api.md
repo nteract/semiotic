@@ -8,6 +8,7 @@ function AreaChart
 function BubbleChart
 function CandlestickChart
 function ConnectedScatterplot
+function CustomChart
 function Heatmap
 function LineChart
 function MinimapChart
@@ -21,7 +22,10 @@ interface AreaChartProps
 interface BubbleChartProps
 interface CandlestickChartProps
 interface ConnectedScatterplotProps
+interface CustomChartProps
 interface HeatmapProps
+interface LayoutContext
+interface LayoutResult
 interface LineChartProps
 interface MultiAxisLineChartProps
 interface QuadrantChartProps
@@ -29,4 +33,5 @@ interface ScatterplotProps
 interface StackedAreaChartProps
 interface StreamXYFrameHandle
 interface StreamXYFrameProps
+type CustomLayout
 ```

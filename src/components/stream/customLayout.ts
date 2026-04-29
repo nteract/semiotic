@@ -31,7 +31,12 @@ export interface LayoutContext<C = Record<string, unknown>> {
   data: Datum[]
   /** Scales constructed by the frame from the resolved x/y domains. */
   scales: StreamScales
-  /** Plot-area geometry. `plot` is the inner drawing rect (margin-adjusted). */
+  /**
+   * Plot-area geometry. All scene-node coordinates are plot-relative —
+   * the canvas/SVG group already lives inside `margin.left`/`margin.top`,
+   * so `width`/`height` describe the plot rect (same as `plot.width`/
+   * `plot.height`). Read `margin` if you need the outer canvas size.
+   */
   dimensions: {
     width: number
     height: number

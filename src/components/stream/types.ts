@@ -451,6 +451,10 @@ export interface StreamXYFrameProps<T = Datum> {
    * - "zero" (default): standard stack from y=0
    * - "wiggle": Byron–Wattenberg streamgraph offset (minimizes wiggle)
    * - "silhouette": center the stack symmetrically around y=0
+   *
+   * Mutually exclusive with `normalize`: when `normalize` is `true`, the
+   * stack is forced to a `"zero"` baseline (any other value is ignored)
+   * because normalization assumes a fixed `[0, 1]` y-domain.
    */
   baseline?: "zero" | "wiggle" | "silhouette"
 

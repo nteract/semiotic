@@ -384,7 +384,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx) : null
 
   const dataMarks = store.scene
-    .map((node, i) => xySceneNodeToSVG(node, i))
+    .map((node, i) => xySceneNodeToSVG(node, i, idPfx))
     .filter(Boolean)
 
   const showAxes = props.showAxes !== false

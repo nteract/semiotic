@@ -23,6 +23,7 @@ import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBinExtent } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
+import { computeStackOffsets } from "./SceneGraph"
 import type {
   Changeset,
   StreamChartType,
@@ -538,28 +539,59 @@ export class PipelineStore {
           yDomain = this._stackExtentCache.yDomain
         } else {
           const groups = this.groupData(bufferArray)
+          // Sort group keys to match buildStackedAreaNodes' stacking order —
+          // wiggle offsets depend on group order, and the extent must agree
+          // with the rendered geometry.
+          const groupKeys = groups.map((g) => g.key).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
 
-          // Single pass: build per-x stacked totals and track the running max.
-          const xTotals = new Map<number, number>()
+          // Per-group-per-x value lookup (mirrors buildStackedAreaNodes).
+          const valueMaps = new Map<string, Map<number, number>>()
+          const xSet = new Set<number>()
           let maxStacked = 0
+          const xTotals = new Map<number, number>()
           for (const g of groups) {
+            const m = new Map<number, number>()
             for (const d of g.data) {
               const x = this.getX(d)
               const y = this.getY(d)
               if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+              m.set(x, (m.get(x) || 0) + y)
+              xSet.add(x)
               const total = (xTotals.get(x) || 0) + y
               xTotals.set(x, total)
               if (total > maxStacked) maxStacked = total
             }
+            valueMaps.set(g.key, m)
           }
 
-          const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
-          if (config.baseline === "silhouette" || config.baseline === "wiggle") {
-            // Center the stack on zero. For wiggle the actual offset is smaller
-            // than half the total, so this is conservative (slightly oversized).
-            const half = maxStacked / 2
-            yDomain = [-(half + pad), half + pad]
+          if (config.baseline === "wiggle" || config.baseline === "silhouette") {
+            // Compute the actual per-x offsets and bound the y-domain by the
+            // observed min(offset) and max(offset + total). For wiggle the
+            // accumulated offset can drift well outside ±total/2; using the
+            // exact rendered range is the only safe way to avoid clipping.
+            const xValues = Array.from(xSet).sort((a, b) => a - b)
+            const offsets = computeStackOffsets(
+              xValues,
+              groupKeys,
+              (k, x) => valueMaps.get(k)?.get(x) || 0,
+              config.baseline
+            )
+            let lo = Infinity
+            let hi = -Infinity
+            for (const x of xValues) {
+              const off = offsets.get(x) ?? 0
+              const total = xTotals.get(x) ?? 0
+              if (off < lo) lo = off
+              if (off + total > hi) hi = off + total
+            }
+            if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+              lo = 0; hi = 0
+            }
+            const range = hi - lo
+            const pad = range > 0 ? range * config.extentPadding : 1
+            yDomain = [lo - pad, hi + pad]
           } else {
+            const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
             yDomain = [0, maxStacked + pad]
           }
           this._stackExtentCache = { key: stackCacheKey, yDomain }
@@ -840,8 +872,13 @@ export class PipelineStore {
         data,
         scales,
         dimensions: {
-          width: layout.width + margin.left + margin.right,
-          height: layout.height + margin.top + margin.bottom,
+          // All scene-node coordinates are plot-relative (the canvas/SVG
+          // group already lives inside `margin.left`/`margin.top`), so
+          // `dimensions.width`/`height` describe the plot rect, matching
+          // `dimensions.plot.width`/`height`. Read `margin` if you need the
+          // outer canvas size.
+          width: layout.width,
+          height: layout.height,
           margin,
           plot: { x: 0, y: 0, width: layout.width, height: layout.height }
         },

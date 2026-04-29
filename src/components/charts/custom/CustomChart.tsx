@@ -56,7 +56,7 @@ export interface CustomChartProps<TDatum extends Datum = Datum, TConfig = Record
  *
  * @example
  * ```tsx
- * import { CustomChart } from "semiotic"
+ * import { CustomChart } from "semiotic/xy"
  * import { waffleLayout } from "semiotic/recipes"
  *
  * <CustomChart
@@ -150,7 +150,9 @@ export const CustomChart = forwardRef(function CustomChart<
     chartType: "custom",
     ...(data != null && { data: safeData }),
     customLayout: layout as CustomLayout,
-    layoutConfig: (layoutConfig ?? {}) as Record<string, unknown>,
+    // Pass through as-is — coercing to a fresh {} when omitted breaks the
+    // pipelineConfig useMemo identity and forces a store rebuild every render.
+    layoutConfig: layoutConfig as Record<string, unknown> | undefined,
     xExtent,
     yExtent,
     colorScheme,
