@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-28.
+Last updated 2026-04-29.
 
 This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, not here.
 
@@ -18,10 +18,6 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 _Empty as of 2026-04-29._ Previously-tracked items closed:
 
-- TypeScript Surface Cleanup → 47 anys removed across high-leverage hotspots; remaining ones are at vendored/SSR/test-utility boundaries where cost/benefit doesn't pencil. New `any` in PRs is opportunistic-flag territory, not a tracked backlog item.
-- Consumer Workaround Audit → realtime HOCs auto-fit `windowSize` to bounded data via `resolveRealtimeWindowSize`; the `windowSize={data.length}` workaround in our own theming docs page is gone, and consumer code following the same pattern degrades gracefully when this version ships (explicit user value still wins).
-- `validationMap` Composition → superseded by the shipped Chart Spec Registry; `validationMap.ts` is a generated file now, hand-editing it would be wasted effort.
-
 ---
 
 ## P1 — Visual & Rendering Coverage
@@ -35,11 +31,10 @@ Remaining infrastructure work:
 
 ### Interaction-State Visual Snapshots
 
-Hover, brush, click-locked crosshair, linked selections, and legend isolate are underrepresented visually.
+Covered as of 2026-04-29: hover-state (scatter, bar — pre-existing), `hoverHighlight` (multi-line dim), brush selection rect (scatter), legend isolate (multi-line LineChart), linked-hover cross-highlight (LinkedCharts dashboard). The remaining underrepresented case is **click-locked crosshair** in `linkedHover` x-position mode (click locks dashed white line, second click or Escape unlocks). That's a 2-step interaction — driver test + snapshot of locked state — and a follow-up if the regression class becomes load-bearing.
 
 Next work:
-- Add snapshots after deterministic `page.hover()`, brush, legend click, and selection actions.
-- Prefer a few high-value charts over broad but shallow coverage.
+- Click-locked crosshair snapshot (low priority; gate value is incremental on top of the linked-hover snapshot already shipped).
 
 ### SSR-Vs-CSR Visual Diff
 

@@ -205,3 +205,67 @@ test.describe("XY Charts - HOC default coverage", () => {
     })
   }
 })
+
+// ── Interaction-state visual snapshots ──────────────────────────────
+// Closes the "Interaction-State Visual Snapshots" P1 item for the XY
+// family. Each test drives the chart into a non-default visual state
+// (hoverHighlight dimming, brush selection rect, legend-isolate),
+// `waitForRafs` to settle the React commit, then snapshots. Higher
+// `maxDiffPixels` than default-state tests because pointer-driven
+// states have more anti-aliased motion edges.
+test.describe("XY Charts - Interaction states", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/xy-examples/")
+  })
+
+  test("hoverHighlight dims non-hovered series", async ({ page }) => {
+    await waitForChartReady(page, "xy-hover-highlight")
+    const testCase = page.locator('[data-testid="xy-hover-highlight"]')
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    if (!box) throw new Error("canvas bounding box unavailable")
+    // Hover at x≈1 in data space (25% of chart width since lineData
+    // spans x=0..4) where series A (15) clearly dominates series B
+    // (8). The midpoint at x=2 is intentionally avoided — that's the
+    // one data x where B (13) is slightly above A (12), so a midpoint
+    // hover would resolve ambiguously across rendered geometry.
+    await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.25)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-hover-highlight.png", {
+      maxDiffPixels: 200,
+    })
+  })
+
+  test("brush selection draws a rect on drag", async ({ page }) => {
+    await waitForChartReady(page, "xy-brush")
+    const testCase = page.locator('[data-testid="xy-brush"]')
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    if (!box) throw new Error("canvas bounding box unavailable")
+    // Drag a rectangular selection across the middle 60% of the chart.
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.8, { steps: 10 })
+    await page.mouse.up()
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-brush.png", {
+      maxDiffPixels: 200,
+    })
+  })
+
+  test("legend isolate dims un-clicked series", async ({ page }) => {
+    await waitForChartReady(page, "xy-legend-isolate")
+    const testCase = page.locator('[data-testid="xy-legend-isolate"]')
+    // Click the legend swatch labeled "A" — `legendInteraction:
+    // "isolate"` should dim series B, leaving A at full opacity.
+    // Locate by visible label rather than `.first()` so adding
+    // a third series later (or changing legend sort order) doesn't
+    // silently isolate the wrong one.
+    const legendSwatch = testCase.locator(".legend-item", { hasText: "A" }).first()
+    await legendSwatch.click()
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("xy-legend-isolate.png", {
+      maxDiffPixels: 200,
+    })
+  })
+})
