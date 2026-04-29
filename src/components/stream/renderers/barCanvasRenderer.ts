@@ -2,51 +2,23 @@ import type { RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { parseCanvasColor } from "./colorUtils"
+import { buildLinearFillGradient, resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
- * Build a CanvasGradient that runs from the bar's tip (opposite the baseline)
- * toward its base, honoring `fillGradient.colorStops` or the opacity-based
- * `{ topOpacity, bottomOpacity }` shape. Mirrors AreaChart's direction so
- * the same `gradientFill` input yields analogous output across chart types.
- * Returns null if the config can't resolve (e.g., fewer than 2 color stops).
+ * Resolve the tip→base axis for a `RectSceneNode`. Mirrors AreaChart's
+ * direction so the same `gradientFill` input yields analogous output
+ * across chart types: the tip is opposite the baseline, the base is
+ * the baseline edge.
  */
-function buildBarGradient(
-  ctx: CanvasRenderingContext2D,
-  node: RectSceneNode,
-  baseFill: string
-): CanvasGradient | null {
-  const fg = node.fillGradient
-  if (!fg) return null
-
-  const edge = node.roundedEdge  // tip edge — set unconditionally by the scene builder
-  // tip → base coordinates along the value axis. Default = top-to-bottom
-  // (matches positive vertical bars) when orientation is unknown.
-  let x0 = node.x, y0 = node.y, x1 = node.x, y1 = node.y + node.h
-  if (edge === "bottom") { y0 = node.y + node.h; y1 = node.y }
-  else if (edge === "right") { x0 = node.x + node.w; y0 = node.y; x1 = node.x; y1 = node.y }
-  else if (edge === "left")  { x0 = node.x; y0 = node.y; x1 = node.x + node.w; y1 = node.y }
-  // "top" and undefined both use the default initialised above.
-
-  if ("colorStops" in fg) {
-    // Filter out non-finite offsets before the count check so we don't build
-    // a gradient with < 2 usable stops (which renders as a flat/transparent
-    // fill and violates the "can't resolve" contract).
-    const validStops = fg.colorStops
-      .filter(s => Number.isFinite(s.offset))
-      .map(s => ({ offset: Math.max(0, Math.min(1, s.offset)), color: s.color }))
-    if (validStops.length < 2) return null
-    const grad = ctx.createLinearGradient(x0, y0, x1, y1)
-    for (const s of validStops) grad.addColorStop(s.offset, s.color)
-    return grad
+function barGradientAxis(node: RectSceneNode): { x0: number; y0: number; x1: number; y1: number } {
+  // Default = top-to-bottom (matches positive vertical bars) when
+  // orientation is unknown.
+  switch (node.roundedEdge) {
+    case "bottom": return { x0: node.x, y0: node.y + node.h, x1: node.x, y1: node.y }
+    case "right":  return { x0: node.x + node.w, y0: node.y, x1: node.x, y1: node.y }
+    case "left":   return { x0: node.x, y0: node.y, x1: node.x + node.w, y1: node.y }
+    default:       return { x0: node.x, y0: node.y, x1: node.x, y1: node.y + node.h }
   }
-  // Opacity form. Normalize via canvas so named colors ("steelblue"), hsl(),
-  // etc. all produce opacity-faded gradients that match the bar's actual fill.
-  const grad = ctx.createLinearGradient(x0, y0, x1, y1)
-  const [r, g, b] = parseCanvasColor(ctx, baseFill)
-  grad.addColorStop(0, `rgba(${r},${g},${b},${fg.topOpacity})`)
-  grad.addColorStop(1, `rgba(${r},${g},${b},${fg.bottomOpacity})`)
-  return grad
 }
 
 /**
@@ -67,12 +39,14 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       drawIconBar(ctx, node)
     } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
-      const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
-        || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
       // Skip gradient construction entirely when the resolved fill is a
       // CanvasPattern — feeding the fallback color into the opacity branch
       // would silently replace the pattern with a solid-color gradient.
-      const grad = typeof solid === "string" ? buildBarGradient(ctx, node, solid) : null
+      const axis = barGradientAxis(node)
+      const grad = node.fillGradient && typeof solid === "string"
+        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
+        : null
       ctx.fillStyle = grad || solid
       const r = Math.min(node.roundedTop, node.w / 2, node.h / 2)
       ctx.beginPath()
@@ -121,12 +95,14 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       }
     } else {
       // Standard solid fill — or gradient when fillGradient is set.
-      const solid = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill)
-        || resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
       // Skip gradient construction entirely when the resolved fill is a
       // CanvasPattern — feeding the fallback color into the opacity branch
       // would silently replace the pattern with a solid-color gradient.
-      const grad = typeof solid === "string" ? buildBarGradient(ctx, node, solid) : null
+      const axis = barGradientAxis(node)
+      const grad = node.fillGradient && typeof solid === "string"
+        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
+        : null
       ctx.fillStyle = grad || solid
       ctx.fillRect(node.x, node.y, node.w, node.h)
 

@@ -1,39 +1,8 @@
-import type { LineSceneNode, LineColorThreshold, CurveType } from "../types"
+import type { LineSceneNode, LineColorThreshold } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
-import {
-  curveMonotoneX,
-  curveMonotoneY,
-  curveCardinal,
-  curveCatmullRom,
-  curveStep,
-  curveStepBefore,
-  curveStepAfter,
-  curveBasis,
-  curveNatural
-} from "d3-shape"
-import type { CurveFactory } from "d3-shape"
-
-/** Map CurveType strings to d3-shape curve factories. */
-function resolveCurveFactory(curve: CurveType | undefined): CurveFactory | null {
-  switch (curve) {
-    case "monotoneX": return curveMonotoneX
-    case "monotoneY": return curveMonotoneY
-    case "cardinal": return curveCardinal
-    case "catmullRom": return curveCatmullRom
-    case "step": return curveStep
-    case "stepBefore": return curveStepBefore
-    case "stepAfter": return curveStepAfter
-    case "basis": return curveBasis
-    case "natural": return curveNatural
-    case "linear":
-    case undefined:
-      return null
-    default:
-      return null
-  }
-}
+import { buildColorStopGradient, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
 
 function resolveColor(
   value: number,
@@ -187,17 +156,15 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     } else if (!hasThresholds) {
       ctx.beginPath()
 
-      if (node.strokeGradient && node.strokeGradient.colorStops.length >= 2 && node.path.length >= 2) {
-        const x0 = node.path[0][0]
-        const x1 = node.path[node.path.length - 1][0]
-        const grad = ctx.createLinearGradient(x0, 0, x1, 0)
-        for (const stop of node.strokeGradient.colorStops) {
-          grad.addColorStop(Math.max(0, Math.min(1, stop.offset)), stop.color)
-        }
-        ctx.strokeStyle = grad
-      } else {
-        ctx.strokeStyle = baseColor
-      }
+      const strokeGrad = node.strokeGradient && node.path.length >= 2
+        ? buildColorStopGradient(
+            ctx,
+            node.strokeGradient,
+            node.path[0][0], 0,
+            node.path[node.path.length - 1][0], 0,
+          )
+        : null
+      ctx.strokeStyle = strokeGrad || baseColor
 
       if (curveFactory) {
         // Use d3-shape line generator with curve interpolation
@@ -298,7 +265,13 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     if (node.style.fill && node.style.fillOpacity && node.style.fillOpacity > 0) {
       ctx.beginPath()
       ctx.globalAlpha = node.style.fillOpacity
-      ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || node.style.fill
+      // `LineSceneNode.style.fill` is `string | CanvasPattern`, so the
+      // string-typed fallback can't accept it without a narrowing
+      // assertion. Falsy patterns can't reach this branch (the
+      // `node.style.fill &&` guard above filters them), and a
+      // CanvasPattern resolved by `resolveCanvasFill` won't trigger
+      // this fallback path either, so the cast is safe in practice.
+      ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, node.style.fill as string)
 
       if (curveFactory && !hasThresholds) {
         // Use d3-shape line generator for the curved top edge, then close with straight bottom
