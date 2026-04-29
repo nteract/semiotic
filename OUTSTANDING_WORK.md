@@ -28,16 +28,9 @@ _Empty as of 2026-04-29._ Previously-tracked items closed:
 
 ### HOC-Level Visual Snapshots
 
-XY family fully covered as of 2026-04-29 (StackedAreaChart, ConnectedScatterplot, QuadrantChart, MultiAxisLineChart, ScatterplotMatrix, MinimapChart added in the latest pass; LineChart / AreaChart / Scatterplot / BubbleChart / Heatmap / CandlestickChart / range-plot already had snapshots). Remaining gaps:
+**Complete as of 2026-04-29 — every HOC in `chartSpecs.ts` (43/43) has at least one default-theme visual snapshot.** The animated-HOC pass shipped pixel-stable snapshots for the 4 realtime charts and `OrbitDiagram` by passing static `data` arrays + omitting decay/pulse/transition/staleness on realtime + `animated: false` on Orbit, so the canvas stabilizes after initial paint and ordinary `waitForChartReady` succeeds.
 
-- Realtime family: `RealtimeHistogram` / `RealtimeSwarmChart` / `RealtimeWaterfallChart` / `RealtimeHeatmap` (only theme-stroke variants exist for some). Streaming-frame snapshots are tricky because the canvas is intentionally never visually stable — `waitForChartReady({ stable: false })` plus a deterministic frame-count freeze would be the right approach.
-- Ordinal family gaps: `DotPlot`, `RidgelinePlot`.
-- Network family gaps: `OrbitDiagram` (has continuous animation, same stability concern as realtime).
-- Geo family gaps: `FlowMap`, `DistanceCartogram`.
-
-Next work:
-- Add fixtures + snapshots for the 6 remaining HOCs above, mirroring the XY pattern (`integration-tests/<family>-examples/index.js` fixture entry + `<family>-frame.spec.ts` test).
-- For realtime/orbit, freeze rAF or pin a fixed frame count before snapshotting.
+Remaining infrastructure work:
 - Bootstrap Linux baselines from the CI `playwright-snapshots` artifact (existing CI workflow auto-generates on first push when no Linux baselines are committed).
 
 ### Interaction-State Visual Snapshots

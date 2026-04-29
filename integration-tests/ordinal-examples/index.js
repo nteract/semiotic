@@ -20,7 +20,9 @@ const {
   SwarmPlot,
   BoxPlot,
   ViolinPlot,
-  Histogram
+  Histogram,
+  DotPlot,
+  RidgelinePlot
 } = Semiotic
 
 const TestCase = ({ title, children, testId, key }) =>
@@ -299,6 +301,37 @@ const examples = [
       ],
       width: 300,
       height: 250,
+    })
+  }),
+
+  // ── Default-theme HOC coverage backfill ─────────────────────────────
+  // One snapshot per public Ordinal HOC that didn't already have one.
+  // Mirrors the XY-family backfill — keeps the regression gate honest
+  // as new chart families are added.
+
+  TestCase({
+    title: "Dot Plot",
+    testId: "ordinal-dotplot",
+    children: React.createElement(DotPlot, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 300,
+    })
+  }),
+
+  TestCase({
+    title: "Ridgeline Plot",
+    testId: "ordinal-ridgeline",
+    children: React.createElement(RidgelinePlot, {
+      data: statisticalData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      bins: 18,
+      width: 400,
+      height: 300,
+      colorScheme: colors,
     })
   })
 ]

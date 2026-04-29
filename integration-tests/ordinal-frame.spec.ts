@@ -191,3 +191,25 @@ test.describe("Ordinal Charts - Gauge", () => {
     })
   })
 })
+
+// ── Default-theme HOC coverage backfill ──────────────────────────────
+// One snapshot per public Ordinal HOC that didn't already have one.
+// Mirrors the XY-family backfill (xy-frame.spec.ts).
+test.describe("Ordinal Charts - HOC default coverage", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/ordinal-examples/")
+  })
+
+  for (const testId of [
+    "ordinal-dotplot",
+    "ordinal-ridgeline",
+  ]) {
+    test(`renders ${testId}`, async ({ page }) => {
+      await waitForChartReady(page, testId)
+      const testCase = page.locator(`[data-testid="${testId}"]`)
+      await expect(testCase).toHaveScreenshot(`${testId}.png`, {
+        maxDiffPixels: 100,
+      })
+    })
+  }
+})
