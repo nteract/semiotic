@@ -1,4 +1,4 @@
-import { chord, ribbon, type ChordGroup, type Chord } from "d3-chord"
+import { chord, ribbon, type Chord } from "d3-chord"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import { arc, type DefaultArcObject } from "d3-shape"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
