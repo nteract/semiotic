@@ -16,29 +16,11 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ## P0 — Architecture & API Coherence
 
-### TypeScript Surface Cleanup
+_Empty as of 2026-04-29._ Previously-tracked items closed:
 
-`no-explicit-any` remains warning-level debt and should be reduced by modeling real shapes, not by mechanical replacement.
-
-Next work:
-- Reduce `any` in highest-leverage hotspots: `StreamGeoFrame` d3 types, `SceneToSVG` d3-shape arc invocations, sankey/chord layout boundaries, and test utilities.
-- Replace bare `string` or deprecated accessor aliases with `ChartAccessor<TDatum, T>` across HOC props.
-- Make `ColorConfig` and `SizeConfig` generic so `colorBy` and `sizeBy` can infer from `keyof TDatum`.
-
-### Consumer Workaround Audit
-
-Known consumers sometimes route around unclear APIs, turning workarounds into accidental public contracts.
-
-Next work:
-- Maintain a tracked-consumers list for API-change checks where access allows.
-- Audit realtime chart usage for `windowSize={data.length}` or other bounded-mode workarounds.
-- Consider first-class bounded mode on realtime HOCs where static-data use is common.
-
-### `validationMap` Composition
-
-**Likely superseded by the P0 Chart Spec Registry plan** — validationMap becomes a generated file from `chartSpecs.ts`, so hand-rewriting its composition would be wasted effort. Skip this unless the registry plan slips.
-
-For reference: `src/components/charts/shared/validationMap.ts` (951 lines) declares 40+ component specs. Every entry repeats `required: ["data"]`, `dataShape: "array"`, identical `dataAccessors` per family, plus a `commonProps + axisProps` spread. A composition helper (`xyChartBaseSpec`, `ordinalChartBaseSpec`) plus a shared `selectiveProps` bag would save ~210–260 lines, but the registry plan eliminates hand-editing the file entirely.
+- TypeScript Surface Cleanup → 47 anys removed across high-leverage hotspots; remaining ones are at vendored/SSR/test-utility boundaries where cost/benefit doesn't pencil. New `any` in PRs is opportunistic-flag territory, not a tracked backlog item.
+- Consumer Workaround Audit → realtime HOCs auto-fit `windowSize` to bounded data via `resolveRealtimeWindowSize`; the `windowSize={data.length}` workaround in our own theming docs page is gone, and consumer code following the same pattern degrades gracefully when this version ships (explicit user value still wins).
+- `validationMap` Composition → superseded by the shipped Chart Spec Registry; `validationMap.ts` is a generated file now, hand-editing it would be wasted effort.
 
 ---
 
@@ -46,12 +28,17 @@ For reference: `src/components/charts/shared/validationMap.ts` (951 lines) decla
 
 ### HOC-Level Visual Snapshots
 
-Frame-level snapshots and themed subsets exist, but HOCs are the user-facing API and still need broader default-state coverage.
+XY family fully covered as of 2026-04-29 (StackedAreaChart, ConnectedScatterplot, QuadrantChart, MultiAxisLineChart, ScatterplotMatrix, MinimapChart added in the latest pass; LineChart / AreaChart / Scatterplot / BubbleChart / Heatmap / CandlestickChart / range-plot already had snapshots). Remaining gaps:
+
+- Realtime family: `RealtimeHistogram` / `RealtimeSwarmChart` / `RealtimeWaterfallChart` / `RealtimeHeatmap` (only theme-stroke variants exist for some). Streaming-frame snapshots are tricky because the canvas is intentionally never visually stable — `waitForChartReady({ stable: false })` plus a deterministic frame-count freeze would be the right approach.
+- Ordinal family gaps: `DotPlot`, `RidgelinePlot`.
+- Network family gaps: `OrbitDiagram` (has continuous animation, same stability concern as realtime).
+- Geo family gaps: `FlowMap`, `DistanceCartogram`.
 
 Next work:
-- Add one Playwright snapshot per HOC under a default theme.
-- Keep fixture data deterministic and small.
-- Bootstrap Linux baselines from CI artifacts before enforcing the new snapshots.
+- Add fixtures + snapshots for the 6 remaining HOCs above, mirroring the XY pattern (`integration-tests/<family>-examples/index.js` fixture entry + `<family>-frame.spec.ts` test).
+- For realtime/orbit, freeze rAF or pin a fixed frame count before snapshotting.
+- Bootstrap Linux baselines from the CI `playwright-snapshots` artifact (existing CI workflow auto-generates on first push when no Linux baselines are committed).
 
 ### Interaction-State Visual Snapshots
 

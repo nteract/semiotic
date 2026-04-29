@@ -18,7 +18,7 @@
 import * as React from "react"
 import { useRef, useEffect } from "react"
 import { select as d3Select } from "d3-selection"
-import { brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
+import { brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { OrdinalScales } from "./ordinalTypes"
 
 interface OrdinalBrushOverlayProps {
@@ -47,7 +47,7 @@ export function OrdinalBrushOverlay({
   onBrush
 }: OrdinalBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const brushRef = useRef<any>(null)
+  const brushRef = useRef<BrushBehavior<unknown> | null>(null)
   const onBrushRef = useRef(onBrush)
   onBrushRef.current = onBrush
   const scalesRef = useRef(scales)
@@ -62,13 +62,13 @@ export function OrdinalBrushOverlay({
   useEffect(() => {
     if (!svgRef.current) return
 
-    const g = d3Select(svgRef.current).select(".brush-g")
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
     // Horizontal: r maps to x → brushX. Vertical: r maps to y → brushY.
     const brushFn = isHorizontal ? d3BrushX() : d3BrushY()
     brushFn.extent([[0, 0], [width, height]])
 
-    brushFn.on("brush end", (event: any) => {
+    brushFn.on("brush end", (event: D3BrushEvent<unknown>) => {
       if (isProgrammaticMoveRef.current) return
       const s = scalesRef.current
       if (!s) return
@@ -95,7 +95,7 @@ export function OrdinalBrushOverlay({
       onBrushRef.current(extent)
     })
 
-    g.call(brushFn as any)
+    g.call(brushFn)
     brushRef.current = brushFn
 
     g.select(".selection")
@@ -118,18 +118,18 @@ export function OrdinalBrushOverlay({
     if (!svgRef.current) return
 
     const ext = activeBrushExtentRef.current
-    const g = d3Select(svgRef.current).select(".brush-g")
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
     const px0 = scales.r(ext.r[0])
     const px1 = scales.r(ext.r[1])
 
     if (isHorizontal) {
       isProgrammaticMoveRef.current = true
-      g.call(brushRef.current.move as any, [px0, px1])
+      g.call(brushRef.current.move, [px0, px1])
       isProgrammaticMoveRef.current = false
     } else {
       isProgrammaticMoveRef.current = true
-      g.call(brushRef.current.move as any, [px1, px0]) // inverted for vertical
+      g.call(brushRef.current.move, [px1, px0]) // inverted for vertical
       isProgrammaticMoveRef.current = false
     }
   }, [scales, isHorizontal])

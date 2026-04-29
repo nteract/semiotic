@@ -6,7 +6,21 @@
  */
 
 import * as React from "react"
-import { arc as d3Arc } from "d3-shape"
+import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
+
+/**
+ * Sentinel arg for d3-shape arc generators that have all four
+ * accessors set to constants. The generator's call signature requires
+ * a `DefaultArcObject` even though it never reads the argument when
+ * accessors are non-functional. Typing this once avoids `as any` at
+ * the three arc-emit sites below.
+ */
+const ARC_NOOP: DefaultArcObject = {
+  innerRadius: 0,
+  outerRadius: 0,
+  startAngle: 0,
+  endAngle: 0,
+}
 
 import type {
   SceneNode,
@@ -303,7 +317,7 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
         .innerRadius(n.innerR)
         .outerRadius(n.outerR)
         .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)({} as any) || ""
+        .endAngle(n.endAngle + Math.PI / 2)(ARC_NOOP) || ""
       return (
         <path
           key={`net-arc-${i}`}
@@ -387,7 +401,12 @@ export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNo
       key={`net-label-${i}`}
       x={label.x} y={label.y}
       textAnchor={label.anchor || "middle"}
-      dominantBaseline={(label.baseline || "auto") as any}
+      // Cast via React's `SVGAttributes["dominantBaseline"]` rather
+      // than `any`. `NetworkLabel.baseline` is a free-form string
+      // (consumers control it); React types this attribute as a strict
+      // SVG-spec union. The cast is the boundary, not a type-safety
+      // bypass — runtime accepts whatever the user supplied.
+      dominantBaseline={(label.baseline || "auto") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
       fontSize={label.fontSize || 11}
       fontWeight={label.fontWeight}
       fill={label.fill || "#333"}
@@ -488,7 +507,7 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
         .startAngle(n.startAngle + Math.PI / 2)
         .endAngle(n.endAngle + Math.PI / 2)
       if (n.cornerRadius) arcGen.cornerRadius(n.cornerRadius)
-      const arcPath = arcGen({} as any) || ""
+      const arcPath = arcGen(ARC_NOOP) || ""
       return (
         <path
           key={baseKey}

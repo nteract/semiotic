@@ -21,6 +21,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
+import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 
 export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
@@ -166,7 +167,7 @@ export const RealtimeLineChart = forwardRef(
       className,
       arrowOfTime = "right",
       windowMode = "sliding",
-      windowSize = 200,
+      windowSize: windowSizeProp,
       data,
       timeAccessor,
       valueAccessor,
@@ -237,6 +238,8 @@ export const RealtimeLineChart = forwardRef(
 
     const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
     if (opacity != null) lineStyle.opacity = opacity
+
+    const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()

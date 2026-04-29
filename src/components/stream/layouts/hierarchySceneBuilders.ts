@@ -344,7 +344,7 @@ export function buildCircleScene(
   const circleOpacity = 0.7
 
   for (const node of nodes) {
-    const r = (node as any).__radius ?? 5
+    const r = node.__radius ?? 5
     if (r <= 0) continue
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
@@ -381,7 +381,7 @@ export function buildCircleScene(
     const labelFn = resolveLabelFn(config.nodeLabel)
 
     for (const node of nodes) {
-      const r = (node as any).__radius ?? 5
+      const r = node.__radius ?? 5
 
       const text = labelFn ? labelFn(node) : node.id
       if (!text) continue
