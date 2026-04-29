@@ -224,10 +224,12 @@ test.describe("XY Charts - Interaction states", () => {
     const canvas = testCase.locator("canvas").first()
     const box = await canvas.boundingBox()
     if (!box) throw new Error("canvas bounding box unavailable")
-    // Hover over the upper portion of the chart — series A is on top
-    // (higher y values) in lineData, so this lands on series A and
-    // series B should dim.
-    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.25)
+    // Hover at x≈1 in data space (25% of chart width since lineData
+    // spans x=0..4) where series A (15) clearly dominates series B
+    // (8). The midpoint at x=2 is intentionally avoided — that's the
+    // one data x where B (13) is slightly above A (12), so a midpoint
+    // hover would resolve ambiguously across rendered geometry.
+    await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.25)
     await waitForRafs(page, 4)
     await expect(testCase).toHaveScreenshot("xy-hover-highlight.png", {
       maxDiffPixels: 200,
@@ -254,12 +256,12 @@ test.describe("XY Charts - Interaction states", () => {
   test("legend isolate dims un-clicked series", async ({ page }) => {
     await waitForChartReady(page, "xy-legend-isolate")
     const testCase = page.locator('[data-testid="xy-legend-isolate"]')
-    // Click the legend swatch for series "A" — `legendInteraction:
+    // Click the legend swatch labeled "A" — `legendInteraction:
     // "isolate"` should dim series B, leaving A at full opacity.
-    // Legend swatches render inside elements with `class="legend-item"`;
-    // the first one in document order is series A given the lineData
-    // insertion sequence.
-    const legendSwatch = testCase.locator(".legend-item").first()
+    // Locate by visible label rather than `.first()` so adding
+    // a third series later (or changing legend sort order) doesn't
+    // silently isolate the wrong one.
+    const legendSwatch = testCase.locator(".legend-item", { hasText: "A" }).first()
     await legendSwatch.click()
     await waitForRafs(page, 4)
     await expect(testCase).toHaveScreenshot("xy-legend-isolate.png", {

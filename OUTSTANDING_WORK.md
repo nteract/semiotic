@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-28.
+Last updated 2026-04-29.
 
 This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, not here.
 
@@ -17,10 +17,6 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 ## P0 — Architecture & API Coherence
 
 _Empty as of 2026-04-29._ Previously-tracked items closed:
-
-- TypeScript Surface Cleanup → 47 anys removed across high-leverage hotspots; remaining ones are at vendored/SSR/test-utility boundaries where cost/benefit doesn't pencil. New `any` in PRs is opportunistic-flag territory, not a tracked backlog item.
-- Consumer Workaround Audit → realtime HOCs auto-fit `windowSize` to bounded data via `resolveRealtimeWindowSize`; the `windowSize={data.length}` workaround in our own theming docs page is gone, and consumer code following the same pattern degrades gracefully when this version ships (explicit user value still wins).
-- `validationMap` Composition → superseded by the shipped Chart Spec Registry; `validationMap.ts` is a generated file now, hand-editing it would be wasted effort.
 
 ---
 
