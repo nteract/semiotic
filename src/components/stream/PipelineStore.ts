@@ -66,6 +66,8 @@ import { buildBarScene } from "./xySceneBuilders/barScene"
 import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
 import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
 import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
+import type { CustomLayout, LayoutContext } from "./customLayout"
+import type { MarginType } from "../types/marginType"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -109,6 +111,8 @@ export interface PipelineConfig {
   // Bar/heatmap specifics
   binSize?: number
   normalize?: boolean
+  /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
+  baseline?: "zero" | "wiggle" | "silhouette"
 
   // Candlestick accessors
   openAccessor?: string | ((d: Datum) => number)
@@ -192,6 +196,16 @@ export interface PipelineConfig {
 
   // Curve interpolation for line/area charts
   curve?: CurveType
+
+  // ── customLayout escape hatch ─────────────────────────────────────
+  /** When provided, replaces chart-type dispatch in scene building.
+   *  Receives a LayoutContext (scales, dimensions, theme, resolveColor)
+   *  and returns SceneNode[] + optional extents/overlays. */
+  customLayout?: CustomLayout
+  /** User-supplied config blob threaded through to LayoutContext.config. */
+  layoutConfig?: Record<string, unknown>
+  /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
+  layoutMargin?: MarginType
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -267,6 +281,8 @@ export class PipelineStore {
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
+  /** Overlays returned from customLayout (consumed by StreamXYFrame for SVGOverlay). */
+  customLayoutOverlays: import("react").ReactNode = null
 
   /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
   xIsDate = false
@@ -517,7 +533,7 @@ export class PipelineStore {
         yDomain = [0, 1 + config.extentPadding]
       } else {
         // Cache the stacked extent computation — only rebuild when buffer data changes
-        const stackCacheKey = `${buffer.size}:${this._ingestVersion}`
+        const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}`
         if (this._stackExtentCache && this._stackExtentCache.key === stackCacheKey) {
           yDomain = this._stackExtentCache.yDomain
         } else {
@@ -538,7 +554,14 @@ export class PipelineStore {
           }
 
           const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
-          yDomain = [0, maxStacked + pad]
+          if (config.baseline === "silhouette" || config.baseline === "wiggle") {
+            // Center the stack on zero. For wiggle the actual offset is smaller
+            // than half the total, so this is conservative (slightly oversized).
+            const half = maxStacked / 2
+            yDomain = [-(half + pad), half + pad]
+          } else {
+            yDomain = [0, maxStacked + pad]
+          }
           this._stackExtentCache = { key: stackCacheKey, yDomain }
         }
       }
@@ -805,7 +828,55 @@ export class PipelineStore {
 
   private buildSceneNodes(layout: StreamLayout, data: Datum[]): SceneNode[] {
     const { config, scales } = this
-    if (!scales || data.length === 0) return []
+    if (!scales) return []
+
+    // customLayout escape hatch — short-circuit chart-type dispatch when
+    // the user has supplied their own layout function. The layout runs
+    // against fully-built scales so it can use them directly, and gets
+    // the same theme/color resolution as built-in scene builders.
+    if (config.customLayout) {
+      const margin: MarginType = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
+      const layoutCtx: LayoutContext = {
+        data,
+        scales,
+        dimensions: {
+          width: layout.width + margin.left + margin.right,
+          height: layout.height + margin.top + margin.bottom,
+          margin,
+          plot: { x: 0, y: 0, width: layout.width, height: layout.height }
+        },
+        theme: {
+          semantic: config.themeSemantic ?? {},
+          categorical: config.themeCategorical ?? STREAMING_PALETTE
+        },
+        resolveColor: (group, datum) => {
+          const c = this.resolveGroupColor(group)
+          if (c) return c
+          // fall back to line style resolver for sample-aware color
+          const s = this.resolveLineStyle(group, datum)
+          if (s.stroke) return s.stroke
+          // s.fill can be a CanvasPattern; only return string fills
+          if (typeof s.fill === "string") return s.fill
+          return config.themeSemantic?.primary ?? "#4e79a7"
+        },
+        config: config.layoutConfig ?? {}
+      }
+      let result
+      try {
+        result = config.customLayout(layoutCtx)
+      } catch (err) {
+        // Layouts can throw — surface in dev, fall back to empty scene in prod.
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[semiotic] customLayout threw:", err)
+        }
+        this.customLayoutOverlays = null
+        return []
+      }
+      this.customLayoutOverlays = result.overlays ?? null
+      return result.nodes ?? []
+    }
+
+    if (data.length === 0) return []
 
     const ctx: XYSceneContext = {
       scales,

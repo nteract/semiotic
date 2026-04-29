@@ -173,6 +173,33 @@ export function xySceneNodeToSVG(node: SceneNode, i: number): React.ReactNode {
       const top = n.topPath.map(([x, y]) => `${x},${y}`).join("L")
       const bottom = [...n.bottomPath].reverse().map(([x, y]) => `${x},${y}`).join("L")
       const d = `M${top}L${bottom}Z`
+      // User-supplied clipRect (used by horizon recipe). Inline the clipPath
+      // alongside the path to keep the SSR output a single self-contained group.
+      if (n.clipRect) {
+        const cid = `area-clip-${i}`
+        return (
+          <g key={`area-${i}`}>
+            <defs>
+              <clipPath id={cid}>
+                <rect
+                  x={n.clipRect.x}
+                  y={n.clipRect.y}
+                  width={n.clipRect.width}
+                  height={n.clipRect.height}
+                />
+              </clipPath>
+            </defs>
+            <path
+              d={d}
+              fill={svgFill(n.style.fill)}
+              fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.7}
+              stroke={n.style.stroke}
+              strokeWidth={n.style.strokeWidth}
+              clipPath={`url(#${cid})`}
+            />
+          </g>
+        )
+      }
       return (
         <path
           key={`area-${i}`}

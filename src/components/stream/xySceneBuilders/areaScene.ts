@@ -56,6 +56,7 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
   const styleFn = (group: string, sampleDatum?: Datum) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined
+  const baseline = ctx.config.baseline ?? "zero"
   const { nodes: areaNodes, stackedTops } = buildStackedAreaNodes(
     groups,
     ctx.scales,
@@ -63,7 +64,8 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
     ctx.getY,
     styleFn,
     ctx.config.normalize,
-    curveType
+    curveType,
+    baseline
   )
   const nodes: SceneNode[] = areaNodes
 

@@ -214,7 +214,7 @@ function buildDeclarations() {
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
-    "semiotic-geo", "semiotic-themes", "semiotic-utils"
+    "semiotic-geo", "semiotic-themes", "semiotic-utils", "semiotic-recipes"
   ]
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
@@ -294,7 +294,8 @@ async function build() {
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify },
     { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
-    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify }
+    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
+    { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify }
   ]
 
   await Promise.all([
