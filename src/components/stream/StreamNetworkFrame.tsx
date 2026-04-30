@@ -1399,7 +1399,11 @@ const StreamNetworkFrame = forwardRef<
         legendClickBehavior={legendClickBehavior}
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
-        foregroundGraphics={resolvedForeground}
+        foregroundGraphics={
+          storeRef.current?.customLayoutOverlays != null
+            ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+            : resolvedForeground
+        }
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}

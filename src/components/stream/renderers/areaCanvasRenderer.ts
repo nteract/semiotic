@@ -52,9 +52,10 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
   for (const node of areaNodes) {
     if (node.topPath.length < 2) continue
 
-    // User-supplied clipRect: hard-clip the area to a rect (used by horizon
-    // recipe to band a single series). Combined save/restore matches the
-    // intro clip's pattern; we increment a guard so they nest cleanly.
+    // User-supplied clipRect: hard-clip the area to a rect. Used by custom
+    // layouts that want partial reveals, banded highlights, or focus
+    // regions. Combined save/restore matches the intro clip's pattern; we
+    // track the guard so they nest cleanly.
     let savedForClip = false
     if (node.clipRect) {
       ctx.save()

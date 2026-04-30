@@ -4,7 +4,6 @@ import { NetworkCustomChart } from "../../../../src/components/charts/custom/Net
 import { StackedAreaChart } from "../../../../src/components/charts/xy/StackedAreaChart"
 import { waffleLayout } from "../../../../src/components/recipes/waffle"
 import { calendarLayout } from "../../../../src/components/recipes/calendar"
-import { horizonLayout } from "../../../../src/components/recipes/horizon"
 import { flextreeLayout } from "../../../../src/components/recipes/flextree"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
@@ -37,18 +36,6 @@ function buildCalendarYear(year, seed = 7) {
     days.push({ date: day, count: Math.round(base + rand() * 3 + burst) })
   }
   return days
-}
-
-function buildHorizonSeries() {
-  const out = []
-  for (let i = 0; i < 200; i++) {
-    const t = i / 200
-    out.push({
-      t: i,
-      v: 30 * Math.sin(t * Math.PI * 4) + 12 * Math.sin(t * Math.PI * 13) + 8 * Math.cos(t * Math.PI * 2),
-    })
-  }
-  return out
 }
 
 // Pre-positioned tree data, as if computed by d3-flextree. Showcases
@@ -141,7 +128,6 @@ function buildStreamgraphData() {
 
 export default function CustomChartsPage() {
   const calendarData = useMemo(() => buildCalendarYear(2025), [])
-  const horizonData = useMemo(() => buildHorizonSeries(), [])
   const streamData = useMemo(() => buildStreamgraphData(), [])
 
   return (
@@ -151,7 +137,7 @@ export default function CustomChartsPage() {
           When the catalog doesn't fit, <code>CustomChart</code> lets you supply a layout
           function that emits scene nodes directly. The frame still owns scales, theme,
           hit testing, transitions, decay, accessibility, and SSR — your layout owns the
-          geometry. Most novel chart types (waffle, calendar, horizon, streamgraph,
+          geometry. Most novel chart types (waffle, calendar, streamgraph,
           flextree, dagre) decompose into the same primitives the built-in HOCs use.
         </p>
         <p>
@@ -245,39 +231,6 @@ import { waffleLayout } from "semiotic/recipes"
 />`}</CodeBlock>
       </section>
 
-      <section>
-        <h2>Horizon chart</h2>
-        <p>
-          Stacked, mirrored, color-banded slices of a single continuous series. Compresses
-          high-cardinality time series into compact rows. The recipe emits{" "}
-          <code>AreaSceneNode</code>s with <code>clipRect</code>s to band a single
-          full-amplitude area into progressively-darker stripes. Increase{" "}
-          <code>bands</code> to encode finer magnitude steps.
-        </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
-          <CustomChart
-            data={horizonData}
-            layout={horizonLayout}
-            layoutConfig={{ xAccessor: "t", yAccessor: "v", bands: 4 }}
-            width={780}
-            height={120}
-            margin={10}
-          />
-        </div>
-        <CodeBlock language="jsx">{`import { horizonLayout } from "semiotic/recipes"
-
-<CustomChart
-  data={timeSeries}
-  layout={horizonLayout}
-  layoutConfig={{
-    xAccessor: "t",
-    yAccessor: "v",
-    bands: 4,
-  }}
-  width={780}
-  height={120}
-/>`}</CodeBlock>
-      </section>
 
       <section>
         <h2>Flextree (network)</h2>
@@ -493,7 +446,7 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
         <CodeBlock language="jsx">{`import { CustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
 import {
-  waffleLayout, calendarLayout, horizonLayout,
+  waffleLayout, calendarLayout,
   flextreeLayout, dagreLayout,
 } from "semiotic/recipes"`}</CodeBlock>
       </section>
@@ -503,8 +456,7 @@ import {
         <ul>
           <li><strong>Plot-relative coordinates.</strong> Scene-node positions are in plot space — the frame already translates by the resolved <code>margin</code>. Use <code>ctx.dimensions.plot</code> for the drawing rect.</li>
           <li><strong>Renderer dispatch.</strong> When <code>customLayout</code> is provided, the frame uses a renderer set that handles every node type, so your layout can emit any mix of rects, areas, lines, etc. regardless of <code>chartType</code>.</li>
-          <li><strong>Extents.</strong> If your layout uses scales (horizon, custom XY), pass <code>xExtent</code> / <code>yExtent</code> on <code>CustomChart</code> to lock the domain. Layouts that don't use scales (waffle, calendar) ignore them.</li>
-          <li><strong>clipRect on areas.</strong> <code>AreaSceneNode</code> accepts a <code>clipRect</code> for hard-clipping — used by <code>horizonLayout</code> to band a single series into N slices.</li>
+          <li><strong>Extents.</strong> If your layout uses scales, pass <code>xExtent</code> / <code>yExtent</code> on <code>CustomChart</code> to lock the domain. Layouts that don't use scales (waffle, calendar) ignore them.</li>
           <li>
             For richer composition examples, see <Link to="/recipes/benchmark-dashboard">recipes pages</Link>.
             Streamgraph baseline lives on <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.

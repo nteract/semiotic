@@ -44,8 +44,17 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
     categorical: string[]
   }
   /**
-   * Resolves a color for a given node id / group, honoring CategoryColorProvider
-   * → colorScheme → theme cascade. Always prefer this over hardcoded literals.
+   * Resolves a stable color for a given key (typically a node id or
+   * category) by hashing into the frame-resolved categorical palette.
+   * The palette comes from `colorScheme` (array or named d3 scheme like
+   * `"tableau10"` / `"set3"`), then the active theme's `categorical`,
+   * then a fallback. The same key always returns the same color for the
+   * lifetime of this store.
+   *
+   * Note: this does *not* honor `CategoryColorProvider` — network charts
+   * don't currently thread that into the pipeline. If you need
+   * cross-chart category color sync, pass a matching `colorScheme` to
+   * each chart instead.
    */
   resolveColor: (key: string) => string
   /** User-supplied config blob threaded through `layoutConfig`. */

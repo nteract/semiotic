@@ -12,9 +12,6 @@ export type { WaffleConfig } from "./recipes/waffle"
 export { calendarLayout } from "./recipes/calendar"
 export type { CalendarConfig } from "./recipes/calendar"
 
-export { horizonLayout } from "./recipes/horizon"
-export type { HorizonConfig } from "./recipes/horizon"
-
 // ── Network recipes (use with StreamNetworkFrame's customNetworkLayout) ──
 export { flextreeLayout } from "./recipes/flextree"
 export type { FlextreeConfig } from "./recipes/flextree"

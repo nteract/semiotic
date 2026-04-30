@@ -1,5 +1,6 @@
 import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
+import { COLOR_SCHEMES } from "../charts/shared/colorUtils"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type { NetworkLayoutContext } from "./networkCustomLayout"
@@ -325,8 +326,13 @@ export class NetworkPipelineStore {
     // customLayout escape hatch — when the user supplies their own layout,
     // skip plugin dispatch entirely. The layout produces scene primitives
     // directly inside `buildScene`; nodes/edges in this.* don't need
-    // positions because the scene IS the geometry.
-    if (this.config.customNetworkLayout) return
+    // positions because the scene IS the geometry. Still bump
+    // layoutVersion so push-mode React subscribers (SVG overlays, labels,
+    // useTopologyDiff consumers) see the change.
+    if (this.config.customNetworkLayout) {
+      this.layoutVersion++
+      return
+    }
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return
 
@@ -514,11 +520,25 @@ export class NetworkPipelineStore {
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
-      const palette = Array.isArray(this.config.colorScheme)
-        ? this.config.colorScheme
-        : (this.config.themeCategorical && this.config.themeCategorical.length > 0
-            ? this.config.themeCategorical
-            : (schemeCategory10 as readonly string[]))
+      // Palette precedence: explicit `colorScheme` (array or named scheme)
+      // → theme categorical → fallback. Named string schemes resolve via
+      // COLOR_SCHEMES; unknown names fall through to the theme palette.
+      const cs = this.config.colorScheme
+      let palette: readonly string[]
+      if (Array.isArray(cs)) {
+        palette = cs
+      } else if (typeof cs === "string") {
+        const resolved = (COLOR_SCHEMES as Record<string, unknown>)[cs]
+        palette = Array.isArray(resolved)
+          ? resolved as string[]
+          : (this.config.themeCategorical && this.config.themeCategorical.length > 0
+              ? this.config.themeCategorical
+              : (schemeCategory10 as readonly string[]))
+      } else if (this.config.themeCategorical && this.config.themeCategorical.length > 0) {
+        palette = this.config.themeCategorical
+      } else {
+        palette = schemeCategory10 as readonly string[]
+      }
       const ctx: NetworkLayoutContext = {
         nodes: nodesArr,
         edges: edgesArr,

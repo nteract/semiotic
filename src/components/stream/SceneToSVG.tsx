@@ -173,8 +173,10 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
       const top = n.topPath.map(([x, y]) => `${x},${y}`).join("L")
       const bottom = [...n.bottomPath].reverse().map(([x, y]) => `${x},${y}`).join("L")
       const d = `M${top}L${bottom}Z`
-      // User-supplied clipRect (used by horizon recipe). Inline the clipPath
-      // alongside the path to keep the SSR output a single self-contained group.
+      // User-supplied clipRect — hard-clips the area to a rect (used by
+      // custom layouts for partial reveals, banding, highlight regions).
+      // Inline the clipPath alongside the path so the SSR output is a
+      // single self-contained group.
       if (n.clipRect) {
         // idPrefix namespaces the clipPath id so multiple charts on the same
         // page don't collide (e.g. two horizon charts both emitting `area-clip-0`).

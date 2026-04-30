@@ -37,7 +37,12 @@ export interface NetworkCustomChartProps<
   /** Color scheme threaded into the layout's `resolveColor` helper. */
   colorScheme?: string | string[]
   enableHover?: boolean
-  showLegend?: boolean
+  /**
+   * Custom layouts own their own color resolution (the layout function
+   * decides what each node looks like), so the auto-legend infrastructure
+   * the built-in network HOCs use can't run. To render a legend, build a
+   * `legendGroups` array yourself and pass it through `frameProps.legend`.
+   */
   /** Additional StreamNetworkFrame props for advanced customization. */
   frameProps?: Partial<Omit<StreamNetworkFrameProps,
     "nodes" | "edges" | "chartType" | "size" | "customNetworkLayout" | "layoutConfig"
@@ -84,7 +89,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     height: props.height,
     showGrid: false,
     enableHover: props.enableHover,
-    showLegend: props.showLegend,
+    showLegend: undefined,
     title: props.title,
     xLabel: undefined,
     yLabel: undefined,
@@ -117,7 +122,6 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     width,
     height,
     enableHover,
-    showLegend,
     title,
     description,
     summary,
@@ -147,7 +151,9 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     summary,
     accessibleTable,
     enableHover,
-    ...(showLegend != null && { legend: showLegend }),
+    // No `showLegend` pass-through: custom layouts own color resolution,
+    // so the auto-legend infrastructure can't run. Pass a real legend
+    // through `frameProps.legend` if you want one.
     ...frameProps,
   }
 

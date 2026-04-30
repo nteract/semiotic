@@ -71,6 +71,41 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(["#ff0000", "#00ff00", "#0000ff"]).toContain(c1)
   })
 
+  it("resolveColor honors named d3 schemes (e.g. tableau10)", () => {
+    // Regression: original implementation only handled array-form
+    // colorScheme — a string like "tableau10" silently fell through to
+    // the fallback palette.
+    let resolveColor: ((k: string) => string) | null = null
+    const layout = (ctx: NetworkLayoutContext) => {
+      resolveColor = ctx.resolveColor
+      return { sceneNodes: [], sceneEdges: [], labels: [] }
+    }
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+      colorScheme: "tableau10",
+    }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    store.buildScene([100, 100])
+
+    const colors = ["alpha", "beta", "gamma"].map((k) => resolveColor!(k))
+    // Tableau10's first color is #4e79a7 — at least one of three keys
+    // should land on a Tableau10 entry, not the schemeCategory10 fallback.
+    const tableau10 = ["#4e79a7", "#f28e2c", "#e15759", "#76b7b2", "#59a14f", "#edc949", "#af7aa1", "#ff9da7", "#9c755f", "#bab0ab"]
+    expect(colors.some((c) => tableau10.includes(c))).toBe(true)
+  })
+
+  it("runLayout bumps layoutVersion when customLayout is supplied", () => {
+    // Regression: the customLayout escape hatch in runLayout used to
+    // return early without incrementing layoutVersion, so push-mode
+    // React subscribers never saw the change.
+    const layout = () => ({ sceneNodes: [], sceneEdges: [], labels: [] })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    const before = store.layoutVersion
+    store.runLayout([100, 100])
+    expect(store.layoutVersion).toBeGreaterThan(before)
+  })
+
   it("captures overlays returned by customLayout", () => {
     const overlay = { _sentinel: true } as unknown as React.ReactNode
     const layout = () => ({
