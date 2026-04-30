@@ -40,8 +40,8 @@ export interface BulletConfig {
    */
   showTicks?: boolean
   /**
-   * Format function for tick labels (and the actual/target values shown
-   * inside the row). @default v => v.toLocaleString()
+   * Format function for the per-row tick labels rendered below each
+   * bullet. @default v => v.toLocaleString()
    */
   tickFormat?: (v: number) => string
 }
@@ -173,7 +173,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     if (maxVal <= 0) continue
 
     const yTop = plot.y + i * (rowH + rowGap + tickAreaH)
-    if (yTop + rowH > plot.y + plot.height) break // overflow guard
+    // Overflow guard accounts for tick chrome too — when showTicks is
+    // enabled the row's footprint is rowH + tickAreaH (the bar plus the
+    // ticks/labels rendered below it). Without including tickAreaH here,
+    // the last row's tick labels can spill past the plot rect.
+    if (yTop + rowH + tickAreaH > plot.y + plot.height) break
     rowInfo.push({ yTop, label: getCategory(d), actual, target, maxVal })
 
     const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW

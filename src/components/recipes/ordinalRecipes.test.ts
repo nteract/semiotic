@@ -187,6 +187,35 @@ describe("bulletLayout", () => {
     expect(result.overlays).toBeNull()
   })
 
+  it("overflow guard accounts for tick chrome (last row's ticks can't spill)", () => {
+    // Regression: previous guard only checked rowH; tick labels rendered
+    // below the row could fall outside the plot rect. Plot height is
+    // capped here to a value where row 1 fits but row 2's ticks would
+    // overflow with showTicks enabled — recipe must skip row 2.
+    const tightCtx = makeCtx({
+      categoryAccessor: "metric",
+      valueAccessor: "actual",
+      targetAccessor: "target",
+      rangesAccessor: "ranges",
+      rowHeight: 24,
+      rowGap: 8,
+      showLabels: false,
+      showTicks: true,
+    }, data, {
+      dimensions: {
+        width: 600, height: 60,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        plot: { x: 0, y: 0, width: 600, height: 60 },
+      },
+    })
+    const result = bulletLayout(tightCtx)
+    const rects = result.nodes! as RectSceneNode[]
+    // Only one row of nodes should be emitted (3 ranges + actual + target = 5).
+    // If the guard doesn't include tickAreaH, both rows render and
+    // there are 10 nodes.
+    expect(rects.length).toBeLessThanOrEqual(5)
+  })
+
   it("reserves labelWidth on the left for row labels", () => {
     // With labelWidth=200, bars start at x = plot.x + 200 = 200.
     const result = bulletLayout(makeCtx({

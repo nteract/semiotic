@@ -38,9 +38,15 @@ export interface ParallelCoordinatesConfig {
    */
   showAxes?: boolean
   /**
-   * Pixel padding reserved at top + bottom of the plot for axis labels
-   * and tick numbers. Subtracted from the line drawing area. @default
-   * 24 (top) when `showAxes`, 0 otherwise. Bottom padding is fixed at 8.
+   * Pixel padding reserved at the **top** of the plot for axis field-name
+   * labels. Used only when `showAxes` is `true`. Subtracted from the line
+   * drawing area along with bottom padding. @default 24
+   *
+   * The recipe also reserves bottom padding for tick numbers — 18px when
+   * `showAxes` is true, 8px when it's false. That bottom value is fixed;
+   * use a smaller chart `margin.bottom` if you need tighter packing.
+   * Top padding when `showAxes` is false is also a fixed 8px (so polyline
+   * endpoints don't hug the chart edge).
    */
   axisLabelPadding?: number
   /**
