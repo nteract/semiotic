@@ -326,10 +326,12 @@ export class NetworkPipelineStore {
     // customLayout escape hatch — when the user supplies their own layout,
     // skip plugin dispatch entirely. The layout produces scene primitives
     // directly inside `buildScene`; nodes/edges in this.* don't need
-    // positions because the scene IS the geometry. Still bump
-    // layoutVersion so push-mode React subscribers (SVG overlays, labels,
-    // useTopologyDiff consumers) see the change.
+    // positions because the scene IS the geometry. We still need to keep
+    // the topology-diff bookkeeping in sync so push-mode subscribers
+    // (SVG overlays, labels, useTopologyDiff consumers, addedNodes-driven
+    // highlighting) observe added/removed nodes and edges.
     if (this.config.customNetworkLayout) {
+      this.recordTopologyDiff()
       this.layoutVersion++
       return
     }
@@ -476,7 +478,20 @@ export class NetworkPipelineStore {
 
     this._hasRenderedOnce = true
 
-    // Compute topology diff
+    this.recordTopologyDiff()
+
+    this.layoutVersion++
+  }
+
+  /**
+   * Compute added/removed node and edge sets relative to the previous
+   * layout snapshot, and update `lastTopologyChangeTime` if anything
+   * changed. Shared by the plugin path (`runLayout` finalization) and the
+   * customLayout escape hatch — without this, `getTopologyDiff()` and
+   * built-in topology-diff highlighting silently stop working when a
+   * `customNetworkLayout` is supplied.
+   */
+  private recordTopologyDiff(): void {
     const currentNodeIds = new Set(this.nodes.keys())
     const currentEdgeKeys = new Set(this.edges.keys())
 
@@ -505,8 +520,6 @@ export class NetworkPipelineStore {
 
     this.previousNodeIds = currentNodeIds
     this.previousEdgeKeys = currentEdgeKeys
-
-    this.layoutVersion++
   }
 
   /**

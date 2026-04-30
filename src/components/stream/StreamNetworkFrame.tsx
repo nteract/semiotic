@@ -455,6 +455,11 @@ const StreamNetworkFrame = forwardRef<
   const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
+  // Lifted from `storeRef.current.customLayoutOverlays` so React re-renders
+  // when overlays change. Synced after every `buildScene` call via
+  // `syncOverlays`. React's reference-equality short-circuit means
+  // null→null and same-ref updates don't trigger spurious re-renders.
+  const [customOverlays, setCustomOverlays] = useState<React.ReactNode>(null)
 
   const hoverRef = useRef<typeof hoverData>(null)
 
@@ -565,6 +570,17 @@ const StreamNetworkFrame = forwardRef<
     scheduleRender()
   }, [pipelineConfig, scheduleRender])
 
+  // Sync the customLayout overlay output to React state. Called after every
+  // data-change `buildScene` so the overlay re-renders when topology or
+  // theme changes. We deliberately do NOT call this from the per-frame
+  // render loop (transition/animation rebuilds): the user's layout function
+  // may return a fresh JSX reference each call, which would force a React
+  // re-render every animation frame. Streaming overlays should update via
+  // data changes, not via animation ticks.
+  const syncCustomOverlays = useCallback(() => {
+    setCustomOverlays(storeRef.current?.customLayoutOverlays ?? null)
+  }, [])
+
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
   // is handled by useFrame above when themeDirtyRef is provided. But there's
   // a second surface to refresh: `nodeColorMap` caches the palette color per
@@ -578,6 +594,7 @@ const StreamNetworkFrame = forwardRef<
     const store = storeRef.current
     if (!store) return
     store.buildScene([adjustedWidth, adjustedHeight])
+    syncCustomOverlays()
     for (const sceneNode of store.sceneNodes) {
       if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
         nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
@@ -585,7 +602,7 @@ const StreamNetworkFrame = forwardRef<
     }
     dirtyRef.current = true
     scheduleRender()
-  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
+  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender, syncCustomOverlays])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -595,6 +612,7 @@ const StreamNetworkFrame = forwardRef<
 
     store.runLayout([adjustedWidth, adjustedHeight])
     store.buildScene([adjustedWidth, adjustedHeight])
+    syncCustomOverlays()
     dirtyRef.current = true
 
     // Sync nodeColorMap from actual scene fills so particle/hover colors
@@ -625,7 +643,7 @@ const StreamNetworkFrame = forwardRef<
       const { nodes, edges } = store.getLayoutData()
       onTopologyChange(nodes, edges)
     }
-  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme])
+  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme, syncCustomOverlays])
 
   // ── Push API ─────────────────────────────────────────────────────────
 
@@ -787,6 +805,7 @@ const StreamNetworkFrame = forwardRef<
       // Hierarchy data: single root object
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
+      syncCustomOverlays()
       dirtyRef.current = true
       scheduleRender()
     } else {
@@ -798,6 +817,7 @@ const StreamNetworkFrame = forwardRef<
 
       store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
+      syncCustomOverlays()
 
       // Sync nodeColorMap from actual scene fills so particle/hover colors
       // match the rendered node colors exactly (same logic as runLayout sync)
@@ -822,7 +842,7 @@ const StreamNetworkFrame = forwardRef<
       dirtyRef.current = true
       scheduleRender()
     }
-  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme])
+  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme, syncCustomOverlays])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1400,8 +1420,8 @@ const StreamNetworkFrame = forwardRef<
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={
-          storeRef.current?.customLayoutOverlays != null
-            ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+          customOverlays != null
+            ? <>{resolvedForeground}{customOverlays}</>
             : resolvedForeground
         }
         annotations={annotations}

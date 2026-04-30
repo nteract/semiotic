@@ -106,6 +106,40 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.layoutVersion).toBeGreaterThan(before)
   })
 
+  it("populates topology-diff sets when customLayout is supplied", () => {
+    // Regression: the customLayout escape hatch used to skip topology-diff
+    // bookkeeping, leaving addedNodes/removedNodes/addedEdges/removedEdges
+    // stale and breaking getTopologyDiff() / built-in highlighting.
+    // ingestBounded calls runLayout internally, so the diff is observed
+    // at the moment ingestion completes.
+    const layout = () => ({ sceneNodes: [], sceneEdges: [], labels: [] })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+
+    // First ingestion: a, b plus an edge. addedNodes should be {a, b}.
+    store.ingestBounded(
+      [{ id: "a" }, { id: "b" }],
+      [{ source: "a", target: "b" }],
+      [100, 100]
+    )
+    expect(store.addedNodes.size).toBe(2)
+    expect(store.removedNodes.size).toBe(0)
+    expect(store.addedEdges.size).toBe(1)
+    expect(store.removedEdges.size).toBe(0)
+    const firstChangeTime = store.lastTopologyChangeTime
+    expect(firstChangeTime).toBeGreaterThan(0)
+
+    // Second ingestion: drop b, add c. addedNodes should be {c}, removedNodes {b}.
+    store.ingestBounded(
+      [{ id: "a" }, { id: "c" }],
+      [],
+      [100, 100]
+    )
+    expect(Array.from(store.addedNodes)).toEqual(["c"])
+    expect(Array.from(store.removedNodes)).toEqual(["b"])
+    expect(store.removedEdges.size).toBe(1) // a→b gone
+    expect(store.lastTopologyChangeTime).toBeGreaterThanOrEqual(firstChangeTime)
+  })
+
   it("captures overlays returned by customLayout", () => {
     const overlay = { _sentinel: true } as unknown as React.ReactNode
     const layout = () => ({
