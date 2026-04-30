@@ -711,7 +711,7 @@ export class OrdinalPipelineStore {
     // directly. Hit testing, decay, transitions, and SSR keep working
     // because they consume `this.scene`.
     if (this.config.customLayout) {
-      const layoutCtx = this.buildLayoutContext(layout)
+      const layoutCtx = this.buildLayoutContext(data, layout)
       let result
       try {
         result = this.config.customLayout(layoutCtx)
@@ -743,7 +743,7 @@ export class OrdinalPipelineStore {
     return nodes
   }
 
-  private buildLayoutContext(layout: OrdinalLayout): OrdinalLayoutContext {
+  private buildLayoutContext(data: Datum[], layout: OrdinalLayout): OrdinalLayoutContext {
     const cfg = this.config
     const margin: MarginType = cfg.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
 
@@ -768,7 +768,12 @@ export class OrdinalPipelineStore {
 
     const scales = this.scales!
     return {
-      data: this.buffer.toArray(),
+      // Use the data array passed to buildSceneNodes — that's what the
+      // built-in scene builders see (post multiAxis expansion etc.). Re-
+      // fetching from the buffer would diverge whenever the pipeline
+      // expanded the rows before dispatch, and would also waste an
+      // allocation.
+      data,
       scales: { o: scales.o, r: scales.r, projection: scales.projection },
       dimensions: {
         width: layout.width,

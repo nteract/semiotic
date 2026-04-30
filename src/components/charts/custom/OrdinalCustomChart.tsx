@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { forwardRef, useMemo, useRef, useImperativeHandle } from "react"
+import { forwardRef, useMemo, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type {
   StreamOrdinalFrameProps,
@@ -13,6 +13,8 @@ import type { BaseChartProps } from "../shared/types"
 import { useChartMode } from "../shared/hooks"
 import { SafeRender } from "../shared/withChartWrapper"
 import { filterSparseArray } from "../shared/sparseArray"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { buildBaseMetadataProps } from "../shared/streamPropsHelpers"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -87,17 +89,10 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
 >(props: OrdinalCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
-  // Forward push/pushMany/clear/getData to the inner frame, mirroring the
-  // built-in ordinal HOCs (BarChart, etc.).
-  useImperativeHandle(ref, () => ({
-    push: (d: Datum) => frameRef.current?.push(d),
-    pushMany: (d: Datum[]) => frameRef.current?.pushMany(d),
-    remove: (id: string | string[]) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    clear: () => frameRef.current?.clear(),
-    getData: () => frameRef.current?.getData() ?? [],
-    getScales: () => frameRef.current?.getScales() ?? null,
-  }), [])
+  // Forward push/pushMany/clear/getData to the inner frame via the shared
+  // helper. The "xy" variant's expected shape (XYOrdinalFrameLike) matches
+  // StreamOrdinalFrameHandle exactly — same shape both frames use.
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -147,6 +142,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     width,
     height,
     enableHover,
+    showGrid,
     title,
     description,
     summary,
@@ -170,13 +166,9 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
     margin: userMargin,
-    className,
-    title,
-    description,
-    summary,
-    accessibleTable,
     enableHover,
     showAxes,
+    showGrid,
     onObservation,
     onClick,
     selection,
@@ -185,6 +177,10 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     loading,
     emptyContent,
     annotations,
+    // buildBaseMetadataProps threads className/title/description/summary/
+    // accessibleTable AND animate through together — animate was missing
+    // before, so the shared BaseChartProps.animate was being silently dropped.
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
     ...frameProps,
   } as StreamOrdinalFrameProps
 

@@ -150,6 +150,50 @@ describe("bulletLayout", () => {
     // Target=250, max=300 → x ≈ 250/300 * 600 = 500 (minus half tick width)
     expect(target.x).toBeCloseTo(500 - target.w / 2, 1)
   })
+
+  it("clamps negative inputs to 0 (bullet axis is non-negative)", () => {
+    // Regression: negative actual/target/range values used to produce
+    // inverted-width rects. Bullet inputs are non-negative by contract;
+    // values < 0 (or non-finite) clamp to 0.
+    const negativeData = [
+      { metric: "Loss", actual: -50, target: -20, ranges: [-10, 50, 100] },
+    ]
+    const result = bulletLayout(makeCtx({
+      categoryAccessor: "metric",
+      valueAccessor: "actual",
+      targetAccessor: "target",
+      rangesAccessor: "ranges",
+    }, negativeData))
+    const rects = result.nodes! as RectSceneNode[]
+    // No rect should have negative width.
+    for (const r of rects) {
+      expect(r.w).toBeGreaterThanOrEqual(0)
+    }
+    // Actual at value=0 → zero-width bar. Target at value=0 → narrow tick at x=0 - tickW/2.
+    const actualBar = rects.find((r) => r.datum?._bulletKind === "actual")!
+    expect(actualBar.w).toBe(0)
+  })
+
+  it("sorts range thresholds ascending regardless of input order", () => {
+    // Regression: ranges given out of order used to paint bands in the
+    // wrong sequence and produce overlapping/inverted geometry.
+    const unsortedData = [
+      { metric: "Mixed", actual: 50, target: 60, ranges: [100, 25, 75] },
+    ]
+    const result = bulletLayout(makeCtx({
+      categoryAccessor: "metric",
+      valueAccessor: "actual",
+      targetAccessor: "target",
+      rangesAccessor: "ranges",
+    }, unsortedData))
+    const rects = result.nodes! as RectSceneNode[]
+    const rangeRects = rects.filter((r) => String(r.group ?? "").startsWith("range-"))
+    // Each subsequent range band should start at or after the previous
+    // band's right edge (no overlap, no negative width).
+    for (let i = 1; i < rangeRects.length; i++) {
+      expect(rangeRects[i].x).toBeGreaterThanOrEqual(rangeRects[i - 1].x + rangeRects[i - 1].w - 1e-6)
+    }
+  })
 })
 
 describe("parallelCoordinatesLayout", () => {

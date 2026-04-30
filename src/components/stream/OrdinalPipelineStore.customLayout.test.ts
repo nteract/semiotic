@@ -104,6 +104,31 @@ describe("OrdinalPipelineStore customLayout", () => {
     expect(colors.some((c) => tableau10.includes(c))).toBe(true)
   })
 
+  it("ctx.data matches what scene builders see (passed through, not re-fetched)", () => {
+    // Regression: buildLayoutContext used to call `this.buffer.toArray()`
+    // independently, which would diverge from the data the scene
+    // builders are dispatched with (e.g. when multiAxis expansion runs
+    // before scene dispatch). Verify ctx.data is whatever buildSceneNodes
+    // received.
+    let captured: unknown[] = []
+    const layout = (ctx: OrdinalLayoutContext) => {
+      captured = ctx.data
+      return { nodes: [] }
+    }
+    const inputs = [
+      { category: "P", value: 1 },
+      { category: "Q", value: 2 },
+      { category: "R", value: 3 },
+    ]
+    const store = new OrdinalPipelineStore(baseConfig({ customLayout: layout }))
+    store.ingest({ inserts: inputs, bounded: true })
+    store.computeScene({ width: 200, height: 100 })
+
+    expect(captured).toHaveLength(3)
+    expect(captured.map((d) => (d as { category: string }).category).sort())
+      .toEqual(["P", "Q", "R"])
+  })
+
   it("o-scale domain reflects ingested categories", () => {
     let domain: string[] = []
     const layout = (ctx: OrdinalLayoutContext) => {

@@ -38,6 +38,11 @@ export interface BulletConfig {
  * gauge for dashboards — same information, ~5× the data density, no
  * pie-shaped overhead.
  *
+ * All inputs (`actual`, `target`, range thresholds) are treated as
+ * non-negative — values < 0 or non-finite are clamped to 0. Range
+ * thresholds are also sorted ascending so band order is always
+ * deterministic regardless of input order.
+ *
  * @example
  * ```tsx
  * import { OrdinalCustomChart } from "semiotic/ordinal"
@@ -70,17 +75,23 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   const rowGap = cfg.rowGap ?? 12
 
   const getCategory = resolveAccessor(cfg.categoryAccessor) as (d: Datum) => string
-  const getValue = (d: Datum): number => {
-    const v = typeof cfg.valueAccessor === "function" ? cfg.valueAccessor(d) : d[cfg.valueAccessor]
-    return Number(v) || 0
+  // Bullet charts are inherently non-negative (they measure progress along
+  // a 0-anchored axis). Clamp every numeric input at 0 so a stray negative
+  // can't produce inverted rect geometry. Same for non-finite values.
+  const clampNonNegative = (v: unknown): number => {
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? n : 0
   }
-  const getTarget = (d: Datum): number => {
-    const v = typeof cfg.targetAccessor === "function" ? cfg.targetAccessor(d) : d[cfg.targetAccessor]
-    return Number(v) || 0
-  }
+  const getValue = (d: Datum): number =>
+    clampNonNegative(typeof cfg.valueAccessor === "function" ? cfg.valueAccessor(d) : d[cfg.valueAccessor])
+  const getTarget = (d: Datum): number =>
+    clampNonNegative(typeof cfg.targetAccessor === "function" ? cfg.targetAccessor(d) : d[cfg.targetAccessor])
   const getRanges = (d: Datum): number[] => {
     const v = typeof cfg.rangesAccessor === "function" ? cfg.rangesAccessor(d) : d[cfg.rangesAccessor]
-    return Array.isArray(v) ? v.map(Number).filter(Number.isFinite) : []
+    if (!Array.isArray(v)) return []
+    // Clamp at 0 and sort ascending so range bands always paint left-to-right
+    // even if the user passed thresholds out of order.
+    return v.map(clampNonNegative).sort((a, b) => a - b)
   }
 
   // Compute a per-row max so every bullet is independently scaled (one
