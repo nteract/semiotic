@@ -129,6 +129,42 @@ describe("OrdinalPipelineStore customLayout", () => {
       .toEqual(["P", "Q", "R"])
   })
 
+  it("radial projection: plot rect is center-anchored", () => {
+    // Regression: the canvas context is center-translated for radial
+    // projections, so dimensions.plot must describe a center-origin
+    // coord space (top-left of visible plot at (-w/2, -h/2)) instead
+    // of always returning {0, 0, w, h}.
+    let captured: { x: number; y: number; width: number; height: number } | null = null
+    const layout = (ctx: OrdinalLayoutContext) => {
+      captured = ctx.dimensions.plot
+      return { nodes: [] }
+    }
+    const store = new OrdinalPipelineStore(baseConfig({
+      customLayout: layout,
+      projection: "radial",
+    }))
+    store.ingest({ inserts: [{ category: "A", value: 1 }], bounded: true })
+    store.computeScene({ width: 200, height: 100 })
+
+    expect(captured).toEqual({ x: -100, y: -50, width: 200, height: 100 })
+  })
+
+  it("vertical projection: plot rect is top-left-anchored", () => {
+    let captured: { x: number; y: number; width: number; height: number } | null = null
+    const layout = (ctx: OrdinalLayoutContext) => {
+      captured = ctx.dimensions.plot
+      return { nodes: [] }
+    }
+    const store = new OrdinalPipelineStore(baseConfig({
+      customLayout: layout,
+      projection: "vertical",
+    }))
+    store.ingest({ inserts: [{ category: "A", value: 1 }], bounded: true })
+    store.computeScene({ width: 200, height: 100 })
+
+    expect(captured).toEqual({ x: 0, y: 0, width: 200, height: 100 })
+  })
+
   it("o-scale domain reflects ingested categories", () => {
     let domain: string[] = []
     const layout = (ctx: OrdinalLayoutContext) => {

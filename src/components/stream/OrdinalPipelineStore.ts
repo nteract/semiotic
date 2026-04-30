@@ -767,6 +767,25 @@ export class OrdinalPipelineStore {
     }
 
     const scales = this.scales!
+    // Coordinate-system shape depends on projection. The frame translates
+    // the canvas/SVG context to:
+    //   vertical/horizontal: (margin.left, margin.top) — top-left of plot
+    //   radial:              (margin.left + plot.width/2, margin.top + plot.height/2)
+    //                        — center of plot
+    // So scene-node coords for radial layouts are center-relative. Reflect
+    // that in `dimensions.plot` so layout authors using `plot.x`/`plot.y`
+    // see the actual top-left of the visible plot rect in their coord
+    // space (not assume 0,0 always means top-left).
+    const isRadial = scales.projection === "radial"
+    const plotRect = isRadial
+      ? {
+          x: -layout.width / 2,
+          y: -layout.height / 2,
+          width: layout.width,
+          height: layout.height,
+        }
+      : { x: 0, y: 0, width: layout.width, height: layout.height }
+
     return {
       // Use the data array passed to buildSceneNodes — that's what the
       // built-in scene builders see (post multiAxis expansion etc.). Re-
@@ -779,7 +798,7 @@ export class OrdinalPipelineStore {
         width: layout.width,
         height: layout.height,
         margin,
-        plot: { x: 0, y: 0, width: layout.width, height: layout.height },
+        plot: plotRect,
       },
       theme: {
         semantic: cfg.themeSemantic ?? {},

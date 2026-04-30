@@ -14,7 +14,8 @@ import { useChartMode } from "../shared/hooks"
 import { SafeRender } from "../shared/withChartWrapper"
 import { filterSparseArray } from "../shared/sparseArray"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
-import { buildBaseMetadataProps } from "../shared/streamPropsHelpers"
+import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { useChartSetup } from "../shared/useChartSetup"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -151,13 +152,50 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
 
   const safeData = useMemo(() => filterSparseArray(data ?? []), [data])
 
+  // Shared setup pipeline — same one BarChart/SwarmPlot/etc. use. Provides:
+  //   - setup.earlyReturn: loading skeleton or empty-state element to short-
+  //     circuit the render (so loading/emptyContent props actually do something)
+  //   - setup.customHoverBehavior / customClickBehavior: wraps onObservation,
+  //     onClick, selection, and linkedHover into the customHoverBehavior/
+  //     customClickBehavior fields the frame consumes (the bare props don't
+  //     exist on StreamOrdinalFrameProps)
+  //   - setup.margin: merged user margin + chart-mode default
+  const setup = useChartSetup({
+    data: safeData,
+    rawData: data,
+    colorBy: undefined,
+    colorScheme,
+    legendInteraction: undefined,
+    selection,
+    linkedHover,
+    fallbackFields: [],
+    unwrapData: true,
+    onObservation,
+    onClick,
+    chartType: "OrdinalCustomChart",
+    chartId,
+    showLegend: undefined,
+    userMargin,
+    marginDefaults: resolved.marginDefaults,
+    loading,
+    emptyContent,
+    width,
+    height,
+  })
+
+  if (setup.earlyReturn) return setup.earlyReturn
+
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "custom",
     ...(data != null && { data: safeData }),
     customLayout: layout as OrdinalCustomLayout,
     layoutConfig,
-    categoryAccessor,
-    valueAccessor,
+    // Map our user-facing accessor names to the frame's bounded-mode prop
+    // names (oAccessor/rAccessor). The frame's `categoryAccessor`/
+    // `valueAccessor` props are streaming-mode aliases and would be
+    // ignored in bounded mode (the default for this HOC).
+    oAccessor: categoryAccessor,
+    rAccessor: valueAccessor,
     oExtent,
     rExtent,
     projection,
@@ -165,24 +203,25 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: userMargin,
+    margin: setup.margin,
     enableHover,
     showAxes,
     showGrid,
-    onObservation,
-    onClick,
-    selection,
-    linkedHover,
-    chartId,
-    loading,
-    emptyContent,
     annotations,
-    // buildBaseMetadataProps threads className/title/description/summary/
-    // accessibleTable AND animate through together — animate was missing
-    // before, so the shared BaseChartProps.animate was being silently dropped.
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    // selection/linkedHover/onObservation/onClick are wired through these
+    // synthesized hover/click behavior props — the bare prop names don't
+    // exist on StreamOrdinalFrameProps.
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      onObservation,
+      onClick,
+      hoverHighlight: false,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...frameProps,
-  } as StreamOrdinalFrameProps
+  }
 
   return (
     <SafeRender componentName="OrdinalCustomChart" width={width} height={height}>

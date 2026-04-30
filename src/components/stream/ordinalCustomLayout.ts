@@ -37,10 +37,21 @@ export interface OrdinalLayoutContext<C extends object = Record<string, unknown>
     projection: OrdinalScales["projection"]
   }
   /**
-   * Plot-area geometry. All scene-node coordinates are plot-relative —
-   * the canvas/SVG group already lives inside `margin.left`/`margin.top`,
-   * so `width`/`height` describe the plot rect (same as `plot.width`/
-   * `plot.height`). Read `margin` if you need the outer canvas size.
+   * Plot-area geometry. The canvas/SVG group is already translated by
+   * the frame, so scene-node coordinates are *plot-local* — but the
+   * origin depends on `scales.projection`:
+   *
+   *   - `vertical` / `horizontal`: origin is the **top-left** of the
+   *     plot rect. `plot = { x: 0, y: 0, width, height }`.
+   *   - `radial`: origin is the **center** of the plot rect. The frame
+   *     translates the context to `(margin.left + width/2, margin.top
+   *     + height/2)` so radial layouts emit coordinates around 0,0.
+   *     `plot = { x: -width/2, y: -height/2, width, height }` — the
+   *     top-left of the visible plot rect lives at `(plot.x, plot.y)`
+   *     in your coord space.
+   *
+   * In both cases `plot.width` and `plot.height` describe the plot rect.
+   * Read `margin` if you need the outer canvas size.
    */
   dimensions: {
     width: number
