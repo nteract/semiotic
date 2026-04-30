@@ -45,6 +45,8 @@ export interface XYSceneConfig {
   curve?: CurveType
   colorScheme?: string | string[]
   normalize?: boolean
+  /** Stacked area baseline. "zero" (default), "wiggle" (streamgraph), "silhouette" (centered). */
+  baseline?: "zero" | "wiggle" | "silhouette"
   gradientFill?: boolean | { topOpacity?: number; bottomOpacity?: number } | { colorStops: Array<{ offset: number; color: string }> }
   areaGroups?: Set<string>
   lineGradient?: { colorStops: Array<{ offset: number; color: string }> }

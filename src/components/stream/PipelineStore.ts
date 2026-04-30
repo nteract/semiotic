@@ -23,6 +23,7 @@ import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBinExtent } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
+import { computeStackOffsets } from "./SceneGraph"
 import type {
   Changeset,
   StreamChartType,
@@ -66,6 +67,8 @@ import { buildBarScene } from "./xySceneBuilders/barScene"
 import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
 import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
 import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
+import type { CustomLayout, LayoutContext } from "./customLayout"
+import type { MarginType } from "../types/marginType"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -109,6 +112,8 @@ export interface PipelineConfig {
   // Bar/heatmap specifics
   binSize?: number
   normalize?: boolean
+  /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
+  baseline?: "zero" | "wiggle" | "silhouette"
 
   // Candlestick accessors
   openAccessor?: string | ((d: Datum) => number)
@@ -192,6 +197,16 @@ export interface PipelineConfig {
 
   // Curve interpolation for line/area charts
   curve?: CurveType
+
+  // ── customLayout escape hatch ─────────────────────────────────────
+  /** When provided, replaces chart-type dispatch in scene building.
+   *  Receives a LayoutContext (scales, dimensions, theme, resolveColor)
+   *  and returns scene nodes plus optional overlays. */
+  customLayout?: CustomLayout
+  /** User-supplied config blob threaded through to LayoutContext.config. */
+  layoutConfig?: object
+  /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
+  layoutMargin?: MarginType
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -267,6 +282,8 @@ export class PipelineStore {
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
+  /** Overlays returned from customLayout (consumed by StreamXYFrame for SVGOverlay). */
+  customLayoutOverlays: import("react").ReactNode = null
 
   /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
   xIsDate = false
@@ -517,28 +534,66 @@ export class PipelineStore {
         yDomain = [0, 1 + config.extentPadding]
       } else {
         // Cache the stacked extent computation — only rebuild when buffer data changes
-        const stackCacheKey = `${buffer.size}:${this._ingestVersion}`
+        const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}`
         if (this._stackExtentCache && this._stackExtentCache.key === stackCacheKey) {
           yDomain = this._stackExtentCache.yDomain
         } else {
           const groups = this.groupData(bufferArray)
+          // Sort group keys to match buildStackedAreaNodes' stacking order —
+          // wiggle offsets depend on group order, and the extent must agree
+          // with the rendered geometry.
+          const groupKeys = groups.map((g) => g.key).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
 
-          // Single pass: build per-x stacked totals and track the running max.
-          const xTotals = new Map<number, number>()
+          // Per-group-per-x value lookup (mirrors buildStackedAreaNodes).
+          const valueMaps = new Map<string, Map<number, number>>()
+          const xSet = new Set<number>()
           let maxStacked = 0
+          const xTotals = new Map<number, number>()
           for (const g of groups) {
+            const m = new Map<number, number>()
             for (const d of g.data) {
               const x = this.getX(d)
               const y = this.getY(d)
               if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+              m.set(x, (m.get(x) || 0) + y)
+              xSet.add(x)
               const total = (xTotals.get(x) || 0) + y
               xTotals.set(x, total)
               if (total > maxStacked) maxStacked = total
             }
+            valueMaps.set(g.key, m)
           }
 
-          const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
-          yDomain = [0, maxStacked + pad]
+          if (config.baseline === "wiggle" || config.baseline === "silhouette") {
+            // Compute the actual per-x offsets and bound the y-domain by the
+            // observed min(offset) and max(offset + total). For wiggle the
+            // accumulated offset can drift well outside ±total/2; using the
+            // exact rendered range is the only safe way to avoid clipping.
+            const xValues = Array.from(xSet).sort((a, b) => a - b)
+            const offsets = computeStackOffsets(
+              xValues,
+              groupKeys,
+              (k, x) => valueMaps.get(k)?.get(x) || 0,
+              config.baseline
+            )
+            let lo = Infinity
+            let hi = -Infinity
+            for (const x of xValues) {
+              const off = offsets.get(x) ?? 0
+              const total = xTotals.get(x) ?? 0
+              if (off < lo) lo = off
+              if (off + total > hi) hi = off + total
+            }
+            if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+              lo = 0; hi = 0
+            }
+            const range = hi - lo
+            const pad = range > 0 ? range * config.extentPadding : 1
+            yDomain = [lo - pad, hi + pad]
+          } else {
+            const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
+            yDomain = [0, maxStacked + pad]
+          }
           this._stackExtentCache = { key: stackCacheKey, yDomain }
         }
       }
@@ -749,6 +804,16 @@ export class PipelineStore {
         case "area":
           for (const p of node.topPath) { p[0] *= wRatio; p[1] *= hRatio }
           for (const p of node.bottomPath) { p[0] *= wRatio; p[1] *= hRatio }
+          // Remap user-supplied clipRect (horizon recipe) so responsive
+          // resizes don't leave the clip in stale coordinates.
+          if (node.clipRect) {
+            node.clipRect = {
+              x: node.clipRect.x * wRatio,
+              y: node.clipRect.y * hRatio,
+              width: node.clipRect.width * wRatio,
+              height: node.clipRect.height * hRatio,
+            }
+          }
           break
         case "point":
           node.x *= wRatio; node.y *= hRatio
@@ -805,7 +870,69 @@ export class PipelineStore {
 
   private buildSceneNodes(layout: StreamLayout, data: Datum[]): SceneNode[] {
     const { config, scales } = this
-    if (!scales || data.length === 0) return []
+    if (!scales) return []
+
+    // customLayout escape hatch — short-circuit chart-type dispatch when
+    // the user has supplied their own layout function. The layout runs
+    // against fully-built scales so it can use them directly, and gets
+    // the same theme/color resolution as built-in scene builders.
+    if (config.customLayout) {
+      const margin: MarginType = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
+      const layoutCtx: LayoutContext = {
+        data,
+        scales,
+        dimensions: {
+          // All scene-node coordinates are plot-relative (the canvas/SVG
+          // group already lives inside `margin.left`/`margin.top`), so
+          // `dimensions.width`/`height` describe the plot rect, matching
+          // `dimensions.plot.width`/`height`. Read `margin` if you need the
+          // outer canvas size.
+          width: layout.width,
+          height: layout.height,
+          margin,
+          plot: { x: 0, y: 0, width: layout.width, height: layout.height }
+        },
+        theme: {
+          semantic: config.themeSemantic ?? {},
+          categorical: config.themeCategorical ?? STREAMING_PALETTE
+        },
+        resolveColor: (group, datum) => {
+          const c = this.resolveGroupColor(group)
+          if (c) return c
+          // fall back to line style resolver for sample-aware color
+          const s = this.resolveLineStyle(group, datum)
+          if (s.stroke) return s.stroke
+          // s.fill can be a CanvasPattern; only return string fills
+          if (typeof s.fill === "string") return s.fill
+          return config.themeSemantic?.primary ?? "#4e79a7"
+        },
+        // `layoutConfig` is typed as `object` at the frame boundary so any
+        // user-defined config interface flows through without casts. The
+        // narrowing back to `C` happens through the user's typed
+        // `CustomLayout<C>` parameter — at this boundary, hand the value
+        // through as the default `Record<string, unknown>`.
+        config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+      }
+      let result
+      try {
+        result = config.customLayout(layoutCtx)
+      } catch (err) {
+        // Layouts can throw — surface in dev, fall back to empty scene in prod.
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[semiotic] customLayout threw:", err)
+        }
+        this.customLayoutOverlays = null
+        return []
+      }
+      this.customLayoutOverlays = result.overlays ?? null
+      return result.nodes ?? []
+    }
+
+    // Built-in chart types: ensure stale overlays from a prior customLayout
+    // run don't bleed through after the user removes the prop.
+    this.customLayoutOverlays = null
+
+    if (data.length === 0) return []
 
     const ctx: XYSceneContext = {
       scales,

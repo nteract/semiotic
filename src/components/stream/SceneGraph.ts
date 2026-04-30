@@ -81,6 +81,59 @@ export function buildAreaNode(
 /** Per-group-per-x stacked top values, keyed by group then x */
 export type StackedTops = Map<string, Map<number, number>>
 
+export type StackBaseline = "zero" | "wiggle" | "silhouette"
+
+/**
+ * Compute per-x stack baseline offsets. Shared between scene rendering
+ * (`buildStackedAreaNodes`) and extent computation (`PipelineStore`) so
+ * both see the same y-bounds — without this, the wiggle offset's
+ * accumulated drift can exceed `±total/2` and clip against a too-small
+ * y-domain.
+ *
+ * Inputs:
+ *   xValues   — sorted unique x values
+ *   groupKeys — group keys in stacking order (same order both callers use)
+ *   valueAt   — (groupKey, x) → group's value at x (0 if absent)
+ */
+export function computeStackOffsets(
+  xValues: number[],
+  groupKeys: string[],
+  valueAt: (groupKey: string, x: number) => number,
+  baseline: StackBaseline
+): Map<number, number> {
+  const offsets = new Map<number, number>()
+  if (baseline === "silhouette") {
+    for (const x of xValues) {
+      let total = 0
+      for (const k of groupKeys) total += valueAt(k, x) || 0
+      offsets.set(x, -total / 2)
+    }
+  } else if (baseline === "wiggle") {
+    if (xValues.length > 0) offsets.set(xValues[0], 0)
+    for (let i = 1; i < xValues.length; i++) {
+      const xPrev = xValues[i - 1]
+      const x = xValues[i]
+      let s1 = 0
+      let s2 = 0
+      let cumCur = 0
+      for (const k of groupKeys) {
+        const fj = valueAt(k, x) || 0
+        const fjPrev = valueAt(k, xPrev) || 0
+        const dj = fj - fjPrev
+        s1 += (2 * cumCur + fj) * dj
+        s2 += fj
+        cumCur += fj
+      }
+      const prevOffset = offsets.get(xPrev) ?? 0
+      const wiggle = s2 > 0 ? s1 / (2 * s2) : 0
+      offsets.set(x, prevOffset - wiggle)
+    }
+  } else {
+    for (const x of xValues) offsets.set(x, 0)
+  }
+  return offsets
+}
+
 export function buildStackedAreaNodes(
   groups: { key: string; data: Datum[] }[],
   scales: StreamScales,
@@ -88,7 +141,8 @@ export function buildStackedAreaNodes(
   yGet: (d: Datum) => number,
   styleFn: (group: string, sampleDatum?: Datum) => Style,
   normalize?: boolean,
-  curve?: CurveType
+  curve?: CurveType,
+  baseline: StackBaseline = "zero"
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
   // Collect all unique x values
   const xSet = new Set<number>()
@@ -127,11 +181,19 @@ export function buildStackedAreaNodes(
     }
   }
 
+  // Compute per-x baseline offset (shared with PipelineStore's extent pass).
+  const offsets = computeStackOffsets(
+    xValues,
+    groups.map((g) => g.key),
+    (k, x) => valueMaps.get(k)?.get(x) || 0,
+    baseline
+  )
+
   // Build stacked area nodes bottom-up
   const nodes: AreaSceneNode[] = []
   const stackedTops: StackedTops = new Map()
-  const baselines = new Map<number, number>() // x → cumulative y
-  for (const x of xValues) baselines.set(x, 0)
+  const baselines = new Map<number, number>() // x → cumulative y (relative to offset)
+  for (const x of xValues) baselines.set(x, offsets.get(x) ?? 0)
 
   for (const g of groups) {
     const vMap = valueMaps.get(g.key)!

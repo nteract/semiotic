@@ -33,6 +33,7 @@ const ENTRIES = {
   "semiotic-geo": "dist/semiotic-geo.d.ts",
   "semiotic-themes": "dist/semiotic-themes.d.ts",
   "semiotic-utils": "dist/semiotic-utils.d.ts",
+  "semiotic-recipes": "dist/semiotic-recipes.d.ts",
 }
 
 const outDir = join(repoRoot, "etc/api-surface")

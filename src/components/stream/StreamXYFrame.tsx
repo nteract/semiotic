@@ -8,6 +8,7 @@ import {
   useMemo,
   useCallback,
   useImperativeHandle,
+  useId,
   forwardRef
 } from "react"
 import type {
@@ -96,7 +97,16 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
   swarm: [swarmCanvasRenderer],
   waterfall: [waterfallCanvasRenderer],
   candlestick: [candlestickCanvasRenderer],
-  mixed: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer]
+  mixed: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer],
+  // custom: all node types possible — each renderer self-filters to its type.
+  custom: [
+    areaCanvasRenderer,
+    barCanvasRenderer,
+    heatmapCanvasRenderer,
+    lineCanvasRenderer,
+    pointCanvasRenderer,
+    candlestickCanvasRenderer,
+  ]
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -347,6 +357,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor,
       curve,
       normalize,
+      baseline,
       binSize,
       valueAccessor,
       arrowOfTime = "right",
@@ -436,8 +447,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       description,
       summary,
       linkedCrosshairName,
-      linkedCrosshairSourceId
+      linkedCrosshairSourceId,
+      customLayout,
+      layoutConfig
     } = props
+
+    // Stable per-instance prefix for SVG ids that must be unique on the
+    // page (e.g. `<clipPath id>` from area `clipRect`). React's `useId`
+    // produces an SSR-safe, hydration-stable string.
+    const svgInstanceId = useId().replace(/:/g, "")
 
     // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
     // dirtyRef is declared before useFrame so it can be threaded in for
@@ -568,6 +586,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       sizeRange,
       binSize,
       normalize,
+      baseline,
       boundsAccessor,
       boundsStyle,
       y0Accessor,
@@ -608,19 +627,23 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       themeSemantic: resolveThemeSemanticColors(currentTheme),
       themeSequential: currentTheme?.colors?.sequential,
       themeDiverging: currentTheme?.colors?.diverging,
+      customLayout,
+      layoutConfig,
+      layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
-      lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
+      lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize, baseline,
       boundsAccessor, boundsStyle, y0Accessor, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, barStyle, colorScheme, barColors, annotations,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
-      isStreaming, pointIdAccessor, curve, currentTheme
+      isStreaming, pointIdAccessor, curve, currentTheme,
+      customLayout, layoutConfig, margin
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -1051,7 +1074,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             }
           }
 
-          const renderers = RENDERERS[chartType]
+          // When customLayout is provided, the user can emit any node type.
+          // Use the "custom" renderer set (every renderer, each self-filtering)
+          // regardless of chartType so a layout that emits, e.g., rects on a
+          // chartType="line" frame still draws.
+          const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType]
           if (renderers && store.scales) {
             for (const renderer of renderers) {
               renderer(
@@ -1320,7 +1347,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
               ))}
-              {scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)}
+              {scene.map((node, i) => xySceneNodeToSVG(node, i, svgInstanceId)).filter(Boolean)}
             </g>
           </svg>
           <SVGOverlay
@@ -1345,7 +1372,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
-            foregroundGraphics={resolvedForeground}
+            foregroundGraphics={
+            storeRef.current?.customLayoutOverlays != null
+              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+              : resolvedForeground
+          }
             marginalGraphics={marginalGraphics}
             xValues={[]}
             yValues={[]}
@@ -1467,7 +1498,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
-          foregroundGraphics={resolvedForeground}
+          foregroundGraphics={
+            storeRef.current?.customLayoutOverlays != null
+              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+              : resolvedForeground
+          }
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}
           yValues={marginalYValues}

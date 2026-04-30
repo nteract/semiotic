@@ -126,6 +126,7 @@ export type StreamChartType =
   | "swarm"
   | "waterfall"
   | "candlestick"
+  | "custom"
 
 export type RuntimeMode = "bounded" | "streaming"
 
@@ -197,6 +198,9 @@ export interface AreaSceneNode {
   style: Style
   datum: SeriesDatum
   group?: string
+  /** Clip the area to this rect (in plot-relative pixels). Used by horizon
+   *  charts to band a single series into N slices. */
+  clipRect?: { x: number; y: number; width: number; height: number }
   /** Gradient fill: opacity-based (topOpacity/bottomOpacity) or multi-color (colorStops) */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   /** Horizontal gradient for the line stroke */
@@ -442,6 +446,17 @@ export interface StreamXYFrameProps<T = Datum> {
   lineDataAccessor?: string
   curve?: CurveType
   normalize?: boolean
+  /**
+   * Stacked area baseline. Only consulted by stackedarea chartType.
+   * - "zero" (default): standard stack from y=0
+   * - "wiggle": Byron–Wattenberg streamgraph offset (minimizes wiggle)
+   * - "silhouette": center the stack symmetrically around y=0
+   *
+   * Mutually exclusive with `normalize`: when `normalize` is `true`, the
+   * stack is forced to a `"zero"` baseline (any other value is ignored)
+   * because normalization assumes a fixed `[0, 1]` y-domain.
+   */
+  baseline?: "zero" | "wiggle" | "silhouette"
 
   // ── Bounds/uncertainty ─────────────────────────
   /**
@@ -660,6 +675,18 @@ export interface StreamXYFrameProps<T = Datum> {
   linkedCrosshairName?: string
   /** Source chart ID — crosshair is suppressed on the source chart to avoid double rendering */
   linkedCrosshairSourceId?: string
+
+  // ── customLayout escape hatch ────────────────────
+  /** Replaces chart-type scene dispatch with a user-supplied layout function.
+   *  Receives a LayoutContext (scales, dimensions, theme, resolveColor) and
+   *  returns SceneNode[] + optional overlays. See `semiotic/recipes` for
+   *  reference layouts (waffle, calendar, horizon). */
+  customLayout?: import("./customLayout").CustomLayout
+  /** User-supplied config blob threaded through to LayoutContext.config.
+   *  Typed as `object` so caller-defined interfaces (without an index
+   *  signature) flow through without casts; layouts narrow via their
+   *  own `CustomLayout<TConfig>` parameterization. */
+  layoutConfig?: object
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

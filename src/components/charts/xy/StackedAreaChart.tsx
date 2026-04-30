@@ -123,6 +123,21 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
   normalize?: boolean
 
   /**
+   * Stacked baseline mode — controls where the stack origin sits.
+   * - `"zero"` (default): standard stacked area, baseline at y=0.
+   * - `"wiggle"`: streamgraph offset (Byron–Wattenberg). Minimizes visual
+   *   wiggle across series — best for high-cardinality series where
+   *   relative shape matters more than absolute values.
+   * - `"silhouette"`: center the stack symmetrically around y=0.
+   *
+   * Mutually exclusive with `normalize` — when `normalize` is true,
+   * baseline is forced to `"zero"`.
+   *
+   * @default "zero"
+   */
+  baseline?: "zero" | "wiggle" | "silhouette"
+
+  /**
    * Enable hover annotations
    * @default true
    */
@@ -243,6 +258,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     showPoints = false,
     pointRadius = 3,
     normalize = false,
+    baseline = "zero",
     tooltip,
     annotations,
     frameProps = {},
@@ -424,6 +440,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     groupAccessor: areaBy || undefined,
     curve,
     normalize,
+    baseline: normalize ? "zero" : baseline,
     lineStyle,
     ...(showPoints && pointStyle && { pointStyle }),
     size: [width, height],

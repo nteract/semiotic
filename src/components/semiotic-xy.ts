@@ -20,12 +20,20 @@ export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 export { CandlestickChart } from "./charts/xy/CandlestickChart"
+export { CustomChart } from "./charts/custom/CustomChart"
 
 // Stream Frame types
 export type {
   StreamXYFrameProps,
   StreamXYFrameHandle
 } from "./stream/types"
+
+// customLayout escape hatch
+export type {
+  CustomLayout,
+  LayoutContext,
+  LayoutResult
+} from "./stream/customLayout"
 
 // Chart prop types
 export type { LineChartProps } from "./charts/xy/LineChart"
@@ -38,3 +46,4 @@ export type { HeatmapProps } from "./charts/xy/Heatmap"
 export type { QuadrantChartProps } from "./charts/xy/QuadrantChart"
 export type { MultiAxisLineChartProps } from "./charts/xy/MultiAxisLineChart"
 export type { CandlestickChartProps } from "./charts/xy/CandlestickChart"
+export type { CustomChartProps } from "./charts/custom/CustomChart"

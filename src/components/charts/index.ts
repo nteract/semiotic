@@ -47,6 +47,13 @@ export { CandlestickChart } from "./xy/CandlestickChart"
 export type { CandlestickChartProps } from "./xy/CandlestickChart"
 
 // ============================================================================
+// Custom Chart (escape hatch for bespoke layouts)
+// ============================================================================
+
+export { CustomChart } from "./custom/CustomChart"
+export type { CustomChartProps } from "./custom/CustomChart"
+
+// ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================
 

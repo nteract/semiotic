@@ -56,6 +56,11 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
   const styleFn = (group: string, sampleDatum?: Datum) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined
+  // Normalized stacks assume a fixed [0, 1] y-domain; non-zero baselines
+  // would shift layers negative and clip against that domain. Force "zero"
+  // when normalize is set so the two props can't conflict at the scene level
+  // even if a caller bypasses the HOC's coercion.
+  const baseline = ctx.config.normalize ? "zero" : (ctx.config.baseline ?? "zero")
   const { nodes: areaNodes, stackedTops } = buildStackedAreaNodes(
     groups,
     ctx.scales,
@@ -63,7 +68,8 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
     ctx.getY,
     styleFn,
     ctx.config.normalize,
-    curveType
+    curveType,
+    baseline
   )
   const nodes: SceneNode[] = areaNodes
 
