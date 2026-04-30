@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- **Use sub-path imports** — `semiotic/xy` (78KB gz), `semiotic/ordinal` (65KB), `semiotic/network` (54KB), `semiotic/geo` (53KB), `semiotic/realtime` (77KB), `semiotic/server` (58KB), `semiotic/utils` (19KB), `semiotic/themes` (3KB), `semiotic/data` (3KB). Full `semiotic` is 158KB gz.
+- **Use sub-path imports** — `semiotic/xy` (77KB gz), `semiotic/ordinal` (64KB), `semiotic/network` (51KB), `semiotic/geo` (49KB), `semiotic/realtime` (84KB), `semiotic/server` (64KB), `semiotic/recipes` (4KB), `semiotic/utils` (20KB), `semiotic/themes` (4KB), `semiotic/data` (3KB). Full `semiotic` is 165KB gz.
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
@@ -22,7 +22,7 @@
 
 **LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time")
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true)
-**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`. No `lineBy`/`lineDataAccessor`.
+**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered). `baseline` is mutually exclusive with `normalize` (forced to `"zero"` when `normalize` is true). No `lineBy`/`lineDataAccessor`.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40])
 **ConnectedScatterplot** — + `orderAccessor`
@@ -100,6 +100,39 @@ ref.current.getScales()                            // returns {o, r, projection}
 ```
 `remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. `replace()` is ordinal-only and routes through a bounded-ingest path that preserves category insertion-order memory and the transition position snapshot — what aggregator HOCs like LikertChart use under the hood to re-aggregate streaming input without shuffling categories or losing animations. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
+
+## Custom Charts (escape hatch)
+
+When the catalog doesn't fit, three HOCs let you supply a layout function that emits scene primitives directly. The frame still owns hit testing, transitions, decay, theme cascade, and SSR — your layout owns geometry only.
+
+- **`CustomChart`** (`semiotic/xy`) — XY layouts: waffle, calendar heatmap, custom point/line/area arrangements
+- **`OrdinalCustomChart`** (`semiotic/ordinal`) — category × value layouts: marimekko, parallel coordinates, bullet, fan chart, slope graph
+- **`NetworkCustomChart`** (`semiotic/network`) — graph layouts: flextree, dagre, custom force/radial
+
+Common shape — pass `layout` (a `(ctx) => { nodes, overlays? }` function) and `layoutConfig` (your own typed config). The context exposes `data`, `scales`, `dimensions` (with plot rect — center-anchored for radial ordinal, top-left otherwise), `theme` (semantic + categorical), `resolveColor(key)` (stable hash → palette), and `config`. Emit standard scene nodes (`rect`, `point`, `area`, `line`, `wedge`, `connector`, `bezier`, etc.) and the frame handles painting, hit testing, accessibility.
+
+```tsx
+import { CustomChart } from "semiotic/xy"
+import { OrdinalCustomChart } from "semiotic/ordinal"
+import { NetworkCustomChart } from "semiotic/network"
+import {
+  waffleLayout, calendarLayout,           // XY recipes
+  marimekkoLayout, bulletLayout, parallelCoordinatesLayout, // ordinal
+  flextreeLayout, dagreLayout,             // network
+} from "semiotic/recipes"
+
+<CustomChart data={cells} layout={waffleLayout} layoutConfig={{ rows: 10, columns: 10, ... }} />
+<OrdinalCustomChart data={revenue} layout={marimekkoLayout} layoutConfig={{ ... }} />
+<NetworkCustomChart nodes={nodes} edges={edges} layout={flextreeLayout} layoutConfig={{ ... }} />
+```
+
+**Recipes subpath** (`semiotic/recipes`, 4KB gz) ships pure layout functions. They emit standard SceneNodes — no chart code. BYO heavy deps (`d3-flextree`, `dagre`) live in user code.
+
+**Notes:**
+- Coords are plot-relative (the frame translates the canvas/SVG group by `margin`). Read `ctx.dimensions.plot` for the drawing rect. Radial ordinal projection is the one exception: `plot.x = -width/2`, `plot.y = -height/2` because the canvas ctx is center-translated.
+- Layouts that need axis domains: pass `xExtent`/`yExtent` (XY) or `oExtent`/`rExtent` (ordinal) — those flow through scale construction *before* the layout runs.
+- Streaming layouts: ingest data via the chart's ref (`push`/`pushMany`); the layout re-runs on each ingest. Custom overlays update on data-change paths, NOT on per-frame animation rebuilds (intentional — would force a React re-render per frame).
+- Custom layouts own their colors. Always prefer `ctx.resolveColor(key)` over hardcoded literals so `ThemeProvider` / `colorScheme` flow through. `CategoryColorProvider` integration is XY-only; for cross-chart category sync on network/ordinal customLayouts, pass a matching `colorScheme` to each chart.
 
 ## Coordinated Views
 

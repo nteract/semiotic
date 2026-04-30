@@ -1,9 +1,9 @@
 import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
-import { COLOR_SCHEMES } from "../charts/shared/colorUtils"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type { NetworkLayoutContext } from "./networkCustomLayout"
+import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -533,25 +533,13 @@ export class NetworkPipelineStore {
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
-      // Palette precedence: explicit `colorScheme` (array or named scheme)
-      // → theme categorical → fallback. Named string schemes resolve via
-      // COLOR_SCHEMES; unknown names fall through to the theme palette.
-      const cs = this.config.colorScheme
-      let palette: readonly string[]
-      if (Array.isArray(cs)) {
-        palette = cs
-      } else if (typeof cs === "string") {
-        const resolved = (COLOR_SCHEMES as Record<string, unknown>)[cs]
-        palette = Array.isArray(resolved)
-          ? resolved as string[]
-          : (this.config.themeCategorical && this.config.themeCategorical.length > 0
-              ? this.config.themeCategorical
-              : (schemeCategory10 as readonly string[]))
-      } else if (this.config.themeCategorical && this.config.themeCategorical.length > 0) {
-        palette = this.config.themeCategorical
-      } else {
-        palette = schemeCategory10 as readonly string[]
-      }
+      // Palette + resolveColor share the same shape across network and
+      // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
+      const palette = resolveCustomLayoutPalette(
+        this.config.colorScheme,
+        this.config.themeCategorical,
+        schemeCategory10 as readonly string[]
+      )
       const ctx: NetworkLayoutContext = {
         nodes: nodesArr,
         edges: edgesArr,
@@ -564,13 +552,7 @@ export class NetworkPipelineStore {
           semantic: this.config.themeSemantic ?? {},
           categorical: [...palette],
         },
-        // Stable hash → palette index. Same key always returns the same color
-        // for the lifetime of this store invocation.
-        resolveColor: (key: string): string => {
-          let hash = 0
-          for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
-          return palette[Math.abs(hash) % palette.length] ?? "#4e79a7"
-        },
+        resolveColor: buildResolveColor(palette),
         config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
       }
       let result

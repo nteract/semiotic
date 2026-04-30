@@ -44,7 +44,7 @@ import { buildSwimlaneScene } from "./ordinalSceneBuilders/swimlaneScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
 import type { OrdinalLayoutContext } from "./ordinalCustomLayout"
-import { COLOR_SCHEMES } from "../charts/shared/colorUtils"
+import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import type { MarginType } from "../types/marginType"
 
 const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
@@ -747,24 +747,13 @@ export class OrdinalPipelineStore {
     const cfg = this.config
     const margin: MarginType = cfg.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
 
-    // Palette precedence: explicit colorScheme (array or named scheme) →
-    // theme categorical → STREAMING_PALETTE fallback.
-    const cs = cfg.colorScheme
-    let palette: readonly string[]
-    if (Array.isArray(cs)) {
-      palette = cs
-    } else if (typeof cs === "string") {
-      const resolved = (COLOR_SCHEMES as Record<string, unknown>)[cs]
-      palette = Array.isArray(resolved)
-        ? (resolved as string[])
-        : (cfg.themeCategorical && cfg.themeCategorical.length > 0
-            ? cfg.themeCategorical
-            : STREAMING_PALETTE)
-    } else if (cfg.themeCategorical && cfg.themeCategorical.length > 0) {
-      palette = cfg.themeCategorical
-    } else {
-      palette = STREAMING_PALETTE
-    }
+    // Palette + resolveColor share the same shape across network and
+    // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
+    const palette = resolveCustomLayoutPalette(
+      cfg.colorScheme,
+      cfg.themeCategorical,
+      STREAMING_PALETTE
+    )
 
     const scales = this.scales!
     // Coordinate-system shape depends on projection. The frame translates
@@ -804,12 +793,7 @@ export class OrdinalPipelineStore {
         semantic: cfg.themeSemantic ?? {},
         categorical: [...palette],
       },
-      // Stable hash → palette index. Same key always returns the same color.
-      resolveColor: (key: string): string => {
-        let hash = 0
-        for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
-        return palette[Math.abs(hash) % palette.length] ?? "#4e79a7"
-      },
+      resolveColor: buildResolveColor(palette),
       config: (cfg.layoutConfig ?? {}) as Record<string, unknown>,
     }
   }
