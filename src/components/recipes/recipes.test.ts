@@ -2,9 +2,8 @@ import { describe, it, expect } from "vitest"
 import { scaleLinear } from "d3-scale"
 import { waffleLayout } from "./waffle"
 import { calendarLayout } from "./calendar"
-import { horizonLayout } from "./horizon"
 import type { LayoutContext } from "../stream/customLayout"
-import type { RectSceneNode, AreaSceneNode } from "../stream/types"
+import type { RectSceneNode } from "../stream/types"
 
 function makeCtx<C>(config: C, overrides?: Partial<LayoutContext<C>>): LayoutContext<C> {
   const x = scaleLinear().domain([0, 100]).range([0, 400])
@@ -103,20 +102,3 @@ describe("calendarLayout", () => {
   })
 })
 
-describe("horizonLayout", () => {
-  it("emits 2 * bands area nodes (positive + negative slices) with clipRects", () => {
-    const data = Array.from({ length: 10 }, (_, i) => ({ t: i, v: i % 2 === 0 ? i : -i }))
-    const result = horizonLayout(
-      makeCtx(
-        { xAccessor: "t", yAccessor: "v", bands: 3 },
-        { data }
-      )
-    )
-    expect(result.nodes).toHaveLength(6)
-    for (const n of result.nodes! as AreaSceneNode[]) {
-      expect(n.type).toBe("area")
-      expect(n.clipRect).toBeTruthy()
-      expect(n.clipRect!.height).toBeCloseTo(200 / 3, 1)
-    }
-  })
-})

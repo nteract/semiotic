@@ -1,6 +1,9 @@
 import { interpolateNumber } from "d3-interpolate"
+import { schemeCategory10 } from "../charts/shared/colorPalettes"
+import { COLOR_SCHEMES } from "../charts/shared/colorUtils"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
+import type { NetworkLayoutContext } from "./networkCustomLayout"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -45,6 +48,8 @@ export class NetworkPipelineStore {
   sceneNodes: NetworkSceneNode[] = []
   sceneEdges: NetworkSceneEdge[] = []
   labels: NetworkLabel[] = []
+  /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
+  customLayoutOverlays: import("react").ReactNode = null
 
   // ── Particles ─────────────────────────────────────────────────────────
 
@@ -318,6 +323,18 @@ export class NetworkPipelineStore {
    * Run the layout algorithm via the appropriate plugin.
    */
   runLayout(size: [number, number]): void {
+    // customLayout escape hatch — when the user supplies their own layout,
+    // skip plugin dispatch entirely. The layout produces scene primitives
+    // directly inside `buildScene`; nodes/edges in this.* don't need
+    // positions because the scene IS the geometry. We still need to keep
+    // the topology-diff bookkeeping in sync so push-mode subscribers
+    // (SVG overlays, labels, useTopologyDiff consumers, addedNodes-driven
+    // highlighting) observe added/removed nodes and edges.
+    if (this.config.customNetworkLayout) {
+      this.recordTopologyDiff()
+      this.layoutVersion++
+      return
+    }
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return
 
@@ -461,7 +478,20 @@ export class NetworkPipelineStore {
 
     this._hasRenderedOnce = true
 
-    // Compute topology diff
+    this.recordTopologyDiff()
+
+    this.layoutVersion++
+  }
+
+  /**
+   * Compute added/removed node and edge sets relative to the previous
+   * layout snapshot, and update `lastTopologyChangeTime` if anything
+   * changed. Shared by the plugin path (`runLayout` finalization) and the
+   * customLayout escape hatch — without this, `getTopologyDiff()` and
+   * built-in topology-diff highlighting silently stop working when a
+   * `customNetworkLayout` is supplied.
+   */
+  private recordTopologyDiff(): void {
     const currentNodeIds = new Set(this.nodes.keys())
     const currentEdgeKeys = new Set(this.edges.keys())
 
@@ -490,19 +520,84 @@ export class NetworkPipelineStore {
 
     this.previousNodeIds = currentNodeIds
     this.previousEdgeKeys = currentEdgeKeys
-
-    this.layoutVersion++
   }
 
   /**
    * Build the scene graph from current layout positions.
    */
   buildScene(size: [number, number]): void {
-    const plugin = getLayoutPlugin(this.config.chartType)
-    if (!plugin) return
-
     const nodesArr = Array.from(this.nodes.values())
     const edgesArr = Array.from(this.edges.values())
+
+    // customLayout escape hatch — short-circuit plugin dispatch and let the
+    // user emit scene primitives directly. Hit testing, decay, and SSR keep
+    // working because they consume `this.sceneNodes`/`sceneEdges`.
+    if (this.config.customNetworkLayout) {
+      // Palette precedence: explicit `colorScheme` (array or named scheme)
+      // → theme categorical → fallback. Named string schemes resolve via
+      // COLOR_SCHEMES; unknown names fall through to the theme palette.
+      const cs = this.config.colorScheme
+      let palette: readonly string[]
+      if (Array.isArray(cs)) {
+        palette = cs
+      } else if (typeof cs === "string") {
+        const resolved = (COLOR_SCHEMES as Record<string, unknown>)[cs]
+        palette = Array.isArray(resolved)
+          ? resolved as string[]
+          : (this.config.themeCategorical && this.config.themeCategorical.length > 0
+              ? this.config.themeCategorical
+              : (schemeCategory10 as readonly string[]))
+      } else if (this.config.themeCategorical && this.config.themeCategorical.length > 0) {
+        palette = this.config.themeCategorical
+      } else {
+        palette = schemeCategory10 as readonly string[]
+      }
+      const ctx: NetworkLayoutContext = {
+        nodes: nodesArr,
+        edges: edgesArr,
+        dimensions: {
+          width: size[0],
+          height: size[1],
+          plot: { x: 0, y: 0, width: size[0], height: size[1] },
+        },
+        theme: {
+          semantic: this.config.themeSemantic ?? {},
+          categorical: [...palette],
+        },
+        // Stable hash → palette index. Same key always returns the same color
+        // for the lifetime of this store invocation.
+        resolveColor: (key: string): string => {
+          let hash = 0
+          for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
+          return palette[Math.abs(hash) % palette.length] ?? "#4e79a7"
+        },
+        config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
+      }
+      let result
+      try {
+        result = this.config.customNetworkLayout(ctx)
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[semiotic] customNetworkLayout threw:", err)
+        }
+        this.sceneNodes = []
+        this.sceneEdges = []
+        this.labels = []
+        this.customLayoutOverlays = null
+        return
+      }
+      this.sceneNodes = result.sceneNodes ?? []
+      this.sceneEdges = result.sceneEdges ?? []
+      this.labels = result.labels ?? []
+      this.customLayoutOverlays = result.overlays ?? null
+      return
+    }
+
+    // Built-in chart types: clear stale overlays from a prior customLayout run.
+    this.customLayoutOverlays = null
+
+    const plugin = getLayoutPlugin(this.config.chartType)
+    if (!plugin) return
 
     const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
       nodesArr,

@@ -5,12 +5,17 @@ _Edit dist/semiotic-recipes.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 function calendarLayout
-function horizonLayout
+function dagreLayout
+function flextreeLayout
 function waffleLayout
 interface CalendarConfig
-interface HorizonConfig
+interface DagreConfig
+interface FlextreeConfig
 interface LayoutContext
 interface LayoutResult
+interface NetworkLayoutContext
+interface NetworkLayoutResult
 interface WaffleConfig
 type CustomLayout
+type NetworkCustomLayout
 ```
