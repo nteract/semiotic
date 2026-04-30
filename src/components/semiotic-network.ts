@@ -15,6 +15,7 @@ export { TreeDiagram } from "./charts/network/TreeDiagram"
 export { Treemap } from "./charts/network/Treemap"
 export { CirclePack } from "./charts/network/CirclePack"
 export { OrbitDiagram } from "./charts/network/OrbitDiagram"
+export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
 
 // Stream Frame types
 export type {
@@ -35,3 +36,11 @@ export type { TreeDiagramProps } from "./charts/network/TreeDiagram"
 export type { TreemapProps } from "./charts/network/Treemap"
 export type { CirclePackProps } from "./charts/network/CirclePack"
 export type { OrbitDiagramProps } from "./charts/network/OrbitDiagram"
+export type { NetworkCustomChartProps } from "./charts/custom/NetworkCustomChart"
+
+// customLayout escape hatch
+export type {
+  NetworkCustomLayout,
+  NetworkLayoutContext,
+  NetworkLayoutResult,
+} from "./stream/networkCustomLayout"

@@ -7,6 +7,7 @@ _Edit dist/semiotic-network.d.ts's sources, then re-run `npm run docs:api-surfac
 function ChordDiagram
 function CirclePack
 function ForceDirectedGraph
+function NetworkCustomChart
 function OrbitDiagram
 function SankeyDiagram
 function StreamNetworkFrame
@@ -15,7 +16,10 @@ function Treemap
 interface ChordDiagramProps
 interface CirclePackProps
 interface ForceDirectedGraphProps
+interface NetworkCustomChartProps
 interface NetworkLabel
+interface NetworkLayoutContext
+interface NetworkLayoutResult
 interface OrbitDiagramProps
 interface SankeyDiagramProps
 interface StreamNetworkFrameHandle
@@ -24,6 +28,7 @@ interface ThresholdAlertConfig
 interface TreeDiagramProps
 interface TreemapProps
 type NetworkChartType
+type NetworkCustomLayout
 type NetworkSceneEdge
 type NetworkSceneNode
 ```

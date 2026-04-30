@@ -42,6 +42,7 @@ function LinkedCharts
 function MinimapChart
 function MultiAxisLineChart
 function MultiLineTooltip
+function NetworkCustomChart
 function OrbitDiagram
 function PieChart
 function QuadrantChart

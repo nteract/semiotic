@@ -89,6 +89,7 @@ import VegaLiteTranslatorPage from "./pages/features/VegaLiteTranslatorPage"
 import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
+import CustomChartsPage from "./pages/features/CustomChartsPage"
 
 // New cookbook pages
 import CandlestickCookbookPage from "./pages/cookbook/CandlestickChartPage"
@@ -394,6 +395,7 @@ export default function DocsApp() {
               <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
+              <Route path="custom-charts" element={<CustomChartsPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

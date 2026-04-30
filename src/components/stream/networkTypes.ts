@@ -554,6 +554,13 @@ export interface NetworkPipelineConfig {
   __orbitState?: unknown
   /** @internal Previous node positions for warm-start force layout */
   __previousPositions?: Map<string, { x: number; y: number }>
+
+  // ── customLayout escape hatch ────────────────────
+  /** When provided, replaces both layout dispatch and scene building.
+   *  Receives raw nodes/edges and returns positioned scene primitives. */
+  customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
+  /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
+  layoutConfig?: object
 }
 
 // ── Component props ─────────────────────────────────────────────────
@@ -690,6 +697,14 @@ export interface StreamNetworkFrameProps<T = Datum> {
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */
   summary?: string
+
+  // ── customLayout escape hatch ────────────────────
+  /** Replaces network layout + scene dispatch with a user-supplied function.
+   *  Receives raw nodes/edges + dimensions/theme, returns positioned scene
+   *  primitives. See `semiotic/recipes` for reference layouts (flextree, dagre). */
+  customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
+  /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
+  layoutConfig?: object
 }
 
 // ── Ref handle ──────────────────────────────────────────────────────

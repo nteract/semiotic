@@ -20,12 +20,16 @@ export interface HorizonConfig {
 }
 
 /**
- * Horizon chart — N stacked, mirrored, color-banded slices of a continuous
- * series. Compresses high-cardinality time series into compact rows. Built
- * on AreaSceneNode `clipRect` to band a single full-amplitude area into
- * progressively-darker stripes.
+ * Horizon chart — N stacked, color-banded slices of a continuous series
+ * compressed into a compact row. The classic overlay algorithm: each
+ * band b draws `clamp(val - b * amp/N, 0, amp/N)` from the baseline,
+ * scaled so a full-band magnitude fills the entire plot height. Bands
+ * paint in order with progressively darker colors so high-magnitude
+ * regions naturally appear darkest.
  *
- * Pass an `xExtent` / `yExtent` prop on `<CustomChart>` to lock the domain;
+ * Negatives fold upward into the same row with a contrasting color ramp.
+ *
+ * Pass an `xExtent` / `yExtent` on `<CustomChart>` to lock the domain;
  * otherwise the chart auto-scales to your data.
  *
  * @example
@@ -33,11 +37,7 @@ export interface HorizonConfig {
  * <CustomChart
  *   data={timeSeries}
  *   layout={horizonLayout}
- *   layoutConfig={{
- *     xAccessor: "time",
- *     yAccessor: "value",
- *     bands: 4,
- *   }}
+ *   layoutConfig={{ xAccessor: "time", yAccessor: "value", bands: 4 }}
  * />
  * ```
  */
@@ -51,92 +51,80 @@ export const horizonLayout: CustomLayout<HorizonConfig> = (ctx) => {
   const getY = resolveAccessor(cfg.yAccessor) as (d: Datum) => number
   const bands = Math.max(1, Math.floor(cfg.bands ?? 3))
 
-  // Compute amplitude (max |y|). Used to size each band.
-  let amp = 0
-  for (const d of data) {
-    const y = Number(getY(d))
-    if (!Number.isFinite(y)) continue
-    if (Math.abs(y) > amp) amp = Math.abs(y)
-  }
-  if (amp === 0) return { nodes: [] }
-
-  const bandHeight = plot.height / bands
-
-  // Build full-amplitude paths once. We render the same area `bands` times,
-  // each clipped to a different horizontal slice.
-  const positive: { x: number; y: number }[] = []
-  const negative: { x: number; y: number }[] = []
-  // Map data y onto band-stack space: a single band spans [0, amp], stacked.
-  // We emit two areas (positive, negative-flipped-up), each scaled so 0 is at
-  // the bottom of the plot and amp is at the top. Negative values are folded
-  // up by negating before scaling.
-  const yToPx = (yMagnitude: number) => plot.y + plot.height - (yMagnitude / amp) * plot.height
+  // Sample (px, value) pairs sorted by x.
+  const samples: { x: number; v: number }[] = []
   for (const d of data) {
     const xRaw = getX(d)
     const xVal = xRaw instanceof Date ? xRaw.valueOf() : Number(xRaw)
     const yVal = Number(getY(d))
     if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
-    const px = scales.x(xVal)
-    if (yVal >= 0) {
-      positive.push({ x: px, y: yToPx(yVal) })
-      negative.push({ x: px, y: yToPx(0) })
-    } else {
-      positive.push({ x: px, y: yToPx(0) })
-      negative.push({ x: px, y: yToPx(-yVal) })
-    }
+    samples.push({ x: scales.x(xVal), v: yVal })
   }
-  positive.sort((a, b) => a.x - b.x)
-  negative.sort((a, b) => a.x - b.x)
+  if (samples.length === 0) return { nodes: [] }
+  samples.sort((a, b) => a.x - b.x)
+
+  // Amplitude = max |value| across the series. Each band represents amp/N.
+  let amp = 0
+  for (const s of samples) {
+    if (Math.abs(s.v) > amp) amp = Math.abs(s.v)
+  }
+  if (amp === 0) return { nodes: [] }
+  const ampPerBand = amp / bands
 
   const baselineY = plot.y + plot.height
   const nodes: AreaSceneNode[] = []
 
-  const posLow = cfg.positiveColors?.[0] ?? mix(ctx.theme.semantic.success ?? "#2e7d32", "#ffffff", 0.6)
+  const posLow = cfg.positiveColors?.[0] ?? mix(ctx.theme.semantic.success ?? "#2e7d32", "#ffffff", 0.7)
   const posHigh = cfg.positiveColors?.[1] ?? (ctx.theme.semantic.success ?? "#2e7d32")
-  const negLow = cfg.negativeColors?.[0] ?? mix(ctx.theme.semantic.danger ?? "#c62828", "#ffffff", 0.6)
+  const negLow = cfg.negativeColors?.[0] ?? mix(ctx.theme.semantic.danger ?? "#c62828", "#ffffff", 0.7)
   const negHigh = cfg.negativeColors?.[1] ?? (ctx.theme.semantic.danger ?? "#c62828")
 
+  // For each band, draw `clamp(val - b*ampPerBand, 0, ampPerBand)` mapped
+  // so a full-band magnitude (== ampPerBand) reaches the top of the plot.
+  // Bands paint in order; higher bands overlap lower ones for the classic
+  // horizon-darkness-by-magnitude look.
   for (let b = 0; b < bands; b++) {
-    // Each band shows the slice of full-amplitude path corresponding to
-    // |y| ∈ [b/bands, (b+1)/bands] * amp. We render the full path but clip
-    // to a horizontal stripe at the bottom of the plot, then translate the
-    // visual so progressively-larger values appear in the same band.
-    //
-    // Concretely: the b-th band's clip rect is the bottom-most band-row of
-    // the plot. The path for band b is the full amplitude shifted UP by
-    // b * bandHeight so only the top portion (representing |y| > b * amp/bands)
-    // intrudes into the visible band.
-    const shift = b * bandHeight
-    const clipRect = {
-      x: plot.x,
-      y: plot.y + plot.height - bandHeight,
-      width: plot.width,
-      height: bandHeight,
-    }
+    const t = bands === 1 ? 1 : b / (bands - 1)
 
-    // Positive band b — color darkens with b.
-    const posT = bands === 1 ? 1 : b / (bands - 1)
-    const posColor = interpolateRgb(posLow, posHigh)(posT)
+    // Positive side
+    const posTopPath: [number, number][] = new Array(samples.length)
+    const posBottomPath: [number, number][] = new Array(samples.length)
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i]
+      const vAboveBase = Math.max(0, s.v - b * ampPerBand)
+      const vb = Math.min(ampPerBand, vAboveBase)
+      const y = baselineY - (vb / ampPerBand) * plot.height
+      posTopPath[i] = [s.x, y]
+      posBottomPath[i] = [s.x, baselineY]
+    }
     nodes.push({
       type: "area",
-      topPath: positive.map((p) => [p.x, p.y - shift + (plot.height - bandHeight)]),
-      bottomPath: positive.map((p) => [p.x, baselineY]),
-      style: { fill: posColor, stroke: "none", fillOpacity: 1 },
+      topPath: posTopPath,
+      bottomPath: posBottomPath,
+      style: { fill: interpolateRgb(posLow, posHigh)(t), stroke: "none", fillOpacity: 1 },
       datum: null,
       group: `horizon-pos-${b}`,
-      clipRect,
     })
 
-    // Negative band b — folded up + recolored.
-    const negColor = interpolateRgb(negLow, negHigh)(posT)
+    // Negative side (folded upward into the same row).
+    const negTopPath: [number, number][] = new Array(samples.length)
+    const negBottomPath: [number, number][] = new Array(samples.length)
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i]
+      const absMag = Math.max(0, -s.v)
+      const vAboveBase = Math.max(0, absMag - b * ampPerBand)
+      const vb = Math.min(ampPerBand, vAboveBase)
+      const y = baselineY - (vb / ampPerBand) * plot.height
+      negTopPath[i] = [s.x, y]
+      negBottomPath[i] = [s.x, baselineY]
+    }
     nodes.push({
       type: "area",
-      topPath: negative.map((p) => [p.x, p.y - shift + (plot.height - bandHeight)]),
-      bottomPath: negative.map((p) => [p.x, baselineY]),
-      style: { fill: negColor, stroke: "none", fillOpacity: 1 },
+      topPath: negTopPath,
+      bottomPath: negBottomPath,
+      style: { fill: interpolateRgb(negLow, negHigh)(t), stroke: "none", fillOpacity: 1 },
       datum: null,
       group: `horizon-neg-${b}`,
-      clipRect,
     })
   }
 

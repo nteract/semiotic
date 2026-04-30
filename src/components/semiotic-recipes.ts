@@ -15,9 +15,21 @@ export type { CalendarConfig } from "./recipes/calendar"
 export { horizonLayout } from "./recipes/horizon"
 export type { HorizonConfig } from "./recipes/horizon"
 
+// ── Network recipes (use with StreamNetworkFrame's customNetworkLayout) ──
+export { flextreeLayout } from "./recipes/flextree"
+export type { FlextreeConfig } from "./recipes/flextree"
+
+export { dagreLayout } from "./recipes/dagre"
+export type { DagreConfig } from "./recipes/dagre"
+
 // Re-export the layout types so recipe authors don't need a second import.
 export type {
   CustomLayout,
   LayoutContext,
   LayoutResult,
 } from "./stream/customLayout"
+export type {
+  NetworkCustomLayout,
+  NetworkLayoutContext,
+  NetworkLayoutResult,
+} from "./stream/networkCustomLayout"

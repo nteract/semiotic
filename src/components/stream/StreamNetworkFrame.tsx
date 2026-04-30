@@ -261,7 +261,9 @@ const StreamNetworkFrame = forwardRef<
     orbitRevolutionStyle,
     orbitEccentricity,
     orbitShowRings,
-    orbitAnimated
+    orbitAnimated,
+    customNetworkLayout,
+    layoutConfig,
   } = props
 
   // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
@@ -368,7 +370,9 @@ const StreamNetworkFrame = forwardRef<
       orbitRevolutionStyle,
       orbitEccentricity,
       orbitShowRings,
-      orbitAnimated
+      orbitAnimated,
+      customNetworkLayout,
+      layoutConfig,
     }),
     [
       chartType,
@@ -420,7 +424,9 @@ const StreamNetworkFrame = forwardRef<
       orbitEccentricity,
       orbitShowRings,
       orbitAnimated,
-      currentTheme
+      currentTheme,
+      customNetworkLayout,
+      layoutConfig,
     ]
   )
 
@@ -1305,7 +1311,11 @@ const StreamNetworkFrame = forwardRef<
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={resolvedForeground}
+          foregroundGraphics={
+            storeRef.current?.customLayoutOverlays != null
+              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+              : resolvedForeground
+          }
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={0}

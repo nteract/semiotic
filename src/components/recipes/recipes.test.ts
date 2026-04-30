@@ -104,7 +104,7 @@ describe("calendarLayout", () => {
 })
 
 describe("horizonLayout", () => {
-  it("emits 2 * bands area nodes (positive + negative slices) with clipRects", () => {
+  it("emits 2 * bands area nodes (one per band per side)", () => {
     const data = Array.from({ length: 10 }, (_, i) => ({ t: i, v: i % 2 === 0 ? i : -i }))
     const result = horizonLayout(
       makeCtx(
@@ -115,8 +115,39 @@ describe("horizonLayout", () => {
     expect(result.nodes).toHaveLength(6)
     for (const n of result.nodes! as AreaSceneNode[]) {
       expect(n.type).toBe("area")
-      expect(n.clipRect).toBeTruthy()
-      expect(n.clipRect!.height).toBeCloseTo(200 / 3, 1)
+      expect(n.topPath.length).toBe(10)
+    }
+  })
+
+  it("band 0 path stays inside the plot rect (no overshoot)", () => {
+    // amp = 9, bands = 3 → ampPerBand = 3. A value of 6 in band 0 clamps to
+    // ampPerBand=3 (full band), so y = baseline - plot.height (top of plot).
+    const data = [{ t: 0, v: 6 }, { t: 1, v: 6 }]
+    const result = horizonLayout(
+      makeCtx({ xAccessor: "t", yAccessor: "v", bands: 3 }, { data })
+    )
+    const band0Pos = result.nodes![0] as AreaSceneNode
+    // plot.y=0, plot.height=200 → baseline=200, top=0
+    for (const [, y] of band0Pos.topPath) {
+      expect(y).toBeGreaterThanOrEqual(0)
+      expect(y).toBeLessThanOrEqual(200)
+    }
+  })
+
+  it("higher bands only contribute when value exceeds (b * ampPerBand)", () => {
+    // Single value of 1.5 with amp=1.5, bands=3, ampPerBand=0.5.
+    //   band 0: clamp(1.5, 0, 0.5) = 0.5 → full band
+    //   band 1: clamp(1.0, 0, 0.5) = 0.5 → full band
+    //   band 2: clamp(0.5, 0, 0.5) = 0.5 → full band
+    // All three positive bands should reach the top of the plot.
+    const data = [{ t: 0, v: 1.5 }, { t: 1, v: 1.5 }]
+    const result = horizonLayout(
+      makeCtx({ xAccessor: "t", yAccessor: "v", bands: 3 }, { data })
+    )
+    // Indices 0, 2, 4 are positive bands (interleaved with negative).
+    for (const i of [0, 2, 4]) {
+      const band = result.nodes![i] as AreaSceneNode
+      expect(band.topPath[0][1]).toBeCloseTo(0, 1) // top of plot
     }
   })
 })

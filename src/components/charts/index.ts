@@ -53,6 +53,9 @@ export type { CandlestickChartProps } from "./xy/CandlestickChart"
 export { CustomChart } from "./custom/CustomChart"
 export type { CustomChartProps } from "./custom/CustomChart"
 
+export { NetworkCustomChart } from "./custom/NetworkCustomChart"
+export type { NetworkCustomChartProps } from "./custom/NetworkCustomChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================
