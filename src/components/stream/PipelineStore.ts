@@ -554,7 +554,13 @@ export class PipelineStore {
             for (const d of g.data) {
               const x = this.getX(d)
               const y = this.getY(d)
-              if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+              // `Number.isFinite` rejects NaN, Infinity, -Infinity, and
+              // non-numbers — stricter than `isNaN` (which only catches
+              // NaN). Without this, ±Infinity values leak into totals
+              // and the resulting yDomain can be ±Infinity (zero
+              // baseline) or fall back to [0,0] (wiggle/silhouette
+              // non-finite guard), producing blank/clipped charts.
+              if (!Number.isFinite(x) || !Number.isFinite(y)) continue
               m.set(x, (m.get(x) || 0) + y)
               xSet.add(x)
               groupTotal += y

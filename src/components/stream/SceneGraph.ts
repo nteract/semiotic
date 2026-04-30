@@ -165,12 +165,16 @@ export function buildStackedAreaNodes(
   curve?: CurveType,
   baseline: StackBaseline = "zero"
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
-  // Collect all unique x values
+  // Collect all unique x values. `Number.isFinite` rejects NaN,
+  // Infinity, -Infinity, and non-numbers — must agree with the
+  // PipelineStore extent computation, otherwise extent and scene
+  // disagree on which rows count and the yDomain doesn't match what
+  // gets drawn.
   const xSet = new Set<number>()
   for (const g of groups) {
     for (const d of g.data) {
       const x = xGet(d)
-      if (x != null && !Number.isNaN(x)) xSet.add(x)
+      if (Number.isFinite(x)) xSet.add(x)
     }
   }
   const xValues = Array.from(xSet).sort((a, b) => a - b)
@@ -182,7 +186,7 @@ export function buildStackedAreaNodes(
     for (const d of g.data) {
       const x = xGet(d)
       const y = yGet(d)
-      if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+      if (Number.isFinite(x) && Number.isFinite(y)) {
         m.set(x, (m.get(x) || 0) + y)
       }
     }
