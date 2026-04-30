@@ -56,6 +56,9 @@ export type { CustomChartProps } from "./custom/CustomChart"
 export { NetworkCustomChart } from "./custom/NetworkCustomChart"
 export type { NetworkCustomChartProps } from "./custom/NetworkCustomChart"
 
+export { OrdinalCustomChart } from "./custom/OrdinalCustomChart"
+export type { OrdinalCustomChartProps } from "./custom/OrdinalCustomChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================

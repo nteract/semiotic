@@ -24,6 +24,7 @@ export type { GaugeChartProps, GaugeThreshold } from "./charts/ordinal/GaugeChar
 export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
 export { LikertChart } from "./charts/ordinal/LikertChart"
+export { OrdinalCustomChart } from "./charts/custom/OrdinalCustomChart"
 
 // Utilities
 export { createHatchPattern } from "./charts/shared/hatchPattern"
@@ -47,3 +48,11 @@ export type { PieChartProps } from "./charts/ordinal/PieChart"
 export type { DonutChartProps } from "./charts/ordinal/DonutChart"
 export type { FunnelChartProps } from "./charts/ordinal/FunnelChart"
 export type { LikertChartProps } from "./charts/ordinal/LikertChart"
+export type { OrdinalCustomChartProps } from "./charts/custom/OrdinalCustomChart"
+
+// customLayout escape hatch
+export type {
+  OrdinalCustomLayout,
+  OrdinalLayoutContext,
+  OrdinalLayoutResult,
+} from "./stream/ordinalCustomLayout"

@@ -36,6 +36,7 @@ export type OrdinalChartType =
   | "funnel"
   | "bar-funnel"
   | "swimlane"
+  | "custom"
 
 // ── Scales ─────────────────────────────────────────────────────────────
 
@@ -296,6 +297,17 @@ export interface OrdinalPipelineConfig {
   /** Whether to animate elements on first render (bars grow from baseline, wedges sweep in) */
   introAnimation?: boolean
   staleness?: StalenessConfig
+
+  // ── customLayout escape hatch ────────────────────
+  /** When provided, replaces chart-type dispatch in scene building.
+   *  Receives an OrdinalLayoutContext (scales, dimensions, theme,
+   *  resolveColor) and returns scene nodes plus optional overlays. */
+  customLayout?: import("./ordinalCustomLayout").OrdinalCustomLayout
+  /** User-supplied config blob threaded through to OrdinalLayoutContext.config. */
+  layoutConfig?: object
+  /** Resolved margin — passed through so OrdinalLayoutContext.dimensions.margin
+   *  reflects what the frame actually used. */
+  layoutMargin?: import("../types/marginType").MarginType
 }
 
 // ── Component props ────────────────────────────────────────────────────
@@ -471,6 +483,16 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   description?: string
   /** Accessible summary rendered as a screen-reader-only note */
   summary?: string
+
+  // ── customLayout escape hatch ────────────────────
+  /** Replaces ordinal scene dispatch with a user-supplied function.
+   *  Receives an OrdinalLayoutContext (scales, dimensions, theme,
+   *  resolveColor), returns scene nodes + optional overlays. See
+   *  `semiotic/recipes` for reference layouts (marimekko, parallel
+   *  coordinates, bullet). */
+  customLayout?: import("./ordinalCustomLayout").OrdinalCustomLayout
+  /** User-supplied config blob threaded through to OrdinalLayoutContext.config. */
+  layoutConfig?: object
 }
 
 // ── Ref handle ─────────────────────────────────────────────────────────
