@@ -49,10 +49,59 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
 
 export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
-  // Sort groups by key to ensure a stable stacking order. Without this,
-  // a sliding window can reorder groups when eviction changes which group
-  // appears first in the buffer, causing layers to swap and flicker.
-  groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+  const stackOrder = ctx.config.stackOrder ?? "key"
+
+  // Stack order — controls which series sits at the top, middle, or
+  // bottom of the stack. Default "key" (alphabetical) gives stable
+  // streaming behavior: when a sliding window evicts data, the order
+  // doesn't shuffle. "insideOut" puts the largest-total series in the
+  // middle with smaller series alternating above/below, which is the
+  // canonical streamgraph aesthetic when combined with `baseline:
+  // "wiggle"` or `"silhouette"` (one "central anchor" layer with others
+  // built off of it).
+  if (stackOrder === "key") {
+    groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+  } else {
+    // Compute per-group totals once.
+    const totals = new Map<string, number>()
+    for (const g of groups) {
+      let s = 0
+      for (const d of g.data) {
+        const v = ctx.getY(d)
+        if (typeof v === "number" && Number.isFinite(v)) s += v
+      }
+      totals.set(g.key, s)
+    }
+    if (stackOrder === "asc") {
+      groups.sort((a, b) => (totals.get(a.key) ?? 0) - (totals.get(b.key) ?? 0))
+    } else if (stackOrder === "desc") {
+      groups.sort((a, b) => (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0))
+    } else if (stackOrder === "insideOut") {
+      // d3-shape's stackOrderInsideOut algorithm: sort by total desc,
+      // then alternately push to bottom or top of the result so the
+      // largest sits in the middle with progressively-smaller series
+      // wrapping outward.
+      const sorted = [...groups].sort((a, b) => (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0))
+      const tops: typeof groups = []
+      const bottoms: typeof groups = []
+      let topSum = 0
+      let bottomSum = 0
+      for (const g of sorted) {
+        if (topSum < bottomSum) {
+          tops.push(g)
+          topSum += totals.get(g.key) ?? 0
+        } else {
+          bottoms.push(g)
+          bottomSum += totals.get(g.key) ?? 0
+        }
+      }
+      // Bottom group renders first (lowest in the stack); reverse it so
+      // the largest group ends up in the middle.
+      groups.length = 0
+      groups.push(...bottoms.reverse(), ...tops)
+    }
+  }
+
   const styleFn = (group: string, sampleDatum?: Datum) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined

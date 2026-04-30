@@ -109,6 +109,9 @@ export function computeStackOffsets(
       offsets.set(x, -total / 2)
     }
   } else if (baseline === "wiggle") {
+    // Step 1 — Byron–Wattenberg wiggle dynamics: each x's offset is the
+    // previous offset minus a "wiggle" term that minimizes the total
+    // visual movement across series.
     if (xValues.length > 0) offsets.set(xValues[0], 0)
     for (let i = 1; i < xValues.length; i++) {
       const xPrev = xValues[i - 1]
@@ -127,6 +130,24 @@ export function computeStackOffsets(
       const prevOffset = offsets.get(xPrev) ?? 0
       const wiggle = s2 > 0 ? s1 / (2 * s2) : 0
       offsets.set(x, prevOffset - wiggle)
+    }
+    // Step 2 — post-center on y=0. Pure wiggle minimizes movement but
+    // doesn't constrain the absolute baseline, so the streamgraph drifts
+    // off-axis (visual middle ends up at, say, y=32 with the y-axis
+    // running [0, 70]). Shift every offset so the average visual center
+    // lands at y=0 — matches the canonical NYT-style streamgraph and
+    // gives the y-axis symmetric ticks.
+    if (xValues.length > 0) {
+      let sumCenter = 0
+      for (const x of xValues) {
+        let total = 0
+        for (const k of groupKeys) total += valueAt(k, x) || 0
+        sumCenter += (offsets.get(x) ?? 0) + total / 2
+      }
+      const avgCenter = sumCenter / xValues.length
+      for (const x of xValues) {
+        offsets.set(x, (offsets.get(x) ?? 0) - avgCenter)
+      }
     }
   } else {
     for (const x of xValues) offsets.set(x, 0)

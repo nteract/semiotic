@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
@@ -23,6 +24,26 @@ export interface BulletConfig {
   actualColor?: string
   /** Color for the target tick. Defaults to theme text. */
   targetColor?: string
+  /**
+   * Render the metric name to the left of each row. Reserves
+   * `labelWidth` from the bullet area. @default true
+   */
+  showLabels?: boolean
+  /**
+   * Pixel width reserved on the left for row labels. Only used when
+   * `showLabels` is true. @default 120
+   */
+  labelWidth?: number
+  /**
+   * Render value-axis tick marks below each bullet (since each row is
+   * independently scaled, ticks are per-row). @default true
+   */
+  showTicks?: boolean
+  /**
+   * Format function for tick labels (and the actual/target values shown
+   * inside the row). @default v => v.toLocaleString()
+   */
+  tickFormat?: (v: number) => string
 }
 
 /**
@@ -73,6 +94,16 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
   const rowH = cfg.rowHeight ?? 28
   const rowGap = cfg.rowGap ?? 12
+  const showLabels = cfg.showLabels !== false
+  const labelW = showLabels ? (cfg.labelWidth ?? 120) : 0
+  const showTicks = cfg.showTicks !== false
+  const tickAreaH = showTicks ? 14 : 0
+  const tickFormat = cfg.tickFormat ?? ((v: number) => v.toLocaleString())
+
+  // Bullet area sits to the right of the labels. Bars draw inside [bulletX, plot.right].
+  const bulletX = plot.x + labelW
+  const bulletW = Math.max(0, plot.width - labelW)
+  if (bulletW <= 0) return { nodes: [] }
 
   const getCategory = resolveAccessor(cfg.categoryAccessor) as (d: Datum) => string
   // Bullet charts are inherently non-negative (they measure progress along
@@ -94,19 +125,45 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     return v.map(clampNonNegative).sort((a, b) => a - b)
   }
 
+  // Datum keys readable by the default tooltip — prefer user-supplied
+  // accessor names (when string) plus generic fallbacks.
+  const categoryKey = typeof cfg.categoryAccessor === "string" ? cfg.categoryAccessor : "metric"
+  const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
+  const targetKey = typeof cfg.targetAccessor === "string" ? cfg.targetAccessor : "target"
+
   // Compute a per-row max so every bullet is independently scaled (one
   // metric in dollars, another in counts — no shared axis).
   const baseColor = cfg.actualColor ?? ctx.theme.semantic.primary ?? "#3b6cb1"
-  const targetColor = cfg.targetColor ?? ctx.theme.semantic.text ?? "#222"
-  // Three grays of increasing darkness for the qualitative ranges. Use
-  // theme grid/border/secondary if available, else fall back to fixed grays.
+  // Color cascade: CSS custom property on a parent element (the
+  // documented dark-mode pattern) wins, then the theme's semantic color,
+  // then the hex fallback. The previous order had the theme winning over
+  // the CSS var, which broke dark mode whenever the default light theme
+  // was active (its semantic.text is dark, so the wrapper's
+  // `--semiotic-text: #e2e8f0` got ignored).
+  const themeText = ctx.theme.semantic.text ?? "currentColor"
+  const themeTextSecondary = ctx.theme.semantic.textSecondary ?? "#888"
+  const themeSurface = ctx.theme.semantic.surface ?? "#e8eaed"
+  const themeGrid = ctx.theme.semantic.grid ?? "#cdd1d6"
+  const themeBorder = ctx.theme.semantic.border ?? "#a3a8af"
+  const targetColor = cfg.targetColor ?? `var(--semiotic-text, ${themeText})`
   const rangeColors = [
-    ctx.theme.semantic.surface ?? "#e8eaed",
-    ctx.theme.semantic.grid ?? "#cdd1d6",
-    ctx.theme.semantic.border ?? "#a3a8af",
+    `var(--semiotic-surface, ${themeSurface})`,
+    `var(--semiotic-grid, ${themeGrid})`,
+    `var(--semiotic-border, ${themeBorder})`,
   ]
+  const labelColor = `var(--semiotic-text, ${themeText})`
+  const subtleColor = `var(--semiotic-text-secondary, ${themeTextSecondary})`
 
   const nodes: RectSceneNode[] = []
+  // Per-row info captured for overlay rendering after the bar pass.
+  const rowInfo: Array<{
+    yTop: number
+    label: string
+    actual: number
+    target: number
+    maxVal: number
+  }> = []
+
   for (let i = 0; i < ctx.data.length; i++) {
     const d = ctx.data[i]
     const ranges = getRanges(d)
@@ -115,12 +172,15 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const maxVal = Math.max(actual, target, ...(ranges.length ? ranges : [0]))
     if (maxVal <= 0) continue
 
-    const yTop = plot.y + i * (rowH + rowGap)
+    const yTop = plot.y + i * (rowH + rowGap + tickAreaH)
     if (yTop + rowH > plot.y + plot.height) break // overflow guard
-    const xToPx = (v: number) => plot.x + (v / maxVal) * plot.width
+    rowInfo.push({ yTop, label: getCategory(d), actual, target, maxVal })
+
+    const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW
+    const baseDatum = { [categoryKey]: getCategory(d), metric: getCategory(d) }
 
     // Background range bars — full row height, successively darker.
-    let lastEnd = plot.x
+    let lastEnd = bulletX
     for (let r = 0; r < ranges.length; r++) {
       const endPx = xToPx(ranges[r])
       const w = endPx - lastEnd
@@ -132,7 +192,7 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
           w,
           h: rowH,
           style: { fill: rangeColors[Math.min(r, rangeColors.length - 1)], stroke: "none" },
-          datum: { _bulletRow: getCategory(d), _bulletRange: r, _bulletRangeValue: ranges[r] },
+          datum: { ...baseDatum, range: r, rangeValue: ranges[r], kind: "range" },
           group: `range-${r}`,
         })
       }
@@ -143,12 +203,12 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const actualH = Math.max(6, Math.floor(rowH * 0.45))
     nodes.push({
       type: "rect",
-      x: plot.x,
+      x: bulletX,
       y: yTop + (rowH - actualH) / 2,
-      w: xToPx(actual) - plot.x,
+      w: xToPx(actual) - bulletX,
       h: actualH,
       style: { fill: baseColor, stroke: "none" },
-      datum: { _bulletRow: getCategory(d), _bulletValue: actual, _bulletKind: "actual" },
+      datum: { ...baseDatum, [valueKey]: actual, value: actual, kind: "actual" },
       group: "actual",
     })
 
@@ -162,12 +222,63 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       w: tickW,
       h: tickH,
       style: { fill: targetColor, stroke: "none" },
-      datum: { _bulletRow: getCategory(d), _bulletValue: target, _bulletKind: "target" },
+      datum: { ...baseDatum, [targetKey]: target, target, kind: "target" },
       group: "target",
     })
   }
 
-  return { nodes }
+  // Chrome overlays (labels + per-row tick marks). Built as React
+  // elements via React.createElement so the recipe stays JSX-free.
+  const overlayChildren: React.ReactNode[] = []
+  for (let i = 0; i < rowInfo.length; i++) {
+    const info = rowInfo[i]
+    const rowMid = info.yTop + rowH / 2
+    if (showLabels) {
+      overlayChildren.push(
+        React.createElement("text", {
+          key: `bullet-label-${i}`,
+          x: plot.x + labelW - 8,
+          y: rowMid,
+          textAnchor: "end",
+          dominantBaseline: "middle",
+          fontSize: 13,
+          fontWeight: 500,
+          fill: labelColor,
+        }, info.label)
+      )
+    }
+    if (showTicks) {
+      // 5 evenly-spaced ticks per row including 0 and max.
+      const tickCount = 5
+      const tickY = info.yTop + rowH + 2
+      for (let t = 0; t < tickCount; t++) {
+        const v = (info.maxVal * t) / (tickCount - 1)
+        const x = bulletX + (v / info.maxVal) * bulletW
+        overlayChildren.push(
+          React.createElement("line", {
+            key: `bullet-tick-${i}-${t}`,
+            x1: x, x2: x,
+            y1: tickY, y2: tickY + 3,
+            stroke: subtleColor,
+            strokeWidth: 1,
+          }),
+          React.createElement("text", {
+            key: `bullet-ticktext-${i}-${t}`,
+            x,
+            y: tickY + 12,
+            textAnchor: t === 0 ? "start" : t === tickCount - 1 ? "end" : "middle",
+            fontSize: 10,
+            fill: subtleColor,
+          }, tickFormat(v))
+        )
+      }
+    }
+  }
+  const overlays = overlayChildren.length > 0
+    ? React.createElement(React.Fragment, null, ...overlayChildren)
+    : null
+
+  return { nodes, overlays }
 }
 
 function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d: Datum) => T {

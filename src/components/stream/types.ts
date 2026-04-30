@@ -457,6 +457,16 @@ export interface StreamXYFrameProps<T = Datum> {
    * because normalization assumes a fixed `[0, 1]` y-domain.
    */
   baseline?: "zero" | "wiggle" | "silhouette"
+  /**
+   * Stack order — controls which series sits at the top, middle, or bottom.
+   * - "key" (default): alphabetical by group key
+   * - "insideOut": largest-total series in the middle, smaller alternating
+   *   above/below. Combined with `baseline: "wiggle"` or `"silhouette"`,
+   *   produces the canonical streamgraph look where a "central anchor"
+   *   layer sits across y=0 and other layers stack outward.
+   * - "asc" / "desc": by total ascending / descending
+   */
+  stackOrder?: "key" | "insideOut" | "asc" | "desc"
 
   // ── Bounds/uncertainty ─────────────────────────
   /**

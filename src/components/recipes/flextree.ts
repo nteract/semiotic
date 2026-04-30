@@ -108,7 +108,10 @@ export const flextreeLayout: NetworkCustomLayout<FlextreeConfig> = (ctx) => {
       h,
       style: {
         fill: cfg.nodeFill ?? ctx.resolveColor(node.id),
-        stroke: ctx.theme.semantic.surface ?? "#fff",
+        // Halo stroke against neighbor overlap. Use the active theme's
+        // surface (chart background) so the rect outline matches the page
+        // even in dark mode.
+        stroke: `var(--semiotic-surface, ${ctx.theme.semantic.surface ?? "#fff"})`,
         strokeWidth: 1.5,
       },
       datum: node,
@@ -151,7 +154,7 @@ export const flextreeLayout: NetworkCustomLayout<FlextreeConfig> = (ctx) => {
       sceneEdges.push({
         type: "line",
         x1: sExit.x, y1: sExit.y, x2: tEntry.x, y2: tEntry.y,
-        style: { stroke: ctx.theme.semantic.border ?? "#999", strokeWidth: 1 },
+        style: { stroke: `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#999"})`, strokeWidth: 1 },
         datum: edge,
       })
     } else {
@@ -165,7 +168,7 @@ export const flextreeLayout: NetworkCustomLayout<FlextreeConfig> = (ctx) => {
       sceneEdges.push({
         type: "curved",
         pathD,
-        style: { stroke: ctx.theme.semantic.border ?? "#999", strokeWidth: 1, fill: "none" },
+        style: { stroke: `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#999"})`, strokeWidth: 1, fill: "none" },
         datum: edge,
       })
     }

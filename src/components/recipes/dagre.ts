@@ -106,7 +106,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
       h,
       style: {
         fill: cfg.nodeFill ?? ctx.resolveColor(node.id),
-        stroke: ctx.theme.semantic.border ?? "#888",
+        stroke: `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#888"})`,
         strokeWidth: 1.5,
       },
       datum: node,
@@ -125,7 +125,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
     }
   }
 
-  const stroke = cfg.edgeStroke ?? ctx.theme.semantic.border ?? "#666"
+  const stroke = cfg.edgeStroke ?? `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#666"})`
   const sceneEdges: (NetworkCurvedEdge | NetworkLineEdge)[] = []
   for (const edge of ctx.edges) {
     const sId = typeof edge.source === "string" ? edge.source : edge.source.id
