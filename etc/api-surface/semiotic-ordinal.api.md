@@ -13,6 +13,7 @@ function GaugeChart
 function GroupedBarChart
 function Histogram
 function LikertChart
+function OrdinalCustomChart
 function PieChart
 function RidgelinePlot
 function StackedBarChart
@@ -29,6 +30,9 @@ interface GaugeThreshold
 interface GroupedBarChartProps
 interface HatchPatternOptions
 interface LikertChartProps
+interface OrdinalCustomChartProps
+interface OrdinalLayoutContext
+interface OrdinalLayoutResult
 interface OrdinalScales
 interface PieChartProps
 interface StackedBarChartProps
@@ -36,5 +40,6 @@ interface StreamOrdinalFrameHandle
 interface StreamOrdinalFrameProps
 interface SwimlaneChartProps
 type OrdinalChartType
+type OrdinalCustomLayout
 type OrdinalSceneNode
 ```

@@ -1,10 +1,14 @@
 import React, { useMemo } from "react"
 import { CustomChart } from "../../../../src/components/charts/custom/CustomChart"
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
+import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
 import { StackedAreaChart } from "../../../../src/components/charts/xy/StackedAreaChart"
 import { waffleLayout } from "../../../../src/components/recipes/waffle"
 import { calendarLayout } from "../../../../src/components/recipes/calendar"
 import { flextreeLayout } from "../../../../src/components/recipes/flextree"
+import { marimekkoLayout } from "../../../../src/components/recipes/marimekko"
+import { bulletLayout } from "../../../../src/components/recipes/bullet"
+import { parallelCoordinatesLayout } from "../../../../src/components/recipes/parallelCoordinates"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
@@ -123,6 +127,50 @@ function buildStreamgraphData() {
   }
   return out
 }
+
+// ── Ordinal demo data ───────────────────────────────────────────────────
+
+// Marimekko: revenue by region × product. Region totals vary so bar widths
+// vary; product mix varies within each region so segment heights vary too.
+const marimekkoData = [
+  { region: "AMER",  product: "Hardware",   revenue: 280 },
+  { region: "AMER",  product: "Software",   revenue: 220 },
+  { region: "AMER",  product: "Services",   revenue: 100 },
+  { region: "EMEA",  product: "Hardware",   revenue: 160 },
+  { region: "EMEA",  product: "Software",   revenue: 200 },
+  { region: "EMEA",  product: "Services",   revenue:  80 },
+  { region: "APAC",  product: "Hardware",   revenue: 130 },
+  { region: "APAC",  product: "Software",   revenue:  90 },
+  { region: "APAC",  product: "Services",   revenue:  60 },
+  { region: "LATAM", product: "Hardware",   revenue:  60 },
+  { region: "LATAM", product: "Software",   revenue:  35 },
+  { region: "LATAM", product: "Services",   revenue:  20 },
+]
+
+// Bullet: 4 KPIs, each with their own scale. Note "Profit Margin" is a
+// percentage, "Order Size" is dollars — bullet's per-row scale handles
+// both side-by-side without any unit normalization.
+const bulletData = [
+  { metric: "Revenue ($M)",        actual: 270, target: 250, ranges: [150, 225, 300] },
+  { metric: "Profit Margin (%)",   actual:  23, target:  27, ranges: [ 20,  25,  30] },
+  { metric: "Order Size ($)",      actual: 102, target: 120, ranges: [ 80, 110, 140] },
+  { metric: "New Customers",       actual: 540, target: 600, ranges: [400, 550, 700] },
+]
+
+// Parallel coordinates: a small cars-style dataset. Five fields with very
+// different units (mpg vs hp vs weight) — each axis has its own scale.
+const parallelCarsData = [
+  { name: "compact",   mpg: 32, hp:  95, weight: 2200, accel: 16, year: 2018 },
+  { name: "sedan",     mpg: 26, hp: 180, weight: 3100, accel: 12, year: 2019 },
+  { name: "suv",       mpg: 21, hp: 240, weight: 4200, accel: 10, year: 2020 },
+  { name: "truck",     mpg: 17, hp: 310, weight: 5400, accel:  9, year: 2017 },
+  { name: "ev",        mpg: 92, hp: 350, weight: 4400, accel:  6, year: 2022 },
+  { name: "sport",     mpg: 24, hp: 400, weight: 3200, accel:  5, year: 2021 },
+  { name: "minivan",   mpg: 22, hp: 280, weight: 4600, accel: 11, year: 2019 },
+  { name: "hybrid",    mpg: 52, hp: 130, weight: 3000, accel: 13, year: 2020 },
+  { name: "wagon",     mpg: 28, hp: 195, weight: 3400, accel: 11, year: 2018 },
+  { name: "coupe",     mpg: 25, hp: 320, weight: 3300, accel:  7, year: 2021 },
+]
 
 // ── Page ─────────────────────────────────────────────────────────────────
 
@@ -382,6 +430,141 @@ const edges = g.edges().map(e => {
       </section>
 
       <section>
+        <h2>Marimekko (ordinal)</h2>
+        <p>
+          Variable-width stacked bars where each bar's width encodes its
+          category's contribution to the grand total, and the inner stacked
+          segments encode the within-category breakdown by{" "}
+          <code>stackBy</code>. Both dimensions are proportional, making it
+          the natural pick for cohort revenue analysis, market share by
+          segment × product, or any "what's the mix within the mix"
+          question.
+        </p>
+        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+          <OrdinalCustomChart
+            data={marimekkoData}
+            layout={marimekkoLayout}
+            layoutConfig={{
+              categoryAccessor: "region",
+              stackBy: "product",
+              valueAccessor: "revenue",
+              gutter: 4,
+              stackOrder: ["Hardware", "Software", "Services"],
+            }}
+            width={760}
+            height={320}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          />
+        </div>
+        <CodeBlock language="jsx">{`import { OrdinalCustomChart } from "semiotic/ordinal"
+import { marimekkoLayout } from "semiotic/recipes"
+
+<OrdinalCustomChart
+  data={salesByRegionAndProduct}
+  layout={marimekkoLayout}
+  layoutConfig={{
+    categoryAccessor: "region",
+    stackBy: "product",
+    valueAccessor: "revenue",
+    gutter: 4,
+  }}
+  width={760}
+  height={320}
+/>`}</CodeBlock>
+      </section>
+
+      <section>
+        <h2>Bullet chart (ordinal)</h2>
+        <p>
+          Stephen Few's compact KPI replacement for half-circle gauges.
+          Each row stacks three layers: qualitative range bands (poor →
+          satisfactory → good) as backgrounds, a thinner dark bar for the
+          actual measured value, and a perpendicular tick at the target.
+          Each row is independently scaled so metrics in different units
+          (dollars, percentages, counts) sit side-by-side without any
+          shared axis.
+        </p>
+        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+          <OrdinalCustomChart
+            data={bulletData}
+            layout={bulletLayout}
+            layoutConfig={{
+              categoryAccessor: "metric",
+              valueAccessor: "actual",
+              targetAccessor: "target",
+              rangesAccessor: "ranges",
+              rowHeight: 28,
+              rowGap: 14,
+            }}
+            width={600}
+            height={210}
+            margin={{ top: 16, right: 20, bottom: 16, left: 140 }}
+          />
+        </div>
+        <CodeBlock language="jsx">{`import { bulletLayout } from "semiotic/recipes"
+
+<OrdinalCustomChart
+  data={[
+    { metric: "Revenue ($M)",      actual: 270, target: 250, ranges: [150, 225, 300] },
+    { metric: "Profit Margin (%)", actual:  23, target:  27, ranges: [ 20,  25,  30] },
+    { metric: "Order Size ($)",    actual: 102, target: 120, ranges: [ 80, 110, 140] },
+    { metric: "New Customers",     actual: 540, target: 600, ranges: [400, 550, 700] },
+  ]}
+  layout={bulletLayout}
+  layoutConfig={{
+    categoryAccessor: "metric",
+    valueAccessor: "actual",
+    targetAccessor: "target",
+    rangesAccessor: "ranges",
+  }}
+  width={600}
+  height={210}
+/>`}</CodeBlock>
+      </section>
+
+      <section>
+        <h2>Parallel coordinates (ordinal)</h2>
+        <p>
+          One polyline per row, traced across N parallel vertical axes.
+          Each axis represents a numeric field with its own independent
+          linear scale, so columns in different units (mpg, horsepower,
+          weight) can sit side-by-side without normalizing. Useful for
+          high-dimensional pattern hunting: clusters of similar rows,
+          outliers that swing wildly between axes, and inverse correlations
+          (lines crossing). Set <code>colorBy</code> to highlight groups.
+        </p>
+        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+          <OrdinalCustomChart
+            data={parallelCarsData}
+            layout={parallelCoordinatesLayout}
+            layoutConfig={{
+              fields: ["mpg", "hp", "weight", "accel", "year"],
+              colorBy: "name",
+              showPoints: true,
+              opacity: 0.7,
+              strokeWidth: 1.5,
+            }}
+            width={760}
+            height={320}
+            margin={{ top: 30, right: 20, bottom: 20, left: 20 }}
+          />
+        </div>
+        <CodeBlock language="jsx">{`import { parallelCoordinatesLayout } from "semiotic/recipes"
+
+<OrdinalCustomChart
+  data={cars}
+  layout={parallelCoordinatesLayout}
+  layoutConfig={{
+    fields: ["mpg", "hp", "weight", "accel", "year"],
+    colorBy: "name",
+    showPoints: true,
+  }}
+  width={760}
+  height={320}
+/>`}</CodeBlock>
+      </section>
+
+      <section>
         <h2>Writing your own layout</h2>
         <p>
           A layout is a pure function: <code>{"(ctx) => { nodes, overlays? }"}</code>. The
@@ -436,8 +619,10 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
       <section>
         <h2>Sub-path import</h2>
         <p>
-          <code>CustomChart</code> ships from <code>semiotic/xy</code> and{" "}
-          <code>NetworkCustomChart</code> from <code>semiotic/network</code>.
+          Each frame's escape-hatch HOC ships from its own sub-path:{" "}
+          <code>CustomChart</code> from <code>semiotic/xy</code>,{" "}
+          <code>NetworkCustomChart</code> from <code>semiotic/network</code>,{" "}
+          <code>OrdinalCustomChart</code> from <code>semiotic/ordinal</code>.
           Layout recipes live on <code>semiotic/recipes</code> as a separate
           sub-path so they only land in the bundle if you actually use them.
           BYO deps (<code>d3-flextree</code>, <code>dagre</code>) are imported by
@@ -445,9 +630,11 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
         </p>
         <CodeBlock language="jsx">{`import { CustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
+import { OrdinalCustomChart } from "semiotic/ordinal"
 import {
   waffleLayout, calendarLayout,
   flextreeLayout, dagreLayout,
+  marimekkoLayout, bulletLayout, parallelCoordinatesLayout,
 } from "semiotic/recipes"`}</CodeBlock>
       </section>
 

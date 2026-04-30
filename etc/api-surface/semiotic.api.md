@@ -44,6 +44,7 @@ function MultiAxisLineChart
 function MultiLineTooltip
 function NetworkCustomChart
 function OrbitDiagram
+function OrdinalCustomChart
 function PieChart
 function QuadrantChart
 function RealtimeHeatmap

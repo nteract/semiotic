@@ -19,6 +19,16 @@ export type { FlextreeConfig } from "./recipes/flextree"
 export { dagreLayout } from "./recipes/dagre"
 export type { DagreConfig } from "./recipes/dagre"
 
+// ── Ordinal recipes (use with OrdinalCustomChart's customLayout) ──
+export { marimekkoLayout } from "./recipes/marimekko"
+export type { MarimekkoConfig } from "./recipes/marimekko"
+
+export { bulletLayout } from "./recipes/bullet"
+export type { BulletConfig } from "./recipes/bullet"
+
+export { parallelCoordinatesLayout } from "./recipes/parallelCoordinates"
+export type { ParallelCoordinatesConfig } from "./recipes/parallelCoordinates"
+
 // Re-export the layout types so recipe authors don't need a second import.
 export type {
   CustomLayout,
@@ -30,3 +40,8 @@ export type {
   NetworkLayoutContext,
   NetworkLayoutResult,
 } from "./stream/networkCustomLayout"
+export type {
+  OrdinalCustomLayout,
+  OrdinalLayoutContext,
+  OrdinalLayoutResult,
+} from "./stream/ordinalCustomLayout"

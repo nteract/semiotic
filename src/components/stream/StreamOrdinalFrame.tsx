@@ -92,7 +92,16 @@ const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
   timeline: withConnectors([barCanvasRenderer]),
   funnel: [barCanvasRenderer, trapezoidCanvasRenderer, funnelLabelRenderer],
   "bar-funnel": [barCanvasRenderer, barFunnelHatchRenderer, barFunnelLabelRenderer],
-  swimlane: withConnectors([barCanvasRenderer])
+  swimlane: withConnectors([barCanvasRenderer]),
+  // custom: any node type possible — each renderer self-filters to its type.
+  custom: withConnectors([
+    barCanvasRenderer,
+    pointCanvasRenderer,
+    wedgeCanvasRenderer,
+    boxplotCanvasRenderer,
+    violinCanvasRenderer,
+    trapezoidCanvasRenderer,
+  ])
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -302,7 +311,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       onBrush: onBrushProp,
       accessibleTable = true,
       description,
-      summary
+      summary,
+      customLayout,
+      layoutConfig,
     } = props
 
     // dirtyRef is declared before useFrame so it can be threaded in for
@@ -363,6 +374,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const [isStale, setIsStale] = useState(false)
+    // Lifted from store.customLayoutOverlays so React re-renders when overlays
+    // change. Synced via syncCustomOverlays() after data-change scene rebuilds.
+    // Same pattern as the network frame; reference-equality short-circuits
+    // no-op updates.
+    const [customOverlays, setCustomOverlays] = useState<React.ReactNode>(null)
+    const syncCustomOverlays = useCallback(() => {
+      setCustomOverlays(storeRef.current?.customLayoutOverlays ?? null)
+    }, [])
 
     // ── Hover config ─────────────────────────────────────────────────────
 
@@ -424,7 +443,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pulse,
       transition,
       introAnimation: introEnabled,
-      staleness
+      staleness,
+      customLayout,
+      layoutConfig,
+      layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
       oAccessor, rAccessor, colorAccessor, stackBy, groupBy, multiAxis,
@@ -434,7 +456,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
-      isStreaming, currentTheme
+      isStreaming, currentTheme,
+      customLayout, layoutConfig, margin,
     ])
 
     const storeRef = useRef<OrdinalPipelineStore | null>(null)
@@ -759,6 +782,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (wasDirty && !transitionActive) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         emitLegendCategories()
+        syncCustomOverlays()
         dirtyRef.current = false
       }
 
@@ -826,8 +850,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         ctx.translate(margin.left, margin.top)
       }
 
-      // Dispatch to renderers
-      const renderers = RENDERERS[chartType] || []
+      // Dispatch to renderers. When customLayout is provided, the user
+      // can emit any node type; use the "custom" renderer set (each
+      // renderer self-filters) regardless of the declared chartType.
+      const renderers = customLayout ? RENDERERS.custom : (RENDERERS[chartType] || [])
       const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
 
       for (const renderer of renderers) {
@@ -984,7 +1010,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
-            foregroundGraphics={resolvedForeground}
+            foregroundGraphics={
+              storeRef.current?.customLayoutOverlays != null
+                ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
+                : resolvedForeground
+            }
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
@@ -1103,7 +1133,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
-          foregroundGraphics={resolvedForeground}
+          foregroundGraphics={
+            customOverlays != null
+              ? <>{resolvedForeground}{customOverlays}</>
+              : resolvedForeground
+          }
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

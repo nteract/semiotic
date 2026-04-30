@@ -43,6 +43,9 @@ import { buildBarFunnelScene } from "./ordinalSceneBuilders/barFunnelScene"
 import { buildSwimlaneScene } from "./ordinalSceneBuilders/swimlaneScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
+import type { OrdinalLayoutContext } from "./ordinalCustomLayout"
+import { COLOR_SCHEMES } from "../charts/shared/colorUtils"
+import type { MarginType } from "../types/marginType"
 
 const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
   bar: buildBarScene,
@@ -105,6 +108,8 @@ export class OrdinalPipelineStore {
   multiScales: (ScaleLinear<number, number>)[] = []
   scene: OrdinalSceneNode[] = []
   columns: Record<string, OrdinalColumn> = {}
+  /** Overlays returned from customLayout (consumed by StreamOrdinalFrame). */
+  customLayoutOverlays: import("react").ReactNode = null
   version = 0
   /** Bumped whenever the buffer is mutated. Used to invalidate per-frame caches. */
   private _dataVersion = 0
@@ -700,6 +705,30 @@ export class OrdinalPipelineStore {
   private buildSceneNodes(data: Datum[], layout: OrdinalLayout): OrdinalSceneNode[] {
     if (!this.scales) return []
 
+    // customLayout escape hatch — short-circuit chart-type dispatch when
+    // the user has supplied their own layout function. The layout runs
+    // against fully-built scales (o + r) and produces scene primitives
+    // directly. Hit testing, decay, transitions, and SSR keep working
+    // because they consume `this.scene`.
+    if (this.config.customLayout) {
+      const layoutCtx = this.buildLayoutContext(layout)
+      let result
+      try {
+        result = this.config.customLayout(layoutCtx)
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[semiotic] ordinal customLayout threw:", err)
+        }
+        this.customLayoutOverlays = null
+        return []
+      }
+      this.customLayoutOverlays = result.overlays ?? null
+      return result.nodes ?? []
+    }
+
+    // Built-in chart types: clear stale overlays from a prior customLayout run.
+    this.customLayoutOverlays = null
+
     const ctx = this.getSceneContext()
     const builder = SCENE_BUILDERS[this.config.chartType]
     let nodes = builder ? builder(ctx, layout) : []
@@ -712,6 +741,53 @@ export class OrdinalPipelineStore {
     }
 
     return nodes
+  }
+
+  private buildLayoutContext(layout: OrdinalLayout): OrdinalLayoutContext {
+    const cfg = this.config
+    const margin: MarginType = cfg.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
+
+    // Palette precedence: explicit colorScheme (array or named scheme) →
+    // theme categorical → STREAMING_PALETTE fallback.
+    const cs = cfg.colorScheme
+    let palette: readonly string[]
+    if (Array.isArray(cs)) {
+      palette = cs
+    } else if (typeof cs === "string") {
+      const resolved = (COLOR_SCHEMES as Record<string, unknown>)[cs]
+      palette = Array.isArray(resolved)
+        ? (resolved as string[])
+        : (cfg.themeCategorical && cfg.themeCategorical.length > 0
+            ? cfg.themeCategorical
+            : STREAMING_PALETTE)
+    } else if (cfg.themeCategorical && cfg.themeCategorical.length > 0) {
+      palette = cfg.themeCategorical
+    } else {
+      palette = STREAMING_PALETTE
+    }
+
+    const scales = this.scales!
+    return {
+      data: this.buffer.toArray(),
+      scales: { o: scales.o, r: scales.r, projection: scales.projection },
+      dimensions: {
+        width: layout.width,
+        height: layout.height,
+        margin,
+        plot: { x: 0, y: 0, width: layout.width, height: layout.height },
+      },
+      theme: {
+        semantic: cfg.themeSemantic ?? {},
+        categorical: [...palette],
+      },
+      // Stable hash → palette index. Same key always returns the same color.
+      resolveColor: (key: string): string => {
+        let hash = 0
+        for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
+        return palette[Math.abs(hash) % palette.length] ?? "#4e79a7"
+      },
+      config: (cfg.layoutConfig ?? {}) as Record<string, unknown>,
+    }
   }
 
   // ── Style resolution ─────────────────────────────────────────────────
