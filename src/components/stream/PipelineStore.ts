@@ -576,10 +576,18 @@ export class PipelineStore {
           // wiggle offsets depend on group order, so the extent must agree
           // with the rendered geometry.
           const order = config.stackOrder ?? "key"
+          // Tie-breaker for equal-total groups — must match areaScene
+          // exactly (both paths use lexicographic key order on ties).
+          // Without this, sliding-window eviction can re-order tied
+          // groups between frames and the rendered stack swaps layers.
+          const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
           let groupKeys: string[]
           if (order === "insideOut") {
             const sorted = [...groups].map((g) => g.key)
-              .sort((a, b) => (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0))
+              .sort((a, b) => {
+                const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
+                return d !== 0 ? d : keyCmp(a, b)
+              })
             const tops: string[] = []
             const bottoms: string[] = []
             let topSum = 0
@@ -590,11 +598,17 @@ export class PipelineStore {
             }
             groupKeys = [...bottoms.reverse(), ...tops]
           } else if (order === "asc") {
-            groupKeys = groups.map((g) => g.key).sort((a, b) => (groupTotals.get(a) ?? 0) - (groupTotals.get(b) ?? 0))
+            groupKeys = groups.map((g) => g.key).sort((a, b) => {
+              const d = (groupTotals.get(a) ?? 0) - (groupTotals.get(b) ?? 0)
+              return d !== 0 ? d : keyCmp(a, b)
+            })
           } else if (order === "desc") {
-            groupKeys = groups.map((g) => g.key).sort((a, b) => (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0))
+            groupKeys = groups.map((g) => g.key).sort((a, b) => {
+              const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
+              return d !== 0 ? d : keyCmp(a, b)
+            })
           } else {
-            groupKeys = groups.map((g) => g.key).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+            groupKeys = groups.map((g) => g.key).sort(keyCmp)
           }
 
           if (config.baseline === "wiggle" || config.baseline === "silhouette") {

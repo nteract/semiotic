@@ -19,16 +19,20 @@ function buildStore(stackOrder: "key" | "insideOut" | "asc" | "desc" | undefined
 }
 
 function ingestStreamgraphData(store: PipelineStore) {
-  // 5 groups with deliberately asymmetric totals so insideOut produces a
-  // meaningful re-ordering. Group "huge" should land in the middle when
-  // insideOut is set; "tiny" should be at one of the outer edges.
+  // 5 groups whose alphabetical order deliberately doesn't match their
+  // total order. That way "key" (alpha), "asc", "desc", and "insideOut"
+  // each produce a distinct stacking — a buggy branch that falls back
+  // to alpha sort would no longer accidentally pass the desc/asc tests.
+  //
+  //   alpha order:  alpha < bravo < charlie < delta < echo
+  //   total order:  charlie (12) > echo (9) > bravo (6) > delta (3) > alpha (1)
   const data: Record<string, unknown>[] = []
   const profiles = [
-    { group: "tiny",   base: 1,  amp: 0.5 },
-    { group: "small",  base: 3,  amp: 1 },
-    { group: "huge",   base: 12, amp: 2 },
-    { group: "medium", base: 6,  amp: 1.5 },
-    { group: "large",  base: 9,  amp: 2 },
+    { group: "alpha",   base: 1,  amp: 0.5 },  // smallest
+    { group: "bravo",   base: 6,  amp: 1.5 },
+    { group: "charlie", base: 12, amp: 2 },    // largest
+    { group: "delta",   base: 3,  amp: 1 },
+    { group: "echo",    base: 9,  amp: 2 },
   ]
   for (let i = 0; i < 20; i++) {
     for (const p of profiles) {
@@ -46,33 +50,59 @@ function getAreaGroupOrder(store: PipelineStore): string[] {
 }
 
 describe("stackOrder", () => {
+  // alpha order:  alpha < bravo < charlie < delta < echo
+  // total desc:   charlie (12) > echo (9) > bravo (6) > delta (3) > alpha (1)
+  // Each branch produces a distinct order, so a buggy fall-through to
+  // "key" would visibly break the desc/asc/insideOut assertions.
+
   it("default 'key' sorts alphabetically", () => {
     const store = buildStore(undefined)
     ingestStreamgraphData(store)
-    expect(getAreaGroupOrder(store)).toEqual(["huge", "large", "medium", "small", "tiny"])
+    expect(getAreaGroupOrder(store)).toEqual(["alpha", "bravo", "charlie", "delta", "echo"])
   })
 
   it("'insideOut' places the largest-total group in the middle", () => {
     const store = buildStore("insideOut")
     ingestStreamgraphData(store)
     const order = getAreaGroupOrder(store)
-    // 5 groups → "huge" should sit at index 2 (the middle).
     expect(order).toHaveLength(5)
-    expect(order[2]).toBe("huge")
-    // "tiny" (smallest total) should land at one of the outer edges.
-    expect([0, order.length - 1]).toContain(order.indexOf("tiny"))
+    // "charlie" (largest total) should sit at the middle (index 2).
+    expect(order[2]).toBe("charlie")
+    // "alpha" (smallest total) should land at one of the outer edges.
+    expect([0, order.length - 1]).toContain(order.indexOf("alpha"))
   })
 
-  it("'desc' sorts largest-first (largest at the bottom of the stack)", () => {
+  it("'desc' sorts by total descending — distinct from alpha order", () => {
     const store = buildStore("desc")
     ingestStreamgraphData(store)
-    expect(getAreaGroupOrder(store)).toEqual(["huge", "large", "medium", "small", "tiny"])
+    // Order is by total, not alpha — charlie (largest) first, alpha (smallest) last.
+    expect(getAreaGroupOrder(store)).toEqual(["charlie", "echo", "bravo", "delta", "alpha"])
   })
 
-  it("'asc' sorts smallest-first", () => {
+  it("'asc' sorts by total ascending — distinct from alpha order", () => {
     const store = buildStore("asc")
     ingestStreamgraphData(store)
-    expect(getAreaGroupOrder(store)).toEqual(["tiny", "small", "medium", "large", "huge"])
+    expect(getAreaGroupOrder(store)).toEqual(["alpha", "delta", "bravo", "echo", "charlie"])
+  })
+
+  it("ties on total break by lexicographic key (stable under streaming)", () => {
+    // Regression: Array.sort is stable on insertion order, but sliding-
+    // window eviction can shift insertion order between frames. Tied
+    // totals would re-order and cause layer flicker. Both areaScene
+    // and PipelineStore tie-break by key alpha — check that here.
+    const store = buildStore("desc")
+    // Two groups, identical totals (3 each), inserted in non-alpha order.
+    store.ingest({
+      inserts: [
+        { t: 0, group: "zeta",  v: 1 }, { t: 1, group: "zeta",  v: 1 }, { t: 2, group: "zeta",  v: 1 },
+        { t: 0, group: "alpha", v: 1 }, { t: 1, group: "alpha", v: 1 }, { t: 2, group: "alpha", v: 1 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 600, height: 200 })
+    // Equal totals → alpha-first (lexicographic tie-break) regardless
+    // of insertion order.
+    expect(getAreaGroupOrder(store)).toEqual(["alpha", "zeta"])
   })
 
   it("yDomain stays centered around zero with insideOut + wiggle", () => {
@@ -96,8 +126,7 @@ describe("stackOrder", () => {
     // typoed/forwards-compat value.
     const store = buildStore("nonsense" as unknown as "key")
     ingestStreamgraphData(store)
-    // "key" sort would produce alpha order: huge, large, medium, small, tiny.
-    expect(getAreaGroupOrder(store)).toEqual(["huge", "large", "medium", "small", "tiny"])
+    expect(getAreaGroupOrder(store)).toEqual(["alpha", "bravo", "charlie", "delta", "echo"])
   })
 
   it("totals filter for stack ordering matches the stacking pipeline", () => {

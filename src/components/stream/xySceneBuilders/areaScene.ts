@@ -82,16 +82,33 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
       }
       totals.set(g.key, s)
     }
+    // Tie-breaker: when two groups have equal totals, fall back to
+    // lexicographic key order. `Array.sort` is stable in modern JS but
+    // its stability is on insertion order — under sliding-window
+    // eviction the insertion order can shift between frames and tied
+    // groups would swap, causing layer flicker. The lexicographic tie-
+    // breaker matches the "key" sort default and PipelineStore's
+    // extent comparator so both paths stay in sync.
+    const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
     if (stackOrder === "asc") {
-      groups.sort((a, b) => (totals.get(a.key) ?? 0) - (totals.get(b.key) ?? 0))
+      groups.sort((a, b) => {
+        const d = (totals.get(a.key) ?? 0) - (totals.get(b.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
     } else if (stackOrder === "desc") {
-      groups.sort((a, b) => (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0))
+      groups.sort((a, b) => {
+        const d = (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
     } else {
       // insideOut — d3-shape's stackOrderInsideOut algorithm: sort by
-      // total desc, then alternately push to bottom or top of the
-      // result so the largest sits in the middle with progressively-
-      // smaller series wrapping outward.
-      const sorted = [...groups].sort((a, b) => (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0))
+      // total desc (ties broken by key), then alternately push to
+      // bottom or top of the result so the largest sits in the middle
+      // with progressively-smaller series wrapping outward.
+      const sorted = [...groups].sort((a, b) => {
+        const d = (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
       const tops: typeof groups = []
       const bottoms: typeof groups = []
       let topSum = 0

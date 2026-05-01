@@ -25,11 +25,15 @@ export function resolveCustomLayoutPalette(
   themeCategorical: string[] | undefined,
   fallback: readonly string[]
 ): readonly string[] {
-  if (Array.isArray(colorScheme)) return colorScheme
+  // Treat an empty array the same as `undefined`. Downstream callers
+  // (`buildResolveColor`) hash by `palette.length`, so a 0-length
+  // palette would produce NaN modulos — fall through to theme/fallback
+  // instead so the resolver always has at least one color to work with.
+  if (Array.isArray(colorScheme) && colorScheme.length > 0) return colorScheme
   if (typeof colorScheme === "string") {
     const named = (COLOR_SCHEMES as Record<string, unknown>)[colorScheme]
-    if (Array.isArray(named)) return named as string[]
-    // Unknown name — fall through to theme/fallback.
+    if (Array.isArray(named) && named.length > 0) return named as string[]
+    // Unknown name (or empty named scheme) — fall through.
   }
   if (themeCategorical && themeCategorical.length > 0) return themeCategorical
   return fallback
@@ -41,6 +45,14 @@ export function resolveCustomLayoutPalette(
  * color for the lifetime of the closure.
  */
 export function buildResolveColor(palette: readonly string[]): (key: string) => string {
+  // Defense in depth — `resolveCustomLayoutPalette` should never return
+  // an empty palette, but if it ever did `Math.abs(hash) % 0` is NaN
+  // and `palette[NaN]` is undefined. Bail out to a fixed primary so the
+  // recipe still draws *something* readable instead of silently
+  // falling all the way through to scene-renderer fallbacks.
+  if (palette.length === 0) {
+    return () => "#4e79a7"
+  }
   return (key: string): string => {
     let hash = 0
     for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
