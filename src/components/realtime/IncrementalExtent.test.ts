@@ -139,4 +139,26 @@ describe("IncrementalExtent", () => {
       expect(ext.max).toBe(20)
     })
   })
+
+  describe("Infinity handling", () => {
+    it("rejects ±Infinity in push (matches stacked-area pipeline)", () => {
+      // Regression: previously the guard only rejected NaN, so Infinity
+      // values silently expanded the extent to ±Infinity, producing
+      // broken downstream scales. Number.isFinite rejects all three.
+      const ext = new IncrementalExtent()
+      ext.push(10)
+      ext.push(Infinity)
+      ext.push(-Infinity)
+      ext.push(20)
+      expect(ext.min).toBe(10)
+      expect(ext.max).toBe(20)
+    })
+
+    it("rejects ±Infinity in recalculate", () => {
+      const ext = new IncrementalExtent()
+      ext.recalculate([5, Infinity, -Infinity, 15])
+      expect(ext.min).toBe(5)
+      expect(ext.max).toBe(15)
+    })
+  })
 })

@@ -27,7 +27,10 @@ export function buildLineNode(
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
-    if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
+    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
+    // IncrementalExtent + the stacked-area pipeline's filter so all
+    // builders agree on which datums count.
+    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
     entries.push({ px: scales.x(xVal), py: scales.y(yVal), rawY: yVal, d })
   }
   // Sort by x pixel coordinate to guarantee binary search correctness
@@ -60,7 +63,10 @@ export function buildAreaNode(
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
-    if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
+    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
+    // IncrementalExtent + the stacked-area pipeline's filter so all
+    // builders agree on which datums count.
+    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
     const px = scales.x(xVal)
     const bottomY = y0Get ? y0Get(d) : baselineY
     entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY) })
@@ -271,7 +277,7 @@ export function buildPointNode(
 ): PointSceneNode | null {
   const xVal = xGet(datum)
   const yVal = yGet(datum)
-  if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) return null
+  if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) return null
   const node: PointSceneNode = {
     type: "point",
     x: scales.x(xVal),

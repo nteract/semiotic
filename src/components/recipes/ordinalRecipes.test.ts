@@ -146,6 +146,24 @@ describe("marimekkoLayout", () => {
     }, zeroData))
     expect(result.nodes).toEqual([])
   })
+
+  it("does not pollute Object.prototype when accessor names are adversarial", () => {
+    // Regression: assigning user-supplied keys like "__proto__" onto a
+    // plain object literal can mutate the prototype chain. Recipe uses
+    // Object.create(null) so the assignment becomes a normal own-property.
+    const before = Object.getOwnPropertyNames(Object.prototype).length
+    const adversarial = [
+      { region: "AMER", product: "Hardware", revenue: 50, polluted: "no" },
+    ]
+    marimekkoLayout(makeCtx({
+      categoryAccessor: "__proto__" as string,
+      stackBy: "constructor" as string,
+      valueAccessor: "revenue",
+    }, adversarial))
+    const after = Object.getOwnPropertyNames(Object.prototype).length
+    expect(after).toBe(before)
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+  })
 })
 
 describe("bulletLayout", () => {
@@ -287,6 +305,21 @@ describe("bulletLayout", () => {
     for (let i = 1; i < rangeRects.length; i++) {
       expect(rangeRects[i].x).toBeGreaterThanOrEqual(rangeRects[i - 1].x + rangeRects[i - 1].w - 1e-6)
     }
+  })
+
+  it("does not pollute Object.prototype when accessor names are adversarial", () => {
+    // Regression: bullet emits datum objects keyed by user-supplied
+    // accessor names. Object.create(null) keeps "__proto__" assignments
+    // as own-properties instead of mutating the prototype chain.
+    const before = Object.getOwnPropertyNames(Object.prototype).length
+    bulletLayout(makeCtx({
+      categoryAccessor: "__proto__" as string,
+      valueAccessor: "constructor" as string,
+      targetAccessor: "prototype" as string,
+      rangesAccessor: "ranges",
+    }, [{ metric: "X", actual: 50, target: 60, ranges: [10, 50, 100] }]))
+    const after = Object.getOwnPropertyNames(Object.prototype).length
+    expect(after).toBe(before)
   })
 })
 

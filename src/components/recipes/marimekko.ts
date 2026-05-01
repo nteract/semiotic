@@ -81,7 +81,15 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
   const stackKey = typeof cfg.stackBy === "string" ? cfg.stackBy : "stack"
   const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
   const buildDatum = (cat: string, st: string, cellVal: number): Datum => {
-    const out: Datum = { category: cat, stack: st, value: cellVal }
+    // `Object.create(null)` produces an object with no prototype, so
+    // assigning a user-supplied key like `__proto__`, `constructor`, or
+    // `prototype` just sets a normal own-property instead of mutating
+    // the object's prototype chain. Defends against accidental
+    // prototype pollution when callers pass adversarial accessor names.
+    const out = Object.create(null) as Datum
+    out.category = cat
+    out.stack = st
+    out.value = cellVal
     if (categoryKey !== "category") out[categoryKey] = cat
     if (stackKey !== "stack") out[stackKey] = st
     if (valueKey !== "value") out[valueKey] = cellVal
