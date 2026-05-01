@@ -2,7 +2,7 @@
  * useCustomChartScaffold / useCustomChartSetup — shared scaffolding for
  * the three custom-layout HOCs.
  *
- * `CustomChart`, `OrdinalCustomChart`, and `NetworkCustomChart` all
+ * `XYCustomChart`, `OrdinalCustomChart`, and `NetworkCustomChart` all
  * repeat the same orchestration pipeline: bind the imperative ref, run
  * `useChartMode`, normalize the user margin shorthand, filter the
  * sparse data array, and (for the data-shaped HOCs) call
@@ -12,7 +12,7 @@
  *   - `useCustomChartScaffold`  — chart-mode + margin + imperative
  *      handle. Used by all three HOCs (network calls this directly).
  *   - `useCustomChartSetup`     — the scaffold *plus* `useChartSetup`
- *      wiring for the data-shaped HOCs (CustomChart, OrdinalCustomChart).
+ *      wiring for the data-shaped HOCs (XYCustomChart, OrdinalCustomChart).
  *
  * Two separate hooks rather than one conditional hook so React's
  * rules-of-hooks aren't on the line — each call site pins exactly one
@@ -108,7 +108,7 @@ export function useCustomChartScaffold<TFrameHandle>(
 interface DataSetupOptions<TFrameHandle> extends ScaffoldOptions<TFrameHandle> {
   /** Raw `data` prop from the HOC (may be undefined in push mode). */
   data: Datum[] | undefined
-  /** Label used by useChartSetup for observation events ("CustomChart", "OrdinalCustomChart"). */
+  /** Label used by useChartSetup for observation events ("XYCustomChart", "OrdinalCustomChart"). */
   chartTypeLabel: string
   /** Whether the hover callback should unwrap the datum (ordinal/network = true, XY = false). */
   unwrapData: boolean
@@ -135,7 +135,7 @@ interface DataSetupResult<TFrameHandle> extends ScaffoldResult<TFrameHandle> {
 
 /**
  * Scaffold + `useChartSetup` wiring for the data-shaped custom-layout
- * HOCs (`CustomChart`, `OrdinalCustomChart`). Each HOC stays in charge
+ * HOCs (`XYCustomChart`, `OrdinalCustomChart`). Each HOC stays in charge
  * of its own frame-specific streamProps; the hook only owns the
  * orchestration that is genuinely identical.
  */

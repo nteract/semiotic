@@ -26,7 +26,6 @@ function ChordDiagram
 function CirclePack
 function ConnectedScatterplot
 function ContextLayout
-function CustomChart
 function DetailsPanel
 function DonutChart
 function DotPlot
@@ -69,6 +68,7 @@ function Tooltip
 function TreeDiagram
 function Treemap
 function ViolinPlot
+function XYCustomChart
 function adaptiveTimeTicks
 function configToJSX
 function copyConfig
