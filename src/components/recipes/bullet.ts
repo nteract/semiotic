@@ -2,6 +2,7 @@ import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
+import { resolveAccessor, createSafeDatum } from "./recipeUtils"
 
 export interface BulletConfig {
   /** Field (or function) yielding the row label per datum. Each row is one bullet. */
@@ -183,18 +184,20 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW
     const cat = getCategory(d)
 
-    // `Object.create(null)` produces a prototype-less object so
-    // assigning a user-supplied key like `__proto__`, `constructor`, or
-    // `prototype` just sets a normal own-property instead of mutating
-    // the prototype chain. Defends against accidental prototype
-    // pollution when callers pass adversarial accessor names.
-    const makeDatum = (extras: Record<string, unknown>): Datum => {
-      const out = Object.create(null) as Datum
-      out.metric = cat
-      if (categoryKey !== "metric") out[categoryKey] = cat
-      for (const k of Object.keys(extras)) out[k] = extras[k]
-      return out
-    }
+    // makeDatum runs every assignment through createSafeDatum's
+    // null-prototype writer — including user-supplied accessor names.
+    // Building an intermediate object literal first would let
+    // `__proto__` invoke the setter on a normal object before we ever
+    // reach the safe target, silently dropping the field. Each call site
+    // hands the recipe-fixed keys (kind/value/range/...) and any
+    // user-controlled accessor (categoryKey/valueKey/targetKey) through
+    // the `set` writer.
+    const makeDatum = (build: (set: (k: string, v: unknown) => void) => void): Datum =>
+      createSafeDatum((set) => {
+        set("metric", cat)
+        if (categoryKey !== "metric") set(categoryKey, cat)
+        build(set)
+      })
 
     // Background range bars — full row height, successively darker.
     let lastEnd = bulletX
@@ -209,7 +212,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
           w,
           h: rowH,
           style: { fill: rangeColors[Math.min(r, rangeColors.length - 1)], stroke: "none" },
-          datum: makeDatum({ range: r, rangeValue: ranges[r], kind: "range" }),
+          datum: makeDatum((set) => {
+            set("range", r)
+            set("rangeValue", ranges[r])
+            set("kind", "range")
+          }),
           group: `range-${r}`,
         })
       }
@@ -218,8 +225,6 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
     // Actual value bar — thinner, centered vertically inside the row.
     const actualH = Math.max(6, Math.floor(rowH * 0.45))
-    const actualExtras: Record<string, unknown> = { value: actual, kind: "actual" }
-    if (valueKey !== "value") actualExtras[valueKey] = actual
     nodes.push({
       type: "rect",
       x: bulletX,
@@ -227,15 +232,17 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       w: xToPx(actual) - bulletX,
       h: actualH,
       style: { fill: baseColor, stroke: "none" },
-      datum: makeDatum(actualExtras),
+      datum: makeDatum((set) => {
+        set("value", actual)
+        set("kind", "actual")
+        if (valueKey !== "value") set(valueKey, actual)
+      }),
       group: "actual",
     })
 
     // Target tick — narrow vertical mark spanning ~80% of row height.
     const tickW = 3
     const tickH = Math.floor(rowH * 0.8)
-    const targetExtras: Record<string, unknown> = { target, kind: "target" }
-    if (targetKey !== "target") targetExtras[targetKey] = target
     nodes.push({
       type: "rect",
       x: xToPx(target) - tickW / 2,
@@ -243,7 +250,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       w: tickW,
       h: tickH,
       style: { fill: targetColor, stroke: "none" },
-      datum: makeDatum(targetExtras),
+      datum: makeDatum((set) => {
+        set("target", target)
+        set("kind", "target")
+        if (targetKey !== "target") set(targetKey, target)
+      }),
       group: "target",
     })
   }
@@ -302,7 +313,3 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   return { nodes, overlays }
 }
 
-function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d: Datum) => T {
-  if (typeof a === "function") return a
-  return (d: Datum) => d[a] as T
-}

@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { forwardRef, useMemo, useRef } from "react"
+import { forwardRef, useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
   StreamNetworkFrameProps,
@@ -10,9 +10,8 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps } from "../shared/types"
-import { useChartMode } from "../shared/hooks"
 import { SafeRender } from "../shared/withChartWrapper"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
 
 export interface NetworkCustomChartProps<
@@ -81,20 +80,6 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
   TEdge extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: NetworkCustomChartProps<TNode, TEdge, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
-  const frameRef = useRef<StreamNetworkFrameHandle>(null)
-  useFrameImperativeHandle(ref, { variant: "network", frameRef })
-
-  const resolved = useChartMode(props.mode, {
-    width: props.width,
-    height: props.height,
-    showGrid: false,
-    enableHover: props.enableHover,
-    showLegend: undefined,
-    title: props.title,
-    xLabel: undefined,
-    yLabel: undefined,
-  })
-
   const {
     nodes,
     edges,
@@ -103,33 +88,27 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     nodeIDAccessor = "id",
     sourceAccessor = "source",
     targetAccessor = "target",
-    margin: userMarginRaw,
+    margin: userMargin,
     className,
     colorScheme,
     frameProps = {},
   } = props
 
-  // PartialMargin allows a number shorthand; StreamNetworkFrame's margin
-  // only accepts the sided object form.
-  const userMargin = useMemo(() => {
-    if (typeof userMarginRaw === "number") {
-      return { top: userMarginRaw, right: userMarginRaw, bottom: userMarginRaw, left: userMarginRaw }
-    }
-    return userMarginRaw
-  }, [userMarginRaw])
-
-  const {
-    width,
-    height,
-    enableHover,
-    title,
-    description,
-    summary,
-    accessibleTable,
-  } = resolved
+  const { frameRef, resolved, normalizedMargin } = useCustomChartScaffold<StreamNetworkFrameHandle>({
+    imperativeRef: ref,
+    imperativeVariant: "network",
+    margin: userMargin,
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    title: props.title,
+    mode: props.mode,
+  })
 
   const safeNodes = useMemo(() => filterSparseArray(nodes ?? []), [nodes])
   const safeEdges = useMemo(() => filterSparseArray(edges ?? []), [edges])
+
+  const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
 
   const streamProps: StreamNetworkFrameProps = {
     chartType: "force",
@@ -144,7 +123,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
-    margin: userMargin,
+    margin: normalizedMargin,
     className,
     title,
     description,

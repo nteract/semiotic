@@ -1,5 +1,5 @@
 /**
- * Recipes entry point — curated layout functions for use with `CustomChart`.
+ * Recipes entry point — curated layout functions for use with `XYCustomChart`.
  *
  * Import from "semiotic/recipes" instead of the full bundle. Recipes are
  * pure CustomLayout functions that emit standard SceneNodes; they get hit

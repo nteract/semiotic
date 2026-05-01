@@ -149,13 +149,16 @@ describe("marimekkoLayout", () => {
 
   it("does not pollute Object.prototype when accessor names are adversarial", () => {
     // Regression: assigning user-supplied keys like "__proto__" onto a
-    // plain object literal can mutate the prototype chain. Recipe uses
-    // Object.create(null) so the assignment becomes a normal own-property.
+    // plain object literal mutates the prototype chain (or silently no-ops
+    // on the setter, dropping the field). The recipe routes every assignment
+    // through createSafeDatum's null-prototype writer so adversarial keys
+    // become normal own-properties on the datum and the global prototype is
+    // untouched.
     const before = Object.getOwnPropertyNames(Object.prototype).length
     const adversarial = [
       { region: "AMER", product: "Hardware", revenue: 50, polluted: "no" },
     ]
-    marimekkoLayout(makeCtx({
+    const result = marimekkoLayout(makeCtx({
       categoryAccessor: "__proto__" as string,
       stackBy: "constructor" as string,
       valueAccessor: "revenue",
@@ -163,6 +166,12 @@ describe("marimekkoLayout", () => {
     const after = Object.getOwnPropertyNames(Object.prototype).length
     expect(after).toBe(before)
     expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    // The user-supplied "__proto__" accessor must round-trip as an
+    // *own-property* on the datum — not be silently dropped by the
+    // __proto__ setter on a non-null prototype intermediate.
+    const rect = (result.nodes! as RectSceneNode[])[0]
+    expect(Object.prototype.hasOwnProperty.call(rect.datum, "__proto__")).toBe(true)
+    expect(Object.prototype.hasOwnProperty.call(rect.datum, "constructor")).toBe(true)
   })
 })
 
@@ -309,10 +318,11 @@ describe("bulletLayout", () => {
 
   it("does not pollute Object.prototype when accessor names are adversarial", () => {
     // Regression: bullet emits datum objects keyed by user-supplied
-    // accessor names. Object.create(null) keeps "__proto__" assignments
-    // as own-properties instead of mutating the prototype chain.
+    // accessor names. createSafeDatum's null-prototype writer keeps
+    // "__proto__" assignments as own-properties instead of routing them
+    // through the prototype setter on an intermediate object.
     const before = Object.getOwnPropertyNames(Object.prototype).length
-    bulletLayout(makeCtx({
+    const result = bulletLayout(makeCtx({
       categoryAccessor: "__proto__" as string,
       valueAccessor: "constructor" as string,
       targetAccessor: "prototype" as string,
@@ -320,6 +330,14 @@ describe("bulletLayout", () => {
     }, [{ metric: "X", actual: 50, target: 60, ranges: [10, 50, 100] }]))
     const after = Object.getOwnPropertyNames(Object.prototype).length
     expect(after).toBe(before)
+    // Each rect's datum must surface the user-supplied accessor name as
+    // an own-property, not silently lose it to the __proto__ setter.
+    const rects = result.nodes! as RectSceneNode[]
+    const actualRect = rects.find((r) => r.datum?.kind === "actual")!
+    const targetRect = rects.find((r) => r.datum?.kind === "target")!
+    expect(Object.prototype.hasOwnProperty.call(actualRect.datum, "__proto__")).toBe(true)
+    expect(Object.prototype.hasOwnProperty.call(actualRect.datum, "constructor")).toBe(true)
+    expect(Object.prototype.hasOwnProperty.call(targetRect.datum, "prototype")).toBe(true)
   })
 })
 

@@ -26,6 +26,7 @@ import {
   DEFAULT_PARTICLE_STYLE
 } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import { composeOverlays } from "./composeOverlays"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
@@ -1332,9 +1333,7 @@ const StreamNetworkFrame = forwardRef<
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={
-            storeRef.current?.customLayoutOverlays != null
-              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
-              : resolvedForeground
+            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
@@ -1420,9 +1419,7 @@ const StreamNetworkFrame = forwardRef<
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={
-          customOverlays != null
-            ? <>{resolvedForeground}{customOverlays}</>
-            : resolvedForeground
+          composeOverlays(resolvedForeground, customOverlays)
         }
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

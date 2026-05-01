@@ -16,7 +16,7 @@ export interface CalendarConfig {
   colorRamp?: [string, string]
   /**
    * Calendar year to render. If omitted, infers the year from the first datum.
-   * For multi-year series, render one CustomChart per year.
+   * For multi-year series, render one XYCustomChart per year.
    */
   year?: number
   /** Pixel gap between cells. @default 2 */
@@ -33,7 +33,7 @@ const DAY_MS = 86_400_000
  *
  * @example
  * ```tsx
- * <CustomChart
+ * <XYCustomChart
  *   data={dailyEvents}
  *   layout={calendarLayout}
  *   layoutConfig={{

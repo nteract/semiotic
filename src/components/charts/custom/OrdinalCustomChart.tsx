@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { forwardRef, useMemo, useRef } from "react"
+import { forwardRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type {
   StreamOrdinalFrameProps,
@@ -10,12 +10,9 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { OrdinalCustomLayout } from "../../stream/ordinalCustomLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps } from "../shared/types"
-import { useChartMode } from "../shared/hooks"
 import { SafeRender } from "../shared/withChartWrapper"
-import { filterSparseArray } from "../shared/sparseArray"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { useChartSetup } from "../shared/useChartSetup"
+import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -88,24 +85,6 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: OrdinalCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
-  const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-
-  // Forward push/pushMany/clear/getData to the inner frame via the shared
-  // helper. The "xy" variant's expected shape (XYOrdinalFrameLike) matches
-  // StreamOrdinalFrameHandle exactly — same shape both frames use.
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
-
-  const resolved = useChartMode(props.mode, {
-    width: props.width,
-    height: props.height,
-    showGrid: props.showGrid,
-    enableHover: props.enableHover,
-    showLegend: undefined,
-    title: props.title,
-    xLabel: undefined,
-    yLabel: undefined,
-  })
-
   const {
     data,
     layout,
@@ -115,7 +94,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     oExtent,
     rExtent,
     projection = "vertical",
-    margin: userMarginRaw,
+    margin: userMargin,
     className,
     colorScheme,
     showAxes = false,
@@ -130,60 +109,39 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     frameProps = {},
   } = props
 
-  // PartialMargin allows a number shorthand; StreamOrdinalFrame's margin
-  // only accepts the sided object form.
-  const userMargin = useMemo(() => {
-    if (typeof userMarginRaw === "number") {
-      return { top: userMarginRaw, right: userMarginRaw, bottom: userMarginRaw, left: userMarginRaw }
-    }
-    return userMarginRaw
-  }, [userMarginRaw])
-
-  const {
-    width,
-    height,
-    enableHover,
-    showGrid,
-    title,
-    description,
-    summary,
-    accessibleTable,
-  } = resolved
-
-  const safeData = useMemo(() => filterSparseArray(data ?? []), [data])
-
   // Shared setup pipeline — same one BarChart/SwarmPlot/etc. use. Provides:
-  //   - setup.earlyReturn: loading skeleton or empty-state element to short-
-  //     circuit the render (so loading/emptyContent props actually do something)
+  //   - earlyReturn: loading skeleton or empty-state element to short-circuit
   //   - setup.customHoverBehavior / customClickBehavior: wraps onObservation,
-  //     onClick, selection, and linkedHover into the customHoverBehavior/
+  //     onClick, selection, and linkedHover into the customHoverBehavior /
   //     customClickBehavior fields the frame consumes (the bare props don't
   //     exist on StreamOrdinalFrameProps)
   //   - setup.margin: merged user margin + chart-mode default
-  const setup = useChartSetup({
-    data: safeData,
-    rawData: data,
-    colorBy: undefined,
+  const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamOrdinalFrameHandle>({
+    imperativeRef: ref,
+    imperativeVariant: "xy",
+    chartTypeLabel: "OrdinalCustomChart",
+    unwrapData: true,
+    data,
     colorScheme,
-    legendInteraction: undefined,
     selection,
     linkedHover,
-    fallbackFields: [],
-    unwrapData: true,
     onObservation,
     onClick,
-    chartType: "OrdinalCustomChart",
     chartId,
-    showLegend: undefined,
-    userMargin,
-    marginDefaults: resolved.marginDefaults,
     loading,
     emptyContent,
-    width,
-    height,
+    margin: userMargin,
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    title: props.title,
+    mode: props.mode,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
+  if (earlyReturn) return earlyReturn
+
+  const { width, height, enableHover, showGrid, title, description, summary, accessibleTable } = resolved
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "custom",

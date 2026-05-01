@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from "react"
-import { CustomChart } from "../../../../src/components/charts/custom/CustomChart"
+import { XYCustomChart } from "../../../../src/components/charts/custom/XYCustomChart"
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
 import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
 import { StackedAreaChart } from "../../../../src/components/charts/xy/StackedAreaChart"
@@ -230,7 +230,7 @@ export default function CustomChartsPage() {
     <PageLayout title="Custom Charts" subtitle="Bespoke geometry on top of the built-in pipeline">
       <section>
         <p>
-          When the catalog doesn't fit, <code>CustomChart</code> lets you supply a layout
+          When the catalog doesn't fit, <code>XYCustomChart</code> lets you supply a layout
           function that emits scene nodes directly. The frame still owns scales, theme,
           hit testing, transitions, decay, accessibility, and SSR — your layout owns the
           geometry. Most novel chart types (waffle, calendar, streamgraph,
@@ -251,7 +251,7 @@ export default function CustomChartsPage() {
           theme, hover, and selection feature works without extra wiring.
         </p>
         <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
-          <CustomChart
+          <XYCustomChart
             data={waffleData}
             layout={waffleLayout}
             layoutConfig={{
@@ -267,10 +267,10 @@ export default function CustomChartsPage() {
             colorScheme={["#4e79a7", "#f28e2c", "#59a14f", "#e15759"]}
           />
         </div>
-        <CodeBlock language="jsx">{`import { CustomChart } from "semiotic/xy"
+        <CodeBlock language="jsx">{`import { XYCustomChart } from "semiotic/xy"
 import { waffleLayout } from "semiotic/recipes"
 
-<CustomChart
+<XYCustomChart
   data={[
     { region: "AMER",  share: 42 },
     { region: "EMEA",  share: 28 },
@@ -297,7 +297,7 @@ import { waffleLayout } from "semiotic/recipes"
           <code>colorRamp</code> for non-default ramps.
         </p>
         <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
-          <CustomChart
+          <XYCustomChart
             data={calendarData}
             layout={calendarLayout}
             layoutConfig={{
@@ -313,7 +313,7 @@ import { waffleLayout } from "semiotic/recipes"
         </div>
         <CodeBlock language="jsx">{`import { calendarLayout } from "semiotic/recipes"
 
-<CustomChart
+<XYCustomChart
   data={dailyEvents}
   layout={calendarLayout}
   layoutConfig={{
@@ -691,7 +691,7 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
         <h2>Sub-path import</h2>
         <p>
           Each frame's escape-hatch HOC ships from its own sub-path:{" "}
-          <code>CustomChart</code> from <code>semiotic/xy</code>,{" "}
+          <code>XYCustomChart</code> from <code>semiotic/xy</code>,{" "}
           <code>NetworkCustomChart</code> from <code>semiotic/network</code>,{" "}
           <code>OrdinalCustomChart</code> from <code>semiotic/ordinal</code>.
           Layout recipes live on <code>semiotic/recipes</code> as a separate
@@ -699,7 +699,7 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
           BYO deps (<code>d3-flextree</code>, <code>dagre</code>) are imported by
           your code, not Semiotic — keeps the library small.
         </p>
-        <CodeBlock language="jsx">{`import { CustomChart } from "semiotic/xy"
+        <CodeBlock language="jsx">{`import { XYCustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
 import { OrdinalCustomChart } from "semiotic/ordinal"
 import {
@@ -714,7 +714,7 @@ import {
         <ul>
           <li><strong>Plot-relative coordinates.</strong> Scene-node positions are in plot space — the frame already translates by the resolved <code>margin</code>. Use <code>ctx.dimensions.plot</code> for the drawing rect.</li>
           <li><strong>Renderer dispatch.</strong> When <code>customLayout</code> is provided, the frame uses a renderer set that handles every node type, so your layout can emit any mix of rects, areas, lines, etc. regardless of <code>chartType</code>.</li>
-          <li><strong>Extents.</strong> If your layout uses scales, pass <code>xExtent</code> / <code>yExtent</code> on <code>CustomChart</code> to lock the domain. Layouts that don't use scales (waffle, calendar) ignore them.</li>
+          <li><strong>Extents.</strong> If your layout uses scales, pass <code>xExtent</code> / <code>yExtent</code> on <code>XYCustomChart</code> to lock the domain. Layouts that don't use scales (waffle, calendar) ignore them.</li>
           <li>
             For richer composition examples, see <Link to="/recipes/benchmark-dashboard">recipes pages</Link>.
             Streamgraph baseline lives on <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
