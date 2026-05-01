@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
@@ -15,6 +16,19 @@ export interface MarimekkoConfig {
   categoryOrder?: string[]
   /** Optional explicit stack order. If omitted, uses insertion order. */
   stackOrder?: string[]
+  /**
+   * Render category labels under each bar via SVG overlays. The default
+   * ordinal axis can't position labels under variable-width bars (it
+   * assumes a uniform band scale), so the recipe handles label
+   * placement itself. @default true
+   */
+  showCategoryLabels?: boolean
+  /**
+   * Pixel-padding reserved beneath the bars for labels. Subtracted from
+   * the plot height when laying out the bars. @default 22 when labels
+   * are shown, 0 otherwise.
+   */
+  labelPadding?: number
 }
 
 /**
@@ -56,6 +70,36 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
   }
   const gutter = cfg.gutter ?? 2
 
+  // Datum keys that the default ordinal tooltip + most user-supplied
+  // tooltips will recognize. When the user's accessors are string field
+  // names, we surface the cell's values under those names so the default
+  // tooltip's `d[oAccessor]` / `d[rAccessor]` lookups land on real
+  // values. We also expose generic `category` / `stack` / `value` fields
+  // as a fallback for tooltips that don't know about the original
+  // accessors.
+  const categoryKey = typeof cfg.categoryAccessor === "string" ? cfg.categoryAccessor : "category"
+  const stackKey = typeof cfg.stackBy === "string" ? cfg.stackBy : "stack"
+  const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
+  const buildDatum = (cat: string, st: string, cellVal: number): Datum => {
+    // `Object.create(null)` produces an object with no prototype, so
+    // assigning a user-supplied key like `__proto__`, `constructor`, or
+    // `prototype` just sets a normal own-property instead of mutating
+    // the object's prototype chain. Defends against accidental
+    // prototype pollution when callers pass adversarial accessor names.
+    const out = Object.create(null) as Datum
+    out.category = cat
+    out.stack = st
+    out.value = cellVal
+    if (categoryKey !== "category") out[categoryKey] = cat
+    if (stackKey !== "stack") out[stackKey] = st
+    if (valueKey !== "value") out[valueKey] = cellVal
+    return out
+  }
+
+  const showLabels = cfg.showCategoryLabels !== false
+  const labelPad = cfg.labelPadding ?? (showLabels ? 22 : 0)
+  const barAreaH = Math.max(0, plot.height - labelPad)
+
   // First pass: tally per-category totals + per-category-per-stack values.
   const categoryOrder: string[] = []
   const categoryTotals = new Map<string, number>()
@@ -96,11 +140,15 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
   const usableW = Math.max(0, plot.width - totalGutter)
 
   const nodes: RectSceneNode[] = []
+  // Track each bar's screen rect so we can position label overlays
+  // afterward without recomputing the cumulative x cursor math.
+  const barSlots: { cat: string; x: number; w: number }[] = []
   let xCursor = plot.x
   for (const cat of finalCats) {
     const catTotal = categoryTotals.get(cat) ?? 0
     const barW = (catTotal / grand) * usableW
     if (barW <= 0) continue
+    barSlots.push({ cat, x: xCursor, w: barW })
 
     // Inner stack: segments from top to bottom proportional to stack value.
     const inner = cellTotals.get(cat)!
@@ -108,7 +156,7 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
     for (const st of finalStacks) {
       const cellVal = inner.get(st) ?? 0
       if (cellVal <= 0) continue
-      const segH = (cellVal / catTotal) * plot.height
+      const segH = (cellVal / catTotal) * barAreaH
       nodes.push({
         type: "rect",
         x: xCursor,
@@ -116,7 +164,7 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
         w: barW,
         h: segH,
         style: { fill: ctx.resolveColor(st), stroke: "none" },
-        datum: { _marimekkoCategory: cat, _marimekkoStack: st, _marimekkoValue: cellVal },
+        datum: buildDatum(cat, st, cellVal),
         group: st,
       })
       yCursor += segH
@@ -124,7 +172,41 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
     xCursor += barW + gutter
   }
 
-  return { nodes }
+  // Category labels — emitted as SVG overlays so they sit above the
+  // canvas. Standard ordinal axes can't position labels under variable-
+  // width bars (their band scale assumes uniform widths), so the recipe
+  // owns label placement. Each label is centered under its bar; if a
+  // label would overflow its slot, it's hidden via a simple width check.
+  const overlays = showLabels && barSlots.length > 0
+    // CSS variable wins so dark-mode parents (setting `--semiotic-text`
+    // on a wrapper) override the default light theme's semantic.text.
+    ? renderCategoryLabels(barSlots, plot.y + barAreaH + 4, `var(--semiotic-text, ${ctx.theme.semantic.text ?? "currentColor"})`)
+    : null
+
+  return { nodes, overlays }
+}
+
+function renderCategoryLabels(
+  slots: { cat: string; x: number; w: number }[],
+  yTop: number,
+  fill: string
+): import("react").ReactElement {
+  const elements = slots.map((slot, i) => {
+    // Approximate label width (≈ 6.5px per character at 12px font). If
+    // the bar is narrower than the label, skip it — better to hide than
+    // overlap neighbors.
+    const approxW = slot.cat.length * 6.5
+    if (approxW > slot.w - 4) return null
+    return React.createElement("text", {
+      key: `marimekko-label-${i}`,
+      x: slot.x + slot.w / 2,
+      y: yTop + 12,
+      textAnchor: "middle",
+      fontSize: 12,
+      fill,
+    }, slot.cat)
+  })
+  return React.createElement(React.Fragment, null, ...elements)
 }
 
 function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d: Datum) => T {

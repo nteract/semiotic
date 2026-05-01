@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ConnectorSceneNode, OrdinalSceneNode } from "../stream/ordinalTypes"
@@ -29,6 +30,47 @@ export interface ParallelCoordinatesConfig {
    * (recommended for low-cardinality data only — gets noisy with 100+ rows).
    */
   showPoints?: boolean
+  /**
+   * Render axis chrome — vertical axis lines, top labels (the field
+   * name), and 5 tick marks per axis showing the domain range. Each
+   * axis is independently scaled, so each gets its own ticks. @default
+   * true
+   */
+  showAxes?: boolean
+  /**
+   * Pixel padding reserved at the **top** of the plot for axis field-name
+   * labels. Used only when `showAxes` is `true`. Subtracted from the line
+   * drawing area along with bottom padding. @default 24
+   *
+   * The recipe also reserves bottom padding for tick numbers — 18px when
+   * `showAxes` is true, 8px when it's false. That bottom value is fixed;
+   * use a smaller chart `margin.bottom` if you need tighter packing.
+   * Top padding when `showAxes` is false is also a fixed 8px (so polyline
+   * endpoints don't hug the chart edge).
+   */
+  axisLabelPadding?: number
+  /**
+   * Optional per-field tick formatter map. Falls back to
+   * `v.toLocaleString()` for fields without explicit formatters.
+   */
+  tickFormat?: Record<string, (v: number) => string>
+  /**
+   * Predicate that decides which rows render at full opacity. Rows where
+   * `highlightFn(d) === false` render at `dimmedOpacity` instead, with
+   * the matching rows z-ordered on top so they don't get covered by
+   * neighbors. Recipes are pure functions so they can't own brush state
+   * themselves — wire this from a parent component that manages the
+   * selection (hover, brush, search query, etc.). Leave undefined for
+   * uniform opacity.
+   *
+   * Roadmap: a future `<ParallelCoordinatesBrushes>` overlay component
+   * will manage drag-to-brush state and feed this hook automatically;
+   * `useBrushSelection` will carry per-field range constraints across
+   * linked charts. This prop is the integration point both will use.
+   */
+  highlightFn?: (d: Datum) => boolean
+  /** Stroke opacity for non-matching rows when `highlightFn` is set. @default 0.08 */
+  dimmedOpacity?: number
 }
 
 /**
@@ -90,12 +132,15 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
   }
 
   // Each axis gets a linear scale mapping its domain → vertical pixel
-  // span (with 8px top/bottom padding so endpoints don't hug the edge).
-  const padding = 8
+  // span. Reserve top space for axis labels (the field name) and bottom
+  // space for tick numbers when chrome is enabled.
+  const showAxes = cfg.showAxes !== false
+  const topPadding = showAxes ? (cfg.axisLabelPadding ?? 24) : 8
+  const bottomPadding = showAxes ? 18 : 8
   const yScales = fields.map((f) =>
     scaleLinear()
       .domain(domains[f])
-      .range([plot.y + plot.height - padding, plot.y + padding])
+      .range([plot.y + plot.height - bottomPadding, plot.y + topPadding])
   )
 
   // Axis x-positions evenly spaced across the plot.
@@ -114,10 +159,22 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
   const opacity = cfg.opacity ?? 0.45
   const strokeWidth = cfg.strokeWidth ?? 1.25
   const defaultStroke = ctx.theme.semantic.primary ?? "#3b6cb1"
+  const dimmedOpacity = cfg.dimmedOpacity ?? 0.08
+  const highlightFn = cfg.highlightFn
 
-  const nodes: OrdinalSceneNode[] = []
+  // When highlightFn is set, build the scene in two passes so highlighted
+  // rows render *after* dimmed rows (canvas paints in array order). That
+  // way the highlighted polyline isn't covered by faint neighbors.
+  const dimmedNodes: OrdinalSceneNode[] = []
+  const highlightNodes: OrdinalSceneNode[] = []
+
   for (const d of ctx.data) {
     const stroke = getColor ? ctx.resolveColor(String(getColor(d))) : defaultStroke
+    const isHighlighted = highlightFn ? highlightFn(d) : true
+    const rowOpacity = highlightFn
+      ? (isHighlighted ? Math.min(1, opacity + 0.4) : dimmedOpacity)
+      : opacity
+    const target = isHighlighted ? highlightNodes : dimmedNodes
 
     // For each consecutive pair of fields, emit one connector segment.
     for (let i = 0; i < fields.length - 1; i++) {
@@ -130,10 +187,16 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
         y1: yScales[i](a),
         x2: axisX[i + 1],
         y2: yScales[i + 1](b),
-        style: { stroke, strokeWidth, opacity, fill: "none" },
+        style: {
+          stroke,
+          // Thicken highlighted lines slightly for extra emphasis.
+          strokeWidth: highlightFn && isHighlighted ? strokeWidth + 0.75 : strokeWidth,
+          opacity: rowOpacity,
+          fill: "none",
+        },
         datum: d,
       }
-      nodes.push(seg)
+      target.push(seg)
     }
 
     // Optional: dots at each axis crossing.
@@ -146,13 +209,86 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
           x: axisX[i],
           y: yScales[i](v),
           r: 2.5,
-          style: { fill: stroke, stroke: "none", opacity: Math.min(1, opacity + 0.3) },
+          style: { fill: stroke, stroke: "none", opacity: Math.min(1, rowOpacity + 0.3) },
           datum: d,
         }
-        nodes.push(pt)
+        target.push(pt)
       }
     }
   }
 
-  return { nodes }
+  // Axis chrome — vertical axis lines, top labels (the field name), and
+  // 5 tick marks per axis. Each axis is independently scaled so each
+  // gets its own ticks. Emitted as overlays so they sit above the
+  // canvas-rendered polylines.
+  let overlays: React.ReactNode = null
+  if (showAxes) {
+    // CSS variable wins so a dark-mode parent (setting `--semiotic-*`
+    // vars on a wrapper, per the docs) overrides the default light
+    // theme's semantic colors. Theme color is the var's fallback.
+    const axisColor = `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#aaa"})`
+    const labelColor = `var(--semiotic-text, ${ctx.theme.semantic.text ?? "currentColor"})`
+    const subtleColor = `var(--semiotic-text-secondary, ${ctx.theme.semantic.textSecondary ?? "#888"})`
+    const axisTop = plot.y + topPadding
+    const axisBot = plot.y + plot.height - bottomPadding
+    const elements: React.ReactNode[] = []
+    for (let i = 0; i < fields.length; i++) {
+      const f = fields[i]
+      const x = axisX[i]
+      const fmt = cfg.tickFormat?.[f] ?? ((v: number) => v.toLocaleString())
+
+      // Vertical axis line.
+      elements.push(
+        React.createElement("line", {
+          key: `pc-axis-line-${i}`,
+          x1: x, x2: x,
+          y1: axisTop, y2: axisBot,
+          stroke: axisColor,
+          strokeWidth: 1,
+        })
+      )
+
+      // Field name above the axis.
+      elements.push(
+        React.createElement("text", {
+          key: `pc-axis-label-${i}`,
+          x,
+          y: plot.y + topPadding - 8,
+          textAnchor: "middle",
+          fontSize: 12,
+          fontWeight: 600,
+          fill: labelColor,
+        }, f)
+      )
+
+      // 5 ticks per axis spanning the field's domain.
+      const [lo, hi] = domains[f]
+      const tickCount = 5
+      for (let t = 0; t < tickCount; t++) {
+        const v = lo + ((hi - lo) * t) / (tickCount - 1)
+        const ty = yScales[i](v)
+        elements.push(
+          React.createElement("line", {
+            key: `pc-tick-${i}-${t}`,
+            x1: x - 3, x2: x + 3,
+            y1: ty, y2: ty,
+            stroke: axisColor,
+            strokeWidth: 1,
+          }),
+          React.createElement("text", {
+            key: `pc-ticktext-${i}-${t}`,
+            x: x + 6,
+            y: ty + 3,
+            fontSize: 10,
+            fill: subtleColor,
+          }, fmt(v))
+        )
+      }
+    }
+    overlays = React.createElement(React.Fragment, null, ...elements)
+  }
+
+  // Concat: dimmed first, highlighted last → highlighted polylines paint
+  // on top so neighbors don't cover them.
+  return { nodes: dimmedNodes.concat(highlightNodes), overlays }
 }

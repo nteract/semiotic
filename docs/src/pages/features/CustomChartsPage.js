@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useCallback } from "react"
 import { CustomChart } from "../../../../src/components/charts/custom/CustomChart"
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
 import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
@@ -171,6 +171,54 @@ const parallelCarsData = [
   { name: "wagon",     mpg: 28, hp: 195, weight: 3400, accel: 11, year: 2018 },
   { name: "coupe",     mpg: 25, hp: 320, weight: 3300, accel:  7, year: 2021 },
 ]
+
+// Parallel-coords demo wrapped to demonstrate hover highlighting.
+// `highlightFn` is the recipe's interactivity hook — pass any predicate
+// and matching rows render at full opacity while others dim. Here a
+// simple useState tracks the hovered row's name; a future
+// `<ParallelCoordinatesBrushes>` overlay (roadmap item) will feed the
+// same hook with per-axis range filters.
+function ParallelCoordinatesDemo() {
+  const [hoveredName, setHoveredName] = useState(null)
+  const onObservation = useCallback((obs) => {
+    if (obs.type === "hover" && obs.datum) {
+      // Hovered datum may be wrapped — grab the user-facing row from `data` if present.
+      const row = obs.datum.data ?? obs.datum
+      setHoveredName(row?.name ?? null)
+    } else if (obs.type === "hover-end") {
+      setHoveredName(null)
+    }
+  }, [])
+  const highlightFn = useMemo(
+    () => (hoveredName ? (d) => d.name === hoveredName : undefined),
+    [hoveredName]
+  )
+
+  return (
+    <>
+      <OrdinalCustomChart
+        data={parallelCarsData}
+        layout={parallelCoordinatesLayout}
+        layoutConfig={{
+          fields: ["mpg", "hp", "weight", "accel", "year"],
+          colorBy: "name",
+          showPoints: true,
+          opacity: 0.7,
+          strokeWidth: 1.5,
+          highlightFn,
+        }}
+        width={760}
+        height={320}
+        margin={{ top: 30, right: 20, bottom: 20, left: 20 }}
+        enableHover
+        onObservation={onObservation}
+      />
+      <div style={{ marginTop: 8, fontSize: 12, color: "var(--semiotic-text-secondary, #666)", minHeight: 18 }}>
+        {hoveredName ? `Highlighting: ${hoveredName}` : "Hover any line to highlight."}
+      </div>
+    </>
+  )
+}
 
 // ── Page ─────────────────────────────────────────────────────────────────
 
@@ -400,9 +448,18 @@ const edges = g.edges().map(e => {
         <h2>Streamgraph</h2>
         <p>
           Streamgraphs aren't a recipe — they're <code>StackedAreaChart</code> with{" "}
-          <code>baseline="wiggle"</code> (Byron–Wattenberg offset) or{" "}
-          <code>baseline="silhouette"</code> (centered). The same layout pipeline that
-          drives stacked areas handles the offset; no escape hatch needed.
+          <code>baseline="wiggle"</code> (Byron–Wattenberg offset, post-centered on
+          y=0) or <code>baseline="silhouette"</code> (symmetric centering). The same
+          layout pipeline that drives stacked areas handles the offset; no escape
+          hatch needed.
+        </p>
+        <p>
+          For the canonical streamgraph aesthetic — a "central anchor" series with
+          smaller series wrapping outward — pair the baseline with{" "}
+          <code>stackOrder="insideOut"</code>. The series with the largest total
+          ends up in the middle straddling y=0; smaller series alternate above and
+          below it. Without an explicit order, series stack alphabetically (which
+          is stable under streaming but visually arbitrary).
         </p>
         <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
           <StackedAreaChart
@@ -411,12 +468,12 @@ const edges = g.edges().map(e => {
             yAccessor="v"
             areaBy="group"
             baseline="wiggle"
+            stackOrder="insideOut"
             colorBy="group"
             colorScheme="category10"
             width={780}
-            height={220}
-            margin={{ top: 10, right: 10, bottom: 30, left: 40 }}
-            showAxes={false}
+            height={240}
+            margin={{ top: 10, right: 20, bottom: 30, left: 50 }}
           />
         </div>
         <CodeBlock language="jsx">{`<StackedAreaChart
@@ -424,7 +481,8 @@ const edges = g.edges().map(e => {
   xAccessor="t"
   yAccessor="v"
   areaBy="group"
-  baseline="wiggle"      // or "silhouette" for symmetric centering
+  baseline="wiggle"        // or "silhouette" for symmetric centering
+  stackOrder="insideOut"   // central anchor series, others wrap outward
   colorBy="group"
 />`}</CodeBlock>
       </section>
@@ -495,10 +553,14 @@ import { marimekkoLayout } from "semiotic/recipes"
               rangesAccessor: "ranges",
               rowHeight: 28,
               rowGap: 14,
+              labelWidth: 140,
             }}
             width={600}
-            height={210}
-            margin={{ top: 16, right: 20, bottom: 16, left: 140 }}
+            height={230}
+            // The recipe reserves `labelWidth` on the left for metric
+            // labels and ~14px below each row for tick numbers — chart
+            // margin only needs minimal padding around the whole thing.
+            margin={{ top: 16, right: 20, bottom: 16, left: 16 }}
           />
         </div>
         <CodeBlock language="jsx">{`import { bulletLayout } from "semiotic/recipes"
@@ -531,37 +593,46 @@ import { marimekkoLayout } from "semiotic/recipes"
           weight) can sit side-by-side without normalizing. Useful for
           high-dimensional pattern hunting: clusters of similar rows,
           outliers that swing wildly between axes, and inverse correlations
-          (lines crossing). Set <code>colorBy</code> to highlight groups.
+          (lines crossing). Set <code>colorBy</code> to color groups.
+        </p>
+        <p>
+          <strong>Interaction:</strong> hover any line to dim its neighbors.
+          The recipe accepts a <code>highlightFn</code> predicate; the demo
+          wraps the chart in a small component that tracks the hovered
+          row's name and feeds it to the recipe. The same hook is the
+          intended integration point for a future{" "}
+          <code>&lt;ParallelCoordinatesBrushes&gt;</code> overlay (drag
+          ranges on each axis to filter rows) and for{" "}
+          <code>useBrushSelection</code>-style linked brushing across
+          coordinated charts.
         </p>
         <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
-          <OrdinalCustomChart
-            data={parallelCarsData}
-            layout={parallelCoordinatesLayout}
-            layoutConfig={{
-              fields: ["mpg", "hp", "weight", "accel", "year"],
-              colorBy: "name",
-              showPoints: true,
-              opacity: 0.7,
-              strokeWidth: 1.5,
-            }}
-            width={760}
-            height={320}
-            margin={{ top: 30, right: 20, bottom: 20, left: 20 }}
-          />
+          <ParallelCoordinatesDemo />
         </div>
         <CodeBlock language="jsx">{`import { parallelCoordinatesLayout } from "semiotic/recipes"
 
-<OrdinalCustomChart
-  data={cars}
-  layout={parallelCoordinatesLayout}
-  layoutConfig={{
-    fields: ["mpg", "hp", "weight", "accel", "year"],
-    colorBy: "name",
-    showPoints: true,
-  }}
-  width={760}
-  height={320}
-/>`}</CodeBlock>
+function ParallelCoords({ cars }) {
+  const [hovered, setHovered] = useState(null)
+  return (
+    <OrdinalCustomChart
+      data={cars}
+      layout={parallelCoordinatesLayout}
+      layoutConfig={{
+        fields: ["mpg", "hp", "weight", "accel", "year"],
+        colorBy: "name",
+        showPoints: true,
+        // Recipes are pure, so hover state lives here in the parent.
+        highlightFn: hovered ? (d) => d.name === hovered : undefined,
+      }}
+      onObservation={(obs) => {
+        if (obs.type === "hover") setHovered(obs.datum?.data?.name ?? obs.datum?.name)
+        else if (obs.type === "hover-end") setHovered(null)
+      }}
+      width={760}
+      height={320}
+    />
+  )
+}`}</CodeBlock>
       </section>
 
       <section>

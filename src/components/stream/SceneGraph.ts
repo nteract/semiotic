@@ -27,7 +27,10 @@ export function buildLineNode(
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
-    if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
+    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
+    // IncrementalExtent + the stacked-area pipeline's filter so all
+    // builders agree on which datums count.
+    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
     entries.push({ px: scales.x(xVal), py: scales.y(yVal), rawY: yVal, d })
   }
   // Sort by x pixel coordinate to guarantee binary search correctness
@@ -60,7 +63,10 @@ export function buildAreaNode(
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
-    if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
+    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
+    // IncrementalExtent + the stacked-area pipeline's filter so all
+    // builders agree on which datums count.
+    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
     const px = scales.x(xVal)
     const bottomY = y0Get ? y0Get(d) : baselineY
     entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY) })
@@ -109,6 +115,9 @@ export function computeStackOffsets(
       offsets.set(x, -total / 2)
     }
   } else if (baseline === "wiggle") {
+    // Step 1 — Byron–Wattenberg wiggle dynamics: each x's offset is the
+    // previous offset minus a "wiggle" term that minimizes the total
+    // visual movement across series.
     if (xValues.length > 0) offsets.set(xValues[0], 0)
     for (let i = 1; i < xValues.length; i++) {
       const xPrev = xValues[i - 1]
@@ -128,6 +137,24 @@ export function computeStackOffsets(
       const wiggle = s2 > 0 ? s1 / (2 * s2) : 0
       offsets.set(x, prevOffset - wiggle)
     }
+    // Step 2 — post-center on y=0. Pure wiggle minimizes movement but
+    // doesn't constrain the absolute baseline, so the streamgraph drifts
+    // off-axis (visual middle ends up at, say, y=32 with the y-axis
+    // running [0, 70]). Shift every offset so the average visual center
+    // lands at y=0 — matches the canonical NYT-style streamgraph and
+    // gives the y-axis symmetric ticks.
+    if (xValues.length > 0) {
+      let sumCenter = 0
+      for (const x of xValues) {
+        let total = 0
+        for (const k of groupKeys) total += valueAt(k, x) || 0
+        sumCenter += (offsets.get(x) ?? 0) + total / 2
+      }
+      const avgCenter = sumCenter / xValues.length
+      for (const x of xValues) {
+        offsets.set(x, (offsets.get(x) ?? 0) - avgCenter)
+      }
+    }
   } else {
     for (const x of xValues) offsets.set(x, 0)
   }
@@ -144,12 +171,16 @@ export function buildStackedAreaNodes(
   curve?: CurveType,
   baseline: StackBaseline = "zero"
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
-  // Collect all unique x values
+  // Collect all unique x values. `Number.isFinite` rejects NaN,
+  // Infinity, -Infinity, and non-numbers — must agree with the
+  // PipelineStore extent computation, otherwise extent and scene
+  // disagree on which rows count and the yDomain doesn't match what
+  // gets drawn.
   const xSet = new Set<number>()
   for (const g of groups) {
     for (const d of g.data) {
       const x = xGet(d)
-      if (x != null && !Number.isNaN(x)) xSet.add(x)
+      if (Number.isFinite(x)) xSet.add(x)
     }
   }
   const xValues = Array.from(xSet).sort((a, b) => a - b)
@@ -161,7 +192,7 @@ export function buildStackedAreaNodes(
     for (const d of g.data) {
       const x = xGet(d)
       const y = yGet(d)
-      if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+      if (Number.isFinite(x) && Number.isFinite(y)) {
         m.set(x, (m.get(x) || 0) + y)
       }
     }
@@ -246,7 +277,7 @@ export function buildPointNode(
 ): PointSceneNode | null {
   const xVal = xGet(datum)
   const yVal = yGet(datum)
-  if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) return null
+  if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) return null
   const node: PointSceneNode = {
     type: "point",
     x: scales.x(xVal),

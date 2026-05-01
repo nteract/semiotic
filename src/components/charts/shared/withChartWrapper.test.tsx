@@ -41,8 +41,13 @@ describe("SafeRender", () => {
     expect(screen.getByTestId("child")).toBeTruthy()
   })
 
-  it("shows error with diagnostic hints when props trigger diagnoseConfig warnings", () => {
-    // Pass props that will cause diagnoseConfig to find issues (empty data array)
+  it("shows the error message even when chartProps are passed", () => {
+    // chartProps is retained for back-compat but no longer threads
+    // diagnoseConfig output into the error fallback. Importing the full
+    // chartSpecs validation map into every subpath bundle (for a fallback
+    // that only fires on render-throw) wasn't worth ~7KB gz per subpath.
+    // Diagnostics remain available via `npx semiotic-ai --doctor` or
+    // `diagnoseConfig` from `semiotic/utils`.
     const badProps = { data: [], width: 600, height: 400 }
 
     const { container } = render(
@@ -51,13 +56,12 @@ describe("SafeRender", () => {
       </SafeRender>
     )
 
-    // Should show the error via ChartError (role="alert")
     const alert = screen.getByRole("alert")
     expect(alert).toBeTruthy()
     expect(alert.textContent).toContain("render failed")
-    // diagnoseConfig should produce a diagnostic hint (rendered in monospace panel)
+    // No diagnostic hint should appear — the integration was removed.
     const hintPanel = container.querySelector("[data-testid='semiotic-diagnostic-hint']")
-    expect(hintPanel).toBeTruthy()
+    expect(hintPanel).toBeNull()
   })
 
   it("shows error without diagnostic hint when no props are passed", () => {

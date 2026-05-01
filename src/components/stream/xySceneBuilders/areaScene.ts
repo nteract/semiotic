@@ -49,10 +49,89 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
 
 export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
-  // Sort groups by key to ensure a stable stacking order. Without this,
-  // a sliding window can reorder groups when eviction changes which group
-  // appears first in the buffer, causing layers to swap and flicker.
-  groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+  const stackOrder = ctx.config.stackOrder ?? "key"
+
+  // Stack order — controls which series sits at the top, middle, or
+  // bottom of the stack. Default "key" (alphabetical) gives stable
+  // streaming behavior: when a sliding window evicts data, the order
+  // doesn't shuffle. "insideOut" puts the largest-total series in the
+  // middle with smaller series alternating above/below, which is the
+  // canonical streamgraph aesthetic when combined with `baseline:
+  // "wiggle"` or `"silhouette"` (one "central anchor" layer with others
+  // built off of it).
+  // Default any unrecognized value to "key" so we always end up with a
+  // stable order. PipelineStore's extent computation does the same
+  // (`config.stackOrder ?? "key"`); the two paths must agree on order
+  // because wiggle offsets are order-dependent.
+  const sortByKey = () => groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+  if (stackOrder === "key") {
+    sortByKey()
+  } else if (stackOrder === "asc" || stackOrder === "desc" || stackOrder === "insideOut") {
+    // Compute per-group totals using the SAME validity filter as the
+    // stacking pipeline (`Number.isFinite` on both x and y). Without
+    // matching the filter, a group whose only y-finite rows have
+    // invalid x would still contribute to the order sort but skip the
+    // actual stacking — order would diverge from extent/scene.
+    const totals = new Map<string, number>()
+    for (const g of groups) {
+      let s = 0
+      for (const d of g.data) {
+        const x = ctx.getX(d)
+        const y = ctx.getY(d)
+        if (Number.isFinite(x) && Number.isFinite(y)) s += y
+      }
+      totals.set(g.key, s)
+    }
+    // Tie-breaker: when two groups have equal totals, fall back to
+    // lexicographic key order. `Array.sort` is stable in modern JS but
+    // its stability is on insertion order — under sliding-window
+    // eviction the insertion order can shift between frames and tied
+    // groups would swap, causing layer flicker. The lexicographic tie-
+    // breaker matches the "key" sort default and PipelineStore's
+    // extent comparator so both paths stay in sync.
+    const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
+    if (stackOrder === "asc") {
+      groups.sort((a, b) => {
+        const d = (totals.get(a.key) ?? 0) - (totals.get(b.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
+    } else if (stackOrder === "desc") {
+      groups.sort((a, b) => {
+        const d = (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
+    } else {
+      // insideOut — d3-shape's stackOrderInsideOut algorithm: sort by
+      // total desc (ties broken by key), then alternately push to
+      // bottom or top of the result so the largest sits in the middle
+      // with progressively-smaller series wrapping outward.
+      const sorted = [...groups].sort((a, b) => {
+        const d = (totals.get(b.key) ?? 0) - (totals.get(a.key) ?? 0)
+        return d !== 0 ? d : keyCmp(a.key, b.key)
+      })
+      const tops: typeof groups = []
+      const bottoms: typeof groups = []
+      let topSum = 0
+      let bottomSum = 0
+      for (const g of sorted) {
+        if (topSum < bottomSum) {
+          tops.push(g)
+          topSum += totals.get(g.key) ?? 0
+        } else {
+          bottoms.push(g)
+          bottomSum += totals.get(g.key) ?? 0
+        }
+      }
+      // Bottom group renders first (lowest in the stack); reverse it so
+      // the largest group ends up in the middle.
+      groups.length = 0
+      groups.push(...bottoms.reverse(), ...tops)
+    }
+  } else {
+    // Unknown stackOrder string — match PipelineStore's fallback.
+    sortByKey()
+  }
+
   const styleFn = (group: string, sampleDatum?: Datum) =>
     ctx.resolveAreaStyle(group, sampleDatum)
   const curveType = (ctx.config.curve && ctx.config.curve !== "linear") ? ctx.config.curve : undefined

@@ -114,6 +114,8 @@ export interface PipelineConfig {
   normalize?: boolean
   /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
   baseline?: "zero" | "wiggle" | "silhouette"
+  /** Stack order — see StreamXYFrameProps.stackOrder. */
+  stackOrder?: "key" | "insideOut" | "asc" | "desc"
 
   // Candlestick accessors
   openAccessor?: string | ((d: Datum) => number)
@@ -534,34 +536,79 @@ export class PipelineStore {
         yDomain = [0, 1 + config.extentPadding]
       } else {
         // Cache the stacked extent computation — only rebuild when buffer data changes
-        const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}`
+        const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
         if (this._stackExtentCache && this._stackExtentCache.key === stackCacheKey) {
           yDomain = this._stackExtentCache.yDomain
         } else {
           const groups = this.groupData(bufferArray)
-          // Sort group keys to match buildStackedAreaNodes' stacking order —
-          // wiggle offsets depend on group order, and the extent must agree
-          // with the rendered geometry.
-          const groupKeys = groups.map((g) => g.key).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
 
           // Per-group-per-x value lookup (mirrors buildStackedAreaNodes).
           const valueMaps = new Map<string, Map<number, number>>()
           const xSet = new Set<number>()
           let maxStacked = 0
           const xTotals = new Map<number, number>()
+          const groupTotals = new Map<string, number>()
           for (const g of groups) {
             const m = new Map<number, number>()
+            let groupTotal = 0
             for (const d of g.data) {
               const x = this.getX(d)
               const y = this.getY(d)
-              if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+              // `Number.isFinite` rejects NaN, Infinity, -Infinity, and
+              // non-numbers — stricter than `isNaN` (which only catches
+              // NaN). Without this, ±Infinity values leak into totals
+              // and the resulting yDomain can be ±Infinity (zero
+              // baseline) or fall back to [0,0] (wiggle/silhouette
+              // non-finite guard), producing blank/clipped charts.
+              if (!Number.isFinite(x) || !Number.isFinite(y)) continue
               m.set(x, (m.get(x) || 0) + y)
               xSet.add(x)
+              groupTotal += y
               const total = (xTotals.get(x) || 0) + y
               xTotals.set(x, total)
               if (total > maxStacked) maxStacked = total
             }
             valueMaps.set(g.key, m)
+            groupTotals.set(g.key, groupTotal)
+          }
+
+          // Sort group keys to match buildStackedAreaNodes' stacking order —
+          // wiggle offsets depend on group order, so the extent must agree
+          // with the rendered geometry.
+          const order = config.stackOrder ?? "key"
+          // Tie-breaker for equal-total groups — must match areaScene
+          // exactly (both paths use lexicographic key order on ties).
+          // Without this, sliding-window eviction can re-order tied
+          // groups between frames and the rendered stack swaps layers.
+          const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
+          let groupKeys: string[]
+          if (order === "insideOut") {
+            const sorted = [...groups].map((g) => g.key)
+              .sort((a, b) => {
+                const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
+                return d !== 0 ? d : keyCmp(a, b)
+              })
+            const tops: string[] = []
+            const bottoms: string[] = []
+            let topSum = 0
+            let bottomSum = 0
+            for (const k of sorted) {
+              if (topSum < bottomSum) { tops.push(k); topSum += groupTotals.get(k) ?? 0 }
+              else { bottoms.push(k); bottomSum += groupTotals.get(k) ?? 0 }
+            }
+            groupKeys = [...bottoms.reverse(), ...tops]
+          } else if (order === "asc") {
+            groupKeys = groups.map((g) => g.key).sort((a, b) => {
+              const d = (groupTotals.get(a) ?? 0) - (groupTotals.get(b) ?? 0)
+              return d !== 0 ? d : keyCmp(a, b)
+            })
+          } else if (order === "desc") {
+            groupKeys = groups.map((g) => g.key).sort((a, b) => {
+              const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
+              return d !== 0 ? d : keyCmp(a, b)
+            })
+          } else {
+            groupKeys = groups.map((g) => g.key).sort(keyCmp)
           }
 
           if (config.baseline === "wiggle" || config.baseline === "silhouette") {

@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- **Use sub-path imports** — `semiotic/xy` (78KB gz), `semiotic/ordinal` (65KB), `semiotic/network` (54KB), `semiotic/geo` (53KB), `semiotic/realtime` (77KB), `semiotic/server` (58KB), `semiotic/utils` (19KB), `semiotic/themes` (3KB), `semiotic/data` (3KB). Full `semiotic` is 158KB gz.
+- **Use sub-path imports** — `semiotic/xy` (77KB gz), `semiotic/ordinal` (64KB), `semiotic/network` (51KB), `semiotic/geo` (49KB), `semiotic/realtime` (84KB), `semiotic/server` (64KB), `semiotic/recipes` (4KB), `semiotic/utils` (20KB), `semiotic/themes` (4KB), `semiotic/data` (3KB). Full `semiotic` is 165KB gz.
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
@@ -22,7 +22,7 @@
 
 **LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time")
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true)
-**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`. No `lineBy`/`lineDataAccessor`.
+**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered), `stackOrder` (`"key"` default alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"` by total). For canonical streamgraph aesthetic: `baseline="wiggle"` + `stackOrder="insideOut"` puts the largest series in the middle as a central anchor with smaller series wrapping outward. `baseline` is mutually exclusive with `normalize`. No `lineBy`/`lineDataAccessor`.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40])
 **ConnectedScatterplot** — + `orderAccessor`
@@ -100,6 +100,88 @@ ref.current.getScales()                            // returns {o, r, projection}
 ```
 `remove()` and `update()` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts. `replace()` is ordinal-only and routes through a bounded-ingest path that preserves category insertion-order memory and the transition position snapshot — what aggregator HOCs like LikertChart use under the hood to re-aggregate streaming input without shuffling categories or losing animations. Network HOC refs also use `remove(id)`/`update(id, updater)` (operates on nodes). For edge-level operations, use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)` (requires `edgeIdAccessor`), `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
+
+## Custom Charts (escape hatch)
+
+When the catalog doesn't fit, three HOCs let you supply a layout function that emits scene primitives directly. The frame still owns hit testing, transitions, decay, theme cascade, and SSR — your layout owns geometry only.
+
+- **`CustomChart`** (`semiotic/xy`) — XY layouts: waffle, calendar heatmap, custom point/line/area arrangements
+- **`OrdinalCustomChart`** (`semiotic/ordinal`) — category × value layouts: marimekko, parallel coordinates, bullet, fan chart, slope graph
+- **`NetworkCustomChart`** (`semiotic/network`) — graph layouts: flextree, dagre, custom force/radial
+
+All three accept `layout` and `layoutConfig` (your own typed config), but the layout context and return shape differ by chart family:
+
+- **`CustomChart` / `OrdinalCustomChart`** — `layout: (ctx) => { nodes, overlays? }`. Context exposes `data`, `scales`, `dimensions` (with plot rect — center-anchored for radial ordinal, top-left otherwise), `theme` (semantic + categorical), `resolveColor(key)`, and `config`. XY scales: `{ x, y }` (linear). Ordinal scales: `{ o, r, projection }` (band + linear).
+- **`NetworkCustomChart`** — `layout: (ctx) => { sceneNodes?, sceneEdges?, labels?, overlays? }`. Context exposes `nodes`, `edges`, `dimensions`, `theme`, `resolveColor(key)`, and `config` — graph data, no `data`/`scales`. Network layouts often run an external positioner (`d3-flextree`, `dagre`) on nodes/edges, then emit network scene primitives (`circle`, `rect`, `arc` for nodes; `line`, `bezier`, `curved` for edges).
+
+XY/ordinal frames render whatever you put in `nodes` (rect, point, area, line, wedge, connector, etc.). Network frames split node-shaped scenes from edge-shaped scenes — give them `sceneNodes` for the round/rect/arc visuals and `sceneEdges` for the connecting paths. All three frames handle painting, hit testing, accessibility, transitions, decay, and SSR for you.
+
+```tsx
+import { CustomChart } from "semiotic/xy"
+import { OrdinalCustomChart } from "semiotic/ordinal"
+import { NetworkCustomChart } from "semiotic/network"
+import {
+  waffleLayout, calendarLayout,           // XY recipes
+  marimekkoLayout, bulletLayout, parallelCoordinatesLayout, // ordinal
+  flextreeLayout, dagreLayout,             // network
+} from "semiotic/recipes"
+
+<CustomChart data={cells} layout={waffleLayout} layoutConfig={{ rows: 10, columns: 10, ... }} />
+<OrdinalCustomChart data={revenue} layout={marimekkoLayout} layoutConfig={{ ... }} />
+<NetworkCustomChart nodes={nodes} edges={edges} layout={flextreeLayout} layoutConfig={{ ... }} />
+```
+
+**Recipes subpath** (`semiotic/recipes`, 4KB gz) ships pure layout functions. They emit standard SceneNodes — no chart code. BYO heavy deps (`d3-flextree`, `dagre`) live in user code.
+
+### Chrome (labels, axes, legends): the recipe owns it
+
+Custom layouts often need chrome the standard chart axes can't render — variable-width bars, per-row independent value scales, parallel axes, asymmetric tree branches. The unified pattern: **the recipe emits its own labels/axes/ticks via the `overlays` return field** (a ReactNode painted on top of the canvas). Built-in axes (via `showAxes` on the HOC) work for layouts that respect the standard scale; everything else, the recipe handles itself.
+
+Convention across shipped recipes — every recipe takes a consistent set of label/axis toggles in `layoutConfig`:
+
+| Recipe | Toggle | Default | What it draws |
+|---|---|---|---|
+| `marimekkoLayout` | `showCategoryLabels` | `true` | Category names under each variable-width bar |
+| `bulletLayout` | `showLabels` | `true` | Metric name to the left of each row |
+| `bulletLayout` | `showTicks` | `true` | Per-row value-axis ticks (each row independently scaled) |
+| `parallelCoordinatesLayout` | `showAxes` | `true` | Vertical axis line + field name + 5 ticks per axis |
+| `flextreeLayout` / `dagreLayout` | `showLabels` | `true` | Node text rendered inside each rect |
+| `waffleLayout` / `calendarLayout` | — | — | No chrome needed (uniform grid + cell color tells the story) |
+
+Writing your own recipe: prefer `showXxx` boolean toggles for chrome opt-out, `xxxFormat` callbacks for custom number/string formatting, and reserve plot-rect padding (`labelWidth`, `labelPadding`, `axisLabelPadding`) when chrome eats space.
+
+### Interaction (hover, brush, selection): the parent component owns it
+
+Recipes are pure functions, so they can't carry interactive state (hover, brush ranges, selection). The pattern: recipes accept a **predicate prop** (e.g. `parallelCoordinatesLayout`'s `highlightFn?: (d) => boolean`) and the parent component manages state. Wire `onObservation` (`{ type: "hover" | "hover-end" | ... }`) on `OrdinalCustomChart` / `CustomChart` / `NetworkCustomChart` to update parent state, then feed a derived predicate back into `layoutConfig`. Matching rows render at full opacity; non-matching dim. Highlighted rows z-order on top so neighbors don't cover them.
+
+```tsx
+const [hovered, setHovered] = useState(null)
+<OrdinalCustomChart
+  data={rows}
+  layout={parallelCoordinatesLayout}
+  layoutConfig={{
+    fields: ["mpg", "hp", "weight"],
+    highlightFn: hovered ? (d) => d.name === hovered : undefined,
+  }}
+  onObservation={(obs) => {
+    if (obs.type === "hover") setHovered(obs.datum?.data?.name ?? obs.datum?.name)
+    else if (obs.type === "hover-end") setHovered(null)
+  }}
+/>
+```
+
+The same predicate hook is the integration point for richer interactions on the roadmap: a future `<ParallelCoordinatesBrushes>` overlay that drag-brushes per-axis ranges, and `useBrushSelection`-style linked brushing across coordinated charts (selection store would carry per-field range constraints, downstream charts consume them via the same hook).
+
+### Built-in chrome works when the layout uses standard scales
+
+Layouts that draw *within* the frame's standard scales can just use the HOC's chrome. Pass `showAxes` on `CustomChart` / `OrdinalCustomChart` and the frame will render the same x/y or o/r axes the built-in HOCs do — useful for custom XY layouts that overlay points/lines on regular axes. The recipe-managed chrome is for the cases where standard axes can't help (variable-width bars under a band scale, per-row independent scales, etc.).
+
+**Notes:**
+- Coords are plot-relative (the frame translates the canvas/SVG group by `margin`). Read `ctx.dimensions.plot` for the drawing rect. Radial ordinal projection is the one exception: `plot.x = -width/2`, `plot.y = -height/2` because the canvas ctx is center-translated.
+- Layouts that need axis domains: pass `xExtent`/`yExtent` (XY) or `oExtent`/`rExtent` (ordinal) — those flow through scale construction *before* the layout runs.
+- Streaming layouts: ingest data via the chart's ref (`push`/`pushMany`); the layout re-runs on each ingest. Custom overlays update on data-change paths, NOT on per-frame animation rebuilds (intentional — would force a React re-render per frame).
+- Custom layouts own their colors. Always prefer `ctx.resolveColor(key)` over hardcoded literals so `ThemeProvider` / `colorScheme` flow through. `CategoryColorProvider` integration is XY-only; for cross-chart category sync on network/ordinal customLayouts, pass a matching `colorScheme` to each chart.
+- Tooltips: emit datum keys that match the user-visible accessor names (e.g. when `categoryAccessor: "region"` and `valueAccessor: "revenue"` are passed, put `region` and `revenue` on each rect's `datum`). The default tooltip looks them up by accessor name and the user's custom tooltip will read whatever fields they expect. Avoid underscored synthetic keys — the default tooltip filters those out.
 
 ## Coordinated Views
 

@@ -1,9 +1,7 @@
 "use client"
-import type { Datum } from "./datumTypes"
 import * as React from "react"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
-import { diagnoseConfig, type DiagnosisResult } from "./diagnoseConfig"
 
 const IS_DEV = typeof process !== "undefined" && process.env?.NODE_ENV !== "production"
 
@@ -11,42 +9,35 @@ interface SafeRenderProps {
   componentName: string
   width: number
   height: number
+  /** @deprecated Retained for back-compat; no longer threaded into the
+   *  error boundary. Use `npx semiotic-ai --doctor` or import
+   *  `diagnoseConfig` from `semiotic/utils` for validation diagnostics. */
   chartProps?: Record<string, unknown>
   children: React.ReactNode
 }
 
 /**
- * Wraps a chart's rendered output with an error boundary.
- * If the chart throws during render, runs diagnoseConfig to produce
- * actionable fix suggestions alongside the error message.
+ * Wraps a chart's rendered output with an error boundary. If the chart
+ * throws during render, displays the error message with the component
+ * name.
+ *
+ * For richer prop diagnostics ("missing accessor", "wrong data shape",
+ * etc.), use `npx semiotic-ai --doctor` (CLI) or import `diagnoseConfig`
+ * from `semiotic/utils`. We intentionally don't bundle the validation
+ * map into every subpath import — it would add ~7KB gz to xy/ordinal/
+ * network just to power a fallback that only fires when render throws.
  */
-export function SafeRender({ componentName, width, height, chartProps, children }: SafeRenderProps) {
+export function SafeRender({ componentName, width, height, children }: SafeRenderProps) {
   return (
     <ChartErrorBoundary
-      fallback={(error: Error) => {
-        let diagnosticHint = ""
-        if (IS_DEV && chartProps) {
-          try {
-            const result: DiagnosisResult = diagnoseConfig(componentName, chartProps as Datum)
-            if (!result.ok) {
-              diagnosticHint = result.diagnoses
-                .map(d => `${d.severity === "error" ? "✗" : "⚠"} ${d.message}${d.fix ? ` — Fix: ${d.fix}` : ""}`)
-                .join("\n")
-            }
-          } catch {
-            // diagnoseConfig should never throw, but don't let diagnostics break the error boundary
-          }
-        }
-        return (
-          <ChartError
-            componentName={componentName}
-            message={error.message}
-            diagnosticHint={diagnosticHint}
-            width={width}
-            height={height}
-          />
-        )
-      }}
+      fallback={(error: Error) => (
+        <ChartError
+          componentName={componentName}
+          message={error.message}
+          width={width}
+          height={height}
+        />
+      )}
     >
       {children}
     </ChartErrorBoundary>

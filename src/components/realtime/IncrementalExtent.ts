@@ -4,7 +4,11 @@ export class IncrementalExtent {
   private _dirty: boolean = false
 
   push(value: number): void {
-    if (Number.isNaN(value)) return
+    // `Number.isFinite` rejects NaN, Infinity, and -Infinity. ±Infinity
+    // values would silently expand the extent to ±Infinity, producing
+    // broken scales downstream — the stricter check matches the stacked-
+    // area pipeline's filter so all extent paths agree on what counts.
+    if (!Number.isFinite(value)) return
     if (value < this._min) this._min = value
     if (value > this._max) this._max = value
   }
@@ -23,7 +27,7 @@ export class IncrementalExtent {
     this._max = -Infinity
     for (const v of values) {
       const n = accessor ? accessor(v) : (v as number)
-      if (Number.isNaN(n)) continue
+      if (!Number.isFinite(n)) continue
       if (n < this._min) this._min = n
       if (n > this._max) this._max = n
     }

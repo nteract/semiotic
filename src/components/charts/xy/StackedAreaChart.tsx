@@ -138,6 +138,20 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
   baseline?: "zero" | "wiggle" | "silhouette"
 
   /**
+   * Stack order — controls which series sits at the top, middle, or
+   * bottom of the stack. Pair with `baseline: "wiggle"` or
+   * `"silhouette"` for the canonical streamgraph look:
+   *
+   * - `"key"` (default): alphabetical by series key. Stable under
+   *   streaming (no re-shuffling on data eviction).
+   * - `"insideOut"`: largest-total series in the middle, smaller series
+   *   wrapping outward. The classic d3 streamgraph aesthetic — gives
+   *   you a "central anchor" layer with everything else built off of it.
+   * - `"asc"` / `"desc"`: by total ascending / descending.
+   */
+  stackOrder?: "key" | "insideOut" | "asc" | "desc"
+
+  /**
    * Enable hover annotations
    * @default true
    */
@@ -259,6 +273,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     pointRadius = 3,
     normalize = false,
     baseline = "zero",
+    stackOrder,
     tooltip,
     annotations,
     frameProps = {},
@@ -441,6 +456,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     curve,
     normalize,
     baseline: normalize ? "zero" : baseline,
+    stackOrder,
     lineStyle,
     ...(showPoints && pointStyle && { pointStyle }),
     size: [width, height],

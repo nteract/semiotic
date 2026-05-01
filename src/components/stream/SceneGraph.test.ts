@@ -92,6 +92,30 @@ describe("SceneGraph — buildLineNode", () => {
     expect(node.path).toHaveLength(2) // only x=5,y=2 and x=3,y=6 survive
     expect(node.path[0][0]).toBeLessThan(node.path[1][0]) // sorted
   })
+
+  it("filters ±Infinity values (matches stacked-area pipeline)", () => {
+    // Regression: builders previously only rejected NaN, so Infinity
+    // values leaked through and pushed scaled pixels to ±Infinity. They
+    // now use Number.isFinite so all builders agree on which datums
+    // count.
+    const data = [
+      { x: 5, y: 2 },
+      { x: Infinity, y: 3 },
+      { x: 1, y: -Infinity },
+      { x: 3, y: 6 }
+    ]
+    const scales = makeScales()
+    const node = buildLineNode(
+      data, scales,
+      d => d.x, d => d.y,
+      { stroke: "#000" }
+    )
+    expect(node.path).toHaveLength(2)
+    for (const [px, py] of node.path) {
+      expect(Number.isFinite(px)).toBe(true)
+      expect(Number.isFinite(py)).toBe(true)
+    }
+  })
 })
 
 describe("SceneGraph — buildAreaNode", () => {
