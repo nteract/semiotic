@@ -105,19 +105,19 @@ Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, Scatter
 
 When the catalog doesn't fit, three HOCs let you supply a layout function that emits scene primitives directly. The frame still owns hit testing, transitions, decay, theme cascade, and SSR — your layout owns geometry only.
 
-- **`CustomChart`** (`semiotic/xy`) — XY layouts: waffle, calendar heatmap, custom point/line/area arrangements
+- **`XYCustomChart`** (`semiotic/xy`) — XY layouts: waffle, calendar heatmap, custom point/line/area arrangements
 - **`OrdinalCustomChart`** (`semiotic/ordinal`) — category × value layouts: marimekko, parallel coordinates, bullet, fan chart, slope graph
 - **`NetworkCustomChart`** (`semiotic/network`) — graph layouts: flextree, dagre, custom force/radial
 
 All three accept `layout` and `layoutConfig` (your own typed config), but the layout context and return shape differ by chart family:
 
-- **`CustomChart` / `OrdinalCustomChart`** — `layout: (ctx) => { nodes, overlays? }`. Context exposes `data`, `scales`, `dimensions` (with plot rect — center-anchored for radial ordinal, top-left otherwise), `theme` (semantic + categorical), `resolveColor(key)`, and `config`. XY scales: `{ x, y }` (linear). Ordinal scales: `{ o, r, projection }` (band + linear).
+- **`XYCustomChart` / `OrdinalCustomChart`** — `layout: (ctx) => { nodes, overlays? }`. Context exposes `data`, `scales`, `dimensions` (with plot rect — center-anchored for radial ordinal, top-left otherwise), `theme` (semantic + categorical), `resolveColor(key)`, and `config`. XY scales: `{ x, y }` (linear). Ordinal scales: `{ o, r, projection }` (band + linear).
 - **`NetworkCustomChart`** — `layout: (ctx) => { sceneNodes?, sceneEdges?, labels?, overlays? }`. Context exposes `nodes`, `edges`, `dimensions`, `theme`, `resolveColor(key)`, and `config` — graph data, no `data`/`scales`. Network layouts often run an external positioner (`d3-flextree`, `dagre`) on nodes/edges, then emit network scene primitives (`circle`, `rect`, `arc` for nodes; `line`, `bezier`, `curved` for edges).
 
 XY/ordinal frames render whatever you put in `nodes` (rect, point, area, line, wedge, connector, etc.). Network frames split node-shaped scenes from edge-shaped scenes — give them `sceneNodes` for the round/rect/arc visuals and `sceneEdges` for the connecting paths. All three frames handle painting, hit testing, accessibility, transitions, decay, and SSR for you.
 
 ```tsx
-import { CustomChart } from "semiotic/xy"
+import { XYCustomChart } from "semiotic/xy"
 import { OrdinalCustomChart } from "semiotic/ordinal"
 import { NetworkCustomChart } from "semiotic/network"
 import {
@@ -126,7 +126,7 @@ import {
   flextreeLayout, dagreLayout,             // network
 } from "semiotic/recipes"
 
-<CustomChart data={cells} layout={waffleLayout} layoutConfig={{ rows: 10, columns: 10, ... }} />
+<XYCustomChart data={cells} layout={waffleLayout} layoutConfig={{ rows: 10, columns: 10, ... }} />
 <OrdinalCustomChart data={revenue} layout={marimekkoLayout} layoutConfig={{ ... }} />
 <NetworkCustomChart nodes={nodes} edges={edges} layout={flextreeLayout} layoutConfig={{ ... }} />
 ```
@@ -152,7 +152,7 @@ Writing your own recipe: prefer `showXxx` boolean toggles for chrome opt-out, `x
 
 ### Interaction (hover, brush, selection): the parent component owns it
 
-Recipes are pure functions, so they can't carry interactive state (hover, brush ranges, selection). The pattern: recipes accept a **predicate prop** (e.g. `parallelCoordinatesLayout`'s `highlightFn?: (d) => boolean`) and the parent component manages state. Wire `onObservation` (`{ type: "hover" | "hover-end" | ... }`) on `OrdinalCustomChart` / `CustomChart` / `NetworkCustomChart` to update parent state, then feed a derived predicate back into `layoutConfig`. Matching rows render at full opacity; non-matching dim. Highlighted rows z-order on top so neighbors don't cover them.
+Recipes are pure functions, so they can't carry interactive state (hover, brush ranges, selection). The pattern: recipes accept a **predicate prop** (e.g. `parallelCoordinatesLayout`'s `highlightFn?: (d) => boolean`) and the parent component manages state. Wire `onObservation` (`{ type: "hover" | "hover-end" | ... }`) on `OrdinalCustomChart` / `XYCustomChart` / `NetworkCustomChart` to update parent state, then feed a derived predicate back into `layoutConfig`. Matching rows render at full opacity; non-matching dim. Highlighted rows z-order on top so neighbors don't cover them.
 
 ```tsx
 const [hovered, setHovered] = useState(null)
@@ -174,7 +174,7 @@ The same predicate hook is the integration point for richer interactions on the 
 
 ### Built-in chrome works when the layout uses standard scales
 
-Layouts that draw *within* the frame's standard scales can just use the HOC's chrome. Pass `showAxes` on `CustomChart` / `OrdinalCustomChart` and the frame will render the same x/y or o/r axes the built-in HOCs do — useful for custom XY layouts that overlay points/lines on regular axes. The recipe-managed chrome is for the cases where standard axes can't help (variable-width bars under a band scale, per-row independent scales, etc.).
+Layouts that draw *within* the frame's standard scales can just use the HOC's chrome. Pass `showAxes` on `XYCustomChart` / `OrdinalCustomChart` and the frame will render the same x/y or o/r axes the built-in HOCs do — useful for custom XY layouts that overlay points/lines on regular axes. The recipe-managed chrome is for the cases where standard axes can't help (variable-width bars under a band scale, per-row independent scales, etc.).
 
 **Notes:**
 - Coords are plot-relative (the frame translates the canvas/SVG group by `margin`). Read `ctx.dimensions.plot` for the drawing rect. Radial ordinal projection is the one exception: `plot.x = -width/2`, `plot.y = -height/2` because the canvas ctx is center-translated.

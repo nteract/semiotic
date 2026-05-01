@@ -1419,9 +1419,7 @@ const StreamNetworkFrame = forwardRef<
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={
-          customOverlays != null
-            ? <>{resolvedForeground}{customOverlays}</>
-            : resolvedForeground
+          composeOverlays(resolvedForeground, customOverlays)
         }
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

@@ -81,13 +81,15 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
   const categoryKey = typeof cfg.categoryAccessor === "string" ? cfg.categoryAccessor : "category"
   const stackKey = typeof cfg.stackBy === "string" ? cfg.stackBy : "stack"
   const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
-  const buildDatum = (cat: string, st: string, cellVal: number): Datum => {
-    const entries: Record<string, unknown> = { category: cat, stack: st, value: cellVal }
-    if (categoryKey !== "category") entries[categoryKey] = cat
-    if (stackKey !== "stack") entries[stackKey] = st
-    if (valueKey !== "value") entries[valueKey] = cellVal
-    return createSafeDatum(entries)
-  }
+  const buildDatum = (cat: string, st: string, cellVal: number): Datum =>
+    createSafeDatum((set) => {
+      set("category", cat)
+      set("stack", st)
+      set("value", cellVal)
+      if (categoryKey !== "category") set(categoryKey, cat)
+      if (stackKey !== "stack") set(stackKey, st)
+      if (valueKey !== "value") set(valueKey, cellVal)
+    })
 
   const showLabels = cfg.showCategoryLabels !== false
   const labelPad = cfg.labelPadding ?? (showLabels ? 22 : 0)

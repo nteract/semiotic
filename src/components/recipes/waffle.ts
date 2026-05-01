@@ -32,10 +32,10 @@ export interface WaffleConfig {
  *
  * @example
  * ```tsx
- * import { CustomChart } from "semiotic/xy"
+ * import { XYCustomChart } from "semiotic/xy"
  * import { waffleLayout } from "semiotic/recipes"
  *
- * <CustomChart
+ * <XYCustomChart
  *   data={[
  *     { region: "AMER", value: 42 },
  *     { region: "EMEA", value: 33 },

@@ -15,14 +15,22 @@ export function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d:
  * user-supplied accessor names. `Object.create(null)` produces a
  * prototype-less object so adversarial keys like `__proto__`,
  * `constructor`, or `prototype` become normal own-properties instead of
- * mutating the prototype chain.
+ * invoking the prototype setter on a normal object literal (which
+ * silently drops the assignment).
+ *
+ * The builder takes a callback that receives a `set(key, value)` writer
+ * bound to the null-prototype object. This API forces every assignment
+ * through the safe target — passing a plain `Record<string, unknown>`
+ * instead would be unsafe, since constructing that intermediate via an
+ * object literal lets `__proto__` hit the setter before we ever reach
+ * the helper.
  *
  * Recipes funnel every datum-emit through this helper so the
  * prototype-pollution invariant is enforced in one place rather than
  * scattered across each recipe's inner loops.
  */
-export function createSafeDatum(entries: Record<string, unknown>): Datum {
+export function createSafeDatum(populate: (set: (key: string, value: unknown) => void) => void): Datum {
   const out = Object.create(null) as Datum
-  for (const k of Object.keys(entries)) out[k] = entries[k]
+  populate((key, value) => { out[key] = value })
   return out
 }

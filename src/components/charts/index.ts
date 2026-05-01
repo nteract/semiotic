@@ -50,8 +50,8 @@ export type { CandlestickChartProps } from "./xy/CandlestickChart"
 // Custom Chart (escape hatch for bespoke layouts)
 // ============================================================================
 
-export { CustomChart } from "./custom/CustomChart"
-export type { CustomChartProps } from "./custom/CustomChart"
+export { XYCustomChart } from "./custom/XYCustomChart"
+export type { XYCustomChartProps } from "./custom/XYCustomChart"
 
 export { NetworkCustomChart } from "./custom/NetworkCustomChart"
 export type { NetworkCustomChartProps } from "./custom/NetworkCustomChart"

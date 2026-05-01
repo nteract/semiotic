@@ -184,11 +184,20 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW
     const cat = getCategory(d)
 
-    const makeDatum = (extras: Record<string, unknown>): Datum => {
-      const entries: Record<string, unknown> = { metric: cat, ...extras }
-      if (categoryKey !== "metric") entries[categoryKey] = cat
-      return createSafeDatum(entries)
-    }
+    // makeDatum runs every assignment through createSafeDatum's
+    // null-prototype writer — including user-supplied accessor names.
+    // Building an intermediate object literal first would let
+    // `__proto__` invoke the setter on a normal object before we ever
+    // reach the safe target, silently dropping the field. Each call site
+    // hands the recipe-fixed keys (kind/value/range/...) and any
+    // user-controlled accessor (categoryKey/valueKey/targetKey) through
+    // the `set` writer.
+    const makeDatum = (build: (set: (k: string, v: unknown) => void) => void): Datum =>
+      createSafeDatum((set) => {
+        set("metric", cat)
+        if (categoryKey !== "metric") set(categoryKey, cat)
+        build(set)
+      })
 
     // Background range bars — full row height, successively darker.
     let lastEnd = bulletX
@@ -203,7 +212,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
           w,
           h: rowH,
           style: { fill: rangeColors[Math.min(r, rangeColors.length - 1)], stroke: "none" },
-          datum: makeDatum({ range: r, rangeValue: ranges[r], kind: "range" }),
+          datum: makeDatum((set) => {
+            set("range", r)
+            set("rangeValue", ranges[r])
+            set("kind", "range")
+          }),
           group: `range-${r}`,
         })
       }
@@ -212,8 +225,6 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
     // Actual value bar — thinner, centered vertically inside the row.
     const actualH = Math.max(6, Math.floor(rowH * 0.45))
-    const actualExtras: Record<string, unknown> = { value: actual, kind: "actual" }
-    if (valueKey !== "value") actualExtras[valueKey] = actual
     nodes.push({
       type: "rect",
       x: bulletX,
@@ -221,15 +232,17 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       w: xToPx(actual) - bulletX,
       h: actualH,
       style: { fill: baseColor, stroke: "none" },
-      datum: makeDatum(actualExtras),
+      datum: makeDatum((set) => {
+        set("value", actual)
+        set("kind", "actual")
+        if (valueKey !== "value") set(valueKey, actual)
+      }),
       group: "actual",
     })
 
     // Target tick — narrow vertical mark spanning ~80% of row height.
     const tickW = 3
     const tickH = Math.floor(rowH * 0.8)
-    const targetExtras: Record<string, unknown> = { target, kind: "target" }
-    if (targetKey !== "target") targetExtras[targetKey] = target
     nodes.push({
       type: "rect",
       x: xToPx(target) - tickW / 2,
@@ -237,7 +250,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       w: tickW,
       h: tickH,
       style: { fill: targetColor, stroke: "none" },
-      datum: makeDatum(targetExtras),
+      datum: makeDatum((set) => {
+        set("target", target)
+        set("kind", "target")
+        if (targetKey !== "target") set(targetKey, target)
+      }),
       group: "target",
     })
   }

@@ -1133,9 +1133,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
           foregroundGraphics={
-            customOverlays != null
-              ? <>{resolvedForeground}{customOverlays}</>
-              : resolvedForeground
+            composeOverlays(resolvedForeground, customOverlays)
           }
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}

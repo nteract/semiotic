@@ -1,13 +1,13 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { CustomChart } from "./CustomChart"
+import { XYCustomChart } from "./XYCustomChart"
 import type { CustomLayout } from "../../stream/customLayout"
 import type { RectSceneNode } from "../../stream/types"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
-// Mock StreamXYFrame to inspect the props CustomChart forwards.
+// Mock StreamXYFrame to inspect the props XYCustomChart forwards.
 let lastXYFrameProps: { customLayout?: CustomLayout; layoutConfig?: Record<string, unknown>; chartType?: string } | null = null
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
@@ -19,7 +19,7 @@ vi.mock("../../stream/StreamXYFrame", () => {
   }
 })
 
-describe("CustomChart", () => {
+describe("XYCustomChart", () => {
   let cleanup: () => void
   beforeEach(() => {
     lastXYFrameProps = null
@@ -43,7 +43,7 @@ describe("CustomChart", () => {
   it("forwards customLayout and chartType=custom to the frame", () => {
     render(
       <TooltipProvider>
-        <CustomChart
+        <XYCustomChart
           data={[{ value: 1 }]}
           layout={trivialLayout}
           width={400}
@@ -58,7 +58,7 @@ describe("CustomChart", () => {
   it("forwards layoutConfig", () => {
     render(
       <TooltipProvider>
-        <CustomChart
+        <XYCustomChart
           data={[{ value: 1 }]}
           layout={trivialLayout}
           layoutConfig={{ rows: 5, columns: 5 }}

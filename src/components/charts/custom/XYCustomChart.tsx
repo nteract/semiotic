@@ -12,7 +12,7 @@ import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 
-export interface CustomChartProps<
+export interface XYCustomChartProps<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 > extends BaseChartProps, AxisConfig {
@@ -37,37 +37,37 @@ export interface CustomChartProps<
   annotations?: Datum[]
   colorScheme?: string | string[]
   tooltip?: TooltipProp
-  /** Additional StreamXYFrame props for advanced customization, excluding CustomChart-controlled fields. */
+  /** Additional StreamXYFrame props for advanced customization, excluding XYCustomChart-controlled fields. */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size" | "customLayout" | "layoutConfig">>
 }
 
 /**
- * CustomChart — escape hatch for bespoke chart geometry.
+ * XYCustomChart — escape hatch for bespoke chart geometry.
  *
  * Wraps StreamXYFrame and threads a user-supplied layout function into the
  * scene-building pipeline. The layout receives scales, dimensions, theme,
  * and a resolveColor helper, and returns scene nodes + optional overlays.
  *
- * Built-in chart types should always be preferred. Reach for CustomChart
+ * Built-in chart types should always be preferred. Reach for XYCustomChart
  * when no HOC fits — waffle grids, calendar heatmaps, horizon bands,
  * bespoke composites. See `semiotic/recipes` for reference layouts.
  *
  * @example
  * ```tsx
- * import { CustomChart } from "semiotic/xy"
+ * import { XYCustomChart } from "semiotic/xy"
  * import { waffleLayout } from "semiotic/recipes"
  *
- * <CustomChart
+ * <XYCustomChart
  *   data={cells}
  *   layout={waffleLayout}
  *   layoutConfig={{ rows: 10, columns: 10, gutter: 2, valueAccessor: "value" }}
  * />
  * ```
  */
-export const CustomChart = forwardRef(function CustomChart<
+export const XYCustomChart = forwardRef(function XYCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
->(props: CustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: XYCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
   const {
     data,
     layout,
@@ -92,7 +92,7 @@ export const CustomChart = forwardRef(function CustomChart<
   const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamXYFrameHandle>({
     imperativeRef: ref,
     imperativeVariant: "xy",
-    chartTypeLabel: "CustomChart",
+    chartTypeLabel: "XYCustomChart",
     unwrapData: false,
     data,
     colorScheme,
@@ -155,7 +155,7 @@ export const CustomChart = forwardRef(function CustomChart<
   }
 
   return (
-    <SafeRender componentName="CustomChart" width={width} height={height}>
+    <SafeRender componentName="XYCustomChart" width={width} height={height}>
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
@@ -164,9 +164,9 @@ export const CustomChart = forwardRef(function CustomChart<
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>
   >(
-    props: CustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>
+    props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }
 
-;(CustomChart as { displayName?: string }).displayName = "CustomChart"
+;(XYCustomChart as { displayName?: string }).displayName = "XYCustomChart"
