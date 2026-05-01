@@ -29,7 +29,6 @@ import type { PartialMargin, MarginType } from "../../types/marginType"
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
-import { filterSparseArray } from "./sparseArray"
 
 /**
  * Margin shorthand → sided form. The Stream*Frame margin props only
@@ -145,14 +144,14 @@ export function useCustomChartSetup<TFrameHandle>(
   const scaffold = useCustomChartScaffold<TFrameHandle>(options)
   const { resolved, normalizedMargin } = scaffold
 
-  // `useChartSetup` filters sparse data internally, but HOCs that want
-  // to forward `safeData` directly into their frame's `data` prop need
-  // a parallel reference here. `filterSparseArray` returns the original
-  // reference when nothing was dropped so memo identity is preserved.
-  const safeData = useMemo(() => filterSparseArray(options.data ?? []), [options.data])
-
+  // `useChartSetup` filters sparse data internally and returns the
+  // result as `setup.data`. Forward the raw prop in and reuse that
+  // sparse-filtered output below — one pass per data change instead of
+  // two. `filterSparseArray` preserves identity when nothing's dropped,
+  // so memo cache hits in the (overwhelmingly common) clean-input case
+  // are unchanged.
   const setup = useChartSetup({
-    data: safeData,
+    data: options.data ?? [],
     rawData: options.data,
     colorBy: undefined,
     colorScheme: options.colorScheme,
@@ -176,7 +175,7 @@ export function useCustomChartSetup<TFrameHandle>(
 
   return {
     ...scaffold,
-    safeData,
+    safeData: setup.data,
     setup,
     earlyReturn: setup.earlyReturn,
   }
