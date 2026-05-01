@@ -2,6 +2,7 @@ import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
+import { resolveAccessor, createSafeDatum } from "./recipeUtils"
 
 export interface MarimekkoConfig {
   /** Field (or function) yielding the category for each datum. Categories become x-axis bars. */
@@ -81,19 +82,11 @@ export const marimekkoLayout: OrdinalCustomLayout<MarimekkoConfig> = (ctx) => {
   const stackKey = typeof cfg.stackBy === "string" ? cfg.stackBy : "stack"
   const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
   const buildDatum = (cat: string, st: string, cellVal: number): Datum => {
-    // `Object.create(null)` produces an object with no prototype, so
-    // assigning a user-supplied key like `__proto__`, `constructor`, or
-    // `prototype` just sets a normal own-property instead of mutating
-    // the object's prototype chain. Defends against accidental
-    // prototype pollution when callers pass adversarial accessor names.
-    const out = Object.create(null) as Datum
-    out.category = cat
-    out.stack = st
-    out.value = cellVal
-    if (categoryKey !== "category") out[categoryKey] = cat
-    if (stackKey !== "stack") out[stackKey] = st
-    if (valueKey !== "value") out[valueKey] = cellVal
-    return out
+    const entries: Record<string, unknown> = { category: cat, stack: st, value: cellVal }
+    if (categoryKey !== "category") entries[categoryKey] = cat
+    if (stackKey !== "stack") entries[stackKey] = st
+    if (valueKey !== "value") entries[valueKey] = cellVal
+    return createSafeDatum(entries)
   }
 
   const showLabels = cfg.showCategoryLabels !== false
@@ -207,11 +200,6 @@ function renderCategoryLabels(
     }, slot.cat)
   })
   return React.createElement(React.Fragment, null, ...elements)
-}
-
-function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d: Datum) => T {
-  if (typeof a === "function") return a
-  return (d: Datum) => d[a] as T
 }
 
 function mergeOrder(hint: string[], fallback: string[], existsInData: (k: string) => boolean): string[] {

@@ -25,6 +25,7 @@ import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { composeOverlays } from "./composeOverlays"
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -1375,9 +1376,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
             foregroundGraphics={
-            storeRef.current?.customLayoutOverlays != null
-              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
-              : resolvedForeground
+            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
             marginalGraphics={marginalGraphics}
             xValues={[]}
@@ -1501,9 +1500,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
           foregroundGraphics={
-            storeRef.current?.customLayoutOverlays != null
-              ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
-              : resolvedForeground
+            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}

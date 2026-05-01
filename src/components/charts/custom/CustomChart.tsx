@@ -1,17 +1,14 @@
 "use client"
 import * as React from "react"
-import { forwardRef, useRef } from "react"
+import { forwardRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CustomLayout } from "../../stream/customLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, AxisConfig } from "../shared/types"
-import { useChartMode } from "../shared/hooks"
 import { SafeRender } from "../shared/withChartWrapper"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
-import { filterSparseArray } from "../shared/sparseArray"
-import { useChartSetup } from "../shared/useChartSetup"
+import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -71,20 +68,6 @@ export const CustomChart = forwardRef(function CustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: CustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
-  const frameRef = useRef<StreamXYFrameHandle>(null)
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
-
-  const resolved = useChartMode(props.mode, {
-    width: props.width,
-    height: props.height,
-    showGrid: props.showGrid,
-    enableHover: props.enableHover,
-    showLegend: props.showLegend,
-    title: props.title,
-    xLabel: props.xLabel,
-    yLabel: props.yLabel,
-  })
-
   const {
     data,
     layout,
@@ -106,46 +89,35 @@ export const CustomChart = forwardRef(function CustomChart<
     frameProps = {},
   } = props
 
-  const {
-    width,
-    height,
-    enableHover,
-    showGrid,
-    showLegend,
-    title,
-    description,
-    summary,
-    accessibleTable,
-    xLabel,
-    yLabel,
-  } = resolved
-
-  const safeData = React.useMemo(() => filterSparseArray(data ?? []), [data])
-
-  const setup = useChartSetup({
-    data: safeData,
-    rawData: data,
-    colorBy: undefined,
+  const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamXYFrameHandle>({
+    imperativeRef: ref,
+    imperativeVariant: "xy",
+    chartTypeLabel: "CustomChart",
+    unwrapData: false,
+    data,
     colorScheme,
-    legendInteraction: undefined,
     selection,
     linkedHover,
-    fallbackFields: [],
-    unwrapData: false,
     onObservation,
     onClick,
-    chartType: "CustomChart",
     chartId,
-    showLegend,
-    userMargin,
-    marginDefaults: resolved.marginDefaults,
     loading,
     emptyContent,
-    width,
-    height,
+    margin: userMargin,
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    mode: props.mode,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
+  if (earlyReturn) return earlyReturn
+
+  const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const streamProps: StreamXYFrameProps = {
     chartType: "custom",

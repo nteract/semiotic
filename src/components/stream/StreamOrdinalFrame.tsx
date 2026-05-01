@@ -42,6 +42,7 @@ import type {
 } from "./ordinalTypes"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
+import { composeOverlays } from "./composeOverlays"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -1011,9 +1012,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
             foregroundGraphics={
-              storeRef.current?.customLayoutOverlays != null
-                ? <>{resolvedForeground}{storeRef.current.customLayoutOverlays}</>
-                : resolvedForeground
+              composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
             }
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}

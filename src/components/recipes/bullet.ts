@@ -2,6 +2,7 @@ import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
+import { resolveAccessor, createSafeDatum } from "./recipeUtils"
 
 export interface BulletConfig {
   /** Field (or function) yielding the row label per datum. Each row is one bullet. */
@@ -183,17 +184,10 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW
     const cat = getCategory(d)
 
-    // `Object.create(null)` produces a prototype-less object so
-    // assigning a user-supplied key like `__proto__`, `constructor`, or
-    // `prototype` just sets a normal own-property instead of mutating
-    // the prototype chain. Defends against accidental prototype
-    // pollution when callers pass adversarial accessor names.
     const makeDatum = (extras: Record<string, unknown>): Datum => {
-      const out = Object.create(null) as Datum
-      out.metric = cat
-      if (categoryKey !== "metric") out[categoryKey] = cat
-      for (const k of Object.keys(extras)) out[k] = extras[k]
-      return out
+      const entries: Record<string, unknown> = { metric: cat, ...extras }
+      if (categoryKey !== "metric") entries[categoryKey] = cat
+      return createSafeDatum(entries)
     }
 
     // Background range bars — full row height, successively darker.
@@ -302,7 +296,3 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   return { nodes, overlays }
 }
 
-function resolveAccessor<T = unknown>(a: string | ((d: Datum) => T)): (d: Datum) => T {
-  if (typeof a === "function") return a
-  return (d: Datum) => d[a] as T
-}
