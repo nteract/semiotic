@@ -135,6 +135,141 @@ import { StreamNetworkFrame } from "semiotic/network"`}
       </p>
 
       {/* -------------------------------------------------------------- */}
+      <h2 id="server-placeholder-pattern">SEO and First-Paint with a Server-Rendered Placeholder</h2>
+
+      <p>
+        The standard <code>"use client"</code> pattern works, but it skips
+        server rendering entirely — the client mount is what produces the
+        first paint. For pages that need indexable chart content, faster
+        first contentful paint, or accessible chart output for non-JS
+        clients, pair <code>next/dynamic</code> with{" "}
+        <code>semiotic/server</code>'s <code>renderChart</code> as the
+        placeholder. The server emits a static SVG that's part of the
+        initial HTML; the client wrapper renders the same placeholder
+        until it has mounted, then swaps in the interactive chart in the
+        same slot.
+      </p>
+
+      <p>
+        This is the cheap, working SSR story today. It's deliberately not
+        rehydration — the placeholder SVG and the client canvas are
+        produced by separate code paths, so the client mount swaps the
+        DOM out rather than picking up where the server left off. That
+        means fast initial paint, indexable static SVG, and zero
+        hydration warnings, with the cost that the first interaction has
+        to wait on client mount + the chart's initial layout pass.
+      </p>
+
+      <p>
+        The shape is two files: a server component that pre-renders the
+        placeholder SVG and passes it down, and a client wrapper that
+        gates on a <code>mounted</code> flag so the placeholder renders
+        on the server (and on the first client render) and the
+        interactive chart renders thereafter.
+      </p>
+
+      <CodeBlock
+        code={`// app/dashboard/RevenueChart.tsx — client wrapper
+"use client"
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
+
+// Lazy-load the interactive chart on the client only.
+const InteractiveChart = dynamic(
+  () => import("semiotic/xy").then((m) => m.LineChart),
+  { ssr: false },
+)
+
+interface Props {
+  chartProps: { data: Array<{ month: string; revenue: number }>; xAccessor: string; yAccessor: string; width: number; height: number }
+  placeholderSvg: string
+}
+
+export default function RevenueChart({ chartProps, placeholderSvg }: Props) {
+  // \`mounted\` is false on the server and during the first client
+  // render — the SVG placeholder is what gets emitted in both cases,
+  // so React's hydration sees identical markup. After mount, swap to
+  // the interactive chart in the same slot.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  if (!mounted) {
+    return (
+      <div
+        style={{ width: chartProps.width, height: chartProps.height }}
+        dangerouslySetInnerHTML={{ __html: placeholderSvg }}
+      />
+    )
+  }
+  return <InteractiveChart {...chartProps} />
+}`}
+        language="tsx"
+      />
+
+      <CodeBlock
+        code={`// app/dashboard/page.tsx — server component
+import { renderChart } from "semiotic/server"
+import RevenueChart from "./RevenueChart"
+
+export default async function DashboardPage() {
+  const data = await fetchRevenue()
+  const chartProps = { data, xAccessor: "month", yAccessor: "revenue", width: 800, height: 400 }
+
+  // Server-render the static SVG once. The wrapper renders it inline
+  // during SSR and during the first client render, then replaces it
+  // with the interactive chart on mount.
+  const placeholderSvg = renderChart("LineChart", chartProps)
+
+  return (
+    <main>
+      <h1>Revenue</h1>
+      <RevenueChart chartProps={chartProps} placeholderSvg={placeholderSvg} />
+    </main>
+  )
+}`}
+        language="tsx"
+      />
+
+      <p>
+        A few details worth knowing:
+      </p>
+
+      <ul>
+        <li>
+          The <code>mounted</code> flag is what gives you in-place
+          replacement. The server bundle and the first client render
+          emit the same SVG markup (so hydration matches), and the
+          post-effect render swaps the subtree to the interactive
+          chart. Only one of the two is in the DOM at any time.
+        </li>
+        <li>
+          The placeholder <code>div</code> uses the same{" "}
+          <code>width</code> and <code>height</code> as the chart so the
+          interactive mount doesn't trigger a layout shift.
+        </li>
+        <li>
+          Pass identical props to <code>renderChart</code> and{" "}
+          <code>InteractiveChart</code>. Mismatch and the chart "jumps"
+          on swap.
+        </li>
+        <li>
+          For static / build-time pages this gives indexable chart SVG
+          with no interactivity penalty. For dynamically-rendered pages
+          the server pass runs on every request — fine for moderate
+          traffic, but cache the SVG output if you're rendering the
+          same chart many times.
+        </li>
+      </ul>
+
+      <p>
+        This pattern is a one-piece fit: replace the server-rendered SVG
+        with future Semiotic isomorphic-rehydration support (when it
+        ships) by removing the <code>placeholderSvg</code>{" "}
+        prop and the <code>mounted</code> gate. No data shape or other
+        prop changes required.
+      </p>
+
+      {/* -------------------------------------------------------------- */}
       <h2 id="static-svg-rendering">Static SVG Rendering on the Server</h2>
 
       <p>

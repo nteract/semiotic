@@ -61,7 +61,11 @@ function createSource<T>(
 
   function set(updater: (current: T) => Partial<T>) {
     state = { ...state, ...updater(state) } as T
-    events.dispatchEvent(new CustomEvent("update"))
+    // Plain `Event`, not `CustomEvent`. CustomEvent landed as a Node
+    // global in v19; using it would crash store updates fired during
+    // SSR on Node 18 (the package's lower bound). The `detail` field is
+    // never read by subscribers, so there's no functional difference.
+    events.dispatchEvent(new Event("update"))
   }
 
   function subscribe(cb: () => void) {
