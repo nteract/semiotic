@@ -1226,6 +1226,18 @@ export class GeoPipelineStore {
     }
   }
 
+  /**
+   * Cancel any pending intro animation set up by the most recent
+   * `computeScene` call. After this, the next paint shows the scene
+   * in its final state directly. See `PipelineStore.cancelIntroAnimation`
+   * for the full rationale — Stream Frames call this when they detect
+   * SSR hydration so the canvas takeover doesn't re-animate from
+   * blank after the server already painted the chart.
+   */
+  cancelIntroAnimation(): void {
+    this.activeTransition = null
+  }
+
   advanceTransition(now: number): boolean {
     if (!this.activeTransition) return false
 

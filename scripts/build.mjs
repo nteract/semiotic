@@ -11,7 +11,7 @@ const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
 
-function useClientPlugin() {
+function useClientPlugin({ serverOnly = false } = {}) {
   const clientModules = new Set()
   return {
     name: "use-client",
@@ -22,6 +22,18 @@ function useClientPlugin() {
       return null
     },
     renderChunk(code, chunk) {
+      // Server-only bundles (e.g. `semiotic/server`) must never carry
+      // the `"use client"` directive — Next.js routes that import from
+      // a server-only entry expect to call its functions from a Server
+      // Component, but the directive flips every export into a client
+      // boundary, throwing at runtime: "Attempted to call X() from the
+      // server but X is on the client." A few transitive client-only
+      // modules (Stream Frame source files, the React store
+      // primitives) are pulled into the server bundle for the SSR-SVG
+      // path, so the heuristic of "any client-tagged module in the
+      // chunk → tag the chunk" produces a false positive here.
+      // Server bundles set this flag to opt out unconditionally.
+      if (serverOnly) return null
       for (const id of Object.keys(chunk.modules)) {
         if (clientModules.has(id)) {
           return { code: `"use client";\n${code}`, map: null }
@@ -37,7 +49,8 @@ async function createBundle(options = {}) {
     input = "src/components/semiotic.ts",
     name = "semiotic",
     analyze = false,
-    minify = false
+    minify = false,
+    serverOnly = false,
   } = options
 
   const plugins = [
@@ -46,7 +59,7 @@ async function createBundle(options = {}) {
       peerDependencies: true
     }),
 
-    useClientPlugin(),
+    useClientPlugin({ serverOnly }),
 
     typescript({
       tsconfig: "tsconfig.json",
@@ -289,7 +302,12 @@ async function build() {
     { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify },
     { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify },
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
-    { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify },
+    // `serverOnly: true` keeps the `"use client"` directive off the
+    // server bundle. Without this, transitive imports of client-tagged
+    // Stream Frame source files leak the directive into a Node-only
+    // entry point, which Next.js then refuses to call from a Server
+    // Component (`renderChart` throws "X is on the client").
+    { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify, serverOnly: true },
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify },
@@ -304,6 +322,47 @@ async function build() {
   ])
 
   createLegacyAliases(bundles)
+
+  assertDirectivePlacement(bundles)
+}
+
+/**
+ * Post-build sanity check: every bundle marked `serverOnly: true` must
+ * NOT carry the `"use client"` directive. Without this gate, a future
+ * change that re-introduces a transitive client-tagged import into the
+ * server bundle would silently flip its top-line back to
+ * `"use client";` — and Next.js would refuse to call any of its
+ * exports from a Server Component at runtime, with the runtime error
+ * "Attempted to call X() from the server but X is on the client."
+ *
+ * Reading the file synchronously is cheap (we already wrote them) and
+ * lets the build fail fast with a clear diagnostic.
+ */
+function assertDirectivePlacement(bundles) {
+  const failures = []
+  for (const b of bundles) {
+    if (!b.serverOnly) continue
+    // Both ESM and CJS variants must be checked — a missed directive
+    // in either would still break the consumer that picks that
+    // condition from the exports map.
+    for (const suffix of [".module.min.js", ".module.js", ".min.js", ".js"]) {
+      const path = `dist/${b.name}${suffix}`
+      if (!existsSync(path)) continue
+      const head = readFileSync(path, "utf8").slice(0, 64)
+      if (/^["']use client["'];/.test(head)) {
+        failures.push(path)
+      }
+    }
+  }
+  if (failures.length === 0) {
+    console.log("\u2705 directive placement verified (server bundles are server-only)")
+    return
+  }
+  console.error("\u274c server-only bundles must not carry \"use client\":")
+  for (const path of failures) console.error(`   - ${path}`)
+  console.error("\nThis usually means a transitive import pulled a client-tagged source file into the bundle.")
+  console.error("Audit the entry point's import graph and remove the client-only dependency.")
+  process.exit(1)
 }
 
 build().catch(err => {

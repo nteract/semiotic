@@ -1156,6 +1156,28 @@ export class PipelineStore {
     return animating
   }
 
+  /**
+   * Cancel any pending intro animation that the most recent
+   * `computeScene` call set up. After this, the next paint shows the
+   * scene in its final state directly — no transition from zero-state
+   * positions.
+   *
+   * Stream Frames call this when they detect SSR hydration: the server
+   * already painted the chart in its final state via the SVG branch,
+   * so re-animating from blank when the canvas takes over is a visual
+   * regression. Subsequent data-change transitions still animate
+   * normally because they re-populate `prevPositionMap` from the
+   * snapshot taken before the change.
+   *
+   * Idempotent — a second call is a no-op since the maps are already
+   * empty and `activeTransition` is already null.
+   */
+  cancelIntroAnimation(): void {
+    this.prevPositionMap.clear()
+    this.prevPathMap.clear()
+    this.activeTransition = null
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
 
   private groupData(data: Datum[]): { key: string; data: Datum[] }[] {

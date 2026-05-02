@@ -49,6 +49,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -352,6 +353,20 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       renderFnRef,
       scheduleRender,
     } = frame
+
+    // ── Hydration boundary ───────────────────────────────────────────────
+    // See StreamXYFrame for the full pattern. The SVG branch below fires
+    // whenever `isServerEnvironment || !hydrated`, so the
+    // server-emitted markup and the client's first-render markup are
+    // byte-identical (no React hydration mismatch). After
+    // `useLayoutEffect` flips `hydrated`, the canvas branch upgrades
+    // the same DOM subtree.
+    //
+    // `wasHydratingFromSSR` distinguishes true SSR rehydration from
+    // pure CSR. When true, the server already painted the chart, so
+    // we cancel the intro animation `computeScene` installed.
+    const hydrated = useHydration()
+    const wasHydratingFromSSR = useWasHydratingFromSSR()
 
     // Resolve new-style names with legacy fallback
     const oLabel = categoryLabel ?? oLabelLegacy
@@ -896,6 +911,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Lifecycle ────────────────────────────────────────────────────────
 
     useEffect(() => {
+      // `hydrated` in deps so the SVG → canvas swap kicks an initial
+      // canvas paint. The data-change effect doesn't re-run because
+      // `data` reference is unchanged across the swap. See
+      // StreamXYFrame for the full rationale.
+      if (hydrated && wasHydratingFromSSR) {
+        storeRef.current?.cancelIntroAnimation()
+      }
+      dirtyRef.current = true
       scheduleRender()
       return () => {
         // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
@@ -904,7 +927,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         // so `store.ingest` can't fire after the component is gone.
         adapterRef.current?.clear()
       }
-    }, [scheduleRender])
+    }, [hydrated, wasHydratingFromSSR, scheduleRender])
 
     useEffect(() => {
       dirtyRef.current = true
@@ -945,7 +968,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── SSR path: render SVG instead of canvas ──────────────────────────
 
-    if (isServerEnvironment) {
+    if (isServerEnvironment || !hydrated) {
       const store = storeRef.current
       if (store && data) {
         store.ingest({ inserts: data, bounded: true })
@@ -960,13 +983,17 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       return (
         <div
+          // Attached on both the SVG and canvas branches so the
+          // `ResizeObserver` in `useResponsiveSize` latches at first
+          // commit. See `StreamXYFrame.tsx` for the full rationale.
+          ref={responsiveRef}
           className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{
             position: "relative",
-            width: size[0],
-            height: size[1],
+            width: responsiveWidth ? "100%" : size[0],
+            height: responsiveHeight ? "100%" : size[1],
           }}
         >
           <ScreenReaderSummary summary={summary} />

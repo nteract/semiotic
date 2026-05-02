@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSR / CSR Parity Fixtures</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: white;
+    }
+    .test-grid {
+      /* Single-column layout: charts in this fixture span up to 500px
+         wide (sankey, treemap), and the Playwright viewport is 900px.
+         A multi-column auto-fit grid would clip those charts at the
+         column boundary, which showed up as cut-off right thirds in
+         the initial baseline run for csr-sankey and csr-treemap. */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .test-case {
+      background: white;
+      padding: 16px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      /* `width: max-content` shrinks the testid container to its chart
+         (+16px padding each side) so the screenshot crop is consistent
+         and tight regardless of viewport width. Without this, flex
+         items stretch to align-items default and the baseline picks
+         up trailing whitespace. */
+      width: max-content;
+    }
+    .test-case h2 {
+      margin-top: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="margin:0 0 16px;font-size:18px;">SSR / CSR parity fixtures</h1>
+  <p style="margin:0 0 24px;color:#777;font-size:13px;">
+    Each test case below is the CSR-side rendering for the SSR/CSR parity matrix.
+    The matching SSR-side rendering is generated at test time via <code>renderChart</code>
+    from <code>semiotic/server</code> and snapshotted from a <code>page.setContent</code>
+    payload — no fixture file needed for the SSR side.
+  </p>
+  <div id="root" class="test-grid"></div>
+  <script type="module" src="./index.js"></script>
+</body>
+</html>

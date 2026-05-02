@@ -53,6 +53,14 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    * and targets reference this value.
    * @default "id"
    */
+  nodeIdAccessor?: ChartAccessor<TNode, string>
+  /**
+   * @deprecated Use `nodeIdAccessor` (camelCase) instead. Removed in
+   * 4.0. The other network HOCs (`SankeyDiagram`, `ChordDiagram`,
+   * `TreeDiagram`, `OrbitDiagram`) all use the camelCase form;
+   * `nodeIDAccessor` was a casing inconsistency in `ForceDirectedGraph`
+   * that the SSR demo's verification matrix surfaced.
+   */
   nodeIDAccessor?: ChartAccessor<TNode, string>
   /** @default "source" */
   sourceAccessor?: ChartAccessor<TEdge, string>
@@ -61,7 +69,7 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
   /**
    * Field or function for the label text rendered next to a node when
    * `showLabels` is true.
-   * @default nodeIDAccessor
+   * @default nodeIdAccessor
    */
   nodeLabel?: ChartAccessor<TNode, string>
   /**
@@ -190,7 +198,11 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     edges,
     margin: userMargin,
     className,
-    nodeIDAccessor = "id",
+    // Accept both casings; the camelCase one wins. `nodeIDAccessor` is
+    // the deprecated alias that shipped historically — kept for
+    // backwards compat and removed in 4.0.
+    nodeIdAccessor: nodeIdAccessorProp,
+    nodeIDAccessor: nodeIDAccessorLegacy,
     sourceAccessor = "source",
     targetAccessor = "target",
     nodeLabel,
@@ -218,6 +230,11 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     strokeWidth,
     opacity,
   } = props
+
+  // Resolve the canonical name first, fall back to the legacy alias,
+  // default to "id". `nodeIDAccessor` (uppercase ID) is deprecated and
+  // removed in 4.0 — see the prop's JSDoc for context.
+  const nodeIDAccessor = nodeIdAccessorProp ?? nodeIDAccessorLegacy ?? "id"
 
   const { width, height, enableHover, showLegend, showLabels = false, title, description, summary, accessibleTable } = resolved
 

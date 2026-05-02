@@ -31,6 +31,7 @@ import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, nav
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -480,6 +481,31 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       transitionProp,
       themeDirtyRef: dirtyRef,
     })
+    // ── Hydration boundary ───────────────────────────────────────────────
+    // `hydrated` is false on the server pass and during the first client
+    // render after SSR, then flips true after the first commit. The SVG
+    // branch below fires whenever `isServerEnvironment || !hydrated`, so
+    // the server-emitted markup and the client's first-render markup are
+    // byte-identical (no React hydration mismatch). The post-commit
+    // re-render swaps in the canvas + interactivity layer.
+    //
+    // After the swap, the canvas needs an explicit paint kick — the
+    // data-change effect that normally drives the initial paint
+    // doesn't re-fire (the `data` prop reference hasn't changed
+    // between the SVG render and the canvas render), so we force a
+    // dirty + scheduleRender once on the hydration transition.
+    //
+    // `wasHydratingFromSSR` distinguishes "true SSR rehydration" from
+    // "pure client mount." When true, the server already painted the
+    // chart in its final state via the SVG branch, so we cancel the
+    // intro animation that `computeScene` installed — re-animating
+    // from blank after SSR looks like a regression. Pure CSR mounts
+    // keep their intro animation because the SVG render is overwritten
+    // by the canvas branch within the same paint frame and never
+    // visible to the user.
+    const hydrated = useHydration()
+    const wasHydratingFromSSR = useWasHydratingFromSSR()
+
     const {
       reducedMotionRef,
       responsiveRef,
@@ -1197,6 +1223,22 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Lifecycle ────────────────────────────────────────────────────────
 
     useEffect(() => {
+      // `hydrated` in deps so that when the SVG → canvas swap happens,
+      // we re-fire and trigger an initial canvas paint. Without this,
+      // the canvas appears in the DOM but stays blank until the next
+      // data change or interaction (the data-change effect doesn't
+      // re-run because `data` reference is unchanged across the swap).
+      // `dirtyRef` flag forces a scene-rebuild path inside the renderer
+      // since the SVG branch already computed the scene synchronously.
+      if (hydrated && wasHydratingFromSSR) {
+        // SSR-hydration handoff: server already painted the final
+        // state, so wipe the intro animation that the SVG branch's
+        // computeScene installed. Subsequent data-change transitions
+        // still animate normally because they re-populate
+        // `prevPositionMap` from the snapshot taken before the change.
+        storeRef.current?.cancelIntroAnimation()
+      }
+      dirtyRef.current = true
       scheduleRender()
       return () => {
         // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
@@ -1205,7 +1247,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         // so `store.ingest` can't fire after the component is gone.
         adapterRef.current?.clear()
       }
-    }, [scheduleRender])
+    }, [hydrated, wasHydratingFromSSR, scheduleRender])
 
     // Re-render when visual props change
     useEffect(() => {
@@ -1298,9 +1340,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       return didChange ? result : rawData
     }
 
-    // ── SSR path: render SVG instead of canvas ──────────────────────────
+    // ── SSR + hydration path: render SVG instead of canvas ─────────────
+    //
+    // Fires on the server pass (so the framework gets pre-rendered SVG
+    // it can ship as initial HTML) AND on the first client render after
+    // hydration (so the markup matches what the server emitted, and
+    // React's hydration check passes). After the post-commit re-render
+    // (`hydrated === true`), control falls through to the canvas branch
+    // below — same DOM root, the inner content is reconciled.
 
-    if (isServerEnvironment) {
+    if (isServerEnvironment || !hydrated) {
       // Compute scene synchronously for server rendering
       const store = storeRef.current
       if (store && data) {
@@ -1324,13 +1373,20 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       return (
         <div
+          // `responsiveRef` is attached on both the SVG and canvas
+          // branches so the ResizeObserver in `useResponsiveSize` latches
+          // on at first commit. Without it, the observer would only
+          // attach after hydration flips to the canvas branch — and
+          // because the observer's useEffect deps don't include the ref,
+          // it would never re-run to see the now-attached element.
+          ref={responsiveRef}
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
           role="img"
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
-            width: size[0],
-            height: size[1],
+            width: responsiveWidth ? "100%" : size[0],
+            height: responsiveHeight ? "100%" : size[1],
           }}
         >
           <ScreenReaderSummary summary={summary} />

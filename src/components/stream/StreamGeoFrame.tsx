@@ -29,6 +29,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
+import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -275,6 +276,18 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       currentTheme,
     } = frame
 
+    // ── Hydration boundary ─────────────────────────────────────────────
+    // See StreamXYFrame for the full pattern. The SVG branch below
+    // fires whenever `isServerEnvironment || !hydrated`, so the
+    // server-emitted markup and the client's first-render markup are
+    // byte-identical (no React hydration mismatch). After
+    // `useLayoutEffect` flips `hydrated`, the canvas branch upgrades
+    // the same DOM subtree. `wasHydratingFromSSR` distinguishes true
+    // SSR rehydration from pure CSR; on rehydration we cancel the
+    // intro animation that the layout pass installed.
+    const hydrated = useHydration()
+    const wasHydratingFromSSR = useWasHydratingFromSSR()
+
     // Resolve dragRotate — defaults to true for orthographic
     const effectiveDragRotate = useMemo(() => {
       if (dragRotateProp != null) return dragRotateProp
@@ -341,6 +354,18 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const zoomTransformRef = useRef<ZoomTransform>(zoomIdentity)
     const isZoomingRef = useRef(false)
     const containerRef = useRef<HTMLDivElement | null>(null)
+
+    // Combine responsive + container refs. Hoisted above the SSR
+    // early-return so the hook count stays equal across renders —
+    // before this lived inside the canvas branch, which made the
+    // SVG-branch first render call fewer hooks than the canvas-branch
+    // re-render and tripped React's rules-of-hooks check.
+    const combinedRef = useCallback((el: HTMLDivElement | null) => {
+      containerRef.current = el
+      if (responsiveRef && typeof responsiveRef === "object") {
+        (responsiveRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+      }
+    }, [responsiveRef])
 
     // Drag-rotate state (globe spinning)
     const dragStartRef = useRef<{ x: number; y: number; rotation: [number, number, number] } | null>(null)
@@ -913,13 +938,19 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // ── Lifecycle ─────────────────────────────────────────────────────
 
     useEffect(() => {
+      // `hydrated` in deps so the SVG → canvas swap kicks an initial
+      // canvas paint. See StreamXYFrame for the rationale.
+      if (hydrated && wasHydratingFromSSR) {
+        storeRef.current?.cancelIntroAnimation?.()
+      }
+      dirtyRef.current = true
       scheduleRender()
       return () => {
         // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
         // is handled by useFrame.
         tileCacheRef.current?.clear()
       }
-    }, [scheduleRender])
+    }, [hydrated, wasHydratingFromSSR, scheduleRender])
 
     useEffect(() => {
       dirtyRef.current = true
@@ -1148,7 +1179,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── SSR path ──────────────────────────────────────────────────────
 
-    if (isServerEnvironment) {
+    if (isServerEnvironment || !hydrated) {
       const store = storeRef.current
       if (store && (areas || points || lines)) {
         if (areas) store.setAreas(areas)
@@ -1161,10 +1192,18 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       return (
         <div
+          // Same combined ref both branches use so the responsive
+          // observer + container-aware zoom handlers latch from first
+          // commit. See `StreamXYFrame.tsx` for the rationale.
+          ref={combinedRef}
           className={`stream-geo-frame${className ? ` ${className}` : ""}`}
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
-          style={{ position: "relative", width: size[0], height: size[1] }}
+          style={{
+            position: "relative",
+            width: responsiveWidth ? "100%" : size[0],
+            height: responsiveHeight ? "100%" : size[1],
+          }}
         >
           <ScreenReaderSummary summary={summary} />
           <svg
@@ -1212,15 +1251,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     }
 
     // ── Client render ─────────────────────────────────────────────────
-
-    // Combine responsive + zoom refs
-    const combinedRef = useCallback((el: HTMLDivElement | null) => {
-      containerRef.current = el
-      // Forward to responsive ref (RefObject)
-      if (responsiveRef && typeof responsiveRef === "object") {
-        (responsiveRef as React.MutableRefObject<HTMLDivElement | null>).current = el
-      }
-    }, [responsiveRef])
 
     return (
       <div

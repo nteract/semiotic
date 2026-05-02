@@ -620,6 +620,38 @@ export class NetworkPipelineStore {
   // ── Transition animation ──────────────────────────────────────────────
 
   /**
+   * Cancel any pending intro animation that the most recent layout
+   * pass set up. After this, the next paint shows nodes/edges in
+   * their final positions directly — no transition from the
+   * center-origin intro state.
+   *
+   * Stream Frames call this when they detect SSR hydration. The
+   * server already painted the chart in its final state via the SVG
+   * branch, so re-animating from blank when the canvas takes over is
+   * a visual regression.
+   *
+   * Idempotent — a second call is a no-op.
+   */
+  cancelIntroAnimation(): void {
+    this.transition = null
+    // Wipe per-node and per-edge intro state so the canvas paint
+    // pipeline reads the live positions instead of interpolating from
+    // center-origin / zero-width values.
+    for (const node of this.nodes.values()) {
+      node._prevX0 = undefined
+      node._prevX1 = undefined
+      node._prevY0 = undefined
+      node._prevY1 = undefined
+    }
+    for (const edge of this.edges.values()) {
+      edge._prevY0 = undefined
+      edge._prevY1 = undefined
+      edge._prevSankeyWidth = undefined
+      edge._introFromZero = false
+    }
+  }
+
+  /**
    * Advance the transition animation. Returns true if still animating.
    */
   advanceTransition(now: number): boolean {
