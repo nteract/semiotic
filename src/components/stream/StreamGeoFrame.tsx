@@ -1179,7 +1179,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── SSR path ──────────────────────────────────────────────────────
 
-    if (isServerEnvironment || !hydrated) {
+    // SSR + actual SSR-hydration only — pure CSR mounts skip the
+    // wasted SVG render. See StreamXYFrame for the full rationale.
+    if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
       const store = storeRef.current
       if (store && (areas || points || lines)) {
         if (areas) store.setAreas(areas)

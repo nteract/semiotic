@@ -1343,13 +1343,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
     // Fires on the server pass (so the framework gets pre-rendered SVG
-    // it can ship as initial HTML) AND on the first client render after
-    // hydration (so the markup matches what the server emitted, and
-    // React's hydration check passes). After the post-commit re-render
-    // (`hydrated === true`), control falls through to the canvas branch
-    // below — same DOM root, the inner content is reconciled.
+    // it can ship as initial HTML) AND on the first client render
+    // *after SSR hydration* (so the markup matches what the server
+    // emitted, and React's hydration check passes). Pure CSR mounts —
+    // where `getServerSnapshot` was never called and there's no
+    // server HTML to match — go straight to the canvas branch and
+    // skip the wasted SVG render that would be overwritten on the
+    // post-commit re-render anyway.
+    //
+    // After the post-hydration re-render (`hydrated === true`),
+    // control falls through to the canvas branch below — same DOM
+    // root, the inner content is reconciled.
 
-    if (isServerEnvironment || !hydrated) {
+    if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
       // Compute scene synchronously for server rendering
       const store = storeRef.current
       if (store && data) {

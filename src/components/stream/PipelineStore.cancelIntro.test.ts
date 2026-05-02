@@ -39,6 +39,39 @@ describe("PipelineStore.cancelIntroAnimation", () => {
     expect(store.advanceTransition(performance.now())).toBe(false)
   })
 
+  it("clears the per-node _introClipFraction on line scenes (paint regression)", () => {
+    // Regression: line / area canvas renderers read `_introClipFraction`
+    // off the scene node directly. `synthesizeIntroPositions` sets it
+    // to 0 (= clip from left → entire line invisible) at intro start.
+    // If `cancelIntroAnimation` only clears prev maps + activeTransition
+    // but leaves `_introClipFraction = 0` on nodes, the first canvas
+    // paint after SSR hydration draws a fully-clipped (blank) line.
+    const store = new PipelineStore({
+      chartType: "line",
+      xAccessor: "x",
+      yAccessor: "y",
+      transition: { duration: 300, easing: "ease-out" },
+      introAnimation: true,
+    })
+    store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 3 }], bounded: true })
+    store.computeScene({ width: 400, height: 200 })
+
+    // Sanity: intro installed → at least one line node has clipFrac=0.
+    const lineNodesBefore = store.scene.filter((n) => n.type === "line") as Array<{ _introClipFraction?: number }>
+    expect(lineNodesBefore.length).toBeGreaterThan(0)
+    expect(lineNodesBefore.some((n) => n._introClipFraction === 0)).toBe(true)
+
+    store.cancelIntroAnimation()
+
+    // After cancel: every line node's clipFrac must be undefined.
+    // `undefined` is the renderer's "no clip" sentinel — anything else
+    // (including 1 explicitly) would be a partial clip.
+    const lineNodesAfter = store.scene.filter((n) => n.type === "line") as Array<{ _introClipFraction?: number }>
+    for (const n of lineNodesAfter) {
+      expect(n._introClipFraction).toBeUndefined()
+    }
+  })
+
   it("is idempotent — calling twice is a no-op", () => {
     const store = new PipelineStore({
       chartType: "line",

@@ -1160,7 +1160,7 @@ export class PipelineStore {
    * Cancel any pending intro animation that the most recent
    * `computeScene` call set up. After this, the next paint shows the
    * scene in its final state directly — no transition from zero-state
-   * positions.
+   * positions, no clip-from-left animation on line/area marks.
    *
    * Stream Frames call this when they detect SSR hydration: the server
    * already painted the chart in its final state via the SVG branch,
@@ -1169,13 +1169,24 @@ export class PipelineStore {
    * normally because they re-populate `prevPositionMap` from the
    * snapshot taken before the change.
    *
+   * Per-node `_introClipFraction` MUST be cleared too — line and area
+   * canvas renderers consume it directly (a `clipFrac < 1` produces a
+   * left-clip that hides the rest of the path), and `synthesizeIntroPositions`
+   * sets it to 0. Without the clear, line / area charts would paint
+   * blank on the first canvas frame after hydration.
+   *
    * Idempotent — a second call is a no-op since the maps are already
-   * empty and `activeTransition` is already null.
+   * empty and the per-node flags are already undefined.
    */
   cancelIntroAnimation(): void {
     this.prevPositionMap.clear()
     this.prevPathMap.clear()
     this.activeTransition = null
+    for (const node of this.scene) {
+      if (node.type === "line" || node.type === "area") {
+        node._introClipFraction = undefined
+      }
+    }
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────
