@@ -1,6 +1,6 @@
 # Outstanding Work
 
-Last updated 2026-04-29.
+Last updated 2026-05-01.
 
 This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, not here.
 
@@ -16,7 +16,24 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ## P0 — Architecture & API Coherence
 
-_Empty as of 2026-04-29._ Previously-tracked items closed:
+### Isomorphic SSR + Hydration for Interactive Charts (Next.js style)
+
+The current SSR path (`semiotic/server` and the in-frame `isServerEnvironment` branch) emits SVG, but it isn't wired into a hydration boundary — on client mount the canvas pipeline rebuilds the scene from scratch and replaces the server output. There's no rehydration today; consumers either render server-side as static SVG (no interaction) or render client-only.
+
+Real isomorphic charts (server-rendered for SEO + a11y + first-paint, then progressively interactive after hydration) need three pieces:
+
+1. **Hydration-stable first paint.** The first client render must produce byte-identical SVG to the server output, then canvas activates *underneath* without unmounting. Today `<canvas>` exists on client but not server, which trips React's hydration check. Likely shape: dual-layer mode where SVG is the canonical paint surface, canvas overlays on `useEffect` for hit-testing/animation.
+2. **Server-safe stores and hooks.** `createStore.tsx` (EventTarget on Node <19), `useResponsiveSize` (ResizeObserver), and the staleness/animation hooks need explicit `typeof window` guards. The `isServerEnvironment` branch in StreamFrames covers paint, but not the surrounding hooks the HOCs call.
+3. **Datum identity round-trip.** For hover/click to work after hydration, the server-emitted scene nodes have to be reconstructable on the client — currently rebuilt from scratch on mount, which is fine for paint but means the first interaction has to wait on a full pipeline pass.
+
+**Cheap interim**: `next/dynamic({ ssr: false })` with a `semiotic/server` `renderChart` placeholder. Server emits static SVG, client lazy-mounts the interactive chart on hydration. No rehydration, but no warnings either, and the SEO/a11y/first-paint story works.
+
+**Real fix**: multi-week refactor of the paint pipeline. Main tradeoff is SVG-first hydration is slower for big datasets (canvas wins past ~5k marks) but indexable and a11y-clean. Worth scoping against actual Next.js consumer demand before committing.
+
+Next work:
+- Decide on cheap-interim vs. real-fix based on consumer pull.
+- If real-fix: prototype the dual-layer SVG-canvas mode on one chart family (likely XY) before generalizing.
+- Either way: audit `createStore.tsx` / `useResponsiveSize` / staleness hooks for SSR safety and add `typeof window` guards (cheap, independent of the larger decision).
 
 ---
 
