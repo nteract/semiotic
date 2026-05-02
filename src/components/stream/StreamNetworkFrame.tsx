@@ -38,6 +38,7 @@ import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -314,6 +315,11 @@ const StreamNetworkFrame = forwardRef<
   // (matches server output); pure CSR mounts skip it.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
+  const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
+  const safeEdges = useMemo(
+    () => Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp,
+    [edgesProp]
+  )
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
@@ -821,8 +827,8 @@ const StreamNetworkFrame = forwardRef<
       scheduleRender()
     } else {
       // Graph data: nodes + edges arrays
-      const rawNodes = nodesProp || []
-      const rawEdges = Array.isArray(edgesProp) ? edgesProp : []
+      const rawNodes = safeNodes
+      const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
 
       if (rawNodes.length === 0 && rawEdges.length === 0) return
 
@@ -853,7 +859,7 @@ const StreamNetworkFrame = forwardRef<
       dirtyRef.current = true
       scheduleRender()
     }
-  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme, syncCustomOverlays])
+  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme, syncCustomOverlays])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1286,8 +1292,8 @@ const StreamNetworkFrame = forwardRef<
         store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
         store.buildScene([adjustedWidth, adjustedHeight])
       } else {
-        const rawNodes = nodesProp || []
-        const rawEdges = Array.isArray(edgesProp) ? edgesProp : []
+        const rawNodes = safeNodes
+        const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
         if (rawNodes.length > 0 || rawEdges.length > 0) {
           store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
           store.buildScene([adjustedWidth, adjustedHeight])

@@ -34,7 +34,7 @@ describe("createStore — RSC import safety", () => {
       return {
         ...actual,
         default: actual,
-        createContext: (...args: unknown[]) => {
+        createContext: () => {
           createContextCalls++
           throw new Error("createContext is not available in this environment")
         },

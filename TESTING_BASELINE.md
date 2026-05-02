@@ -1,107 +1,114 @@
 # Semiotic Testing Baseline
 
+This is orientation material for contributors and release reviewers. It is not a live release-status ledger. For exact counts and current pass/fail status, run the package scripts; CI and `package.json` are the source of truth.
+
 ## Overview
 
-Semiotic v3 uses a two-tier testing strategy: fast unit/integration tests via Vitest, and visual regression E2E tests via Playwright. All rendering is canvas-based (not SVG), with each chart rendering a data canvas and sometimes a separate interaction canvas.
+Semiotic v3 uses a layered testing strategy: fast unit/integration tests via Vitest, visual regression and browser behavior tests via Playwright, plus release guardrails for type safety, public surface consistency, SSR alignment, AI contracts, package contents, and size budgets. Rendering is canvas-first in the browser, with SVG used for server rendering and hydration handoff.
 
-## Current Test Status
+## Test Coverage Orientation
 
-### Unit & Integration Tests (Vitest) — 1318 tests, 83 suites
+### Unit and Integration Tests (Vitest)
 
-- **Framework**: Vitest (with jsdom environment)
-- **Test Suites**: 83 passing
-- **Total Tests**: 1318 passing, 0 failing
-- **Location**: `src/**/*.test.{ts,tsx,jsx}`
-- **Run command**: `npm test`
+- **Framework**: Vitest with jsdom where browser APIs are needed.
+- **Location**: `src/**/*.test.{ts,tsx,jsx}`.
+- **Run command**: `npm test`.
+- **Exact count**: emitted by the current test run; avoid hard-coding counts in docs.
 
 Key test areas:
-- Stream pipeline stores (PipelineStore, OrdinalPipelineStore, NetworkPipelineStore)
-- Canvas renderers (point, line, bar, wedge, boxplot, heatmap)
-- Canvas hit testing (CanvasHitTester, OrdinalCanvasHitTester, NetworkCanvasHitTester)
-- HOC charts (all chart types render without error)
-- Coordinated views (LinkedCharts, CategoryColorProvider, selections)
-- Realtime (BinAccumulator, decay, pulse, staleness encodings)
-- Data pipeline (DataSourceAdapter, progressive chunking)
-- Validation (validateProps, diagnoseConfig)
-- Serialization (toConfig/fromConfig, toURL/fromURL)
-- Keyboard navigation, tooltips, annotations, legends
 
-### E2E Visual Regression Tests (Playwright) — 47 tests
+- Stream pipeline stores (`PipelineStore`, `OrdinalPipelineStore`, `NetworkPipelineStore`).
+- Canvas renderers for points, lines, bars, wedges, boxplots, heatmaps, and related marks.
+- Canvas hit testing across XY, ordinal, network, and geo scenes.
+- HOC charts across chart families.
+- Coordinated views (`LinkedCharts`, `CategoryColorProvider`, selections).
+- Realtime behavior (`BinAccumulator`, decay, pulse, staleness encodings).
+- Data pipeline behavior (`DataSourceAdapter`, progressive chunking).
+- Validation and diagnostics (`validateProps`, `diagnoseConfig`).
+- Serialization (`toConfig`/`fromConfig`, `toURL`/`fromURL`).
+- Keyboard navigation, tooltips, annotations, legends, and accessibility helpers.
+- SSR and hydration behavior for supported chart families.
 
-- **Framework**: Playwright (Chromium only)
-- **Total Tests**: 47
-- **Run command**: `npm run test:dist` (builds dist first)
-- **Update snapshots**: `npx playwright test --update-snapshots`
+### Browser and Visual Regression Tests (Playwright)
 
-Test specs:
-| Spec File | Tests | Coverage |
-|-----------|-------|----------|
-| `xy-frame.spec.ts` | 7 | Line, area, scatter, bubble charts + hover |
-| `ordinal-frame.spec.ts` | 11 | Bars (vertical/horizontal/stacked/grouped), pie, donut, swarm, box, violin, histogram + hover |
-| `network-frame.spec.ts` | 7 | Force-directed, tree, treemap, circle pack, sankey, chord + hover |
-| `hoc-legend.spec.ts` | 10 | Legend rendering for all chart types, showLegend prop, category count, positioning |
-| `coordinated-views.spec.ts` | 8 | LinkedCharts, CategoryColorProvider, ChartGrid emphasis, empty state, three-way linked |
-| `debug-canvas-scatter.spec.ts` | 1 | Canvas rendering smoke test |
-| `page-load-test.spec.ts` | 1 | Page load error detection |
+- **Framework**: Playwright.
+- **Run command**: `npm run test:dist` after building dist output.
+- **Update snapshots**: `npx playwright test --update-snapshots`.
 
-### CI Pipeline
+Representative coverage:
 
-GitHub Actions workflow (`.github/workflows/node.js.yml`):
+| Area | Coverage |
+| --- | --- |
+| XY charts | Line, area, scatter, bubble, hover, linked states |
+| Ordinal charts | Bars, pie, donut, swarm, box, violin, histogram, hover |
+| Network charts | Force-directed, tree, treemap, circle pack, sankey, chord, hover |
+| Legends and coordinated views | Legend rendering, linked charts, category color, chart grid states |
+| SSR parity | Server SVG and client canvas baselines for representative charts |
+| Page/load checks | Browser smoke coverage and error detection |
 
-**`testing` job:**
-1. Build library (`npm run dist`)
-2. Build MCP server (`npm run build:mcp`)
-3. Run unit tests (`npm test`)
-4. TypeScript type check (`npm run typescript`)
-5. Chart Spec Registry round-trip (`npm run check:chart-specs`) and CLAUDE.md coverage (`npm run check:claude-md-coverage`)
+Snapshot baselines are platform-specific. When a new baseline family is introduced, CI can produce Linux artifacts that maintainers can review and commit.
 
-**`e2e` job** (depends on `testing`):
-1. Install Playwright Chromium
-2. Build library
-3. Run E2E tests with snapshot update
-4. Upload snapshot baselines as artifacts (30-day retention)
-5. Upload failure artifacts on error (7-day retention)
+### Release Guardrails
+
+Use current package scripts for the definitive set. Common gates include:
+
+```bash
+npm test
+npm run typescript
+npm run lint
+npm run check:chart-specs
+npm run check:surface
+npm run check:ssr
+npm run check:test-quality
+npm run check:jsdoc-coverage
+npm run check:claude-md-coverage
+npm run check:ai-examples-coverage
+npm run check:ai-contracts
+npm run check:pack
+npm run size
+```
+
+## CI Pipeline
+
+GitHub Actions is the release-confidence source. The workflow builds the library, builds the MCP server, runs unit tests, checks types, validates generated/public surfaces, verifies chart and AI contracts, builds production bundles, checks package contents, enforces size limits, and runs Playwright/browser coverage.
+
+Treat this section as a map of the testing posture rather than a replacement for `.github/workflows/node.js.yml`.
 
 ## Architecture Notes
 
-- Each chart renders 1–2 canvas elements (data canvas + optional interaction canvas)
-- Playwright `waitForVisualization` helpers must use `locator("canvas").first()` to avoid strict mode failures
-- Snapshot baselines are platform-specific (`*-chromium-darwin.png` vs `*-chromium-linux.png`)
-- CI runs `--update-snapshots` to auto-generate Linux baselines; download from artifacts to commit
+- Browser charts render one or more canvas layers, usually a data canvas plus optional interaction canvas.
+- Server rendering uses SVG output and hydration parity tests for supported non-streaming HOCs.
+- Playwright helpers should target stable chart readiness signals rather than timing assumptions.
+- Snapshot baselines vary by operating system and browser.
 
-## Build System
-
-- **Bundler**: Rollup (via `scripts/build.mjs`)
-- **Output**: Tree-shakeable ESM + CJS bundles per entry point
-- **Entry points**: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`, `semiotic/server`
-- **TypeScript**: `strict: true`, declarations generated
-- **Build command**: `npm run dist` (dev) / `npm run dist:prod` (minified)
-
-## Commands
+## Common Commands
 
 ```bash
-# Unit tests
-npm test                          # run all
-npx vitest run --reporter=verbose # verbose output
-npx vitest --coverage             # with coverage
+# Unit and integration tests
+npm test
+npx vitest run --reporter=verbose
+npx vitest --coverage
 
-# E2E tests
-npm run dist                      # build first
-npm run test:dist                 # run Playwright
-npx playwright test --update-snapshots  # regenerate baselines
+# Browser and visual tests
+npm run dist
+npm run test:dist
+npx playwright test --update-snapshots
 
 # Benchmarks
-npm run bench                     # run benchmarks
-npm run bench:baseline            # save baseline
-npm run bench:compare             # compare against baseline
+npm run bench
+npm run bench:baseline
+npm run bench:compare
 
 # Other checks
-npm run typescript                # type check
-npm run check:chart-specs         # registry round-trip (schema/validation/metadata)
-npm run check:claude-md-coverage  # CLAUDE.md mentions every component
-npm run lint                      # ESLint
+npm run typescript
+npm run check:chart-specs
+npm run check:surface
+npm run check:ssr
+npm run check:claude-md-coverage
+npm run lint
 ```
 
-## Known Issues
+## Operational Notes
 
-1. **Snapshot baselines are OS-specific** — macOS and Linux render slightly differently. CI generates Linux baselines; commit them from the artifacts if needed.
+1. Snapshot baselines are OS-specific. macOS and Linux render slightly differently, so snapshot artifacts should be reviewed before being committed.
+2. Test counts change as coverage grows. Prefer command output over stale count claims.

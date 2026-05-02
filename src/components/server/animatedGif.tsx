@@ -431,30 +431,33 @@ export async function renderToAnimatedGif(
     throw new Error("No frames generated — check that data is not empty")
   }
 
-  // Load sharp dynamically — these are optional deps, loaded at call time.
-  // The string-variable indirection defeats static bundler resolution so sharp
-  // stays out of the main chunk. Dynamic `import()` would force this function
-  // (and its callers) to become async, a much bigger refactor.
+  // Load optional deps dynamically at call time. The variable specifiers
+  // defeat static bundler resolution so these Node-only raster/encoding
+  // packages stay out of edge/browser-oriented bundles until GIF export runs.
   let sharp: any
   try {
-    const sharpModule = "sharp"
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    sharp = require(sharpModule)
+    const sharpName = "sharp"
+    const sharpModule = await import(sharpName)
+    sharp = sharpModule.default ?? sharpModule
   } catch {
     throw new Error(
       `Animated GIF export requires "sharp". Install it:\n  npm install sharp`
     )
   }
 
-  // Load gifenc — same optional-dep pattern as sharp above.
   let GIFEncoder: any, quantize: any, applyPalette: any
   try {
-    const gifencModule = "gifenc"
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const gifenc = require(gifencModule)
-    GIFEncoder = gifenc.GIFEncoder
-    quantize = gifenc.quantize
-    applyPalette = gifenc.applyPalette
+    const gifencName = "gifenc"
+    const gifencModule = await import(gifencName)
+    GIFEncoder = gifencModule.GIFEncoder
+      ?? gifencModule.default?.GIFEncoder
+      ?? gifencModule.default?.default?.GIFEncoder
+    quantize = gifencModule.quantize
+      ?? gifencModule.default?.quantize
+      ?? gifencModule.default?.default?.quantize
+    applyPalette = gifencModule.applyPalette
+      ?? gifencModule.default?.applyPalette
+      ?? gifencModule.default?.default?.applyPalette
   } catch {
     throw new Error(
       `Animated GIF export requires "gifenc". Install it:\n  npm install gifenc`

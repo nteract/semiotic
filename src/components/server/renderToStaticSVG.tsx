@@ -61,6 +61,7 @@ import { renderStaticAnnotations } from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
 import { CHART_CONFIGS } from "./serverChartConfigs"
 import type { SemioticTheme } from "../store/ThemeStore"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -306,6 +307,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 300]
   const margin = { ...defaultMargin, ...props.margin }
+  const data = filterSparseArray(props.data)
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
@@ -362,7 +364,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const store = new PipelineStore(pipelineConfig)
 
   if (props.data) {
-    store.ingest({ inserts: props.data, bounded: true })
+    store.ingest({ inserts: data, bounded: true })
   }
 
   store.computeScene({ width, height })
@@ -409,7 +411,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   // categorical auto-build covers that case. Tracked in OUTSTANDING_WORK.md.
   const xyAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.groupAccessor
-    const categories = extractCategories(props.data || [], colorAccessor)
+    const categories = extractCategories(data, colorAccessor)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,
@@ -578,8 +580,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     nodes = []
     edges = []
   } else {
-    const propsNodes = props.nodes || []
-    const propsEdges = Array.isArray(props.edges) ? props.edges : []
+    const propsNodes = filterSparseArray(props.nodes || [])
+    const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
 
     if (propsNodes.length === 0 && propsEdges.length === 0) {
       return ReactDOMServer.renderToStaticMarkup(
@@ -666,8 +668,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     const colorAccessor = isAccessor(props.colorBy)
       ? props.colorBy
       : isAccessor(props.nodeIDAccessor) ? props.nodeIDAccessor : undefined
-    const legendSource = props.nodes && props.nodes.length > 0
-      ? (props.nodes as any[])
+    const legendSource = nodes.length > 0
+      ? nodes.map((node) => node.data || { id: node.id })
       : Array.from(new Set(
         edges.flatMap((e) => {
           const src = typeof e.source === "string" ? e.source : (e.source as any)?.id
@@ -831,6 +833,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 400]
   const margin = { ...defaultMargin, ...props.margin }
+  const data = filterSparseArray(props.data)
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
@@ -890,7 +893,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   const store = new OrdinalPipelineStore(pipelineConfig)
 
   if (props.data) {
-    store.ingest({ inserts: props.data, bounded: true })
+    store.ingest({ inserts: data, bounded: true })
   }
 
   store.computeScene({ width, height })
@@ -974,7 +977,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   // contract; same pattern. Config-object form deferred (OUTSTANDING_WORK).
   const ordinalAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.stackBy || props.groupBy
-    const categories = extractCategories(props.data || [], colorAccessor)
+    const categories = extractCategories(data, colorAccessor)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,
@@ -1026,6 +1029,9 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
   const margin = { ...defaultMargin, ...props.margin }
+  const areas = Array.isArray(props.areas) ? filterSparseArray(props.areas) : props.areas
+  const points = filterSparseArray(props.points)
+  const lines = filterSparseArray(props.lines)
   // Reserve legend space BEFORE computing inner dims so the geo projection
   // fits inside the post-legend area. Same shape as XY/Network.
   const legendPos = props.legendPosition
@@ -1055,19 +1061,19 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
 
   const store = new GeoPipelineStore(config)
 
-  if (props.areas) {
-    if (typeof props.areas === "string") {
+  if (areas) {
+    if (typeof areas === "string") {
       throw new Error(
         `Geo SSR requires pre-resolved GeoJSON features. ` +
-        `Reference string "${props.areas}" cannot be resolved synchronously. ` +
-        `Use \`const features = await resolveReferenceGeography('${props.areas}')\` ` +
+        `Reference string "${areas}" cannot be resolved synchronously. ` +
+        `Use \`const features = await resolveReferenceGeography('${areas}')\` ` +
         `before calling renderGeoToStaticSVG.`
       )
     }
-    store.setAreas(props.areas)
+    store.setAreas(areas)
   }
-  if (props.points) store.setPoints(props.points as any[])
-  if (props.lines) store.setLines(props.lines as any[])
+  if (props.points) store.setPoints(points as any[])
+  if (props.lines) store.setLines(lines as any[])
 
   store.computeScene({ width, height })
 
@@ -1135,15 +1141,15 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
       typeof a === "string" || typeof a === "function"
     const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
     const legendSource: any[] = (() => {
-      if (Array.isArray(props.points) && props.points.length > 0) return props.points as any[]
-      if (Array.isArray(props.areas) && props.areas.length > 0) {
+      if (points.length > 0) return points as any[]
+      if (Array.isArray(areas) && areas.length > 0) {
         // For string accessors, GeoJSON features carry attributes under
         // `properties` — flatten so `extractCategories` can read the field.
         // Function accessors get raw features so they can decide what to read.
         if (typeof colorAccessor === "string") {
-          return (props.areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+          return (areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
         }
-        return props.areas as any[]
+        return areas as any[]
       }
       return []
     })()
@@ -1384,14 +1390,14 @@ export async function renderToImage(
   }
 
   // Load sharp dynamically — optional dep, loaded at call time only.
-  // The string-variable indirection defeats static bundler resolution so sharp
-  // stays out of the main chunk. Dynamic `import()` would force renderToImage
-  // (and every caller) to become async.
+  // The variable specifier defeats static bundler resolution so sharp stays
+  // out of edge/browser-oriented server bundles until this Node-only raster
+  // export path is actually called.
   let sharp: any
   try {
-    const sharpModule = "sharp"
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    sharp = require(sharpModule)
+    const moduleName = "sharp"
+    const sharpModule = await import(moduleName)
+    sharp = sharpModule.default ?? sharpModule
   } catch {
     throw new Error(
       `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +

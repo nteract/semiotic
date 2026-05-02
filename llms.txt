@@ -42,4 +42,4 @@ Entry points: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`,
 
 - [Streaming Sankey](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#realtime-charts-semioticrealtime): StreamNetworkFrame with particles
 - [Realtime Encoding](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#realtime-charts-semioticrealtime): decay, pulse, transition, staleness
-- [Known Pitfalls](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#known-pitfalls): Common mistakes and workarounds
+- [Usage Notes](https://github.com/nteract/semiotic/blob/main/CLAUDE.md#usage-notes): Practical chart behavior notes and edge cases

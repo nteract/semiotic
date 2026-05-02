@@ -53,6 +53,7 @@ import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer
 import type { StreamRendererFn } from "./renderers/types"
 import { resolveNodeColor } from "./sceneUtils"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
@@ -536,6 +537,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
+    const safeData = useMemo(() => filterSparseArray(data), [data])
 
     // Determine effective hover annotation config
     const effectiveHoverAnnotation = hoverAnnotation ?? enableHover
@@ -786,12 +788,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // (e.g. [{ label: "A", coordinates: [...] }]). Flatten into coordinate
       // datums for the pipeline — the pipeline needs flat data for extent
       // tracking and scale computation.
-      if (lineDataAccessor && data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
+      if (lineDataAccessor && safeData.length > 0 && typeof safeData[0] === "object" && safeData[0] !== null) {
         const key = typeof lineDataAccessor === "string" ? lineDataAccessor : "coordinates"
-        const hasCoords = data[0][key]
+        const hasCoords = safeData[0][key]
         if (Array.isArray(hasCoords)) {
           const flat: any[] = []
-          for (const line of data) {
+          for (const line of safeData) {
             const coords = (line as any)[key]
             if (Array.isArray(coords)) {
               // Stamp group key onto each datum for grouping
@@ -807,8 +809,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           return
         }
       }
-      adapterRef.current?.setBoundedData(data)
-    }, [data, lineDataAccessor])
+      adapterRef.current?.setBoundedData(safeData)
+    }, [data, safeData, lineDataAccessor])
 
     // ── Hover handlers ───────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
@@ -1340,7 +1342,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Compute scene synchronously for server rendering
       const store = storeRef.current
       if (store && data) {
-        store.ingest({ inserts: data, bounded: true })
+        store.ingest({ inserts: safeData, bounded: true })
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 

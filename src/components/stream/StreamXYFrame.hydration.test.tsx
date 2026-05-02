@@ -91,7 +91,7 @@ describe("StreamXYFrame hydration parity", () => {
     container.innerHTML = html
 
     // Pre-hydration: outer wrapper is role="img" (SVG-only shape).
-    const wrapper = container.querySelector(".stream-xy-frame")
+    const wrapper = container.querySelector(".stream-xy-frame") // test-quality-gate: allow-mount-only - precondition for semantic role assertion below.
     expect(wrapper).not.toBeNull()
     expect(wrapper?.getAttribute("role")).toBe("img")
 
@@ -107,7 +107,7 @@ describe("StreamXYFrame hydration parity", () => {
     expect(upgradedWrapper?.getAttribute("role")).toBe("group")
     expect(upgradedWrapper?.getAttribute("tabIndex")).toBe("0")
     // And a <canvas> should now exist for data-mark painting.
-    expect(container.querySelector("canvas")).not.toBeNull()
+    expect(container.querySelector("canvas")).not.toBeNull() // test-quality-gate: allow-mount-only - verifies the hydration branch swapped to the interactive canvas surface.
 
     root?.unmount()
   })

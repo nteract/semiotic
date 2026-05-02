@@ -156,6 +156,5 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     // Stable refs (`storeRef`, `dirtyRef`, `renderFnRef`) intentionally
     // omitted from deps — including them would just trip
     // exhaustive-deps without changing behavior.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, wasHydratingFromSSR])
 }

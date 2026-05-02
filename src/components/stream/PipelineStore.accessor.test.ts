@@ -38,6 +38,27 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(store.needsFullRebuild).toBe(true)
   })
 
+  it("rebuilds tracked extents when positional accessors change", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "x1",
+      yAccessor: "y1",
+    }))
+    store.ingest({
+      inserts: [
+        { x1: 1, y1: 10, x2: 100, y2: 1000 },
+        { x1: 2, y1: 20, x2: 200, y2: 2000 },
+      ],
+      bounded: true,
+    })
+    expect(store.getExtents()).toEqual({ x: [1, 2], y: [10, 20] })
+
+    store.updateConfig({ xAccessor: "x2", yAccessor: "y2" })
+
+    expect(store.getExtents()).toEqual({ x: [100, 200], y: [1000, 2000] })
+  })
+
   it("does not set needsFullRebuild for functionally equivalent inline arrows", () => {
     const store = new PipelineStore(makeConfig({
       xAccessor: (d: Datum) => d.time,

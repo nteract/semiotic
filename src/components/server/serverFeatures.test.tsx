@@ -156,6 +156,38 @@ describe("Theme inlining", () => {
     } as any)
     expect(svg).toContain("sans-serif")
   })
+
+  it("filters sparse frame-level inputs before SSR pipeline ingestion", () => {
+    expect(() => renderToStaticSVG("xy", {
+      chartType: "line",
+      data: [null, { x: 0, y: 10 }, undefined, { x: 1, y: 20 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [300, 200],
+    } as any)).not.toThrow()
+
+    expect(() => renderToStaticSVG("ordinal", {
+      chartType: "bar",
+      data: [null, { category: "A", value: 10 }, undefined],
+      oAccessor: "category",
+      rAccessor: "value",
+      size: [300, 200],
+    } as any)).not.toThrow()
+
+    expect(() => renderToStaticSVG("network", {
+      chartType: "force",
+      nodes: [null, { id: "A" }, undefined, { id: "B" }],
+      edges: [null, { source: "A", target: "B" }, undefined],
+      size: [300, 200],
+    } as any)).not.toThrow()
+
+    expect(() => renderToStaticSVG("geo", {
+      points: [null, { x: -122.4, y: 37.8 }, undefined],
+      xAccessor: "x",
+      yAccessor: "y",
+      size: [300, 200],
+    } as any)).not.toThrow()
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -448,6 +480,19 @@ describe("renderChart", () => {
       height: 300,
     })
     expect(svg).toContain("<circle")
+  })
+
+  it("renders ConnectedScatterplot with both connectors and points", () => {
+    const svg = renderChart("ConnectedScatterplot", {
+      data: scatterData,
+      xAccessor: "x",
+      yAccessor: "y",
+      orderAccessor: "x",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("<path")
+    expect(countMatches(svg, /<circle/g)).toBeGreaterThan(0)
   })
 
   it("renders Heatmap", () => {

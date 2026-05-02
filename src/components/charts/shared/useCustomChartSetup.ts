@@ -42,7 +42,7 @@ export function normalizeUserMargin(m: PartialMargin | undefined): Partial<Margi
   return m
 }
 
-interface ScaffoldOptions<TFrameHandle> {
+interface ScaffoldOptions {
   /** Ref forwarded by the HOC. The hook binds the imperative handle internally. */
   imperativeRef: Ref<RealtimeFrameHandle> | undefined
   /** Which `useFrameImperativeHandle` variant to bind. XY/ordinal frames share "xy". */
@@ -77,7 +77,7 @@ interface ScaffoldResult<TFrameHandle> {
  * `useCustomChartSetup`.
  */
 export function useCustomChartScaffold<TFrameHandle>(
-  options: ScaffoldOptions<TFrameHandle>
+  options: ScaffoldOptions
 ): ScaffoldResult<TFrameHandle> {
   const frameRef = useRef<TFrameHandle | null>(null)
   useFrameImperativeHandle(options.imperativeRef, {
@@ -104,7 +104,7 @@ export function useCustomChartScaffold<TFrameHandle>(
   return { frameRef, resolved, normalizedMargin }
 }
 
-interface DataSetupOptions<TFrameHandle> extends ScaffoldOptions<TFrameHandle> {
+interface DataSetupOptions extends ScaffoldOptions {
   /** Raw `data` prop from the HOC (may be undefined in push mode). */
   data: Datum[] | undefined
   /** Label used by useChartSetup for observation events ("XYCustomChart", "OrdinalCustomChart"). */
@@ -139,7 +139,7 @@ interface DataSetupResult<TFrameHandle> extends ScaffoldResult<TFrameHandle> {
  * orchestration that is genuinely identical.
  */
 export function useCustomChartSetup<TFrameHandle>(
-  options: DataSetupOptions<TFrameHandle>
+  options: DataSetupOptions
 ): DataSetupResult<TFrameHandle> {
   const scaffold = useCustomChartScaffold<TFrameHandle>(options)
   const { resolved, normalizedMargin } = scaffold
