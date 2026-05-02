@@ -199,9 +199,9 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     edges,
     margin: userMargin,
     className,
-    // Accept both casings; the camelCase one wins. `nodeIdAccessor` is
-    // the deprecated alias that shipped historically — kept for
-    // backwards compat and removed in 4.0.
+    // Accept both casings; the camelCase one wins. `nodeIDAccessor`
+    // (uppercase ID) is the deprecated alias that shipped historically
+    // — kept for backwards compat and removed in 4.0.
     nodeIdAccessor: nodeIdAccessorProp,
     nodeIDAccessor: nodeIDAccessorLegacy,
     sourceAccessor = "source",

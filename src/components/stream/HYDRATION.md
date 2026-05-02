@@ -49,16 +49,16 @@ useHydrationLifecycle({
   wasHydratingFromSSR,
   storeRef,
   dirtyRef,
-  scheduleRender,
+  renderFnRef,
   cleanup: () => adapterRef.current?.clear(), // optional, frame-specific
 })
 ```
 
-This single call replaces what was 12 lines of duplicated post-hydration effect across the four shipped frames. It does three things on every commit-after-hydration:
+This single call replaces what was 12 lines of duplicated post-hydration effect across the four shipped frames. It does three things on every commit-after-hydration, inside an isomorphic layout effect (synchronous, before the browser paints):
 
 - If we just rehydrated from SSR, calls `storeRef.current?.cancelIntroAnimation?.()` — server already painted the chart in its final state, so re-animating from blank when canvas takes over is a visual regression.
 - Marks the scene dirty (`dirtyRef.current = true`) so the canvas paint pipeline rebuilds.
-- Schedules a paint via `scheduleRender()`.
+- Paints the canvas synchronously via `renderFnRef.current()`. **Synchronous, not rAF-deferred** — an rAF callback wouldn't fire until the *next* frame, leaving frame N painted with the canvas in DOM but blank. Calling `renderFnRef.current()` directly from the layout effect makes frame N's paint already include the canvas content; no flash.
 
 The `cleanup` callback is your unmount hook — XY/Ordinal clear the streaming `DataSourceAdapter`, Geo clears the tile cache, Network has no extra cleanup. `useFrame` already handles rAF cancellation.
 
