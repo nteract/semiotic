@@ -482,27 +482,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       themeDirtyRef: dirtyRef,
     })
     // ── Hydration boundary ───────────────────────────────────────────────
-    // `hydrated` is false on the server pass and during the first client
-    // render after SSR, then flips true after the first commit. The SVG
-    // branch below fires whenever `isServerEnvironment || !hydrated`, so
-    // the server-emitted markup and the client's first-render markup are
-    // byte-identical (no React hydration mismatch). The post-commit
-    // re-render swaps in the canvas + interactivity layer.
+    // SVG-branch gate: `isServerEnvironment || (!hydrated && wasHydratingFromSSR)`.
+    //   - `isServerEnvironment` covers the Node SSR pass.
+    //   - `!hydrated && wasHydratingFromSSR` covers the first client
+    //      render *after* SSR rehydration, so the React tree we
+    //      produce matches the server-emitted HTML byte-for-byte.
+    //   - Pure CSR mounts (no SSR HTML) skip the SVG branch entirely
+    //      and go straight to canvas — the SVG render would just be
+    //      overwritten by the post-commit re-render anyway.
     //
-    // After the swap, the canvas needs an explicit paint kick — the
-    // data-change effect that normally drives the initial paint
-    // doesn't re-fire (the `data` prop reference hasn't changed
-    // between the SVG render and the canvas render), so we force a
-    // dirty + scheduleRender once on the hydration transition.
-    //
-    // `wasHydratingFromSSR` distinguishes "true SSR rehydration" from
-    // "pure client mount." When true, the server already painted the
-    // chart in its final state via the SVG branch, so we cancel the
-    // intro animation that `computeScene` installed — re-animating
-    // from blank after SSR looks like a regression. Pure CSR mounts
-    // keep their intro animation because the SVG render is overwritten
-    // by the canvas branch within the same paint frame and never
-    // visible to the user.
+    // `useHydrationLifecycle` further down handles the post-swap
+    // paint kick (cancelIntroAnimation if rehydrating, dirtyRef +
+    // scheduleRender always). See `HYDRATION.md` for the full recipe.
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
 

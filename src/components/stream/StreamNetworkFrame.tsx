@@ -307,15 +307,11 @@ const StreamNetworkFrame = forwardRef<
   } = frame
 
   // ── Hydration boundary ─────────────────────────────────────────────────
-  // See StreamXYFrame for the full pattern. The SVG branch fires whenever
-  // `isServerEnvironment || !hydrated`, so the server-emitted markup and
-  // the client's first-render markup are byte-identical (no React
-  // hydration mismatch). After `useLayoutEffect` flips `hydrated`, the
-  // canvas branch upgrades the same DOM subtree.
-  //
-  // `wasHydratingFromSSR` distinguishes true SSR rehydration from pure
-  // CSR. When true, the server already painted the chart, so we cancel
-  // the intro animation the layout pass installed.
+  // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
+  // canonical comment. SVG-branch gate is
+  // `isServerEnvironment || (!hydrated && wasHydratingFromSSR)`:
+  // SSR pass + first client render after SSR get the SVG branch
+  // (matches server output); pure CSR mounts skip it.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
 

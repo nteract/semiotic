@@ -89,13 +89,28 @@ async function createBundle(options = {}) {
     serverOnly = false,
   } = options
 
+  // The `useClientPlugin` is split across two hook phases: `transform`
+  // scans each module as it's parsed (recording which ones open with
+  // `"use client"`), and `renderChunk` prepends the directive on the
+  // final chunk output. The `transform` order doesn't matter — every
+  // plugin's transform runs on every module — but `renderChunk` order
+  // does. Terser's renderChunk parses the bundled chunk and re-emits
+  // it through its compressor, which silently drops top-level string
+  // expressions like `"use client";` even with default settings (the
+  // statement isn't preserved through terser's parser → compress →
+  // emit pipeline the way `"use strict"` is).
+  //
+  // Fix: append `useClientPlugin` AFTER terser so its `renderChunk`
+  // is the LAST thing to run, prepending `"use client";` onto the
+  // already-minified output. Terser never sees the directive, so it
+  // can't strip it.
+  const useClient = useClientPlugin({ serverOnly })
+
   const plugins = [
     external({
       dependencies: true,
       peerDependencies: true
     }),
-
-    useClientPlugin({ serverOnly }),
 
     typescript({
       tsconfig: "tsconfig.json",
@@ -146,6 +161,9 @@ async function createBundle(options = {}) {
       })
     )
   }
+
+  // Append last so `useClient.renderChunk` runs after `terser.renderChunk`.
+  plugins.push(useClient)
 
   const bundle = await rollup({
     input,
