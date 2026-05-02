@@ -1364,6 +1364,19 @@ export class OrdinalPipelineStore {
     return true
   }
 
+  /**
+   * Cancel any pending intro animation that the most recent
+   * `computeScene` call set up. After this, the next paint shows the
+   * scene in its final state directly. See `PipelineStore.cancelIntroAnimation`
+   * for the full rationale — Stream Frames call this when they detect
+   * SSR hydration so the canvas takeover doesn't re-animate from blank
+   * after the server already painted the chart.
+   */
+  cancelIntroAnimation(): void {
+    this.prevPositionMap.clear()
+    this.activeTransition = null
+  }
+
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Datum[] {

@@ -36,6 +36,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
+import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
@@ -304,6 +305,15 @@ const StreamNetworkFrame = forwardRef<
     scheduleRender,
     currentTheme,
   } = frame
+
+  // ── Hydration boundary ─────────────────────────────────────────────────
+  // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
+  // canonical comment. SVG-branch gate is
+  // `isServerEnvironment || (!hydrated && wasHydratingFromSSR)`:
+  // SSR pass + first client render after SSR get the SVG branch
+  // (matches server output); pure CSR mounts skip it.
+  const hydrated = useHydration()
+  const wasHydratingFromSSR = useWasHydratingFromSSR()
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
@@ -1222,13 +1232,15 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Lifecycle ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    scheduleRender()
-    return () => {
-      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-      // is handled by useFrame.
-    }
-  }, [scheduleRender])
+  useHydrationLifecycle({
+    hydrated,
+    wasHydratingFromSSR,
+    storeRef,
+    dirtyRef,
+    renderFnRef,
+    // No frame-specific cleanup — useFrame handles the rAF/pointermove
+    // refs on unmount.
+  })
 
   useEffect(() => {
     dirtyRef.current = true
@@ -1262,7 +1274,9 @@ const StreamNetworkFrame = forwardRef<
 
   // ── SSR path: render SVG instead of canvas ──────────────────────────
 
-  if (isServerEnvironment) {
+  // SSR + actual SSR-hydration only — pure CSR mounts skip the
+  // wasted SVG render. See StreamXYFrame for the full rationale.
+  if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
     const store = storeRef.current
     if (store) {
       const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
@@ -1287,13 +1301,17 @@ const StreamNetworkFrame = forwardRef<
 
     return (
       <div
+        // Attached on both branches so the `ResizeObserver` in
+        // `useResponsiveSize` latches at first commit. See
+        // `StreamXYFrame.tsx` for the full rationale.
+        ref={responsiveRef}
         className={`stream-network-frame${className ? ` ${className}` : ""}`}
         role="img"
         aria-label={description || (typeof title === "string" ? title : "Network chart")}
         style={{
           position: "relative",
-          width: size[0],
-          height: size[1],
+          width: responsiveWidth ? "100%" : size[0],
+          height: responsiveHeight ? "100%" : size[1],
         }}
       >
         <ScreenReaderSummary summary={summary} />

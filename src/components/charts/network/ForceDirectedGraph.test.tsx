@@ -62,10 +62,38 @@ describe("ForceDirectedGraph", () => {
     expect(lastNetworkFrameProps.chartType).toBe("force")
   })
 
-  it("forwards nodeIDAccessor", () => {
+  it("forwards nodeIdAccessor (canonical camelCase form)", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} nodeIdAccessor="id" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")
+  })
+
+  it("forwards the deprecated nodeIDAccessor alias for backwards compat", () => {
+    // Regression: the historical casing was `nodeIDAccessor` (uppercase
+    // ID), which was inconsistent with the rest of the network HOCs
+    // (Sankey/Chord/Tree/Orbit all used `nodeIdAccessor`). Both forms
+    // resolve to the same internal value; the deprecated alias is
+    // removed in 4.0.
     render(
       <TooltipProvider>
         <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} nodeIDAccessor="id" />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")
+  })
+
+  it("nodeIdAccessor wins when both are passed", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          nodeIdAccessor="id"
+          nodeIDAccessor="legacy_id_field"
+        />
       </TooltipProvider>
     )
     expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")

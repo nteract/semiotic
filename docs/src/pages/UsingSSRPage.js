@@ -60,6 +60,44 @@ export default function Dashboard() {
         that uses hooks, event handlers, or browser APIs.
       </p>
 
+      <h3 id="turbopack-workaround">Bundler note: Turbopack subpath resolution</h3>
+
+      <p>
+        At time of writing, Turbopack (Next.js's default dev bundler in
+        recent versions) intermittently fails to resolve Semiotic's
+        sub-path exports — <code>{`Module not found: Can't resolve 'semiotic/xy'`}</code>{" "}
+        from a Server Component, even though Node, webpack, esbuild, and
+        Vite all resolve them correctly. The package's <code>exports</code>{" "}
+        map is well-formed; the issue is in Turbopack's exports
+        resolution path.
+      </p>
+
+      <p>
+        Until that's resolved upstream, opt out of Turbopack with the{" "}
+        <code>--webpack</code> flag on both <code>dev</code> and{" "}
+        <code>build</code>:
+      </p>
+
+      <CodeBlock
+        code={`{
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start"
+  }
+}`}
+        language="json"
+      />
+
+      <p>
+        Webpack handles Semiotic's exports map with no special config.
+        If you're testing against a local copy of Semiotic via{" "}
+        <code>file:</code> in <code>package.json</code>, also pass{" "}
+        <code>--install-links</code> to <code>npm install</code> so the
+        package is copied rather than symlinked — npm's default symlink
+        behavior breaks resolution under both bundlers.
+      </p>
+
       <h3 id="importing-from-server-components">Importing from Server Components</h3>
 
       <p>
@@ -135,19 +173,178 @@ import { StreamNetworkFrame } from "semiotic/network"`}
       </p>
 
       {/* -------------------------------------------------------------- */}
-      <h2 id="server-placeholder-pattern">SEO and First-Paint with a Server-Rendered Placeholder</h2>
+      <h2 id="auto-hydration">Isomorphic Auto-Hydration</h2>
 
       <p>
-        The standard <code>"use client"</code> pattern works, but it skips
-        server rendering entirely — the client mount is what produces the
-        first paint. For pages that need indexable chart content, faster
-        first contentful paint, or accessible chart output for non-JS
-        clients, pair <code>next/dynamic</code> with{" "}
-        <code>semiotic/server</code>'s <code>renderChart</code> as the
-        placeholder. The server emits a static SVG that's part of the
-        initial HTML; the client wrapper renders the same placeholder
-        until it has mounted, then swaps in the interactive chart in the
-        same slot.
+        Every non-streaming chart HOC in Semiotic participates in React's
+        hydration boundary directly. The same chart component that
+        renders interactively on the client also renders server-side as
+        inline SVG when called from a React Server Component — no
+        separate placeholder, no <code>next/dynamic</code> scaffolding,
+        no <code>"use client"</code> ceremony for the chart itself.
+      </p>
+
+      <p>
+        Covered HOCs:
+      </p>
+
+      <ul>
+        <li>
+          <strong>XY:</strong> <code>LineChart</code>, <code>AreaChart</code>,{" "}
+          <code>StackedAreaChart</code>, <code>Scatterplot</code>,{" "}
+          <code>ConnectedScatterplot</code>, <code>BubbleChart</code>,{" "}
+          <code>Heatmap</code>, <code>ScatterplotMatrix</code>,{" "}
+          <code>QuadrantChart</code>, <code>MultiAxisLineChart</code>,{" "}
+          <code>CandlestickChart</code>, <code>MinimapChart</code>,{" "}
+          <code>XYCustomChart</code>.
+        </li>
+        <li>
+          <strong>Ordinal:</strong> <code>BarChart</code>,{" "}
+          <code>StackedBarChart</code>, <code>GroupedBarChart</code>,{" "}
+          <code>SwarmPlot</code>, <code>BoxPlot</code>,{" "}
+          <code>Histogram</code>, <code>ViolinPlot</code>,{" "}
+          <code>RidgelinePlot</code>, <code>DotPlot</code>,{" "}
+          <code>PieChart</code>, <code>DonutChart</code>,{" "}
+          <code>GaugeChart</code>, <code>FunnelChart</code>,{" "}
+          <code>SwimlaneChart</code>, <code>LikertChart</code>,{" "}
+          <code>OrdinalCustomChart</code>.
+        </li>
+        <li>
+          <strong>Network:</strong> <code>ForceDirectedGraph</code>,{" "}
+          <code>ChordDiagram</code>, <code>SankeyDiagram</code>,{" "}
+          <code>TreeDiagram</code>, <code>Treemap</code>,{" "}
+          <code>CirclePack</code>, <code>OrbitDiagram</code>,{" "}
+          <code>NetworkCustomChart</code>.
+        </li>
+        <li>
+          <strong>Geo:</strong> <code>ChoroplethMap</code>,{" "}
+          <code>ProportionalSymbolMap</code>, <code>FlowMap</code>,{" "}
+          <code>DistanceCartogram</code>.
+        </li>
+      </ul>
+
+      <p>
+        Streaming charts (<code>RealtimeLineChart</code>,{" "}
+        <code>RealtimeHistogram</code>, <code>RealtimeSwarmChart</code>,{" "}
+        <code>RealtimeWaterfallChart</code>, <code>RealtimeHeatmap</code>)
+        deliberately stay canvas-only — they're designed for live
+        push-driven data, not pre-rendered output. Render them as client
+        components.
+      </p>
+
+      <CodeBlock
+        code={`// app/dashboard/page.tsx — server component
+// No "use client" needed. The chart emits SVG server-side, hydrates to
+// canvas + interactivity on the client, with no hydration mismatch.
+import { LineChart } from "semiotic/xy"
+
+export default async function DashboardPage() {
+  const data = await fetchRevenue()
+  return (
+    <main>
+      <h1>Revenue</h1>
+      <LineChart
+        data={data}
+        xAccessor="month"
+        yAccessor="revenue"
+        width={800}
+        height={400}
+      />
+    </main>
+  )
+}`}
+        language="tsx"
+      />
+
+      <p>
+        How it works: <code>StreamXYFrame</code> uses an internal{" "}
+        <code>useHydration()</code> hook that returns <code>false</code>{" "}
+        on the server and during the first client render after hydration,
+        then flips to <code>true</code> after the first commit. While
+        false, the frame's existing SSR-mode SVG branch fires; once true,
+        the frame upgrades to canvas + interactivity in the same DOM
+        subtree. React's reconciler handles the swap as a normal update.
+        Server output and first-client-render output are byte-identical,
+        so hydration succeeds without mismatch warnings.
+      </p>
+
+      <p>
+        Tradeoffs:
+      </p>
+
+      <ul>
+        <li>
+          <strong>SVG paint is slower than canvas past ~5k marks.</strong>{" "}
+          For dense scatter or streaming charts, the SVG-first approach
+          adds a measurable cost. Streaming and realtime charts opt out
+          of the SVG layer (they're canvas-only by design — see below).
+        </li>
+        <li>
+          <strong>First interaction waits on canvas mount.</strong> Hover
+          and click handlers attach to the canvas, which exists only
+          after hydration completes. In practice that's a single rAF
+          frame from when the page becomes interactive.
+        </li>
+        <li>
+          <strong>Theme CSS variables resolve via the canvas DOM context.</strong>{" "}
+          On the server there's no canvas to read computed styles from,
+          so <code>var(--semiotic-*)</code> values fall back to whatever{" "}
+          fallback is declared in the CSS or to the theme preset. Use
+          explicit theme-prop values when you need tighter SSR/client
+          color parity.
+        </li>
+        <li>
+          <strong>Responsive charts re-layout once on hydration.</strong>{" "}
+          The server doesn't know the consumer's container dimensions,
+          so charts with <code>responsiveWidth</code> or{" "}
+          <code>responsiveHeight</code> render server-side at their{" "}
+          <code>width</code> / <code>height</code> defaults. On
+          hydration, the <code>ResizeObserver</code> attaches and
+          measures the actual container — if it differs from the
+          default, the chart re-lays out once. Pin{" "}
+          <code>width</code> / <code>height</code> explicitly when
+          you can predict the layout, or accept the single-frame
+          re-layout as the cost of doing responsive sizing under SSR.
+        </li>
+      </ul>
+
+      <p>
+        Hydration parity is enforced by a regression test{" "}
+        (<code>StreamXYFrame.hydration.test.tsx</code>) that calls{" "}
+        <code>renderToString</code> + <code>hydrateRoot</code> against the
+        same component and asserts no React hydration mismatch warnings.
+        If a future change makes the server output diverge from the first
+        client render, the test fails before the regression ships.
+      </p>
+
+      <p>
+        <strong>Animations behave correctly across the boundary.</strong>{" "}
+        When a chart with <code>animate</code> enabled is hydrated from
+        SSR, the intro animation is skipped — the server already
+        painted the chart in its final state, and re-animating from
+        blank when the canvas takes over would look like a regression.
+        Pure client mounts (no SSR) keep their intro animation because
+        the SVG render is overwritten before the browser paints, so the
+        canvas's first paint is the user's first sight of the chart.
+        Subsequent data-change transitions animate normally in both
+        modes.
+      </p>
+
+      {/* -------------------------------------------------------------- */}
+      <h2 id="server-placeholder-pattern">Manual Placeholder Pattern (for streaming charts)</h2>
+
+      <p>
+        Streaming charts (<code>RealtimeLineChart</code> et al.) and any
+        chart you've deliberately wrapped in <code>{`{ ssr: false }`}</code>{" "}
+        don't participate in auto-hydration. For these, pair{" "}
+        <code>next/dynamic</code> with <code>semiotic/server</code>'s{" "}
+        <code>renderChart</code> as the placeholder. The server emits a
+        static SVG that's part of the initial HTML; the client wrapper
+        renders the same placeholder until it has mounted, then swaps in
+        the interactive chart in the same slot. This is also the
+        emergency fallback if you ever hit a hydration regression in an
+        auto-hydrating chart — wrap it manually until the regression is
+        fixed.
       </p>
 
       <p>
