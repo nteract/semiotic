@@ -315,7 +315,7 @@ annotations={[{ type: "widget", month: 4, revenue: 32, dy: -4, content: <MyAlert
 - `exportChart(containerDiv, { format: "png"|"svg" })` — pass the **wrapper div** (not the SVG element); it finds canvas + SVG internally. Default: PNG, composites canvas + SVG layers
 - `npx semiotic-ai --doctor` — validate component + props JSON from CLI (uses both validateProps and diagnoseConfig)
 
-## Known Pitfalls
+## Usage Notes
 
 **Tooltip datum shape**: HOC tooltip functions receive your raw data object. When using `frameProps.tooltipContent` on Stream Frames, the datum may be wrapped — access your data via `d.data`. HOC `tooltip` functions don't need this.
 

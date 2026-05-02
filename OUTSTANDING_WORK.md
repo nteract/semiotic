@@ -1,156 +1,179 @@
-# Outstanding Work
+# Roadmap and Maintenance Context
 
-Last updated 2026-05-01 (all four phases of real-fix isomorphic SSR + geo backfill + RSC import safety landed; SSR demo caught two more bugs along the way).
+Last reviewed 2026-05-02.
 
-This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, not here.
+This file name is historical. Treat this document as maintainer context for roadmap planning, release review, and future investment areas, not as a defect list. Items below are classified as compatibility direction, optional product extensions, profile-guided optimization candidates, or historical implementation notes. Do not cite an item as a current bug or release blocker unless a current release gate fails or current source inspection confirms it.
 
-## Priority Order
+Completed release work belongs in `CHANGELOG.md`. Current release confidence comes from the package scripts and CI gates in `package.json` and `.github/workflows/node.js.yml`.
 
-1. Release confidence and documentation correctness.
-2. Public API coherence and agent-facing behavior contracts.
-3. Rendering/test coverage that catches silent visual regressions.
-4. Performance work with clear profiling or scale justification.
-5. Product extensions that are useful but not release blockers.
+## How To Read This File
 
----
-
-## P0 — Architecture & API Coherence
-
-### Split `semiotic/utils` and `semiotic/themes` to keep pure exports server-safe
-
-Both bundles are *mixed*: ~80% of their exports are pure (theme constants, formatters, color helpers, validators, `fromVegaLite`, `RingBuffer`, `IncrementalExtent`) and ~20% are React-flavored (`ThemeProvider`, `useTheme`, `useReducedMotion`, `useHighContrast`, `MultiPointTooltip`, `exportChart`). The `"use client"` directive lands on the entire bundle via the React-only re-exports' transitive imports — and the directive is file-level, so importing a pure export from a Server Component is blocked too. Server Components can't `import { fromVegaLite } from "semiotic/utils"` to transform a Vega spec on the server, even though the function itself is pure.
-
-Build categorization is currently agnostic for both (no `clientOnly: true` flag), which is honest about the mixed nature but means the inverse-direction post-build assertion doesn't gate either bundle.
-
-Real fix: split the entry points. Move `ThemeProvider` / `useTheme` / `useReducedMotion` / `useHighContrast` / `MultiPointTooltip` / `exportChart` into a new `semiotic/react` (or absorb into the main `semiotic` bundle), leaving `semiotic/utils` and `semiotic/themes` as pure bundles. Drops the directive on both, makes the pure exports server-importable, restores the `clientOnly` gate on each.
-
-Open question: how much breakage is acceptable? Consumers importing `ThemeProvider` from `semiotic/utils` would need to update. Could add a deprecation period via re-exports from the existing entry points, then remove in 4.0.
-
-Next work:
-- Audit consumers (docs site, demo project, internal docs) for `import ... from "semiotic/utils"` and `import ... from "semiotic/themes"` to map the breakage surface.
-- Decide on new entry-point name (`semiotic/react` vs absorb-into-main vs add a `semiotic/hooks`).
-- Land the split with deprecated re-exports, codemod entry in `semiotic-codemod`, update docs.
-
-### Codemod for `nodeIDAccessor` → `nodeIdAccessor` rename
-
-`ForceDirectedGraph` now accepts `nodeIdAccessor` as the canonical camelCase prop name, with `nodeIDAccessor` kept as a `@deprecated` alias and removed in 4.0. A jscodeshift transform should be added to the external [`semiotic-codemod` repo](https://github.com/emeeks/semiotic-codemod) that renames the prop on existing JSX usages.
-
-Sketch (transform name: `force-directed-graph-node-id`): walk every `<ForceDirectedGraph …>` JSX element, find the `nodeIDAccessor` attribute on the opening element, rename it to `nodeIdAccessor`. Skip if `nodeIdAccessor` is already present (don't produce duplicate attributes). Idempotent. Fixture pair lives under `tests/__testfixtures__/force-directed-graph-node-id.{input,output}.tsx`. Add to the recipe order in `bin/cli.js` after `subpath-imports`.
-
-This is purely a polish fix — consumers using `nodeIDAccessor` keep working until 4.0; the codemod is for the consumer who wants to silence the deprecation warning their IDE shows on the prop.
-
-### Turbopack subpath resolution
-
-Turbopack (Next.js's default dev bundler in recent versions) intermittently fails to resolve Semiotic's sub-path exports — `Module not found: Can't resolve 'semiotic/xy'` from a Server Component, even though Node, webpack, esbuild, and Vite all resolve them correctly against the same `package.json`. Reproduced in the SSR demo project at `~/sandbox/semiotic-ssr-demo`.
-
-Workaround documented in `UsingSSRPage`: pass `--webpack` to `next dev` and `next build`. Webpack handles the exports map without issue.
-
-Hypothesis: Turbopack's exports resolver may not handle the `.module.min.js` extension correctly, or has a quirk around how it walks conditional exports for subpath patterns. The package's exports map is well-formed by spec.
-
-Next work:
-- Reproduce in a minimal Turbopack repro and file upstream.
-- Once root-caused, decide whether to work around in our package shape (e.g. drop the `.min.` from `import` targets and let consumers' bundlers minify) or wait for the upstream fix.
-- Independent npm gotcha (also documented): `npm install` symlinks `file:` deps by default, which breaks resolution in both Turbopack and webpack. `npm install --install-links` copies the package and works correctly. Not Semiotic's bug, but worth surfacing in the docs.
-
-### Isomorphic SSR + Hydration for Interactive Charts (Next.js style)
-
-True isomorphic charts: the chart component renders server-side as SVG, the client picks up that SVG without remounting (no hydration mismatch), and canvas + interactivity attach in place. Staged across four phases.
-
-**Phase 1 — landed 2026-05-01 (XY frame).** `useHydration()` hook + extension of `StreamXYFrame`'s `isServerEnvironment` branch to also fire when `!hydrated`. Server output equals first-client-render output (both go through the SVG branch); after first commit, `useLayoutEffect` flips `hydrated` and the canvas branch upgrades the same DOM subtree. Hydration-parity test (`StreamXYFrame.hydration.test.tsx`) gates regressions: `renderToString` + `hydrateRoot` round-trip with no React mismatch warnings.
-
-**Phase 2 — landed 2026-05-01 (XY catalog).** Parametrized hydration test across all 13 XY HOCs (`charts/xy/hydration.test.tsx`): LineChart, AreaChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap, ScatterplotMatrix, QuadrantChart, MultiAxisLineChart, CandlestickChart, MinimapChart, XYCustomChart. Every one passes the three-part check (no `<canvas>` in server output, no React mismatch warnings on hydrate, canvas live after the swap) with zero code changes — the boundary genuinely lived in `StreamXYFrame` and the architecture held.
-
-**Phase 3 — landed 2026-05-01 (ordinal + network + geo catalogs).** `StreamOrdinalFrame`, `StreamNetworkFrame`, and `StreamGeoFrame` got the same `useHydration` integration (one-line `useHydration()` call, condition swap on the SSR branch, `responsiveRef` on the SVG branch's outer div, `hydrated` in the mount-time `scheduleRender` deps). Parametrized regression tests cover every shipped HOC: `charts/ordinal/hydration.test.tsx` (16 ordinals — BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, FunnelChart, SwimlaneChart, LikertChart, OrdinalCustomChart), `charts/network/hydration.test.tsx` (8 networks — ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram, NetworkCustomChart), and `charts/geo/hydration.test.tsx` (4 geo — ChoroplethMap, ProportionalSymbolMap, FlowMap, DistanceCartogram). All 84 new tests pass (28 cases × 3 assertions each). The harder scene primitives (wedges, ribbons, sankey beziers, hierarchy rects, orbit arcs, force-directed positions, projected feature paths) round-trip through `SceneToSVG` cleanly with no extensions needed. **Geo was caught late** — the original Phase 3 scope omitted `StreamGeoFrame` because I enumerated three frame families instead of four; the demo project's verification matrix exposed the gap and the same five-line integration applied cleanly.
-
-**Phase 4 — landed 2026-05-01 (intro continuity).** Animations now resolve correctly across the hydration boundary. Today's pre-fix bug: server painted the chart in its final state via SVG, then on hydration the canvas took over and *re-animated the intro from blank → final*, producing a visible flash where the user saw their chart, then watched it animate back in. Fix: a `useWasHydratingFromSSR` hook (uses `useSyncExternalStore`'s `getServerSnapshot` to distinguish SSR rehydration from pure CSR mounts) + a `cancelIntroAnimation` method on each pipeline store. When the SVG → canvas swap happens after SSR rehydration, the frame calls `cancelIntroAnimation` to wipe the intro state, so the canvas paints the final scene directly. Pure CSR mounts keep their intro animation because the SVG render is overwritten before the browser ever paints. Subsequent data-change transitions still animate normally — only the *first* paint after SSR hydration is intro-skipped. Regression tests live in `useHydration.test.tsx` (hook behavior) and `PipelineStore.cancelIntro.test.ts` (store-level cancellation across all three pipeline types).
-
-**Result: every non-streaming HOC in Semiotic auto-hydrates from a React Server Component, with no flash on hydration.** 41 HOCs total — 13 XY + 16 ordinal + 8 network + 4 geo. No `"use client"` ceremony, no manual placeholder, no `next/dynamic` scaffolding, no re-animated intro.
-
-**Manual placeholder pattern stays documented for streaming charts.** `RealtimeLineChart`, `RealtimeHistogram`, etc. are deliberately canvas-only — server-rendering a live push-driven streamgraph isn't a use case. The pattern (`next/dynamic({ ssr: false })` + `semiotic/server`'s `renderChart` placeholder) remains the answer for those, plus as an emergency fallback if a future regression hits an auto-hydrating chart.
-
-**Streaming charts deliberately stay canvas-only.** A server-rendered streamgraph or `RealtimeLineChart` was never a use case; those frames stay on the canvas-first path.
+1. Release confidence and documentation correctness are ongoing guardrails.
+2. Public API coherence items are compatibility design work unless explicitly labeled as blockers.
+3. Rendering and visual coverage items describe the current coverage posture plus incremental fixtures that could be added.
+4. Performance work should stay profile-guided and scale-justified.
+5. Product extensions are useful directions, not release requirements.
 
 ---
 
-## P1 — Visual & Rendering Coverage
+## API and Compatibility Roadmap
 
-### HOC-Level Visual Snapshots
+### Pure utility entry points and React-flavored helpers
 
-**Complete as of 2026-04-29 — every HOC in `chartSpecs.ts` (43/43) has at least one default-theme visual snapshot.** The animated-HOC pass shipped pixel-stable snapshots for the 4 realtime charts and `OrbitDiagram` by passing static `data` arrays + omitting decay/pulse/transition/staleness on realtime + `animated: false` on Orbit, so the canvas stabilizes after initial paint and ordinary `waitForChartReady` succeeds.
+`semiotic/utils` and `semiotic/themes` intentionally carry stable compatibility exports today. Most exports are pure helpers (`theme` constants, formatters, color helpers, validators, `fromVegaLite`, `RingBuffer`, `IncrementalExtent`); a smaller set are React-flavored conveniences (`ThemeProvider`, `useTheme`, `useReducedMotion`, `useHighContrast`, `MultiPointTooltip`, `exportChart`).
 
-Remaining infrastructure work:
-- Bootstrap Linux baselines from the CI `playwright-snapshots` artifact (existing CI workflow auto-generates on first push when no Linux baselines are committed).
+The future-facing API design question is whether to add a clearer pure/server lane and React/client lane. In React Server Component environments, file-level `"use client"` propagation means a bundle with React-only re-exports can be treated as client-only even when a specific helper is pure. The current package shape is supported and honest about that mixed compatibility surface; a future split would make the intent easier for bundlers and agents to reason about.
 
-### Interaction-State Visual Snapshots
+Compatibility path under consideration:
 
-Covered as of 2026-04-29: hover-state (scatter, bar — pre-existing), `hoverHighlight` (multi-line dim), brush selection rect (scatter), legend isolate (multi-line LineChart), linked-hover cross-highlight (LinkedCharts dashboard). The remaining underrepresented case is **click-locked crosshair** in `linkedHover` x-position mode (click locks dashed white line, second click or Escape unlocks). That's a 2-step interaction — driver test + snapshot of locked state — and a follow-up if the regression class becomes load-bearing.
+- Keep the existing entry points stable during a deprecation period.
+- Move React-oriented helpers into a new entry point such as `semiotic/react`, or absorb them into the main `semiotic` bundle.
+- Leave `semiotic/utils` and `semiotic/themes` as pure bundles once the migration window is acceptable.
+- Update docs and `semiotic-codemod` so consumers have a mechanical path if the split lands.
 
-Next work:
-- Click-locked crosshair snapshot (low priority; gate value is incremental on top of the linked-hover snapshot already shipped).
+Decision points:
 
-### SSR-Vs-CSR Visual Diff
+- Audit docs, examples, and known consumers for imports from `semiotic/utils` and `semiotic/themes`.
+- Choose the target entry point name and migration story.
+- Decide whether this is a 3.x additive migration with deprecated re-exports, or a 4.0 cleanup.
 
-**Structural parity gate landed 2026-05-01.** `src/components/server/ssr-csr-parity.test.tsx` exercises the two SSR code paths (`renderChart` from `semiotic/server` vs. `renderToString(<Component />)` through the in-frame SSR branch) for a representative chart matrix — LineChart, BarChart, PieChart, SankeyDiagram, Treemap. Catches the regression class where one pipeline silently emits wildly different data marks than the other.
+### Codemod for `nodeIDAccessor` to `nodeIdAccessor`
 
-**Pixel-level Playwright gate landed 2026-05-01.** `integration-tests/ssr-parity.spec.ts` snapshots both server-rendered SVG (via `renderChart`) and client-rendered canvas for the same chart matrix. The SSR side renders into a `page.setContent` payload with the `renderChart` output inlined — no fixture file needed for that side. The CSR side uses a new `integration-tests/ssr-parity-examples/` fixture page. 30 baselines committed (5 charts × 2 sides × 3 browsers, all darwin); CI generates Linux baselines on first push from the artifact pattern other Playwright specs use.
+`ForceDirectedGraph` accepts `nodeIdAccessor` as the canonical camelCase prop name. `nodeIDAccessor` remains supported as a `@deprecated` alias until 4.0.
 
-Both sides snapshot independently rather than direct pixel-comparing each other — SVG and canvas pipelines render with subtly different anti-aliasing and won't match byte-for-byte, but per-side baselines mean any drift on either pipeline lands in front of a maintainer for review.
+The codemod is a migration convenience, not a runtime gap. A jscodeshift transform in the external [`semiotic-codemod` repo](https://github.com/emeeks/semiotic-codemod) would let consumers silence IDE deprecation warnings mechanically.
 
-Surfaced an expected divergence in the structural test: `renderChart` emits bare data marks while the in-frame SSR branch includes SVGOverlay chrome (axis/legend). Documented; assertions tuned to permit it. The Playwright baselines lock in both renderings as-they-are, so a maintainer reviewing snapshot diffs can decide whether a change is intentional.
+Sketch:
 
-Future work (lower priority):
-- Background-graphics fixture coverage (the matrix doesn't currently exercise foreground/background graphics composition).
-- Theme-matrix variant of the parity gate (charts × theme presets) if a theme-driven SSR regression ever ships unnoticed.
+- Transform name: `force-directed-graph-node-id`.
+- Walk every `<ForceDirectedGraph ...>` JSX element.
+- Rename an opening-element `nodeIDAccessor` attribute to `nodeIdAccessor`.
+- Skip when `nodeIdAccessor` is already present.
+- Add fixture pair under `tests/__testfixtures__/force-directed-graph-node-id.{input,output}.tsx`.
+- Add to the recipe order in `bin/cli.js` after `subpath-imports`.
 
-### Animation Snapshots
+### Turbopack subpath resolution note
 
-The screenshot harness generally avoids active animation, leaving intro/update paths undercovered.
+Semiotic's subpath exports resolve correctly through Node, webpack, esbuild, and Vite against the package exports map. Turbopack, Next.js's newer dev bundler, has intermittently failed to resolve subpath exports such as `semiotic/xy` from a Server Component in the SSR demo project at `~/sandbox/semiotic-ssr-demo`.
 
-Next work:
-- Mock time or freeze animation progress at deterministic points.
+The package exports map is well-formed by spec. The practical compatibility note for Next.js users is to use webpack mode if Turbopack hits this resolver edge case:
+
+```bash
+next dev --webpack
+next build --webpack
+```
+
+Follow-up path:
+
+- Reduce the behavior to a minimal Turbopack repro and file upstream.
+- If root cause points to package shape rather than the bundler, consider whether import targets should avoid the `.module.min.js` suffix and leave minification to consumer builds.
+- Keep documenting the independent `file:` dependency behavior: `npm install` symlinks local packages by default, while `npm install --install-links` copies them. Copying is the reliable local demo setup for both webpack and Turbopack.
+
+### Isomorphic SSR and hydration reference
+
+Semiotic now supports true isomorphic charts for every non-streaming HOC: the chart renders server-side as SVG, the client hydrates that SVG without a React mismatch, and canvas plus interactivity attach in place after hydration. This section is retained as architectural context for future reviews.
+
+**Phase 1 - landed 2026-05-01 (XY frame).** `useHydration()` and the `StreamXYFrame` SSR branch make server output match the first client render. After the first commit, `useLayoutEffect` flips `hydrated` and the canvas branch upgrades the same DOM subtree. `StreamXYFrame.hydration.test.tsx` gates the `renderToString` + `hydrateRoot` round trip with no React mismatch warnings.
+
+**Phase 2 - landed 2026-05-01 (XY catalog).** `charts/xy/hydration.test.tsx` parametrizes the hydration contract across all 13 XY HOCs: LineChart, AreaChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap, ScatterplotMatrix, QuadrantChart, MultiAxisLineChart, CandlestickChart, MinimapChart, XYCustomChart. Each passes the three-part check: no `<canvas>` in server output, no React mismatch warnings on hydrate, canvas live after the swap.
+
+**Phase 3 - landed 2026-05-01 (ordinal, network, and geo catalogs).** `StreamOrdinalFrame`, `StreamNetworkFrame`, and `StreamGeoFrame` use the same hydration integration. Parametrized regression tests cover every shipped ordinal, network, and geo HOC. The scene primitives involved in wedges, ribbons, Sankey beziers, hierarchy rects, orbit arcs, force-directed positions, and projected feature paths round-trip through `SceneToSVG` cleanly.
+
+The final verification matrix includes the geo catalog. That coverage is called out because it is a useful example of why the release matrix enumerates all four frame families explicitly.
+
+**Phase 4 - landed 2026-05-01 (intro continuity).** Animations resolve correctly across the hydration boundary. `useWasHydratingFromSSR` distinguishes SSR rehydration from pure CSR mounts, and `cancelIntroAnimation` prevents the first hydrated canvas paint from replaying the intro animation after the user has already seen the server-rendered final state. Pure CSR mounts keep their intro animation, and subsequent data-change transitions still animate normally.
+
+Result: every non-streaming HOC auto-hydrates from a React Server Component with no `"use client"` ceremony, no manual placeholder, no `next/dynamic` scaffolding, and no re-animated intro.
+
+Streaming charts stay deliberately canvas-only. `RealtimeLineChart`, `RealtimeHistogram`, and related push-driven charts should use the documented manual placeholder pattern (`next/dynamic({ ssr: false })` plus a `semiotic/server` `renderChart` placeholder) when an SSR placeholder is useful.
+
+---
+
+## Visual and Rendering Coverage Posture
+
+### HOC-level visual snapshots
+
+Complete as of 2026-04-29: every HOC in `chartSpecs.ts` has at least one default-theme visual snapshot. The animated-HOC pass made the realtime charts and `OrbitDiagram` pixel-stable by using static data and disabling time-varying behavior where appropriate.
+
+Operational note:
+
+- Bootstrap Linux baselines from the CI `playwright-snapshots` artifact when new baseline families are introduced.
+
+### Interaction-state visual snapshots
+
+Covered interaction fixtures include hover state, `hoverHighlight`, brush selection, legend isolation, and linked-hover cross-highlight. A click-locked crosshair snapshot in `linkedHover` x-position mode would be an additional high-specificity fixture if that regression class becomes important enough to gate.
+
+Optional expansion:
+
+- Add a 2-step driver test and snapshot for click-locked linked-hover crosshair state.
+
+### SSR-vs-CSR rendering gates
+
+Structural parity landed 2026-05-01 in `src/components/server/ssr-csr-parity.test.tsx`. It exercises `renderChart` from `semiotic/server` and the in-frame SSR branch for a representative matrix: LineChart, BarChart, PieChart, SankeyDiagram, Treemap.
+
+Pixel-level Playwright coverage landed 2026-05-01 in `integration-tests/ssr-parity.spec.ts`. It snapshots server-rendered SVG and client-rendered canvas for the same chart matrix. The two sides are intentionally baselined separately because SVG and canvas anti-aliasing differ; per-side baselines make drift reviewable without requiring byte-for-byte equivalence between renderers.
+
+Documented expected divergence: `renderChart` emits data marks while the in-frame SSR branch includes SVGOverlay chrome such as axes and legends. The tests account for that difference, and the baselines lock both renderings as they are.
+
+Optional expansions:
+
+- Background and foreground graphics fixture coverage.
+- Theme-matrix variants if a theme-driven SSR regression ever reaches release review.
+
+### Animation snapshots
+
+The screenshot harness generally avoids active animation so that visual baselines stay deterministic. Animation-specific snapshots should use mocked time or frozen progress rather than live timers.
+
+Optional expansion:
+
 - Snapshot representative mid-animation states for bars, wedges, lines/areas, points, network nodes, and geo points.
 
 ---
 
-## P2 — Performance & Scale
+## Performance and Scale Candidates
 
-### Hit-Tester Factory (assessed and skipped)
+### Hit-tester factory assessment
 
-The OUTSTANDING_WORK companion plan to the canvas render-helper module proposed a generic `findNearestSceneNode(scene, px, py, maxDistance, typeDispatcher, pointQuadtree?, maxPointRadius?)` shared across `CanvasHitTester` / `OrdinalCanvasHitTester` / `NetworkCanvasHitTester` / `GeoCanvasHitTester`, with an estimated 150–180-line savings.
+The canvas render-helper companion plan considered a generic `findNearestSceneNode(scene, px, py, maxDistance, typeDispatcher, pointQuadtree?, maxPointRadius?)` shared across `CanvasHitTester`, `OrdinalCanvasHitTester`, `NetworkCanvasHitTester`, and `GeoCanvasHitTester`.
 
-Audited in 2026-04-28 and the savings don't materialize. Only the XY + Ordinal hit testers share a `quadtree-fast-path → linear-scan-with-dispatch → closest-wins` shape, and even there the duplicated portion is ~10 lines (the closest-wins reduce). Network's two-loop nodes-then-edges structure with a smallest-area override for nested treemap rects, and Geo's three-phase points → reverse-order areas → lines structure with offscreen `hitCtx.isPointInPath`, are genuinely different shapes. A factory broad enough to absorb all four would be abstraction, not extraction. The bulk of each tester is per-mark hit functions (`hitTestPoint`, `hitTestWedge`, `hitTestBezierEdge`, `isPointInPath` for geoarea Path2D, etc.) that don't share regardless.
+Reviewed 2026-04-28. The extraction was intentionally skipped because the shared structure was too small to justify the abstraction. XY and ordinal share only a limited nearest-point shape; network and geo have materially different hit-testing flows. The current specialized implementations are the clearer design.
 
-Re-open only if a future hit-tester scenario shows up with ≥80% structural overlap with one of the existing four.
+Re-open only if a future hit-tester scenario has at least 80% structural overlap with an existing implementation.
 
-### Network Decay Style Allocation
+### Network decay style allocation
 
-Decay, pulse, and transition paths still spread style objects per node per frame in some hot paths.
+Some decay, pulse, and transition paths allocate style objects per node per frame. This is a profile-guided optimization candidate, not a known release blocker.
 
-Next work:
-- Profile large network streams before changing behavior.
-- If allocation is material, mutate unique scene-node style objects in place and add regression tests around style isolation.
+Investigation path:
 
-### Network Tension Threshold
+- Profile large network streams.
+- If allocation is material, mutate unique scene-node style objects in place.
+- Add regression tests around style isolation before changing behavior.
 
-The force-layout tension threshold is empirically tuned and may re-run too often or not often enough under bursty updates.
+### Network tension threshold
 
-Next work:
+The force-layout tension threshold is empirically tuned. It can be revisited with benchmark evidence for bursty graph updates.
+
+Investigation path:
+
 - Build a benchmark fixture for bursty graph updates.
 - Measure layout quality and frame cost across threshold values.
 - Document the chosen threshold and failure modes.
 
-### Incremental Scene Updates
+### Incremental scene updates
 
-Most stream updates still trigger broad scene rebuilds.
+Most stream updates use broad scene rebuilds. That keeps correctness straightforward and is a reasonable fallback. Incremental append/evict updates are a future scale optimization for simple scenes.
 
-Next work:
+Investigation path:
+
 - Prototype append/evict updates for simple point and bar scenes.
-- Keep the current full rebuild as the correctness fallback.
-- Avoid optimizing complex marks until simple scenes show clear wins.
+- Keep full rebuild as the correctness fallback.
+- Avoid optimizing complex marks until simple scenes show a clear win.
 
-### Large-Scale Rendering Options
+### Large-scale rendering options
 
-Potential work:
+Possible long-range work:
+
 - RingBuffer in-place iteration helpers.
 - Canvas curve interpolation optimization.
 - Network decay sort cache.
@@ -159,45 +182,50 @@ Potential work:
 
 ---
 
-## P3 — Product Extensions
+## Product Extension Ideas
 
-### Design System Research
+### Design system research
 
-Potential work:
+Potential extensions:
+
 - Curated categorical palettes that maximize neighbor contrast.
-- Per-role typography tokens beyond sizes, for example title, legend, axis, and tick font families.
+- Per-role typography tokens beyond sizes, such as title, legend, axis, and tick font families.
 
-### Server Export Formats
+### Server export formats
 
-Potential work:
+Potential extensions:
+
 - `renderToPDF()` using pdfkit or jsPDF.
 - Verify sync `renderChart` and `renderDashboard` in Cloudflare Workers, Vercel Edge, and Deno.
 - Make `transitionFrames` in GIF export perform real incremental store ingestion.
 - Link Render Studio animated previews to downloadable GIF output.
 
-### Push API Undo
+### Push API undo
 
 `remove()` and `update()` return previous values, so callers can implement undo manually today.
 
-Potential work:
+Potential extension:
+
 - Add an optional operation log with inverse operations.
 - Expose `ref.current.undo()` only if the memory and semantic tradeoffs are clear.
 
-### Geo Enhancements
+### Geo enhancements
 
-Potential work:
+Potential extensions:
+
 - Anti-meridian and pole projection regression fixtures.
-- Path2D hit testing generalization.
+- Path2D hit-testing generalization.
 - Bounds pre-filter for network nodes.
 - Canvas grid lines.
 - Geographic minimap.
 - Temporal animation on cartograms.
 - Richer edge encodings, including tapered and animated dashed lines.
 
-### CodeQL Re-Evaluation
+### CodeQL re-evaluation
 
-CodeQL was removed because the workflow-managed config kept producing stale-baseline warnings on every PR even after the language identifier was aligned. GitHub's "default setup" mode (Repo Settings → Security → Code scanning) manages the configuration outside the workflow file, which avoids the drift class entirely.
+Security scanning is optional infrastructure for this repo, not an application-runtime feature. CodeQL workflow setup was previously removed because workflow-managed configuration produced stale-baseline warnings on PRs after language configuration changes. GitHub's default setup mode manages configuration outside the workflow file and avoids that specific drift class.
 
-Potential work:
-- Decide whether the security scanning value (a JS/TS library that's mostly DOM/canvas/d3 surface — not high-CWE territory) justifies re-enabling.
-- If yes, enable default setup and verify it produces a single check name that matches the configured branch protection rule.
+Potential extension:
+
+- Decide whether CodeQL's value for a JS/TS canvas visualization library justifies re-enabling.
+- If yes, enable default setup and verify that the resulting check name matches branch protection.

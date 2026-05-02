@@ -291,7 +291,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 
 `role="group"` (outer) + `role="img"` (inner canvas). Keyboard: arrows navigate points, Enter cycles neighbors, Home/End/PageUp/PageDown. Shape-adaptive focus ring (`--semiotic-focus`). `accessibleTable` (default true) for sr-only data summary. Auto-detects `prefers-reduced-motion` and `forced-colors`. Hooks: `useReducedMotion()`, `useHighContrast()`.
 
-## Known Pitfalls
+## Usage Notes
 
 - **Tooltip datum shape**: HOC tooltips get raw data. Frame `tooltipContent` gets wrapped — use `d.data`.
 - **Legend**: "bottom" expands margin ~80px. MultiAxisLineChart: use `legendPosition="bottom"`.

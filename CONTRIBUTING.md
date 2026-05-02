@@ -1,94 +1,145 @@
 # Contributing to Semiotic
 
-Welcome! We're glad you're here.
+Semiotic is a React data visualization library with canvas-first chart rendering, server-side SVG rendering, AI/MCP tooling, and a Parcel-powered documentation site. This guide describes the current repository workflow; package scripts and CI are the source of truth.
 
-## Getting started
+## Getting Started
 
 ```bash
 git clone https://github.com/nteract/semiotic.git
 cd semiotic
-npm install --legacy-peer-deps
-npm test          # 628 unit tests (Jest)
-npm run dist      # build all bundles (Rollup)
-npm run typescript  # type check
+npm install
+npm test
+npm run typescript
+npm run dist
 ```
 
-Requires Node 18+. See `.node-version`.
+The repo pins Node with Volta in `package.json`. Use that version when possible.
 
-## Project structure
+## Project Structure
 
-```
+```text
 src/
   components/
-    StreamXYFrame.tsx, StreamOrdinalFrame.tsx, StreamNetworkFrame.tsx   # core Frames
+    StreamXYFrame.tsx, StreamOrdinalFrame.tsx, StreamNetworkFrame.tsx, StreamGeoFrame.tsx
     charts/
       xy/         # LineChart, AreaChart, Scatterplot, etc.
       ordinal/    # BarChart, StackedBarChart, PieChart, etc.
       network/    # ForceDirectedGraph, SankeyDiagram, TreeDiagram, etc.
-      shared/     # colorUtils, hooks, validateChartData, validateProps
-    server/       # renderToStaticSVG
+      geo/        # ChoroplethMap, FlowMap, DistanceCartogram, etc.
+      realtime/   # push-driven realtime charts
+      shared/     # shared HOC helpers, validation, metadata
+    server/       # static SVG, image, dashboard, and export utilities
   processing/     # data pipelines and layout algorithms
-ai/               # schema.json, MCP server, CLI, system prompt, examples
-scripts/          # build.mjs, release scripts
-docs/             # website source (Parcel)
+ai/               # schema, MCP server, CLI, prompts, examples, metadata
+docs/             # documentation site source
+integration-tests/# Playwright fixtures and specs
+scripts/          # build, release, validation, and generated-doc scripts
 ```
 
-## Development workflow
+## Development Workflow
 
-1. Create a branch from `main`
-2. Make your changes
-3. Run `npm test` and `npm run dist` to verify
-4. Open a PR against `main`
-5. CI runs tests, build, and type check automatically
+1. Create a branch from `main`.
+2. Make focused changes.
+3. Run the narrow tests or checks that cover your change.
+4. Run broader release checks for shared behavior, public API changes, SSR, AI contracts, or docs changes.
+5. Open a PR against `main` with the checks you ran.
 
-## Build toolchain
+## Toolchain
 
-- **Rollup 4** — library bundles (`npm run dist`)
-- **Parcel** — docs website (`npm start`)
-- **TypeScript 5** — type checking (`npm run typescript`)
-- **Jest** — unit tests (`npm test`)
-- **Playwright** — integration tests (`npm run test:dist`)
+- **Rollup** via `scripts/build.mjs` for library bundles.
+- **Parcel** for the docs website.
+- **TypeScript 6** for type checking and declarations.
+- **Vitest** for unit, integration, and benchmark tests.
+- **Playwright** for browser and visual regression coverage.
+- **esbuild** for the bundled MCP server.
+- **size-limit** for bundle budgets.
+
+## Common Commands
+
+```bash
+# Core checks
+npm test
+npm run typescript
+npm run typescript:mcp
+npm run lint
+
+# Builds
+npm run dist
+npm run dist:prod
+npm run build:mcp
+
+# Browser and visual tests
+npm run test:dist
+npm run test:visual:update
+
+# Docs
+npm run docs:dev
+npm run website:build
+npm run docs:api:json
+npm run check:docs-routes
+
+# AI and public-surface contracts
+npm run check:chart-specs
+npm run check:claude-md-coverage
+npm run check:mcp-registry
+npm run check:surface
+npm run check:ai-contracts
+npm run check:ai-examples-coverage
+
+# Release-oriented checks
+npm run check:ssr
+npm run check:test-quality
+npm run check:jsdoc-coverage
+npm run size
+npm run check:pack
+npm run release:check
+```
 
 ## Architecture
 
-Semiotic has three layers:
+Semiotic has three main user-facing layers:
 
 | Layer | Purpose | Example |
-|---|---|---|
-| **HOC Charts** | Simple props, sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
-| **Frames** | Full control over rendering and interaction | `<XYFrame lines={d} customLineMark={...} />` |
-| **Utilities** | Axes, legends, annotations, brushes | Used internally by Frames |
+| --- | --- | --- |
+| **HOC charts** | Focused chart APIs with sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
+| **Stream Frames** | Lower-level rendering, interaction, streaming, and SSR behavior | `<StreamXYFrame ... />` |
+| **Utilities and AI tooling** | Validation, serialization, themes, server rendering, MCP, and assistant contracts | `validateProps`, `renderChart`, `semiotic-ai` |
 
-HOC charts wrap Frames. Every HOC accepts `frameProps` to pass through to
-the underlying Frame for advanced use cases.
+HOC charts wrap Stream Frames. Every HOC accepts `frameProps` for advanced pass-through behavior.
 
-## Testing
+## Testing Guidance
 
-- Unit tests live next to source files: `ComponentName.test.tsx`
-- Run a single test: `npx jest --testPathPattern=LineChart`
-- Integration tests: `npm run test:dist` (requires build first)
+- Unit and integration tests live next to source files as `*.test.{ts,tsx,jsx}`.
+- Use `npx vitest run path/to/file.test.tsx` for focused runs.
+- Browser and visual tests live under `integration-tests`.
+- Build dist before Playwright when the test expects packaged output.
+- Exact test counts change as coverage grows; use current command output rather than hard-coded counts.
 
-## Code style
+## Code Style
 
-- TypeScript, no `any` in new code where avoidable
-- Prettier handles formatting (see `.prettierrc`)
-- ESLint for linting (`npm run lint`)
-- No semicolons, double quotes, trailing commas
+- TypeScript is preferred for new source files.
+- Avoid `any` in new code unless there is a clear boundary reason.
+- Prettier and ESLint define formatting and lint rules.
+- Existing style uses no semicolons and double quotes.
 
-## Publishing releases
+## Before Opening a PR
 
-Releases are automated via GitHub Actions. The workflow:
+Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.
 
-1. Update `version` in `package.json`
-2. Update `CHANGELOG.md`
-3. Commit: `git commit -m "chore(release): v3.0.0"`
-4. Tag: `git tag v3.0.0`
-5. Push: `git push && git push --tags`
-6. CI builds, tests, and publishes to npm automatically
+For docs-only changes, run at least:
 
-The `NPM_TOKEN` secret must be configured in the repo's GitHub settings.
+```bash
+npm run check:claude-md-coverage
+npm run check:ai-contracts
+npm run check:docs-routes
+```
+
+Add `npm run website:build` when routes, examples, generated API docs, or public docs pages change.
+
+## Publishing Releases
+
+Releases are automated through GitHub Actions and npm credentials configured in the repository. Release PRs should update `package.json`, `CHANGELOG.md`, and any generated artifacts required by the release checks before tagging.
 
 ## Community
 
-This project follows the nteract
-[Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).
+This project follows the nteract [Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).
