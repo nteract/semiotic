@@ -910,7 +910,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
-      scheduleRender,
+      renderFnRef,
       cleanup: () => adapterRef.current?.clear(),
     })
 

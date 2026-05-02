@@ -939,7 +939,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
-      scheduleRender,
+      renderFnRef,
       // Geo-specific: clear the tile cache on unmount so background
       // map tiles don't leak across remounts.
       cleanup: () => tileCacheRef.current?.clear(),

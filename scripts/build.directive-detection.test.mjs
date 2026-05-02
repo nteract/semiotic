@@ -3,38 +3,13 @@
  * decides whether a source file's content qualifies as a client
  * module for the rollup `useClientPlugin` to chunk-tag.
  *
- * The previous version used `code.startsWith('"use client"')`, which
- * silently missed every source file that opened with a JSDoc block
- * (StreamOrdinalFrame, useFrame, useHydration, etc.). The fix accepts
- * any combination of leading whitespace + line-comments + block-comments
- * before the directive, matching how Next.js / React parse the
- * directive.
+ * Imports the helper from `./lib/useClientDirective.mjs` (the same
+ * module `build.mjs` consumes), so future changes to the detection
+ * logic are exercised by this test automatically — no manual
+ * lockstep maintenance.
  */
 import { describe, it, expect } from "vitest"
-
-// Re-implement here rather than importing from build.mjs — that file
-// has top-level rollup imports we don't want to load just to unit-test
-// a string helper. Keep the implementation in lockstep manually; if
-// build.mjs's version drifts, this test will catch the divergence
-// next time someone runs the suite.
-function hasLeadingUseClientDirective(code) {
-  let i = 0
-  while (i < code.length) {
-    const ch = code[i]
-    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
-      i++
-    } else if (ch === "/" && code[i + 1] === "/") {
-      while (i < code.length && code[i] !== "\n") i++
-    } else if (ch === "/" && code[i + 1] === "*") {
-      i += 2
-      while (i < code.length - 1 && !(code[i] === "*" && code[i + 1] === "/")) i++
-      i += 2
-    } else {
-      break
-    }
-  }
-  return code.startsWith('"use client"', i) || code.startsWith("'use client'", i)
-}
+import { hasLeadingUseClientDirective } from "./lib/useClientDirective.mjs"
 
 describe("hasLeadingUseClientDirective", () => {
   const positives = [

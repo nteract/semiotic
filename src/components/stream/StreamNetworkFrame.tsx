@@ -1237,7 +1237,7 @@ const StreamNetworkFrame = forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    scheduleRender,
+    renderFnRef,
     // No frame-specific cleanup — useFrame handles the rAF/pointermove
     // refs on unmount.
   })

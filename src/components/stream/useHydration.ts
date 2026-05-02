@@ -87,17 +87,22 @@ export function useWasHydratingFromSSR(): boolean {
  *    painted the chart in its final state — re-animating from blank
  *    on the canvas takeover is a visual regression).
  * 2. Mark the scene dirty so the canvas-paint pipeline rebuilds.
- * 3. Schedule a paint via `scheduleRender()` so the canvas actually
- *    draws the final scene. Without this, the canvas would mount
- *    blank because the data-change effect doesn't re-fire across the
- *    SVG → canvas swap (the `data` prop reference is unchanged).
+ * 3. **Paint the canvas synchronously** via `renderFnRef.current()`.
  *
- * This hook codifies that pattern in one place. Each frame supplies
- * its own `cleanup` for unmount work that's frame-specific (XY/Ordinal
- * clear the streaming adapter; Geo clears its tile cache; Network has
- * no extra cleanup). Re-running the effect on `hydrated` /
- * `wasHydratingFromSSR` change ensures the swap fires correctly even
- * if a future architectural change introduces a third state.
+ * Step 3 is the timing-critical bit. The hook fires inside an
+ * isomorphic layout effect — `useLayoutEffect` on the client (runs
+ * synchronously after commit but before the browser paints),
+ * `useEffect` on the server (no-op, since SSR doesn't paint). If we
+ * deferred the paint to a `requestAnimationFrame` (the standard
+ * `scheduleRender()` route), the rAF callback wouldn't fire until
+ * the *next* frame — meaning the browser would paint *frame N* with
+ * the canvas in DOM but blank, then *frame N+1* with the canvas
+ * actually drawn. Synchronous paint inside the layout effect makes
+ * frame N's paint already include the canvas content; no flash.
+ *
+ * Each frame supplies its own `cleanup` for unmount work that's
+ * frame-specific (XY/Ordinal clear the streaming adapter; Geo clears
+ * its tile cache; Network has no extra cleanup).
  */
 export interface HydrationLifecycleOptions {
   hydrated: boolean
@@ -116,29 +121,41 @@ export interface HydrationLifecycleOptions {
    * rebuilds the scene from scratch.
    */
   dirtyRef: MutableRefObject<boolean>
-  /** rAF-coalesced renderer-render kicker from `useFrame`. */
-  scheduleRender: () => void
+  /**
+   * Ref to the frame's render closure (assigned by `useFrame` /
+   * the frame body). The hook calls this synchronously to paint
+   * within the same frame as the SVG → canvas swap commit, avoiding
+   * the one-frame blank-canvas flicker that an rAF-deferred paint
+   * would produce.
+   */
+  renderFnRef: MutableRefObject<() => void>
   /**
    * Optional unmount cleanup. Frame-specific work the hook can't
    * generalize — e.g. clearing the streaming `DataSourceAdapter`
-   * (XY/Ordinal) or the geo tile cache. Returning a function from a
-   * `useEffect` is the React idiom for this; we mirror it here.
+   * (XY/Ordinal) or the geo tile cache.
    */
   cleanup?: () => void
 }
 
 export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
-  const { hydrated, wasHydratingFromSSR, storeRef, dirtyRef, scheduleRender, cleanup } = opts
-  useEffect(() => {
+  const { hydrated, wasHydratingFromSSR, storeRef, dirtyRef, renderFnRef, cleanup } = opts
+  useIsomorphicLayoutEffect(() => {
     if (hydrated && wasHydratingFromSSR) {
       storeRef.current?.cancelIntroAnimation?.()
     }
     dirtyRef.current = true
-    scheduleRender()
+    // Synchronous paint — see the hook's docstring for why an rAF
+    // here would produce a one-frame blank-canvas flicker on SSR
+    // rehydration. `renderFnRef.current` is the frame body's render
+    // closure; it's idempotent and rAF-cancel-safe (resets
+    // `rafRef.current = 0` at the start), so calling it directly
+    // from a layout effect doesn't conflict with the in-flight
+    // scheduling that other paths use.
+    renderFnRef.current()
     return cleanup
-    // `storeRef` / `dirtyRef` are stable refs — including them in deps
-    // would just trip eslint's exhaustive-deps. The semantically
-    // load-bearing deps are the two boolean signals + scheduleRender.
+    // Stable refs (`storeRef`, `dirtyRef`, `renderFnRef`) intentionally
+    // omitted from deps — including them would just trip
+    // exhaustive-deps without changing behavior.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, wasHydratingFromSSR, scheduleRender])
+  }, [hydrated, wasHydratingFromSSR])
 }

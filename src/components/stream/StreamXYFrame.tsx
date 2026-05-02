@@ -1218,7 +1218,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
-      scheduleRender,
+      renderFnRef,
       // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
       // is handled by useFrame. We just clear the adapter here so any
       // in-flight progressive chunking / pending push microtask can't

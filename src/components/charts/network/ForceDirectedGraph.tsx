@@ -23,7 +23,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps {
   /**
    * Array of node objects. Each node must have a unique id (or other field
-   * named by `nodeIDAccessor`).
+   * named by `nodeIdAccessor`).
    *
    * **Required for static rendering**: when `edges` is provided, `nodes`
    * must be too — even if it could be inferred from edge endpoints, pass
@@ -58,8 +58,9 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    * @deprecated Use `nodeIdAccessor` (camelCase) instead. Removed in
    * 4.0. The other network HOCs (`SankeyDiagram`, `ChordDiagram`,
    * `TreeDiagram`, `OrbitDiagram`) all use the camelCase form;
-   * `nodeIDAccessor` was a casing inconsistency in `ForceDirectedGraph`
-   * that the SSR demo's verification matrix surfaced.
+   * `nodeIDAccessor` (uppercase ID) was a casing inconsistency in
+   * `ForceDirectedGraph` that the SSR demo's verification matrix
+   * surfaced.
    */
   nodeIDAccessor?: ChartAccessor<TNode, string>
   /** @default "source" */
@@ -111,7 +112,7 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
   forceStrength?: number
   /**
    * Render labels next to nodes. Uses `nodeLabel` accessor (defaulting to
-   * `nodeIDAccessor`).
+   * `nodeIdAccessor`).
    */
   showLabels?: boolean
   enableHover?: boolean
@@ -198,7 +199,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     edges,
     margin: userMargin,
     className,
-    // Accept both casings; the camelCase one wins. `nodeIDAccessor` is
+    // Accept both casings; the camelCase one wins. `nodeIdAccessor` is
     // the deprecated alias that shipped historically — kept for
     // backwards compat and removed in 4.0.
     nodeIdAccessor: nodeIdAccessorProp,
@@ -232,8 +233,8 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   } = props
 
   // Resolve the canonical name first, fall back to the legacy alias,
-  // default to "id". `nodeIDAccessor` (uppercase ID) is deprecated and
-  // removed in 4.0 — see the prop's JSDoc for context.
+  // default to "id". `nodeIDAccessor` (uppercase ID) is the deprecated
+  // alias, removed in 4.0 — see the prop's JSDoc for context.
   const nodeIDAccessor = nodeIdAccessorProp ?? nodeIDAccessorLegacy ?? "id"
 
   const { width, height, enableHover, showLegend, showLabels = false, title, description, summary, accessibleTable } = resolved
