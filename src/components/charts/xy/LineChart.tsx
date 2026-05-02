@@ -374,7 +374,6 @@ export const LineChart = forwardRef(
   // that data loaders commonly emit. Identity-preserving when nothing
   // is dropped so downstream memo deps still cache-hit.
   const safeData = useMemo(() => filterSparseArray(data), [data])
-  const isPushMode = data === undefined
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("LineChart", safeData, "xAccessor", xAccessor)

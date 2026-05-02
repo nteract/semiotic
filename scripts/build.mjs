@@ -231,9 +231,9 @@ async function createBundle(options = {}) {
 function buildDeclarations() {
   try {
     execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
-  } catch {
-    console.warn("⚠ Declaration generation failed (non-fatal — JS bundles are unaffected)")
-    return
+  } catch (err) {
+    console.error("❌ Declaration generation failed")
+    throw err
   }
   // Copy entry-point declarations from dist/components/ to dist/ so package.json
   // "types" fields resolve correctly (tsc emits into dist/components/ due to

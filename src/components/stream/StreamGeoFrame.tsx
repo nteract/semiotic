@@ -284,6 +284,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // (matches server output); pure CSR mounts skip it.
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
+    const safeAreas = useMemo(
+      () => Array.isArray(areas) ? filterSparseArray(areas) : areas,
+      [areas]
+    )
+    const safePoints = useMemo(() => filterSparseArray(points), [points])
+    const safeLines = useMemo(() => filterSparseArray(lines), [lines])
 
     // Resolve dragRotate — defaults to true for orthographic
     const effectiveDragRotate = useMemo(() => {
@@ -428,12 +434,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     useEffect(() => {
       const store = storeRef.current
       if (!store) return
-      if (areas) store.setAreas(areas)
-      if (points) store.setPoints(points)
-      if (lines) store.setLines(lines)
+      if (safeAreas) store.setAreas(safeAreas)
+      if (points) store.setPoints(safePoints)
+      if (lines) store.setLines(safeLines)
       dirtyRef.current = true
       scheduleRender()
-    }, [areas, points, lines, scheduleRender])
+    }, [safeAreas, points, safePoints, lines, safeLines, scheduleRender])
 
     // ── Push API ──────────────────────────────────────────────────────
 
@@ -1176,10 +1182,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // wasted SVG render. See StreamXYFrame for the full rationale.
     if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
       const store = storeRef.current
-      if (store && (areas || points || lines)) {
-        if (areas) store.setAreas(areas)
-        if (points) store.setPoints(points)
-        if (lines) store.setLines(lines)
+      if (store && (safeAreas || points || lines)) {
+        if (safeAreas) store.setAreas(safeAreas)
+        if (points) store.setPoints(safePoints)
+        if (lines) store.setLines(safeLines)
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 

@@ -352,6 +352,32 @@ export class PipelineStore {
     }
   }
 
+  private pushDatumYExtent(d: Datum): void {
+    if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+      this.yExtent.push(this.getHigh(d))
+      this.yExtent.push(this.getLow(d))
+      return
+    }
+    this.yExtent.push(this.getY(d))
+    if (this.getY0) this.yExtent.push(this.getY0(d))
+  }
+
+  private rebuildYExtent(): void {
+    this.yExtent.clear()
+    for (const d of this.buffer) {
+      this.pushDatumYExtent(d)
+    }
+  }
+
+  private rebuildExtents(): void {
+    this.xExtent.clear()
+    this.yExtent.clear()
+    for (const d of this.buffer) {
+      this.xExtent.push(this.getX(d))
+      this.pushDatumYExtent(d)
+    }
+  }
+
   // Last `inserts` array reference seen by a `bounded: true` ingest.
   // The render-time SSR branch in every Stream Frame calls
   // `store.ingest({ inserts: data, bounded: true })` from inside
@@ -486,6 +512,7 @@ export class PipelineStore {
             this.yExtent.evict(this.getLow(evicted))
           } else {
             this.yExtent.evict(this.getY(evicted))
+            if (this.getY0) this.yExtent.evict(this.getY0(evicted))
           }
         }
       }
@@ -519,16 +546,7 @@ export class PipelineStore {
       this.xExtent.recalculate(buffer, this.getX)
     }
     if (this.yExtent.dirty) {
-      if (config.chartType === "candlestick" && this.getHigh && this.getLow) {
-        // Candlestick y-extent spans high→low, not a single y accessor
-        this.yExtent.clear()
-        for (const d of buffer) {
-          this.yExtent.push(this.getHigh(d))
-          this.yExtent.push(this.getLow(d))
-        }
-      } else {
-        this.yExtent.recalculate(buffer, this.getY)
-      }
+      this.rebuildYExtent()
     }
 
     // Materialize buffer once for all downstream consumers (cached when unchanged)
@@ -1589,6 +1607,9 @@ export class PipelineStore {
     if ("normalize" in config || "extentPadding" in config
       || "xAccessor" in config || "yAccessor" in config
       || "timeAccessor" in config || "valueAccessor" in config
+      || "boundsAccessor" in config || "y0Accessor" in config
+      || "openAccessor" in config || "highAccessor" in config
+      || "lowAccessor" in config || "closeAccessor" in config
       || "groupAccessor" in config || "categoryAccessor" in config
       || "chartType" in config || "runtimeMode" in config) {
       this._stackExtentCache = null
@@ -1596,6 +1617,7 @@ export class PipelineStore {
 
     // Track whether any accessor actually changed (not just new function identity)
     let accessorChanged = false
+    let extentAccessorChanged = false
 
     Object.assign(this.config, config)
 
@@ -1626,6 +1648,7 @@ export class PipelineStore {
           this.getY = resolveAccessor(this.config.yAccessor, "y")
         }
         accessorChanged = true
+        extentAccessorChanged = true
       }
     }
     if ("groupAccessor" in config && !accessorsEquivalent(config.groupAccessor, prev.groupAccessor)) {
@@ -1651,6 +1674,14 @@ export class PipelineStore {
         ? resolveAccessor(this.config.y0Accessor, "y0")
         : undefined
       accessorChanged = true
+      extentAccessorChanged = true
+    }
+    if ("boundsAccessor" in config && !accessorsEquivalent(config.boundsAccessor, prev.boundsAccessor)) {
+      this.getBounds = this.config.boundsAccessor
+        ? resolveAccessor(this.config.boundsAccessor, "bounds")
+        : undefined
+      accessorChanged = true
+      extentAccessorChanged = true
     }
     if ("pointIdAccessor" in config && !accessorsEquivalent(config.pointIdAccessor, prev.pointIdAccessor)) {
       this.getPointId = this.config.pointIdAccessor != null ? resolveStringAccessor(this.config.pointIdAccessor) : undefined
@@ -1658,6 +1689,7 @@ export class PipelineStore {
     }
     // Recompute candlestick OHLC accessors + range mode when they change
     if (this.config.chartType === "candlestick" && (
+      modeChanged ||
       ("openAccessor" in config && !accessorsEquivalent(config.openAccessor, prev.openAccessor)) ||
       ("closeAccessor" in config && !accessorsEquivalent(config.closeAccessor, prev.closeAccessor)) ||
       ("highAccessor" in config && !accessorsEquivalent(config.highAccessor, prev.highAccessor)) ||
@@ -1671,6 +1703,7 @@ export class PipelineStore {
       this.getClose = hasClose ? resolveAccessor(this.config.closeAccessor, "close") : undefined
       this.config.candlestickRangeMode = !hasOpen && !hasClose
       accessorChanged = true
+      extentAccessorChanged = true
     }
 
     // Only mark full rebuild needed if non-accessor config actually changed or accessors changed.
@@ -1686,6 +1719,7 @@ export class PipelineStore {
       }
     }
     if (accessorChanged) {
+      if (extentAccessorChanged) this.rebuildExtents()
       this.needsFullRebuild = true
     }
   }

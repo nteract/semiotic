@@ -55,6 +55,7 @@ import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 
 // Canvas renderers
 import { getDevicePixelRatio } from "./canvasSetup"
@@ -362,6 +363,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // (matches server output); pure CSR mounts skip it.
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
+    const safeData = useMemo(() => filterSparseArray(data), [data])
 
     // Resolve new-style names with legacy fallback
     const oLabel = categoryLabel ?? oLabelLegacy
@@ -605,8 +607,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     useEffect(() => {
       if (!data) return
-      adapterRef.current?.setBoundedData(data)
-    }, [data])
+      adapterRef.current?.setBoundedData(safeData)
+    }, [data, safeData])
 
     // ── Hover handlers ───────────────────────────────────────────────────
 
@@ -958,7 +960,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
       const store = storeRef.current
       if (store && data) {
-        store.ingest({ inserts: data, bounded: true })
+        store.ingest({ inserts: safeData, bounded: true })
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
       }
 

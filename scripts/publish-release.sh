@@ -23,14 +23,17 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-git checkout main
-git pull
-npm install
-npm run build
-git tag -a $VERSION -m "release $VERSION"
-git push --set-upstream origin $CURRENT_BRANCH
-git push --tags
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  error "Releases must be run from main. Current branch: $CURRENT_BRANCH"
+  exit 1
+fi
 
+git pull --ff-only
+npm install
+npm run release:check
+git tag -a "$VERSION" -m "release $VERSION"
 npm publish
+git push origin "$CURRENT_BRANCH"
+git push origin "$VERSION"
 
 success "published $VERSION to npm"

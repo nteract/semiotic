@@ -82,6 +82,7 @@ export class DataSourceAdapter<T = Datum> {
     // identity-preserving in the clean case so the dedup cache
     // (`lastBoundedData === data`) on the next render still hits.
     data = filterSparseArray(data) as T[]
+    if (this.lastBoundedData === data) return
     this.lastBoundedData = data
 
     // Cancel any in-flight progressive ingestion

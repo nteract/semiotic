@@ -71,6 +71,30 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(changesets[0].inserts[99]).toEqual({ id: 99, value: 990 })
   })
 
+  it("same bounded data reference is a no-op", () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    const data = generateData(100)
+    adapter.setBoundedData(data)
+    adapter.setBoundedData(data)
+
+    expect(changesets).toHaveLength(1)
+  })
+
+  it("same large bounded data reference does not restart chunking", () => {
+    const changesets: Changeset<any>[] = []
+    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+
+    const data = generateData(12000)
+    adapter.setBoundedData(data)
+    adapter.setBoundedData(data)
+
+    expect(changesets).toHaveLength(1)
+    flushRAF()
+    expect(changesets).toHaveLength(2)
+  })
+
   // 2. Large bounded data chunks progressively
   it("large bounded dataset (>5000) chunks: first synchronous, rest on rAF", () => {
     const changesets: Changeset<any>[] = []
