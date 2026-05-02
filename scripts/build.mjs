@@ -336,8 +336,20 @@ async function build() {
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify, clientOnly: true },
-    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify, clientOnly: true },
+    // `semiotic-themes` and `semiotic-utils` are *mixed* bundles — most
+    // of their exports are pure (theme constants, formatters, color
+    // helpers, RingBuffer, IncrementalExtent, fromVegaLite) but they
+    // also re-export React-flavored APIs (ThemeProvider, useTheme,
+    // useReducedMotion, useHighContrast, MultiPointTooltip,
+    // exportChart). The `"use client"` directive lands on the bundle
+    // via the React-only re-exports' transitive imports, but
+    // unconditionally asserting clientOnly would make Server Component
+    // consumers think they can't import the pure exports — and they
+    // can't, because the directive is file-level. Tracked as a
+    // structural follow-up in OUTSTANDING_WORK; until then we don't
+    // gate either way.
+    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
+    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
     { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify }
   ]
 

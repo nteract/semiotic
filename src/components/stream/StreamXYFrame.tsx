@@ -492,8 +492,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     //      overwritten by the post-commit re-render anyway.
     //
     // `useHydrationLifecycle` further down handles the post-swap
-    // paint kick (cancelIntroAnimation if rehydrating, dirtyRef +
-    // scheduleRender always). See `HYDRATION.md` for the full recipe.
+    // paint kick from inside an isomorphic layout effect:
+    // cancelIntroAnimation if rehydrating, mark dirtyRef, then
+    // synchronously call `renderFnRef.current()` (no rAF — that
+    // would defer the paint to the next frame and produce a
+    // one-frame blank-canvas flash). See `HYDRATION.md` for the
+    // full recipe.
     const hydrated = useHydration()
     const wasHydratingFromSSR = useWasHydratingFromSSR()
 

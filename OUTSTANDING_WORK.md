@@ -16,6 +16,21 @@ This file is the active backlog only. Completed work belongs in `CHANGELOG.md`, 
 
 ## P0 — Architecture & API Coherence
 
+### Split `semiotic/utils` and `semiotic/themes` to keep pure exports server-safe
+
+Both bundles are *mixed*: ~80% of their exports are pure (theme constants, formatters, color helpers, validators, `fromVegaLite`, `RingBuffer`, `IncrementalExtent`) and ~20% are React-flavored (`ThemeProvider`, `useTheme`, `useReducedMotion`, `useHighContrast`, `MultiPointTooltip`, `exportChart`). The `"use client"` directive lands on the entire bundle via the React-only re-exports' transitive imports — and the directive is file-level, so importing a pure export from a Server Component is blocked too. Server Components can't `import { fromVegaLite } from "semiotic/utils"` to transform a Vega spec on the server, even though the function itself is pure.
+
+Build categorization is currently agnostic for both (no `clientOnly: true` flag), which is honest about the mixed nature but means the inverse-direction post-build assertion doesn't gate either bundle.
+
+Real fix: split the entry points. Move `ThemeProvider` / `useTheme` / `useReducedMotion` / `useHighContrast` / `MultiPointTooltip` / `exportChart` into a new `semiotic/react` (or absorb into the main `semiotic` bundle), leaving `semiotic/utils` and `semiotic/themes` as pure bundles. Drops the directive on both, makes the pure exports server-importable, restores the `clientOnly` gate on each.
+
+Open question: how much breakage is acceptable? Consumers importing `ThemeProvider` from `semiotic/utils` would need to update. Could add a deprecation period via re-exports from the existing entry points, then remove in 4.0.
+
+Next work:
+- Audit consumers (docs site, demo project, internal docs) for `import ... from "semiotic/utils"` and `import ... from "semiotic/themes"` to map the breakage surface.
+- Decide on new entry-point name (`semiotic/react` vs absorb-into-main vs add a `semiotic/hooks`).
+- Land the split with deprecated re-exports, codemod entry in `semiotic-codemod`, update docs.
+
 ### Codemod for `nodeIDAccessor` → `nodeIdAccessor` rename
 
 `ForceDirectedGraph` now accepts `nodeIdAccessor` as the canonical camelCase prop name, with `nodeIDAccessor` kept as a `@deprecated` alias and removed in 4.0. A jscodeshift transform should be added to the external [`semiotic-codemod` repo](https://github.com/emeeks/semiotic-codemod) that renames the prop on existing JSX usages.
