@@ -8,7 +8,12 @@ export default defineConfig({
     exclude: [
       'node_modules',
       'dist',
-      'integration-tests/**'
+      'integration-tests/**',
+      // The `codemod/` directory is a self-contained sibling package
+      // with its own jest test runner. Exclude its test files (and the
+      // nested node_modules vitest auto-walks into) so Semiotic's vitest
+      // doesn't try to run jscodeshift internals.
+      'codemod/**'
     ],
     coverage: {
       provider: 'v8',
