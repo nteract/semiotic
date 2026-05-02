@@ -7,7 +7,8 @@ import CodeBlock from "../components/CodeBlock"
 // Migrating from Semiotic 1.x / 2.x to Semiotic 3
 // ---------------------------------------------------------------------------
 
-const installSnippet = `npm install semiotic@latest react@18 react-dom@18
+const installSnippet = `# React 18.1+ or 19 — Semiotic v3's peer-dep range is ^18.1.0 || ^19.0.0
+npm install semiotic@latest react@^18.1.0 react-dom@^18.1.0
 npm uninstall @types/semiotic   # built-in types ship with v3`
 
 const aliasSnippet = `// Both work in v3 — XYFrame is aliased to StreamXYFrame
@@ -93,7 +94,7 @@ const facetDiff = `- import { FacetController } from "semiotic"
 + </LinkedCharts>`
 
 const baseMarkPropsDiff = `- <XYFrame baseMarkProps={{ transitionDuration: { fill: 500 } }} />
-+ <StreamXYFrame lineStyle={{ transition: "fill 500ms" }} />`
++ <LineChart animate={{ duration: 500 }} />`
 
 const networkStyleBefore = `<NetworkFrame
   nodes={nodes}
@@ -327,7 +328,7 @@ export default function MigrationPage() {
           <tr>
             <td style={tdStyle}>React</td>
             <td style={tdStyle}>16+ (v1) / 17+ (v2-rc)</td>
-            <td style={tdStyle}>18.1+ required</td>
+            <td style={tdStyle}>18.1+ or 19 (peer-dep range <code>^18.1.0 || ^19.0.0</code>)</td>
           </tr>
           <tr>
             <td style={tdStyle}>Frames</td>
@@ -385,16 +386,17 @@ export default function MigrationPage() {
       {/* ---------------------------------------------------------------- */}
       <h2 id="step-by-step">Step-by-step upgrade</h2>
 
-      <h3 id="step-1">1. Update React to 18.1+</h3>
+      <h3 id="step-1">1. Update React to 18.1+ or 19</h3>
 
       <p>
         Semiotic 3 uses concurrent rendering features (transitions,
         deferred values) and ships with <code>"use client"</code> directives
-        recognized by Next.js App Router and similar frameworks. React 16 and
-        17 are not supported.
+        recognized by Next.js App Router and similar frameworks. The peer-dep
+        range is <code>^18.1.0 || ^19.0.0</code>; React 16 and 17 are not
+        supported, and 18.0.x is below the floor.
       </p>
 
-      <CodeBlock code={`npm install react@18 react-dom@18`} language="bash" />
+      <CodeBlock code={`npm install react@^18.1.0 react-dom@^18.1.0`} language="bash" />
 
       <p>
         See the{" "}
@@ -634,12 +636,34 @@ npx prettier --write ./src`}
       <h3 id="base-mark-props"><code>baseMarkProps</code> (removed)</h3>
 
       <p>
-        Replaced by per-mark style props (<code>lineStyle</code>,{" "}
-        <code>pointStyle</code>, <code>pieceStyle</code>, etc.) and standard
-        CSS transitions on those styles.
+        Two replacements depending on what you used <code>baseMarkProps</code>{" "}
+        for:
       </p>
+      <ul>
+        <li>
+          For <strong>per-mark styling</strong> (fill, stroke, opacity), use
+          the per-mark style props — <code>lineStyle</code>,{" "}
+          <code>pointStyle</code>, <code>pieceStyle</code>, etc. Each accepts
+          either a static style object or a function returning one.
+        </li>
+        <li>
+          For <strong>transition / animation timing</strong>, use the{" "}
+          <code>animate</code> prop on the HOC. v3 marks render to canvas, so
+          CSS transitions on style objects do not animate mark updates —{" "}
+          <code>animate</code> wires the duration/easing into the canvas
+          transition pipeline, which is what produces the actual smooth
+          interpolation.
+        </li>
+      </ul>
 
       <CodeBlock code={baseMarkPropsDiff} language="diff" />
+
+      <p>
+        <code>animate</code> accepts <code>true</code>, a number of
+        milliseconds, or <code>{`{ duration, easing, intro }`}</code>. The{" "}
+        <Link to="/api/charts">chart API reference</Link> lists per-chart
+        defaults.
+      </p>
 
       <h3 id="process-viz"><code>ProcessViz</code>, <code>Mark</code>, <code>SpanOrDiv</code> (removed)</h3>
 

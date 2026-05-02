@@ -5,15 +5,16 @@ This guide covers upgrading from Semiotic v1.x or v2.x to v3.
 > **Reading on the docs site is easier:** the rendered version of this guide
 > at [semiotic.nteract.io/migration](https://semiotic.nteract.io/migration)
 > has anchored sections, side-by-side diffs, and links into the chart
-> catalog. This file is the source of truth and stays in sync with the
-> docs page, so feel free to read whichever you prefer.
+> catalog. The two are kept in sync by hand — if you spot a discrepancy
+> between this file and the docs page, please open an issue and treat
+> this Markdown as the canonical text until it's resolved.
 
 ## Quick Summary
 
 | Area | Impact |
 |---|---|
 | Core Frames | `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` replace the legacy SVG frames. Legacy names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) are aliased for backwards compatibility. |
-| React version | **React 18.1+** required (was 16+ in v1, 17+ in v2) |
+| React version | **React 18.1+ or 19** required (was 16+ in v1, 17+ in v2). Peer-dep range is `^18.1.0 \|\| ^19.0.0`. |
 | Rendering | All frames are **canvas-first** with SVG overlays for axes, labels, and annotations |
 | Streaming | Every frame supports a ref-based push API for high-frequency data |
 | Removed components | `RealtimeSankey`, `RealtimeNetworkFrame`, `ProcessViz`, `Mark`, `SpanOrDiv`, `FacetController` |
@@ -28,10 +29,10 @@ This guide covers upgrading from Semiotic v1.x or v2.x to v3.
 
 ## Step 1: Update React
 
-Semiotic v3 requires React 18.1 or later.
+Semiotic v3 supports React 18.1+ or React 19. The peer-dep range is `^18.1.0 || ^19.0.0`; 18.0.x is below the floor.
 
 ```bash
-npm install react@18 react-dom@18
+npm install react@^18.1.0 react-dom@^18.1.0
 ```
 
 If you are on React 16 or 17, you must upgrade first. See the
