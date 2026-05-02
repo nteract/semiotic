@@ -259,6 +259,22 @@ const examples = [
   }),
 
   TestCase({
+    title: "Stacked Area Chart — multi tooltip",
+    testId: "xy-stacked-area-multi-tooltip",
+    children: React.createElement(StackedAreaChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      areaBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
     title: "Connected Scatterplot",
     testId: "xy-connected-scatter",
     children: React.createElement(ConnectedScatterplot, {

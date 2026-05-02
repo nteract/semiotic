@@ -11,7 +11,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { type TooltipProp } from "../../Tooltip/Tooltip"
+import { MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
@@ -183,7 +183,13 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
   legendPosition?: LegendPosition
 
   /**
-   * Tooltip configuration
+   * Tooltip configuration.
+   *
+   * Pass `"multi"` to enable hover-anywhere mode: hovering at any x along the
+   * chart surfaces a single tooltip listing every stacked series at that x,
+   * with y values linearly interpolated along the rendered area path (so the
+   * `curve` setting is honored automatically). Without `"multi"`, the tooltip
+   * only appears within `hoverRadius` of an explicit data point.
    */
   tooltip?: TooltipProp
 
@@ -473,7 +479,9 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     showGrid,
     ...setup.legendBehaviorProps,
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
-    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...(tooltip === "multi"
+      ? { tooltipContent: MultiPointTooltip(), tooltipMode: "multi" as const }
+      : buildTooltipProps({ tooltip, defaultTooltipContent })),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,
       customHoverBehavior: setup.customHoverBehavior,
