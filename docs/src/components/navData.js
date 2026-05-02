@@ -8,6 +8,10 @@ const navData = [
     path: "/getting-started"
   },
   {
+    title: "Migrating to v3",
+    path: "/migration"
+  },
+  {
     title: "Charts",
     path: "/charts",
     tier: "charts",

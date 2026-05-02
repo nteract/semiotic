@@ -2,6 +2,12 @@
 
 This guide covers upgrading from Semiotic v1.x or v2.x to v3.
 
+> **Reading on the docs site is easier:** the rendered version of this guide
+> at [semiotic.nteract.io/migration](https://semiotic.nteract.io/migration)
+> has anchored sections, side-by-side diffs, and links into the chart
+> catalog. This file is the source of truth and stays in sync with the
+> docs page, so feel free to read whichever you prefer.
+
 ## Quick Summary
 
 | Area | Impact |

@@ -14,6 +14,7 @@ import ApiReferencePage from "./pages/api/ApiReferencePage"
 
 // New chart pages
 import GettingStartedPage from "./pages/GettingStartedPage"
+import MigrationPage from "./pages/MigrationPage"
 import LineChartPage from "./pages/charts/LineChartPage"
 import AreaChartPage from "./pages/charts/AreaChartPage"
 import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
@@ -409,6 +410,7 @@ export default function DocsApp() {
 
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />
+            <Route path="migration" element={<MigrationPage />} />
 
             {/* 404 catch-all */}
             <Route path="*" element={<NotFoundPage />} />
