@@ -120,4 +120,21 @@ describe("StreamXYFrame hydration parity", () => {
     const html = renderToString(<StreamXYFrame {...baseProps} />)
     expect(html).not.toContain("<canvas")
   })
+
+  // ── Coverage note ──────────────────────────────────────────────────
+  //
+  // jsdom's canvas mock can't faithfully test "did the canvas actually
+  // paint?" — its 2D context stubs out drawing methods, and rAF inside
+  // `hydrateRoot`'s act() doesn't reliably flush. The pixel-level
+  // "canvas paints correctly after hydration" gate lives in Playwright:
+  // `integration-tests/ssr-parity.spec.ts` baselines the post-mount
+  // canvas state for a representative chart matrix. If the SVG →
+  // canvas paint kick regresses, the Playwright CSR baselines diff
+  // (the canvas mounts blank instead of showing the chart).
+  //
+  // The four tests above cover what jsdom can verify reliably:
+  // (1) server SVG output is non-empty, (2) hydration produces no
+  // React mismatch warnings, (3) the wrapper upgrades from role="img"
+  // to role="group", and (4) renderToString's SSR branch doesn't leak
+  // canvas elements into the server output.
 })

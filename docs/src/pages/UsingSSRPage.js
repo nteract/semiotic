@@ -293,6 +293,19 @@ export default async function DashboardPage() {
           explicit theme-prop values when you need tighter SSR/client
           color parity.
         </li>
+        <li>
+          <strong>Responsive charts re-layout once on hydration.</strong>{" "}
+          The server doesn't know the consumer's container dimensions,
+          so charts with <code>responsiveWidth</code> or{" "}
+          <code>responsiveHeight</code> render server-side at their{" "}
+          <code>width</code> / <code>height</code> defaults. On
+          hydration, the <code>ResizeObserver</code> attaches and
+          measures the actual container — if it differs from the
+          default, the chart re-lays out once. Pin{" "}
+          <code>width</code> / <code>height</code> explicitly when
+          you can predict the layout, or accept the single-frame
+          re-layout as the cost of doing responsive sizing under SSR.
+        </li>
       </ul>
 
       <p>

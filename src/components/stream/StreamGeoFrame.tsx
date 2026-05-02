@@ -29,7 +29,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -937,20 +937,16 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Lifecycle ─────────────────────────────────────────────────────
 
-    useEffect(() => {
-      // `hydrated` in deps so the SVG → canvas swap kicks an initial
-      // canvas paint. See StreamXYFrame for the rationale.
-      if (hydrated && wasHydratingFromSSR) {
-        storeRef.current?.cancelIntroAnimation?.()
-      }
-      dirtyRef.current = true
-      scheduleRender()
-      return () => {
-        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-        // is handled by useFrame.
-        tileCacheRef.current?.clear()
-      }
-    }, [hydrated, wasHydratingFromSSR, scheduleRender])
+    useHydrationLifecycle({
+      hydrated,
+      wasHydratingFromSSR,
+      storeRef,
+      dirtyRef,
+      scheduleRender,
+      // Geo-specific: clear the tile cache on unmount so background
+      // map tiles don't leak across remounts.
+      cleanup: () => tileCacheRef.current?.clear(),
+    })
 
     useEffect(() => {
       dirtyRef.current = true

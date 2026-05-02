@@ -49,7 +49,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -910,24 +910,14 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // ── Lifecycle ────────────────────────────────────────────────────────
 
-    useEffect(() => {
-      // `hydrated` in deps so the SVG → canvas swap kicks an initial
-      // canvas paint. The data-change effect doesn't re-run because
-      // `data` reference is unchanged across the swap. See
-      // StreamXYFrame for the full rationale.
-      if (hydrated && wasHydratingFromSSR) {
-        storeRef.current?.cancelIntroAnimation()
-      }
-      dirtyRef.current = true
-      scheduleRender()
-      return () => {
-        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-        // is handled by useFrame.
-        // Cancel any in-flight progressive chunking / pending push microtask
-        // so `store.ingest` can't fire after the component is gone.
-        adapterRef.current?.clear()
-      }
-    }, [hydrated, wasHydratingFromSSR, scheduleRender])
+    useHydrationLifecycle({
+      hydrated,
+      wasHydratingFromSSR,
+      storeRef,
+      dirtyRef,
+      scheduleRender,
+      cleanup: () => adapterRef.current?.clear(),
+    })
 
     useEffect(() => {
       dirtyRef.current = true

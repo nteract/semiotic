@@ -36,7 +36,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 
 // Canvas setup
@@ -1236,19 +1236,15 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Lifecycle ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    // `hydrated` in deps so the SVG → canvas swap kicks an initial
-    // canvas paint. See StreamXYFrame for the rationale.
-    if (hydrated && wasHydratingFromSSR) {
-      storeRef.current?.cancelIntroAnimation()
-    }
-    dirtyRef.current = true
-    scheduleRender()
-    return () => {
-      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-      // is handled by useFrame.
-    }
-  }, [hydrated, wasHydratingFromSSR, scheduleRender])
+  useHydrationLifecycle({
+    hydrated,
+    wasHydratingFromSSR,
+    storeRef,
+    dirtyRef,
+    scheduleRender,
+    // No frame-specific cleanup — useFrame handles the rAF/pointermove
+    // refs on unmount.
+  })
 
   useEffect(() => {
     dirtyRef.current = true

@@ -26,6 +26,7 @@
  */
 "use client"
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react"
+import type { MutableRefObject, RefObject } from "react"
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect
@@ -74,4 +75,70 @@ export function useWasHydratingFromSSR(): boolean {
   // if React called `getServerSnapshot`, i.e. we were hydrating SSR.
   const ref = useRef(isHydrating)
   return ref.current
+}
+
+/**
+ * Shared post-hydration lifecycle for every Stream Frame.
+ *
+ * Three things happen on every commit-after-hydration:
+ *
+ * 1. If we just rehydrated from SSR, cancel the intro animation that
+ *    the SVG-branch's `computeScene` installed (the server already
+ *    painted the chart in its final state — re-animating from blank
+ *    on the canvas takeover is a visual regression).
+ * 2. Mark the scene dirty so the canvas-paint pipeline rebuilds.
+ * 3. Schedule a paint via `scheduleRender()` so the canvas actually
+ *    draws the final scene. Without this, the canvas would mount
+ *    blank because the data-change effect doesn't re-fire across the
+ *    SVG → canvas swap (the `data` prop reference is unchanged).
+ *
+ * This hook codifies that pattern in one place. Each frame supplies
+ * its own `cleanup` for unmount work that's frame-specific (XY/Ordinal
+ * clear the streaming adapter; Geo clears its tile cache; Network has
+ * no extra cleanup). Re-running the effect on `hydrated` /
+ * `wasHydratingFromSSR` change ensures the swap fires correctly even
+ * if a future architectural change introduces a third state.
+ */
+export interface HydrationLifecycleOptions {
+  hydrated: boolean
+  wasHydratingFromSSR: boolean
+  /**
+   * Ref to the frame's pipeline store. The store optionally implements
+   * `cancelIntroAnimation()`; the hook calls it when the SVG → canvas
+   * swap fires after SSR rehydration. (Currently every shipped store
+   * implements the method, but the optional shape lets a custom store
+   * opt out.)
+   */
+  storeRef: RefObject<{ cancelIntroAnimation?: () => void } | null>
+  /**
+   * Mutable dirty flag the renderer reads on its next paint. The hook
+   * sets it to true on every commit so the post-hydration paint
+   * rebuilds the scene from scratch.
+   */
+  dirtyRef: MutableRefObject<boolean>
+  /** rAF-coalesced renderer-render kicker from `useFrame`. */
+  scheduleRender: () => void
+  /**
+   * Optional unmount cleanup. Frame-specific work the hook can't
+   * generalize — e.g. clearing the streaming `DataSourceAdapter`
+   * (XY/Ordinal) or the geo tile cache. Returning a function from a
+   * `useEffect` is the React idiom for this; we mirror it here.
+   */
+  cleanup?: () => void
+}
+
+export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
+  const { hydrated, wasHydratingFromSSR, storeRef, dirtyRef, scheduleRender, cleanup } = opts
+  useEffect(() => {
+    if (hydrated && wasHydratingFromSSR) {
+      storeRef.current?.cancelIntroAnimation?.()
+    }
+    dirtyRef.current = true
+    scheduleRender()
+    return cleanup
+    // `storeRef` / `dirtyRef` are stable refs — including them in deps
+    // would just trip eslint's exhaustive-deps. The semantically
+    // load-bearing deps are the two boolean signals + scheduleRender.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, wasHydratingFromSSR, scheduleRender])
 }

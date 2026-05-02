@@ -31,7 +31,7 @@ import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, nav
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -1222,32 +1222,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Lifecycle ────────────────────────────────────────────────────────
 
-    useEffect(() => {
-      // `hydrated` in deps so that when the SVG → canvas swap happens,
-      // we re-fire and trigger an initial canvas paint. Without this,
-      // the canvas appears in the DOM but stays blank until the next
-      // data change or interaction (the data-change effect doesn't
-      // re-run because `data` reference is unchanged across the swap).
-      // `dirtyRef` flag forces a scene-rebuild path inside the renderer
-      // since the SVG branch already computed the scene synchronously.
-      if (hydrated && wasHydratingFromSSR) {
-        // SSR-hydration handoff: server already painted the final
-        // state, so wipe the intro animation that the SVG branch's
-        // computeScene installed. Subsequent data-change transitions
-        // still animate normally because they re-populate
-        // `prevPositionMap` from the snapshot taken before the change.
-        storeRef.current?.cancelIntroAnimation()
-      }
-      dirtyRef.current = true
-      scheduleRender()
-      return () => {
-        // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-        // is handled by useFrame.
-        // Cancel any in-flight progressive chunking / pending push microtask
-        // so `store.ingest` can't fire after the component is gone.
-        adapterRef.current?.clear()
-      }
-    }, [hydrated, wasHydratingFromSSR, scheduleRender])
+    useHydrationLifecycle({
+      hydrated,
+      wasHydratingFromSSR,
+      storeRef,
+      dirtyRef,
+      scheduleRender,
+      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
+      // is handled by useFrame. We just clear the adapter here so any
+      // in-flight progressive chunking / pending push microtask can't
+      // fire `store.ingest` after the component is gone.
+      cleanup: () => adapterRef.current?.clear(),
+    })
 
     // Re-render when visual props change
     useEffect(() => {

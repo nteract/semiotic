@@ -11,12 +11,48 @@ const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
 
+/**
+ * Match a leading `"use client"` directive, accepting any leading
+ * whitespace + line comments + block comments before it. Matches how
+ * Next.js / React's parsers interpret the directive: it has to be the
+ * first *statement* in the module, but JSDoc and other leading
+ * comments are fine.
+ *
+ * The earlier `code.startsWith('"use client"')` check missed every
+ * source file that opens with a JSDoc block (StreamOrdinalFrame.tsx,
+ * useHydration.ts, useFrame.ts, etc.). Bundles still ended up
+ * directive-tagged in practice because most chunks pulled in *some*
+ * other module that opened with the bare directive — but a future
+ * change isolating one of those JSDoc-headered files into its own
+ * chunk would silently lose the directive on its bundle.
+ */
+function hasLeadingUseClientDirective(code) {
+  let i = 0
+  while (i < code.length) {
+    const ch = code[i]
+    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
+      i++
+    } else if (ch === "/" && code[i + 1] === "/") {
+      // Line comment — skip to end of line.
+      while (i < code.length && code[i] !== "\n") i++
+    } else if (ch === "/" && code[i + 1] === "*") {
+      // Block comment — skip past the closing */.
+      i += 2
+      while (i < code.length - 1 && !(code[i] === "*" && code[i + 1] === "/")) i++
+      i += 2
+    } else {
+      break
+    }
+  }
+  return code.startsWith('"use client"', i) || code.startsWith("'use client'", i)
+}
+
 function useClientPlugin({ serverOnly = false } = {}) {
   const clientModules = new Set()
   return {
     name: "use-client",
     transform(code, id) {
-      if (code.startsWith('"use client"') || code.startsWith("'use client'")) {
+      if (hasLeadingUseClientDirective(code)) {
         clientModules.add(id)
       }
       return null
@@ -296,23 +332,29 @@ async function build() {
   const minify = isProduction
   const analyze = isAnalyze
 
+  // Three categories drive the post-build directive-placement gate:
+  //   serverOnly: true   — must NOT carry "use client" (semiotic/server)
+  //   clientOnly: true   — must carry "use client" (Stream-Frame-based
+  //                        chart bundles + theming + AI / utils that
+  //                        wrap React hooks or providers)
+  //   neither            — agnostic pure-function bundle (data, recipes)
   const bundles = [
-    { input: "src/components/semiotic.ts", name: "semiotic", analyze, minify },
-    { input: "src/components/semiotic-xy.ts", name: "xy", analyze: false, minify },
-    { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify },
-    { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify },
-    { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
+    { input: "src/components/semiotic.ts", name: "semiotic", analyze, minify, clientOnly: true },
+    { input: "src/components/semiotic-xy.ts", name: "xy", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify, clientOnly: true },
     // `serverOnly: true` keeps the `"use client"` directive off the
     // server bundle. Without this, transitive imports of client-tagged
     // Stream Frame source files leak the directive into a Node-only
     // entry point, which Next.js then refuses to call from a Server
     // Component (`renderChart` throws "X is on the client").
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify, serverOnly: true },
-    { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
+    { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
-    { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify },
-    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
-    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
+    { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify }
   ]
 
@@ -327,21 +369,36 @@ async function build() {
 }
 
 /**
- * Post-build sanity check: every bundle marked `serverOnly: true` must
- * NOT carry the `"use client"` directive. Without this gate, a future
- * change that re-introduces a transitive client-tagged import into the
- * server bundle would silently flip its top-line back to
- * `"use client";` — and Next.js would refuse to call any of its
- * exports from a Server Component at runtime, with the runtime error
- * "Attempted to call X() from the server but X is on the client."
+ * Post-build sanity check on `"use client"` directive placement.
  *
- * Reading the file synchronously is cheap (we already wrote them) and
+ * Three bundle categories:
+ *
+ * - **`serverOnly: true`** — MUST NOT carry the directive. A future
+ *   change that pulls a client-tagged module into the server bundle
+ *   would silently flip its top-line back to `"use client";` — Next.js
+ *   would then refuse to call any of its exports from a Server
+ *   Component, throwing "Attempted to call X() from the server but X
+ *   is on the client" at runtime.
+ *
+ * - **`clientOnly: true`** — MUST carry the directive. Catches the
+ *   inverse regression: if `useClientPlugin`'s detection silently
+ *   dropped the directive from a chart-family bundle (e.g. the
+ *   leading-directive check missing files that open with a JSDoc
+ *   block), every Next.js Server Component importing from that
+ *   sub-path would crash with browser-API errors at runtime ("window
+ *   is not defined", etc.).
+ *
+ * - **Neither** — agnostic. Pure-function bundles (`semiotic/data`,
+ *   `semiotic/recipes`) contain no React component code, so they
+ *   neither need nor harm from the directive. Skip them.
+ *
+ * Reading the file synchronously is cheap (we just wrote them) and
  * lets the build fail fast with a clear diagnostic.
  */
 function assertDirectivePlacement(bundles) {
   const failures = []
   for (const b of bundles) {
-    if (!b.serverOnly) continue
+    if (!b.serverOnly && !b.clientOnly) continue // agnostic bundle, skip
     // Both ESM and CJS variants must be checked — a missed directive
     // in either would still break the consumer that picks that
     // condition from the exports map.
@@ -349,19 +406,22 @@ function assertDirectivePlacement(bundles) {
       const path = `dist/${b.name}${suffix}`
       if (!existsSync(path)) continue
       const head = readFileSync(path, "utf8").slice(0, 64)
-      if (/^["']use client["'];/.test(head)) {
-        failures.push(path)
+      const hasDirective = /^["']use client["'];/.test(head)
+      if (b.serverOnly && hasDirective) {
+        failures.push({ path, problem: 'server-only bundle carries "use client"' })
+      } else if (b.clientOnly && !hasDirective) {
+        failures.push({ path, problem: 'client-only bundle missing "use client" directive' })
       }
     }
   }
   if (failures.length === 0) {
-    console.log("\u2705 directive placement verified (server bundles are server-only)")
+    console.log("\u2705 directive placement verified (server bundles clean, client bundles tagged)")
     return
   }
-  console.error("\u274c server-only bundles must not carry \"use client\":")
-  for (const path of failures) console.error(`   - ${path}`)
-  console.error("\nThis usually means a transitive import pulled a client-tagged source file into the bundle.")
-  console.error("Audit the entry point's import graph and remove the client-only dependency.")
+  console.error("\u274c directive placement check failed:")
+  for (const { path, problem } of failures) console.error(`   - ${path}: ${problem}`)
+  console.error("\nFor server-only bundle failures: a transitive import pulled a client-tagged source file in. Audit the entry point's import graph.")
+  console.error("For client-only bundle failures: useClientPlugin missed flagging a module — likely the leading-directive detection. Inspect hasLeadingUseClientDirective().")
   process.exit(1)
 }
 

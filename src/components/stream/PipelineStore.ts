@@ -352,11 +352,36 @@ export class PipelineStore {
     }
   }
 
+  // Last `inserts` array reference seen by a `bounded: true` ingest.
+  // The render-time SSR branch in every Stream Frame calls
+  // `store.ingest({ inserts: data, bounded: true })` from inside
+  // render — necessary because there's no useEffect path on the
+  // server pass, and the in-frame SVG branch needs the scene populated
+  // before it can serialize. React StrictMode renders components
+  // twice, so without an idempotency check we'd ingest the same array
+  // twice per dev-mode mount. The fast-path comparison below makes
+  // the second call a true no-op when the data reference is unchanged.
+  private _lastBoundedInsertsRef: unknown[] | null = null
+
   /**
    * Process a changeset from DataSourceAdapter.
    * Returns true if the scene needs re-rendering.
+   *
+   * Bounded mode is idempotent on identical `inserts` references —
+   * passing the same array a second time is a no-op (returns `false`,
+   * indicating no re-render needed). This makes render-time calls
+   * from the SSR branch safe under React StrictMode / concurrent
+   * rendering, where render runs twice. Non-bounded (streaming)
+   * ingests have no such guard because each new buffer entry is
+   * meaningful — streaming consumers don't pass the same array twice.
    */
   ingest(changeset: Changeset): boolean {
+    if (changeset.bounded && this._lastBoundedInsertsRef === changeset.inserts) {
+      // Same data reference — already fully ingested in a prior call.
+      // Skip the buffer-clear + re-extent work; the existing scene
+      // state is exactly what this call would produce.
+      return false
+    }
     const now = typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
     this.needsFullRebuild = true
@@ -364,6 +389,7 @@ export class PipelineStore {
     this._ingestVersion++
 
     if (changeset.bounded) {
+      this._lastBoundedInsertsRef = changeset.inserts
       // Full replacement for bounded data
       this.buffer.clear()
       this.xExtent.clear()
@@ -1493,6 +1519,10 @@ export class PipelineStore {
     this.exitNodes = []
     this.activeTransition = null
     this.lastIngestTime = 0
+    // Forget the last bounded ingest reference so a subsequent
+    // ingest with the same array re-runs the buffer fill (the
+    // buffer was just cleared above).
+    this._lastBoundedInsertsRef = null
 
     this.needsFullRebuild = true
     this._bufferDirty = true
