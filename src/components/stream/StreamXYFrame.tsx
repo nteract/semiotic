@@ -673,16 +673,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       customLayout, layoutConfig, margin
     ])
 
-    // Stabilize the config reference so inline-object props (e.g.
-    // `pulse={{ duration: 600, ... }}`, `staleness={{ ... }}`,
-    // `frameProps={{ pulse: ..., staleness: ... }}`) don't shed a fresh
-    // identity every parent render. Without this the `updateConfig`
-    // effect below re-fires every render → dirty + scheduleRender →
-    // rAF render loop fires `setAnnotationFrame((f) => f + 1)` → React
-    // re-renders → pipelineConfig recomputes (inline ref again) → the
-    // cycle trips React 19's "Maximum update depth exceeded" guard
-    // after ~50 frames. See `useStableShallow.ts` for why a one-level
-    // shallow compare is enough for the typical config shape.
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity on every parent render. Without this
+    // the `updateConfig` effect would depend on raw `pipelineConfig`
+    // and re-fire every render → dirty + scheduleRender → rAF render
+    // loop fires `setAnnotationFrame((f) => f + 1)` → React re-renders
+    // → pipelineConfig recomputes (inline ref again) → the cycle trips
+    // React 19's "Maximum update depth exceeded" guard. See
+    // `useStableShallow.ts` for why a one-level shallow compare is
+    // enough for the typical config shape (primitives, sub-objects of
+    // primitives, primitive arrays).
     const stablePipelineConfig = useStableShallow(pipelineConfig)
 
     const storeRef = useRef<PipelineStore | null>(null)

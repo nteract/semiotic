@@ -36,6 +36,7 @@ export function useStableShallow<T>(value: T): T {
 
 function shallowEqualTwoLevel(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true
+  if (Array.isArray(a) && Array.isArray(b)) return shallowEqualArray(a, b)
   if (!isPlainObject(a) || !isPlainObject(b)) return false
   const ak = Object.keys(a)
   const bk = Object.keys(b)
@@ -48,6 +49,10 @@ function shallowEqualTwoLevel(a: unknown, b: unknown): boolean {
     const va = (a as Record<string, unknown>)[k]
     const vb = (b as Record<string, unknown>)[k]
     if (Object.is(va, vb)) continue
+    if (Array.isArray(va) && Array.isArray(vb)) {
+      if (!shallowEqualArray(va, vb)) return false
+      continue
+    }
     if (!isPlainObject(va) || !isPlainObject(vb)) return false
     if (!shallowEqualKeys(va, vb)) return false
   }
@@ -64,6 +69,23 @@ function shallowEqualKeys(
   for (const k of ak) {
     if (!Object.prototype.hasOwnProperty.call(b, k)) return false
     if (!Object.is(a[k], b[k])) return false
+  }
+  return true
+}
+
+/**
+ * Per-index `Object.is` for arrays. Inline array literals (xExtent,
+ * yExtent, sizeRange, colorScheme, areaGroups, etc.) shed identity
+ * every render the same way inline objects do, and the pipelineConfig
+ * memo deps include them, so without array-aware comparison the
+ * stabilizer would still let the loop reform on those props. We don't
+ * recurse into array elements — the typical shape is arrays of
+ * primitives (numbers, strings) where `Object.is` is the right test.
+ */
+function shallowEqualArray(a: unknown[], b: unknown[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (!Object.is(a[i], b[i])) return false
   }
   return true
 }

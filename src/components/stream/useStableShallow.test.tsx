@@ -94,6 +94,54 @@ describe("useStableShallow", () => {
     expect(result.current).toBe(b)
   })
 
+  it("stabilizes equal top-level arrays (extent / colorScheme shape)", () => {
+    // Stream pipeline configs commonly carry primitive arrays — xExtent,
+    // yExtent, sizeRange, colorScheme, etc. — all of which a consumer
+    // is just as likely to inline as object props.
+    const initial = [0, 100] as [number, number]
+    const { result, rerender } = renderHook(
+      ({ value }) => useStableShallow(value),
+      { initialProps: { value: initial } },
+    )
+    expect(result.current).toBe(initial)
+    rerender({ value: [0, 100] as [number, number] })
+    expect(result.current).toBe(initial)
+  })
+
+  it("returns the new array reference when an element changes", () => {
+    const a = [0, 100] as [number, number]
+    const b = [0, 200] as [number, number]
+    const { result, rerender } = renderHook(
+      ({ value }) => useStableShallow(value),
+      { initialProps: { value: a } },
+    )
+    rerender({ value: b })
+    expect(result.current).toBe(b)
+  })
+
+  it("stabilizes nested arrays inside config objects", () => {
+    // `pipelineConfig.colorScheme = ["#a", "#b"]` is the realistic case.
+    const a = { colorScheme: ["#abc", "#def"], n: 1 }
+    const b = { colorScheme: ["#abc", "#def"], n: 1 }
+    const { result, rerender } = renderHook(
+      ({ value }) => useStableShallow(value),
+      { initialProps: { value: a } },
+    )
+    rerender({ value: b })
+    expect(result.current).toBe(a)
+  })
+
+  it("does not falsely stabilize when nested arrays differ in length", () => {
+    const a = { colorScheme: ["#abc", "#def"] }
+    const b = { colorScheme: ["#abc", "#def", "#fed"] }
+    const { result, rerender } = renderHook(
+      ({ value }) => useStableShallow(value),
+      { initialProps: { value: a } },
+    )
+    rerender({ value: b })
+    expect(result.current).toBe(b)
+  })
+
   it("does not falsely stabilize when nested key sets differ", () => {
     const a = { pulse: { duration: 600 } }
     const b = { pulse: { color: "#abc" } } // single key, but different name

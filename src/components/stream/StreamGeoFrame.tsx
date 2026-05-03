@@ -331,9 +331,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, currentTheme
     ])
 
-    // Stabilize the config reference so inline-object props don't shed
-    // a fresh identity every parent render. See StreamNetworkFrame for
-    // the full incident write-up; the same loop applies here.
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity every parent render. See
+    // StreamNetworkFrame for the full incident write-up; the same loop
+    // applies here.
     const stablePipelineConfig = useStableShallow(pipelineConfig)
 
     // ── Store ─────────────────────────────────────────────────────────

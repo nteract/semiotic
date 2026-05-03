@@ -474,9 +474,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       customLayout, layoutConfig, margin,
     ])
 
-    // Stabilize the config reference so inline-object props don't shed
-    // a fresh identity every parent render. See StreamNetworkFrame for
-    // the full incident write-up; the same loop applies here.
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity every parent render. See
+    // StreamNetworkFrame for the full incident write-up; the same loop
+    // applies here.
     const stablePipelineConfig = useStableShallow(pipelineConfig)
 
     const storeRef = useRef<OrdinalPipelineStore | null>(null)

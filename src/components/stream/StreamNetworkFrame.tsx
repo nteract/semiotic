@@ -448,18 +448,18 @@ const StreamNetworkFrame = forwardRef<
     ]
   )
 
-  // Stabilize the config reference so inline-object props (e.g.
-  // `pulse={{ duration: 600, ... }}`, `staleness={{ ... }}`,
+  // Stabilize the config reference so inline-object / inline-array
+  // props (e.g. `pulse={{ duration: 600, ... }}`, `staleness={{ ... }}`,
   // `frameProps={{ pulse: ..., staleness: ... }}`) don't shed a fresh
-  // identity on every parent render. Without this, the effect at line
-  // ~590 — `useEffect(() => updateConfig(pipelineConfig), [pipelineConfig])` —
-  // re-fires every render, dirties the scene, and the rAF render loop's
-  // `setAnnotationFrame((f) => f + 1)` triggers another re-render with
-  // yet another fresh inline ref, which React 19 catches as
-  // "Maximum update depth exceeded" after ~50 cycles. The hook returns
-  // the previous reference whenever the value is shallow-equal at one
-  // level deep, which covers the typical config shape (primitives plus
-  // a few sub-objects of primitives).
+  // identity on every parent render. Without this stabilization, the
+  // `updateConfig` effect would depend on raw `pipelineConfig` and
+  // re-fire on every render, dirtying the scene; the rAF render loop's
+  // `setAnnotationFrame((f) => f + 1)` would then trigger another
+  // re-render with yet another fresh inline ref, which React 19
+  // catches as "Maximum update depth exceeded" after ~50 cycles. The
+  // hook returns the previous reference whenever the value is
+  // shallow-equal at one level deep — which covers the typical config
+  // shape (primitives, sub-objects of primitives, primitive arrays).
   const stablePipelineConfig = useStableShallow(pipelineConfig)
 
   // ── Refs ─────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { parseCanvasColor } from "./colorUtils"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
@@ -120,7 +121,7 @@ export const barFunnelLabelRenderer = (
   // mode where `--semiotic-text-secondary` (a mid-grey) collapsed into
   // the surface color.
   const bodyTextColor = resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
-  const isDarkMode = isLightColor(bodyTextColor)
+  const isDarkMode = isLightColor(ctx, bodyTextColor)
   const labelBackground = isDarkMode ? "#1f2937" : "#ffffff"
   const labelBorder = isDarkMode ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)"
   const primaryTextColor = isDarkMode ? "#f3f4f6" : "#1a1a1a"
@@ -225,45 +226,22 @@ function roundedRect(
 }
 
 /**
- * Approximate WCAG-style relative luminance check. Parses `#rgb`,
- * `#rrggbb`, `rgb(...)`, and `rgba(...)` — the forms `resolveCSSColor`
- * is going to produce after going through `getComputedStyle` (which
- * normalizes everything to `rgb(...)` / `rgba(...)`). Anything we can't
- * parse defaults to "not light" so the label conservatively stays in
- * light-mode shape, which is the historic visual contract.
+ * Approximate WCAG-style relative luminance check. Routes through
+ * `parseCanvasColor`, which round-trips the input through the canvas's
+ * own `fillStyle` to normalize any valid CSS color — named, hex, hsl,
+ * legacy/modern rgb(), space-separated rgb syntax, etc. — into an
+ * `[r, g, b]` triple. That matters because `resolveCSSColor` returns
+ * the raw CSS variable token, and `getComputedStyle` is allowed to
+ * yield any of those forms; a hand-rolled hex/rgb regex would silently
+ * mis-classify hsl tokens as "not light" and leave dark-mode labels in
+ * light-mode shape.
  */
-function isLightColor(color: string): boolean {
-  const rgb = parseRGB(color)
-  if (!rgb) return false
+function isLightColor(ctx: CanvasRenderingContext2D, color: string): boolean {
+  const [r, g, b] = parseCanvasColor(ctx, color)
   // Rec. 709 luma — close enough for the dark-vs-light split, and
   // cheaper than full WCAG sRGB linearization.
-  const luma = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255
+  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
   return luma > 0.6
-}
-
-function parseRGB(color: string): [number, number, number] | null {
-  const trimmed = color.trim()
-  if (trimmed.startsWith("#")) {
-    const hex = trimmed.slice(1)
-    if (hex.length === 3) {
-      return [
-        parseInt(hex[0] + hex[0], 16),
-        parseInt(hex[1] + hex[1], 16),
-        parseInt(hex[2] + hex[2], 16),
-      ]
-    }
-    if (hex.length === 6) {
-      return [
-        parseInt(hex.slice(0, 2), 16),
-        parseInt(hex.slice(2, 4), 16),
-        parseInt(hex.slice(4, 6), 16),
-      ]
-    }
-    return null
-  }
-  const m = /^rgba?\(\s*([\d.]+)\s*[,\s]\s*([\d.]+)\s*[,\s]\s*([\d.]+)/.exec(trimmed)
-  if (!m) return null
-  return [Number(m[1]), Number(m[2]), Number(m[3])]
 }
 
 function formatNumber(n: number): string {
