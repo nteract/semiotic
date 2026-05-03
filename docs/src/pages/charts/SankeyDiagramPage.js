@@ -215,6 +215,17 @@ function StreamingSankey() {
   )
 }`
 
+// Hoisted out of the component so the `frameProps` reference passed to
+// SankeyDiagram is stable. Inline `frameProps={{ pulse: {...}, staleness: {...} }}`
+// gives `pulse` and `staleness` new identities on every parent render, which
+// invalidates `StreamNetworkFrame.pipelineConfig` and pushes the rAF render
+// loop into a setState cycle that React 19 catches as a max-update-depth
+// violation.
+const STREAMING_SANKEY_FRAME_PROPS = {
+  pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
+  staleness: { threshold: 5000, dimOpacity: 0.4, showBadge: true },
+}
+
 function StreamingSankeyDemo({ width }) {
   const chartRef = useRef()
   const [pushed, setPushed] = useState(false)
@@ -248,10 +259,7 @@ function StreamingSankeyDemo({ width }) {
         showParticles
         edgeOpacity={0.4}
         colorScheme={pastelColors}
-        frameProps={{
-          pulse: { duration: 600, color: "rgba(255,200,50,0.7)", glowRadius: 5 },
-          staleness: { threshold: 5000, dimOpacity: 0.4, showBadge: true },
-        }}
+        frameProps={STREAMING_SANKEY_FRAME_PROPS}
       />
     </div>
   )

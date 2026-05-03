@@ -1,6 +1,7 @@
 import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { parseCanvasColor } from "./colorUtils"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
@@ -77,7 +78,15 @@ export const barFunnelHatchRenderer = (
  *  - Bold percentage (of first step)
  *  - Raw value below it
  *
- * Labels appear on a white rounded-rect background (matching the reference images).
+ * Light/dark mode is decided per-frame from the luminance of the
+ * resolved `--semiotic-text` value: if body text is light, we're in
+ * dark mode and pair a dark surface with light text; otherwise light
+ * mode (white surface, dark text). Pairing the background to whatever
+ * text color the consumer's theme actually emits is more robust than
+ * sourcing both from independent CSS variables — many sites set
+ * `--semiotic-text` and `--semiotic-bg` without setting
+ * `--semiotic-tooltip-bg`, which would otherwise leave the label box
+ * stuck on its fallback regardless of theme.
  */
 export const barFunnelLabelRenderer = (
   ctx: CanvasRenderingContext2D,
@@ -105,9 +114,18 @@ export const barFunnelLabelRenderer = (
   // Minimum bar width (px) before label is suppressed entirely
   const MIN_LABEL_BAR_WIDTH = 25
 
-  // Resolve once per frame — theme text colors for label primary/secondary text.
-  const primaryTextColor = resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
-  const secondaryTextColor = resolveCSSColor(ctx, "var(--semiotic-text-secondary, #666)")!
+  // Decide light vs dark mode from the body text luminance, then pair
+  // the floating-label surface against that. Both pct and val use the
+  // same primary text color so the value stays high-contrast on the
+  // chosen surface — the previous secondary-text branch failed in dark
+  // mode where `--semiotic-text-secondary` (a mid-grey) collapsed into
+  // the surface color.
+  const bodyTextColor = resolveCSSColor(ctx, "var(--semiotic-text, #333)")!
+  const isDarkMode = isLightColor(ctx, bodyTextColor)
+  const labelBackground = isDarkMode ? "#1f2937" : "#ffffff"
+  const labelBorder = isDarkMode ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)"
+  const primaryTextColor = isDarkMode ? "#f3f4f6" : "#1a1a1a"
+  const secondaryTextColor = primaryTextColor
 
   for (const node of labelRects) {
     const d = node.datum
@@ -146,19 +164,19 @@ export const barFunnelLabelRenderer = (
     const boxX = lx - labelW / 2
     const boxY = ly - labelH - 4
 
-    // White background with subtle shadow
+    // Theme-aware background with subtle shadow
     ctx.save()
     ctx.shadowColor = "rgba(0,0,0,0.15)"
     ctx.shadowBlur = 4
     ctx.shadowOffsetY = 1
-    ctx.fillStyle = "rgba(255,255,255,0.95)"
+    ctx.fillStyle = labelBackground
     ctx.beginPath()
     roundedRect(ctx, boxX, boxY, labelW, labelH, cornerRadius)
     ctx.fill()
     ctx.restore()
 
-    // Subtle border
-    ctx.strokeStyle = "rgba(0,0,0,0.12)"
+    // Subtle border (theme-aware)
+    ctx.strokeStyle = labelBorder
     ctx.lineWidth = 0.5
     ctx.beginPath()
     roundedRect(ctx, boxX, boxY, labelW, labelH, cornerRadius)
@@ -205,6 +223,25 @@ function roundedRect(
   ctx.lineTo(x, y + r)
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
+}
+
+/**
+ * Approximate WCAG-style relative luminance check. Routes through
+ * `parseCanvasColor`, which round-trips the input through the canvas's
+ * own `fillStyle` to normalize any valid CSS color — named, hex, hsl,
+ * legacy/modern rgb(), space-separated rgb syntax, etc. — into an
+ * `[r, g, b]` triple. That matters because `resolveCSSColor` returns
+ * the raw CSS variable token, and `getComputedStyle` is allowed to
+ * yield any of those forms; a hand-rolled hex/rgb regex would silently
+ * mis-classify hsl tokens as "not light" and leave dark-mode labels in
+ * light-mode shape.
+ */
+function isLightColor(ctx: CanvasRenderingContext2D, color: string): boolean {
+  const [r, g, b] = parseCanvasColor(ctx, color)
+  // Rec. 709 luma — close enough for the dark-vs-light split, and
+  // cheaper than full WCAG sRGB linearization.
+  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  return luma > 0.6
 }
 
 function formatNumber(n: number): string {

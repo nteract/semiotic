@@ -30,6 +30,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -330,11 +331,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, currentTheme
     ])
 
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity every parent render. See
+    // StreamNetworkFrame for the full incident write-up; the same loop
+    // applies here.
+    const stablePipelineConfig = useStableShallow(pipelineConfig)
+
     // ── Store ─────────────────────────────────────────────────────────
 
     const storeRef = useRef<GeoPipelineStore | null>(null)
     if (!storeRef.current) {
-      storeRef.current = new GeoPipelineStore(pipelineConfig)
+      storeRef.current = new GeoPipelineStore(stablePipelineConfig)
     }
 
     // ── Refs ──────────────────────────────────────────────────────────
@@ -424,10 +431,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // ── Sync config ───────────────────────────────────────────────────
 
     useEffect(() => {
-      storeRef.current?.updateConfig(pipelineConfig)
+      storeRef.current?.updateConfig(stablePipelineConfig)
       dirtyRef.current = true
       scheduleRender()
-    }, [pipelineConfig, scheduleRender])
+    }, [stablePipelineConfig, scheduleRender])
 
     // ── Sync bounded data ─────────────────────────────────────────────
 

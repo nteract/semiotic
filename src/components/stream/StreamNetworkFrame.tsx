@@ -37,6 +37,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useStableShallow } from "./useStableShallow"
 import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
@@ -447,6 +448,20 @@ const StreamNetworkFrame = forwardRef<
     ]
   )
 
+  // Stabilize the config reference so inline-object / inline-array
+  // props (e.g. `pulse={{ duration: 600, ... }}`, `staleness={{ ... }}`,
+  // `frameProps={{ pulse: ..., staleness: ... }}`) don't shed a fresh
+  // identity on every parent render. Without this stabilization, the
+  // `updateConfig` effect would depend on raw `pipelineConfig` and
+  // re-fire on every render, dirtying the scene; the rAF render loop's
+  // `setAnnotationFrame((f) => f + 1)` would then trigger another
+  // re-render with yet another fresh inline ref, which React 19
+  // catches as "Maximum update depth exceeded" after ~50 cycles. The
+  // hook returns the previous reference whenever the value is
+  // shallow-equal at one level deep — which covers the typical config
+  // shape (primitives, sub-objects of primitives, primitive arrays).
+  const stablePipelineConfig = useStableShallow(pipelineConfig)
+
   // ── Refs ─────────────────────────────────────────────────────────────
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -463,7 +478,7 @@ const StreamNetworkFrame = forwardRef<
 
   const storeRef = useRef<NetworkPipelineStore | null>(null)
   if (!storeRef.current) {
-    storeRef.current = new NetworkPipelineStore(pipelineConfig)
+    storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
 
   // ── State ────────────────────────────────────────────────────────────
@@ -582,10 +597,10 @@ const StreamNetworkFrame = forwardRef<
 
   // Update config when props change
   useEffect(() => {
-    storeRef.current?.updateConfig(pipelineConfig)
+    storeRef.current?.updateConfig(stablePipelineConfig)
     dirtyRef.current = true
     scheduleRender()
-  }, [pipelineConfig, scheduleRender])
+  }, [stablePipelineConfig, scheduleRender])
 
   // Sync the customLayout overlay output to React state. Called after every
   // data-change `buildScene` so the overlay re-renders when topology or
@@ -859,7 +874,7 @@ const StreamNetworkFrame = forwardRef<
       dirtyRef.current = true
       scheduleRender()
     }
-  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme, syncCustomOverlays])
+  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stablePipelineConfig, scheduleRender, colorScheme, syncCustomOverlays])
 
   // ── Initial streaming data ───────────────────────────────────────────
 

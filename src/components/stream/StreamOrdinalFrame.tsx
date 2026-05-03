@@ -50,6 +50,7 @@ import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -473,9 +474,15 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       customLayout, layoutConfig, margin,
     ])
 
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity every parent render. See
+    // StreamNetworkFrame for the full incident write-up; the same loop
+    // applies here.
+    const stablePipelineConfig = useStableShallow(pipelineConfig)
+
     const storeRef = useRef<OrdinalPipelineStore | null>(null)
     if (!storeRef.current) {
-      storeRef.current = new OrdinalPipelineStore(pipelineConfig)
+      storeRef.current = new OrdinalPipelineStore(stablePipelineConfig)
     }
 
     // scheduleRender comes from useFrame above.
@@ -492,10 +499,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     // Update config when it changes
     useEffect(() => {
-      storeRef.current?.updateConfig(pipelineConfig)
+      storeRef.current?.updateConfig(stablePipelineConfig)
       dirtyRef.current = true
       scheduleRender()
-    }, [pipelineConfig, scheduleRender])
+    }, [stablePipelineConfig, scheduleRender])
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.

@@ -167,9 +167,14 @@ function LinkedLegend({
   selectionName: string
   field: string
 }) {
+  // All hooks must run unconditionally on every render — when
+  // `categoryColors` starts empty (e.g. a streaming chart hasn't pushed
+  // any rows yet) and later populates, an early return before the hook
+  // calls would change the static-flag profile of the fiber and trip
+  // React 19's "Internal React error: Expected static flag was missing"
+  // on the first non-empty render. The empty-state early return lives
+  // *after* every hook below.
   const entries = Object.entries(categoryColors)
-  if (entries.length === 0) return null
-
   const allCategories = entries.map(([label]) => label)
   const items = entries.map(([label, color]) => ({ label, color }))
   const legendGroups: LegendGroup[] = [{
@@ -267,6 +272,11 @@ function LinkedLegend({
     [entries, measuredWidth]
   )
   const svgHeight = Math.max(30, rowCount * 22 + 8)
+
+  // Empty-state guard lives here, after every hook above, so the hook
+  // count and static-flag profile stay constant across renders — see
+  // the comment near `entries` for why an earlier return would crash.
+  if (entries.length === 0) return null
 
   return (
     <div ref={containerRef} style={{ width: "100%", display: "block" }}>

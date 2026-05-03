@@ -32,6 +32,7 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -672,9 +673,21 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       customLayout, layoutConfig, margin
     ])
 
+    // Stabilize the config reference so inline-object / inline-array
+    // props don't shed identity on every parent render. Without this
+    // the `updateConfig` effect would depend on raw `pipelineConfig`
+    // and re-fire every render → dirty + scheduleRender → rAF render
+    // loop fires `setAnnotationFrame((f) => f + 1)` → React re-renders
+    // → pipelineConfig recomputes (inline ref again) → the cycle trips
+    // React 19's "Maximum update depth exceeded" guard. See
+    // `useStableShallow.ts` for why a one-level shallow compare is
+    // enough for the typical config shape (primitives, sub-objects of
+    // primitives, primitive arrays).
+    const stablePipelineConfig = useStableShallow(pipelineConfig)
+
     const storeRef = useRef<PipelineStore | null>(null)
     if (!storeRef.current) {
-      storeRef.current = new PipelineStore(pipelineConfig)
+      storeRef.current = new PipelineStore(stablePipelineConfig)
     }
 
     // scheduleRender comes from useFrame above.
@@ -692,10 +705,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Update config when it changes — also schedule re-render since style
     // callbacks (pointStyle, areaStyle, etc.) may have changed.
     useEffect(() => {
-      storeRef.current?.updateConfig(pipelineConfig)
+      storeRef.current?.updateConfig(stablePipelineConfig)
       dirtyRef.current = true
       scheduleRender()
-    }, [pipelineConfig, scheduleRender])
+    }, [stablePipelineConfig, scheduleRender])
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.
