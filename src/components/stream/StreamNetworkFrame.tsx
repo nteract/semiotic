@@ -1278,13 +1278,25 @@ const StreamNetworkFrame = forwardRef<
     // animation tick to push React past its max-update-depth guard.
     // The canvas itself still paints every frame; this only governs
     // how often we ask React to reconcile the SVG-label layer.
-    const wantsAnnotationUpdate = wasDirty || isTransitioning || animationTicked
+    // Fold `pendingAnnotationFrameRef.current` into the predicate so a
+    // previously-throttled frame still counts as wanting an update on
+    // the very next tick (without it, a one-shot `wasDirty` that
+    // landed inside the gate could leave `pending=true` while
+    // `wantsAnnotationUpdate` flips back to false on the retry frame
+    // and the rAF chain would keep spinning forever waiting for an
+    // update that nothing was asking for anymore).
+    const wantsAnnotationUpdate =
+      wasDirty || isTransitioning || animationTicked || pendingAnnotationFrameRef.current
     if (wantsAnnotationUpdate && (now - lastAnnotationFrameTimeRef.current) >= 33) {
       setAnnotationFrame((f) => f + 1)
       lastAnnotationFrameTimeRef.current = now
       pendingAnnotationFrameRef.current = false
     } else if (wantsAnnotationUpdate) {
       pendingAnnotationFrameRef.current = true
+    } else {
+      // Nothing to update — clear the pending flag so the rAF
+      // continuation below doesn't keep ticking.
+      pendingAnnotationFrameRef.current = false
     }
 
     // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation),

@@ -27,10 +27,17 @@
 import * as React from "react"
 import { useRef } from "react"
 import { render, act } from "@testing-library/react"
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, afterEach } from "vitest"
 import { useHydrationLifecycle } from "./useHydration"
 
 describe("useHydrationLifecycle cleanup", () => {
+  afterEach(() => {
+    // The second test stashes a `setHydrated` setter on globalThis so
+    // it can flip the dep from outside the component. Clean it up so
+    // it doesn't leak into other test files in the shared environment.
+    delete (globalThis as { __setHydrated?: unknown }).__setHydrated
+  })
+
   it("fires the cleanup option exactly once on unmount, not on every deps change", () => {
     const calls: string[] = []
     function Probe() {
@@ -108,8 +115,8 @@ describe("useHydrationLifecycle cleanup", () => {
   it("uses the latest cleanup closure even if the prop changes between renders", () => {
     // Defensive guarantee: a parent that recreates the cleanup arrow
     // every render shouldn't see a stale closure fire on unmount.
-    let activeCleanup = () => { calls.push("cleanup-A") }
     const calls: string[] = []
+    let activeCleanup = () => { calls.push("cleanup-A") }
     function Probe({ which }: { which: "A" | "B" }) {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)

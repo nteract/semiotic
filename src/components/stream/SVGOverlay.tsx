@@ -142,6 +142,18 @@ interface SVGOverlayProps {
 
   /** When true, grid lines and axis baselines are skipped (rendered by SVGUnderlay instead) */
   underlayRendered?: boolean
+  /**
+   * Hint from the frame about whether the canvas is painting an opaque
+   * background that will hide `SVGUnderlay`. When `true`, this overlay
+   * also renders grid + baselines (otherwise nothing shows in the CSR
+   * steady state — the canvas covers the underlay copy). When `false`
+   * — e.g. `background="transparent"` or a `backgroundGraphics` SVG
+   * sibling — the underlay is visible and we skip the overlay copy to
+   * avoid the doubled / slightly-darker stroke. Defaults to `true` so
+   * existing callers behave the same as the post-jagged-base-fix
+   * baseline.
+   */
+  canvasObscuresUnderlay?: boolean
 
   /** Name of the linked crosshair store entry to read */
   linkedCrosshairName?: string
@@ -364,6 +376,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     pointNodes,
     curve: annCurve,
     underlayRendered,
+    canvasObscuresUnderlay = true,
     linkedCrosshairName,
     linkedCrosshairSourceId,
     children
@@ -546,19 +559,21 @@ export function SVGOverlay(props: SVGOverlayProps) {
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines.
          *
-         * We render grid + baselines from BOTH SVGUnderlay (behind the
-         * canvas) and SVGOverlay (above the canvas) intentionally:
-         * the canvas paints `--semiotic-bg` opaquely across the whole
-         * frame (per the design note in CLAUDE.md), which hides the
-         * underlay during the CSR steady state. The underlay only
-         * shows through during the SSR / pre-hydration window when
-         * the canvas hasn't painted yet. Skipping the overlay copy
-         * (the historical `!underlayRendered` gate) was the cause of
-         * a "jagged baseline disappeared" regression on
-         * `/features/axes`. The two renders are byte-equal SVG and
-         * never visible at the same time, so duplicating costs nothing
-         * and the visual contract holds end-to-end. */}
-        {showGrid && scales && (() => {
+         * Three states:
+         *  • No `underlayRendered` — overlay is the only source, render here.
+         *  • `underlayRendered` AND canvas paints opaquely — underlay is
+         *    hidden by the canvas, so we still render here.
+         *  • `underlayRendered` AND canvas is transparent (the
+         *    `background="transparent"` / `backgroundGraphics` cases) —
+         *    the underlay shows through, so we skip the overlay copy
+         *    to avoid the doubled / slightly-darker stroke from two
+         *    SVG paths overlaid pixel-for-pixel. Skipping the overlay
+         *    copy was the cause of a "jagged baseline disappeared"
+         *    regression on `/features/axes` BEFORE this gate considered
+         *    canvas opacity; pinning the canvas-opacity hint via
+         *    `canvasObscuresUnderlay` keeps both regressions out of
+         *    play simultaneously. */}
+        {showGrid && scales && (!underlayRendered || canvasObscuresUnderlay) && (() => {
           const bottomGridStyle = resolveGridDash(axes?.find(a => a.orient === "bottom")?.gridStyle)
           const leftGridStyle = resolveGridDash(axes?.find(a => a.orient === "left")?.gridStyle)
           return (
@@ -616,13 +631,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
-            {/* X axis baseline. Rendered here even when underlayRendered
-                so the canvas's opaque `--semiotic-bg` fill doesn't end up
-                hiding it — see the comment by the grid block above. */}
-            {showBottomBaseline && !bottomJagged && (
+            {/* X axis baseline. Same three-state gate as the grid block
+                above: render unless the underlay is already showing
+                through a transparent canvas. */}
+            {(!underlayRendered || canvasObscuresUnderlay) && showBottomBaseline && !bottomJagged && (
               <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1}  />
             )}
-            {bottomJagged && (
+            {(!underlayRendered || canvasObscuresUnderlay) && bottomJagged && (
               <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
             {xTicks.map((tick, i) => {
@@ -667,11 +682,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
               </text>
             )}
 
-            {/* Y axis baseline. Same rationale as the X baseline above. */}
-            {showLeftBaseline && !leftJagged && (
+            {/* Y axis baseline. Same gate as the X baseline above. */}
+            {(!underlayRendered || canvasObscuresUnderlay) && showLeftBaseline && !leftJagged && (
               <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
             )}
-            {leftJagged && (
+            {(!underlayRendered || canvasObscuresUnderlay) && leftJagged && (
               <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
             )}
             {yTicks.map((tick, i) => {

@@ -159,7 +159,8 @@ describe("jaggedBase rendering", () => {
     // Same regression class without the jagged flag — straight
     // baselines and grid lines were also affected by the
     // `!underlayRendered` gate. Confirm the frame's "above the
-    // canvas" layer paints them.
+    // canvas" layer paints them when the canvas is opaque (the
+    // default `canvasObscuresUnderlay`).
     const { container } = render(
       <SVGOverlay
         {...baseProps}
@@ -180,5 +181,58 @@ describe("jaggedBase rendering", () => {
     // tick-only counts.
     const lines = container.querySelectorAll("line")
     expect(lines.length).toBeGreaterThan(6)
+  })
+
+  it("SVGOverlay skips the jagged path when underlayRendered:true AND the canvas is transparent (no double-render)", () => {
+    // When the frame opts out of canvas background painting (via
+    // `background="transparent"` or a `backgroundGraphics` SVG
+    // sibling), `SVGUnderlay` is visible behind the canvas. The
+    // overlay must NOT also emit the jagged baseline — two SVG
+    // paths overlaid pixel-for-pixel produce a doubled / slightly
+    // darker stroke that's a Copilot-flagged regression.
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales() as any}
+        showAxes={true}
+        underlayRendered={true}
+        canvasObscuresUnderlay={false}
+        axes={[
+          { orient: "left", baseline: false, jaggedBase: true },
+          { orient: "bottom" },
+        ]}
+      />,
+    )
+    // The overlay must emit zero `<path>` elements in this state —
+    // the underlay still renders the jagged baseline.
+    expect(container.querySelectorAll("path").length).toBe(0)
+  })
+
+  it("SVGOverlay skips straight baselines + grid lines when underlayRendered:true AND the canvas is transparent", () => {
+    // Same gate, non-jagged variant.
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales() as any}
+        showAxes={true}
+        showGrid={true}
+        underlayRendered={true}
+        canvasObscuresUnderlay={false}
+        axes={[
+          { orient: "left" },
+          { orient: "bottom" },
+        ]}
+      />,
+    )
+    // Tick marks (5px notch lines from each tick) should still
+    // render — they're painted at the tick position regardless of
+    // the gate. But the baselines + grid lines must not. With
+    // `xTicks ≈ 3` + `yTicks ≈ 2` that's at most ~5 tick-mark
+    // `<line>` elements; an unsuppressed grid + baseline pair would
+    // push the count above 7. Use a strict upper bound to catch a
+    // regression that re-enables either branch under transparent
+    // canvas.
+    const lines = container.querySelectorAll("line")
+    expect(lines.length).toBeLessThan(7)
   })
 })

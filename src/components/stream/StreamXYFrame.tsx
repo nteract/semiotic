@@ -1591,6 +1591,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           )}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
+          // Mirror the canvas render-loop's `shouldPaintBg` predicate
+          // (line ~1090). When the canvas paints `--semiotic-bg`
+          // opaquely, it hides `SVGUnderlay` and the overlay needs to
+          // emit the grid + baseline copy itself. When the canvas is
+          // transparent (`background="transparent"` opt-out, or a
+          // `backgroundGraphics` SVG sibling that owns the bg layer),
+          // the underlay shows through and the overlay must NOT
+          // duplicate to avoid the doubled / slightly-darker stroke
+          // from two SVG paths overlaid pixel-for-pixel.
+          canvasObscuresUnderlay={background !== "transparent" && !backgroundGraphics}
           linkedCrosshairName={linkedCrosshairName}
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />
