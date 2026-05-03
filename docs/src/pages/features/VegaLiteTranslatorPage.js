@@ -1,5 +1,20 @@
 import React, { useState, useMemo } from "react"
-import { BarChart, LineChart, Scatterplot, configToJSX, fromVegaLite } from "semiotic"
+import {
+  BarChart,
+  StackedBarChart,
+  LineChart,
+  AreaChart,
+  StackedAreaChart,
+  Scatterplot,
+  BubbleChart,
+  Heatmap,
+  PieChart,
+  DonutChart,
+  DotPlot,
+  Histogram,
+  configToJSX,
+  fromVegaLite,
+} from "semiotic"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 
@@ -145,10 +160,23 @@ const SAMPLES = {
 // Chart renderer — maps component name to Semiotic component
 // ---------------------------------------------------------------------------
 
+// Covers every component name that `fromVegaLite` can return per the
+// "Mark to component" table on this page. Keep in sync with the table —
+// a missing entry sends the demo into the "preview not available"
+// placeholder even though the JSX panel shows valid code.
 const COMPONENT_MAP = {
   BarChart: (props) => <BarChart {...props} />,
+  StackedBarChart: (props) => <StackedBarChart {...props} />,
   LineChart: (props) => <LineChart {...props} />,
+  AreaChart: (props) => <AreaChart {...props} />,
+  StackedAreaChart: (props) => <StackedAreaChart {...props} />,
   Scatterplot: (props) => <Scatterplot {...props} />,
+  BubbleChart: (props) => <BubbleChart {...props} />,
+  Heatmap: (props) => <Heatmap {...props} />,
+  PieChart: (props) => <PieChart {...props} />,
+  DonutChart: (props) => <DonutChart {...props} />,
+  DotPlot: (props) => <DotPlot {...props} />,
+  Histogram: (props) => <Histogram {...props} />,
 }
 
 function renderChart(config) {

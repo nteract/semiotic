@@ -31,6 +31,7 @@ import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
+import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -805,10 +806,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       if (!ctx) return
       ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-      // Background (skip if tiles are rendering — tiles are the background)
+      // Background (skip if tiles are rendering — tiles are the background).
+      // Resolve CSS-variable strings before assignment; canvas's `fillStyle`
+      // silently rejects `var(...)` syntax and leaves the previous fill
+      // (a node/edge/particle color) in place — see the matching comment
+      // in StreamNetworkFrame for the flashing-background incident.
       if (background && !tileURL) {
-        ctx.fillStyle = background
-        ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+        const resolvedBg = resolveCSSColor(ctx, background)
+        if (resolvedBg) {
+          ctx.fillStyle = resolvedBg
+          ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+        }
       }
 
       ctx.save()

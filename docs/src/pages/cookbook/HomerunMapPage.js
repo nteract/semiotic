@@ -153,8 +153,8 @@ export default function HomerunMapPage() {
         { label: "Homerun Map", path: "/cookbook/homerun-map" }
       ]}
       prevPage={{
-        title: "Candlestick Chart",
-        path: "/cookbook/candlestick-chart"
+        title: "Serialization",
+        path: "/features/serialization"
       }}
       nextPage={{
         title: "Canvas Interaction",

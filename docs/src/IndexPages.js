@@ -159,11 +159,6 @@ export function ExamplesIndex() {
         <div className="sub-header">StreamXYFrame</div>
 
         <PageLink
-          href="/cookbook/candlestick-chart"
-          title="Candlestick Chart"
-          thumbnail={new URL("../public/assets/img/candlestick.png", import.meta.url)}
-        />
-        <PageLink
           href="/cookbook/homerun-map"
           title="Homerun Map"
           thumbnail={new URL("../public/assets/img/baseball.png", import.meta.url)}

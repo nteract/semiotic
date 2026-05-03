@@ -136,7 +136,6 @@ const navData = [
     title: "Cookbook",
     path: "/cookbook",
     children: [
-      { title: "Candlestick Chart", path: "/cookbook/candlestick-chart" },
       { title: "Homerun Map", path: "/cookbook/homerun-map" },
       { title: "Canvas Interaction", path: "/cookbook/canvas-interaction" },
       { title: "Uncertainty Visualization", path: "/cookbook/uncertainty-visualization" },

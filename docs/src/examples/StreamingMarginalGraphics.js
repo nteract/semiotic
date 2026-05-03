@@ -28,15 +28,35 @@ const StreamingMarginalGraphics = () => {
   const [containerRef, containerWidth] = useContainerWidth()
 
   useEffect(() => {
+    // Box-Muller transform: pulls a sample from a standard normal so the
+    // cloud has a natural Gaussian shape (dense in the middle, thinner
+    // tails) instead of the boxy uniform-noise look the previous data
+    // generator produced.
+    const gauss = () => {
+      const u = 1 - Math.random()
+      const v = Math.random()
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
+    }
     const id = setInterval(() => {
-      if (chartRef.current) {
-        const i = indexRef.current++
-        // Simulate a bivariate stream: x drifts with noise, y is correlated + noise
-        const x = 50 + Math.sin(i * 0.03) * 30 + (Math.random() - 0.5) * 20
-        const y = x * 0.8 + (Math.random() - 0.5) * 25 + 20
-        chartRef.current.push({ time: i, x, y })
+      if (!chartRef.current) return
+      // Push three samples per tick — at the configured `windowSize` of
+      // 250 the chart keeps ~80 ticks of history (≈ 4s at the 50ms
+      // cadence below), enough motion to see the cluster slide while
+      // still looking like a populated cloud rather than a sparse
+      // trail.
+      const i = indexRef.current++
+      // Cluster mean drifts on a slow sine so the user can see the
+      // distribution moving while the marginals reshape in lockstep.
+      const cx = 50 + Math.sin(i * 0.04) * 25
+      const cy = 50 + Math.sin(i * 0.04 + Math.PI / 3) * 25
+      for (let k = 0; k < 3; k++) {
+        const x = cx + gauss() * 8
+        // Strong positive correlation between x and y, with a small
+        // independent residual so the cloud has visible spread.
+        const y = cy + (x - cx) * 0.7 + gauss() * 6
+        chartRef.current.push({ time: i * 3 + k, x, y })
       }
-    }, 80)
+    }, 50)
     return () => clearInterval(id)
   }, [])
 
@@ -67,7 +87,7 @@ The key is combining \`runtimeMode="streaming"\` with \`marginalGraphics\` on a 
             size={[containerWidth, 400]}
             xAccessor="x"
             yAccessor="y"
-            windowSize={200}
+            windowSize={250}
             pointStyle={() => ({
               fill: theme[1],
               fillOpacity: 0.7,

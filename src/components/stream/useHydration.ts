@@ -152,9 +152,25 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     // from a layout effect doesn't conflict with the in-flight
     // scheduling that other paths use.
     renderFnRef.current()
-    return cleanup
     // Stable refs (`storeRef`, `dirtyRef`, `renderFnRef`) intentionally
     // omitted from deps — including them would just trip
     // exhaustive-deps without changing behavior.
   }, [hydrated, wasHydratingFromSSR])
+
+  // Unmount-only cleanup. Held in its own `useEffect([])` so it fires
+  // exactly once on dismount and never on a deps change of the layout
+  // effect above. Returning `cleanup` from THAT effect's `[hydrated,
+  // wasHydratingFromSSR]` form ran on every deps change too — and
+  // `hydrated` flips false→true once after mount, so the cleanup ran
+  // immediately after every initial paint. For the XY/Ordinal frames
+  // that path called `adapter.clear()` and wiped any rows a parent
+  // had pushed via a callback ref's pre-seed pattern. The bug was
+  // hidden until a parent passed `ref={callback}` and pushed inside
+  // the callback (the pattern in the docs `/features/push-api`
+  // BarUpdateDemo and `/charts/sankey-diagram` PushApiDemo).
+  const cleanupRef = useRef(cleanup)
+  cleanupRef.current = cleanup
+  useEffect(() => {
+    return () => cleanupRef.current?.()
+  }, [])
 }

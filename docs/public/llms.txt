@@ -72,7 +72,6 @@
 
 ## Optional
 
-- [Cookbook — Candlestick](/cookbook/candlestick-chart): Financial OHLC charts
 - [Cookbook — Radar](/cookbook/radar-plot): Radar/spider charts
 - [Cookbook — Timeline](/cookbook/timeline): Timeline visualizations
 - [Cookbook — Marginal Graphics](/cookbook/marginal-graphics): Distribution plots in scatter margins
