@@ -312,7 +312,7 @@ export default function SerializationPage() {
         { label: "Serialization", path: "/features/serialization" },
       ]}
       prevPage={{ title: "AI Observation Hooks", path: "/features/observation-hooks" }}
-      nextPage={{ title: "Candlestick Chart", path: "/cookbook/candlestick-chart" }}
+      nextPage={{ title: "Homerun Map", path: "/cookbook/homerun-map" }}
     >
       <p>
         Serialize any chart's configuration to JSON, encode it as a URL for

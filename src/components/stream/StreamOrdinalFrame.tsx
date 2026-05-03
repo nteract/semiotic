@@ -51,6 +51,7 @@ import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
+import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -847,9 +848,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         const semioticBg = canvas
           ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
           : ""
+        // Resolve `var(...)` so canvas accepts the assignment — see
+        // the matching comment in StreamNetworkFrame.
         const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-        if (effectiveBg) {
-          ctx.fillStyle = effectiveBg
+        const resolvedBg = effectiveBg ? resolveCSSColor(ctx, effectiveBg) : null
+        if (resolvedBg) {
+          ctx.fillStyle = resolvedBg
           ctx.fillRect(0, 0, size[0], size[1])
         }
       }

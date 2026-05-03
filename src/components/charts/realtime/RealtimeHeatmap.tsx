@@ -216,6 +216,7 @@ export const RealtimeHeatmap = forwardRef(
       [onHover, linkedHoverBehavior]
     )
 
+    // `[]` deps so the handle stays stable — see useFrameImperativeHandle.
     useImperativeHandle(ref, () => ({
       push: (point) => frameRef.current?.push(point),
       pushMany: (points) => frameRef.current?.pushMany(points),
@@ -224,7 +225,7 @@ export const RealtimeHeatmap = forwardRef(
       clear: () => frameRef.current?.clear(),
       getData: () => frameRef.current?.getData() ?? [],
       getScales: () => frameRef.current?.getScales() ?? null
-    }))
+    }), [])
 
     // ── Loading / empty states (computed early, returned after all hooks) ───
     const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])

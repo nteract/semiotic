@@ -33,6 +33,7 @@ import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
+import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -596,8 +597,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       arrowOfTime: isStreaming ? arrowOfTime : "right",
       extentPadding,
       scalePadding,
-      xAccessor: isStreaming ? undefined : xAccessor,
-      yAccessor: isStreaming ? undefined : yAccessor,
+      // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
+      // The store's streaming-mode resolution chain
+      // (`timeAccessor || xAccessor || "time"`) already gives `timeAccessor`
+      // priority for the bar/swarm/waterfall families, so keeping the x/y
+      // accessors here doesn't change behavior for those chart types — but
+      // it lets a streaming scatter / bubble pass non-temporal accessors
+      // and have them honored. Stripping them previously forced the store
+      // to fall through to `d.time` and `d.value`, producing a buffer of
+      // 200 datums whose `buildPointNode` calls all returned null because
+      // y resolved to `d.value` (= undefined → NaN).
+      xAccessor,
+      yAccessor,
       timeAccessor: isStreaming ? timeAccessor : undefined,
       valueAccessor,
       colorAccessor,
@@ -1088,9 +1099,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           const shouldPaintBg = background !== "transparent" && !backgroundGraphics
           if (shouldPaintBg) {
             const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+            // Resolve `var(...)` so canvas accepts the assignment — without
+            // this, a user passing `background="var(--surface-1)"` would
+            // silently fall back to the prior fillStyle (a node/area color
+            // from the last draw), producing a palette-flashing background
+            // on every animation frame.
             const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-            if (effectiveBg) {
-              ctx.fillStyle = effectiveBg
+            const resolvedBg = effectiveBg ? resolveCSSColor(ctx, effectiveBg) : null
+            if (resolvedBg) {
+              ctx.fillStyle = resolvedBg
               ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
             }
           }
@@ -1574,6 +1591,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           )}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
+          // Mirror the canvas render-loop's `shouldPaintBg` predicate
+          // (line ~1090). When the canvas paints `--semiotic-bg`
+          // opaquely, it hides `SVGUnderlay` and the overlay needs to
+          // emit the grid + baseline copy itself. When the canvas is
+          // transparent (`background="transparent"` opt-out, or a
+          // `backgroundGraphics` SVG sibling that owns the bg layer),
+          // the underlay shows through and the overlay must NOT
+          // duplicate to avoid the doubled / slightly-darker stroke
+          // from two SVG paths overlaid pixel-for-pixel.
+          canvasObscuresUnderlay={background !== "transparent" && !backgroundGraphics}
           linkedCrosshairName={linkedCrosshairName}
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />

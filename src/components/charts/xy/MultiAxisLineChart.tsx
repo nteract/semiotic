@@ -154,19 +154,25 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
 ) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
   const extentsRef = useRef<[number, number][]>([])
+  // `seriesRef` lets the imperative handle read the LATEST series prop
+  // at call time without rebinding on every render. The handle itself
+  // stays referentially stable (deps `[]` below) — see
+  // useFrameImperativeHandle for the regression class this prevents
+  // (callback refs that pre-seed data re-firing on every parent
+  // re-render and undoing user-driven mutations between the seed and
+  // the next paint).
+  const seriesRef = useRef(props.series)
+  seriesRef.current = props.series
 
   useImperativeHandle(ref, () => {
-    // Filter sparse `series` entries once per factory invocation.
-    // useImperativeHandle re-runs the factory each render, so this
-    // captures the latest props; both push and pushMany reuse the same
-    // safe array. We can't reach the hook-scope `series` shadow defined
-    // later in the function body from here.
-    const safeSeriesProp = (props.series ?? []).filter(
-      (s): s is MultiAxisSeriesConfig<TDatum> => s != null && typeof s === "object",
-    )
+    const getSafeSeries = () =>
+      (seriesRef.current ?? []).filter(
+        (s): s is MultiAxisSeriesConfig<TDatum> => s != null && typeof s === "object",
+      )
     return {
       push: (point) => {
         if (!frameRef.current) return
+        const safeSeriesProp = getSafeSeries()
         const raw = point as Datum
         // Transform point into unitized series points
         for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
@@ -185,6 +191,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       },
       pushMany: (points) => {
         if (!frameRef.current) return
+        const safeSeriesProp = getSafeSeries()
         const transformed: Datum[] = []
         for (const raw of points as Datum[]) {
           for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
@@ -209,7 +216,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       getData: () => frameRef.current?.getData() ?? [],
       getScales: () => frameRef.current?.getScales() ?? null
     }
-  })
+  }, [])
 
   const resolved = useChartMode(props.mode, {
     width: props.width,

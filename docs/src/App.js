@@ -93,7 +93,6 @@ import PushApiPage from "./pages/features/PushApiPage"
 import CustomChartsPage from "./pages/features/CustomChartsPage"
 
 // New cookbook pages
-import CandlestickCookbookPage from "./pages/cookbook/CandlestickChartPage"
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
 import CanvasInteractionPage from "./pages/cookbook/CanvasInteractionPage"
 import UncertaintyVisualizationPage from "./pages/cookbook/UncertaintyVisualizationPage"
@@ -312,7 +311,6 @@ export default function DocsApp() {
                   </>
                 }
               />
-              <Route path="candlestick-chart" element={<CandlestickCookbookPage />} />
               <Route path="homerun-map" element={<HomerunMapPage />} />
               <Route path="canvas-interaction" element={<CanvasInteractionPage />} />
               <Route path="uncertainty-visualization" element={<UncertaintyVisualizationPage />} />

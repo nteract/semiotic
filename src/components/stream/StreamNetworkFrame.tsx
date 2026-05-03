@@ -38,6 +38,7 @@ import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
+import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
@@ -473,6 +474,25 @@ const StreamNetworkFrame = forwardRef<
   // rafRef + renderFnRef + scheduleRender + dirtyRef + theme-change
   // effect all destructured from useFrame above; not redeclared here.
   const lastFrameTimeRef = useRef(0)
+  // Throttle the rAF-driven `setAnnotationFrame((f) => f + 1)` below.
+  // Continuous-animation chart types (orbit, pulse-driven, particle
+  // sankey) keep `animationTicked`/`hasActivePulses` true on every
+  // frame, so an unguarded setAnnotationFrame would fire 60 React
+  // re-renders per second per chart instance. When a parent component
+  // *also* re-renders the page on its own cadence (PageLayout's
+  // IntersectionObserver firing on scroll, for instance, hands fresh
+  // inline-arrow function refs through to OrbitDiagram, which the
+  // stabilizer can't absorb because functions aren't shallow-equal),
+  // the two update streams compound and trip React 19's max-update-
+  // depth guard. ~30 Hz is plenty for label-position updates that
+  // track a moving scene; the canvas itself paints every frame.
+  const lastAnnotationFrameTimeRef = useRef(0)
+  // Set when the throttle gate blocks a `setAnnotationFrame` and the
+  // chart isn't already in a continuous-rAF mode. The next-frame
+  // continuation below honors this so a one-shot push never drops its
+  // SVG-layer reconciliation just because it landed inside the 33 ms
+  // gate of a recent fire.
+  const pendingAnnotationFrameRef = useRef(false)
 
   // ── Store ────────────────────────────────────────────────────────────
 
@@ -1153,10 +1173,19 @@ const StreamNetworkFrame = forwardRef<
     if (!prepareCanvas(canvas, size, margin, dpr)) return
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-    // Background
+    // Background. The user prop may be a `var(--token, fallback)`
+    // string, which the canvas API silently rejects when assigned to
+    // `ctx.fillStyle` — leaving the prior frame's fillStyle (a node,
+    // edge, or particle color) in place. The next `fillRect` then
+    // paints the chart background with that stale color, producing
+    // a palette-flashing effect on every animation frame. Resolve
+    // CSS variables to their concrete value before assigning.
     if (background) {
-      ctx.fillStyle = background
-      ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+      const resolvedBg = resolveCSSColor(ctx, background)
+      if (resolvedBg) {
+        ctx.fillStyle = resolvedBg
+        ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+      }
     }
 
     // Apply realtime encoding (pulse/decay/thresholds)
@@ -1240,13 +1269,40 @@ const StreamNetworkFrame = forwardRef<
       }
     }
 
-    // Update SVG overlay when layout changes
-    if (wasDirty || isTransitioning || animationTicked) {
+    // Update SVG overlay when layout changes. Throttle uniformly to
+    // ~30 Hz regardless of source — animationTicked, isTransitioning,
+    // and wasDirty all funnel through the same gate. The looser bound
+    // protects against a parent re-rendering (e.g. a docs page whose
+    // IntersectionObserver-driven sticky-TOC dirties the prop chain on
+    // every scroll-pixel) compounding with the orbit's own continuous
+    // animation tick to push React past its max-update-depth guard.
+    // The canvas itself still paints every frame; this only governs
+    // how often we ask React to reconcile the SVG-label layer.
+    // Fold `pendingAnnotationFrameRef.current` into the predicate so a
+    // previously-throttled frame still counts as wanting an update on
+    // the very next tick (without it, a one-shot `wasDirty` that
+    // landed inside the gate could leave `pending=true` while
+    // `wantsAnnotationUpdate` flips back to false on the retry frame
+    // and the rAF chain would keep spinning forever waiting for an
+    // update that nothing was asking for anymore).
+    const wantsAnnotationUpdate =
+      wasDirty || isTransitioning || animationTicked || pendingAnnotationFrameRef.current
+    if (wantsAnnotationUpdate && (now - lastAnnotationFrameTimeRef.current) >= 33) {
       setAnnotationFrame((f) => f + 1)
+      lastAnnotationFrameTimeRef.current = now
+      pendingAnnotationFrameRef.current = false
+    } else if (wantsAnnotationUpdate) {
+      pendingAnnotationFrameRef.current = true
+    } else {
+      // Nothing to update — clear the pending flag so the rAF
+      // continuation below doesn't keep ticking.
+      pendingAnnotationFrameRef.current = false
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation)
-    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation),
+    // OR to retry a throttled setAnnotationFrame so a one-shot dirty event
+    // that landed inside the throttle gate still reconciles the SVG layer.
+    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff || pendingAnnotationFrameRef.current) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }

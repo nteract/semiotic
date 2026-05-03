@@ -91,17 +91,28 @@ export function useFrameImperativeHandle(
   options: Options,
 ): void {
   const { variant, frameRef, overrides, deps } = options
-  // Methods are computed inside `useImperativeHandle`'s factory so they
-  // capture the latest `frameRef.current`. The factory re-runs on every
-  // render unless `deps` is supplied — match React's contract for the
-  // hook so consumer behavior is unchanged from the inline form.
+  // Default deps to `[]` so the handle is referentially stable across
+  // renders. The method bodies read `frameRef.current` at call time, so
+  // a frozen closure still dispatches into the latest store. Without
+  // this, every parent re-render produces a new handle, which makes
+  // React fire any callback ref attached via `ref={callback}` with
+  // `null` then the new handle each render. Consumers that pre-seed
+  // data inside such a callback (the canonical pattern in the docs
+  // `/features/push-api` NetworkDemo `initRef` and similar) would
+  // re-run the seed on every parent re-render — re-pushing the same
+  // edges and undoing any user-driven `remove` / `update` between
+  // renders. Reproduced concretely on the network demo's "Remove
+  // Cache" button: the click triggered a `setLog` re-render, the
+  // re-render rebuilt the imperative handle, the callback ref fired
+  // null→new, the seed pushed the original 5 edges back, and the
+  // Cache node reappeared with its edges within the same frame.
   useImperativeHandle(
     ref,
     () => {
       const defaults = makeVariantDefaults(variant, frameRef)
       return { ...defaults, ...overrides } as RealtimeFrameHandle
     },
-    deps,
+    deps ?? [],
   )
 }
 

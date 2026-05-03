@@ -326,6 +326,10 @@ export const RealtimeTemporalHistogram = forwardRef(
       [userOnBrush, onObservation, chartId, brushConfig]
     )
 
+    // `[]` deps so the handle stays referentially stable across renders —
+    // see `useFrameImperativeHandle` for the regression class this
+    // prevents (callback refs that pre-seed data re-firing their seed
+    // on every parent re-render).
     useImperativeHandle(ref, () => ({
       push: (point) => frameRef.current?.push(point),
       pushMany: (points) => frameRef.current?.pushMany(points),
@@ -334,7 +338,7 @@ export const RealtimeTemporalHistogram = forwardRef(
       clear: () => frameRef.current?.clear(),
       getData: () => frameRef.current?.getData() ?? [],
       getScales: () => frameRef.current?.getScales() ?? null
-    }))
+    }), [])
 
     // ── Loading / empty states (computed early, returned after all hooks) ───
     const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
