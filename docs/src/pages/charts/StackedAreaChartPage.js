@@ -55,7 +55,7 @@ const stackedAreaChartProps = [
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-area)", description: "Show a legend. Defaults to true when multiple areas are present." },
-  { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
+  { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every stack value at the hovered x position.' },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
@@ -230,6 +230,35 @@ export default function StackedAreaChartPage() {
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
+
+      <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
+      <p>
+        Pass <code>tooltip="multi"</code> when readers need to compare every
+        stack at the same x position. The tooltip follows the cursor across the
+        rendered x range and lists each stack's individual contribution, not the
+        cumulative stack height.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: stackedData,
+          xAccessor: "quarter",
+          yAccessor: "revenue",
+          areaBy: "region",
+          colorBy: "region",
+          tooltip: "multi",
+          xLabel: "Quarter",
+          yLabel: "Revenue ($)",
+        }}
+        type={StackedAreaChart}
+        overrideProps={{
+          data: "regionalData",
+          areaBy: '"region"',
+          colorBy: '"region"',
+          tooltip: '"multi"',
+        }}
+        hiddenProps={{}}
+      />
 
       <h3 id="normalized">Normalized (100% Stacked)</h3>
       <p>

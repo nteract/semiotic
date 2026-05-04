@@ -1,5 +1,35 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Page } from "@playwright/test"
 import { waitForChartReady, waitForRafs } from "./helpers"
+
+async function hoverAndScreenshotMultiTooltip(
+  page: Page,
+  testId: string,
+  snapshotName: string
+) {
+  await waitForChartReady(page, testId)
+  const testCase = page.locator(`[data-testid="${testId}"]`)
+  await testCase.scrollIntoViewIfNeeded()
+  await waitForRafs(page, 2)
+
+  const canvas = testCase.locator("canvas").first()
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error("canvas bounding box unavailable")
+
+  // Hover near the middle of the rendered x range, away from the explicit
+  // sample points. `tooltip="multi"` should still resolve every series at
+  // the cursor's x position.
+  await page.mouse.move(box.x + box.width * 0.52, box.y + box.height * 0.5)
+  await waitForRafs(page, 6)
+
+  const tooltip = testCase.locator(".stream-frame-tooltip .semiotic-tooltip")
+  await expect(tooltip).toBeVisible({ timeout: 2000 })
+  await expect(tooltip).toContainText("A")
+  await expect(tooltip).toContainText("B")
+
+  await expect(testCase).toHaveScreenshot(snapshotName, {
+    maxDiffPixels: 300,
+  })
+}
 
 test.describe("XY Charts - Line Charts", () => {
   test.beforeEach(async ({ page }) => {
@@ -268,4 +298,26 @@ test.describe("XY Charts - Interaction states", () => {
       maxDiffPixels: 200,
     })
   })
+
+  for (const { testId, name, snapshot } of [
+    {
+      testId: "xy-line-multi-tooltip",
+      name: "line chart",
+      snapshot: "xy-line-multi-tooltip-hover.png",
+    },
+    {
+      testId: "xy-area-multi-tooltip",
+      name: "area chart",
+      snapshot: "xy-area-multi-tooltip-hover.png",
+    },
+    {
+      testId: "xy-stacked-area-multi-tooltip",
+      name: "stacked area chart",
+      snapshot: "xy-stacked-area-multi-tooltip-hover.png",
+    },
+  ]) {
+    test(`${name} multi tooltip appears away from explicit points`, async ({ page }) => {
+      await hoverAndScreenshotMultiTooltip(page, testId, snapshot)
+    })
+  }
 })

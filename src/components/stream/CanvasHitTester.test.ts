@@ -307,6 +307,29 @@ describe("findAllNodesAtX", () => {
     expect(results[0].y).toBeCloseTo(80, 0)
   })
 
+  it("does not clamp outside the rendered path range even with a generous tolerance", () => {
+    const before = findAllNodesAtX([lineA], 0, 1000)
+    const after = findAllNodesAtX([lineA], 100, 1000)
+    expect(before).toHaveLength(0)
+    expect(after).toHaveLength(0)
+  })
+
+  it("returns interpolated bottom Y for area nodes", () => {
+    const slopedArea: AreaSceneNode = {
+      type: "area",
+      topPath: [[10, 90], [50, 50], [90, 10]],
+      bottomPath: [[10, 120], [50, 100], [90, 80]],
+      style: { fill: "green" },
+      datum: [{ id: "a1" }, { id: "a2" }, { id: "a3" }],
+      group: "Area",
+    }
+
+    const results = findAllNodesAtX([slopedArea], 30, 30)
+    expect(results).toHaveLength(1)
+    expect(results[0].y).toBeCloseTo(70, 0)
+    expect(results[0].y0).toBeCloseTo(110, 0)
+  })
+
   it("returns color from node style", () => {
     const results = findAllNodesAtX([lineA, lineB], 50, 30)
     expect(results[0].color).toBe("red")

@@ -872,11 +872,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const posX = isMulti || !hit ? chartX : hit.x
       const posY = isMulti || !hit ? chartY : hit.y
 
-      const hover: HoverData = buildHoverData(hit?.datum ?? {}, posX, posY)
+      let hover: HoverData = buildHoverData(hit?.datum ?? {}, posX, posY)
 
       // Multi-tooltip mode: attach all series values at this X to the hover data.
-      // A generous x-tolerance ensures the hover-anywhere case (no nearest
-      // node) still resolves interpolated y values across the rendered path.
+      // Keep the interpolation generous for sparse paths, but range-bounded in
+      // CanvasHitTester so padded/explicit xExtent space outside the rendered
+      // path does not clamp to the first/last point.
       if (isMulti && store.scene.length > 0 && store.scales) {
         const allHits = findAllNodesAtX(store.scene, posX, Math.max(hoverRadius, adjustedWidth))
         if (allHits.length > 0) {
@@ -888,15 +889,31 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           // pointermove. Required by downstream consumers like MultiPointTooltip
           // that render a color swatch from s.color.
           const fallbackColor = themePrimaryRef.current
-          hover.xValue = xInvert ? xInvert(posX) : posX
-          hover.xPx = posX
-          hover.allSeries = allHits.map(h => ({
-            group: h.group || "",
-            value: yInvert ? yInvert(h.y) : h.y,
-            valuePx: h.y,
-            color: h.color || fallbackColor,
-            datum: h.datum,
-          }))
+          const xValue = xInvert ? xInvert(posX) : posX
+          if (!hit) {
+            const syntheticDatum: Datum = { xValue }
+            if (typeof xAccessor === "string") syntheticDatum[xAccessor] = xValue
+            hover = buildHoverData(syntheticDatum, posX, posY, { xValue, xPx: posX })
+          } else {
+            hover.xValue = xValue
+            hover.xPx = posX
+          }
+          hover.allSeries = allHits.map(h => {
+            const topValue = yInvert ? yInvert(h.y) : h.y
+            const bottomValue = h.y0 != null
+              ? (yInvert ? yInvert(h.y0) : h.y0)
+              : undefined
+            const value = chartType === "stackedarea" && bottomValue != null
+              ? topValue - bottomValue
+              : topValue
+            return {
+              group: h.group || "",
+              value,
+              valuePx: h.y,
+              color: h.color || fallbackColor,
+              datum: h.datum,
+            }
+          })
         }
       }
 

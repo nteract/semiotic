@@ -267,6 +267,20 @@ describe("useChartSelection", () => {
     expect(obs.y).toBe(20)
   })
 
+  it("preserves frame-provided xValue in hover observations", () => {
+    const onObservation = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onObservation, chartType: "LineChart" }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customHoverBehavior({ x: 10, y: 20, xValue: 42.5, data: { val: 42 } })
+    })
+
+    expect(onObservation.mock.calls[0][0].datum).toEqual({ val: 42, xValue: 42.5 })
+  })
+
   it("calls onObservation with hover-end when hovering with null", () => {
     const onObservation = vi.fn()
     const { result } = renderHook(
@@ -822,6 +836,31 @@ describe("useChartSelection crosshair x-position mode", () => {
     })
 
     expect(result.current.crosshair).toBeNull()
+  })
+
+  it("prefers frame-provided xValue for cursor-anchored multi hovers", () => {
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: "multiCH", mode: "x-position", xField: "time" },
+          chartType: "LineChart",
+        })
+        const crosshair = useCrosshairPosition("multiCH")
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.selection.customHoverBehavior({
+        x: 10,
+        y: 20,
+        xValue: 42.5,
+        data: { time: 40, value: 100 },
+      })
+    })
+
+    expect(result.current.crosshair?.xValue).toBe(42.5)
   })
 
   it("clears crosshair on unmount", () => {

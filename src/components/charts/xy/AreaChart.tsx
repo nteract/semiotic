@@ -11,7 +11,7 @@ import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { type TooltipProp } from "../../Tooltip/Tooltip"
+import { MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
@@ -175,7 +175,8 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
   legendPosition?: LegendPosition
 
   /**
-   * Tooltip configuration
+   * Tooltip configuration. Pass "multi" to show every area value at the
+   * hovered x position.
    */
   tooltip?: TooltipProp
 
@@ -487,7 +488,9 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     showGrid,
     ...setup.legendBehaviorProps,
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
-    ...buildTooltipProps({ tooltip, defaultTooltipContent }),
+    ...(tooltip === "multi"
+      ? { tooltipContent: MultiPointTooltip(), tooltipMode: "multi" as const }
+      : buildTooltipProps({ tooltip, defaultTooltipContent })),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,
       customHoverBehavior: setup.customHoverBehavior,
