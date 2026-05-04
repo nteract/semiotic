@@ -20,6 +20,22 @@ import type { Datum } from "./datumTypes"
  */
 export const DEFAULT_COLOR = "#007bff"
 
+function resolveHoverXPosition(d: Datum, datum: Datum | null | undefined, xField: string): number | null {
+  const candidate = d.xValue ?? datum?.[xField]
+  if (candidate == null) return null
+  const numeric = Number(candidate)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function observationDatum(d: Datum): Datum {
+  let datum = d.data || d.datum || d
+  if (Array.isArray(datum)) datum = datum[0]
+  if (d.xValue != null && datum && typeof datum === "object" && !Array.isArray(datum) && datum.xValue == null) {
+    return { ...datum, xValue: d.xValue }
+  }
+  return datum || {}
+}
+
 /**
  * Returns the theme's categorical palette, or undefined if no ThemeProvider or
  * the palette is empty. Safe to call outside a ThemeProvider (returns undefined).
@@ -273,9 +289,9 @@ export function useChartSelection({
 
           // x-position mode: broadcast X value to crosshair store
           if (hoverConfig?.mode === "x-position" && hoverConfig.xField) {
-            const xVal = datum?.[hoverConfig.xField]
-            if (xVal != null && Number.isFinite(Number(xVal))) {
-              setCrosshairPosition(hoverConfig.name || "hover", Number(xVal), crosshairSourceId)
+            const xVal = resolveHoverXPosition(d, datum, hoverConfig.xField)
+            if (xVal != null) {
+              setCrosshairPosition(hoverConfig.name || "hover", xVal, crosshairSourceId)
             }
           }
 
@@ -312,8 +328,7 @@ export function useChartSelection({
         const base = { timestamp: now, chartType: chartType || "unknown", chartId }
 
         if (d) {
-          let datum = d.data || d.datum || d
-          if (Array.isArray(datum)) datum = datum[0]
+          const datum = observationDatum(d)
           const obs: ChartObservation = {
             ...base,
             type: "hover",
@@ -339,9 +354,9 @@ export function useChartSelection({
       if (hoverConfig?.mode === "x-position" && hoverConfig.xField && d) {
         let datum = d.data || d.datum || d
         if (Array.isArray(datum)) datum = datum[0]
-        const xVal = datum?.[hoverConfig.xField]
-        if (xVal != null && Number.isFinite(Number(xVal))) {
-          toggleCrosshairLock(hoverConfig.name || "hover", Number(xVal), crosshairSourceId)
+        const xVal = resolveHoverXPosition(d, datum, hoverConfig.xField)
+        if (xVal != null) {
+          toggleCrosshairLock(hoverConfig.name || "hover", xVal, crosshairSourceId)
         }
       }
 
@@ -356,8 +371,7 @@ export function useChartSelection({
         const base = { timestamp: now, chartType: chartType || "unknown", chartId }
 
         if (d) {
-          let datum = d.data || d.datum || d
-          if (Array.isArray(datum)) datum = datum[0]
+          const datum = observationDatum(d)
           const obs: ChartObservation = {
             ...base,
             type: "click",

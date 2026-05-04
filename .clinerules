@@ -20,9 +20,9 @@
 
 ## XY Charts (`semiotic/xy`)
 
-**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time")
-**AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true)
-**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered), `stackOrder` (`"key"` default alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"` by total). For canonical streamgraph aesthetic: `baseline="wiggle"` + `stackOrder="insideOut"` puts the largest series in the middle as a central anchor with smaller series wrapping outward. `baseline` is mutually exclusive with `normalize`. No `lineBy`/`lineDataAccessor`.
+**LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time"), `tooltip="multi"` for hover-anywhere series comparison
+**AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true), `tooltip="multi"` for hover-anywhere area comparison
+**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered), `stackOrder` (`"key"` default alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"` by total). For canonical streamgraph aesthetic: `baseline="wiggle"` + `stackOrder="insideOut"` puts the largest series in the middle as a central anchor with smaller series wrapping outward. `baseline` is mutually exclusive with `normalize`. No `lineBy`/`lineDataAccessor`. Pass `tooltip="multi"` for hover-anywhere mode: a single tooltip lists every stacked series at the hovered x, with values interpolated between rendered path samples.
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40])
 **ConnectedScatterplot** — + `orderAccessor`
@@ -306,7 +306,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Geo imports**: Always `semiotic/geo`, never `semiotic`, to avoid d3-geo in non-geo bundles.
 - **fillArea**: `fillArea={["seriesA"]}` fills named series only. Names must match `lineBy`/`colorBy` keys.
 - **hoverHighlight**: Requires `colorBy` as a string field.
-- **tooltip="multi"**: Shows all series at hovered X. Custom fn receives `datum.allSeries`.
+- **tooltip="multi"**: Shows all series at hovered X for LineChart, AreaChart, and StackedAreaChart. Custom fn receives `datum.allSeries`.
 - **Axis config**: `frameProps.axes: [{ orient, includeMax, autoRotate, gridStyle, landmarkTicks }]`
 - **xScaleType: "time"**: Creates `scaleTime`. Required for landmark ticks with timestamps.
 - **scalePadding**: Pixel inset on scale ranges. Pass via `frameProps={{ scalePadding: 12 }}`.

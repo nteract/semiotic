@@ -211,5 +211,24 @@ describe("AreaChart", () => {
       const style = lastXYFrameProps.pointStyle({})
       expect(style.r).toBe(7)
     })
+
+    it('forwards tooltipMode="multi" when tooltip="multi"', () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} tooltip="multi" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBe("multi")
+      expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
+    })
+
+    it("does not set tooltipMode when tooltip is omitted", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.tooltipMode).toBeUndefined()
+    })
   })
 })

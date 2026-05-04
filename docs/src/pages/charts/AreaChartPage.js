@@ -87,7 +87,7 @@ const areaChartProps = [
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-area)", description: "Show a legend. Defaults to true when multiple areas are present." },
-  { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
+  { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every area value at the hovered x position.' },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
@@ -276,6 +276,37 @@ export default function AreaChartPage() {
 ]`,
           areaBy: '"channel"',
           colorBy: '"channel"',
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
+      <p>
+        Pass <code>tooltip="multi"</code> on multi-area charts when readers
+        need the values for every area at the same x position. The tooltip
+        follows the cursor across the rendered x range and interpolates values
+        between sampled points.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: multiAreaData,
+          xAccessor: "month",
+          yAccessor: "sales",
+          areaBy: "channel",
+          colorBy: "channel",
+          tooltip: "multi",
+          curve: "monotoneX",
+          xLabel: "Month",
+          yLabel: "Sales ($)",
+        }}
+        type={AreaChart}
+        overrideProps={{
+          data: `multiAreaData`,
+          areaBy: '"channel"',
+          colorBy: '"channel"',
+          tooltip: '"multi"',
+          curve: '"monotoneX"',
         }}
         hiddenProps={{}}
       />

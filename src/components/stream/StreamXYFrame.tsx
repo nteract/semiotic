@@ -870,7 +870,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
       const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
-      if (!hit) {
+      const isMulti = tooltipMode === "multi"
+
+      const clearHover = () => {
         if (hoverRef.current) {
           hoverRef.current = null
           hoveredNodeRef.current = null
@@ -878,39 +880,79 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           if (customHoverBehavior) customHoverBehavior(null)
           scheduleRender()
         }
+      }
+
+      // Without a hit, only multi-tooltip (hover-anywhere) mode has anything
+      // to show — interpolated series values at the cursor's x. Otherwise
+      // there's nothing under the cursor and we clear.
+      if (!hit && !isMulti) {
+        clearHover()
         return
       }
 
-      const rawDatum = hit.datum || {}
-      const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y)
+      // In multi mode, anchor the hover to the cursor regardless of whether a
+      // node was hit. Using `hit.x/hit.y` would snap to the nearest top-path
+      // sample whenever findNearestNode succeeds, producing a visible jump as
+      // the cursor passes data points. The real hit's `node` is still used
+      // below for highlight tracking.
+      const posX = isMulti || !hit ? chartX : hit.x
+      const posY = isMulti || !hit ? chartY : hit.y
 
-      // Multi-tooltip mode: attach all series values at this X to the hover data
-      if (tooltipMode === "multi" && store.scene.length > 0 && store.scales) {
-        const allHits = findAllNodesAtX(store.scene, hit.x, hoverRadius)
-        const yInvert = store.scales.y.invert
-        const xInvert = store.scales.x.invert
+      let hover: HoverData = buildHoverData(hit?.datum ?? {}, posX, posY)
+
+      // Multi-tooltip mode: attach all series values at this X to the hover data.
+      // Keep the interpolation generous for sparse paths, but range-bounded in
+      // CanvasHitTester so padded/explicit xExtent space outside the rendered
+      // path does not clamp to the first/last point.
+      if (isMulti && store.scene.length > 0 && store.scales) {
+        const allHits = findAllNodesAtX(store.scene, posX, Math.max(hoverRadius, adjustedWidth))
         if (allHits.length > 0) {
-          const xValue = xInvert ? xInvert(hit.x) : hit.x
-          hover.xValue = xValue
-          hover.xPx = hit.x
-          // Read the cached theme primary (updated from the render loop)
-          // so each hit without its own color falls back to --semiotic-primary.
+          const yInvert = store.scales.y.invert
+          const xInvert = store.scales.x.invert
+          // Read the cached theme primary (updated from the render loop) so
+          // each hit without its own color falls back to --semiotic-primary.
           // Avoids re-invoking resolveThemeColors (getComputedStyle) on every
           // pointermove. Required by downstream consumers like MultiPointTooltip
           // that render a color swatch from s.color.
           const fallbackColor = themePrimaryRef.current
-          hover.allSeries = allHits.map(h => ({
-            group: h.group || "",
-            value: yInvert ? yInvert(h.y) : h.y,
-            valuePx: h.y,
-            color: h.color || fallbackColor,
-            datum: h.datum,
-          }))
+          const xValue = xInvert ? xInvert(posX) : posX
+          if (!hit) {
+            const syntheticDatum: Datum = { xValue }
+            if (typeof xAccessor === "string") syntheticDatum[xAccessor] = xValue
+            hover = buildHoverData(syntheticDatum, posX, posY, { xValue, xPx: posX })
+          } else {
+            hover.xValue = xValue
+            hover.xPx = posX
+          }
+          hover.allSeries = allHits.map(h => {
+            const topValue = yInvert ? yInvert(h.y) : h.y
+            const bottomValue = h.y0 != null
+              ? (yInvert ? yInvert(h.y0) : h.y0)
+              : undefined
+            const value = chartType === "stackedarea" && bottomValue != null
+              ? topValue - bottomValue
+              : topValue
+            return {
+              group: h.group || "",
+              value,
+              valuePx: h.y,
+              color: h.color || fallbackColor,
+              datum: h.datum,
+            }
+          })
         }
       }
 
+      // Hover-anywhere with no real hit and no series under the cursor (e.g.
+      // before/after the data range) is nothing to show — clear instead of
+      // rendering an empty tooltip at the synthetic cursor position.
+      if (!hit && !hover.allSeries?.length) {
+        clearHover()
+        return
+      }
+
       hoverRef.current = hover
-      hoveredNodeRef.current = hit.node
+      hoveredNodeRef.current = hit?.node ?? null
       setHoverPoint(hover)
       if (customHoverBehavior) {
         customHoverBehavior(hover)

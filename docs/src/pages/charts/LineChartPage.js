@@ -144,7 +144,7 @@ const lineChartProps = [
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-line)", description: "Show a legend. Defaults to true when multiple lines are present." },
-  { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
+  { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every series value at the hovered x position.' },
   { name: "gapStrategy", type: '"break" | "interpolate" | "zero"', required: false, default: '"break"', description: 'How to handle null/undefined/NaN values in data. "break" splits the line at gaps, "interpolate" connects across gaps, "zero" drops to zero.' },
   { name: "directLabel", type: "boolean", required: false, default: "false", description: "Place category labels at line endpoints instead of using a separate legend. Auto-hides the legend when enabled." },
   { name: "legendInteraction", type: '"highlight" | "isolate" | "none"', required: false, default: '"none"', description: 'Legend interaction mode. "highlight" dims non-hovered categories to 30% opacity. "isolate" toggles category visibility on click.' },
@@ -617,10 +617,12 @@ export default function LineChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Hover Highlight */}
       {/* ----------------------------------------------------------------- */}
-      <h3 id="multi-tooltip">Multi-Point Tooltip</h3>
+      <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
         Set <code>tooltip="multi"</code> to show all series values at the
-        hovered X position with color swatches — like a legend inside the tooltip.
+        hovered x position with color swatches. The tooltip follows the cursor
+        across the rendered x range, so readers can compare series between
+        sampled points as well as directly over them.
       </p>
 
       <LiveExample
@@ -631,11 +633,15 @@ export default function LineChartPage() {
           lineBy: "product",
           colorBy: "product",
           tooltip: "multi",
+          curve: "monotoneX",
+          xLabel: "Month",
+          yLabel: "Revenue ($)",
         }}
         type={LineChart}
         overrideProps={{
           data: `multiLineData`,
           tooltip: '"multi"',
+          curve: '"monotoneX"',
         }}
         hiddenProps={{}}
       />

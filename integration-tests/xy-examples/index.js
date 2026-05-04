@@ -61,6 +61,23 @@ const examples = [
     })
   }),
 
+  TestCase({
+    title: "Line Chart — multi tooltip",
+    testId: "xy-line-multi-tooltip",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
+      curve: "monotoneX",
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
   // 3. Area Chart
   TestCase({
     title: "Area Chart",
@@ -71,6 +88,23 @@ const examples = [
       yAccessor: "y",
       areaBy: "series",
       colorBy: "series",
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  TestCase({
+    title: "Area Chart — multi tooltip",
+    testId: "xy-area-multi-tooltip",
+    children: React.createElement(AreaChart, {
+      data: areaData,
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
+      curve: "monotoneX",
       width: 400,
       height: 300,
       colorScheme: colors
@@ -252,6 +286,22 @@ const examples = [
       yAccessor: "value",
       areaBy: "series",
       colorBy: "series",
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  TestCase({
+    title: "Stacked Area Chart — multi tooltip",
+    testId: "xy-stacked-area-multi-tooltip",
+    children: React.createElement(StackedAreaChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      areaBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
       width: 400,
       height: 300,
       colorScheme: colors,

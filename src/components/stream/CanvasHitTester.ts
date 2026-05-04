@@ -13,6 +13,16 @@ export interface HitResult {
   distance: number
 }
 
+export interface XHitResult {
+  node: SceneNode
+  datum: any
+  x: number
+  y: number
+  y0?: number
+  group?: string
+  color?: string
+}
+
 /**
  * Find the nearest scene node to the given pixel coordinates.
  * Dispatches to type-specific hit testers for optimal performance.
@@ -94,6 +104,10 @@ export function findNearestNode(
  */
 function interpolatePathAtX(path: [number, number][], px: number, maxXDistance: number): number | null {
   if (path.length === 0) return null
+  const firstX = path[0][0]
+  const lastX = path[path.length - 1][0]
+  if (px < firstX || px > lastX) return null
+
   const idx = binarySearchPath(path, px)
   if (idx < 0) return null
   if (Math.abs(path[idx][0] - px) > maxXDistance) return null
@@ -127,8 +141,8 @@ export function findAllNodesAtX(
   scene: SceneNode[],
   px: number,
   maxXDistance: number = 30
-): Array<{ node: SceneNode; datum: any; x: number; y: number; group?: string; color?: string }> {
-  const results: Array<{ node: SceneNode; datum: any; x: number; y: number; group?: string; color?: string }> = []
+): XHitResult[] {
+  const results: XHitResult[] = []
 
   for (const node of scene) {
     if (node.type === "line") {
@@ -145,10 +159,11 @@ export function findAllNodesAtX(
       if (areaNode.topPath.length < 2) continue
       const interpY = interpolatePathAtX(areaNode.topPath, px, maxXDistance)
       if (interpY === null) continue
+      const interpY0 = interpolatePathAtX(areaNode.bottomPath, px, maxXDistance)
       const idx = binarySearchPath(areaNode.topPath, px)
       const datum = Array.isArray(areaNode.datum) && areaNode.datum[idx] ? areaNode.datum[idx] : areaNode.datum
       const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined
-      results.push({ node, datum, x: areaNode.topPath[idx][0], y: interpY, group: areaNode.group, color: areaColor })
+      results.push({ node, datum, x: areaNode.topPath[idx][0], y: interpY, y0: interpY0 ?? undefined, group: areaNode.group, color: areaColor })
     }
   }
 

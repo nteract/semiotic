@@ -383,6 +383,49 @@ describe("StreamXYFrame", () => {
       // With enableHover=false, the customHoverBehavior should not be called
       expect(hoverSpy).not.toHaveBeenCalled()
     })
+
+    it("reports stackedarea multi-tooltip values as band heights", async () => {
+      const hoverSpy = vi.fn()
+      const { container } = render(
+        <StreamXYFrame
+          chartType="stackedarea"
+          data={[
+            { x: 0, y: 10, series: "A" },
+            { x: 10, y: 10, series: "A" },
+            { x: 0, y: 5, series: "B" },
+            { x: 10, y: 5, series: "B" },
+          ]}
+          xAccessor="x"
+          yAccessor="y"
+          groupAccessor="series"
+          xExtent={[0, 10]}
+          yExtent={[0, 20]}
+          size={[200, 100]}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          showAxes={false}
+          enableHover
+          tooltipMode="multi"
+          customHoverBehavior={hoverSpy}
+        />
+      )
+
+      await act(async () => { await Promise.resolve() })
+
+      const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
+      fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 85 })
+
+      expect(hoverSpy).toHaveBeenCalled()
+      const hover = hoverSpy.mock.calls.at(-1)?.[0]
+      expect(hover.xValue).toBeCloseTo(5)
+      expect(hover.data.x).toBeCloseTo(5)
+      expect(hover.allSeries).toHaveLength(2)
+
+      const valuesByGroup = Object.fromEntries(
+        hover.allSeries.map((s: { group: string; value: number }) => [s.group, s.value])
+      )
+      expect(valuesByGroup.A).toBeCloseTo(10)
+      expect(valuesByGroup.B).toBeCloseTo(5)
+    })
   })
 
   // ── Legend rendering ──────────────────────────────────────────────────
