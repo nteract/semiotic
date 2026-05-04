@@ -550,5 +550,6 @@ export function navPointToHover(point: NavPoint): HoverData {
     data: rawDatum,
     x: point.x,
     y: point.y,
+    __semioticHoverData: true,
   }
 }

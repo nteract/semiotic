@@ -96,6 +96,10 @@ export function findNearestNode(
         result = hitTestLine(node, px, py, maxDistance)
         break
       case "rect":
+        // Skip non-interactive rects (e.g. swimlane track backgrounds —
+        // emitted with `datum: null` so they paint behind the data items
+        // without stealing hover/click from them).
+        if (node.datum == null) break
         result = hitTestRect(node, px, py)
         break
       case "heatcell":

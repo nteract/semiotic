@@ -118,7 +118,7 @@ function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | nu
 
 function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   if (!data) return null
-  // GeoJSON features: show properties
+  // GeoJSON features: show properties (lifted to top-level on the hover wrapper)
   if (data.properties) {
     const name = data.properties.name || data.properties.NAME || data.properties.id || "Feature"
     return (
@@ -127,8 +127,14 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
       </div>
     )
   }
-  // Point data: show first string/number fields
-  const entries = Object.entries(data).slice(0, 3)
+  // Point data: hover wrapper now has the canonical { data, x, y } shape
+  // (no flattened fields), so read user-facing fields off `data.data`.
+  // Skip wrapper-internal keys when iterating so the default tooltip
+  // shows the user's actual datum fields, not "data: [object]".
+  const source = (data as any).data ?? data
+  const entries = Object.entries(source as Record<string, unknown>)
+    .filter(([k]) => k !== "data" && !k.startsWith("__"))
+    .slice(0, 3)
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       {entries.map(([k, v]) => (
@@ -569,6 +575,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             ...(rawData?.properties || {}),
             data: rawData,
             properties: rawData?.properties,
+            __semioticHoverData: true,
             x, y,
             time: x,
             value: y,
@@ -632,6 +639,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           ...flattened,
           data: rawData,
           properties: rawData?.properties,
+          __semioticHoverData: true,
           x: chartX,
           y: chartY,
           time: chartX,
@@ -681,6 +689,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         properties: rawDatum?.properties,
         x: point.x,
         y: point.y,
+        __semioticHoverData: true,
       }
       hoverRef.current = hover
       setHoverPoint(hover)

@@ -470,15 +470,26 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     //    We wrap all results in the standard tooltip chrome.
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
     return (hoverData: Datum) => {
-      // Unwrap HoverData → raw datum so user functions receive the
-      // data they pushed/passed. Stream Frame hovers carry the
-      // canonical { data, x, y } shape; we use that signature as the
-      // detection heuristic so user data that happens to have a
-      // `.data` property doesn't get over-unwrapped.
-      const looksLikeHoverWrapper = hoverData
+      // Unwrap Semiotic HoverData → raw datum so user functions receive
+      // the data they pushed/passed. Prefer the explicit internal marker
+      // emitted by Stream Frames. Keep a narrow legacy fallback for older
+      // frame wrappers that carried frame-only metadata, but avoid guessing
+      // from common raw fields like `{ x, y, data }` — those are valid user
+      // datum shapes and must not be over-unwrapped.
+      const explicitlyMarked = hoverData?.__semioticHoverData === true
+      const hasLegacyFrameMarker = hoverData && (
+        hoverData.type === "node" ||
+        hoverData.type === "edge" ||
+        hoverData.nodeOrEdge !== undefined ||
+        hoverData.allSeries !== undefined ||
+        hoverData.stats !== undefined ||
+        hoverData.__chartType !== undefined
+      )
+      const looksLikeHoverWrapper = explicitlyMarked || (hoverData
         && hoverData.data !== undefined
         && typeof hoverData.x === "number"
         && typeof hoverData.y === "number"
+        && hasLegacyFrameMarker)
       const datum = looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData
       const result = userFn(datum)
       if (result === null || result === undefined) return null

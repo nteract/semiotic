@@ -196,6 +196,34 @@ describe("CanvasHitTester — findNearestNode", () => {
     expect(lineResult).not.toBeNull()
     expect(lineResult!.datum.id).toBe("l1")
   })
+
+  it("skips non-interactive rect nodes with null datum", () => {
+    const track: RectSceneNode = {
+      type: "rect",
+      x: 40,
+      y: 40,
+      w: 60,
+      h: 20,
+      style: { fill: "#eee" },
+      datum: null,
+    }
+    const dataRect: RectSceneNode = {
+      type: "rect",
+      x: 45,
+      y: 45,
+      w: 20,
+      h: 10,
+      style: { fill: "#09f" },
+      datum: { id: "data" },
+    }
+
+    const hit = findNearestNode([track, dataRect], 50, 50)
+    expect(hit).not.toBeNull()
+    expect(hit!.datum.id).toBe("data")
+
+    const trackOnly = findNearestNode([track], 70, 50)
+    expect(trackOnly).toBeNull()
+  })
 })
 
 describe("hit radius defaults", () => {

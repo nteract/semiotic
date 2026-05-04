@@ -8,6 +8,7 @@ describe("buildHoverData", () => {
     expect(hover.data).toBe(datum)
     expect(hover.x).toBe(100)
     expect(hover.y).toBe(200)
+    expect(hover.__semioticHoverData).toBe(true)
   })
 
   it("does NOT flatten datum fields onto the hover root", () => {

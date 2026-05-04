@@ -71,6 +71,8 @@ export interface HoverData {
   x: number
   /** Pixel Y coordinate of the hovered element */
   y: number
+  /** @internal Explicit marker used to distinguish Semiotic hover wrappers from raw user data. */
+  __semioticHoverData?: true
 
   // ── XY-specific ──────────────────────────────────────────────────────
   /** All series values at hovered X (multi-point tooltip mode) */

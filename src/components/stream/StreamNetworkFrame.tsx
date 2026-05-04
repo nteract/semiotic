@@ -1118,6 +1118,7 @@ const StreamNetworkFrame = forwardRef<
       data: rawDatum,
       x: point.x,
       y: point.y,
+      __semioticHoverData: true,
       nodeOrEdge: "node",
     }
     hoverRef.current = hover

@@ -138,7 +138,6 @@ test.describe("Ordinal Charts - Swimlane", () => {
 
     // Should have category tick labels A, B, C
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Swimlane WITH labels:", texts)
     expect(texts).toContain("A")
     expect(texts).toContain("B")
     expect(texts).toContain("C")
@@ -155,7 +154,6 @@ test.describe("Ordinal Charts - Swimlane", () => {
 
     // Should NOT have category tick labels A, B, C
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Swimlane NO labels:", texts)
     expect(texts).not.toContain("A")
     expect(texts).not.toContain("B")
     expect(texts).not.toContain("C")

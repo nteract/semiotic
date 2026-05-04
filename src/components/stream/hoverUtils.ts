@@ -38,6 +38,7 @@ export function buildHoverData(
     data: rawDatum,
     x,
     y,
+    __semioticHoverData: true,
     ...extra,
   }
 }

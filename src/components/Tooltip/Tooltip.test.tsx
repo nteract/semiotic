@@ -209,20 +209,47 @@ describe("normalizeTooltip", () => {
     expect(rendered.props.children).toBe("Fix bug")
   })
 
-  it("unwraps any HoverData-shaped wrapper so the user fn receives the raw datum", () => {
-    // The Stream Frame's HoverData shape is `{ data, x, y, ... }`.
-    // `normalizeTooltip` detects that shape and unwraps to the
-    // `data` field so user tooltip fns can write `d.fieldName`
-    // instead of `hover.data.fieldName`. After the v2 backward-
-    // compat strip (datum-spread + pixel-coordinate aliases gone),
-    // we use the canonical `{ data, x, y }` signature as the
-    // unwrap heuristic instead of the network-only `type` field.
+  it("unwraps explicitly marked HoverData so the user fn receives the raw datum", () => {
     const fn = (d: Datum) => d.fieldName
     const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
-    const hoverData = { data: { fieldName: "hello" }, x: 10, y: 20 }
+    const hoverData = {
+      data: { fieldName: "hello" },
+      x: 10,
+      y: 20,
+      __semioticHoverData: true,
+    }
     const rendered = wrapped(hoverData) as any
     expect(rendered).not.toBeNull()
     expect(rendered.props.children).toBe("hello")
+  })
+
+  it("does not unwrap raw user data that happens to have x, y, and data fields", () => {
+    const fn = (d: Datum) => d.fieldName
+    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const rawDatum = {
+      x: 10,
+      y: 20,
+      data: { fieldName: "nested value" },
+      fieldName: "top-level value",
+    }
+    const rendered = wrapped(rawDatum) as any
+    expect(rendered).not.toBeNull()
+    expect(rendered.props.children).toBe("top-level value")
+  })
+
+  it("does not unwrap raw user data with a primitive data field and category", () => {
+    const fn = (d: Datum) => d.label
+    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const rawDatum = {
+      x: 10,
+      y: 20,
+      data: "raw payload",
+      category: "A",
+      label: "visible label",
+    }
+    const rendered = wrapped(rawDatum) as any
+    expect(rendered).not.toBeNull()
+    expect(rendered.props.children).toBe("visible label")
   })
 
   it("returns false for undefined", () => {

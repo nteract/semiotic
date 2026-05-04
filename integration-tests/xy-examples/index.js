@@ -61,23 +61,6 @@ const examples = [
     })
   }),
 
-  TestCase({
-    title: "Line Chart — multi tooltip",
-    testId: "xy-line-multi-tooltip",
-    children: React.createElement(LineChart, {
-      data: lineData,
-      xAccessor: "x",
-      yAccessor: "value",
-      lineBy: "series",
-      colorBy: "series",
-      tooltip: "multi",
-      curve: "monotoneX",
-      width: 400,
-      height: 300,
-      colorScheme: colors
-    })
-  }),
-
   // 3. Area Chart
   TestCase({
     title: "Area Chart",
@@ -88,23 +71,6 @@ const examples = [
       yAccessor: "y",
       areaBy: "series",
       colorBy: "series",
-      width: 400,
-      height: 300,
-      colorScheme: colors
-    })
-  }),
-
-  TestCase({
-    title: "Area Chart — multi tooltip",
-    testId: "xy-area-multi-tooltip",
-    children: React.createElement(AreaChart, {
-      data: areaData,
-      xAccessor: "x",
-      yAccessor: "y",
-      areaBy: "series",
-      colorBy: "series",
-      tooltip: "multi",
-      curve: "monotoneX",
       width: 400,
       height: 300,
       colorScheme: colors
@@ -293,22 +259,6 @@ const examples = [
   }),
 
   TestCase({
-    title: "Stacked Area Chart — multi tooltip",
-    testId: "xy-stacked-area-multi-tooltip",
-    children: React.createElement(StackedAreaChart, {
-      data: lineData,
-      xAccessor: "x",
-      yAccessor: "value",
-      areaBy: "series",
-      colorBy: "series",
-      tooltip: "multi",
-      width: 400,
-      height: 300,
-      colorScheme: colors,
-    }),
-  }),
-
-  TestCase({
     title: "Connected Scatterplot",
     testId: "xy-connected-scatter",
     children: React.createElement(ConnectedScatterplot, {
@@ -454,6 +404,61 @@ const examples = [
       colorBy: "series",
       showLegend: true,
       legendInteraction: "isolate",
+      width: 400,
+      height: 300,
+      colorScheme: colors,
+    }),
+  }),
+
+  // ── Multi-tooltip fixtures ───────────────────────────────────────────
+  // Keep the new hover-anywhere examples after the existing visual
+  // regression fixtures so CSS grid row stretching does not shift older
+  // screenshot baselines when new examples are added.
+
+  TestCase({
+    title: "Line Chart — multi tooltip",
+    testId: "xy-line-multi-tooltip",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
+      curve: "monotoneX",
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  TestCase({
+    title: "Area Chart — multi tooltip",
+    testId: "xy-area-multi-tooltip",
+    children: React.createElement(AreaChart, {
+      data: areaData,
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
+      curve: "monotoneX",
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  TestCase({
+    title: "Stacked Area Chart — multi tooltip",
+    testId: "xy-stacked-area-multi-tooltip",
+    children: React.createElement(StackedAreaChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      areaBy: "series",
+      colorBy: "series",
+      tooltip: "multi",
       width: 400,
       height: 300,
       colorScheme: colors,
