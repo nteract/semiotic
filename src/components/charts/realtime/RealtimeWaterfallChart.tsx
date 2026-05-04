@@ -16,6 +16,7 @@ import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import { buildWaterfallTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
@@ -192,7 +193,15 @@ export const RealtimeWaterfallChart = forwardRef(
     const enableHover = resolved.enableHover
     const margin = userMargin ?? resolved.marginDefaults
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    const resolvedTooltip = tooltipContent ?? tooltip
+    // Waterfall-aware default tooltip. Each bar's height represents
+    // the per-tick `delta`, but its TOP ends at the running
+    // cumulative total — the value the bar's projection on the
+    // y-axis is actually telling you. The waterfall scene builder
+    // enriches each rect's datum with `baseline`, `cumEnd`, and
+    // `delta`; surface those so a hovered bar reads "x: <time>",
+    // "Δ: +5.2", "total: 87.4" instead of just "y: 5.2".
+    const resolvedTooltip =
+      tooltipContent ?? tooltip ?? buildWaterfallTooltip({ timeAccessor, valueAccessor })
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

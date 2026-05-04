@@ -116,14 +116,6 @@ function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | nu
   return canvas.getContext("2d")
 }
 
-function flattenGeoDatum(datum: GeoFeatureLike | null | undefined): GeoFeatureLike | null {
-  if (!datum) return null
-  if (datum.properties && typeof datum.properties === "object") {
-    return { ...datum, ...datum.properties }
-  }
-  return datum
-}
-
 function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   if (!data) return null
   // GeoJSON features: show properties
@@ -684,15 +676,11 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Build full HoverData with flattened GeoJSON properties — same shape for
       // both state (tooltip) and customHoverBehavior (no mismatch)
       const rawDatum = point.datum as GeoFeatureLike | null
-      const data = flattenGeoDatum(rawDatum)
       const hover: HoverData = {
-        ...data,
         data: rawDatum,
         properties: rawDatum?.properties,
         x: point.x,
         y: point.y,
-        time: point.x,
-        value: point.y,
       }
       hoverRef.current = hover
       setHoverPoint(hover)

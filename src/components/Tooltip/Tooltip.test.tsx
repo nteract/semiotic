@@ -176,9 +176,14 @@ describe("MultiLineTooltip with piece hover data", () => {
 })
 
 describe("normalizeTooltip", () => {
-  it("returns a default tooltip function for boolean true", () => {
-    const result = normalizeTooltip(true)
-    expect(typeof result).toBe("function")
+  it("returns undefined for boolean true so the chart-specific default tooltip wins via the caller's `||` fallback", () => {
+    // Previously this returned a generic `Tooltip()` helper that
+    // dumped raw datum keys ("o"/"h"/"l"/"c" for candlestick, etc.).
+    // Now `tooltip={true}` defers to the HOC's `defaultTooltipContent`
+    // — the one with proper field labels — by returning undefined and
+    // letting `buildTooltipProps`'s `|| defaultTooltipContent` chain
+    // resolve.
+    expect(normalizeTooltip(true)).toBeUndefined()
   })
 
   it("returns false for boolean false", () => {
@@ -204,12 +209,18 @@ describe("normalizeTooltip", () => {
     expect(rendered.props.children).toBe("Fix bug")
   })
 
-  it("does not unwrap user data that happens to have a .data property", () => {
-    const fn = (d: Datum) => d.data?.nested
+  it("unwraps any HoverData-shaped wrapper so the user fn receives the raw datum", () => {
+    // The Stream Frame's HoverData shape is `{ data, x, y, ... }`.
+    // `normalizeTooltip` detects that shape and unwraps to the
+    // `data` field so user tooltip fns can write `d.fieldName`
+    // instead of `hover.data.fieldName`. After the v2 backward-
+    // compat strip (datum-spread + pixel-coordinate aliases gone),
+    // we use the canonical `{ data, x, y }` signature as the
+    // unwrap heuristic instead of the network-only `type` field.
+    const fn = (d: Datum) => d.fieldName
     const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
-    // User datum has .data but no .type — should NOT be unwrapped
-    const datum = { data: { nested: "hello" }, x: 10, y: 20 }
-    const rendered = wrapped(datum) as any
+    const hoverData = { data: { fieldName: "hello" }, x: 10, y: 20 }
+    const rendered = wrapped(hoverData) as any
     expect(rendered).not.toBeNull()
     expect(rendered.props.children).toBe("hello")
   })
@@ -296,8 +307,11 @@ describe("MultiPointTooltip", () => {
 
   it("falls back to single-datum display when allSeries is missing", () => {
     const fn = MultiPointTooltip()
-    const data = { value: 42 }
-    const { container } = render(<>{fn(data)}</>)
+    // After the v2 backward-compat strip, MultiPointTooltip reads
+    // data-space values off `hover.data` only — the
+    // pixel-coordinate aliases on the hover root are gone.
+    const hoverData = { data: { value: 42 } }
+    const { container } = render(<>{fn(hoverData)}</>)
     expect(container.textContent).toContain("42")
   })
 

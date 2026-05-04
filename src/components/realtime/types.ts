@@ -71,10 +71,6 @@ export interface HoverData {
   x: number
   /** Pixel Y coordinate of the hovered element */
   y: number
-  /** Pixel X coordinate, aliased as "time" for backwards compatibility with realtime charts */
-  time: number
-  /** Pixel Y coordinate, aliased as "value" for backwards compatibility with realtime charts */
-  value: number
 
   // ── XY-specific ──────────────────────────────────────────────────────
   /** All series values at hovered X (multi-point tooltip mode) */

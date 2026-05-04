@@ -547,11 +547,8 @@ export function nextIndex(
 export function navPointToHover(point: NavPoint): HoverData {
   const rawDatum = point.datum || {}
   return {
-    ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
     data: rawDatum,
     x: point.x,
     y: point.y,
-    time: point.x,
-    value: point.y,
   }
 }
