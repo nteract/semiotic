@@ -577,8 +577,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             properties: rawData?.properties,
             __semioticHoverData: true,
             x, y,
-            time: x,
-            value: y,
           }
           hoverRef.current = hover
           hoveredNodeRef.current = node
@@ -681,10 +679,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      // Build full HoverData with flattened GeoJSON properties — same shape for
-      // both state (tooltip) and customHoverBehavior (no mismatch)
+      // Build the HoverData with the same shape the mouse-hover path
+      // emits — flatten GeoJSON properties to the top level so custom
+      // tooltips and `customHoverBehavior` consumers reading `d.name` /
+      // `d.population` see the same fields whether the feature was
+      // reached via the keyboard or the mouse. Without this match, a
+      // keyboard user gets a less-useful hover payload — an
+      // accessibility regression.
       const rawDatum = point.datum as GeoFeatureLike | null
       const hover: HoverData = {
+        ...(rawDatum || {}),
+        ...(rawDatum?.properties || {}),
         data: rawDatum,
         properties: rawDatum?.properties,
         x: point.x,

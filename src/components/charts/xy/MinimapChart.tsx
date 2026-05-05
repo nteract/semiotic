@@ -12,6 +12,7 @@ import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -462,6 +463,18 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   const chartType = fillArea ? "area" as const : "line" as const
 
+  // Default tooltip with accessor-aware labels. `tooltip={true}` should
+  // show a useful tooltip even without a chart-specific default — the
+  // built-in StreamXYFrame fallback only knows generic `x/time` /
+  // `y/value` field names, so consumers with custom accessors (e.g.
+  // `xAccessor="date"` / `yAccessor="sales"`) would otherwise see blank
+  // content. Building one here keeps `normalizeTooltip(tooltip) ||
+  // defaultTooltipContent` honest.
+  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
+  ]), [xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat])
+
   // ── Build StreamXYFrame props ───────────────────────────────────────
 
   const mainProps: StreamXYFrameProps = {
@@ -488,7 +501,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) || undefined }),
+    tooltipContent: tooltip === false
+      ? undefined
+      : (normalizeTooltip(tooltip) || defaultTooltipContent),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
     ...frameProps
