@@ -60,6 +60,16 @@ jobs:
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
+      # Pack-and-import smoke test runs BEFORE publish (not inside
+      # prepublishOnly). Running `npm pack` inside the prepublishOnly
+      # hook of `npm publish` can hit a re-entrancy edge case on some
+      # npm versions where the inner pack returns 0 without producing
+      # a tarball, breaking the smoke check (seen on Node 22 / npm 10
+      # in CI). Splitting it out keeps the validation while sidestepping
+      # the lifecycle interaction.
+      - name: Pack-and-import smoke test
+        run: npm run check:pack
+
       - name: Dry-run publish (validate package)
         run: npm publish --dry-run --tag ${{ steps.dist-tag.outputs.tag }}
         env:

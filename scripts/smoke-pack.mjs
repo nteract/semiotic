@@ -49,7 +49,14 @@ function firstLine(err) {
 function findTarball(dir) {
   const files = readdirSync(dir)
   const tarball = files.find((f) => f.startsWith("semiotic-") && f.endsWith(".tgz"))
-  if (!tarball) throw new Error(`no tarball produced in ${dir}`)
+  if (!tarball) {
+    // Surface what's actually in the dir so CI logs aren't a dead end —
+    // npm pack returning 0 without producing a tarball is rare enough
+    // that the directory listing is the single most useful breadcrumb.
+    throw new Error(
+      `no tarball produced in ${dir} (contents: ${files.length === 0 ? "<empty>" : files.join(", ")})`,
+    )
+  }
   return join(dir, tarball)
 }
 
@@ -61,8 +68,13 @@ const failures = []
 
 try {
   // Pack the working repo into a tarball inside the temp dir.
+  // `--pack-destination` lands the tarball next to our temp consumer
+  // project; capturing combined output keeps CI logs useful when npm
+  // pack exits 0 but produces nothing (rare, but seen on some runners
+  // when --pack-destination is silently ignored).
   console.log("▶ npm pack")
-  run(`npm pack --pack-destination "${tmp}"`, { cwd: repoRoot })
+  const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, { cwd: repoRoot })
+  if (packOut?.trim()) console.log(packOut.trim().split("\n").map((l) => `  ${l}`).join("\n"))
   const tarball = findTarball(tmp)
   console.log(`  tarball: ${tarball}`)
 
