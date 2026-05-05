@@ -181,13 +181,20 @@ describe("buildHeatmapTooltip", () => {
     expect(container.textContent).toMatch(/count:\s*42/)
   })
 
-  it("shows sum only when agg === \"sum\" and the sum differs from count", () => {
+  it("shows sum whenever agg === \"sum\", including the sum-equals-count edge case", () => {
     const Tooltip = buildHeatmapTooltip()
     const sumHover = heatmapHover({ agg: "sum", value: 142, count: 12, sum: 142 })
     const text = render(<>{Tooltip(sumHover)}</>).container.textContent ?? ""
     expect(text).toMatch(/sum:\s*142/)
     expect(text).not.toMatch(/mean:/)
-    // count agg keeps the sum row hidden — value === count there, no extra info.
+    // The metric the heatmap is colored BY when agg="sum" is the sum,
+    // so it's surfaced even when sum coincidentally equals count
+    // (e.g. every value in the bin is 1). Suppressing on equality used
+    // to hide the primary aggregated metric on this realistic case.
+    const onesHover = heatmapHover({ agg: "sum", value: 5, count: 5, sum: 5 })
+    const onesText = render(<>{Tooltip(onesHover)}</>).container.textContent ?? ""
+    expect(onesText).toMatch(/sum:\s*5/)
+    // count agg still keeps the sum row hidden — sum isn't the metric there.
     const countText = render(<>{Tooltip(heatmapHover())}</>).container.textContent ?? ""
     expect(countText).not.toMatch(/sum:/)
     expect(countText).not.toMatch(/mean:/)

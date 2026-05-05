@@ -148,12 +148,16 @@ export function buildWaterfallTooltip<TDatum extends Datum = Datum>(
  * This tooltip surfaces the user-relevant info:
  *   x:     <data-space x-center of the bin>
  *   y:     <data-space y-center of the bin>
- *   count: 12               (always shown)
- *   sum:   142              (when agg === "sum" and differs from count)
+ *   count: 12               (when datum.count is present — streaming path)
+ *   sum:   142              (when agg === "sum")
  *   mean:  11.83            (when agg === "mean")
  *
+ * For `agg === "sum"` we always surface the sum (it's the metric the
+ * heatmap is colored by, even when sum happens to equal count).
+ *
  * Falls back to the canonical x/y shape if the enriched fields are
- * absent (e.g. a non-streaming render path).
+ * absent (e.g. a non-streaming render path); the count/sum/mean rows
+ * only appear when the matching field is present on the datum.
  */
 export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
   options: DefaultRealtimeTooltipOptions<TDatum> = {},
@@ -186,7 +190,7 @@ export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
         {count != null && (
           <div><span style={labelStyle}>count:</span>{format(count)}</div>
         )}
-        {agg === "sum" && sum != null && sum !== count && (
+        {agg === "sum" && sum != null && (
           <div><span style={labelStyle}>sum:</span>{format(sum)}</div>
         )}
         {agg === "mean" && mean != null && (
