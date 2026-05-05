@@ -171,7 +171,13 @@ export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
     const x = datum?.xCenter ?? readField(datum, timeAccessor, "time")
     const y = datum?.yCenter ?? readField(datum, valueAccessor, "value")
     const count = datum?.count
-    const value = datum?.value
+    // Read the dedicated `sum` and `value` fields directly off the datum
+    // contract instead of treating `value` as the sum (it's
+    // aggregation-dependent — equals count for "count", mean for "mean").
+    // Decoupling the display from `value` semantics keeps the tooltip
+    // honest if the scene ever changes how `value` is computed.
+    const sum = datum?.sum
+    const mean = datum?.value
     const agg = datum?.agg ?? "count"
     return (
       <div className="semiotic-tooltip" style={tooltipStyle}>
@@ -180,11 +186,11 @@ export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
         {count != null && (
           <div><span style={labelStyle}>count:</span>{format(count)}</div>
         )}
-        {agg === "sum" && value != null && value !== count && (
-          <div><span style={labelStyle}>sum:</span>{format(value)}</div>
+        {agg === "sum" && sum != null && sum !== count && (
+          <div><span style={labelStyle}>sum:</span>{format(sum)}</div>
         )}
-        {agg === "mean" && value != null && (
-          <div><span style={labelStyle}>mean:</span>{format(value)}</div>
+        {agg === "mean" && mean != null && (
+          <div><span style={labelStyle}>mean:</span>{format(mean)}</div>
         )}
       </div>
     )
