@@ -218,17 +218,25 @@ const defaultTooltipStyle: React.CSSProperties = {
 }
 
 function DefaultTooltip({ hover }: { hover: HoverData }) {
-  const fmtValue = (v: number) =>
-    Number.isInteger(v) ? String(v) : v.toFixed(2)
-
+  const fmt = (v: unknown): string => {
+    if (v == null) return ""
+    if (typeof v === "number") return Number.isInteger(v) ? String(v) : v.toFixed(2)
+    if (v instanceof Date) return v.toLocaleString()
+    return String(v)
+  }
+  // Read data-space values off the raw datum. The Stream Frame's
+  // hover-build pipeline doesn't know the consumer's accessor names,
+  // so the default tooltip displays the canonical-shape fields. HOCs
+  // that want to honor `xAccessor`/`yAccessor` build their own
+  // tooltip — see `buildDefaultRealtimeTooltip` for the realtime
+  // family's accessor-aware fallback.
+  const datum = (hover.data ?? {}) as Record<string, unknown>
+  const yField = datum.y ?? datum.value
+  const xField = datum.x ?? datum.time
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 600, marginBottom: 2 }}>
-        {fmtValue(hover.value)}
-      </div>
-      <div style={{ opacity: 0.7, fontSize: 11 }}>
-        {fmtValue(hover.time)}
-      </div>
+      <div style={{ fontWeight: 600, marginBottom: 2 }}>{fmt(yField)}</div>
+      <div style={{ opacity: 0.7, fontSize: 11 }}>{fmt(xField)}</div>
     </div>
   )
 }

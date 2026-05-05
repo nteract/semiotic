@@ -1,55 +1,84 @@
 import { test, expect } from "@playwright/test"
 import { waitForAllChartsReady } from "./helpers"
 
-test("check xy-examples page for errors", async ({ page }) => {
+const requiredCanvasCharts = ["xy-line", "xy-area", "xy-scatter", "xy-stacked-area"]
+
+type CanvasChartSummary = {
+  id: string
+  hasContainer: boolean
+  hasDataCanvas: boolean
+  width: number
+  height: number
+  painted: boolean
+}
+
+function summarizeCanvasCharts(ids: string[]): CanvasChartSummary[] {
+  return ids.map(id => {
+    const container = document.querySelector(`[data-testid="${id}"]`)
+    const canvas = container?.querySelector("canvas[aria-label]") as HTMLCanvasElement | null
+    let painted = false
+
+    if (canvas && canvas.width > 0 && canvas.height > 0) {
+      const ctx = canvas.getContext("2d")
+      if (ctx) {
+        try {
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+          for (let i = 0; i < data.length; i += 16) {
+            const alpha = data[i + 3]
+            if (alpha <= 10) continue
+            if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) continue
+            painted = true
+            break
+          }
+        } catch {
+          painted = false
+        }
+      }
+    }
+
+    return {
+      id,
+      hasContainer: Boolean(container),
+      hasDataCanvas: Boolean(canvas),
+      width: canvas?.width ?? 0,
+      height: canvas?.height ?? 0,
+      painted
+    }
+  })
+}
+
+test("xy-examples page mounts charts without runtime errors", async ({ page }) => {
   const errors: string[] = []
-  const consoleLogs: string[] = []
+  const consoleErrors: string[] = []
 
   page.on("pageerror", err => errors.push(err.message))
   page.on("console", msg => {
     if (msg.type() === "error") {
-      consoleLogs.push(`ERROR: ${msg.text()}`)
-    } else {
-      consoleLogs.push(msg.text())
+      consoleErrors.push(msg.text())
     }
   })
 
-  await page.goto("http://localhost:1234/xy-examples/")
+  await page.goto("/xy-examples/")
   await waitForAllChartsReady(page)
 
-  console.log("=== Page Errors ===")
-  errors.forEach(e => console.log(e))
-
-  console.log("\n=== Console Logs ===")
-  consoleLogs.forEach(l => console.log(l))
-
-  console.log("\n=== Element Counts ===")
   const testCases = await page.locator('[data-testid]').count()
-  const svgs = await page.locator("svg.visualization-layer").count()
   const canvases = await page.locator("canvas").count()
+  const dataCanvases = await page.locator("canvas[aria-label]").count()
 
-  console.log(`Test cases: ${testCases}`)
-  console.log(`SVG elements: ${svgs}`)
-  console.log(`Canvas elements: ${canvases}`)
+  expect(errors).toEqual([])
+  expect(consoleErrors).toEqual([])
+  expect(testCases).toBeGreaterThan(10)
+  expect(canvases).toBeGreaterThan(0)
+  expect(dataCanvases).toBeGreaterThan(0)
 
-  // Get list of test IDs
-  const testIds = await page.locator('[data-testid]').evaluateAll(els =>
-    els.map(el => el.getAttribute('data-testid'))
-  )
-  console.log("\n=== Test IDs found ===")
-  testIds.forEach(id => console.log(`  - ${id}`))
-
-  // Check specific canvas example
-  const canvasTest = page.locator('[data-testid="xy-line-canvas"]')
-  const canvasTestVisible = await canvasTest.isVisible().catch(() => false)
-  console.log(`\nCanvas test case visible: ${canvasTestVisible}`)
-
-  if (canvasTestVisible) {
-    const svgInCanvas = await canvasTest.locator("svg").count()
-    const canvasInCanvas = await canvasTest.locator("canvas").count()
-    console.log(`  SVG inside canvas test: ${svgInCanvas}`)
-    console.log(`  Canvas inside canvas test: ${canvasInCanvas}`)
+  const chartSummaries = await page.evaluate(summarizeCanvasCharts, requiredCanvasCharts)
+  for (const summary of chartSummaries) {
+    expect(summary).toEqual(expect.objectContaining({
+      hasContainer: true,
+      hasDataCanvas: true,
+      painted: true
+    }))
+    expect(summary.width).toBeGreaterThan(0)
+    expect(summary.height).toBeGreaterThan(0)
   }
-
-  await page.screenshot({ path: "test-results/xy-examples-debug.png", fullPage: true })
 })

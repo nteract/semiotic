@@ -262,6 +262,9 @@ const SwimlaneChartPropsTable = [
   { name: "brush", type: "boolean", required: false, default: null, description: "Enable value-axis brush selection." },
   { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { r: [min, max] } or null when brush clears." },
   { name: "linkedBrush", type: "string | object", required: false, default: null, description: "LinkedCharts brush integration name." },
+  { name: "gradientFill", type: "boolean | { topOpacity, bottomOpacity } | { colorStops }", required: false, default: null, description: "Gradient fill across each segment along its growth direction (left→right horizontal, bottom→top vertical). Same shape as BarChart/AreaChart gradientFill." },
+  { name: "trackFill", type: "string | { color, opacity }", required: false, default: null, description: 'Lane "track" fill — a rect drawn behind each lane spanning the full value-axis range, sized to the lane\'s bandwidth. CSS vars supported (e.g. "var(--semiotic-grid)").' },
+  { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects. Supports x-threshold for unlabeled dashed vertical reference lines (omit label)." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamOrdinalFrame for advanced control." },
 ]
 
@@ -448,6 +451,118 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
       strokeWidth: 1,
     }),
   }}
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Gradient Fill + Threshold */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="gradient-fill">Gradient Fill + Threshold</h2>
+
+      <p>
+        Pass <code>gradientFill</code> with <code>colorStops</code> to render a
+        multi-stop gradient along each segment&rsquo;s growth direction
+        (left&rarr;right horizontal, bottom&rarr;top vertical). The shape
+        matches <Link to="/charts/bar-chart">BarChart</Link> and{" "}
+        <Link to="/charts/area-chart">AreaChart</Link>. Combine with an{" "}
+        <code>x-threshold</code> annotation to drop an unlabeled dashed
+        vertical line at any value &mdash; useful for SLO/budget markers.
+      </p>
+
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16 }}>
+        <SwimlaneChart
+          data={[{ lane: "Budget", phase: "spend", value: 75 }]}
+          categoryAccessor="lane"
+          subcategoryAccessor="phase"
+          valueAccessor="value"
+          width={600}
+          height={120}
+          orientation="horizontal"
+          showCategoryTicks
+          showLegend={false}
+          margin={{ left: 90, right: 20, top: 10, bottom: 30 }}
+          frameProps={{ rExtent: [0, 100] }}
+          // Track sized to the lane's bandwidth (not the full plot area),
+          // spanning the full value axis, drawn behind the gradient bar.
+          // Semi-transparent neutral grey naturally contrasts on both
+          // light and dark backgrounds — appears as light grey over white
+          // and mid grey over near-black.
+          trackFill="rgba(127, 127, 127, 0.25)"
+          gradientFill={{
+            colorStops: [
+              { offset: 0, color: "#9ca3af" },
+              { offset: 50 / 75, color: "#9ca3af" },
+              { offset: 50 / 75, color: "#fbbf24" },
+              { offset: 62.5 / 75, color: "#f97316" },
+              { offset: 1, color: "#dc2626" },
+            ],
+          }}
+          annotations={[
+            { type: "x-threshold", value: 50, color: "var(--semiotic-text, #374151)", strokeWidth: 1.5 },
+          ]}
+        />
+      </div>
+
+      <p>
+        The same gradient + threshold combo also works in <code>sparkline</code>
+        mode &mdash; chrome strips off but the track, gradient, and dashed
+        threshold remain. Useful for inline status indicators in tables and
+        dashboards.
+      </p>
+
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 13, color: "var(--text-2)", minWidth: 80 }}>Q3 budget</span>
+        <SwimlaneChart
+          mode="sparkline"
+          data={[{ lane: "spend", phase: "spend", value: 75 }]}
+          categoryAccessor="lane"
+          subcategoryAccessor="phase"
+          valueAccessor="value"
+          width={240}
+          height={20}
+          orientation="horizontal"
+          frameProps={{ rExtent: [0, 100] }}
+          trackFill="rgba(127, 127, 127, 0.25)"
+          gradientFill={{
+            colorStops: [
+              { offset: 0, color: "#9ca3af" },
+              { offset: 50 / 75, color: "#9ca3af" },
+              { offset: 50 / 75, color: "#fbbf24" },
+              { offset: 62.5 / 75, color: "#f97316" },
+              { offset: 1, color: "#dc2626" },
+            ],
+          }}
+          annotations={[
+            { type: "x-threshold", value: 50, color: "var(--semiotic-text, #374151)", strokeWidth: 1.5 },
+          ]}
+        />
+        <span style={{ fontSize: 13, color: "var(--text-2)" }}>75% of $1.2M</span>
+      </div>
+
+      <CodeBlock
+        code={`<SwimlaneChart
+  data={[{ lane: "Budget", phase: "spend", value: 75 }]}
+  categoryAccessor="lane"
+  subcategoryAccessor="phase"
+  valueAccessor="value"
+  orientation="horizontal"
+  frameProps={{ rExtent: [0, 100] }}
+  // Track sized to the lane's bandwidth, full value-axis width.
+  // Semi-transparent grey naturally contrasts in both light and dark mode.
+  trackFill="rgba(127, 127, 127, 0.25)"
+  gradientFill={{
+    colorStops: [
+      { offset: 0,       color: "#9ca3af" }, // grey from 0%...
+      { offset: 50/75,   color: "#9ca3af" }, // ...to 50% (hard transition)
+      { offset: 50/75,   color: "#fbbf24" }, // yellow from 50%...
+      { offset: 62.5/75, color: "#f97316" }, // ...through orange...
+      { offset: 1,       color: "#dc2626" }, // ...to red at 75%
+    ],
+  }}
+  annotations={[
+    { type: "x-threshold", value: 50, color: "var(--semiotic-text)" },
+  ]}
 />`}
         language="jsx"
       />

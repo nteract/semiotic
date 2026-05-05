@@ -407,8 +407,10 @@ export function MultiPointTooltip(): TooltipContentFn {
   return (d: Datum) => {
     const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: Datum }> | undefined
     if (!allSeries || allSeries.length === 0) {
-      // Fallback to single-datum display — prefer data-space values from datum
-      const val = d.data?.value ?? d.data?.y ?? d.value ?? d.y
+      // Fallback to single-datum display. Read data-space values
+      // off `d.data` only — the v2-era pixel-coordinate aliases on
+      // the hover root are gone.
+      const val = d.data?.value ?? d.data?.y
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div>{formatValue(val)}</div>
@@ -416,8 +418,9 @@ export function MultiPointTooltip(): TooltipContentFn {
       )
     }
 
-    // Header: use xValue (data-space) set by StreamXYFrame, fall back to datum fields
-    const headerValue = d.xValue ?? d.data?.time ?? d.data?.x ?? d.time
+    // Header: prefer `xValue` (data-space, set by StreamXYFrame for
+    // multi-tooltip mode), then fall back to canonical datum fields.
+    const headerValue = d.xValue ?? d.data?.time ?? d.data?.x
 
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
@@ -443,10 +446,20 @@ export function MultiPointTooltip(): TooltipContentFn {
  * Returns `false` to disable, or a `TooltipContentFn` compatible with
  * all Stream Frame `tooltipContent` signatures.
  */
-export function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn {
+export function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined {
   if (tooltip === true) {
-    // Enable default tooltip — return generic Tooltip function
-    return Tooltip()
+    // Return undefined so the caller's `|| defaultTooltipContent`
+    // fallback chain (in `buildTooltipProps`) lands on the chart's
+    // chart-specific default tooltip — the one with proper field
+    // labels ("Open"/"High"/"Low"/"Close" for candlestick,
+    // "Category"/"Value" for ordinal, etc.). Returning the generic
+    // `Tooltip()` here would render raw datum field names ("o", "h",
+    // "l", "c") which is what `tooltip={true}` historically did but
+    // is rarely what the user wants. Consumers without a chart-
+    // specific default still fall through to the Stream Frame's
+    // `DefaultTooltip`, so `tooltip={true}` on a raw frame keeps
+    // working — just with the chart-aware shape.
+    return undefined
   }
 
   if (typeof tooltip === "function") {
@@ -457,15 +470,27 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     //    We wrap all results in the standard tooltip chrome.
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
     return (hoverData: Datum) => {
-      // Unwrap HoverData → raw datum so user functions receive the data they expect.
-      // Only unwrap when hoverData matches the HoverData shape from Stream Frames
-      // (has .type of "node"/"edge" AND .data object). This avoids mis-unwrapping
-      // user data that happens to have a .data property.
-      const isHoverWrapper = hoverData
-        && typeof hoverData.data === "object"
-        && hoverData.data !== null
-        && (hoverData.type === "node" || hoverData.type === "edge")
-      const datum = isHoverWrapper ? hoverData.data : hoverData
+      // Unwrap Semiotic HoverData → raw datum so user functions receive
+      // the data they pushed/passed. Prefer the explicit internal marker
+      // emitted by Stream Frames. Keep a narrow legacy fallback for older
+      // frame wrappers that carried frame-only metadata, but avoid guessing
+      // from common raw fields like `{ x, y, data }` — those are valid user
+      // datum shapes and must not be over-unwrapped.
+      const explicitlyMarked = hoverData?.__semioticHoverData === true
+      const hasLegacyFrameMarker = hoverData && (
+        hoverData.type === "node" ||
+        hoverData.type === "edge" ||
+        hoverData.nodeOrEdge !== undefined ||
+        hoverData.allSeries !== undefined ||
+        hoverData.stats !== undefined ||
+        hoverData.__chartType !== undefined
+      )
+      const looksLikeHoverWrapper = explicitlyMarked || (hoverData
+        && hoverData.data !== undefined
+        && typeof hoverData.x === "number"
+        && typeof hoverData.y === "number"
+        && hasLegacyFrameMarker)
+      const datum = looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (

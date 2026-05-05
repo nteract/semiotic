@@ -1,5 +1,5 @@
 import { buildRectNode } from "../SceneGraph"
-import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
+import type { OrdinalSceneNode, OrdinalLayout, RectSceneNode } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
 /**
@@ -16,6 +16,35 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isHorizontal = projection === "horizontal"
+  const gradientFill = ctx.config.gradientFill
+  // Gradient runs along the bar's growth direction. Horizontal lanes grow
+  // left→right, so the gradient axis pivots on the "left" edge; vertical
+  // lanes grow bottom→top, pivoting on "bottom". roundedEdge alone doesn't
+  // round corners (the canvas renderer only rounds when roundedTop > 0).
+  const gradientEdge: RectSceneNode["roundedEdge"] = isHorizontal ? "left" : "bottom"
+
+  // ── Track ────────────────────────────────────────────────────────────
+  // Optional rect drawn behind each lane spanning the full value-axis
+  // range, sized to the lane's bandwidth. Lets budget/progress lanes read
+  // as filled vs. empty. Emitted before data items so the bar paints on
+  // top. Pixel range = the r-scale's pixel range (already accounts for
+  // extentPadding so the track aligns with the axis ticks).
+  const trackFill = ctx.config.trackFill
+  if (trackFill) {
+    const trackColor = typeof trackFill === "string" ? trackFill : trackFill.color
+    const trackOpacity = typeof trackFill === "string" ? 1 : (trackFill.opacity ?? 1)
+    const [r0, r1] = rScale.range()
+    const trackStart = Math.min(r0, r1)
+    const trackLen = Math.abs(r1 - r0)
+    for (const col of Object.values(columns)) {
+      const trackStyle = { fill: trackColor, opacity: trackOpacity }
+      // datum: null so hit-testing returns no payload — track is purely visual.
+      const node = isHorizontal
+        ? buildRectNode(trackStart, col.x, trackLen, col.width, trackStyle, null, "__track__")
+        : buildRectNode(col.x, trackStart, col.width, trackLen, trackStyle, null, "__track__")
+      nodes.push(node)
+    }
+  }
 
   for (const col of Object.values(columns)) {
     // Each piece becomes its own rect, stacked sequentially within the lane.
@@ -29,21 +58,28 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
       const subcategory = getStack ? getStack(d) : col.name
       const style = resolvePieceStyle(d, subcategory)
 
+      let node: RectSceneNode
       if (isHorizontal) {
         const x0 = rScale(offset)
         const x1 = rScale(offset + val)
-        nodes.push(buildRectNode(
+        node = buildRectNode(
           x0, col.x, x1 - x0, col.width,
           style, d, subcategory
-        ))
+        )
       } else {
         const y0 = rScale(offset + val)
         const y1 = rScale(offset)
-        nodes.push(buildRectNode(
+        node = buildRectNode(
           col.x, y0, col.width, y1 - y0,
           style, d, subcategory
-        ))
+        )
       }
+
+      if (gradientFill) {
+        node.fillGradient = gradientFill
+        node.roundedEdge = gradientEdge
+      }
+      nodes.push(node)
 
       offset += val
     }

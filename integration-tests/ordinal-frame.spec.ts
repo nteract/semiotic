@@ -138,7 +138,6 @@ test.describe("Ordinal Charts - Swimlane", () => {
 
     // Should have category tick labels A, B, C
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Swimlane WITH labels:", texts)
     expect(texts).toContain("A")
     expect(texts).toContain("B")
     expect(texts).toContain("C")
@@ -155,10 +154,48 @@ test.describe("Ordinal Charts - Swimlane", () => {
 
     // Should NOT have category tick labels A, B, C
     const texts = await testCase.locator("svg text").allTextContents()
-    console.log("Swimlane NO labels:", texts)
     expect(texts).not.toContain("A")
     expect(texts).not.toContain("B")
     expect(texts).not.toContain("C")
+  })
+
+  test("swimlane gradient + dashed x-threshold annotation render", async ({ page }) => {
+    await waitForChartReady(page, "ord-swimlane-gradient")
+    const testCase = page.locator('[data-testid="ord-swimlane-gradient"]')
+
+    // Canvas paints the gradient bar (and the trackFill rect behind it).
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.width).toBeGreaterThan(100)
+
+    // SVG overlay should carry an x-threshold line with the default
+    // dashed pattern. Annotation renders as <line stroke-dasharray="6,3">.
+    const dashedLines = testCase.locator('svg line[stroke-dasharray="6,3"]')
+    await expect(dashedLines).toHaveCount(1)
+
+    // Visual snapshot — covers gradient stops + threshold position + track.
+    await expect(testCase).toHaveScreenshot("ord-swimlane-gradient.png", {
+      maxDiffPixels: 200
+    })
+  })
+
+  test("swimlane gradient renders in sparkline mode with track + threshold", async ({ page }) => {
+    await waitForChartReady(page, "ord-swimlane-gradient-sparkline")
+    const testCase = page.locator('[data-testid="ord-swimlane-gradient-sparkline"]')
+
+    // Canvas paints the gradient bar (and trackFill) at sparkline dimensions.
+    const canvas = testCase.locator("canvas").first()
+    const box = await canvas.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.height).toBeLessThan(40)
+
+    // Dashed threshold survives the sparkline chrome strip.
+    await expect(testCase.locator('svg line[stroke-dasharray="6,3"]')).toHaveCount(1)
+
+    await expect(testCase).toHaveScreenshot("ord-swimlane-gradient-sparkline.png", {
+      maxDiffPixels: 200
+    })
   })
 })
 

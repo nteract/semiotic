@@ -295,6 +295,10 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
 
   for (const node of scene) {
     if (node.type === "rect" && node.x != null) {
+      // Skip non-interactive rects (e.g. swimlane track backgrounds —
+      // emitted with `datum: null` so arrow-key navigation lands on
+      // real data segments, not empty track tiles with no tooltip).
+      if (node.datum == null) continue
       // Group by node.group (set by stacking/grouping) falling back to category.
       const category = node.datum?.category ?? ""
       points.push({
@@ -547,11 +551,9 @@ export function nextIndex(
 export function navPointToHover(point: NavPoint): HoverData {
   const rawDatum = point.datum || {}
   return {
-    ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
     data: rawDatum,
     x: point.x,
     y: point.y,
-    time: point.x,
-    value: point.y,
+    __semioticHoverData: true,
   }
 }

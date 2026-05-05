@@ -73,6 +73,17 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
   rTickValues?: number[]
   /** Align first value tick label to start, last to end. Prevents clipping at chart edges. */
   tickLabelEdgeAlign?: boolean
+  /** Gradient fill for swimlane segments. `true` uses tip→base opacity ramp;
+   *  pass `{ topOpacity, bottomOpacity }` for a uniform alpha gradient or
+   *  `{ colorStops }` for a multi-stop color ramp. Same shape as
+   *  BarChart.gradientFill / AreaChart.gradientFill. The gradient runs along
+   *  the lane's growth direction (left→right horizontal, bottom→top vertical). */
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Lane "track" fill — a rect drawn behind each lane spanning the full
+   *  value-axis range, sized to the lane's bandwidth. Lets budget/progress
+   *  lanes read as filled vs. empty. Pass a color string (CSS vars
+   *  supported, e.g. `"var(--semiotic-grid)"`) or `{ color, opacity }`. */
+  trackFill?: string | { color: string; opacity?: number }
   /** Pass-through props to StreamOrdinalFrame */
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
@@ -162,6 +173,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     rTickValues,
     tickLabelEdgeAlign,
     showCategoryTicks,
+    gradientFill,
+    trackFill,
   } = props
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, categoryLabel, valueLabel } = resolved
@@ -306,6 +319,12 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(gradientFill && {
+      gradientFill: gradientFill === true
+        ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+        : gradientFill
+    }),
+    ...(trackFill != null && { trackFill }),
     ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.

@@ -221,6 +221,76 @@ const examples = [
       height: 200,
     })
   }),
+  // Swimlane gradient + dashed x-threshold annotation (primary mode)
+  // Single-lane budget bar: solid grey 0-50%, then yellow→orange→red
+  // gradient 50-75%, with an unlabeled dashed line at 50% (the threshold).
+  // The light-grey "track" behind the bar spans the full 0-100 value range
+  // and is theme-aware via --semiotic-grid.
+  TestCase({
+    title: "Swimlane (gradient + threshold)",
+    testId: "ord-swimlane-gradient",
+    children: React.createElement(SwimlaneChart, {
+      data: [{ lane: "Budget", phase: "spend", value: 75 }],
+      categoryAccessor: "lane",
+      subcategoryAccessor: "phase",
+      valueAccessor: "value",
+      orientation: "horizontal",
+      showCategoryTicks: true,
+      showLegend: false,
+      // Width fits within the 380px test-grid content area (420 column - 20*2 padding)
+      // so the chart doesn't overflow into the adjacent sparkline test case.
+      width: 360,
+      height: 120,
+      margin: { left: 70, right: 20, top: 10, bottom: 30 },
+      frameProps: { rExtent: [0, 100] },
+      // Track sized to the lane's bandwidth. Semi-transparent neutral grey
+      // contrasts in both light and dark mode without flipping black/white.
+      trackFill: "rgba(127, 127, 127, 0.25)",
+      gradientFill: {
+        colorStops: [
+          { offset: 0, color: "#9ca3af" },
+          { offset: 50 / 75, color: "#9ca3af" },
+          { offset: 50 / 75, color: "#fbbf24" },
+          { offset: 62.5 / 75, color: "#f97316" },
+          { offset: 1, color: "#dc2626" },
+        ],
+      },
+      annotations: [
+        { type: "x-threshold", value: 50, color: "var(--semiotic-text, #374151)", strokeWidth: 1.5 },
+      ],
+    })
+  }),
+  // Same gradient + threshold composition in sparkline mode — chrome
+  // strips, track + gradient + dashed threshold remain. Inline status
+  // indicator suitable for tables and compact dashboards.
+  TestCase({
+    title: "Swimlane (gradient + threshold, sparkline)",
+    testId: "ord-swimlane-gradient-sparkline",
+    children: React.createElement(SwimlaneChart, {
+      mode: "sparkline",
+      data: [{ lane: "spend", phase: "spend", value: 75 }],
+      categoryAccessor: "lane",
+      subcategoryAccessor: "phase",
+      valueAccessor: "value",
+      orientation: "horizontal",
+      width: 240,
+      height: 20,
+      frameProps: { rExtent: [0, 100] },
+      trackFill: "rgba(127, 127, 127, 0.25)",
+      gradientFill: {
+        colorStops: [
+          { offset: 0, color: "#9ca3af" },
+          { offset: 50 / 75, color: "#9ca3af" },
+          { offset: 50 / 75, color: "#fbbf24" },
+          { offset: 62.5 / 75, color: "#f97316" },
+          { offset: 1, color: "#dc2626" },
+        ],
+      },
+      annotations: [
+        { type: "x-threshold", value: 50, color: "var(--semiotic-text, #374151)", strokeWidth: 1.5 },
+      ],
+    })
+  }),
   // Swimlane WITHOUT category ticks
   TestCase({
     title: "Swimlane (no labels)",

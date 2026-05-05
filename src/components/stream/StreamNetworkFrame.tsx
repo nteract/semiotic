@@ -1115,12 +1115,10 @@ const StreamNetworkFrame = forwardRef<
     focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
     const rawDatum = point.datum || {}
     const hover: HoverData = {
-      ...(typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum) ? rawDatum : {}),
       data: rawDatum,
       x: point.x,
       y: point.y,
-      time: point.x,
-      value: point.y,
+      __semioticHoverData: true,
       nodeOrEdge: "node",
     }
     hoverRef.current = hover

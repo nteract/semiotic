@@ -337,8 +337,11 @@ export default function TooltipsPage() {
       <h3 id="custom-tooltip">Custom Tooltip Function</h3>
       <p>
         For complete control over tooltip rendering, pass a custom function to{" "}
-        <code>tooltipContent</code>. The function receives the hovered data
-        point and should return a React element:
+        <code>tooltipContent</code>. The function receives the
+        Stream Frame's <code>HoverData</code> wrapper —{" "}
+        <code>{`{ data, x, y, ... }`}</code> — where <code>data</code> is the
+        raw datum the user pushed or passed. Read fields off{" "}
+        <code>d.data</code> directly:
       </p>
 
       <CodeBlock
@@ -346,25 +349,36 @@ export default function TooltipsPage() {
   data={data}
   chartType="scatter"
   enableHover={true}
-  tooltipContent={d => (
-    <div style={{
-      background: "var(--surface-1)",
-      border: "1px solid #ccc",
-      padding: "8px 12px",
-      borderRadius: 4,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-    }}>
-      <strong>{d.category}</strong>
-      <div>X: {d.x}</div>
-      <div>Y: {d.y}</div>
-      <div>Value: {d.value.toLocaleString()}</div>
-    </div>
-  )}
+  tooltipContent={d => {
+    const datum = d.data
+    return (
+      <div style={{
+        background: "var(--surface-1)",
+        border: "1px solid #ccc",
+        padding: "8px 12px",
+        borderRadius: 4,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+      }}>
+        <strong>{datum.category}</strong>
+        <div>X: {datum.x}</div>
+        <div>Y: {datum.y}</div>
+        <div>Value: {datum.value.toLocaleString()}</div>
+      </div>
+    )
+  }}
   xAccessor="x"
   yAccessor="y"
 />`}
         language="jsx"
       />
+      <p style={{ fontSize: "0.9em", opacity: 0.85, marginTop: 8 }}>
+        Higher-level HOC props like <code>tooltip</code> (on{" "}
+        <code>BarChart</code>, <code>LineChart</code>, etc.) auto-unwrap the
+        wrapper for you, so the function there receives the datum directly —{" "}
+        <code>{`tooltip={d => d.category}`}</code>. The raw{" "}
+        <code>tooltipContent</code> form on Stream Frames is the unwrapped
+        path for callers that need the full hover context.
+      </p>
 
       <h3 id="advanced-hover">Advanced hoverAnnotation</h3>
       <p>

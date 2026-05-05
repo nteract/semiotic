@@ -116,17 +116,9 @@ function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | nu
   return canvas.getContext("2d")
 }
 
-function flattenGeoDatum(datum: GeoFeatureLike | null | undefined): GeoFeatureLike | null {
-  if (!datum) return null
-  if (datum.properties && typeof datum.properties === "object") {
-    return { ...datum, ...datum.properties }
-  }
-  return datum
-}
-
 function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   if (!data) return null
-  // GeoJSON features: show properties
+  // GeoJSON features: show properties (lifted to top-level on the hover wrapper)
   if (data.properties) {
     const name = data.properties.name || data.properties.NAME || data.properties.id || "Feature"
     return (
@@ -135,8 +127,14 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
       </div>
     )
   }
-  // Point data: show first string/number fields
-  const entries = Object.entries(data).slice(0, 3)
+  // Point data: hover wrapper now has the canonical { data, x, y } shape
+  // (no flattened fields), so read user-facing fields off `data.data`.
+  // Skip wrapper-internal keys when iterating so the default tooltip
+  // shows the user's actual datum fields, not "data: [object]".
+  const source = (data as any).data ?? data
+  const entries = Object.entries(source as Record<string, unknown>)
+    .filter(([k]) => k !== "data" && !k.startsWith("__"))
+    .slice(0, 3)
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       {entries.map(([k, v]) => (
@@ -577,9 +575,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             ...(rawData?.properties || {}),
             data: rawData,
             properties: rawData?.properties,
+            __semioticHoverData: true,
             x, y,
-            time: x,
-            value: y,
           }
           hoverRef.current = hover
           hoveredNodeRef.current = node
@@ -640,6 +637,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           ...flattened,
           data: rawData,
           properties: rawData?.properties,
+          __semioticHoverData: true,
           x: chartX,
           y: chartY,
           time: chartX,
@@ -681,18 +679,22 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      // Build full HoverData with flattened GeoJSON properties — same shape for
-      // both state (tooltip) and customHoverBehavior (no mismatch)
+      // Build the HoverData with the same shape the mouse-hover path
+      // emits — flatten GeoJSON properties to the top level so custom
+      // tooltips and `customHoverBehavior` consumers reading `d.name` /
+      // `d.population` see the same fields whether the feature was
+      // reached via the keyboard or the mouse. Without this match, a
+      // keyboard user gets a less-useful hover payload — an
+      // accessibility regression.
       const rawDatum = point.datum as GeoFeatureLike | null
-      const data = flattenGeoDatum(rawDatum)
       const hover: HoverData = {
-        ...data,
+        ...(rawDatum || {}),
+        ...(rawDatum?.properties || {}),
         data: rawDatum,
         properties: rawDatum?.properties,
         x: point.x,
         y: point.y,
-        time: point.x,
-        value: point.y,
+        __semioticHoverData: true,
       }
       hoverRef.current = hover
       setHoverPoint(hover)

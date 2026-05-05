@@ -46,6 +46,10 @@ export function findNearestOrdinalNode(
 
     switch (node.type) {
       case "rect":
+        // Skip non-interactive rects (e.g. swimlane track backgrounds —
+        // emitted with `datum: null` so they paint behind data items
+        // without stealing hover/click from them).
+        if (node.datum == null) break
         result = hitTestRect(node, px, py)
         break
       case "point":

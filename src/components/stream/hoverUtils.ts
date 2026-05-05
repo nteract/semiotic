@@ -1,4 +1,3 @@
-import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Shared hover data utilities for stream frames.
  *
@@ -23,21 +22,11 @@ export interface HoverPointerCoords {
 }
 
 /**
- * Spread raw datum properties onto HoverData if it's a non-null,
- * non-array object. Class instances (Date, etc.) are included —
- * this matches the historical behavior where all datum fields are
- * accessible directly on the hover object (d.fieldName).
- */
-export function spreadDatum(rawDatum: any): Datum {
-  return typeof rawDatum === "object" && rawDatum !== null && !Array.isArray(rawDatum)
-    ? rawDatum
-    : {}
-}
-
-/**
  * Build a HoverData object from a raw datum and pixel coordinates.
- * Spreads plain-object datum properties for backwards compatibility
- * (consumers can access d.fieldName directly in addition to d.data.fieldName).
+ * The raw datum is preserved as `hover.data` for tooltip / callback
+ * consumers; pixel coordinates land on `x` / `y`. Anything else
+ * relevant to a specific frame family — `category`, `stats`,
+ * `nodeOrEdge`, `xValue`, etc. — is layered in via `extra`.
  */
 export function buildHoverData(
   rawDatum: any,
@@ -46,12 +35,10 @@ export function buildHoverData(
   extra?: Partial<HoverData>
 ): HoverData {
   return {
-    ...spreadDatum(rawDatum),
     data: rawDatum,
     x,
     y,
-    time: x,
-    value: y,
+    __semioticHoverData: true,
     ...extra,
   }
 }

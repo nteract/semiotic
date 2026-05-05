@@ -18,6 +18,7 @@ import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
@@ -198,7 +199,9 @@ export const RealtimeHeatmap = forwardRef(
     const enableHover = resolved.enableHover
     const margin = userMargin ?? resolved.marginDefaults
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    const resolvedTooltip = tooltipContent ?? tooltip
+    // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
+    const resolvedTooltip =
+      tooltipContent ?? tooltip ?? buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

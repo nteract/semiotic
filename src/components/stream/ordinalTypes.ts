@@ -235,6 +235,11 @@ export interface OrdinalPipelineConfig {
    *  bar's orientation (tip → base). Same shape as AreaChart.gradientFill
    *  sans the `boolean` case — the HOC resolves `true` to default opacities. */
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Swimlane "track" fill — a rect drawn behind each lane spanning the
+   *  full value-axis range, sized to the lane's bandwidth. Used to make
+   *  budget/progress lanes read as filled vs. empty. Pass a color (CSS
+   *  var supported) or `{ color, opacity }`. Honored by `chartType="swimlane"` only. */
+  trackFill?: string | { color: string; opacity?: number }
   /** When true, adds padding below the 0 baseline. When false (default), bars are flush with the axis line. */
   baselinePadding?: boolean
   innerRadius?: number
@@ -348,6 +353,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   /** Gradient fill for bar rects. Same shape as AreaChart.gradientFill sans
    *  the boolean case — resolve booleans at the HOC layer. */
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  /** Swimlane "track" fill — see OrdinalPipelineConfig.trackFill */
+  trackFill?: string | { color: string; opacity?: number }
   baselinePadding?: boolean
   innerRadius?: number
   cornerRadius?: number

@@ -22,7 +22,8 @@ async function hoverAndScreenshotMultiTooltip(
   await waitForRafs(page, 6)
 
   const tooltip = testCase.locator(".stream-frame-tooltip .semiotic-tooltip")
-  await expect(tooltip).toBeVisible({ timeout: 2000 })
+  await expect(tooltip).toHaveCSS("display", /^(?!none$).+/, { timeout: 2000 })
+  await expect(tooltip).toHaveCSS("visibility", "visible")
   await expect(tooltip).toContainText("A")
   await expect(tooltip).toContainText("B")
 

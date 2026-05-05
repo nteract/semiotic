@@ -4,6 +4,30 @@ import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Datum } from "../charts/shared/datumTypes"
+import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
+import { sampleCurvePath } from "./sampleCurvePath"
+
+/**
+ * Per-node memo for the dense curve-sampled polyline. Keyed by the
+ * raw path reference so a streaming rebuild that produces a fresh
+ * `path` array invalidates automatically. The sampling itself is
+ * O(N · samplesPerSegment); the cache means the work happens once
+ * per data change rather than once per hover frame.
+ */
+const curveSampleCache = new WeakMap<ReadonlyArray<readonly [number, number]>, [number, number][]>()
+
+function getCurveSampledPath(
+  rawPath: ReadonlyArray<readonly [number, number]>,
+  curve: LineSceneNode["curve"] | AreaSceneNode["curve"] | undefined,
+): [number, number][] {
+  const factory = resolveCurveFactory(curve)
+  if (!factory) return rawPath as [number, number][]
+  const cached = curveSampleCache.get(rawPath)
+  if (cached) return cached
+  const sampled = sampleCurvePath(rawPath, factory)
+  curveSampleCache.set(rawPath, sampled)
+  return sampled
+}
 
 export interface HitResult {
   node: SceneNode
@@ -72,6 +96,10 @@ export function findNearestNode(
         result = hitTestLine(node, px, py, maxDistance)
         break
       case "rect":
+        // Skip non-interactive rects (e.g. swimlane track backgrounds —
+        // emitted with `datum: null` so they paint behind the data items
+        // without stealing hover/click from them).
+        if (node.datum == null) break
         result = hitTestRect(node, px, py)
         break
       case "heatcell":
@@ -148,8 +176,17 @@ export function findAllNodesAtX(
     if (node.type === "line") {
       const lineNode = node as LineSceneNode
       if (lineNode.path.length < 2) continue
-      const interpY = interpolatePathAtX(lineNode.path, px, maxXDistance)
+      // For non-linear curves the canvas renderer draws cubic-bezier
+      // segments between data samples; linear-interpolating between
+      // raw samples drops the dot off the visible curve. Use a dense
+      // polyline that lies on the rendered curve instead.
+      const lookupPath = getCurveSampledPath(lineNode.path, lineNode.curve)
+      const interpY = interpolatePathAtX(lookupPath, px, maxXDistance)
       if (interpY === null) continue
+      // Datum index still keys into `path` (the raw data samples) —
+      // each sample maps 1:1 with `lineNode.datum[i]`. The dense
+      // curve polyline doesn't carry datum indices, only pixel
+      // coordinates.
       const idx = binarySearchPath(lineNode.path, px)
       const datum = Array.isArray(lineNode.datum) && lineNode.datum[idx] ? lineNode.datum[idx] : lineNode.datum
       results.push({ node, datum, x: lineNode.path[idx][0], y: interpY, group: lineNode.group, color: lineNode.style.stroke })
@@ -157,9 +194,15 @@ export function findAllNodesAtX(
       const areaNode = node as AreaSceneNode
       if (areaNode.interactive === false) continue
       if (areaNode.topPath.length < 2) continue
-      const interpY = interpolatePathAtX(areaNode.topPath, px, maxXDistance)
+      // Areas use the same curve for both the top and bottom edges,
+      // so sample both against the configured curve. The
+      // stacked-area family in particular relies on the bottom edge
+      // tracking the layer below it.
+      const topLookup = getCurveSampledPath(areaNode.topPath, areaNode.curve)
+      const bottomLookup = getCurveSampledPath(areaNode.bottomPath, areaNode.curve)
+      const interpY = interpolatePathAtX(topLookup, px, maxXDistance)
       if (interpY === null) continue
-      const interpY0 = interpolatePathAtX(areaNode.bottomPath, px, maxXDistance)
+      const interpY0 = interpolatePathAtX(bottomLookup, px, maxXDistance)
       const idx = binarySearchPath(areaNode.topPath, px)
       const datum = Array.isArray(areaNode.datum) && areaNode.datum[idx] ? areaNode.datum[idx] : areaNode.datum
       const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined

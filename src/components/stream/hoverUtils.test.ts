@@ -1,69 +1,44 @@
-import { spreadDatum, buildHoverData } from "./hoverUtils"
-
-describe("spreadDatum", () => {
-  it("spreads plain object properties", () => {
-    expect(spreadDatum({ x: 1, y: 2 })).toEqual({ x: 1, y: 2 })
-  })
-
-  it("returns empty object for arrays", () => {
-    expect(spreadDatum([1, 2, 3])).toEqual({})
-  })
-
-  it("returns empty object for null", () => {
-    expect(spreadDatum(null)).toEqual({})
-  })
-
-  it("returns empty object for undefined", () => {
-    expect(spreadDatum(undefined)).toEqual({})
-  })
-
-  it("returns empty object for primitives", () => {
-    expect(spreadDatum(42)).toEqual({})
-    expect(spreadDatum("hello")).toEqual({})
-    expect(spreadDatum(true)).toEqual({})
-  })
-
-  it("includes class instances (Date, etc.)", () => {
-    const d = new Date()
-    const result = spreadDatum(d)
-    expect(typeof result).toBe("object")
-  })
-})
+import { describe, it, expect } from "vitest"
+import { buildHoverData } from "./hoverUtils"
 
 describe("buildHoverData", () => {
-  it("builds HoverData with datum spread + coordinates", () => {
-    const hover = buildHoverData({ category: "A", value: 10 }, 100, 200)
-    expect(hover.data).toEqual({ category: "A", value: 10 })
-    expect(hover.category).toBe("A")
+  it("builds HoverData with raw datum + pixel coordinates", () => {
+    const datum = { category: "A", value: 10 }
+    const hover = buildHoverData(datum, 100, 200)
+    expect(hover.data).toBe(datum)
     expect(hover.x).toBe(100)
     expect(hover.y).toBe(200)
-    expect(hover.time).toBe(100)
-    expect(hover.value).toBe(200)
+    expect(hover.__semioticHoverData).toBe(true)
   })
 
-  it("applies extra properties", () => {
+  it("does NOT flatten datum fields onto the hover root", () => {
+    // Historical v2 behavior spread the datum onto HoverData itself
+    // so consumers could write `d.fieldName`. That shim was removed
+    // alongside the `time`/`value` pixel-coordinate aliases — every
+    // consumer reads through `hover.data.fieldName` now. This test
+    // pins the contract so a future "convenience" change can't
+    // re-introduce the leak.
+    const hover = buildHoverData({ category: "A", value: 10 }, 100, 200) as Record<string, unknown>
+    expect(hover.category).toBeUndefined()
+    expect(hover.value).toBeUndefined()
+  })
+
+  it("applies extra properties without copying datum fields", () => {
     const hover = buildHoverData({ id: "n1" }, 50, 60, { nodeOrEdge: "node" })
     expect(hover.nodeOrEdge).toBe("node")
-    expect(hover.data.id).toBe("n1")
+    expect(hover.data?.id).toBe("n1")
   })
 
-  it("extra properties override datum fields", () => {
-    const hover = buildHoverData({ value: 999 }, 10, 20, { value: 20 } as any)
-    // extra.value (20) should override datum's value field
-    expect(hover.value).toBe(20)
-  })
-
-  it("handles array datum without spreading", () => {
+  it("preserves array-shaped datums via the `data` field", () => {
     const arr = [{ x: 1 }, { x: 2 }]
     const hover = buildHoverData(arr, 10, 20)
     expect(hover.data).toBe(arr)
-    // Array properties should NOT be spread onto hover
-    expect(hover[0]).toBeUndefined()
   })
 
   it("handles null datum", () => {
     const hover = buildHoverData(null, 0, 0)
     expect(hover.data).toBeNull()
     expect(hover.x).toBe(0)
+    expect(hover.y).toBe(0)
   })
 })
