@@ -501,8 +501,10 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(title && { title }),
     ...(description && { description }),
     ...(summary && { summary }),
+    // tooltip={false} → return-null function actually disables hover popups;
+    // undefined would fall through to StreamXYFrame's built-in default tooltip.
     tooltipContent: tooltip === false
-      ? undefined
+      ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
