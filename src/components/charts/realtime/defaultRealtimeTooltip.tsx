@@ -135,3 +135,58 @@ export function buildWaterfallTooltip<TDatum extends Datum = Datum>(
     )
   }
 }
+
+/**
+ * Heatmap-specific default tooltip.
+ *
+ * The streaming heatmap aggregates raw points into 2D bins; each cell's
+ * datum is `{ xi, yi, value, count, sum, xCenter, yCenter, agg }`. The
+ * generic `x: <time>, y: <value>` shape is meaningless because the cell
+ * doesn't carry the user's original fields — it carries bin indices and
+ * aggregated counts.
+ *
+ * This tooltip surfaces the user-relevant info:
+ *   x:     <data-space x-center of the bin>
+ *   y:     <data-space y-center of the bin>
+ *   count: 12               (always shown)
+ *   sum:   142              (when agg === "sum" and differs from count)
+ *   mean:  11.83            (when agg === "mean")
+ *
+ * Falls back to the canonical x/y shape if the enriched fields are
+ * absent (e.g. a non-streaming render path).
+ */
+export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
+  options: DefaultRealtimeTooltipOptions<TDatum> = {},
+): (d: HoverData) => ReactNode {
+  const { timeAccessor, valueAccessor, xLabel = "x", yLabel = "y" } = options
+  return (d: HoverData) => {
+    const datum = (d?.data ?? null) as (TDatum & {
+      xi?: number; yi?: number;
+      value?: number; count?: number; sum?: number;
+      xCenter?: number; yCenter?: number;
+      agg?: "count" | "sum" | "mean";
+    }) | null
+    // Prefer the bin's data-space center; fall back to user accessors
+    // for non-streaming or custom-emitted heatcells.
+    const x = datum?.xCenter ?? readField(datum, timeAccessor, "time")
+    const y = datum?.yCenter ?? readField(datum, valueAccessor, "value")
+    const count = datum?.count
+    const value = datum?.value
+    const agg = datum?.agg ?? "count"
+    return (
+      <div className="semiotic-tooltip" style={tooltipStyle}>
+        <div><span style={labelStyle}>{xLabel}:</span>{format(x)}</div>
+        <div><span style={labelStyle}>{yLabel}:</span>{format(y)}</div>
+        {count != null && (
+          <div><span style={labelStyle}>count:</span>{format(count)}</div>
+        )}
+        {agg === "sum" && value != null && value !== count && (
+          <div><span style={labelStyle}>sum:</span>{format(value)}</div>
+        )}
+        {agg === "mean" && value != null && (
+          <div><span style={labelStyle}>mean:</span>{format(value)}</div>
+        )}
+      </div>
+    )
+  }
+}
