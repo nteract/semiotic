@@ -62,6 +62,10 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   legendPosition?: LegendPosition
   /** Annotation objects to render on the chart */
   annotations?: Datum[]
+  /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  xExtent?: [number | undefined, number | undefined] | [number]
+  /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  yExtent?: [number | undefined, number | undefined] | [number]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -144,6 +148,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     marginalGraphics,
     pointIdAccessor,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -325,6 +331,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),
     ...setup.crosshairProps,
     ...frameProps

@@ -37,6 +37,35 @@ test.describe("Ordinal Charts - Bar Charts", () => {
       maxDiffPixels: 100
     })
   })
+
+  // SwarmPlot's `valueExtent` prop maps to the frame's `rExtent`. Each
+  // variant exercises one shape (both/min-only/max-only). SwarmPlot
+  // (not BarChart) is the chart of choice here because bars anchor the
+  // value axis at 0 regardless of rExtent[0] — a deliberate policy, but
+  // it makes BarChart unsuitable for distinguishing the three shapes.
+  // Pinned to pixel-stable snapshots so a regression that drops the
+  // pass-through (or maps it to the wrong axis) trips the gate.
+  for (const variant of ["both", "min", "max"] as const) {
+    test(`renders swarm plot with valueExtent (${variant})`, async ({ page }) => {
+      const id = `ordinal-swarm-extent-${variant}`
+      await waitForChartReady(page, id)
+      const testCase = page.locator(`[data-testid="${id}"]`)
+      await expect(testCase).toHaveScreenshot(`${id}.png`, { maxDiffPixels: 100 })
+    })
+  }
+
+  // Histogram has special handling: user `valueExtent` wins over the
+  // auto-computed shared bin extent (so streamed updates don't shift
+  // bins as the data's min/max drifts). Snapshotting confirms the
+  // precedence rule — a regression that flipped it would re-fit the
+  // axis to the data's actual range and lose the empty bands either
+  // side of the cluster.
+  test("renders histogram with valueExtent winning over auto bin extent", async ({ page }) => {
+    const id = "ordinal-histogram-extent"
+    await waitForChartReady(page, id)
+    const testCase = page.locator(`[data-testid="${id}"]`)
+    await expect(testCase).toHaveScreenshot(`${id}.png`, { maxDiffPixels: 100 })
+  })
 })
 
 test.describe("Ordinal Charts - Pie and Donut", () => {

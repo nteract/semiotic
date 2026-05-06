@@ -31,6 +31,10 @@ export interface CandlestickChartProps<TDatum extends Datum = Datum> extends Bas
   candlestickStyle?: CandlestickStyle
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  xExtent?: [number | undefined, number | undefined] | [number]
+  /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  yExtent?: [number | undefined, number | undefined] | [number]
   enableHover?: boolean
   showGrid?: boolean
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
@@ -116,6 +120,8 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     candlestickStyle,
     tooltip,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -242,6 +248,8 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
       customHoverBehavior, customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...crosshairFrameProps,
     ...frameProps,
   }

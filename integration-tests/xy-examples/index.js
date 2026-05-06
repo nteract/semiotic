@@ -464,6 +464,129 @@ const examples = [
       colorScheme: colors,
     }),
   }),
+
+  // ── xExtent / yExtent override variants ────────────────────────────
+  // LineChart accepts both `xExtent` and `yExtent` as top-level props,
+  // each in three shapes: [min, max] (both pinned), [min, undefined]
+  // (just min pinned), [undefined, max] (just max pinned). Six fixtures
+  // total — one per axis × shape — exercise the full matrix the user
+  // asked us to cover. lineData has x ∈ [0, 4] and value ∈ [5, 20], so
+  // the override extents are deliberately wider/tighter than the data
+  // domain to make each shape visually distinct.
+  TestCase({
+    title: "LineChart (yExtent both)",
+    testId: "xy-line-yextent-both",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      yExtent: [0, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "LineChart (yExtent min only)",
+    testId: "xy-line-yextent-min",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      // Anchor min to 0; max stays data-derived (~20).
+      yExtent: [0, undefined],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "LineChart (yExtent max only)",
+    testId: "xy-line-yextent-max",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      yExtent: [undefined, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "LineChart (xExtent both)",
+    testId: "xy-line-xextent-both",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      xExtent: [-2, 8],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "LineChart (xExtent min only)",
+    testId: "xy-line-xextent-min",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      xExtent: [-2, undefined],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "LineChart (xExtent max only)",
+    testId: "xy-line-xextent-max",
+    children: React.createElement(LineChart, {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "value",
+      lineBy: "series",
+      xExtent: [undefined, 8],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+
+  // AreaChart yExtent variants — locks in the regression that drove
+  // adding extent pass-through in the first place. Three shapes:
+  // [min, max], [min, undefined], [undefined, max]. Stacked areas have
+  // their own caveat (cumulative-sum auto-extension) handled by the
+  // pipeline merge — single-series area is the right surface to pin
+  // here.
+  TestCase({
+    title: "AreaChart (yExtent both)",
+    testId: "xy-area-yextent-both",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      yExtent: [0, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "AreaChart (yExtent min only)",
+    testId: "xy-area-yextent-min",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      // Anchor min to 0; max stays data-derived (~20).
+      yExtent: [0, undefined],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "AreaChart (yExtent max only)",
+    testId: "xy-area-yextent-max",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      yExtent: [undefined, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  })
 ]
 
 // Render all examples

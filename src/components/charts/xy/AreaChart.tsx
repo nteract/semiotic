@@ -186,6 +186,22 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
   annotations?: Datum[]
 
   /**
+   * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived. Useful for pinning a time axis to a known
+   * window (e.g. last 24 hours) so streamed updates don't shift the
+   * left/right edges as data flows in.
+   */
+  xExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
+   * Fixed y domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived. The fill baseline is the y-domain minimum, so
+   * setting `yExtent={[0, 100]}` anchors both the axis AND the area's
+   * baseline at 0 — the typical "percentage / counter" shape.
+   */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -284,6 +300,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     pointRadius = 3,
     tooltip,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -497,6 +515,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps
   }

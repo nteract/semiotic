@@ -52,6 +52,8 @@ export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChart
   linkedBrush?: string | { name: string; rField?: string }
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -114,6 +116,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
     valueFormat,
     colorBy, colorScheme, categoryPadding = 20,
     tooltip, annotations,
+    valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -221,6 +224,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.

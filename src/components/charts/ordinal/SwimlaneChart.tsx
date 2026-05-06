@@ -84,6 +84,8 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
    *  lanes read as filled vs. empty. Pass a color string (CSS vars
    *  supported, e.g. `"var(--semiotic-grid)"`) or `{ color, opacity }`. */
   trackFill?: string | { color: string; opacity?: number }
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   /** Pass-through props to StreamOrdinalFrame */
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
@@ -175,6 +177,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     showCategoryTicks,
     gradientFill,
     trackFill,
+    valueExtent,
   } = props
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, categoryLabel, valueLabel } = resolved
@@ -325,6 +328,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
         : gradientFill
     }),
     ...(trackFill != null && { trackFill }),
+    ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.

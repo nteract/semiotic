@@ -100,6 +100,8 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -218,6 +220,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     baselinePadding = false,
     tooltip,
     annotations,
+    valueExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -378,6 +381,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle is excluded
     // to prevent clobbering the HOC's color-resolved, selection-wrapped style.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

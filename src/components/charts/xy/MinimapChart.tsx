@@ -103,6 +103,14 @@ export interface MinimapChartProps<TDatum extends Datum = Datum>
   /** Controlled brush extent */
   brushExtent?: [number, number]
 
+  /**
+   * Fixed y domain `[min, max]` (either bound may be undefined to leave
+   * that side data-derived). xExtent is reserved for brush selection on
+   * MinimapChart — pass `frameProps.xExtent` if you need to override the
+   * brushed x range from advanced consumers.
+   */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
   /** Additional StreamXYFrame props */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -304,6 +312,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     renderBefore = false,
     onBrush,
     brushExtent: controlledExtent,
+    yExtent,
     frameProps = {},
     loading,
     emptyContent,
@@ -508,6 +517,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
       : (normalizeTooltip(tooltip) || defaultTooltipContent),
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
+    ...(yExtent && { yExtent }),
     ...frameProps
   }
 
@@ -523,7 +533,10 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     margin: minimapMargin,
     showAxes: minimapConfig.showAxes ?? false,
     background: minimapConfig.background,
-    enableHover: false
+    enableHover: false,
+    // Mirror the main chart's y domain on the overview so a click-to-jump
+    // brushed region maps back to the same vertical scale the user sees.
+    ...(yExtent && { yExtent }),
   }
 
   // ── Render ──────────────────────────────────────────────────────────

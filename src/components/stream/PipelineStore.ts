@@ -729,6 +729,26 @@ export class PipelineStore {
       }
     }
 
+    // Re-apply user-specified partial `yExtent` bounds after the
+    // chart-type-specific extent rules. The stackedarea / bar-binSize /
+    // waterfall branches replace yDomain wholesale to cover their
+    // cumulative-sum or signed-bar geometry; without this merge a
+    // user's `yExtent={[0, undefined]}` would be silently dropped on
+    // those chart types (the generic branch already merges partial
+    // bounds inline, but the chart-type branches don't go through it).
+    // Copy before assigning in case yDomain came from `_stackExtentCache`
+    // — mutating the cached reference would poison subsequent hits.
+    if (config.yExtent && !yFullySpecified) {
+      const userMin = config.yExtent[0]
+      const userMax = config.yExtent[1]
+      if (userMin != null || userMax != null) {
+        yDomain = [
+          userMin != null ? userMin : yDomain[0],
+          userMax != null ? userMax : yDomain[1],
+        ]
+      }
+    }
+
     // Handle degenerate extents
     if (xDomain[0] === Infinity || xDomain[1] === -Infinity) {
       // Empty data fallback — use sensible default for the scale type

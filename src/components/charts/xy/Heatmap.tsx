@@ -163,6 +163,11 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
    */
   annotations?: Datum[]
 
+  /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  xExtent?: [number | undefined, number | undefined] | [number]
+  /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
   /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
@@ -264,6 +269,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     cellBorderWidth: _cellBorderWidth = 1,
     tooltip,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -440,6 +447,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       customHoverBehavior, customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...crosshairFrameProps,
     ...frameProps
   }

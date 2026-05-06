@@ -199,6 +199,20 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
   annotations?: Datum[]
 
   /**
+   * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived.
+   */
+  xExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
+   * Fixed y domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived. Stacked areas auto-extend the y domain to
+   * cover the cumulative sum unless `yExtent` is fully specified —
+   * passing `yExtent={[0, 200]}` pins both bounds.
+   */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -282,6 +296,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     stackOrder,
     tooltip,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -488,6 +504,8 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps
   }

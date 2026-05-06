@@ -33,6 +33,34 @@ const TestCase = ({ title, children, testId, key }) =>
     children
   )
 
+// Dedicated dataset for the valueExtent matrix: deterministic, three
+// categories with means well above 0, no near-zero outliers, no values
+// >120. Each variant of the override (both/min/max) needs to land on a
+// visibly different axis layout — `statisticalData`'s tail dipping to
+// ~3 in Group A made the "min only" case look identical to no-override
+// (the data already started near 0). This dataset's data min sits at
+// ~40, so anchoring `valueExtent[0]` to 0 pulls the axis down clearly.
+const extentSwarmData = (() => {
+  const out = []
+  const groups = ["Group A", "Group B", "Group C"]
+  const means = [55, 75, 60]
+  // Deterministic seeded jitter so snapshots are pixel-stable across runs.
+  let s = 1
+  const rng = () => {
+    s = (s * 9301 + 49297) % 233280
+    return s / 233280
+  }
+  for (let g = 0; g < groups.length; g++) {
+    for (let i = 0; i < 24; i++) {
+      // Uniform-ish jitter within ±10 of the group mean keeps every
+      // value in [40, 90] — well above 0, well below 120.
+      const v = means[g] + (rng() - 0.5) * 20
+      out.push({ category: groups[g], value: Math.round(v * 10) / 10 })
+    }
+  }
+  return out
+})()
+
 const examples = [
   // 1. Vertical Bar Chart
   TestCase({
@@ -401,6 +429,92 @@ const examples = [
       bins: 18,
       width: 400,
       height: 300,
+      colorScheme: colors,
+    })
+  }),
+
+  // ── valueExtent override variants ─────────────────────────────────
+  // SwarmPlot's `valueExtent` prop maps to the frame's `rExtent` (the
+  // value-axis domain). Each variant exercises one shape:
+  //   • [min, max] — both bounds pinned (axis runs 0–120)
+  //   • [min, undefined] — only the min pinned, max stays data-derived
+  //   • [undefined, max] — only the max pinned, min stays data-derived
+  //
+  // SwarmPlot is the right fixture for this matrix (not BarChart) —
+  // bar charts intentionally anchor the value axis at 0 regardless of
+  // the rExtent min, so a "min only" override there would look
+  // identical to a "both" override and the matrix wouldn't actually
+  // distinguish the three shapes.
+  //
+  // `extentSwarmData` clusters its values in [40, 90] with no near-zero
+  // outliers — the original `statisticalData` had a 3.5σ tail dipping
+  // to ~3, which made the "min only" case look identical to the
+  // no-override default (the data already touched zero). The dedicated
+  // dataset guarantees each variant lands on a visibly different axis
+  // layout: a clear gap between 0 and the lowest dot in the min-only
+  // case, axis above the data top in the max-only case, and a tall
+  // empty band above 90 in the both-pinned case.
+  TestCase({
+    title: "SwarmPlot (valueExtent both)",
+    testId: "ordinal-swarm-extent-both",
+    children: React.createElement(SwarmPlot, {
+      data: extentSwarmData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [0, 120],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "SwarmPlot (valueExtent min only)",
+    testId: "ordinal-swarm-extent-min",
+    children: React.createElement(SwarmPlot, {
+      data: extentSwarmData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      // `undefined` upper bound → data max wins (~85), so the dots use
+      // most of the upper chart but the axis anchors at 0 — there's a
+      // clear gap between 0 and the lowest dot. Without the override
+      // the axis would auto-fit to the data min (~40).
+      valueExtent: [0, undefined],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "SwarmPlot (valueExtent max only)",
+    testId: "ordinal-swarm-extent-max",
+    children: React.createElement(SwarmPlot, {
+      data: extentSwarmData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [undefined, 200],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
+  }),
+
+  // Histogram precedence fixture — user `valueExtent` MUST win over the
+  // auto-computed shared bin extent, otherwise pinning the axis to a
+  // known range so streamed updates don't shift bins is impossible.
+  // The data spans ~20-90; pinning to [0, 120] reveals empty bands at
+  // both ends. A regression that drops the precedence would re-fit the
+  // domain to [data.min, data.max] and lose the empty bands.
+  TestCase({
+    title: "Histogram (valueExtent both)",
+    testId: "ordinal-histogram-extent",
+    children: React.createElement(Histogram, {
+      data: extentSwarmData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [0, 120],
+      bins: 15,
+      width: 380,
+      height: 280,
       colorScheme: colors,
     })
   })

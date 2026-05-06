@@ -146,6 +146,11 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    */
   annotations?: Datum[]
 
+  /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  xExtent?: [number | undefined, number | undefined] | [number]
+  /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
   /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
@@ -248,6 +253,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     marginalGraphics,
     pointIdAccessor,
     annotations,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -465,6 +472,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(xExtent && { xExtent }),
+    ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps
   }

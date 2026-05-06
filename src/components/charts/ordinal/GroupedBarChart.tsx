@@ -48,6 +48,8 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
   annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -113,7 +115,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     categoryAccessor = "category", groupBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, sort = false, barPadding = 60, roundedTop, baselinePadding = false,
-    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
@@ -244,6 +246,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

@@ -69,32 +69,210 @@ const multiAreaData = [
 // ---------------------------------------------------------------------------
 
 const areaChartProps = [
-  { name: "data", type: "array", required: true, default: null, description: "Array of data points, optionally grouped by category." },
-  { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values from each data point." },
-  { name: "yAccessor", type: "string | function", required: false, default: '"y"', description: "Field name or function to access y values from each data point." },
-  { name: "areaBy", type: "string | function", required: false, default: null, description: "Field name or function to group data into multiple areas (e.g., by series)." },
-  { name: "y0Accessor", type: "string | function", required: false, default: null, description: "Per-point lower bound accessor. When set, fills between yAccessor (top) and y0Accessor (bottom) instead of to the axis. Use for percentile bands, confidence intervals, or ribbons." },
-  { name: "gradientFill", type: "boolean | object", required: false, default: "false", description: "Gradient fill from line to baseline. true for defaults (80%→5%) or { topOpacity, bottomOpacity } for custom." },
-  { name: "lineDataAccessor", type: "string", required: false, default: '"coordinates"', description: "Field name in area objects that contains coordinate arrays." },
-  { name: "colorBy", type: "string | function", required: false, default: null, description: "Field name or function to determine area color for multiple areas." },
-  { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme name or custom colors array." },
-  { name: "curve", type: "string", required: false, default: '"monotoneX"', description: 'Curve interpolation: "linear", "monotoneX", "monotoneY", "step", "basis", "cardinal", "catmullRom".' },
-  { name: "areaOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the filled area." },
-  { name: "showLine", type: "boolean", required: false, default: "true", description: "Show a line on top of the area." },
-  { name: "lineWidth", type: "number", required: false, default: "2", description: "Stroke width of the line when showLine is true." },
-  { name: "showPoints", type: "boolean", required: false, default: "false", description: "Show data points on the area line. Useful for sparse data or single-point series." },
-  { name: "pointRadius", type: "number", required: false, default: "3", description: "Point radius when showPoints is true." },
-  { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
-  { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
-  { name: "showLegend", type: "boolean", required: false, default: "true (multi-area)", description: "Show a legend. Defaults to true when multiple areas are present." },
-  { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every area value at the hovered x position.' },
-  { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
-  { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
-  { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
-  { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
-  { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
-  { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  {
+    name: "data",
+    type: "array",
+    required: true,
+    default: null,
+    description: "Array of data points, optionally grouped by category.",
+  },
+  {
+    name: "xAccessor",
+    type: "string | function",
+    required: false,
+    default: '"x"',
+    description: "Field name or function to access x values from each data point.",
+  },
+  {
+    name: "yAccessor",
+    type: "string | function",
+    required: false,
+    default: '"y"',
+    description: "Field name or function to access y values from each data point.",
+  },
+  {
+    name: "areaBy",
+    type: "string | function",
+    required: false,
+    default: null,
+    description: "Field name or function to group data into multiple areas (e.g., by series).",
+  },
+  {
+    name: "y0Accessor",
+    type: "string | function",
+    required: false,
+    default: null,
+    description:
+      "Per-point lower bound accessor. When set, fills between yAccessor (top) and y0Accessor (bottom) instead of to the axis. Use for percentile bands, confidence intervals, or ribbons.",
+  },
+  {
+    name: "gradientFill",
+    type: "boolean | object",
+    required: false,
+    default: "false",
+    description:
+      "Gradient fill from line to baseline. true for defaults (80%→5%) or { topOpacity, bottomOpacity } for custom.",
+  },
+  {
+    name: "lineDataAccessor",
+    type: "string",
+    required: false,
+    default: '"coordinates"',
+    description: "Field name in area objects that contains coordinate arrays.",
+  },
+  {
+    name: "colorBy",
+    type: "string | function",
+    required: false,
+    default: null,
+    description: "Field name or function to determine area color for multiple areas.",
+  },
+  {
+    name: "colorScheme",
+    type: "string | array",
+    required: false,
+    default: '"category10"',
+    description: "Color scheme name or custom colors array.",
+  },
+  {
+    name: "curve",
+    type: "string",
+    required: false,
+    default: '"monotoneX"',
+    description:
+      'Curve interpolation: "linear", "monotoneX", "monotoneY", "step", "basis", "cardinal", "catmullRom".',
+  },
+  {
+    name: "areaOpacity",
+    type: "number",
+    required: false,
+    default: "0.7",
+    description: "Opacity of the filled area.",
+  },
+  {
+    name: "showLine",
+    type: "boolean",
+    required: false,
+    default: "true",
+    description: "Show a line on top of the area.",
+  },
+  {
+    name: "lineWidth",
+    type: "number",
+    required: false,
+    default: "2",
+    description: "Stroke width of the line when showLine is true.",
+  },
+  {
+    name: "showPoints",
+    type: "boolean",
+    required: false,
+    default: "false",
+    description:
+      "Show data points on the area line. Useful for sparse data or single-point series.",
+  },
+  {
+    name: "pointRadius",
+    type: "number",
+    required: false,
+    default: "3",
+    description: "Point radius when showPoints is true.",
+  },
+  {
+    name: "enableHover",
+    type: "boolean",
+    required: false,
+    default: "true",
+    description: "Enable hover annotations on data points.",
+  },
+  {
+    name: "showGrid",
+    type: "boolean",
+    required: false,
+    default: "false",
+    description: "Show background grid lines.",
+  },
+  {
+    name: "showLegend",
+    type: "boolean",
+    required: false,
+    default: "true (multi-area)",
+    description: "Show a legend. Defaults to true when multiple areas are present.",
+  },
+  {
+    name: "tooltip",
+    type: '"multi" | object | function',
+    required: false,
+    default: null,
+    description:
+      'Tooltip configuration or render function. Pass "multi" to show every area value at the hovered x position.',
+  },
+  {
+    name: "width",
+    type: "number",
+    required: false,
+    default: "600",
+    description: "Chart width in pixels.",
+  },
+  {
+    name: "height",
+    type: "number",
+    required: false,
+    default: "400",
+    description: "Chart height in pixels.",
+  },
+  {
+    name: "margin",
+    type: "object",
+    required: false,
+    default: "{ top: 50, bottom: 60, left: 70, right: 40 }",
+    description: "Margin around the chart area.",
+  },
+  {
+    name: "xLabel",
+    type: "string",
+    required: false,
+    default: null,
+    description: "Label for the x-axis.",
+  },
+  {
+    name: "yLabel",
+    type: "string",
+    required: false,
+    default: null,
+    description: "Label for the y-axis.",
+  },
+  {
+    name: "title",
+    type: "string",
+    required: false,
+    default: null,
+    description: "Chart title displayed at the top.",
+  },
+  {
+    name: "xExtent",
+    type: "[min?, max?]",
+    required: false,
+    default: null,
+    description:
+      "Fixed x domain. Either bound may be undefined to leave that side data-derived.",
+  },
+  {
+    name: "yExtent",
+    type: "[min?, max?]",
+    required: false,
+    default: null,
+    description:
+      "Fixed y domain. Either bound may be undefined to leave that side data-derived. The fill baseline is the y-domain min, so yExtent={[0, 100]} anchors both axis and area baseline at 0.",
+  },
+  {
+    name: "frameProps",
+    type: "object",
+    required: false,
+    default: null,
+    description:
+      "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -198,10 +376,9 @@ export default function AreaChartPage() {
       />
 
       <p>
-        AreaChart visualizes quantities over continuous intervals with filled
-        areas beneath a line. Each series fills from its line down to the
-        baseline, with overlapping areas using transparency so all shapes remain
-        visible. For stacked areas, use{" "}
+        AreaChart visualizes quantities over continuous intervals with filled areas beneath a line.
+        Each series fills from its line down to the baseline, with overlapping areas using
+        transparency so all shapes remain visible. For stacked areas, use{" "}
         <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
       </p>
 
@@ -211,8 +388,8 @@ export default function AreaChartPage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        The simplest area chart requires just <code>data</code>,{" "}
-        <code>xAccessor</code>, and <code>yAccessor</code>.
+        The simplest area chart requires just <code>data</code>, <code>xAccessor</code>, and{" "}
+        <code>yAccessor</code>.
       </p>
 
       <StreamingToggle
@@ -253,8 +430,8 @@ export default function AreaChartPage() {
 
       <h3 id="multi-area">Multiple Areas</h3>
       <p>
-        Use <code>areaBy</code> to group data points into separate areas, and{" "}
-        <code>colorBy</code> to color them by category.
+        Use <code>areaBy</code> to group data points into separate areas, and <code>colorBy</code>{" "}
+        to color them by category.
       </p>
 
       <LiveExample
@@ -282,10 +459,9 @@ export default function AreaChartPage() {
 
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
-        Pass <code>tooltip="multi"</code> on multi-area charts when readers
-        need the values for every area at the same x position. The tooltip
-        follows the cursor across the rendered x range and interpolates values
-        between sampled points.
+        Pass <code>tooltip="multi"</code> on multi-area charts when readers need the values for
+        every area at the same x position. The tooltip follows the cursor across the rendered x
+        range and interpolates values between sampled points.
       </p>
 
       <LiveExample
@@ -313,8 +489,8 @@ export default function AreaChartPage() {
 
       <h3 id="custom-curve-opacity">Custom Curve and Opacity</h3>
       <p>
-        Adjust the <code>curve</code> interpolation and <code>areaOpacity</code>{" "}
-        for different visual effects.
+        Adjust the <code>curve</code> interpolation and <code>areaOpacity</code> for different
+        visual effects.
       </p>
 
       <LiveExample
@@ -336,9 +512,9 @@ export default function AreaChartPage() {
 
       <h3 id="gradient-fill">Gradient Fill</h3>
       <p>
-        Set <code>gradientFill</code> to fade the fill from opaque at the line
-        to transparent at the baseline — the modern area chart look. Use{" "}
-        <code>true</code> for defaults (80% → 5%) or pass custom opacities.
+        Set <code>gradientFill</code> to fade the fill from opaque at the line to transparent at the
+        baseline — the modern area chart look. Use <code>true</code> for defaults (80% → 5%) or pass
+        custom opacities.
       </p>
 
       <LiveExample
@@ -360,8 +536,8 @@ export default function AreaChartPage() {
 
       <h3 id="no-line">Area Without Top Line</h3>
       <p>
-        Set <code>showLine</code> to <code>false</code> for a pure filled area
-        without the stroke on top.
+        Set <code>showLine</code> to <code>false</code> for a pure filled area without the stroke on
+        top.
       </p>
 
       <LiveExample
@@ -384,10 +560,9 @@ export default function AreaChartPage() {
 
       <h3 id="percentile-band">Percentile Band (p5–p95)</h3>
       <p>
-        Use <code>y0Accessor</code> to fill between two values per data point
-        instead of filling down to the axis. This is ideal for percentile
-        bands, confidence intervals, or any ribbon visualization. Layer
-        multiple AreaCharts for nested bands (e.g., p5–p95 and p25–p75).
+        Use <code>y0Accessor</code> to fill between two values per data point instead of filling
+        down to the axis. This is ideal for percentile bands, confidence intervals, or any ribbon
+        visualization. Layer multiple AreaCharts for nested bands (e.g., p5–p95 and p25–p75).
       </p>
 
       <LiveExample
@@ -417,9 +592,8 @@ export default function AreaChartPage() {
       />
 
       <p>
-        For a layered percentile fan, render two AreaCharts — an outer
-        p5–p95 band and an inner p25–p75 band — with a median LineChart
-        on top:
+        For a layered percentile fan, render two AreaCharts — an outer p5–p95 band and an inner
+        p25–p75 band — with a median LineChart on top:
       </p>
 
       <CodeBlock
@@ -445,10 +619,9 @@ export default function AreaChartPage() {
       {/* ----------------------------------------------------------------- */}
       <h3 id="multi-color-gradient">Multi-Color Gradient Fill</h3>
       <p>
-        Use <code>gradientFill</code> with <code>colorStops</code> for
-        semantic color bands (e.g. severity zones). Each stop specifies an
-        offset (0–1) and a color string — including <code>transparent</code>.
-        Stops can be placed at any position to create non-uniform bands.
+        Use <code>gradientFill</code> with <code>colorStops</code> for semantic color bands (e.g.
+        severity zones). Each stop specifies an offset (0–1) and a color string — including{" "}
+        <code>transparent</code>. Stops can be placed at any position to create non-uniform bands.
       </p>
 
       <LiveExample
@@ -457,11 +630,13 @@ export default function AreaChartPage() {
           xAccessor: "month",
           yAccessor: "sales",
           color: "rgba(244,67,54,1)",
-          gradientFill: { colorStops: [
-            { offset: 0, color: "rgba(244,67,54,0.8)" },
-            { offset: 0.25, color: "rgba(255,193,7,0.8)" },
-            { offset: 0.5, color: "transparent" },
-          ]},
+          gradientFill: {
+            colorStops: [
+              { offset: 0, color: "rgba(244,67,54,0.8)" },
+              { offset: 0.25, color: "rgba(255,193,7,0.8)" },
+              { offset: 0.5, color: "transparent" },
+            ],
+          },
         }}
         type={AreaChart}
         overrideProps={{
@@ -481,10 +656,9 @@ export default function AreaChartPage() {
       {/* ----------------------------------------------------------------- */}
       <h3 id="per-series-fill-area">Per-Series Fill Area</h3>
       <p>
-        Use <code>LineChart</code> with <code>fillArea</code> set to an array
-        of series names to fill only specific series while keeping others as
-        lines. Series names match the <code>lineBy</code>/<code>colorBy</code>{" "}
-        group key.
+        Use <code>LineChart</code> with <code>fillArea</code> set to an array of series names to
+        fill only specific series while keeping others as lines. Series names match the{" "}
+        <code>lineBy</code>/<code>colorBy</code> group key.
       </p>
 
       <LiveExample
@@ -521,13 +695,19 @@ export default function AreaChartPage() {
       <h2 id="graduating">Graduating to the Frame</h2>
 
       <p>
-        When you need more control — custom marks, complex annotations,
-        dual-axis layouts — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
-        directly. Every <code>AreaChart</code> is just a configured{" "}
-        <code>StreamXYFrame</code> under the hood.
+        When you need more control — custom marks, complex annotations, dual-axis layouts — graduate
+        to <Link to="/frames/xy-frame">StreamXYFrame</Link> directly. Every <code>AreaChart</code>{" "}
+        is just a configured <code>StreamXYFrame</code> under the hood.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-charts)" }}>Chart (simple)</h4>
           <CodeBlock
@@ -582,8 +762,8 @@ export default function AreaChartPage() {
       </div>
 
       <p>
-        The <code>frameProps</code> prop on AreaChart lets you pass any StreamXYFrame
-        prop without fully graduating:
+        The <code>frameProps</code> prop on AreaChart lets you pass any StreamXYFrame prop without
+        fully graduating:
       </p>
 
       <CodeBlock
@@ -608,27 +788,25 @@ export default function AreaChartPage() {
 
       <ul>
         <li>
-          <Link to="/charts/stacked-area-chart">StackedAreaChart</Link> — areas
-          stacked on top of each other to show totals
+          <Link to="/charts/stacked-area-chart">StackedAreaChart</Link> — areas stacked on top of
+          each other to show totals
         </li>
         <li>
-          <Link to="/charts/line-chart">LineChart</Link> — line without the
-          filled area (or use <code>showLine</code> on AreaChart)
+          <Link to="/charts/line-chart">LineChart</Link> — line without the filled area (or use{" "}
+          <code>showLine</code> on AreaChart)
         </li>
         <li>
-          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with
-          full control over every rendering detail
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with full control
+          over every rendering detail
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — adding callouts,
-          highlights, and notes to any visualization
+          <Link to="/features/annotations">Annotations</Link> — adding callouts, highlights, and
+          notes to any visualization
         </li>
         <li>
-          <Link to="/features/tooltips">Tooltips</Link> — custom tooltip content
-          and positioning
+          <Link to="/features/tooltips">Tooltips</Link> — custom tooltip content and positioning
         </li>
       </ul>
-
     </PageLayout>
   )
 }
