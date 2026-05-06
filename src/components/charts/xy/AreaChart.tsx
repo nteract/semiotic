@@ -187,8 +187,9 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
 
   /**
    * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
-   * that side data-derived. Useful for anchoring a percentage axis to
-   * `[0, 100]` regardless of the data's actual range.
+   * that side data-derived. Useful for pinning a time axis to a known
+   * window (e.g. last 24 hours) so streamed updates don't shift the
+   * left/right edges as data flows in.
    */
   xExtent?: [number | undefined, number | undefined] | [number]
 

@@ -203,6 +203,73 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.groupAccessor).toBe("__forecastSegment")
     })
 
+    it("user-pinned yExtent wins over the forecast envelope auto-extent", () => {
+      const fcData = [
+        { x: 0, y: 50, upper: 60, lower: 40 },
+        { x: 1, y: 55, upper: 65, lower: 45 },
+        { x: 2, y: 60, upper: 70, lower: 50 },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={fcData}
+            forecast={{ trainEnd: 1, upperBounds: "upper", lowerBounds: "lower" }}
+            yExtent={[0, 100]}
+          />
+        </TooltipProvider>
+      )
+      // User pinned both bounds; the envelope's auto-computed extent
+      // (~40-70) must NOT win over the explicit [0, 100] override.
+      expect(lastXYFrameProps.yExtent).toEqual([0, 100])
+    })
+
+    it("yExtent={[undefined, undefined]} does NOT suppress the envelope", () => {
+      // Regression: arrays are always truthy in JS, so a naive
+      // `yExtent ? user : envelope` check would silently strip the
+      // forecast envelope expansion when the user passed an empty
+      // tuple — even though they hadn't actually pinned anything.
+      const fcData = [
+        { x: 0, y: 50, upper: 60, lower: 40 },
+        { x: 1, y: 55, upper: 65, lower: 45 },
+        { x: 2, y: 60, upper: 70, lower: 50 },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={fcData}
+            forecast={{ trainEnd: 1, upperBounds: "upper", lowerBounds: "lower" }}
+            yExtent={[undefined, undefined]}
+          />
+        </TooltipProvider>
+      )
+      // Envelope wins because no bound was actually pinned. The exact
+      // numeric domain isn't asserted (depends on extentPadding); we
+      // just check the prop is present and not the empty user shape.
+      expect(lastXYFrameProps.yExtent).toBeDefined()
+      expect(lastXYFrameProps.yExtent).not.toEqual([undefined, undefined])
+    })
+
+    it("partial yExtent (one bound pinned) still wins over the envelope", () => {
+      const fcData = [
+        { x: 0, y: 50, upper: 60, lower: 40 },
+        { x: 1, y: 55, upper: 65, lower: 45 },
+        { x: 2, y: 60, upper: 70, lower: 50 },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={fcData}
+            forecast={{ trainEnd: 1, upperBounds: "upper", lowerBounds: "lower" }}
+            yExtent={[0, undefined]}
+          />
+        </TooltipProvider>
+      )
+      // User pinned the lower bound; the partial-extent merge in
+      // PipelineStore handles applying the user min over the envelope
+      // max, so the prop reaches the frame as the user shape.
+      expect(lastXYFrameProps.yExtent).toEqual([0, undefined])
+    })
+
     it("passes lineStyle as a function", () => {
       render(
         <TooltipProvider>

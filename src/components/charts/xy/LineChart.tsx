@@ -984,8 +984,14 @@ export const LineChart = forwardRef(
     yScaleType,
     // Explicit user yExtent wins over the auto-computed envelope; the
     // envelope only fills in when the user hasn't pinned the domain.
+    // `yExtent` is an array (always truthy) so check that at least one
+    // bound is non-nullish — otherwise `yExtent={[undefined, undefined]}`
+    // would silently suppress the forecast/anomaly envelope expansion
+    // without actually pinning anything.
     ...(xExtent && { xExtent }),
-    ...(yExtent ? { yExtent } : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
+    ...((yExtent && (yExtent[0] != null || yExtent[1] != null))
+      ? { yExtent }
+      : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
     groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
     curve,
     lineStyle,
