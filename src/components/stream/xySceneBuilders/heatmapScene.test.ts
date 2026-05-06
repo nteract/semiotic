@@ -371,6 +371,62 @@ describe("buildStreamingHeatmapScene", () => {
     expect(nodes).toHaveLength(0)
   })
 
+  it("enriches each cell datum with bin-center coords and aggregation type for tooltip consumption", () => {
+    // Domain [0,100], 5 bins => binSize 20, so:
+    //   bin (0, 0) center = (0 + 0.5) * 20 = 10
+    //   bin (2, 2) center = (2 + 0.5) * 20 = 50
+    //   bin (4, 4) center = (4 + 0.5) * 20 = 90
+    // The bin-center fields drive the realtime heatmap default tooltip
+    // (`x:` / `y:` rows). Without them the streaming heatmap reads as
+    // blank because the cell datum has bin INDICES, not the user's
+    // original `time` / `value` field names.
+    const data = [
+      { x: 5, y: 5, value: 1 },     // → bin (0, 0)
+      { x: 50, y: 50, value: 1 },   // → bin (2, 2)
+      { x: 95, y: 95, value: 1 },   // → bin (4, 4)
+    ]
+    const ctx = makeStreamCtx()
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(3)
+
+    // Sort by xi so positional asserts are stable.
+    const datums = nodes
+      .map((n) => (n as any).datum)
+      .sort((a, b) => a.xi - b.xi)
+
+    // Bin (0, 0) — top-left of the data domain.
+    expect(datums[0].xCenter).toBe(10)
+    expect(datums[0].yCenter).toBe(10)
+    // Bin (2, 2) — middle.
+    expect(datums[1].xCenter).toBe(50)
+    expect(datums[1].yCenter).toBe(50)
+    // Bin (4, 4) — last bin (clamped by the streaming binner).
+    expect(datums[2].xCenter).toBe(90)
+    expect(datums[2].yCenter).toBe(90)
+
+    // Every cell carries the active aggregation type so the tooltip can
+    // pick which row to surface (count/sum/mean) without re-deriving it.
+    expect(datums.every((d) => d.agg === "count")).toBe(true)
+  })
+
+  it("threads the configured agg through to each cell datum (sum / mean)", () => {
+    // The tooltip's sum vs. mean row picks off `datum.agg` directly —
+    // pin both branches so a future config-shape change can't silently
+    // ship a tooltip that reads off the wrong field.
+    const data = [{ x: 10, y: 10, value: 5 }]
+    const sumNodes = buildHeatmapScene(
+      makeStreamCtx({ config: { heatmapAggregation: "sum", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
+      data, defaultLayout,
+    )
+    expect((sumNodes[0] as any).datum.agg).toBe("sum")
+
+    const meanNodes = buildHeatmapScene(
+      makeStreamCtx({ config: { heatmapAggregation: "mean", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
+      data, defaultLayout,
+    )
+    expect((meanNodes[0] as any).datum.agg).toBe("mean")
+  })
+
   it("showValues sets label metadata in streaming mode", () => {
     const data = [{ x: 10, y: 10, value: 7 }]
     const ctx = makeStreamCtx({

@@ -277,10 +277,16 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
       const labelOpts = showValues
         ? { value: val, showValues: true as const, valueFormat }
         : undefined
+      // Enrich the datum with the bin's data-space center coords + the
+      // aggregation type so consumer tooltips can show meaningful values.
+      // Without these the streaming heatmap datum is just `{xi, yi, ...}`
+      // which doesn't tell the user *where* in their data the cell sits.
+      const xCenter = xMin + (xi + 0.5) * xBinSize
+      const yCenter = yMin + (yi + 0.5) * yBinSize
       nodes.push(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,
-        { xi, yi, value: val, count: counts[idx], sum: sums[idx] },
+        { xi, yi, value: val, count: counts[idx], sum: sums[idx], xCenter, yCenter, agg },
         labelOpts
       ))
     }

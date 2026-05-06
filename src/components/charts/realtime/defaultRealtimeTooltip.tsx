@@ -135,3 +135,68 @@ export function buildWaterfallTooltip<TDatum extends Datum = Datum>(
     )
   }
 }
+
+/**
+ * Heatmap-specific default tooltip.
+ *
+ * The streaming heatmap aggregates raw points into 2D bins; each cell's
+ * datum is `{ xi, yi, value, count, sum, xCenter, yCenter, agg }`. The
+ * generic `x: <time>, y: <value>` shape is meaningless because the cell
+ * doesn't carry the user's original fields — it carries bin indices and
+ * aggregated counts.
+ *
+ * This tooltip surfaces the user-relevant info:
+ *   x:     <data-space x-center of the bin>
+ *   y:     <data-space y-center of the bin>
+ *   count: 12               (when datum.count is present — streaming path)
+ *   sum:   142              (when agg === "sum")
+ *   mean:  11.83            (when agg === "mean")
+ *
+ * For `agg === "sum"` we always surface the sum (it's the metric the
+ * heatmap is colored by, even when sum happens to equal count).
+ *
+ * Falls back to the canonical x/y shape if the enriched fields are
+ * absent (e.g. a non-streaming render path); the count/sum/mean rows
+ * only appear when the matching field is present on the datum.
+ */
+export function buildHeatmapTooltip<TDatum extends Datum = Datum>(
+  options: DefaultRealtimeTooltipOptions<TDatum> = {},
+): (d: HoverData) => ReactNode {
+  const { timeAccessor, valueAccessor, xLabel = "x", yLabel = "y" } = options
+  return (d: HoverData) => {
+    const datum = (d?.data ?? null) as (TDatum & {
+      xi?: number; yi?: number;
+      value?: number; count?: number; sum?: number;
+      xCenter?: number; yCenter?: number;
+      agg?: "count" | "sum" | "mean";
+    }) | null
+    // Prefer the bin's data-space center; fall back to user accessors
+    // for non-streaming or custom-emitted heatcells.
+    const x = datum?.xCenter ?? readField(datum, timeAccessor, "time")
+    const y = datum?.yCenter ?? readField(datum, valueAccessor, "value")
+    const count = datum?.count
+    // Read the dedicated `sum` and `value` fields directly off the datum
+    // contract instead of treating `value` as the sum (it's
+    // aggregation-dependent — equals count for "count", mean for "mean").
+    // Decoupling the display from `value` semantics keeps the tooltip
+    // honest if the scene ever changes how `value` is computed.
+    const sum = datum?.sum
+    const mean = datum?.value
+    const agg = datum?.agg ?? "count"
+    return (
+      <div className="semiotic-tooltip" style={tooltipStyle}>
+        <div><span style={labelStyle}>{xLabel}:</span>{format(x)}</div>
+        <div><span style={labelStyle}>{yLabel}:</span>{format(y)}</div>
+        {count != null && (
+          <div><span style={labelStyle}>count:</span>{format(count)}</div>
+        )}
+        {agg === "sum" && sum != null && (
+          <div><span style={labelStyle}>sum:</span>{format(sum)}</div>
+        )}
+        {agg === "mean" && mean != null && (
+          <div><span style={labelStyle}>mean:</span>{format(mean)}</div>
+        )}
+      </div>
+    )
+  }
+}

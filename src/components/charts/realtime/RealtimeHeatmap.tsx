@@ -18,7 +18,7 @@ import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
+import { buildHeatmapTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
@@ -199,9 +199,14 @@ export const RealtimeHeatmap = forwardRef(
     const enableHover = resolved.enableHover
     const margin = userMargin ?? resolved.marginDefaults
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
-    // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
+    // Heatcell datums are aggregated bins, not the user's raw rows — the
+    // generic `x:/y:` tooltip would read undefined off `timeAccessor`/
+    // `valueAccessor` since the cell datum is `{xi, yi, value, count, sum,
+    // xCenter, yCenter, agg}`. The heatmap-specific helper reads the
+    // enriched bin-center coords + aggregation type so users see real
+    // data-space values and the cell's count/sum/mean.
     const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
+      tooltipContent ?? tooltip ?? buildHeatmapTooltip({ timeAccessor, valueAccessor })
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
