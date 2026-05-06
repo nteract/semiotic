@@ -61,6 +61,19 @@ test.describe("XY Charts - Line Charts", () => {
     })
   })
 
+  // AreaChart yExtent regression fixtures — single-series so the fill
+  // baseline anchors at the y-domain min and the override is visible.
+  // Stacked-area's cumulative-sum auto-extension is exercised
+  // separately via the pipeline-store unit tests.
+  for (const variant of ["both", "min", "max"] as const) {
+    test(`renders area chart with yExtent (${variant})`, async ({ page }) => {
+      const id = `xy-area-yextent-${variant}`
+      await waitForChartReady(page, id)
+      const testCase = page.locator(`[data-testid="${id}"]`)
+      await expect(testCase).toHaveScreenshot(`${id}.png`, { maxDiffPixels: 100 })
+    })
+  }
+
   // LineChart accepts both `xExtent` and `yExtent` as top-level props in
   // three shapes — [min, max], [min, undefined], [undefined, max]. The
   // 6 fixtures (axis × shape) lock in pixel-stable snapshots; without

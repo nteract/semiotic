@@ -250,6 +250,22 @@ const areaChartProps = [
     description: "Chart title displayed at the top.",
   },
   {
+    name: "xExtent",
+    type: "[min?, max?]",
+    required: false,
+    default: null,
+    description:
+      "Fixed x domain. Either bound may be undefined to leave that side data-derived.",
+  },
+  {
+    name: "yExtent",
+    type: "[min?, max?]",
+    required: false,
+    default: null,
+    description:
+      "Fixed y domain. Either bound may be undefined to leave that side data-derived. The fill baseline is the y-domain min, so yExtent={[0, 100]} anchors both axis and area baseline at 0.",
+  },
+  {
     name: "frameProps",
     type: "object",
     required: false,

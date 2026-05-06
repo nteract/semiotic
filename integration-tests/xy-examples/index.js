@@ -545,6 +545,47 @@ const examples = [
       xExtent: [undefined, 8],
       width: 400, height: 280, colorScheme: colors,
     })
+  }),
+
+  // AreaChart yExtent variants — locks in the regression that drove
+  // adding extent pass-through in the first place. Three shapes:
+  // [min, max], [min, undefined], [undefined, max]. Stacked areas have
+  // their own caveat (cumulative-sum auto-extension) handled by the
+  // pipeline merge — single-series area is the right surface to pin
+  // here.
+  TestCase({
+    title: "AreaChart (yExtent both)",
+    testId: "xy-area-yextent-both",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      yExtent: [0, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "AreaChart (yExtent min only)",
+    testId: "xy-area-yextent-min",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      // Anchor min to 0; max stays data-derived (~20).
+      yExtent: [0, undefined],
+      width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "AreaChart (yExtent max only)",
+    testId: "xy-area-yextent-max",
+    children: React.createElement(AreaChart, {
+      data: lineData.filter((d) => d.series === "A"),
+      xAccessor: "x",
+      yAccessor: "value",
+      yExtent: [undefined, 50],
+      width: 400, height: 280, colorScheme: colors,
+    })
   })
 ]
 
