@@ -221,6 +221,20 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
   forecast?: ForecastConfig
 
   /**
+   * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived.
+   */
+  xExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
+   * Fixed y domain `[min, max]`. Either bound may be `undefined` to leave
+   * that side data-derived. Wins over the auto-computed envelope extent
+   * when forecast bounds are present, so explicit user intent stays
+   * authoritative.
+   */
+  yExtent?: [number | undefined, number | undefined] | [number]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -348,6 +362,8 @@ export const LineChart = forwardRef(
     gapStrategy = "break",
     anomaly,
     forecast,
+    xExtent,
+    yExtent,
     frameProps = {},
     selection,
     linkedHover,
@@ -966,7 +982,10 @@ export const LineChart = forwardRef(
     yAccessor,
     xScaleType,
     yScaleType,
-    ...(envelopeYExtent && { yExtent: envelopeYExtent }),
+    // Explicit user yExtent wins over the auto-computed envelope; the
+    // envelope only fills in when the user hasn't pinned the domain.
+    ...(xExtent && { xExtent }),
+    ...(yExtent ? { yExtent } : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
     groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
     curve,
     lineStyle,

@@ -403,6 +403,56 @@ const examples = [
       height: 300,
       colorScheme: colors,
     })
+  }),
+
+  // ── valueExtent override variants ─────────────────────────────────
+  // BarChart's `valueExtent` prop maps to the frame's `rExtent` (the
+  // value-axis domain). Each variant exercises one shape:
+  //   • [min, max] — both bounds pinned (value axis runs 0–100)
+  //   • [min, undefined] — only the min pinned, max stays data-derived
+  //   • [undefined, max] — only the max pinned, min stays data-derived
+  // The fixture data has values 15–60 so each variant looks distinct.
+  TestCase({
+    title: "BarChart (valueExtent both)",
+    testId: "ordinal-bars-extent-both",
+    children: React.createElement(BarChart, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [0, 100],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "BarChart (valueExtent min only)",
+    testId: "ordinal-bars-extent-min",
+    children: React.createElement(BarChart, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      // `undefined` upper bound → data max wins (60), so the bars fill
+      // the chart but the axis still anchors at 0 instead of the data
+      // min (15) — useful for "y starts at zero" without capping.
+      valueExtent: [0, undefined],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
+  }),
+  TestCase({
+    title: "BarChart (valueExtent max only)",
+    testId: "ordinal-bars-extent-max",
+    children: React.createElement(BarChart, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [undefined, 200],
+      width: 380,
+      height: 280,
+      colorScheme: colors,
+    })
   })
 ]
 

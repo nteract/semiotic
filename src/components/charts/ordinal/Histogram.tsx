@@ -83,6 +83,8 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   linkedBrush?: string | { name: string; rField?: string }
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. Wins over Histogram's auto-computed shared bin extent — useful for pinning the axis to a known range so streamed updates don't shift the bins as min/max drift. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -174,6 +176,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     valueFormat,
     colorBy, colorScheme, categoryPadding = 20,
     tooltip, annotations,
+    valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -292,7 +295,10 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     summaryStyle,
     bins,
     normalize: relative,
-    ...(rExtent && { rExtent }),
+    // User-supplied `valueExtent` wins over the auto-computed shared bin
+    // extent — useful for pinning the axis to a known range so streamed
+    // updates don't shift the bins as the data's min/max drifts.
+    ...(valueExtent ? { rExtent: valueExtent } : (rExtent && { rExtent })),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,

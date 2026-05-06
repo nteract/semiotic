@@ -60,6 +60,23 @@ test.describe("XY Charts - Line Charts", () => {
       maxDiffPixels: 100
     })
   })
+
+  // LineChart accepts both `xExtent` and `yExtent` as top-level props in
+  // three shapes — [min, max], [min, undefined], [undefined, max]. The
+  // 6 fixtures (axis × shape) lock in pixel-stable snapshots; without
+  // these a regression dropping the pass-through to the frame would
+  // silently render at the data-derived domain instead of the override
+  // (the bug that originally surfaced this gap on AreaChart).
+  for (const axis of ["yExtent", "xExtent"] as const) {
+    for (const variant of ["both", "min", "max"] as const) {
+      test(`renders line chart with ${axis} (${variant})`, async ({ page }) => {
+        const id = `xy-line-${axis.toLowerCase()}-${variant}`
+        await waitForChartReady(page, id)
+        const testCase = page.locator(`[data-testid="${id}"]`)
+        await expect(testCase).toHaveScreenshot(`${id}.png`, { maxDiffPixels: 100 })
+      })
+    }
+  }
 })
 
 test.describe("XY Charts - Area Charts", () => {

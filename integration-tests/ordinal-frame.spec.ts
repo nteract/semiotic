@@ -37,6 +37,19 @@ test.describe("Ordinal Charts - Bar Charts", () => {
       maxDiffPixels: 100
     })
   })
+
+  // BarChart's `valueExtent` prop maps to the frame's `rExtent`. Each
+  // variant exercises one shape (both/min-only/max-only). Pinned to a
+  // pixel-stable snapshot per browser so a regression that drops the
+  // pass-through (or maps it to the wrong axis) shows up immediately.
+  for (const variant of ["both", "min", "max"] as const) {
+    test(`renders bar chart with valueExtent (${variant})`, async ({ page }) => {
+      const id = `ordinal-bars-extent-${variant}`
+      await waitForChartReady(page, id)
+      const testCase = page.locator(`[data-testid="${id}"]`)
+      await expect(testCase).toHaveScreenshot(`${id}.png`, { maxDiffPixels: 100 })
+    })
+  }
 })
 
 test.describe("Ordinal Charts - Pie and Donut", () => {

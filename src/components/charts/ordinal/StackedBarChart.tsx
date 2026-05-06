@@ -49,6 +49,8 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. Stacked bars auto-extend the value domain to cover the cumulative stack unless `valueExtent` is fully specified. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -114,7 +116,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, baselinePadding = false,
-    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
@@ -244,6 +246,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

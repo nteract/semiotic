@@ -52,6 +52,8 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -111,7 +113,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
     colorBy, colorScheme, sort = "auto", dotRadius = 5,
-    categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover,
+    categoryPadding = 10, tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
@@ -226,6 +228,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

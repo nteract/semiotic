@@ -53,6 +53,8 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
   linkedBrush?: string | { name: string; rField?: string }
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
+  valueExtent?: [number | undefined, number | undefined] | [number]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -118,7 +120,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     orientation = "vertical", valueFormat,
     colorBy, colorScheme,
     sizeBy, sizeRange = [3, 8], pointRadius = 4, pointOpacity = 0.7,
-    categoryPadding = 20, tooltip, annotations,
+    categoryPadding = 20, tooltip, annotations, valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -248,6 +250,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
