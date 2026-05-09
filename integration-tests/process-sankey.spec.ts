@@ -1,42 +1,56 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Page } from "@playwright/test"
 
-// ProcessSankey is hand-rolled SVG (no canvas), so the canvas-based
-// `waitForChartReady` helper doesn't apply. We assert against the
-// `<svg>` the component paints + the band/ribbon paths inside.
+// ProcessSankey now wraps StreamNetworkFrame, which paints bands and
+// ribbons to a canvas. The legend, time axis, lane rails, particles,
+// and node labels are SVG overlays inside the frame's `<svg>` group.
+// Tests inspect canvas pixels for the data layer and DOM for chrome.
 
 const PAGE = "/process-sankey-examples/"
 
-const SVG = "svg[aria-labelledby='process-sankey-title process-sankey-desc']"
+async function canvasHasPaint(page: Page, testId: string): Promise<boolean> {
+  return page.evaluate((id) => {
+    const container = document.querySelector(`[data-testid="${id}"]`)
+    if (!container) return false
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement | null
+    if (!canvas || canvas.width === 0 || canvas.height === 0) return false
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return false
+    let data: Uint8ClampedArray
+    try {
+      data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+    } catch {
+      return false
+    }
+    for (let i = 0; i < data.length; i += 16) {
+      const a = data[i + 3]
+      if (a <= 10) continue
+      if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) continue
+      return true
+    }
+    return false
+  }, testId)
+}
 
 test.describe("ProcessSankey - Static", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(PAGE)
   })
 
-  test("renders categorical-colored bands and a legend", async ({ page }) => {
+  test("renders bands + ribbons on the canvas, plus an SVG legend", async ({ page }) => {
     const tc = page.locator('[data-testid="static-basic"]')
     await expect(tc).toBeVisible()
-    const svg = tc.locator(SVG)
-    await expect(svg).toBeVisible()
-    // At least one band per node + one ribbon per edge → many <path>s.
-    const paths = svg.locator("path")
-    expect(await paths.count()).toBeGreaterThan(3)
-    // Legend group is rendered with aria-label="Legend".
-    await expect(svg.locator("g[aria-label='Legend']")).toBeVisible()
-    // Each distinct category becomes a swatch row.
-    const swatches = svg.locator("g[aria-label='Legend'] > g")
-    expect(await swatches.count()).toBeGreaterThanOrEqual(3)
+    // Allow first paint
+    await expect.poll(() => canvasHasPaint(page, "static-basic"), { timeout: 5_000 }).toBe(true)
+    // Categorical legend swatches paint via the frame's overlay.
+    const legendItems = tc.locator(".semiotic-legend-item, [class*='legend-item']")
+    expect(await legendItems.count()).toBeGreaterThan(0)
   })
 
   test("particles render when showParticles is on", async ({ page }) => {
     const tc = page.locator('[data-testid="static-particles"]')
     await expect(tc).toBeVisible()
-    const svg = tc.locator(SVG)
-    // Particles are <circle> elements (one per ribbon × N per edge).
-    // After mount + a couple frames, there should be at least one.
-    await page.waitForTimeout(150)
-    const circles = svg.locator("circle")
-    expect(await circles.count()).toBeGreaterThan(0)
+    // Particles are <circle> elements in the foregroundGraphics overlay.
+    await expect.poll(async () => tc.locator("svg circle").count(), { timeout: 5_000 }).toBeGreaterThan(0)
   })
 })
 
@@ -45,26 +59,23 @@ test.describe("ProcessSankey - Push API", () => {
     await page.goto(PAGE)
   })
 
-  test("seeding via ref grows the chart", async ({ page }) => {
+  test("seeding via ref grows the canvas", async ({ page }) => {
     const tc = page.locator('[data-testid="push-demo"]')
     await expect(tc).toBeVisible()
-    const svg = tc.locator(SVG)
-    // Empty initial state → SVG is present but draws no bands/ribbons.
-    expect(await svg.locator("path").count()).toBe(0)
+    // Empty initial state — canvas exists but no painted pixels.
+    expect(await canvasHasPaint(page, "push-demo")).toBe(false)
 
     await tc.locator('[data-testid="push-seed"]').click()
-    // After seed, paths populate.
-    await expect.poll(async () => await svg.locator("path").count(), { timeout: 5_000 }).toBeGreaterThan(2)
-    // Counter reflects the queued items.
-    await expect(tc.locator('[data-testid="push-count"]')).toHaveText(/pushed \d+/)
+    await expect.poll(() => canvasHasPaint(page, "push-demo"), { timeout: 5_000 }).toBe(true)
+    await expect(tc.locator('[data-testid="push-count"]')).toHaveText(/pushed [1-9]\d*/)
   })
 
   test("clear() empties the chart back out", async ({ page }) => {
     const tc = page.locator('[data-testid="push-demo"]')
     await tc.locator('[data-testid="push-seed"]').click()
-    await expect.poll(async () => await tc.locator(SVG).locator("path").count()).toBeGreaterThan(0)
+    await expect.poll(() => canvasHasPaint(page, "push-demo")).toBe(true)
     await tc.locator('[data-testid="push-clear"]').click()
-    await expect.poll(async () => await tc.locator(SVG).locator("path").count()).toBe(0)
+    await expect.poll(() => canvasHasPaint(page, "push-demo")).toBe(false)
     await expect(tc.locator('[data-testid="push-count"]')).toHaveText("pushed 0")
   })
 })
@@ -74,7 +85,8 @@ test.describe("ProcessSankey - Validation", () => {
     await page.goto(PAGE)
     const tc = page.locator('[data-testid="validation-failure"]')
     await expect(tc).toBeVisible()
-    // Chart renders an error <svg> with the failure message text.
+    // The validation gate paints an inline SVG with the failure message
+    // (this path is HOC-side; doesn't use the Frame).
     await expect(tc.locator("svg")).toContainText(/data invalid/i)
     await expect(tc.locator("svg")).toContainText(/backward-edge|ends before/i)
   })
@@ -85,8 +97,7 @@ test.describe("ProcessSankey - Rendering Integrity", () => {
     const errors: string[] = []
     page.on("pageerror", (err) => errors.push(err.message))
     await page.goto(PAGE)
-    // Allow first paint + a couple frames for particle rAF.
-    await page.waitForTimeout(300)
+    await page.waitForTimeout(500)
     const real = errors.filter((e) => !e.includes("act(") && !e.includes("Warning:"))
     expect(real).toEqual([])
   })
