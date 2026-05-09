@@ -35,6 +35,7 @@ import DotPlotPage from "./pages/charts/DotPlotPage"
 import ForceDirectedGraphPage from "./pages/charts/ForceDirectedGraphPage"
 import ChordDiagramPage from "./pages/charts/ChordDiagramPage"
 import SankeyDiagramPage from "./pages/charts/SankeyDiagramPage"
+import ProcessSankeyPage from "./pages/charts/ProcessSankeyPage"
 import TreeDiagramPage from "./pages/charts/TreeDiagramPage"
 import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
 import RealtimeHistogramPage from "./pages/charts/RealtimeHistogramPage"
@@ -451,6 +452,7 @@ export default function DocsApp() {
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
               <Route path="chord-diagram" element={<ChordDiagramPage />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPage />} />
+              <Route path="process-sankey" element={<ProcessSankeyPage />} />
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />

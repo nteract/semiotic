@@ -3,9 +3,11 @@ const KIND_PROPERTY = 1024
 const KIND_TYPE_ALIAS = 2097152
 
 // Map components whose public component name differs from the exported props type.
-export const COMPONENT_PROPS_NAME_MAP = {
-  RealtimeHistogram: "RealtimeTemporalHistogramProps",
-}
+// Currently empty — `RealtimeHistogram`'s props type used to be named
+// `RealtimeTemporalHistogramProps` (the canonical/alias direction was inverted),
+// but the rename brought the type alias back into the standard
+// `${componentName}Props` shape so this map no longer needs an entry.
+export const COMPONENT_PROPS_NAME_MAP = {}
 
 // Per-apiData index cache. The reflection index is expensive to build
 // (full TypeDoc tree walk) and ApiReferencePage renders ~40 components in a

@@ -478,6 +478,44 @@ export default function SankeyDiagramPage() {
       </p>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Quick Start */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="quick-start">Quick Start</h2>
+
+      <p>
+        The simplest Sankey diagram requires just <code>edges</code> with{" "}
+        <code>source</code>, <code>target</code>, and <code>value</code>{" "}
+        properties. Nodes are inferred automatically from the edges.
+      </p>
+
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              edges: edgeData,
+            }}
+            type={SankeyDiagram}
+            startHidden={false}
+            overrideProps={{
+              edges: `[
+  { source: "Budget", target: "Engineering", value: 400 },
+  { source: "Budget", target: "Marketing", value: 250 },
+  { source: "Engineering", target: "Salaries", value: 300 },
+  // ...more edges with value
+]`,
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSankeyDemo width={w} />}
+            code={streamingSankeyCode}
+          />
+        }
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Circular Links */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="circular-links">Circular Links</h2>
@@ -533,44 +571,6 @@ export default function SankeyDiagramPage() {
         }}
         hiddenProps={{}}
         title="Multiple Cycles"
-      />
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="quick-start">Quick Start</h2>
-
-      <p>
-        The simplest Sankey diagram requires just <code>edges</code> with{" "}
-        <code>source</code>, <code>target</code>, and <code>value</code>{" "}
-        properties. Nodes are inferred automatically from the edges.
-      </p>
-
-      <StreamingToggle
-        staticContent={
-          <LiveExample
-            frameProps={{
-              edges: edgeData,
-            }}
-            type={SankeyDiagram}
-            startHidden={false}
-            overrideProps={{
-              edges: `[
-  { source: "Budget", target: "Engineering", value: 400 },
-  { source: "Budget", target: "Marketing", value: 250 },
-  { source: "Engineering", target: "Salaries", value: 300 },
-  // ...more edges with value
-]`,
-            }}
-            hiddenProps={{}}
-          />
-        }
-        streamingContent={
-          <StreamingDemo
-            renderChart={(w) => <StreamingSankeyDemo width={w} />}
-            code={streamingSankeyCode}
-          />
-        }
       />
 
       {/* ----------------------------------------------------------------- */}

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from "react"
-import { RealtimeTemporalHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData } from "semiotic"
+import { RealtimeHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -55,7 +55,7 @@ function BasicBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeTemporalHistogram
+        <RealtimeHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -93,7 +93,7 @@ function StackedBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeTemporalHistogram
+        <RealtimeHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -128,7 +128,7 @@ function StyledBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeTemporalHistogram
+        <RealtimeHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -185,7 +185,7 @@ function StaticDataDemo() {
       </div>
       <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
         {containerWidth && mode === "static" && (
-          <RealtimeTemporalHistogram
+          <RealtimeHistogram
             data={staticData}
             size={[containerWidth, 280]}
             binSize={10}
@@ -196,7 +196,7 @@ function StaticDataDemo() {
           />
         )}
         {containerWidth && mode === "streaming" && (
-          <RealtimeTemporalHistogram
+          <RealtimeHistogram
             ref={chartRef}
             size={[containerWidth, 280]}
             binSize={20}
@@ -241,7 +241,7 @@ function StreamingBrushDemo() {
     <div>
       <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
         {containerWidth && (
-          <RealtimeTemporalHistogram
+          <RealtimeHistogram
             ref={chartRef}
             size={[containerWidth, 280]}
             binSize={20}
@@ -359,7 +359,7 @@ function LinkedBrushDemo() {
           <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text-secondary)" }}>Histogram (brush to filter)</div>
             {containerWidth && (
-              <RealtimeTemporalHistogram
+              <RealtimeHistogram
                 ref={histRef}
                 size={[chartWidth, 200]}
                 binSize={20}
@@ -508,7 +508,7 @@ function StackedBrushDemo() {
           <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text-secondary)" }}>Stacked Histogram (brush to filter)</div>
             {containerWidth && (
-              <RealtimeTemporalHistogram
+              <RealtimeHistogram
                 ref={histRef}
                 size={[chartWidth, 200]}
                 binSize={20}
@@ -578,7 +578,7 @@ const RealtimeHistogramProps = [
 export default function RealtimeHistogramPage() {
   return (
     <PageLayout
-      title="RealtimeTemporalHistogram"
+      title="RealtimeHistogram"
       tier="charts"
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
@@ -644,7 +644,7 @@ function StreamingBars() {
   }, [])
 
   return (
-    <RealtimeTemporalHistogram
+    <RealtimeHistogram
       ref={chartRef}
       binSize={20}
       fill="#007bff"
@@ -686,7 +686,7 @@ useEffect(() => {
   return () => clearInterval(id)
 }, [])
 
-<RealtimeTemporalHistogram
+<RealtimeHistogram
   ref={chartRef}
   binSize={20}
   categoryAccessor="category"
@@ -717,7 +717,7 @@ useEffect(() => {
   return () => clearInterval(id)
 }, [])
 
-<RealtimeTemporalHistogram
+<RealtimeHistogram
   ref={chartRef}
   binSize={20}
   fill="#28a745"
@@ -744,7 +744,7 @@ useEffect(() => {
       <StaticDataDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`<RealtimeTemporalHistogram
+          code={`<RealtimeHistogram
   data={staticData}
   binSize={10}
   fill="#007bff"
@@ -766,7 +766,7 @@ useEffect(() => {
       <StreamingBrushDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`<RealtimeTemporalHistogram
+          code={`<RealtimeHistogram
   ref={chartRef}
   binSize={20}
   fill="#6f42c1"
@@ -790,7 +790,7 @@ useEffect(() => {
       <LinkedBrushDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`import { LinkedCharts, RealtimeTemporalHistogram,
+          code={`import { LinkedCharts, RealtimeHistogram,
   LineChart, AreaChart, useFilteredData } from "semiotic"
 
 // Consumer component — must be inside <LinkedCharts>
@@ -821,7 +821,7 @@ function FilteredOverlay({ allData, width }) {
 
 // Dashboard
 <LinkedCharts>
-  <RealtimeTemporalHistogram ref={histRef} binSize={20}
+  <RealtimeHistogram ref={histRef} binSize={20}
     brush={{ dimension: "x", snap: "bin" }}
     linkedBrush="timeRange" />
   <FilteredOverlay allData={allData} width={600} />
@@ -844,7 +844,7 @@ function FilteredOverlay({ allData, width }) {
       <StackedBrushDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`import { LinkedCharts, RealtimeTemporalHistogram,
+          code={`import { LinkedCharts, RealtimeHistogram,
   LineChart, useFilteredData } from "semiotic"
 
 const COLORS = { errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }
@@ -885,7 +885,7 @@ function FilteredMultiLineOverlay({ allData, width }) {
 }
 
 <LinkedCharts>
-  <RealtimeTemporalHistogram ref={histRef} binSize={20}
+  <RealtimeHistogram ref={histRef} binSize={20}
     categoryAccessor="category" colors={COLORS}
     brush={{ dimension: "x", snap: "bin" }}
     linkedBrush="catBrush" />
@@ -921,7 +921,7 @@ function FilteredMultiLineOverlay({ allData, width }) {
           <CodeBlock
             code={`import { RealtimeHistogram } from "semiotic"
 
-<RealtimeTemporalHistogram
+<RealtimeHistogram
   ref={chartRef}
   data={eventStream}
   binSize={5000}

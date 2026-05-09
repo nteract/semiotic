@@ -121,6 +121,9 @@ export type { ChordDiagramProps } from "./network/ChordDiagram"
 export { SankeyDiagram } from "./network/SankeyDiagram"
 export type { SankeyDiagramProps } from "./network/SankeyDiagram"
 
+export { ProcessSankey } from "./network/ProcessSankey"
+export type { ProcessSankeyProps, ProcessSankeyTick } from "./network/ProcessSankey"
+
 export { TreeDiagram } from "./network/TreeDiagram"
 export type { TreeDiagramProps } from "./network/TreeDiagram"
 

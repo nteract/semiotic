@@ -3,7 +3,7 @@ import {
   LineChart, BarChart, Scatterplot, DonutChart, Treemap, SankeyDiagram,
   LinkedCharts, CategoryColorProvider,
 } from "semiotic"
-import { RealtimeLineChart, RealtimeTemporalHistogram } from "semiotic"
+import { RealtimeLineChart, RealtimeHistogram } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
@@ -289,7 +289,7 @@ function StreamingSparkRow() {
           <td style={tdStyle}>Events/sec</td>
           <td style={{ ...tdStyle, fontWeight: 600, fontFamily: "var(--font-code, monospace)" }}>1.7K</td>
           <td style={tdStyle}>
-            <RealtimeTemporalHistogram
+            <RealtimeHistogram
               ref={histRef}
               mode="sparkline"
               binSize={500}
