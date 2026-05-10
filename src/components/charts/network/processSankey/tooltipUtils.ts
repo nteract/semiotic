@@ -36,23 +36,35 @@ export function massHistoryRows(data: ProcessSankeyNodeData | undefined): MassHi
   return rows
 }
 
+/** Number of quantile picks emitted on truncation. Fixed at five —
+ *  `min`, `q25`, `median`, `q75`, `max` — because the picks are
+ *  semantic (named labels), not cap-driven. The `truncateAt` parameter
+ *  on `pickMassQuantiles` controls *when* to truncate, not how many to
+ *  return. */
+export const QUANTILE_PICK_COUNT = 5
+
 /**
- * Condense a row series down to (at most) five mass-quantile picks —
+ * Condense a row series down to the five mass-quantile picks —
  * `min`, `q25`, `median`, `q75`, `max` — re-sorted by time so the
  * tooltip table reads chronologically. Returns the input unchanged
- * when its length is at or below `limit` (default 5).
+ * when its length is at or below `truncateAt` (default 5).
  *
  * Same-time collisions are deduplicated, so very small or very flat
  * series may yield fewer than five output rows even when truncation
  * fires; the marks attached are the first ones encountered for each
  * surviving timestamp, which keeps `min` and `max` stable when ties
  * are present.
+ *
+ * Note: `truncateAt` is the *trigger threshold*, not the output cap —
+ * once truncation fires, the output always emits the five quantile
+ * picks. To raise/lower the threshold without changing the picks,
+ * pass a different `truncateAt`; to vary the picks, fork this util.
  */
 export function pickMassQuantiles(
   rows: MassHistoryRow[],
-  limit = 5
+  truncateAt = QUANTILE_PICK_COUNT
 ): MassHistoryRowMarked[] {
-  if (rows.length <= limit) return rows.slice()
+  if (rows.length <= truncateAt) return rows.slice()
   const sorted = [...rows].sort((a, b) => a.total - b.total)
   const lastIdx = sorted.length - 1
   const picks: MassHistoryRowMarked[] = [

@@ -512,6 +512,125 @@ const forceDirectedGraph: ChartConfig = {
   }),
 }
 
+// ProcessSankey is unique among network HOCs in that it doesn't use a
+// built-in chartType — it composes via the `customNetworkLayout`
+// escape hatch. The SSR config therefore runs the algorithm + path
+// builders here (same pure helpers the HOC uses) and threads the
+// resulting band/ribbon specs through `customNetworkLayout` +
+// `layoutConfig`. CSR and SSR end up calling the same scene-emit
+// function with byte-identical inputs.
+const processSankey: ChartConfig = {
+  frameType: "network",
+  buildProps: (_data, colorBy, colorScheme, common, rest) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { buildProcessSankeyScenes } = require("../charts/network/processSankey/buildScenes")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { emitProcessSankeyScenes } = require("../charts/network/processSankey/streamingLayout")
+
+    const toTime = (v: unknown): number => {
+      if (v == null) return NaN
+      if (v instanceof Date) return v.getTime()
+      if (typeof v === "number") return v
+      return new Date(v as string).getTime()
+    }
+
+    const sourceAccessor = rest.sourceAccessor || "source"
+    const targetAccessor = rest.targetAccessor || "target"
+    const valueAccessor = rest.valueAccessor || "value"
+    const nodeIdAccessor = rest.nodeIdAccessor || "id"
+    const startTimeAccessor = rest.startTimeAccessor || "startTime"
+    const endTimeAccessor = rest.endTimeAccessor || "endTime"
+    const xExtentAccessor = rest.xExtentAccessor || "xExtent"
+    const edgeIdAccessor = rest.edgeIdAccessor || "id"
+
+    const accVal = (acc: unknown, d: Datum): unknown =>
+      typeof acc === "function" ? (acc as (d: Datum) => unknown)(d) : d[acc as string]
+
+    const rawNodes: Datum[] = Array.isArray(rest.nodes) ? rest.nodes : []
+    const rawEdges: Datum[] = Array.isArray(rest.edges) ? rest.edges : []
+    const domain: [number, number] = [
+      toTime((rest.domain as [unknown, unknown])?.[0]),
+      toTime((rest.domain as [unknown, unknown])?.[1]),
+    ]
+
+    const ns = rawNodes.map((n) => {
+      const id = String(accVal(nodeIdAccessor, n))
+      const x = accVal(xExtentAccessor, n)
+      const out: { id: string; xExtent?: [number, number]; __raw: Datum } = { id, __raw: n }
+      if (Array.isArray(x) && x.length === 2) {
+        const a = toTime(x[0]); const b = toTime(x[1])
+        if (Number.isFinite(a) && Number.isFinite(b)) out.xExtent = [a, b]
+      }
+      return out
+    })
+    const es = rawEdges.map((e, i) => {
+      const fromAcc = accVal(edgeIdAccessor, e) as string | undefined
+      const id = fromAcc != null ? String(fromAcc) : `${accVal(sourceAccessor, e)}-${accVal(targetAccessor, e)}-${i}`
+      return {
+        id,
+        source: String(accVal(sourceAccessor, e)),
+        target: String(accVal(targetAccessor, e)),
+        value: Number(accVal(valueAccessor, e)),
+        startTime: toTime(accVal(startTimeAccessor, e)),
+        endTime: toTime(accVal(endTimeAccessor, e)),
+        __raw: e,
+      }
+    })
+
+    const [width, height] = (common.size as [number, number]) ?? [760, 520]
+    const margin = (common.margin as { top: number; right: number; bottom: number; left: number }) ?? { top: 30, right: 80, bottom: 40, left: 80 }
+    const plotW = width - margin.left - margin.right
+    const plotH = height - margin.top - margin.bottom
+
+    // Color resolution mirrors the HOC's: prefer colorScheme array, then
+    // categorical fallback. Function/string colorBy is honored for
+    // node lookup.
+    const palette = Array.isArray(colorScheme) ? colorScheme : null
+    const fallbackPalette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+    const colorScale = colorBy ? createColorScale(rawNodes, colorBy, colorScheme) : null
+    const nodeById = new Map<string, Datum>()
+    for (const n of ns) nodeById.set(n.id, n.__raw)
+    const colorOf = (id: string, idx: number): string => {
+      if (colorBy && nodeById.has(id)) {
+        return getColor(nodeById.get(id) as Datum, colorBy, colorScale ?? undefined) as string
+      }
+      const p = palette || fallbackPalette
+      return p[idx % p.length]
+    }
+
+    const { layoutConfig } = buildProcessSankeyScenes({
+      nodes: ns,
+      edges: es,
+      domain,
+      plotW,
+      plotH,
+      ribbonLane: rest.ribbonLane || "both",
+      edgeOpacity: typeof rest.edgeOpacity === "number" ? (rest.edgeOpacity as number) : 0.35,
+      colorOf,
+      layoutOpts: {
+        pairing: rest.pairing || "temporal",
+        packing: rest.packing || "reuse",
+        laneOrder: rest.laneOrder || "crossing-min",
+        lifetimeMode: rest.lifetimeMode || "half",
+      },
+    })
+
+    return {
+      chartType: "force",
+      // Minimal frame nodes/edges so the SSR `buildScene` gate fires
+      // (`if (rawNodes.length > 0 || rawEdges.length > 0)`).
+      // ProcessSankey doesn't use the frame's force layout — bands
+      // and ribbons come from `layoutConfig` — but ingestion has to
+      // run for the customNetworkLayout to dispatch.
+      nodes: ns.map((n) => ({ id: n.id, data: n.__raw })),
+      edges: es.map((e) => ({ id: e.id, source: e.source, target: e.target, data: e.__raw })),
+      customNetworkLayout: emitProcessSankeyScenes,
+      layoutConfig,
+      ...common,
+    }
+  },
+}
+
 const sankeyDiagram: ChartConfig = {
   frameType: "network",
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
@@ -824,6 +943,7 @@ export const CHART_CONFIGS = {
   GaugeChart: gaugeChart,
   ForceDirectedGraph: forceDirectedGraph,
   SankeyDiagram: sankeyDiagram,
+  ProcessSankey: processSankey,
   ChordDiagram: chordDiagram,
   TreeDiagram: treeDiagram,
   Treemap: treemap,

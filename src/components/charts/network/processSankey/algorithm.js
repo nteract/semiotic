@@ -58,7 +58,7 @@ export function validateProcessSankey(nodes, edges, domain) {
 export function formatProcessSankeyIssue(issue) {
   if (issue.kind === "invalid-node-time") return `node ${issue.id} has an invalid xExtent (must be [start, end] with start <= end)`
   if (issue.kind === "invalid-edge-time") return `edge ${issue.id} has an invalid startTime or endTime`
-  if (issue.kind === "invalid-domain") return "time domain contains an invalid date"
+  if (issue.kind === "invalid-domain") return "time domain must be a 2-tuple of finite times [start, end] with start <= end"
   if (issue.kind === "invalid-value") return `edge ${issue.id} must have a positive finite value`
   if (issue.kind === "missing-node") return `edge ${issue.id} references missing ${issue.endpoint} node "${issue.nodeId}"`
   if (issue.kind === "backward-edge") return `edge ${issue.id} (${issue.source}->${issue.target}) ends before it starts`
@@ -824,10 +824,15 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
  * Compute the full Process Sankey layout for a given dataset and
  * configuration. Pure function, no side effects.
  *
+ * The chart's time domain isn't a layout opt — domain handling lives
+ * in the geometry helpers (`buildBandPath`, `buildRibbonPath`,
+ * `clampSamples`) which receive an `xScale` and a domain pair from
+ * the caller. The layout itself is timeless apart from the per-node
+ * sample/event timestamps.
+ *
  * @param {Array} nodes   - [{ id, xExtent? }]   xExtent is an optional [start, end] tuple
  * @param {Array} edges   - [{ id, source, target, value, startTime, endTime }]
  * @param {Object} opts
- * @param {[number, number]} opts.domain - [tMin, tMax] in ms
  * @param {number} opts.plotH            - inner chart height in px
  * @param {string} [opts.pairing]        - "value" | "temporal"
  * @param {string} [opts.packing]        - "off" | "reuse"

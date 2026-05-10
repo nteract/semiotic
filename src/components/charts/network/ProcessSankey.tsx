@@ -229,58 +229,131 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   // ProcessSankey accepts both nodes and edges via push (auto-detected
   // by source/target presence), so we override the variant defaults.
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
+  // Resolve an item's edge id when it's an edge — used by remove/update
+  // so consumers can address edges by id (the documented contract).
+  // Nodes still go through `nodeIdAccessor` for the same operation;
+  // remove/update walk both lists and apply to whichever has the id.
+  const resolveEdgeId = useCallback((e: TEdge, i: number): string => {
+    const fromAccessor = accessor(edgeIdAccessor, e) as unknown as string | undefined
+    if (fromAccessor != null) return String(fromAccessor)
+    return `${accessor(sourceAccessor, e)}-${accessor(targetAccessor, e)}-${i}`
+  }, [edgeIdAccessor, sourceAccessor, targetAccessor])
+
+  const looksLikeEdge = useCallback((item: Datum | undefined | null): boolean => {
+    if (item == null) return false
+    const e = item as TEdge
+    return (
+      accessor(sourceAccessor as ChartAccessor<TEdge, string>, e) != null &&
+      accessor(targetAccessor as ChartAccessor<TEdge, string>, e) != null
+    )
+  }, [sourceAccessor, targetAccessor])
+
   useFrameImperativeHandle(ref, {
     variant: "network",
     frameRef,
     overrides: {
       push(item: Datum) {
-        const candidate = item as TEdge
-        const looksLikeEdge =
-          candidate != null &&
-          accessor(sourceAccessor as ChartAccessor<TEdge, string>, candidate) != null &&
-          accessor(targetAccessor as ChartAccessor<TEdge, string>, candidate) != null
-        if (looksLikeEdge) {
+        if (looksLikeEdge(item)) {
           if (isControlled) {
             // eslint-disable-next-line no-console
-            console.warn("ProcessSankey.push: ignored — `edges` prop is controlled.")
+            console.warn("ProcessSankey.push: edge ignored — `edges` prop is controlled.")
             return
           }
-          setPushedEdges(prev => [...prev, candidate])
+          setPushedEdges(prev => [...prev, item as unknown as TEdge])
         } else {
-          setPushedNodes(prev => [...prev, candidate as unknown as TNode])
+          // Nodes are always push-mode (the `nodes` prop is always
+          // optional / merged with internal pushedNodes), so allow
+          // node pushes even when `edges` is controlled.
+          setPushedNodes(prev => [...prev, item as unknown as TNode])
         }
       },
       pushMany(items: Datum[]) {
-        if (isControlled) return
-        // Mirror push(): partition each item into edges vs nodes by
-        // checking for source+target presence. A consumer batch-pushing
-        // mixed records would otherwise see nodes get filed as edges,
-        // producing invalid normalized edges (source/target → "undefined").
+        // Partition into edges + nodes. Edges respect controlled mode
+        // (silently dropped with a warning if `edges` is a prop);
+        // nodes always flow through, matching push()'s behavior so
+        // batch-pushing mixed records doesn't lose data.
         const newEdges: TEdge[] = []
         const newNodes: TNode[] = []
         for (const item of items) {
-          const candidate = item as TEdge
-          const looksLikeEdge =
-            candidate != null &&
-            accessor(sourceAccessor as ChartAccessor<TEdge, string>, candidate) != null &&
-            accessor(targetAccessor as ChartAccessor<TEdge, string>, candidate) != null
-          if (looksLikeEdge) newEdges.push(candidate)
+          if (looksLikeEdge(item)) newEdges.push(item as unknown as TEdge)
           else newNodes.push(item as unknown as TNode)
         }
-        if (newEdges.length > 0) setPushedEdges(prev => [...prev, ...newEdges])
+        if (newEdges.length > 0) {
+          if (isControlled) {
+            // eslint-disable-next-line no-console
+            console.warn("ProcessSankey.pushMany: edges ignored — `edges` prop is controlled.")
+          } else {
+            setPushedEdges(prev => [...prev, ...newEdges])
+          }
+        }
         if (newNodes.length > 0) setPushedNodes(prev => [...prev, ...newNodes])
       },
-      clear() {
+      // remove(id | id[]) — addresses *edges* primarily (the documented
+      // contract; ProcessSankey's primary data shape is edges) but
+      // falls through to nodes when an id matches there. Returns the
+      // removed records so callers can undo / log.
+      remove(id: string | string[]): Datum[] {
+        const ids = new Set(Array.isArray(id) ? id : [id])
+        const removed: Datum[] = []
         if (!isControlled) {
-          setPushedEdges([])
-          setPushedNodes([])
+          setPushedEdges(prev => prev.filter((e, i) => {
+            const eid = resolveEdgeId(e, i)
+            if (ids.has(eid)) {
+              removed.push(e as Datum)
+              return false
+            }
+            return true
+          }))
         }
+        // Node-side fallback — `nodeIdAccessor` resolves user nodes.
+        setPushedNodes(prev => prev.filter((n) => {
+          const nid = String(accessor(nodeIdAccessor, n))
+          if (ids.has(nid)) {
+            removed.push(n as Datum)
+            return false
+          }
+          return true
+        }))
+        return removed
+      },
+      // update(id, updater) — same id resolution as remove(): walks
+      // edges first, then nodes. Returns previous data values for
+      // undo/observation.
+      update(id: string | string[], updater: (d: Datum) => Datum): Datum[] {
+        const ids = new Set(Array.isArray(id) ? id : [id])
+        const previous: Datum[] = []
+        if (!isControlled) {
+          setPushedEdges(prev => prev.map((e, i) => {
+            const eid = resolveEdgeId(e, i)
+            if (ids.has(eid)) {
+              previous.push(e as Datum)
+              return updater(e as Datum) as TEdge
+            }
+            return e
+          }))
+        }
+        setPushedNodes(prev => prev.map((n) => {
+          const nid = String(accessor(nodeIdAccessor, n))
+          if (ids.has(nid)) {
+            previous.push(n as Datum)
+            return updater(n as Datum) as TNode
+          }
+          return n
+        }))
+        return previous
+      },
+      clear() {
+        if (!isControlled) setPushedEdges([])
+        setPushedNodes([])
         frameRef.current?.clear()
       },
-      getData: () => rawEdges as unknown as Datum[],
+      // Snapshot the current edge list. `?? []` guards against a
+      // consumer passing `edges={null}` — without it the ref contract
+      // (`Datum[]`) would silently leak `null` to callers.
+      getData: () => (rawEdges ?? []) as unknown as Datum[],
       getScales: () => null,
     },
-    deps: [isControlled, sourceAccessor, targetAccessor, rawEdges],
+    deps: [isControlled, looksLikeEdge, resolveEdgeId, nodeIdAccessor, rawEdges],
   })
 
   const getEdgeId = useCallback((e: TEdge, i: number): string => {

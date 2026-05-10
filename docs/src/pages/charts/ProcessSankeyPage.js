@@ -1033,8 +1033,17 @@ ref.current.clear()`} />
       <p>
         <code>push</code> auto-detects edges (records with{" "}
         <code>source</code> + <code>target</code>) vs nodes; non-edges
-        go to the internal node list. Calls are no-ops if{" "}
-        <code>edges</code> is being passed as a prop (controlled mode).
+        go to the internal node list. <code>pushMany</code> partitions
+        a mixed batch the same way. Edge writes are silently dropped
+        with a console warning if <code>edges</code> is being passed
+        as a prop (controlled mode); node writes always flow through.
+      </p>
+      <p>
+        <code>remove(id)</code> and <code>update(id, fn)</code> address
+        edges by id first (resolved via <code>edgeIdAccessor</code>,
+        falling back to a synthesized{" "}
+        <code>{`source-target-index`}</code> id) and fall through to
+        nodes by <code>nodeIdAccessor</code> when no edge matches.
       </p>
 
       <h2 id="caveats">Caveats and known limitations</h2>
