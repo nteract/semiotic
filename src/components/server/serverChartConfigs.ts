@@ -11,6 +11,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { interpolateViridis } from "../charts/shared/colorPalettes"
+import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
+import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -522,11 +524,6 @@ const forceDirectedGraph: ChartConfig = {
 const processSankey: ChartConfig = {
   frameType: "network",
   buildProps: (_data, colorBy, colorScheme, common, rest) => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { buildProcessSankeyScenes } = require("../charts/network/processSankey/buildScenes")
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { emitProcessSankeyScenes } = require("../charts/network/processSankey/streamingLayout")
-
     const toTime = (v: unknown): number => {
       if (v == null) return NaN
       if (v instanceof Date) return v.getTime()

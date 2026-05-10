@@ -758,7 +758,13 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
             key={`p-${e.id}-${i}`}
             cx={x} cy={y} r={particleRadius}
             fill={fill}
-            stroke="var(--surface-1, #111827)"
+            // Outline against the chart background so a particle that
+            // happens to land on a same-colored ribbon still reads.
+            // `--semiotic-bg` is the documented theme token; the
+            // `--surface-1` we used previously was a docs-page CSS
+            // variable that didn't resolve under ThemeProvider and
+            // always fell back to the literal color.
+            stroke="var(--semiotic-bg, #111827)"
             strokeWidth={0.5}
             pointerEvents="none"
           />

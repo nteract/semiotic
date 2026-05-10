@@ -579,7 +579,10 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   },
 
   ProcessSankey: {
-    required: ["edges", "domain"],
+    // `edges` is omitted in push-mode (consumers push via the ref);
+    // only `domain` is structurally required because the time axis
+    // has no sensible default.
+    required: ["domain"],
     dataShape: "network",
     dataAccessors: ["sourceAccessor", "targetAccessor"],
     props: {

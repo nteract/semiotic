@@ -556,7 +556,13 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     edgeOpacity: props.edgeOpacity,
     colorByDepth: props.colorByDepth,
     nodeSize: props.nodeSize,
-    nodeSizeRange: props.nodeSizeRange
+    nodeSizeRange: props.nodeSizeRange,
+    // Forward the customLayout escape hatch + its layoutConfig so the
+    // SSR path can dispatch through the same custom-layout shim the
+    // CSR pipeline uses (consumed below in the customNetworkLayout
+    // branch).
+    customNetworkLayout: props.customNetworkLayout,
+    layoutConfig: props.layoutConfig,
   }
 
   let nodes: RealtimeNode[]
@@ -616,11 +622,58 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     }
   }
 
-  plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
-
-  const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
-    nodes, edges, config, [innerWidth, innerHeight]
-  )
+  // customLayout escape hatch — same dispatch the CSR pipeline uses in
+  // NetworkPipelineStore.runLayout/buildScene. When the caller supplies
+  // a `customNetworkLayout` (ProcessSankey via the SSR config does this),
+  // skip the built-in plugin and emit scene primitives from the custom
+  // layout function directly. Without this, charts that compose via the
+  // escape hatch would silently fall through to the force/sankey/etc.
+  // plugin during SSR — visible regression class for any registered
+  // custom-layout chart.
+  let sceneNodes: import("../stream/networkTypes").NetworkSceneNode[] = []
+  let sceneEdges: import("../stream/networkTypes").NetworkSceneEdge[] = []
+  let labels: import("../stream/networkTypes").NetworkLabel[] = []
+  if (config.customNetworkLayout) {
+    // Match the resolveColor + theme shape NetworkPipelineStore builds
+    // for the customLayout context. Pin the categorical palette to the
+    // resolved theme so SSR matches CSR.
+    const palette = (Array.isArray(config.colorScheme) ? config.colorScheme : null)
+      || theme.colors.categorical
+      || ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+    const colorMemo = new Map<string, string>()
+    const resolveColor = (key: string): string => {
+      if (colorMemo.has(key)) return colorMemo.get(key) as string
+      const hash = Array.from(key).reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0)
+      const c = palette[hash % palette.length]
+      colorMemo.set(key, c)
+      return c
+    }
+    const ctx = {
+      nodes,
+      edges,
+      dimensions: {
+        width: size[0],
+        height: size[1],
+        plot: { x: margin.left, y: margin.top, width: innerWidth, height: innerHeight },
+      },
+      theme: {
+        semantic: theme.colors as unknown as import("../stream/types").ThemeSemanticColors,
+        categorical: palette,
+      },
+      resolveColor,
+      config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+    }
+    const result = config.customNetworkLayout(ctx)
+    sceneNodes = result.sceneNodes ?? []
+    sceneEdges = result.sceneEdges ?? []
+    labels = result.labels ?? []
+  } else {
+    plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
+    const built = plugin.buildScene(nodes, edges, config, [innerWidth, innerHeight])
+    sceneNodes = built.sceneNodes
+    sceneEdges = built.sceneEdges
+    labels = built.labels
+  }
 
   // Apply theme text color to labels (layout plugins default to #333)
   const s = themeStyles(theme)
