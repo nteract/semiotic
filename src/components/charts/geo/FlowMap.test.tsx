@@ -178,11 +178,15 @@ describe("FlowMap", () => {
         </Wrapper>
       )
       expect(lastGeoFrameProps.lines).toHaveLength(3)
-      // Each line should have coordinates array
+      // Each line should have coordinates array. Synthesized coords
+      // carry stable internal keys (__semiotic_x / __semiotic_y);
+      // the frame reads them via FlowMap's hybrid xAccessor /
+      // yAccessor so the user-facing lon/lat is preserved at read
+      // time. See "hybrid xAccessor reads…" tests below.
       for (const line of lastGeoFrameProps.lines) {
         expect(line.coordinates).toHaveLength(2)
-        expect(line.coordinates[0]).toHaveProperty("lon")
-        expect(line.coordinates[0]).toHaveProperty("lat")
+        expect(line.coordinates[0]).toHaveProperty("__semiotic_x")
+        expect(line.coordinates[0]).toHaveProperty("__semiotic_y")
       }
     })
 
@@ -340,8 +344,47 @@ describe("FlowMap", () => {
       expect(line.target).toBe("B")
       expect(line.passengers).toBe(100)
       expect(line.coordinates).toHaveLength(2)
-      expect(line.coordinates[0].lon).toBe(-73.7)
-      expect(line.coordinates[1].lon).toBe(-0.4)
+      // Synthesized coords carry stable internal keys
+      // (`__semiotic_x` / `__semiotic_y`); the frame reads them via
+      // FlowMap's hybrid xReader/yReader (verified separately by
+      // checking lastGeoFrameProps.xAccessor returns the value when
+      // called on a synthesized coord).
+      expect(line.coordinates[0].__semiotic_x).toBe(-73.7)
+      expect(line.coordinates[1].__semiotic_x).toBe(-0.4)
+    })
+
+    it("hybrid xAccessor reads synthesized coords AND user nodes", () => {
+      // String-form user accessor: nodes use { lon, lat } keys, synthesized
+      // coords use the stable internal keys. Both must work through the
+      // single accessor passed to the frame.
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} />
+        </Wrapper>
+      )
+      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+      // Reads from a node (user shape).
+      expect(xAcc({ lon: 100, lat: 50 })).toBe(100)
+      // Reads from a synthesized coord (stable key).
+      expect(xAcc({ __semiotic_x: 7, __semiotic_y: 8 })).toBe(7)
+    })
+
+    it("hybrid xAccessor works with function user accessors", () => {
+      // Function accessor: would have silently failed with the old
+      // [xAccessor as string] coord-key pattern.
+      const lonFn = (d: any) => d.lon * 2
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} xAccessor={lonFn} />
+        </Wrapper>
+      )
+      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+      // Node shape — falls back to the user function.
+      expect(xAcc({ lon: 5 })).toBe(10)
+      // Synthesized coord — stable key wins (the user function would
+      // have returned NaN here because synthesized coords don't carry
+      // the user's expected shape).
+      expect(xAcc({ __semiotic_x: 99 })).toBe(99)
     })
 
     it("drops a pushed flow whose endpoints aren't in nodeLookup", () => {

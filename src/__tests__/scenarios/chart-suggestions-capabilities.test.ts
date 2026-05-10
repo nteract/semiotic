@@ -10,10 +10,11 @@ import { describe, it, expect } from "vitest"
 // in mixed-module mode. Casting to `any` keeps the test ergonomic
 // without authoring a `.d.ts` stub.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { suggestCharts, chartSatisfiesCapabilities, VALID_CAPABILITY_KEYS } =
+const { suggestCharts, chartSatisfiesCapabilities, explainCapabilityMismatch, VALID_CAPABILITY_KEYS } =
   require("../../../ai/chartSuggestions.cjs") as {
     suggestCharts: (args: any) => any
     chartSatisfiesCapabilities: (chartName: string, requirements: any) => boolean
+    explainCapabilityMismatch: (chartName: string, requirements: any) => string | null
     VALID_CAPABILITY_KEYS: string[]
   }
 
@@ -23,6 +24,33 @@ describe("chartSuggestions — capability filter", () => {
       expect(VALID_CAPABILITY_KEYS.sort()).toEqual([
         "legend", "linkedHover", "push", "selection", "ssr",
       ])
+    })
+  })
+
+  describe("explainCapabilityMismatch", () => {
+    it("returns null when no mismatch", () => {
+      expect(explainCapabilityMismatch("Scatterplot", { push: true })).toBeNull()
+    })
+
+    it("describes a single-constraint mismatch", () => {
+      // GaugeChart has supportsPush: false. Asking for push: true mismatches.
+      const reason = explainCapabilityMismatch("GaugeChart", { push: true })
+      expect(reason).toContain("push=true")
+      expect(reason).toContain("supportsPush=false")
+    })
+
+    it("describes multiple-constraint mismatches with separator", () => {
+      // GaugeChart: supportsLegend=false, supportsLinkedHover=false.
+      // Asking for both should surface both.
+      const reason = explainCapabilityMismatch("GaugeChart", { legend: true, linkedHover: true })
+      expect(reason).toContain("legend=true")
+      expect(reason).toContain("linkedHover=true")
+      expect(reason).toContain(";")
+    })
+
+    it("explains unknown chart name", () => {
+      const reason = explainCapabilityMismatch("NotARealChart", { push: true })
+      expect(reason).toContain("not found")
     })
   })
 
@@ -103,6 +131,22 @@ describe("chartSuggestions — capability filter", () => {
       expect(filtered.filteredOut.length).toBeGreaterThan(0)
       expect(filtered.filteredOut[0]).toHaveProperty("component")
       expect(filtered.filteredOut[0]).toHaveProperty("reason")
+    })
+
+    it("filteredOut.reason cites the specific capability mismatch", () => {
+      // Drop GaugeChart-style data (single-value would never match
+      // here anyway) — instead use Scatterplot which we know
+      // supports push, and forbid push to force a mismatch.
+      const filtered = suggestCharts({ data: numericData, capabilities: { push: false } })
+      expect(filtered.ok).toBe(true)
+      const scatterFiltered = filtered.filteredOut.find((f: any) => f.component === "Scatterplot")
+      expect(scatterFiltered).toBeDefined()
+      // Reason should mention the failed constraint, not the data-shape rationale.
+      expect(scatterFiltered.reason).toMatch(/push=false/)
+      expect(scatterFiltered.reason).toMatch(/supportsPush=true/)
+      // Sanity — the data-shape rationale (which used to be the
+      // reason) should not be the value here.
+      expect(scatterFiltered.reason).not.toMatch(/scatterplot shows relationships/)
     })
 
     it("rejects unknown capability keys", () => {

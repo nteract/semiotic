@@ -6948,8 +6948,9 @@ var require_chartSuggestions = __commonJS({
     ];
     var MAX_SAMPLE_SIZE = 5;
     var _capabilityMatrix = null;
+    var _capabilityMatrixLoaded = false;
     function loadCapabilityMatrix() {
-      if (_capabilityMatrix) return _capabilityMatrix;
+      if (_capabilityMatrixLoaded) return _capabilityMatrix;
       const candidates = [
         path2.join(__dirname, "capabilities.json"),
         path2.join(__dirname, "..", "capabilities.json")
@@ -6959,12 +6960,13 @@ var require_chartSuggestions = __commonJS({
           const json2 = require(candidate);
           if (json2 && json2.charts) {
             _capabilityMatrix = json2.charts;
+            _capabilityMatrixLoaded = true;
             return _capabilityMatrix;
           }
         } catch {
         }
       }
-      _capabilityMatrix = {};
+      _capabilityMatrixLoaded = true;
       return _capabilityMatrix;
     }
     var CAPABILITY_KEY_MAP = {
@@ -6978,6 +6980,7 @@ var require_chartSuggestions = __commonJS({
     function chartSatisfiesCapabilities(chartName, requirements) {
       if (!requirements || Object.keys(requirements).length === 0) return true;
       const matrix = loadCapabilityMatrix();
+      if (matrix == null) return false;
       const spec = matrix[chartName];
       if (!spec) return false;
       for (const [shortKey, want] of Object.entries(requirements)) {
@@ -6988,6 +6991,24 @@ var require_chartSuggestions = __commonJS({
         if (has !== want) return false;
       }
       return true;
+    }
+    function explainCapabilityMismatch(chartName, requirements) {
+      if (!requirements || Object.keys(requirements).length === 0) return null;
+      const matrix = loadCapabilityMatrix();
+      if (matrix == null) return "capability matrix unavailable (run `npm run docs:capabilities`)";
+      const spec = matrix[chartName];
+      if (!spec) return `${chartName} not found in capability matrix`;
+      const mismatches = [];
+      for (const [shortKey, want] of Object.entries(requirements)) {
+        if (want == null) continue;
+        const matrixKey = CAPABILITY_KEY_MAP[shortKey];
+        if (!matrixKey) continue;
+        const has = spec[matrixKey] === true;
+        if (has !== want) {
+          mismatches.push(`requires ${shortKey}=${want} but ${matrixKey}=${has}`);
+        }
+      }
+      return mismatches.length > 0 ? mismatches.join("; ") : null;
     }
     function summarizeFields(data, keys) {
       const numericFields = [];
@@ -7066,6 +7087,12 @@ var require_chartSuggestions = __commonJS({
           return {
             ok: false,
             error: `Unknown capability key(s): ${unknown2.join(", ")}. Expected: ${VALID_CAPABILITY_KEYS.join(", ")}.`
+          };
+        }
+        if (loadCapabilityMatrix() == null) {
+          return {
+            ok: false,
+            error: "Capability matrix unavailable: ai/capabilities.json is missing. Run `npm run docs:capabilities` to generate it. (Capability filtering requires the matrix; suggestions without a `capabilities` arg still work.)"
           };
         }
       }
@@ -7241,7 +7268,15 @@ var require_chartSuggestions = __commonJS({
         // applied — caller can see which suggestions were dropped and
         // whether to relax the constraint.
         ...capabilities && filteredSuggestions.length < suggestions.length && {
-          filteredOut: suggestions.filter((s) => !chartSatisfiesCapabilities(s.component, capabilities)).map((s) => ({ component: s.component, reason: s.reason }))
+          filteredOut: suggestions.filter((s) => !chartSatisfiesCapabilities(s.component, capabilities)).map((s) => ({
+            component: s.component,
+            // The `reason` here is the capability mismatch (which
+            // constraint failed), not the original data-shape rationale
+            // — callers debugging an empty result need to know which
+            // capability to relax, not why the chart was originally
+            // suggested.
+            reason: explainCapabilityMismatch(s.component, capabilities) || "did not satisfy capability constraints"
+          }))
         }
       };
     }
@@ -7300,7 +7335,8 @@ For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import fr
       suggestCharts: suggestCharts2,
       // Exported for tests + callers that want to filter their own
       // chart-name set without re-running the suggestion pipeline.
-      chartSatisfiesCapabilities
+      chartSatisfiesCapabilities,
+      explainCapabilityMismatch
     };
   }
 });

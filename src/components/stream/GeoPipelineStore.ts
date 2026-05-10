@@ -366,7 +366,11 @@ export class GeoPipelineStore {
   }
 
   setLines(data: Datum[]): void {
-    this.lineData = data
+    // Defensive copy — `pushLine` / `pushManyLines` mutate
+    // `lineData` in place (no ring buffer for lines), so taking the
+    // user's array reference here would let a subsequent push leak
+    // into the React-owned array passed via the `lines` prop.
+    this.lineData = data.slice()
   }
 
   /** Initialize streaming mode with a ring buffer */
@@ -396,19 +400,23 @@ export class GeoPipelineStore {
   }
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
-   *  aren't ring-buffered — the bounded set is the geography. */
+   *  aren't ring-buffered — the bounded set is the geography.
+   *  Mutates `lineData` in place (the array is internal to the store
+   *  and never returned by reference) so streaming pushes don't pay
+   *  the O(n) GC churn of an array spread per push. */
   pushLine(line: Datum): void {
     if (line == null || typeof line !== "object") return
-    this.lineData = [...this.lineData, line]
+    this.lineData.push(line)
     this.version++
   }
 
-  /** Append multiple line/flow records in one pass. */
+  /** Append multiple line/flow records in one pass. Same in-place
+   *  mutation rationale as `pushLine`. */
   pushManyLines(lines: Datum[]): void {
     if (!Array.isArray(lines) || lines.length === 0) return
     const safe = lines.filter((l) => l != null && typeof l === "object")
     if (safe.length === 0) return
-    this.lineData = [...this.lineData, ...safe]
+    this.lineData.push(...safe)
     this.version++
   }
 

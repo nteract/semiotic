@@ -12,16 +12,28 @@ const MAX_SAMPLE_SIZE = 5
 // from `chartSpecs.ts` via `npm run docs:capabilities`. Used to
 // filter suggestions when the caller passes capability constraints.
 // Loaded lazily so a test or build that hasn't generated the file
-// yet still imports cleanly; consumers that pass capability
-// constraints will see an explicit error if the JSON is missing.
+// yet still imports cleanly; if the JSON is missing AND a caller
+// passes capability constraints, `suggestCharts` returns an explicit
+// error rather than silently filtering everything out (would happen
+// because `chartSatisfiesCapabilities` fails closed for unknown
+// chart names).
 //
 // `__dirname` points at the cjs source location at runtime —
 // when bundled into `ai/dist/mcp-server.js` `__dirname` is
 // `ai/dist/`, so we also probe the parent directory. Mirrors the
 // `schema.json` loader's two-candidate pattern.
+//
+// `_capabilityMatrixLoaded` differentiates "load attempted, file
+// missing → empty {}" from "load not yet attempted". Without this
+// flag, a build that's missing capabilities.json would set
+// `_capabilityMatrix = {}` and every subsequent call would short-
+// circuit on `if (_capabilityMatrix)` (because `{}` is truthy) and
+// never re-probe — the right behavior for a steady state but
+// incompatible with detecting "loader failed".
 let _capabilityMatrix = null
+let _capabilityMatrixLoaded = false
 function loadCapabilityMatrix() {
-  if (_capabilityMatrix) return _capabilityMatrix
+  if (_capabilityMatrixLoaded) return _capabilityMatrix
   const candidates = [
     path.join(__dirname, "capabilities.json"),
     path.join(__dirname, "..", "capabilities.json"),
@@ -31,13 +43,14 @@ function loadCapabilityMatrix() {
       const json = require(candidate)
       if (json && json.charts) {
         _capabilityMatrix = json.charts
+        _capabilityMatrixLoaded = true
         return _capabilityMatrix
       }
     } catch {
       // try next candidate
     }
   }
-  _capabilityMatrix = {}
+  _capabilityMatrixLoaded = true
   return _capabilityMatrix
 }
 
@@ -75,6 +88,7 @@ const VALID_CAPABILITY_KEYS = Object.keys(CAPABILITY_KEY_MAP)
 function chartSatisfiesCapabilities(chartName, requirements) {
   if (!requirements || Object.keys(requirements).length === 0) return true
   const matrix = loadCapabilityMatrix()
+  if (matrix == null) return false // matrix unavailable — fail closed
   const spec = matrix[chartName]
   if (!spec) return false // unknown chart — fail closed
   for (const [shortKey, want] of Object.entries(requirements)) {
@@ -85,6 +99,33 @@ function chartSatisfiesCapabilities(chartName, requirements) {
     if (has !== want) return false
   }
   return true
+}
+
+/**
+ * Explain why a chart doesn't satisfy a capability constraint set —
+ * used in the `filteredOut[].reason` payload so callers see the
+ * specific mismatched constraint(s) rather than the chart's
+ * data-shape rationale. Returns null when no mismatch (defensive;
+ * callers should only invoke this on charts that already failed
+ * `chartSatisfiesCapabilities`).
+ */
+function explainCapabilityMismatch(chartName, requirements) {
+  if (!requirements || Object.keys(requirements).length === 0) return null
+  const matrix = loadCapabilityMatrix()
+  if (matrix == null) return "capability matrix unavailable (run `npm run docs:capabilities`)"
+  const spec = matrix[chartName]
+  if (!spec) return `${chartName} not found in capability matrix`
+  const mismatches = []
+  for (const [shortKey, want] of Object.entries(requirements)) {
+    if (want == null) continue
+    const matrixKey = CAPABILITY_KEY_MAP[shortKey]
+    if (!matrixKey) continue
+    const has = spec[matrixKey] === true
+    if (has !== want) {
+      mismatches.push(`requires ${shortKey}=${want} but ${matrixKey}=${has}`)
+    }
+  }
+  return mismatches.length > 0 ? mismatches.join("; ") : null
 }
 
 function summarizeFields(data, keys) {
@@ -174,6 +215,15 @@ function suggestCharts(args = {}) {
       return {
         ok: false,
         error: `Unknown capability key(s): ${unknown.join(", ")}. Expected: ${VALID_CAPABILITY_KEYS.join(", ")}.`,
+      }
+    }
+    // Probe matrix availability up front so callers see a clear error
+    // instead of an empty-suggestions silent-failure when
+    // capabilities.json is missing from the build.
+    if (loadCapabilityMatrix() == null) {
+      return {
+        ok: false,
+        error: "Capability matrix unavailable: ai/capabilities.json is missing. Run `npm run docs:capabilities` to generate it. (Capability filtering requires the matrix; suggestions without a `capabilities` arg still work.)",
       }
     }
   }
@@ -376,7 +426,15 @@ function suggestCharts(args = {}) {
     ...(capabilities && filteredSuggestions.length < suggestions.length && {
       filteredOut: suggestions
         .filter((s) => !chartSatisfiesCapabilities(s.component, capabilities))
-        .map((s) => ({ component: s.component, reason: s.reason })),
+        .map((s) => ({
+          component: s.component,
+          // The `reason` here is the capability mismatch (which
+          // constraint failed), not the original data-shape rationale
+          // — callers debugging an empty result need to know which
+          // capability to relax, not why the chart was originally
+          // suggested.
+          reason: explainCapabilityMismatch(s.component, capabilities) || "did not satisfy capability constraints",
+        })),
     }),
   }
 }
@@ -417,4 +475,5 @@ module.exports = {
   // Exported for tests + callers that want to filter their own
   // chart-name set without re-running the suggestion pipeline.
   chartSatisfiesCapabilities,
+  explainCapabilityMismatch,
 }

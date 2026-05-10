@@ -7,6 +7,15 @@ import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp, StreamGeoFrameHandle } from "../../stream/geoTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+
+// Stable internal keys for synthesized line-coord objects. The
+// frame's xAccessor / yAccessor would otherwise need to know how to
+// read user-supplied function accessors against synthesized objects
+// (which have no user-controlled shape). By writing coords with
+// these fixed keys and passing hybrid accessors that prefer them,
+// FlowMap supports both string and function user accessors.
+const COORD_X_KEY = "__semiotic_x"
+const COORD_Y_KEY = "__semiotic_y"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
@@ -316,11 +325,16 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     const yAcc = typeof yAccessorRef.current === "function"
       ? yAccessorRef.current
       : (d: Datum) => d[yAccessorRef.current as string]
+    // Synthesized coords use stable keys. The frame reads them via
+    // the hybrid `xReader` / `yReader` defined below, which prefer
+    // these stable keys on coord objects and fall back to the
+    // user's accessor on nodes — supports both string and function
+    // user accessors.
     return {
       ...flow,
       coordinates: [
-        { [xAccessorRef.current as string]: xAcc(src), [yAccessorRef.current as string]: yAcc(src) },
-        { [xAccessorRef.current as string]: xAcc(tgt), [yAccessorRef.current as string]: yAcc(tgt) },
+        { [COORD_X_KEY]: xAcc(src), [COORD_Y_KEY]: yAcc(src) },
+        { [COORD_X_KEY]: xAcc(tgt), [COORD_Y_KEY]: yAcc(tgt) },
       ],
     }
   }, [])
@@ -406,7 +420,8 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
   // Click behavior is the standard pass-through — no translation needed.
   const customClickBehavior = setup.customClickBehavior
 
-  // Convert flows to line data
+  // Convert flows to line data. Coords use stable internal keys
+  // (see resolveFlowToLine for the same pattern in the push path).
   const lineData = useMemo(() => {
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
@@ -419,12 +434,39 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
       return {
         ...flow,
         coordinates: [
-          { [xAccessor as string]: xAcc(src), [yAccessor as string]: yAcc(src) },
-          { [xAccessor as string]: xAcc(tgt), [yAccessor as string]: yAcc(tgt) }
+          { [COORD_X_KEY]: xAcc(src), [COORD_Y_KEY]: yAcc(src) },
+          { [COORD_X_KEY]: xAcc(tgt), [COORD_Y_KEY]: yAcc(tgt) },
         ]
       }
     }).filter(Boolean) as Datum[]
   }, [safeFlows, nodeLookup, xAccessor, yAccessor])
+
+  // Hybrid x/y readers passed to the frame as `xAccessor` /
+  // `yAccessor`. On synthesized line-coord objects (which carry
+  // `COORD_X_KEY` / `COORD_Y_KEY`) we read the stable keys; on
+  // anything else (nodes / user-shaped data) we fall back to the
+  // user's accessor. This is the integration point that lets
+  // FlowMap accept function accessors — the synthesized coords
+  // never have to satisfy a user-defined function shape.
+  const xReader = useMemo(() => {
+    const userRead = typeof xAccessor === "function"
+      ? xAccessor
+      : (d: Datum) => d[xAccessor as string]
+    return (d: Datum) => {
+      if (d != null && typeof d === "object" && COORD_X_KEY in d) return d[COORD_X_KEY]
+      return userRead(d)
+    }
+  }, [xAccessor])
+
+  const yReader = useMemo(() => {
+    const userRead = typeof yAccessor === "function"
+      ? yAccessor
+      : (d: Datum) => d[yAccessor as string]
+    return (d: Datum) => {
+      if (d != null && typeof d === "object" && COORD_Y_KEY in d) return d[COORD_Y_KEY]
+      return userRead(d)
+    }
+  }, [yAccessor])
 
   // Edge width scale
   const widthScale = useMemo(() => {
@@ -515,8 +557,8 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     // supplied we hand the translated `lineData` over as usual.
     ...(flows != null && { lines: lineData }),
     points: safeNodes,
-    xAccessor: xAccessor as any,
-    yAccessor: yAccessor as any,
+    xAccessor: xReader as any,
+    yAccessor: yReader as any,
     lineDataAccessor: "coordinates",
     ...(lineIdAccessor != null && { lineIdAccessor }),
     lineType,
