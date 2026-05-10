@@ -499,6 +499,26 @@ describe("MCP protocol round-trip", () => {
     expect(sc.capabilities).toEqual({ push: true, ssr: true })
   })
 
+  it("suggestChart rejects unknown capability keys at the MCP schema layer", async () => {
+    // The zod schema is `.strict()`, so an unknown key causes the
+    // MCP framework to return a JSON-RPC error rather than silently
+    // strip the key (which would mask the cjs-level validation).
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestChart",
+      arguments: {
+        data: [{ x: 1, y: 1 }, { x: 2, y: 2 }],
+        capabilities: { wibble: true },
+      },
+    }, "suggest-cap-strict")
+
+    // Either a JSON-RPC error (zod rejected) OR a tool-level error
+    // (cjs validator caught it). Both are valid fail-closed shapes;
+    // the assertion only requires that the unknown key didn't get
+    // silently dropped + processed as an empty constraint set.
+    const errored = result.error != null || result.result?.isError === true
+    expect(errored).toBe(true)
+  })
+
 
   it("renderChart produces SVG output", async () => {
     const result = await sendRequest(proc, "tools/call", {

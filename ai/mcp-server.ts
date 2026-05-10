@@ -583,7 +583,11 @@ function createServer(): McpServer {
         ssr: z.boolean().optional().describe("Require server-side rendering via renderChart()"),
         selection: z.boolean().optional().describe("Require named selection / cross-filter support"),
         legend: z.boolean().optional().describe("Require a top-level legend"),
-      }).optional().describe("Capability constraints — set a key to true to require, false to forbid. Unset keys are ignored."),
+        // `.strict()` so the MCP surface rejects unknown capability
+        // keys at the schema layer rather than silently stripping
+        // them — keeps the cjs-level "Unknown capability key(s)"
+        // validation from being unreachable from MCP callers.
+      }).strict().optional().describe("Capability constraints — set a key to true to require, false to forbid. Unset keys are ignored."),
     },
     suggestChartHandler
   )
