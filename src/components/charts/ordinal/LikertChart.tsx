@@ -22,6 +22,14 @@ import {
   NEUTRAL_POS,
 } from "../shared/useLikertAggregation"
 
+// Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
+// LikertChart drives fill from `baseStyleExtras` (level-keyed
+// palette) so the helper's category-cycling path never fires —
+// the map is genuinely unused. Keeping a single reference at
+// module scope avoids re-allocating on every render, which would
+// otherwise bust the helper's `basePieceStyle` memoization.
+const EMPTY_CATEGORY_INDEX_MAP = new Map<string, number>()
+
 /**
  * LikertChart — visualize Likert scale survey responses.
  *
@@ -339,7 +347,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     color: undefined,
     themeCategorical: undefined,
     colorScheme: undefined,
-    categoryIndexMap: new Map<string, number>(),  // unused since extras supplies fill
+    categoryIndexMap: EMPTY_CATEGORY_INDEX_MAP,  // stable; unused since extras supplies fill
     userPieceStyle: frameProps?.pieceStyle,
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
