@@ -401,9 +401,10 @@ export class GeoPipelineStore {
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
    *  aren't ring-buffered — the bounded set is the geography.
-   *  Mutates `lineData` in place (the array is internal to the store
-   *  and never returned by reference) so streaming pushes don't pay
-   *  the O(n) GC churn of an array spread per push. */
+   *  Mutates `lineData` in place to avoid the O(n) GC churn of an
+   *  array spread per push. The mutation is invisible to callers
+   *  because `setLines` defensive-copies on entry and `getLines`
+   *  defensive-copies on exit. */
   pushLine(line: Datum): void {
     if (line == null || typeof line !== "object") return
     this.lineData.push(line)
@@ -442,9 +443,13 @@ export class GeoPipelineStore {
     return removed
   }
 
-  /** Read the current line/flow set (post-push, pre-projection). */
+  /** Read the current line/flow set (post-push, pre-projection).
+   *  Defensive copy — `pushLine` / `pushManyLines` mutate
+   *  `lineData` in place, so returning by reference would let
+   *  callers observe ingest-side mutations on a snapshot they
+   *  thought was stable. */
   getLines(): Datum[] {
-    return this.lineData
+    return this.lineData.slice()
   }
 
   /**

@@ -425,7 +425,7 @@ export default function ScatterplotPage() {
         overlays (regression lines, trend bands, anomaly markers) are
         already first-class on <code>Scatterplot</code> via the{" "}
         <code>regression</code> prop and the <code>annotations</code> array
-        — see the regression example below.
+        — see the <a href="#regression">Regression Overlay</a> section.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
