@@ -120,6 +120,48 @@ describe("trend annotation — ordinal frame", () => {
     })
   })
 
+  // The trend handler reads `data[xAccessor]` / `data[yAccessor]`
+  // with string keys. When the chart's user accessor is a function,
+  // StreamOrdinalFrame bakes the resolved value under a synthetic
+  // string key (via `annotationAccessorResolver`) and forwards that
+  // synthetic key as the annotation context's xAccessor — so this
+  // handler works against the synthetic-keyed shape uniformly.
+  // This test pins the integration: a synthetic key correctly
+  // surfaces into the trend regression path.
+  describe("function accessor → synthetic key path", () => {
+    const ctx: AnnotationContext = {
+      // What StreamOrdinalFrame produces when categoryAccessor is
+      // function-valued: synthetic keys, baked values.
+      data: [
+        { __semiotic_resolvedO: "Q1", __semiotic_resolvedR: 10 },
+        { __semiotic_resolvedO: "Q2", __semiotic_resolvedR: 20 },
+        { __semiotic_resolvedO: "Q3", __semiotic_resolvedR: 30 },
+      ],
+      xAccessor: "__semiotic_resolvedO",
+      yAccessor: "__semiotic_resolvedR",
+      frameType: "ordinal",
+      projection: "vertical",
+      width: 400,
+      height: 200,
+      scales: {
+        x: makeBandScale({ Q1: 50, Q2: 200, Q3: 350 }),
+        y: makeLinearScale([0, 50], [200, 0]),
+        o: undefined as any,
+      },
+    }
+
+    it("regresses through synthetic-keyed annotation data", () => {
+      const result = rules({ type: "trend", method: "linear" }, 0, ctx)
+      expect(result).not.toBeNull()
+      const html = renderToStaticMarkup(result as React.ReactElement)
+      expect(html).toContain("<polyline")
+      // First trend point: idx=0 → x=50, y=10 → 160. Last:
+      // idx=2 → x=350, y=30 → 80.
+      expect(html).toContain("50,160")
+      expect(html).toContain("350,80")
+    })
+  })
+
   describe("LOESS on ordinal frames", () => {
     const ctx: AnnotationContext = {
       data: [

@@ -412,12 +412,15 @@ export class GeoPipelineStore {
   }
 
   /** Append multiple line/flow records in one pass. Same in-place
-   *  mutation rationale as `pushLine`. */
+   *  mutation rationale as `pushLine`. Loops instead of
+   *  `Array.prototype.push(...safe)` so very large batches don't
+   *  blow the engine's argument-count limit (mirrors how `pushMany`
+   *  for points iterates rather than spreads). */
   pushManyLines(lines: Datum[]): void {
     if (!Array.isArray(lines) || lines.length === 0) return
     const safe = lines.filter((l) => l != null && typeof l === "object")
     if (safe.length === 0) return
-    this.lineData.push(...safe)
+    for (const line of safe) this.lineData.push(line)
     this.version++
   }
 

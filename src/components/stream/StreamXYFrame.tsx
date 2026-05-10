@@ -56,6 +56,7 @@ import type { StreamRendererFn } from "./renderers/types"
 import { resolveNodeColor } from "./sceneUtils"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
@@ -1367,41 +1368,21 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     )
 
     // ── Annotation accessor resolution ─────────────────────────────────
-    // SVGOverlay needs string keys to look up coordinates in annotationData.
-    // When accessors are functions, we bake resolved values under synthetic keys.
-    // Priority: string accessor → function accessor (resolved) → string fallback
-    // (timeAccessor/valueAccessor) → function fallback (resolved) → undefined.
-    const resolveAnnAccessor = (
-      primary: any, fallback: any, resolvedKey: string, fallbackKey: string
-    ): { key: string | undefined; fn: ((d: Datum) => any) | null } => {
-      if (typeof primary === "string") return { key: primary, fn: null }
-      if (typeof primary === "function") return { key: resolvedKey, fn: primary }
-      if (typeof fallback === "string") return { key: fallback, fn: null }
-      if (typeof fallback === "function") return { key: fallbackKey, fn: fallback }
-      return { key: undefined, fn: null }
-    }
-
-    const xResolved = resolveAnnAccessor(xAccessor, timeAccessor, "__semiotic_resolvedX", "__semiotic_resolvedTime")
-    const yResolved = resolveAnnAccessor(yAccessor, valueAccessor, "__semiotic_resolvedY", "__semiotic_resolvedValue")
+    // SVGOverlay needs string keys to look up coordinates in
+    // annotationData. When accessors are functions, we bake resolved
+    // values under synthetic keys. Priority: string accessor →
+    // function accessor (resolved) → string fallback
+    // (timeAccessor/valueAccessor) → function fallback (resolved) →
+    // undefined.
+    //
+    // Helpers live in `./annotationAccessorResolver` so
+    // StreamOrdinalFrame can share the same plumbing.
+    const xResolved = resolveAnnotationAccessor(xAccessor, timeAccessor, "__semiotic_resolvedX", "__semiotic_resolvedTime")
+    const yResolved = resolveAnnotationAccessor(yAccessor, valueAccessor, "__semiotic_resolvedY", "__semiotic_resolvedValue")
     const annXAccessor = xResolved.key
     const annYAccessor = yResolved.key
-    const hasAnnotations = annotations && annotations.length > 0
-
-    const enrichAnnotationData = (rawData: Datum[] | undefined): Datum[] | undefined => {
-      if (!rawData || !hasAnnotations || (!xResolved.fn && !yResolved.fn)) return rawData
-      let didChange = false
-      const result = rawData.map(d => {
-        const computeX = xResolved.fn && xResolved.key && !(xResolved.key in d)
-        const computeY = yResolved.fn && yResolved.key && !(yResolved.key in d)
-        if (!computeX && !computeY) return d
-        didChange = true
-        const copy = { ...d }
-        if (computeX) copy[xResolved.key!] = xResolved.fn!(d)
-        if (computeY) copy[yResolved.key!] = yResolved.fn!(d)
-        return copy
-      })
-      return didChange ? result : rawData
-    }
+    const hasAnnotations = (annotations && annotations.length > 0) || false
+    const enrichAnnotationData = buildEnrichAnnotationData(xResolved, yResolved, hasAnnotations)
 
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
