@@ -27,6 +27,9 @@ import type { RealtimeFrameHandle, HoverData } from "../../realtime/types"
 import { useColorScale, useThemeCategorical } from "../shared/hooks"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { inferNodesFromEdges } from "../shared/networkUtils"
+import { filterSparseArray } from "../shared/sparseArray"
+import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
   StreamNetworkFrameProps,
@@ -196,11 +199,21 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     lifetimeMode = "half",
     showLaneRails = false,
     showQualityReadout = false,
-    width = 760,
-    height = 520,
+    // Match BaseChartProps defaults so ProcessSankey shares the
+    // chart-grid sizing other HOCs use; the Process Sankey-specific
+    // larger default of 760×520 was confusing in dashboards that mixed
+    // it with sankey/force/etc.
+    width = 600,
+    height = 400,
     margin: userMargin,
     title,
     description,
+    summary,
+    accessibleTable,
+    responsiveWidth,
+    responsiveHeight,
+    loading,
+    emptyContent,
     edgeOpacity = 0.35,
     timeFormat,
     valueFormat,
@@ -243,8 +256,52 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     setPushedNodes(next)
   }, [])
   const isControlled = rawEdgesProp !== undefined
-  const rawEdges = isControlled ? rawEdgesProp : pushedEdges
-  const rawNodes = (rawNodesProp ?? pushedNodes) as TNode[]
+  const rawEdges = filterSparseArray(isControlled ? rawEdgesProp : pushedEdges)
+  // Nodes can come from three sources, in order of precedence:
+  //   1. Controlled `nodes` prop (filtered for sparse holes).
+  //   2. Push-API additions (`ref.current.push(node)`); merged on top
+  //      of #1 — id collisions resolve to the controlled record.
+  //   3. Inferred from edge endpoints when neither #1 nor #2 covers
+  //      a referenced id. Without this, omitting `nodes` (the docs
+  //      say it's optional) emitted `missing-node` issues for every
+  //      edge endpoint and the chart rendered an error instead.
+  const rawNodes = useMemo<TNode[]>(() => {
+    const controlled = filterSparseArray(rawNodesProp ?? []) as TNode[]
+    const pushed = pushedNodes
+    if (controlled.length === 0 && pushed.length === 0) {
+      return inferNodesFromEdges(
+        [],
+        rawEdges as unknown as Datum[],
+        sourceAccessor as string | ((d: Datum) => string),
+        targetAccessor as string | ((d: Datum) => string),
+      ) as unknown as TNode[]
+    }
+    const seen = new Set<string>()
+    const merged: TNode[] = []
+    for (const n of controlled) {
+      const id = String(accessor(nodeIdAccessor, n))
+      if (seen.has(id)) continue
+      seen.add(id); merged.push(n)
+    }
+    for (const n of pushed) {
+      const id = String(accessor(nodeIdAccessor, n))
+      if (seen.has(id)) continue
+      seen.add(id); merged.push(n)
+    }
+    // Fill in any edge endpoints that neither side declared.
+    const inferred = inferNodesFromEdges(
+      [],
+      rawEdges as unknown as Datum[],
+      sourceAccessor as string | ((d: Datum) => string),
+      targetAccessor as string | ((d: Datum) => string),
+    )
+    for (const stub of inferred) {
+      if (seen.has(stub.id)) continue
+      seen.add(stub.id)
+      merged.push(stub as unknown as TNode)
+    }
+    return merged
+  }, [rawNodesProp, pushedNodes, rawEdges, nodeIdAccessor, sourceAccessor, targetAccessor])
 
   // ── Frame ref bridges the user's ref to the inner frame's handle. ────
   // The push API methods route through StreamNetworkFrame, but
@@ -811,6 +868,39 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     return <g>{dots}</g>
   }, [showParticles, layout, edges, xScale, domain, ribbonLane, colorOf, particleDensity, particleMaxPerEdge, particleProgress, particleRadius, nodeIndexById])
 
+  // ── Frame nodes/edges ─────────────────────────────────────────────
+  // Computed BEFORE the early-return gates so hook ordering stays
+  // stable across renders. ProcessSankey doesn't use the frame's
+  // force-layout output for positioning — bands/ribbons come from
+  // `layoutConfig` — but ingestion has to fire so the SSR `buildScene`
+  // gate (`if (rawNodes.length > 0 || rawEdges.length > 0)`) lets the
+  // customNetworkLayout dispatch run.
+  const safeFrameNodes = useMemo(
+    () => (rawNodes ?? []).map((n) => ({ id: getNodeId(n), data: n as Datum })),
+    [rawNodes, getNodeId],
+  )
+  const safeFrameEdges = useMemo(
+    () => (rawEdges ?? []).map((e, i) => ({
+      id: getEdgeId(e, i),
+      source: String(accessor(sourceAccessor, e)),
+      target: String(accessor(targetAccessor, e)),
+      data: e as Datum,
+    })),
+    [rawEdges, getEdgeId, sourceAccessor, targetAccessor],
+  )
+
+  // ── Loading / empty states ────────────────────────────────────────
+  // Both helpers fire AFTER all hooks above so React doesn't see a
+  // hook-count change when the chart switches between
+  // empty/loading/active. Empty state triggers when neither edges nor
+  // nodes were supplied AND nothing's been pushed.
+  const loadingEl = renderLoadingState(loading, width, height)
+  const noUserData = (rawEdgesProp === undefined && pushedEdges.length === 0)
+    && (rawNodesProp === undefined && pushedNodes.length === 0)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(noUserData ? undefined : safeFrameEdges, width, height, emptyContent)
+    : null
+
   // ── Validation gate ──
   if (issues.length > 0) {
     return (
@@ -826,31 +916,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       </svg>
     )
   }
-
-  // ── Frame integration ──────────────────────────────────────────────
-  // We pass empty `nodes` and `edges` to the frame because ProcessSankey
-  // emits its own scene primitives via `customNetworkLayout`. The frame's
-  // own layout plugins would otherwise try to position our data with
-  // sankey/force/etc. semantics, which doesn't apply here.
-  // Pass the user's raw nodes/edges through so the frame's SSR path
-  // (which gates `buildScene` on `nodes.length > 0 || edges.length > 0`)
-  // actually runs the customNetworkLayout. ProcessSankey doesn't use
-  // the frame's force-layout output for positioning — bands/ribbons
-  // come from `layoutConfig` — but the ingestion step has to fire so
-  // SSR snapshots match the CSR canvas pipeline.
-  const safeFrameNodes = useMemo(
-    () => (rawNodes ?? []).map((n) => ({ id: getNodeId(n), data: n as Datum })),
-    [rawNodes, getNodeId],
-  )
-  const safeFrameEdges = useMemo(
-    () => (rawEdges ?? []).map((e, i) => ({
-      id: getEdgeId(e, i),
-      source: String(accessor(sourceAccessor, e)),
-      target: String(accessor(targetAccessor, e)),
-      data: e as Datum,
-    })),
-    [rawEdges, getEdgeId, sourceAccessor, targetAccessor],
-  )
+  if (loadingEl) return loadingEl
+  if (emptyEl) return emptyEl
 
   return (
     <StreamNetworkFrame
@@ -861,9 +928,13 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       customNetworkLayout={emitProcessSankeyScenes as unknown as StreamNetworkFrameProps["customNetworkLayout"]}
       layoutConfig={layoutConfig as unknown as Record<string, unknown>}
       size={[width, height]}
+      responsiveWidth={responsiveWidth}
+      responsiveHeight={responsiveHeight}
       margin={margin}
       title={title}
       description={description ?? "Temporal process flow with lifetime-bounded node lanes, mass bands, and value-scaled ribbons."}
+      summary={summary}
+      accessibleTable={accessibleTable}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : tooltipContent}
       backgroundGraphics={backgroundGraphics}

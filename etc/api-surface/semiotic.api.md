@@ -45,6 +45,7 @@ function NetworkCustomChart
 function OrbitDiagram
 function OrdinalCustomChart
 function PieChart
+function ProcessSankey
 function QuadrantChart
 function RealtimeHeatmap
 function RealtimeHistogram
@@ -144,13 +145,15 @@ interface OrbitDiagramProps
 interface OrbitNode
 interface OrdinalScales
 interface PieChartProps
+interface ProcessSankeyProps
+interface ProcessSankeyTick
 interface QuadrantChartProps
 interface QuadrantConfig
 interface QuadrantsConfig
 interface RealtimeHeatmapProps
+interface RealtimeHistogramProps
 interface RealtimeLineChartProps
 interface RealtimeSwarmChartProps
-interface RealtimeTemporalHistogramProps
 interface RealtimeWaterfallChartProps
 interface RidgelinePlotProps
 interface SankeyDiagramProps
@@ -210,7 +213,7 @@ type NetworkSceneNode
 type OnObservationCallback
 type OrdinalChartType
 type OrdinalSceneNode
-type RealtimeHistogramProps
+type RealtimeTemporalHistogramProps
 type ResolutionMode
 type RuntimeMode
 type SceneNode
