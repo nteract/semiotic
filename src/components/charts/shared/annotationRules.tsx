@@ -356,13 +356,16 @@ export function createDefaultAnnotationRules(
         const isOrdinal = context.frameType === "ordinal"
         const isHoriz = context.projection === "horizontal"
 
-        // Resolve which axis carries the categorical value for
-        // ordinal frames. Vertical projection: categories on x
-        // (using the o-centered scale.x); horizontal: categories on
-        // y (using scale.y). For XY the categorical concept doesn't
-        // apply — both axes are continuous.
-        const categoricalAccessor = isOrdinal ? (isHoriz ? yAcc : xAcc) : null
-        const valueAccessor = isOrdinal ? (isHoriz ? xAcc : yAcc) : null
+        // In ordinal frames, the annotation context's
+        // xAccessor/yAccessor always map to oAccessor/rAccessor
+        // (category/value) regardless of projection — see
+        // StreamOrdinalFrame.tsx where OrdinalSVGOverlay receives
+        // `xAccessor=oAccessor, yAccessor=rAccessor` for both
+        // horizontal and vertical projections. Projection only
+        // changes pixel projection (via scales.x / scales.y), not
+        // which data field is categorical vs numeric.
+        const categoricalAccessor = isOrdinal ? xAcc : null
+        const valueAccessor = isOrdinal ? yAcc : null
 
         // Build regression input + record category order so we can
         // map regression x-output back to the band scale at render

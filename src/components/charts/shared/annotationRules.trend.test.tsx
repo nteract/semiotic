@@ -74,8 +74,14 @@ describe("trend annotation — ordinal frame", () => {
     })
   })
 
-  // Horizontal projection: values on x (linear), categories on y
-  // (band scale). The handler swaps the categorical/value axes.
+  // Horizontal projection: values on x-pixel-axis (linear),
+  // categories on y-pixel-axis (band scale). At the AnnotationContext
+  // level, xAccessor/yAccessor still map to oAccessor (category) /
+  // rAccessor (value) respectively — projection only changes pixel
+  // projection through scales.x / scales.y, NOT which data field is
+  // categorical vs numeric. This mirrors how StreamOrdinalFrame
+  // forwards accessors to OrdinalSVGOverlay (both projections pass
+  // xAccessor=oAccessor, yAccessor=rAccessor).
   describe("horizontal projection", () => {
     const ctx: AnnotationContext = {
       data: [
@@ -83,14 +89,17 @@ describe("trend annotation — ordinal frame", () => {
         { cat: "Mid", value: 20 },
         { cat: "High", value: 30 },
       ],
-      // For horizontal: xAccessor reads value, yAccessor reads category.
-      xAccessor: "value",
-      yAccessor: "cat",
+      xAccessor: "cat",
+      yAccessor: "value",
       frameType: "ordinal",
       projection: "horizontal",
       width: 400,
       height: 300,
       scales: {
+        // In horizontal projection scales.x is the linear value scale
+        // and scales.y is the band-centered category scale. The
+        // accessors above are still category/value — only the pixel
+        // axis flips.
         x: makeLinearScale([0, 30], [0, 400]),
         y: makeBandScale({ Low: 100, Mid: 150, High: 200 }),
         o: undefined as any,
@@ -102,10 +111,10 @@ describe("trend annotation — ordinal frame", () => {
       expect(result).not.toBeNull()
       const html = renderToStaticMarkup(result as React.ReactElement)
       expect(html).toContain("<polyline")
-      // Regression input: (value=10, idx=0), (20, 1), (30, 2). y = 0.1x - 1
-      // (perfectly linear). First trend point: x=10 → scaleX(10)=133.33,
-      // y=0 → scaleY("Low")=100. Last: x=30 → scaleX(30)=400, y=2 →
-      // scaleY("High")=200.
+      // Regression input: (catIdx=0, value=10), (1, 20), (2, 30). The
+      // perfect fit is value = 10*idx + 10. First trend point: idx=0
+      // → scaleY("Low")=100, value=10 → scaleX(10)=133.33. Last:
+      // idx=2 → scaleY("High")=200, value=30 → scaleX(30)=400.
       expect(html).toMatch(/133\.\d+,100/)
       expect(html).toContain("400,200")
     })
