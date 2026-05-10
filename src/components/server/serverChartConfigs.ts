@@ -13,6 +13,7 @@ import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { interpolateViridis } from "../charts/shared/colorPalettes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
+import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm.js"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -595,7 +596,7 @@ const processSankey: ChartConfig = {
       return p[idx % p.length]
     }
 
-    const { layoutConfig } = buildProcessSankeyScenes({
+    const { layoutConfig, issues } = buildProcessSankeyScenes({
       nodes: ns,
       edges: es,
       domain,
@@ -611,6 +612,17 @@ const processSankey: ChartConfig = {
         lifetimeMode: rest.lifetimeMode || "half",
       },
     })
+
+    // Surface validation failures the same way the HOC does — throw
+    // with the formatted issue list so renderChart() callers see the
+    // actionable error instead of silently getting an empty SVG.
+    // (The CSR HOC paints an inline error block; SSR can't render
+    // arbitrary JSX into the network frame's SVG, so we propagate
+    // through the renderChart caller.)
+    if (issues.length > 0) {
+      const messages = issues.map(formatProcessSankeyIssue).join("; ")
+      throw new Error(`ProcessSankey: data invalid — ${messages}`)
+    }
 
     return {
       chartType: "force",

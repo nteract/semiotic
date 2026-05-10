@@ -26,6 +26,11 @@ import type {
 } from "../stream/types"
 
 import { getLayoutPlugin } from "../stream/layouts"
+import {
+  resolveCustomLayoutPalette,
+  buildResolveColor,
+  schemeCategory10,
+} from "../stream/customLayoutPalette"
 
 import type {
   NetworkPipelineConfig,
@@ -634,20 +639,18 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   let sceneEdges: import("../stream/networkTypes").NetworkSceneEdge[] = []
   let labels: import("../stream/networkTypes").NetworkLabel[] = []
   if (config.customNetworkLayout) {
-    // Match the resolveColor + theme shape NetworkPipelineStore builds
-    // for the customLayout context. Pin the categorical palette to the
-    // resolved theme so SSR matches CSR.
-    const palette = (Array.isArray(config.colorScheme) ? config.colorScheme : null)
-      || theme.colors.categorical
-      || ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-    const colorMemo = new Map<string, string>()
-    const resolveColor = (key: string): string => {
-      if (colorMemo.has(key)) return colorMemo.get(key) as string
-      const hash = Array.from(key).reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0)
-      const c = palette[hash % palette.length]
-      colorMemo.set(key, c)
-      return c
-    }
+    // Reuse the same palette + resolver helpers NetworkPipelineStore
+    // uses for the CSR custom-layout context, so a `colorScheme` named
+    // string (e.g. `"tableau10"`) resolves identically on both paths.
+    // Without this, SSR would silently fall through to
+    // `theme.colors.categorical` whenever the caller passed a string
+    // scheme — visible drift from CSR for any registered custom layout.
+    const palette = resolveCustomLayoutPalette(
+      config.colorScheme as string | string[] | undefined,
+      theme.colors.categorical,
+      schemeCategory10,
+    )
+    const resolveColor = buildResolveColor(palette)
     const ctx = {
       nodes,
       edges,
@@ -658,7 +661,10 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       },
       theme: {
         semantic: theme.colors as unknown as import("../stream/types").ThemeSemanticColors,
-        categorical: palette,
+        // `palette` from resolveCustomLayoutPalette is `readonly`;
+        // shallow-copy to a mutable array because the customLayout
+        // context type marks `categorical` mutable.
+        categorical: [...palette],
       },
       resolveColor,
       config: (config.layoutConfig ?? {}) as Record<string, unknown>,

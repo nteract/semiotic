@@ -218,8 +218,30 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   } = props
 
   // ── Push API: own the edge/node lists when controlled props are absent ──
+  //
+  // We mirror the state in refs so the imperative handle can read the
+  // current list synchronously, even when callers chain push() →
+  // remove() within a single tick. React state updates are scheduled,
+  // not committed, so a closure that reads `pushedEdges` directly
+  // wouldn't see the items pushed earlier in the same tick — the
+  // earlier `setPushedEdges(prev => …)` updater pattern compounded
+  // this by deferring the entire derivation. Refs give us a
+  // synchronous source of truth; `setPushedEdges`/`setPushedNodes`
+  // still drive the React re-render.
   const [pushedEdges, setPushedEdges] = useState<TEdge[]>([])
   const [pushedNodes, setPushedNodes] = useState<TNode[]>([])
+  const pushedEdgesRef = useRef<TEdge[]>(pushedEdges)
+  const pushedNodesRef = useRef<TNode[]>(pushedNodes)
+  pushedEdgesRef.current = pushedEdges
+  pushedNodesRef.current = pushedNodes
+  const writePushedEdges = useCallback((next: TEdge[]) => {
+    pushedEdgesRef.current = next
+    setPushedEdges(next)
+  }, [])
+  const writePushedNodes = useCallback((next: TNode[]) => {
+    pushedNodesRef.current = next
+    setPushedNodes(next)
+  }, [])
   const isControlled = rawEdgesProp !== undefined
   const rawEdges = isControlled ? rawEdgesProp : pushedEdges
   const rawNodes = (rawNodesProp ?? pushedNodes) as TNode[]
@@ -259,12 +281,12 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
             console.warn("ProcessSankey.push: edge ignored — `edges` prop is controlled.")
             return
           }
-          setPushedEdges(prev => [...prev, item as unknown as TEdge])
+          writePushedEdges([...pushedEdgesRef.current, item as unknown as TEdge])
         } else {
           // Nodes are always push-mode (the `nodes` prop is always
           // optional / merged with internal pushedNodes), so allow
           // node pushes even when `edges` is controlled.
-          setPushedNodes(prev => [...prev, item as unknown as TNode])
+          writePushedNodes([...pushedNodesRef.current, item as unknown as TNode])
         }
       },
       pushMany(items: Datum[]) {
@@ -283,68 +305,77 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
             // eslint-disable-next-line no-console
             console.warn("ProcessSankey.pushMany: edges ignored — `edges` prop is controlled.")
           } else {
-            setPushedEdges(prev => [...prev, ...newEdges])
+            writePushedEdges([...pushedEdgesRef.current, ...newEdges])
           }
         }
-        if (newNodes.length > 0) setPushedNodes(prev => [...prev, ...newNodes])
+        if (newNodes.length > 0) writePushedNodes([...pushedNodesRef.current, ...newNodes])
       },
       // remove(id | id[]) — addresses *edges* primarily (the documented
       // contract; ProcessSankey's primary data shape is edges) but
       // falls through to nodes when an id matches there. Returns the
       // removed records so callers can undo / log.
+      //
+      // Computes the result synchronously against the closure's view
+      // of `pushedEdges`/`pushedNodes`. The earlier "push into a `let`
+      // inside the setState updater" pattern would return `[]` because
+      // the updater fires asynchronously — by the time the function
+      // returned, the array was still empty.
       remove(id: string | string[]): Datum[] {
         const ids = new Set(Array.isArray(id) ? id : [id])
         const removed: Datum[] = []
         if (!isControlled) {
-          setPushedEdges(prev => prev.filter((e, i) => {
-            const eid = resolveEdgeId(e, i)
-            if (ids.has(eid)) {
-              removed.push(e as Datum)
-              return false
-            }
-            return true
-          }))
-        }
-        // Node-side fallback — `nodeIdAccessor` resolves user nodes.
-        setPushedNodes(prev => prev.filter((n) => {
-          const nid = String(accessor(nodeIdAccessor, n))
-          if (ids.has(nid)) {
-            removed.push(n as Datum)
-            return false
+          const currentEdges = pushedEdgesRef.current
+          const nextEdges: TEdge[] = []
+          for (let i = 0; i < currentEdges.length; i++) {
+            const e = currentEdges[i]
+            if (ids.has(resolveEdgeId(e, i))) removed.push(e as Datum)
+            else nextEdges.push(e)
           }
-          return true
-        }))
+          if (nextEdges.length !== currentEdges.length) writePushedEdges(nextEdges)
+        }
+        const currentNodes = pushedNodesRef.current
+        const nextNodes: TNode[] = []
+        for (const n of currentNodes) {
+          const nid = String(accessor(nodeIdAccessor, n))
+          if (ids.has(nid)) removed.push(n as Datum)
+          else nextNodes.push(n)
+        }
+        if (nextNodes.length !== currentNodes.length) writePushedNodes(nextNodes)
         return removed
       },
       // update(id, updater) — same id resolution as remove(): walks
       // edges first, then nodes. Returns previous data values for
-      // undo/observation.
+      // undo/observation. Synchronous computation for the same reason
+      // remove() does — the setState updater fires asynchronously.
       update(id: string | string[], updater: (d: Datum) => Datum): Datum[] {
         const ids = new Set(Array.isArray(id) ? id : [id])
         const previous: Datum[] = []
         if (!isControlled) {
-          setPushedEdges(prev => prev.map((e, i) => {
-            const eid = resolveEdgeId(e, i)
-            if (ids.has(eid)) {
-              previous.push(e as Datum)
-              return updater(e as Datum) as TEdge
-            }
-            return e
-          }))
+          const currentEdges = pushedEdgesRef.current
+          let touchedEdges = false
+          const nextEdges = currentEdges.map((e, i) => {
+            if (!ids.has(resolveEdgeId(e, i))) return e
+            previous.push(e as Datum)
+            touchedEdges = true
+            return updater(e as Datum) as TEdge
+          })
+          if (touchedEdges) writePushedEdges(nextEdges)
         }
-        setPushedNodes(prev => prev.map((n) => {
+        const currentNodes = pushedNodesRef.current
+        let touchedNodes = false
+        const nextNodes = currentNodes.map((n) => {
           const nid = String(accessor(nodeIdAccessor, n))
-          if (ids.has(nid)) {
-            previous.push(n as Datum)
-            return updater(n as Datum) as TNode
-          }
-          return n
-        }))
+          if (!ids.has(nid)) return n
+          previous.push(n as Datum)
+          touchedNodes = true
+          return updater(n as Datum) as TNode
+        })
+        if (touchedNodes) writePushedNodes(nextNodes)
         return previous
       },
       clear() {
-        if (!isControlled) setPushedEdges([])
-        setPushedNodes([])
+        if (!isControlled) writePushedEdges([])
+        writePushedNodes([])
         frameRef.current?.clear()
       },
       // Snapshot the current edge list. `?? []` guards against a
@@ -353,14 +384,14 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       getData: () => (rawEdges ?? []) as unknown as Datum[],
       getScales: () => null,
     },
-    deps: [isControlled, looksLikeEdge, resolveEdgeId, nodeIdAccessor, rawEdges],
+    deps: [isControlled, looksLikeEdge, resolveEdgeId, nodeIdAccessor, rawEdges, writePushedEdges, writePushedNodes],
   })
 
-  const getEdgeId = useCallback((e: TEdge, i: number): string => {
-    const fromAccessor = accessor(edgeIdAccessor, e) as unknown as string | undefined
-    if (fromAccessor != null) return String(fromAccessor)
-    return `${accessor(sourceAccessor, e)}-${accessor(targetAccessor, e)}-${i}`
-  }, [edgeIdAccessor, sourceAccessor, targetAccessor])
+  // Single source of truth for edge id derivation — both rendering
+  // (band/ribbon scene specs) and the imperative remove/update pathway
+  // resolve through the same closure, so the id used in tooltips
+  // matches the id consumers pass to remove("e1") / update("e1", ...).
+  const getEdgeId = resolveEdgeId
 
   const getNodeId = useCallback((n: TNode): string => String(accessor(nodeIdAccessor, n)),
     [nodeIdAccessor])
