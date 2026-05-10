@@ -29,13 +29,18 @@ const apiFixture = {
           target: 20,
         },
         {
+          // The canonical interface is `RealtimeHistogramProps`
+          // (id 30 below). `RealtimeTemporalHistogramProps` is the
+          // deprecated type alias that points back at the canonical
+          // name. The fixture mirrors the actual source-code rename
+          // direction so the test exercises a realistic alias graph.
           id: 5,
-          name: "RealtimeHistogramProps",
+          name: "RealtimeTemporalHistogramProps",
           kind: 2097152,
           type: {
             type: "reference",
             target: 30,
-            name: "RealtimeTemporalHistogramProps",
+            name: "RealtimeHistogramProps",
           },
         },
       ],
@@ -92,7 +97,7 @@ const apiFixture = {
     },
     {
       id: 30,
-      name: "RealtimeTemporalHistogramProps",
+      name: "RealtimeHistogramProps",
       kind: 256,
       children: [
         {
@@ -116,10 +121,16 @@ describe("api docs TypeDoc extraction", () => {
     expect(extractProps(propsInterface).map((prop) => prop.name)).toEqual(["data", "mode"])
   })
 
-  it("resolves component-specific props aliases", () => {
+  it("resolves the canonical props interface for components named ${X}Props", () => {
+    // After the alias rename, `findPropsInterface("RealtimeHistogram")`
+    // resolves the standard `${componentName}Props` lookup directly to
+    // the canonical interface. The deprecated
+    // `RealtimeTemporalHistogramProps` type-alias still exists in the
+    // fixture (and source) but is just a back-compat handle — the
+    // resolver lands on the underlying interface either way.
     const propsInterface = findPropsInterface(apiFixture, "RealtimeHistogram")
 
-    expect(propsInterface?.name).toBe("RealtimeTemporalHistogramProps")
+    expect(propsInterface?.name).toBe("RealtimeHistogramProps")
     expect(extractProps(propsInterface)[0]).toMatchObject({
       name: "binSize",
       required: true,

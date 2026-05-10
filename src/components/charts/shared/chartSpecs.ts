@@ -829,6 +829,50 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     },
   },
 
+  ProcessSankey: {
+    name: "ProcessSankey",
+    category: "network",
+    description: "Temporal sankey with a real time x-axis. Edges carry startTime/endTime; nodes can declare an explicit xExtent lifetime. Use for timestamped flow events (PR commits, campaign-finance contributions, supply-chain shipments).",
+    // `edges` is intentionally NOT required: ProcessSankey supports
+    // push-mode where edges arrives via the ref. Only `domain` is
+    // structurally required because the time axis can't degrade
+    // without it.
+    required: ["domain"],
+    dataShape: "network",
+    dataAccessors: ["sourceAccessor", "targetAccessor"],
+    propBags: ["common"],
+    ownProps: {
+      edges: { type: "array", description: "Array of timed edge records with source, target, value, startTime, endTime. Omit for push-mode." },
+      nodes: { type: "array", description: "Optional array of node objects. Nodes may carry an `xExtent: [start, end]` to bound the lane explicitly." },
+      domain: { type: "array", description: "[tStart, tEnd] of the chart's x-axis (required)." },
+      axisTicks: { type: "array", description: "Optional [{ date, label }] tick array for the time axis." },
+      sourceAccessor: { type: ["string", "function"], default: "source" },
+      targetAccessor: { type: ["string", "function"], default: "target" },
+      valueAccessor: { type: ["string", "function"], default: "value" },
+      nodeIdAccessor: { type: ["string", "function"], default: "id" },
+      startTimeAccessor: { type: ["string", "function"], default: "startTime" },
+      endTimeAccessor: { type: ["string", "function"], default: "endTime" },
+      xExtentAccessor: { type: ["string", "function"], default: "xExtent" },
+      edgeIdAccessor: { type: ["string", "function"], default: "id" },
+      legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const, default: "right" },
+      pairing: { type: "string", enum: ["value", "temporal"] as const, default: "temporal", description: "Edge-side pairing strategy at transit nodes." },
+      packing: { type: "string", enum: ["off", "reuse"] as const, default: "reuse", description: "Lane reuse — pack lifetime-disjoint nodes into the same row." },
+      laneOrder: { type: "string", enum: ["insertion", "crossing-min", "inside-out", "crossing-min+inside-out"] as const, default: "crossing-min" },
+      ribbonLane: { type: "string", enum: ["source", "target", "both"] as const, default: "both" },
+      lifetimeMode: { type: "string", enum: ["full", "half"] as const, default: "half" },
+      showLaneRails: { type: "boolean", default: false },
+      showQualityReadout: { type: "boolean", default: false },
+      edgeOpacity: { type: "number", default: 0.35 },
+      timeFormat: { type: "function", omitFromSchema: true },
+      valueFormat: { type: "function", omitFromSchema: true },
+      showParticles: { type: "boolean", default: false },
+      particleRadius: { type: "number", default: 2.5 },
+      particleDuration: { type: "number", default: 6000 },
+      particleDensity: { type: "number", default: 1 },
+      particleMaxPerEdge: { type: "number", default: 40 },
+    },
+  },
+
   ChordDiagram: {
     name: "ChordDiagram",
     category: "network",

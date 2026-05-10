@@ -10,7 +10,7 @@ import {
   BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
   Histogram, ViolinPlot, RidgelinePlot,
   PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
-  ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram
+  ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram
 } from "semiotic/ai"
 
 import {
@@ -55,6 +55,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   ForceDirectedGraph: { component: ForceDirectedGraph, category: "network" },
   ChordDiagram: { component: ChordDiagram, category: "network" },
   SankeyDiagram: { component: SankeyDiagram, category: "network" },
+  ProcessSankey: { component: ProcessSankey, category: "network" },
   TreeDiagram: { component: TreeDiagram, category: "network" },
   Treemap: { component: Treemap, category: "network" },
   CirclePack: { component: CirclePack, category: "network" },

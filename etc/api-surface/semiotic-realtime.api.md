@@ -20,6 +20,7 @@ interface HoverAnnotationConfig
 interface HoverData
 interface LineStyle
 interface RealtimeHeatmapProps
+interface RealtimeHistogramProps
 interface RealtimeLineChartProps
 interface RealtimeSwarmChartProps
 interface RealtimeWaterfallChartProps
@@ -31,7 +32,6 @@ interface SwarmStyle
 interface WaterfallStyle
 type ArrowOfTime
 type NetworkChartType
-type RealtimeHistogramProps
 type StreamChartType
 type ThresholdType
 type WindowMode

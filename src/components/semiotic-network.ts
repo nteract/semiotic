@@ -15,6 +15,7 @@ export { TreeDiagram } from "./charts/network/TreeDiagram"
 export { Treemap } from "./charts/network/Treemap"
 export { CirclePack } from "./charts/network/CirclePack"
 export { OrbitDiagram } from "./charts/network/OrbitDiagram"
+export { ProcessSankey } from "./charts/network/ProcessSankey"
 export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
 
 // Stream Frame types
@@ -31,6 +32,7 @@ export type {
 // Chart prop types
 export type { ForceDirectedGraphProps } from "./charts/network/ForceDirectedGraph"
 export type { SankeyDiagramProps } from "./charts/network/SankeyDiagram"
+export type { ProcessSankeyProps, ProcessSankeyTick } from "./charts/network/ProcessSankey"
 export type { ChordDiagramProps } from "./charts/network/ChordDiagram"
 export type { TreeDiagramProps } from "./charts/network/TreeDiagram"
 export type { TreemapProps } from "./charts/network/Treemap"

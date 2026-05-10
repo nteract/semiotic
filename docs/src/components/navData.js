@@ -65,6 +65,7 @@ const navData = [
           { title: "Force Directed Graph", path: "/charts/force-directed-graph" },
           { title: "Chord Diagram", path: "/charts/chord-diagram" },
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
+          { title: "Process Sankey", path: "/charts/process-sankey" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },
           { title: "Circle Pack", path: "/charts/circle-pack" },

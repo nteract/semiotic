@@ -26,6 +26,11 @@ import type {
 } from "../stream/types"
 
 import { getLayoutPlugin } from "../stream/layouts"
+import {
+  resolveCustomLayoutPalette,
+  buildResolveColor,
+  schemeCategory10,
+} from "../stream/customLayoutPalette"
 
 import type {
   NetworkPipelineConfig,
@@ -556,7 +561,13 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     edgeOpacity: props.edgeOpacity,
     colorByDepth: props.colorByDepth,
     nodeSize: props.nodeSize,
-    nodeSizeRange: props.nodeSizeRange
+    nodeSizeRange: props.nodeSizeRange,
+    // Forward the customLayout escape hatch + its layoutConfig so the
+    // SSR path can dispatch through the same custom-layout shim the
+    // CSR pipeline uses (consumed below in the customNetworkLayout
+    // branch).
+    customNetworkLayout: props.customNetworkLayout,
+    layoutConfig: props.layoutConfig,
   }
 
   let nodes: RealtimeNode[]
@@ -616,11 +627,71 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     }
   }
 
-  plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
-
-  const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
-    nodes, edges, config, [innerWidth, innerHeight]
-  )
+  // customLayout escape hatch — same dispatch the CSR pipeline uses in
+  // NetworkPipelineStore.runLayout/buildScene. When the caller supplies
+  // a `customNetworkLayout` (ProcessSankey via the SSR config does this),
+  // skip the built-in plugin and emit scene primitives from the custom
+  // layout function directly. Without this, charts that compose via the
+  // escape hatch would silently fall through to the force/sankey/etc.
+  // plugin during SSR — visible regression class for any registered
+  // custom-layout chart.
+  let sceneNodes: import("../stream/networkTypes").NetworkSceneNode[] = []
+  let sceneEdges: import("../stream/networkTypes").NetworkSceneEdge[] = []
+  let labels: import("../stream/networkTypes").NetworkLabel[] = []
+  // Overlays returned from a custom layout (drawn above the data layer
+  // by NetworkSVGOverlay on CSR; threaded into `content` below on SSR
+  // so screenshot baselines include them).
+  let customLayoutOverlays: import("react").ReactNode = null
+  if (config.customNetworkLayout) {
+    // Reuse the same palette + resolver helpers NetworkPipelineStore
+    // uses for the CSR custom-layout context, so a `colorScheme` named
+    // string (e.g. `"tableau10"`) resolves identically on both paths.
+    // Without this, SSR would silently fall through to
+    // `theme.colors.categorical` whenever the caller passed a string
+    // scheme — visible drift from CSR for any registered custom layout.
+    const palette = resolveCustomLayoutPalette(
+      config.colorScheme as string | string[] | undefined,
+      theme.colors.categorical,
+      schemeCategory10,
+    )
+    const resolveColor = buildResolveColor(palette)
+    // `dimensions` matches the CSR `NetworkPipelineStore.runLayout`
+    // contract: width/height are the inner plot size, and plot.x/y
+    // are 0 (the frame's <g transform="translate(margin.left,
+    // margin.top)"> already lives at the plot origin, so layout
+    // coordinates are plot-relative). Passing outer width + a
+    // margin-shifted plot origin would push every band/ribbon
+    // visually offset on SSR vs CSR.
+    const ctx = {
+      nodes,
+      edges,
+      dimensions: {
+        width: innerWidth,
+        height: innerHeight,
+        plot: { x: 0, y: 0, width: innerWidth, height: innerHeight },
+      },
+      theme: {
+        semantic: theme.colors as unknown as import("../stream/types").ThemeSemanticColors,
+        // `palette` from resolveCustomLayoutPalette is `readonly`;
+        // shallow-copy to a mutable array because the customLayout
+        // context type marks `categorical` mutable.
+        categorical: [...palette],
+      },
+      resolveColor,
+      config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+    }
+    const result = config.customNetworkLayout(ctx)
+    sceneNodes = result.sceneNodes ?? []
+    sceneEdges = result.sceneEdges ?? []
+    labels = result.labels ?? []
+    customLayoutOverlays = result.overlays ?? null
+  } else {
+    plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
+    const built = plugin.buildScene(nodes, edges, config, [innerWidth, innerHeight])
+    sceneNodes = built.sceneNodes
+    sceneEdges = built.sceneEdges
+    labels = built.labels
+  }
 
   // Apply theme text color to labels (layout plugins default to #333)
   const s = themeStyles(theme)
@@ -708,6 +779,13 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       {labelElements}
       {annotationNodes}
       {props.foregroundGraphics}
+      {/* customLayout-emitted overlays paint above the data layer,
+          matching `NetworkSVGOverlay`'s `composeOverlays(foreground,
+          customLayoutOverlays)` ordering on CSR. Without this, SSR
+          snapshots for any registered custom layout would be missing
+          axis chrome / particles / quality readouts that the live
+          chart shows. */}
+      {customLayoutOverlays}
     </>
   )
 

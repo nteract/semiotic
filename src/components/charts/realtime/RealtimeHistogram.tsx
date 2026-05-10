@@ -27,7 +27,7 @@ import { useBrushSelection } from "../../store/useSelection"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 
-export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
+export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Time interval for binning */
@@ -144,7 +144,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
 }
 
 /**
- * RealtimeTemporalHistogram - Streaming temporal histogram.
+ * RealtimeHistogram - Streaming temporal histogram.
  *
  * Wraps StreamXYFrame with `chartType="bar"` and `runtimeMode="streaming"`,
  * binning pushed data points into time-windowed bars. Supports both simple
@@ -156,7 +156,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
  * @example
  * ```tsx
  * // Simple temporal histogram — push each event, the chart bins by time
- * <RealtimeTemporalHistogram
+ * <RealtimeHistogram
  *   ref={ref}
  *   binSize={20}
  *   fill="#007bff"
@@ -167,7 +167,7 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
  * @example
  * ```tsx
  * // Stacked by category — same push API, color by status field
- * <RealtimeTemporalHistogram
+ * <RealtimeHistogram
  *   ref={ref}
  *   binSize={25}
  *   categoryAccessor="category"
@@ -176,8 +176,8 @@ export interface RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> {
  * />
  * ```
  */
-export const RealtimeTemporalHistogram = forwardRef(
-  function RealtimeTemporalHistogram<TDatum extends Datum = Datum>(props: RealtimeTemporalHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const RealtimeHistogram = forwardRef(
+  function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
     // Thread mode-aware dimensions + axes through so `sparkline` / `context`
     // actually strip the axis chrome they're meant to. Previously only
     // dimensions were mode-driven, so `mode="sparkline"` rendered a 120×24
@@ -251,7 +251,7 @@ export const RealtimeTemporalHistogram = forwardRef(
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
       selection, linkedHover, unwrapData: true,
-      onObservation, chartType: "RealtimeTemporalHistogram", chartId
+      onObservation, chartType: "RealtimeHistogram", chartId
     })
 
     const combinedHoverBehavior = useCallback(
@@ -299,14 +299,14 @@ export const RealtimeTemporalHistogram = forwardRef(
               type: "brush",
               extent,
               timestamp: Date.now(),
-              chartType: "RealtimeTemporalHistogram",
+              chartType: "RealtimeHistogram",
               chartId
             })
           } else {
             onObservation({
               type: "brush-end",
               timestamp: Date.now(),
-              chartType: "RealtimeTemporalHistogram",
+              chartType: "RealtimeHistogram",
               chartId
             })
           }
@@ -406,12 +406,15 @@ export const RealtimeTemporalHistogram = forwardRef(
     )
   }
 ) as unknown as {
-  <TDatum extends Datum = Datum>(props: RealtimeTemporalHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
+  <TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-RealtimeTemporalHistogram.displayName = "RealtimeTemporalHistogram"
+RealtimeHistogram.displayName = "RealtimeHistogram"
 
-/** @deprecated Use RealtimeTemporalHistogram instead */
-export const RealtimeHistogram = RealtimeTemporalHistogram
-/** @deprecated Use RealtimeTemporalHistogramProps instead */
-export type RealtimeHistogramProps = RealtimeTemporalHistogramProps
+/** @deprecated Use `RealtimeHistogram` (the canonical public name) instead. The
+ *  `RealtimeTemporalHistogram` alias is preserved for back-compat with code
+ *  written before the rename and will be removed in a future major version. */
+export const RealtimeTemporalHistogram = RealtimeHistogram
+/** @deprecated Use `RealtimeHistogramProps` instead. Same component, just the
+ *  pre-rename type alias. */
+export type RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> = RealtimeHistogramProps<TDatum>

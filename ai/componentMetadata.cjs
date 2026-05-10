@@ -14,8 +14,8 @@ const COMPONENTS_BY_CATEGORY = {
     "DonutChart", "GaugeChart", "FunnelChart", "SwimlaneChart",
   ],
   network: [
-    "ForceDirectedGraph", "SankeyDiagram", "ChordDiagram", "TreeDiagram",
-    "Treemap", "CirclePack", "OrbitDiagram",
+    "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
+    "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram",
   ],
   geo: [
     "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",

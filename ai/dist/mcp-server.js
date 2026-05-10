@@ -6839,6 +6839,7 @@ var require_componentMetadata = __commonJS({
       network: [
         "ForceDirectedGraph",
         "SankeyDiagram",
+        "ProcessSankey",
         "ChordDiagram",
         "TreeDiagram",
         "Treemap",

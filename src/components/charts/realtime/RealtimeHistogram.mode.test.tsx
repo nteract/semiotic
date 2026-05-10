@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { RealtimeTemporalHistogram } from "./RealtimeHistogram"
+import { RealtimeHistogram } from "./RealtimeHistogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // `useChartMode` only affects the props RealtimeHistogram forwards to
@@ -17,7 +17,7 @@ vi.mock("../../stream/StreamXYFrame", () => ({
   }),
 }))
 
-describe("RealtimeTemporalHistogram — chart mode resolution", () => {
+describe("RealtimeHistogram — chart mode resolution", () => {
   beforeEach(() => { lastXYFrameProps = null })
 
   it("sparkline mode shrinks size and turns axes off", () => {
@@ -26,7 +26,7 @@ describe("RealtimeTemporalHistogram — chart mode resolution", () => {
     // canvas, eating most of the drawable area.
     render(
       <TooltipProvider>
-        <RealtimeTemporalHistogram binSize={100} mode="sparkline" />
+        <RealtimeHistogram binSize={100} mode="sparkline" />
       </TooltipProvider>
     )
     expect(lastXYFrameProps.size).toEqual([120, 24])
@@ -36,7 +36,7 @@ describe("RealtimeTemporalHistogram — chart mode resolution", () => {
   it("context mode shrinks size and turns axes off", () => {
     render(
       <TooltipProvider>
-        <RealtimeTemporalHistogram binSize={100} mode="context" />
+        <RealtimeHistogram binSize={100} mode="context" />
       </TooltipProvider>
     )
     expect(lastXYFrameProps.size).toEqual([400, 250])
@@ -46,7 +46,7 @@ describe("RealtimeTemporalHistogram — chart mode resolution", () => {
   it("primary mode keeps the 600×400 default with axes on", () => {
     render(
       <TooltipProvider>
-        <RealtimeTemporalHistogram binSize={100} />
+        <RealtimeHistogram binSize={100} />
       </TooltipProvider>
     )
     expect(lastXYFrameProps.size).toEqual([600, 400])

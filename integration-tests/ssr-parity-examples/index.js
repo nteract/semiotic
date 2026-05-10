@@ -8,6 +8,7 @@ const {
   PieChart,
   SankeyDiagram,
   Treemap,
+  ProcessSankey,
 } = Semiotic
 
 // Same fixture data used by the spec when calling renderChart on the
@@ -42,6 +43,22 @@ const hierarchy = {
     { name: "gamma", value: 4 },
   ],
 }
+
+// ProcessSankey fixture: a tiny 4-node temporal flow. Inline timestamps
+// (ms since epoch) keep the spec-side mirror byte-identical without
+// pulling Date construction into the parity boundary.
+const psNodes = [
+  { id: "Alice",   category: "Person",    xExtent: [1767657600000, 1767657600000] },
+  { id: "Bob",     category: "Person",    xExtent: [1769472000000, 1769472000000] },
+  { id: "Eng",     category: "Team" },
+  { id: "Release", category: "Milestone", xExtent: [1776384000000, 1779494400000] },
+]
+const psEdges = [
+  { id: "alice-eng", source: "Alice", target: "Eng",     value: 8,  startTime: 1769904000000, endTime: 1771632000000 },
+  { id: "bob-eng",   source: "Bob",   target: "Eng",     value: 5,  startTime: 1771977600000, endTime: 1774569600000 },
+  { id: "eng-rel",   source: "Eng",   target: "Release", value: 13, startTime: 1776384000000, endTime: 1778889600000 },
+]
+const psDomain = [1767225600000, 1779494400000]
 
 const TestCase = ({ title, testId, children }) =>
   React.createElement(
@@ -108,6 +125,19 @@ const examples = [
       valueAccessor: "value",
       width: 500,
       height: 400,
+    }),
+  }),
+  TestCase({
+    title: "ProcessSankey (CSR)",
+    testId: "csr-process-sankey",
+    children: React.createElement(ProcessSankey, {
+      nodes: psNodes,
+      edges: psEdges,
+      domain: psDomain,
+      colorBy: "category",
+      showLegend: true,
+      width: 500,
+      height: 320,
     }),
   }),
 ]

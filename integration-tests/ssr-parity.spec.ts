@@ -59,6 +59,20 @@ const hierarchy = {
   ],
 }
 
+// ProcessSankey fixture — mirrors the CSR-side fixture byte-for-byte.
+const psNodes = [
+  { id: "Alice",   category: "Person",    xExtent: [1767657600000, 1767657600000] },
+  { id: "Bob",     category: "Person",    xExtent: [1769472000000, 1769472000000] },
+  { id: "Eng",     category: "Team" },
+  { id: "Release", category: "Milestone", xExtent: [1776384000000, 1779494400000] },
+]
+const psEdges = [
+  { id: "alice-eng", source: "Alice", target: "Eng",     value: 8,  startTime: 1769904000000, endTime: 1771632000000 },
+  { id: "bob-eng",   source: "Bob",   target: "Eng",     value: 5,  startTime: 1771977600000, endTime: 1774569600000 },
+  { id: "eng-rel",   source: "Eng",   target: "Release", value: 13, startTime: 1776384000000, endTime: 1778889600000 },
+]
+const psDomain = [1767225600000, 1779494400000]
+
 interface ParityCase {
   id: string
   csrTestId: string
@@ -101,6 +115,25 @@ const cases: ParityCase[] = [
     csrTestId: "csr-treemap",
     ssrComponent: "Treemap",
     ssrProps: { data: hierarchy, childrenAccessor: "children", valueAccessor: "value", width: 500, height: 400 },
+  },
+  {
+    id: "process-sankey",
+    csrTestId: "csr-process-sankey",
+    // ProcessSankey is registered in `CHART_CONFIGS` (the SSR config
+    // pre-computes bands+ribbons via `buildProcessSankeyScenes` and
+    // threads them through `customNetworkLayout` + `layoutConfig`),
+    // so it goes through the same `renderChart` registry path the
+    // rest of the parity matrix uses.
+    ssrComponent: "ProcessSankey",
+    ssrProps: {
+      nodes: psNodes,
+      edges: psEdges,
+      domain: psDomain,
+      colorBy: "category",
+      showLegend: true,
+      width: 500,
+      height: 320,
+    },
   },
 ]
 

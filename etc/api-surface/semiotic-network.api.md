@@ -9,6 +9,7 @@ function CirclePack
 function ForceDirectedGraph
 function NetworkCustomChart
 function OrbitDiagram
+function ProcessSankey
 function SankeyDiagram
 function StreamNetworkFrame
 function TreeDiagram
@@ -21,6 +22,8 @@ interface NetworkLabel
 interface NetworkLayoutContext
 interface NetworkLayoutResult
 interface OrbitDiagramProps
+interface ProcessSankeyProps
+interface ProcessSankeyTick
 interface SankeyDiagramProps
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps

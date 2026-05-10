@@ -33,6 +33,7 @@ function MultiAxisLineChart
 function MultiLineTooltip
 function OrbitDiagram
 function PieChart
+function ProcessSankey
 function QuadrantChart
 function RealtimeHeatmap
 function RealtimeHistogram
