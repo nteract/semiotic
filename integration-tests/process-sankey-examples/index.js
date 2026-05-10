@@ -1,5 +1,5 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 const { ProcessSankey } = Semiotic

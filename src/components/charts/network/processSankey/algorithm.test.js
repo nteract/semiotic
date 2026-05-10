@@ -84,6 +84,24 @@ describe("validateProcessSankey", () => {
     const out = formatProcessSankeyIssue({ kind: "backward-edge", id: "e", source: "A", target: "B" })
     expect(out).toMatch(/backward-edge|ends before/i)
   })
+
+  it("flags malformed/inverted domains", () => {
+    const cases = [
+      [],                  // wrong shape
+      [10],                // wrong shape
+      [10, 20, 30],        // wrong shape
+      [NaN, 20],           // non-finite
+      [10, Infinity],      // non-finite
+      [50, 10],            // inverted (start > end)
+    ]
+    for (const dom of cases) {
+      const issues = validateProcessSankey([], [], dom)
+      expect(issues.some((i) => i.kind === "invalid-domain")).toBe(true)
+    }
+    // Equal endpoints are allowed (start == end) since `<=` is permitted.
+    const equalIssues = validateProcessSankey([], [], [10, 10])
+    expect(equalIssues.some((i) => i.kind === "invalid-domain")).toBe(false)
+  })
 })
 
 describe("buildEdgeIndex", () => {

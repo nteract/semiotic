@@ -17,7 +17,13 @@
 export function validateProcessSankey(nodes, edges, domain) {
   const issues = []
   const nodeIds = new Set(nodes.map((n) => n.id))
-  if (domain && domain.some((d) => !Number.isFinite(d))) {
+  // Domain must be [start, end] with finite numbers and start <= end.
+  // An inverted/malformed domain otherwise flows silently into scaleTime
+  // and produces a chart with the x-axis wired backward.
+  const domainShapeOk = Array.isArray(domain) && domain.length === 2
+  const domainFinite = domainShapeOk && Number.isFinite(domain[0]) && Number.isFinite(domain[1])
+  const domainOrdered = domainFinite && domain[0] <= domain[1]
+  if (!domainShapeOk || !domainFinite || !domainOrdered) {
     issues.push({ kind: "invalid-domain" })
   }
   for (const n of nodes) {

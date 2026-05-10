@@ -102,3 +102,39 @@ test.describe("ProcessSankey - Rendering Integrity", () => {
     expect(real).toEqual([])
   })
 })
+
+// ── Visual regression baselines ────────────────────────────────────────
+// Pixel-snapshots that fail on any unintentional rendering drift in
+// the band layout, ribbon geometry, axis chrome, legend, or particle
+// emission. Update with:
+//   npx playwright test integration-tests/process-sankey.spec.ts --update-snapshots
+//
+// `maxDiffPixels` budget is generous (300) because the canvas pipeline's
+// anti-aliasing varies slightly across runners, but tight enough to
+// catch any structural change (extra band, dropped ribbon, shifted axis).
+test.describe("ProcessSankey - Visual baselines", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(PAGE)
+  })
+
+  test("static — categorical bands + legend", async ({ page }) => {
+    const tc = page.locator('[data-testid="static-basic"]')
+    await expect.poll(() => canvasHasPaint(page, "static-basic"), { timeout: 5_000 }).toBe(true)
+    // Particle layer is gated by `showParticles`; the static-basic
+    // case doesn't emit any, so the snapshot is deterministic. Allow
+    // one extra frame for layout settle.
+    await page.waitForTimeout(120)
+    await expect(tc).toHaveScreenshot("static-basic.png", { maxDiffPixels: 300 })
+  })
+
+  // No pixel snapshot for the particle stream — rAF-driven animation
+  // makes per-frame state non-deterministic across runners (the
+  // existing "particles render when showParticles is on" test verifies
+  // emission count, which is the observable invariant).
+
+  test("validation failure block", async ({ page }) => {
+    const tc = page.locator('[data-testid="validation-failure"]')
+    await expect(tc).toBeVisible()
+    await expect(tc).toHaveScreenshot("validation-failure.png", { maxDiffPixels: 100 })
+  })
+})

@@ -7,7 +7,6 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
-import useContainerWidth from "../../hooks/useContainerWidth"
 
 // Default formatter the sandbox uses for both axis ticks and tooltip
 // time fields. ProcessSankey treats `timeFormat` the same way XY charts

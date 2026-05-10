@@ -59,6 +59,20 @@ const hierarchy = {
   ],
 }
 
+// ProcessSankey fixture — mirrors the CSR-side fixture byte-for-byte.
+const psNodes = [
+  { id: "Alice",   category: "Person",    xExtent: [1767657600000, 1767657600000] },
+  { id: "Bob",     category: "Person",    xExtent: [1769472000000, 1769472000000] },
+  { id: "Eng",     category: "Team" },
+  { id: "Release", category: "Milestone", xExtent: [1776384000000, 1779494400000] },
+]
+const psEdges = [
+  { id: "alice-eng", source: "Alice", target: "Eng",     value: 8,  startTime: 1769904000000, endTime: 1771632000000 },
+  { id: "bob-eng",   source: "Bob",   target: "Eng",     value: 5,  startTime: 1771977600000, endTime: 1774569600000 },
+  { id: "eng-rel",   source: "Eng",   target: "Release", value: 13, startTime: 1776384000000, endTime: 1778889600000 },
+]
+const psDomain = [1767225600000, 1779494400000]
+
 interface ParityCase {
   id: string
   csrTestId: string
@@ -104,6 +118,26 @@ const cases: ParityCase[] = [
   },
 ]
 
+// ProcessSankey isn't registered in `CHART_CONFIGS` (no `renderChart`
+// entry — it wraps StreamNetworkFrame via the `customNetworkLayout`
+// escape hatch instead of a built-in plugin). We still want SSR
+// coverage, so we render the HOC through React's `renderToString`
+// directly — same end result (HOC → Frame → SVG via SceneToSVG), just
+// without the registry-based dispatch.
+const processSankeyCase = {
+  id: "process-sankey",
+  csrTestId: "csr-process-sankey",
+  ssrProps: {
+    nodes: psNodes,
+    edges: psEdges,
+    domain: psDomain,
+    colorBy: "category",
+    showLegend: true,
+    width: 500,
+    height: 320,
+  },
+}
+
 // Lazy-load `renderChart` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
 // dist/ folder has no `type: "module"` package.json — so Node refuses
@@ -117,6 +151,31 @@ function getRenderChart() {
   renderChart = server.renderChart ?? null
   if (!renderChart) throw new Error("renderChart not found on semiotic/server")
   return renderChart
+}
+
+// HOC SSR via React's renderToString. Used for charts that aren't in
+// the `renderChart` registry (currently just ProcessSankey, which uses
+// the customNetworkLayout escape hatch). The output goes through the
+// same SceneToSVG converter `renderChart` uses internally — same
+// invariant, different entry point.
+let renderToString: ((node: unknown) => string) | null = null
+let createElement: ((type: unknown, props: unknown) => unknown) | null = null
+let semioticDist: Record<string, unknown> | null = null
+function getReactSSR() {
+  if (renderToString && createElement && semioticDist) {
+    return { renderToString, createElement, dist: semioticDist }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const reactDOMServer = require("react-dom/server") as { renderToString: typeof renderToString }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const react = require("react") as { createElement: typeof createElement }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const dist = require("../dist/semiotic.min.js") as Record<string, unknown>
+  renderToString = reactDOMServer.renderToString
+  createElement = react.createElement
+  semioticDist = dist
+  if (!renderToString || !createElement) throw new Error("react/react-dom-server not loadable")
+  return { renderToString, createElement, dist }
 }
 
 test.describe("SSR / CSR parity", () => {
@@ -150,4 +209,33 @@ test.describe("SSR / CSR parity", () => {
       await expect(target).toHaveScreenshot(`ssr-${c.id}.png`, { maxDiffPixels: 200 })
     })
   }
+
+  // ── ProcessSankey (HOC SSR via React.renderToString) ───────────────
+  test(`CSR baseline — ${processSankeyCase.id}`, async ({ page }) => {
+    await page.goto("/ssr-parity-examples/")
+    await waitForChartReady(page, processSankeyCase.csrTestId)
+    const target = page.locator(`[data-testid="${processSankeyCase.csrTestId}"]`)
+    await expect(target).toHaveScreenshot(`csr-${processSankeyCase.id}.png`, { maxDiffPixels: 200 })
+  })
+
+  test(`SSR baseline — ${processSankeyCase.id}`, async ({ page }) => {
+    const { renderToString, createElement, dist } = getReactSSR()
+    const ProcessSankey = dist.ProcessSankey
+    if (!ProcessSankey) throw new Error("ProcessSankey not exported from dist")
+    const ssrMarkup = renderToString(createElement(ProcessSankey, processSankeyCase.ssrProps))
+    await page.setContent(`
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><title>SSR process-sankey</title></head>
+        <body style="margin:0;padding:16px;background:white;font-family:sans-serif;">
+          <div data-testid="ssr-target" style="display:inline-block;background:white;">
+            ${ssrMarkup}
+          </div>
+        </body>
+      </html>
+    `)
+    const target = page.locator('[data-testid="ssr-target"]')
+    await target.waitFor({ state: "visible" })
+    await expect(target).toHaveScreenshot(`ssr-${processSankeyCase.id}.png`, { maxDiffPixels: 400 })
+  })
 })

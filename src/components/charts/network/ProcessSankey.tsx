@@ -252,7 +252,23 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       },
       pushMany(items: Datum[]) {
         if (isControlled) return
-        setPushedEdges(prev => [...prev, ...(items as unknown as TEdge[])])
+        // Mirror push(): partition each item into edges vs nodes by
+        // checking for source+target presence. A consumer batch-pushing
+        // mixed records would otherwise see nodes get filed as edges,
+        // producing invalid normalized edges (source/target → "undefined").
+        const newEdges: TEdge[] = []
+        const newNodes: TNode[] = []
+        for (const item of items) {
+          const candidate = item as TEdge
+          const looksLikeEdge =
+            candidate != null &&
+            accessor(sourceAccessor as ChartAccessor<TEdge, string>, candidate) != null &&
+            accessor(targetAccessor as ChartAccessor<TEdge, string>, candidate) != null
+          if (looksLikeEdge) newEdges.push(candidate)
+          else newNodes.push(item as unknown as TNode)
+        }
+        if (newEdges.length > 0) setPushedEdges(prev => [...prev, ...newEdges])
+        if (newNodes.length > 0) setPushedNodes(prev => [...prev, ...newNodes])
       },
       clear() {
         if (!isControlled) {
@@ -358,6 +374,17 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   // ── Build band + ribbon scene specs from layout output. ─────────────
   // These flow to the customNetworkLayout via layoutConfig — the layout
   // fn is a thin shim that maps these to NetworkBezierEdge primitives.
+  // Map node id → array index for O(1) source-color lookups in the
+  // ribbon and particle loops below. Without this, each ribbon's color
+  // resolution does a linear scan over `nodes`, making layout cost
+  // O(|nodes|×|edges|) — quadratic on dense graphs. Computed once per
+  // layout render and reused by `sceneSpecs` and `foregroundGraphics`.
+  const nodeIndexById = useMemo(() => {
+    const m = new Map<string, number>()
+    nodes.forEach((n, i) => m.set(n.id, i))
+    return m
+  }, [nodes])
+
   const sceneSpecs = useMemo(() => {
     const empty: { bands: ProcessSankeyBandSpec[]; ribbons: ProcessSankeyRibbonSpec[] } = { bands: [], ribbons: [] }
     if (!layout) return empty
@@ -391,7 +418,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       const srcAtt = nodeData[e.source]?.localAttachments.get(e.id)
       const tgtAtt = nodeData[e.target]?.localAttachments.get(e.id)
       if (!srcAtt || !tgtAtt) return
-      const sourceIdx = nodes.findIndex((n) => n.id === e.source)
+      const sourceIdx = nodeIndexById.get(e.source) ?? 0
       const fill = colorOf(e.source, sourceIdx)
       const d = buildRibbonPath(
         srcAtt, centerlines[e.source],
@@ -408,7 +435,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       })
     })
     return { bands, ribbons }
-  }, [layout, nodes, edges, xScale, domain, colorOf, rawNodeById, rawEdgeById, ribbonLane, edgeOpacity])
+  }, [layout, nodes, edges, xScale, domain, colorOf, rawNodeById, rawEdgeById, ribbonLane, edgeOpacity, nodeIndexById])
 
   const layoutConfig: ProcessSankeyLayoutConfig = useMemo(() => ({
     bands: sceneSpecs.bands,
@@ -509,13 +536,16 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       )
     }
 
-    // Ribbon (edge) default tooltip
-    const e = userDatum as Datum
-    const src = e[sourceAccessor as string]
-    const tgt = e[targetAccessor as string]
-    const val = e[valueAccessor as string]
-    const start = e[startTimeAccessor as string]
-    const end = e[endTimeAccessor as string]
+    // Ribbon (edge) default tooltip. Goes through the accessor helper
+    // so function-form accessors work — the previous direct
+    // `e[acc as string]` lookup returned undefined whenever a consumer
+    // passed `sourceAccessor={(e) => e.source}` or similar.
+    const e = userDatum as TEdge
+    const src = accessor(sourceAccessor as ChartAccessor<TEdge, string>, e)
+    const tgt = accessor(targetAccessor as ChartAccessor<TEdge, string>, e)
+    const val = accessor(valueAccessor as ChartAccessor<TEdge, number>, e)
+    const start = accessor(startTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
+    const end = accessor(endTimeAccessor as ChartAccessor<TEdge, TimeLike>, e)
     return (
       <div style={{ minWidth: 160 }}>
         <div style={{ fontWeight: 600, marginBottom: 4 }}>
@@ -598,12 +628,18 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   const [particleProgress, setParticleProgress] = useState(0)
   useEffect(() => {
     if (!showParticles) return
+    // Guard against a bogus particleDuration prop (0, negative, NaN).
+    // Using one as the divisor below would produce NaN coordinates and
+    // particles would silently disappear; fall back to the default.
+    const cycleMs = Number.isFinite(particleDuration) && particleDuration > 0
+      ? particleDuration
+      : 6000
     let raf = 0
     let mounted = true
     const start = performance.now()
     const tick = (now: number) => {
       if (!mounted) return
-      const t = ((now - start) % particleDuration) / particleDuration
+      const t = ((now - start) % cycleMs) / cycleMs
       setParticleProgress(t)
       raf = requestAnimationFrame(tick)
     }
@@ -637,7 +673,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         : tCl + (tgtAtt.sideMassAfter - tgtAtt.value / 2) * S
       const target = Math.round(e.value * particleDensity)
       const n = Math.max(1, Math.min(particleMaxPerEdge, target))
-      const sourceIdx = nodes.findIndex((nn) => nn.id === e.source)
+      const sourceIdx = nodeIndexById.get(e.source) ?? 0
       const fill = colorOf(e.source, sourceIdx)
       for (let i = 0; i < n; i++) {
         const phase = (particleProgress + i / n) % 1
@@ -657,7 +693,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       }
     })
     return <g>{dots}</g>
-  }, [showParticles, layout, edges, xScale, domain, ribbonLane, nodes, colorOf, particleDensity, particleMaxPerEdge, particleProgress, particleRadius])
+  }, [showParticles, layout, edges, xScale, domain, ribbonLane, colorOf, particleDensity, particleMaxPerEdge, particleProgress, particleRadius, nodeIndexById])
 
   // ── Validation gate ──
   if (issues.length > 0) {
@@ -680,10 +716,32 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   // emits its own scene primitives via `customNetworkLayout`. The frame's
   // own layout plugins would otherwise try to position our data with
   // sankey/force/etc. semantics, which doesn't apply here.
+  // Pass the user's raw nodes/edges through so the frame's SSR path
+  // (which gates `buildScene` on `nodes.length > 0 || edges.length > 0`)
+  // actually runs the customNetworkLayout. ProcessSankey doesn't use
+  // the frame's force-layout output for positioning — bands/ribbons
+  // come from `layoutConfig` — but the ingestion step has to fire so
+  // SSR snapshots match the CSR canvas pipeline.
+  const safeFrameNodes = useMemo(
+    () => (rawNodes ?? []).map((n) => ({ id: getNodeId(n), data: n as Datum })),
+    [rawNodes, getNodeId],
+  )
+  const safeFrameEdges = useMemo(
+    () => (rawEdges ?? []).map((e, i) => ({
+      id: getEdgeId(e, i),
+      source: String(accessor(sourceAccessor, e)),
+      target: String(accessor(targetAccessor, e)),
+      data: e as Datum,
+    })),
+    [rawEdges, getEdgeId, sourceAccessor, targetAccessor],
+  )
+
   return (
     <StreamNetworkFrame
       ref={frameRef}
       chartType="force"
+      nodes={safeFrameNodes}
+      edges={safeFrameEdges}
       customNetworkLayout={emitProcessSankeyScenes as unknown as StreamNetworkFrameProps["customNetworkLayout"]}
       layoutConfig={layoutConfig as unknown as Record<string, unknown>}
       size={[width, height]}
