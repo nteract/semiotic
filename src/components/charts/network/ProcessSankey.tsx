@@ -160,15 +160,53 @@ function accessor<T extends Datum, V>(a: ChartAccessor<T, V>, d: T): V {
  *
  * @example
  * ```tsx
- * const ref = useRef<RealtimeFrameHandle>(null)
+ * // Static fixture: pre-built nodes + timed edges, categorical colors.
  * <ProcessSankey
- *   ref={ref}
- *   nodes={nodes}
- *   edges={edges}
- *   domain={[t0, t1]}
+ *   nodes={[
+ *     { id: "Alice", category: "Person", xExtent: ["2026-01-06", "2026-01-06"] },
+ *     { id: "Bob",   category: "Person", xExtent: ["2026-02-01", "2026-02-01"] },
+ *     { id: "Eng",     category: "Team" },
+ *     { id: "Release", category: "Milestone", xExtent: ["2026-04-15", "2026-05-30"] },
+ *   ]}
+ *   edges={[
+ *     { id: "alice-eng", source: "Alice", target: "Eng",     value: 8,
+ *       startTime: "2026-01-20", endTime: "2026-02-10" },
+ *     { id: "bob-eng",   source: "Bob",   target: "Eng",     value: 5,
+ *       startTime: "2026-02-15", endTime: "2026-03-15" },
+ *     { id: "eng-rel",   source: "Eng",   target: "Release", value: 13,
+ *       startTime: "2026-04-15", endTime: "2026-05-15" },
+ *   ]}
+ *   domain={["2026-01-01", "2026-05-31"]}
  *   colorBy="category"
  *   showLegend
  * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Push mode: omit `edges`, mutate via the ref. Same chart shape, but
+ * // edges arrive over time. Particles depict throughput.
+ * const ref = useRef<RealtimeFrameHandle>(null)
+ *
+ * useEffect(() => {
+ *   const id = setInterval(() => {
+ *     ref.current?.push({
+ *       source: "API", target: "DB", value: Math.random() * 10,
+ *       startTime: Date.now(), endTime: Date.now() + 1500,
+ *     })
+ *   }, 800)
+ *   return () => clearInterval(id)
+ * }, [])
+ *
+ * return (
+ *   <ProcessSankey
+ *     ref={ref}
+ *     domain={[t0, t0 + 60_000]}
+ *     showParticles
+ *     colorBy="category"
+ *     showLegend
+ *   />
+ * )
  * ```
  */
 export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(
