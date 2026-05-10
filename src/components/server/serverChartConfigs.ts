@@ -581,16 +581,35 @@ const processSankey: ChartConfig = {
     const plotH = height - margin.top - margin.bottom
 
     // Color resolution mirrors the HOC's: prefer colorScheme array, then
-    // categorical fallback. Function/string colorBy is honored for
-    // node lookup.
+    // categorical fallback. Both string-form (`colorBy="category"`)
+    // and function-form (`colorBy={(d) => d.category}`) accessors are
+    // honored — `createColorScale` only derives a non-empty domain
+    // when colorBy is a string, so function-form goes through a
+    // synthetic `_cat` projection (matching what `useColorScale`
+    // does on the CSR side) before passing into the d3-scale.
     const palette = Array.isArray(colorScheme) ? colorScheme : null
     const fallbackPalette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
-    const colorScale = colorBy ? createColorScale(rawNodes, colorBy, colorScheme) : null
+    const colorByFn = typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
+    const scaleSourceData: Datum[] = colorByFn
+      ? rawNodes.map((n) => ({ _cat: colorByFn(n) }))
+      : rawNodes
+    const scaleColorBy: string | ((d: Datum) => string) | undefined = colorByFn
+      ? "_cat"
+      : (typeof colorBy === "string" ? colorBy : undefined)
+    const colorScale = scaleColorBy
+      ? createColorScale(scaleSourceData, scaleColorBy, colorScheme)
+      : null
     const nodeById = new Map<string, Datum>()
     for (const n of ns) nodeById.set(n.id, n.__raw)
     const colorOf = (id: string, idx: number): string => {
       if (colorBy && nodeById.has(id)) {
-        return getColor(nodeById.get(id) as Datum, colorBy, colorScale ?? undefined) as string
+        const raw = nodeById.get(id) as Datum
+        if (colorByFn) {
+          // Project through the function to derive the category, then
+          // look up in the scale built from the synthetic `_cat` rows.
+          return getColor({ _cat: colorByFn(raw) }, "_cat", colorScale ?? undefined) as string
+        }
+        return getColor(raw, colorBy, colorScale ?? undefined) as string
       }
       const p = palette || fallbackPalette
       return p[idx % p.length]

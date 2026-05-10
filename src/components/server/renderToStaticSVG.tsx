@@ -638,6 +638,10 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   let sceneNodes: import("../stream/networkTypes").NetworkSceneNode[] = []
   let sceneEdges: import("../stream/networkTypes").NetworkSceneEdge[] = []
   let labels: import("../stream/networkTypes").NetworkLabel[] = []
+  // Overlays returned from a custom layout (drawn above the data layer
+  // by NetworkSVGOverlay on CSR; threaded into `content` below on SSR
+  // so screenshot baselines include them).
+  let customLayoutOverlays: import("react").ReactNode = null
   if (config.customNetworkLayout) {
     // Reuse the same palette + resolver helpers NetworkPipelineStore
     // uses for the CSR custom-layout context, so a `colorScheme` named
@@ -651,13 +655,20 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       schemeCategory10,
     )
     const resolveColor = buildResolveColor(palette)
+    // `dimensions` matches the CSR `NetworkPipelineStore.runLayout`
+    // contract: width/height are the inner plot size, and plot.x/y
+    // are 0 (the frame's <g transform="translate(margin.left,
+    // margin.top)"> already lives at the plot origin, so layout
+    // coordinates are plot-relative). Passing outer width + a
+    // margin-shifted plot origin would push every band/ribbon
+    // visually offset on SSR vs CSR.
     const ctx = {
       nodes,
       edges,
       dimensions: {
-        width: size[0],
-        height: size[1],
-        plot: { x: margin.left, y: margin.top, width: innerWidth, height: innerHeight },
+        width: innerWidth,
+        height: innerHeight,
+        plot: { x: 0, y: 0, width: innerWidth, height: innerHeight },
       },
       theme: {
         semantic: theme.colors as unknown as import("../stream/types").ThemeSemanticColors,
@@ -673,6 +684,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     sceneNodes = result.sceneNodes ?? []
     sceneEdges = result.sceneEdges ?? []
     labels = result.labels ?? []
+    customLayoutOverlays = result.overlays ?? null
   } else {
     plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
     const built = plugin.buildScene(nodes, edges, config, [innerWidth, innerHeight])
@@ -767,6 +779,13 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       {labelElements}
       {annotationNodes}
       {props.foregroundGraphics}
+      {/* customLayout-emitted overlays paint above the data layer,
+          matching `NetworkSVGOverlay`'s `composeOverlays(foreground,
+          customLayoutOverlays)` ordering on CSR. Without this, SSR
+          snapshots for any registered custom layout would be missing
+          axis chrome / particles / quality readouts that the live
+          chart shows. */}
+      {customLayoutOverlays}
     </>
   )
 

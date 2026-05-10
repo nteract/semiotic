@@ -716,7 +716,13 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         {axisTicks.map((tick, i) => {
           const t = toTime(tick.date)
           const x = xScale(t)
-          const label = timeFormat ? timeFormat(new Date(t)) : tick.label
+          // Prefer an explicit `tick.label` over the global
+          // `timeFormat`. Lets a consumer set up a default formatter
+          // for tooltips and most ticks while still spelling certain
+          // ticks out by hand (e.g. "Q1 ★", "Election Day").
+          const label = tick.label != null
+            ? tick.label
+            : (timeFormat ? timeFormat(new Date(t)) : "")
           return (
             <g key={i} transform={`translate(${x},${plotH + 4})`}>
               <line y2={6} stroke="#94a3b8" />

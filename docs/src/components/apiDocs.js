@@ -3,21 +3,17 @@ const KIND_PROPERTY = 1024
 const KIND_TYPE_ALIAS = 2097152
 
 // Map components whose public component name differs from the exported
-// props type. The default lookup is `${componentName}Props`; when the
-// canonical interface lives under a different name, list the override
-// here so `findPropsInterface` short-circuits the type-alias walk.
+// props type. The default lookup is `${componentName}Props`; only list
+// overrides here when the canonical interface lives under a different
+// name and the standard component-name lookup wouldn't find it.
 //
-// `RealtimeHistogram` exports `RealtimeHistogramProps` as a type-alias
-// pointing at the canonical `RealtimeTemporalHistogramProps` interface.
-// Type-alias resolution finds the underlying interface either way, but
-// the explicit entry keeps the component → interface mapping
-// discoverable without walking the TypeDoc tree, and matches the
-// expectation downstream fixtures/tests assert against
-// (api-docs-extraction.test.js: "resolves component-specific props
-// aliases" pins `propsInterface.name` to the canonical alias target).
-export const COMPONENT_PROPS_NAME_MAP = {
-  RealtimeHistogram: "RealtimeTemporalHistogramProps",
-}
+// `RealtimeHistogram` now exports `RealtimeHistogramProps` as the
+// canonical interface and `RealtimeTemporalHistogramProps` as a
+// deprecated type alias pointing at it, so the standard
+// `${componentName}Props` lookup resolves correctly without an entry
+// here. (Earlier versions had the alias direction reversed; the
+// rename means the override is no longer needed.)
+export const COMPONENT_PROPS_NAME_MAP = {}
 
 // Per-apiData index cache. The reflection index is expensive to build
 // (full TypeDoc tree walk) and ApiReferencePage renders ~40 components in a

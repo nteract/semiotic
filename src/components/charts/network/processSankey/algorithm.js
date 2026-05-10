@@ -573,13 +573,20 @@ function biasLargestToCenter(slots, slotByNode, edges) {
   const n = slots.length
   if (n <= 1) return
   const sizeOf = (s) => s.peak.topPeak + s.peak.botPeak
+  // Hold slot REFERENCES (not indices) since the loop body mutates the
+  // slots array via splice. The original `idx` captured before the
+  // first move would be stale on every subsequent iteration, leading
+  // to "move the wrong slot" (or undo the previous move) — visible as
+  // unstable layouts when `laneOrder="crossing-min+inside-out"` ran
+  // against fixtures with three or more slots.
   const sortedDesc = slots
-    .map((slot, idx) => ({ slot, idx, size: sizeOf(slot) }))
+    .map((slot) => ({ slot, size: sizeOf(slot) }))
     .sort((a, b) => b.size - a.size)
   const middle = Math.floor((n - 1) / 2)
   let curScore = score(slotByNode, edges)
-  for (const { idx } of sortedDesc) {
-    const curPos = idx
+  for (const { slot } of sortedDesc) {
+    const curPos = slots.indexOf(slot)
+    if (curPos < 0) continue
     const targetPos = middle
     if (curPos === targetPos) continue
     const tmp = slots[curPos]
