@@ -4,13 +4,34 @@ import { render } from "@testing-library/react"
 import { FlowMap } from "./FlowMap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
-// Mock StreamGeoFrame to capture props
+// Mock StreamGeoFrame to capture props AND expose a fake imperative
+// handle so push-API tests can spy on `pushLine`/`pushManyLines`/etc.
 let lastGeoFrameProps: any = null
+const fakeFrameHandle = {
+  push: vi.fn(),
+  pushMany: vi.fn(),
+  removePoint: vi.fn(() => []),
+  pushLine: vi.fn(),
+  pushManyLines: vi.fn(),
+  removeLine: vi.fn(() => []),
+  getLines: vi.fn(() => []),
+  clear: vi.fn(),
+  getProjection: vi.fn(() => null),
+  getGeoPath: vi.fn(() => null),
+  getCartogramLayout: vi.fn(() => null),
+  getZoom: vi.fn(() => 1),
+  resetZoom: vi.fn(),
+  getData: vi.fn(() => []),
+}
 vi.mock("../../stream/StreamGeoFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef((props: any, ref: any) => {
       lastGeoFrameProps = props
+      // Wire the forwarded ref to the fake handle so `useFrameImperativeHandle`
+      // routes through it.
+      if (typeof ref === "function") ref(fakeFrameHandle)
+      else if (ref) ref.current = fakeFrameHandle
       return <div className="stream-geo-frame"><svg /></div>
     })
   }
@@ -40,6 +61,9 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 describe("FlowMap", () => {
   beforeEach(() => {
     lastGeoFrameProps = null
+    Object.values(fakeFrameHandle).forEach((fn) => {
+      if (typeof (fn as any)?.mockClear === "function") (fn as any).mockClear()
+    })
   })
 
   // ── Hooks-before-early-return fix ─────────────────────────────────────
@@ -289,6 +313,93 @@ describe("FlowMap", () => {
         </Wrapper>
       )
       expect(lastGeoFrameProps.zoomable).toBe(true)
+    })
+  })
+
+  // ── Push API ──────────────────────────────────────────────────────────
+  //
+  // FlowMap pushes raw flows (`{ source, target, value }`); the HOC
+  // resolves source/target through `nodeLookup` HOC-side, then forwards
+  // a `{ ...flow, coordinates: [...] }` line entry to the frame's
+  // `pushLine`/`pushManyLines`. See `useFrameImperativeHandle` `geo-lines`
+  // variant.
+
+  describe("push API", () => {
+    it("translates a pushed flow into a coordinate-resolved line", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.push({ source: "A", target: "B", passengers: 100 })
+
+      expect(fakeFrameHandle.pushLine).toHaveBeenCalledTimes(1)
+      const line = (fakeFrameHandle.pushLine as any).mock.calls[0][0]
+      expect(line.source).toBe("A")
+      expect(line.target).toBe("B")
+      expect(line.passengers).toBe(100)
+      expect(line.coordinates).toHaveLength(2)
+      expect(line.coordinates[0].lon).toBe(-73.7)
+      expect(line.coordinates[1].lon).toBe(-0.4)
+    })
+
+    it("drops a pushed flow whose endpoints aren't in nodeLookup", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.push({ source: "A", target: "MISSING", value: 1 })
+      expect(fakeFrameHandle.pushLine).not.toHaveBeenCalled()
+    })
+
+    it("batches pushMany into a single pushManyLines call", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.pushMany([
+        { source: "A", target: "B", value: 1 },
+        { source: "B", target: "C", value: 2 },
+        { source: "A", target: "MISSING", value: 99 }, // dropped
+      ])
+
+      expect(fakeFrameHandle.pushManyLines).toHaveBeenCalledTimes(1)
+      const lines = (fakeFrameHandle.pushManyLines as any).mock.calls[0][0]
+      expect(lines).toHaveLength(2)
+    })
+
+    it("forwards remove(id) to the frame's removeLine", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} lineIdAccessor="id" />
+        </Wrapper>
+      )
+      ref.current?.remove("flow-1")
+      expect(fakeFrameHandle.removeLine).toHaveBeenCalledWith("flow-1")
+    })
+
+    it("forwards lineIdAccessor through to streamProps", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} lineIdAccessor="id" />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.lineIdAccessor).toBe("id")
+    })
+
+    it("omits `lines` from streamProps when flows prop is undefined (push mode)", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.lines).toBeUndefined()
     })
   })
 

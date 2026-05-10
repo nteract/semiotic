@@ -395,6 +395,50 @@ export class GeoPipelineStore {
     this.lastIngestTime = now
   }
 
+  /** Append a single line/flow record (coordinates pre-resolved). Lines
+   *  aren't ring-buffered — the bounded set is the geography. */
+  pushLine(line: Datum): void {
+    if (line == null || typeof line !== "object") return
+    this.lineData = [...this.lineData, line]
+    this.version++
+  }
+
+  /** Append multiple line/flow records in one pass. */
+  pushManyLines(lines: Datum[]): void {
+    if (!Array.isArray(lines) || lines.length === 0) return
+    const safe = lines.filter((l) => l != null && typeof l === "object")
+    if (safe.length === 0) return
+    this.lineData = [...this.lineData, ...safe]
+    this.version++
+  }
+
+  /** Remove line records by id. Requires `lineIdAccessor`. */
+  removeLine(id: string | string[]): Datum[] {
+    const { lineIdAccessor } = this.config
+    if (!lineIdAccessor) {
+      throw new Error("removeLine() requires lineIdAccessor to be configured")
+    }
+    const getId = typeof lineIdAccessor === "function"
+      ? lineIdAccessor
+      : (d: Datum) => d[lineIdAccessor as string]
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const removed: Datum[] = []
+    this.lineData = this.lineData.filter((d) => {
+      if (ids.has(String(getId(d)))) {
+        removed.push(d)
+        return false
+      }
+      return true
+    })
+    if (removed.length > 0) this.version++
+    return removed
+  }
+
+  /** Read the current line/flow set (post-push, pre-projection). */
+  getLines(): Datum[] {
+    return this.lineData
+  }
+
   /**
    * Remove points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items.

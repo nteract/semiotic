@@ -4,15 +4,16 @@ import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, DEPTH_PALETTE_COLORS, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, useColorScale, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
@@ -122,21 +123,47 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
 
   const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
-  // ── Loading state (computed early, returned after all hooks) ─────────────
-  const loadingEl = renderLoadingState(loading, width, height)
+  // Flatten the hierarchy once so the consolidated setup hook can
+  // build its color scale + categories off the same node array
+  // node-style/legend logic uses below.
+  const allNodes = useMemo(() => {
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
+  }, [data, childrenAccessor])
 
-  const { activeSelectionHook, customHoverBehavior: baseHoverBehavior, customClickBehavior } = useChartSelection({
+  // Consolidated network setup. Treemap's data shape is a hierarchy
+  // root, not nodes/edges, so we feed `allNodes` (the flattened
+  // descendants) and turn off node inference. `colorByDepth` paints
+  // by tree depth instead of a categorical accessor — pass undefined
+  // for `colorBy` in that case so the color scale + categories don't
+  // try to extract categories that wouldn't drive the styling.
+  const setup = useNetworkChartSetup({
+    nodes: allNodes,
+    edges: undefined,
+    inferNodes: false,
+    colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
+    colorScheme,
+    showLegend: false,             // Treemap has no top-level legend prop
+    legendInteraction,
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    onObservation, onClick, chartType: "Treemap", chartId
+    onObservation,
+    onClick,
+    chartType: "Treemap",
+    chartId,
+    marginDefaults: resolved.marginDefaults,
+    userMargin,
+    width, height,
+    loading,
+    // No emptyContent gate — `data` is a hierarchy root validated
+    // separately by validateObjectData, not the array-empty path.
   })
 
   const resolvedSelection = useResolvedSelection(selection)
+  const baseHoverBehavior = setup.customHoverBehavior
 
   // Network frame hover: { type, data: sceneNode, x, y }
-  // sceneNode.data = original datum for this hierarchy node
-  // Pass it as { data: originalDatum } so useChartSelection unwraps correctly
+  // sceneNode.data = original datum for this hierarchy node.
+  // Pass it as { data: originalDatum } so useChartSelection unwraps correctly.
   const customHoverBehavior = useCallback(
     (d: Datum | null) => {
       if (!d) return baseHoverBehavior(null)
@@ -147,35 +174,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     [baseHoverBehavior]
   )
 
-  const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
-  }, [data, childrenAccessor])
-
-  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy || colorByDepth) return []
-    const vals = new Set<string>()
-    for (const d of allNodes as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [allNodes, colorBy, colorByDepth])
-
-  const legendState = useLegendInteraction(legendInteraction, colorByDepth ? undefined : colorBy as string | ((d: Datum) => string) | undefined, allCategories)
-
-  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
-  const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
-
-  const effectivePalette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
 
   const nodeStyleFn = useMemo(() => {
     return (d: Datum) => {
@@ -183,13 +182,13 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       return baseStyle
     }
-  }, [colorBy, colorByDepth, colorScale, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) on nodeStyleFn
   // before selection wrapping, so they land on every node.
@@ -200,12 +199,12 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
 
   // Wrap node style with selection — unwrap hierarchy .data for predicate matching
   const nodeStyle = useMemo(() => {
-    if (!activeSelectionHook) return nodeStyleFnWithPrimitives
+    if (!setup.activeSelectionHook) return nodeStyleFnWithPrimitives
     return (d: Datum) => {
       const style = { ...nodeStyleFnWithPrimitives(d) }
-      if (activeSelectionHook.isActive) {
+      if (setup.activeSelectionHook!.isActive) {
         const datum = d.data || d
-        const matches = activeSelectionHook.predicate(datum)
+        const matches = setup.activeSelectionHook!.predicate(datum)
         if (matches) {
           if (resolvedSelection?.selectedStyle) Object.assign(style, resolvedSelection.selectedStyle)
         } else {
@@ -218,7 +217,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       }
       return style
     }
-  }, [nodeStyleFnWithPrimitives, activeSelectionHook, resolvedSelection])
+  }, [nodeStyleFnWithPrimitives, setup.activeSelectionHook, resolvedSelection])
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)
@@ -228,15 +227,12 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     ? paddingTopProp
     : (showLabels && (labelMode === "parent" || labelMode === "all") ? 18 : undefined)
 
-  // Margin
-  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
-
   // Validate
   const error = validateObjectData({ componentName: "Treemap", data })
   if (error) return <ChartError componentName="Treemap" message={error} width={width} height={height} />
 
   // ── Loading guard (deferred to after all hooks) ────────────────────────
-  if (loadingEl) return loadingEl
+  if (setup.loadingEl) return setup.loadingEl
 
   return (<SafeRender componentName="Treemap" width={width} height={height}>
     <StreamNetworkFrame
@@ -245,7 +241,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
-      margin={margin}
+      margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
       hierarchySum={hierarchySumFn}
@@ -253,7 +249,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       paddingTop={resolvedPaddingTop}
       nodeStyle={nodeStyle}
       colorBy={colorBy}
-      colorScheme={effectivePalette}
+      colorScheme={setup.effectivePalette}
       colorByDepth={colorByDepth}
       nodeLabel={showLabels ? (nodeLabel || nodeIdAccessor) : undefined}
       showLabels={showLabels}
@@ -261,12 +257,12 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       {...((linkedHover || onObservation || onClick) && { customHoverBehavior })}
-      {...((onObservation || onClick) && { customClickBehavior })}
+      {...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior })}
       {...(legendInteraction && legendInteraction !== "none" && {
-        legendHoverBehavior: legendState.onLegendHover,
-        legendClickBehavior: legendState.onLegendClick,
-        legendHighlightedCategory: legendState.highlightedCategory,
-        legendIsolatedCategories: legendState.isolatedCategories,
+        legendHoverBehavior: setup.legendState.onLegendHover,
+        legendClickBehavior: setup.legendState.onLegendClick,
+        legendHighlightedCategory: setup.legendState.highlightedCategory,
+        legendIsolatedCategories: setup.legendState.isolatedCategories,
       })}
       className={className}
       title={title}

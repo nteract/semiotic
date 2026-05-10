@@ -77,6 +77,7 @@ const scatterplotProps = [
   { name: "sizeRange", type: "[number, number]", required: false, default: "[3, 15]", description: "Min and max radius for points when sizeBy is specified." },
   { name: "pointRadius", type: "number", required: false, default: "5", description: "Default point radius when sizeBy is not specified." },
   { name: "pointOpacity", type: "number", required: false, default: "0.8", description: "Opacity of the points." },
+  { name: "regression", type: "boolean | string | object", required: false, default: null, description: "Overlay a regression line. true = linear, \"linear\" | \"polynomial\" | \"loess\" = method, or a full RegressionConfig object. Sugar over the trend annotation." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend. Defaults to true when colorBy is specified." },
@@ -354,6 +355,56 @@ export default function ScatterplotPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Regression overlay */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="regression">Regression Overlay</h3>
+      <p>
+        Set <code>regression</code> to overlay a fitted line. Pass{" "}
+        <code>true</code> for a default linear fit, a method name (
+        <code>"linear"</code> | <code>"polynomial"</code> |{" "}
+        <code>"loess"</code>) for the method-only shorthand, or a config
+        object for full styling control. The prop is sugar over the{" "}
+        <code>trend</code> annotation — for multiple regression lines or
+        custom anchoring drop into the <code>annotations</code> array
+        directly.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "height",
+          yAccessor: "weight",
+          regression: { method: "linear", color: "#ef4444", label: "Trend" },
+        }}
+        type={Scatterplot}
+        overrideProps={{
+          data: `sampleData`,
+          regression: `{ method: "linear", color: "#ef4444", label: "Trend" }`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        Use <code>method: "loess"</code> for non-linear data — bandwidth
+        controls how aggressively the curve smooths.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: simpleData,
+          xAccessor: "height",
+          yAccessor: "weight",
+          regression: { method: "loess", bandwidth: 0.5, color: "#8b5cf6", strokeWidth: 2.5 },
+        }}
+        type={Scatterplot}
+        overrideProps={{
+          data: `sampleData`,
+          regression: `{ method: "loess", bandwidth: 0.5, color: "#8b5cf6", strokeWidth: 2.5 }`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
@@ -366,10 +417,15 @@ export default function ScatterplotPage() {
       <h2 id="graduating">Graduating to the Frame</h2>
 
       <p>
-        When you need more control — custom marks, complex annotations,
-        regression lines — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
+        When you need more control — custom marks, fully bespoke layouts,
+        per-mark scene primitives — graduate to{" "}
+        <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
         directly. Every <code>Scatterplot</code> is just a configured{" "}
-        <code>StreamXYFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood. Common analytical
+        overlays (regression lines, trend bands, anomaly markers) are
+        already first-class on <code>Scatterplot</code> via the{" "}
+        <code>regression</code> prop and the <code>annotations</code> array
+        — see the regression example below.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>

@@ -7,8 +7,8 @@ import { useMemo, useCallback, forwardRef, useRef, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, getSize } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { getSize } from "../shared/colorUtils"
+import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -16,11 +16,12 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
  * BubbleChart component props
@@ -146,6 +147,15 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    */
   annotations?: Datum[]
 
+  /**
+   * Overlay a regression line on the bubbles. Accepts `true` (linear
+   * with default styling), a method name (`"linear"` | `"polynomial"`
+   * | `"loess"`), or a full `RegressionConfig`. Sugar over the `trend`
+   * annotation — drop into the `annotations` array directly for richer
+   * setups.
+   */
+  regression?: RegressionProp
+
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
   /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -253,6 +263,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     marginalGraphics,
     pointIdAccessor,
     annotations,
+    regression,
     xExtent,
     yExtent,
     frameProps = {},
@@ -384,39 +395,18 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
   }, [safeData, sizeBy, isPushMode, sizeDomainVersion])
 
-  // Point style function
-  const basePointStyle = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {
-        fillOpacity: bubbleOpacity,
-        strokeWidth: bubbleStrokeWidth,
-        stroke: bubbleStrokeColor
-      }
-
-      // Apply color — skip fill when colorScale unavailable (push API)
-      // so the frame's own color map can fill in
-      if (colorBy) {
-        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
-      } else {
-        baseStyle.fill = color || DEFAULT_COLOR
-      }
-
-      // Apply size
-      baseStyle.r = getSize(d, sizeBy, sizeRange, sizeDomain)
-
-      return baseStyle
-    }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor, color])
-
-  const basePointStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
-    [basePointStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Bubble's chart-shape defaults (default stroke + width) ride
+  // through `baseStyleExtras`. sizeBy is mandatory on BubbleChart, so
+  // `radiusFn` is always set.
+  const pointStyle = useXYPointStyle({
+    colorBy, colorScale: setup.colorScale, color,
+    fillOpacity: bubbleOpacity,
+    radiusFn: (d) => getSize(d, sizeBy, sizeRange, sizeDomain),
+    baseStyleExtras: { stroke: bubbleStrokeColor, strokeWidth: bubbleStrokeWidth },
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -438,6 +428,14 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     requiredProps: { sizeBy },
   })
   if (error) return <ChartError componentName="BubbleChart" message={error} width={width} height={height} />
+
+  // Splice the `regression` sugar into annotations as a `trend`
+  // annotation. Trend goes first so user-supplied annotations paint
+  // above it.
+  const trendAnn = buildRegressionAnnotation(regression)
+  const resolvedAnnotations = trendAnn
+    ? [trendAnn, ...(annotations || [])]
+    : annotations
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
@@ -471,7 +469,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,

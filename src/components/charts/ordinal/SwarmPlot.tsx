@@ -6,8 +6,8 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor, getSize } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { getSize } from "../shared/colorUtils"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -15,8 +15,7 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -177,32 +176,22 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      const base: Record<string, string | number> = { fillOpacity: pointOpacity }
-      base.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      base.r = sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
-
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style. The size encoding (`r` from sizeBy)
+  // is per-datum, so it flows through `baseStyleExtras` as a
+  // function form. fillOpacity is constant.
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy,
+    colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    baseStyleExtras: (d) => ({
+      fillOpacity: pointOpacity,
+      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius,
+    }),
+  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({

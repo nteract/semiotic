@@ -6,8 +6,7 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -15,8 +14,7 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -160,36 +158,20 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      let base: Datum
-      if (effectiveColorBy) {
-        if (setup.colorScale) base = { fill: getColor(d, effectiveColorBy, setup.colorScale) }
-        else base = {} // Let frame use its own color scheme (push API)
-      } else {
-        base = { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
-      }
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
-
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style — same recipe as PieChart with
+  // per-slice color cycling enabled. Previously had a stroke-only
+  // user-overlay filter that diverged from PieChart's spread
+  // semantic; aligned with the helper.
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy: effectiveColorBy,
+    colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    cycleByCategory: true,
+  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({

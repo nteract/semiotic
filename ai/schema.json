@@ -642,6 +642,14 @@
             "pointOpacity": {
               "type": "number",
               "default": 0.8
+            },
+            "regression": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Overlay a regression line. true = linear, 'linear' | 'polynomial' | 'loess' = method, or full RegressionConfig object. Sugar over the trend annotation."
             }
           },
           "required": [
@@ -1230,6 +1238,14 @@
             "bubbleStrokeColor": {
               "type": "string",
               "default": "white"
+            },
+            "regression": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Overlay a regression line on the bubbles. Same shape as Scatterplot's regression prop."
             }
           },
           "required": [
@@ -1534,6 +1550,14 @@
                 "function"
               ],
               "description": "Accessor for unique point IDs, used by point-anchored annotations"
+            },
+            "regression": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Overlay a regression line under the connected path. Same shape as Scatterplot's regression prop."
             }
           },
           "required": [
@@ -1680,6 +1704,14 @@
             "barPadding": {
               "type": "number",
               "default": 40
+            },
+            "regression": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale."
             }
           },
           "required": [
@@ -2997,6 +3029,14 @@
             "categoryPadding": {
               "type": "number",
               "default": 10
+            },
+            "regression": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Overlay a regression line through the dots. Same shape as Scatterplot's regression prop."
             }
           },
           "required": [
@@ -6228,6 +6268,12 @@
               "type": "array"
             },
             "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "lineIdAccessor": {
               "type": [
                 "string",
                 "function"

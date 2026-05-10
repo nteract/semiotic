@@ -1,0 +1,575 @@
+{
+  "__generated": true,
+  "__source": "src/components/charts/shared/chartSpecs.ts",
+  "charts": {
+    "AreaChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "BubbleChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "size-encoding",
+        "streaming-domain",
+        "regression-overlay"
+      ]
+    },
+    "CandlestickChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "ohlc"
+      ]
+    },
+    "ConnectedScatterplot": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "regression-overlay"
+      ]
+    },
+    "Heatmap": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "sequential",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "LineChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "forecast",
+        "anomaly",
+        "gap-handling",
+        "direct-labels",
+        "endpoint-labels"
+      ]
+    },
+    "MinimapChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "brush",
+        "overview-detail",
+        "composite-delegates-interaction",
+        "hoc-ssr-only"
+      ]
+    },
+    "MultiAxisLineChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "dual-axis",
+        "hoc-ssr-only"
+      ]
+    },
+    "QuadrantChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "quadrants",
+        "hoc-ssr-only"
+      ]
+    },
+    "Scatterplot": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "regression-overlay"
+      ]
+    },
+    "ScatterplotMatrix": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "matrix",
+        "brush",
+        "composite-delegates-interaction",
+        "hoc-ssr-only"
+      ]
+    },
+    "StackedAreaChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "stack",
+        "streamgraph"
+      ]
+    },
+    "BarChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "regression-overlay"
+      ]
+    },
+    "BoxPlot": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "statistical"
+      ]
+    },
+    "DonutChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "DotPlot": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "regression-overlay"
+      ]
+    },
+    "FunnelChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "GaugeChart": {
+      "category": "ordinal",
+      "supportsLegend": false,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "threshold",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "threshold-zones",
+        "value-only",
+        "controlled-prop-streaming"
+      ]
+    },
+    "GroupedBarChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "Histogram": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "LikertChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "PieChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "RidgelinePlot": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "StackedBarChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "stack"
+      ]
+    },
+    "SwarmPlot": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "SwimlaneChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "brush"
+      ]
+    },
+    "ViolinPlot": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "statistical"
+      ]
+    },
+    "ChordDiagram": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "CirclePack": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "hierarchy"
+      ]
+    },
+    "ForceDirectedGraph": {
+      "category": "network",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "force-simulation"
+      ]
+    },
+    "OrbitDiagram": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "hierarchy",
+        "animated",
+        "hoc-ssr-only"
+      ]
+    },
+    "ProcessSankey": {
+      "category": "network",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "custom",
+      "specialFeatures": [
+        "temporal",
+        "particles",
+        "lane-reuse"
+      ]
+    },
+    "SankeyDiagram": {
+      "category": "network",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "TreeDiagram": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "hierarchy"
+      ]
+    },
+    "Treemap": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "hierarchy"
+      ]
+    },
+    "ChoroplethMap": {
+      "category": "geo",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "sequential",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "controlled-prop-streaming"
+      ]
+    },
+    "DistanceCartogram": {
+      "category": "geo",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "distortion",
+        "hoc-ssr-only"
+      ]
+    },
+    "FlowMap": {
+      "category": "geo",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "particles"
+      ]
+    },
+    "ProportionalSymbolMap": {
+      "category": "geo",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "sequential",
+      "layoutMode": "plugin",
+      "specialFeatures": []
+    },
+    "RealtimeHeatmap": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "sequential",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "live-stream"
+      ]
+    },
+    "RealtimeHistogram": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "live-stream",
+        "brush"
+      ]
+    },
+    "RealtimeLineChart": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "live-stream"
+      ]
+    },
+    "RealtimeSwarmChart": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "live-stream"
+      ]
+    },
+    "RealtimeWaterfallChart": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "live-stream"
+      ]
+    }
+  }
+}

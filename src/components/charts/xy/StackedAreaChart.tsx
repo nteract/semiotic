@@ -7,19 +7,16 @@ import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 
 /**
  * StackedAreaChart component props
@@ -322,41 +319,6 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
-  // ── Core chart logic ───────────────────────────────────────────────────
-
-  // Check if data is in area objects format (has lineDataAccessor field)
-  const isAreaObjectFormat = safeData[0]?.[lineDataAccessor] !== undefined
-
-  // Transform data to line/area format if needed
-  const areaData = useMemo(() => {
-    if (isAreaObjectFormat) {
-      // Data is already in area objects format
-      return safeData
-    }
-
-    if (areaBy) {
-      // Group data by areaBy field
-      const grouped = safeData.reduce((acc, d) => {
-        const key = typeof areaBy === "function" ? areaBy(d) : d[areaBy]
-        if (!acc[key]) {
-          const areaObj: Datum = { [lineDataAccessor]: [] }
-          // Add the grouping field
-          if (typeof areaBy === "string") {
-            areaObj[areaBy] = key
-          }
-          acc[key] = areaObj
-        }
-        acc[key][lineDataAccessor].push(d)
-        return acc
-      }, {} as Record<string, Datum>)
-
-      return Object.values(grouped)
-    }
-
-    // Single area - wrap in area object
-    return [{ [lineDataAccessor]: safeData }]
-  }, [safeData, areaBy, lineDataAccessor, isAreaObjectFormat])
-
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
     data: safeData,
@@ -383,66 +345,22 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     height,
   })
 
-  // Area/line style function
-  const baseLineStyle = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {}
-
-      // Apply color — skip when colorScale unavailable (push API)
-      // so the frame's own color resolution can fill in
-      if (actualColorBy && setup.colorScale) {
-        const color = getColor(d, actualColorBy, setup.colorScale)
-        baseStyle.fill = color
-        if (showLine) {
-          baseStyle.stroke = color
-          baseStyle.strokeWidth = lineWidth
-        } else {
-          baseStyle.stroke = "none"
-        }
-      } else if (!actualColorBy) {
-        const uniformColor = color || DEFAULT_COLOR
-        baseStyle.fill = uniformColor
-        baseStyle.stroke = showLine ? uniformColor : "none"
-        if (showLine) baseStyle.strokeWidth = lineWidth
-      }
-      baseStyle.fillOpacity = areaOpacity
-
-      return baseStyle
-    }
-  }, [actualColorBy, setup.colorScale, areaOpacity, showLine, lineWidth, color])
-
-  const baseLineStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
-    [baseLineStyle, stroke, strokeWidth, opacity]
-  )
-
-  const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
-
-  // Point style function (if showPoints is true)
-  const pointStyle = useMemo(() => {
-    if (!showPoints) return undefined
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
-      if (actualColorBy) {
-        if (setup.colorScale) baseStyle.fill = getColor(d.parentLine || d, actualColorBy, setup.colorScale)
-      } else {
-        baseStyle.fill = color || DEFAULT_COLOR
-      }
-      return baseStyle
-    }
-  }, [showPoints, pointRadius, actualColorBy, setup.colorScale, color])
-
-  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
-  // cascade from the HOC so the tooltip values read the same way as the axis.
-  const groupField = areaBy || colorBy
-  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
-    ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
+  // ── Area-series construction (data shaping, line/point style, tooltip) ─
+  // `actualColorBy` (= `colorBy ?? areaBy`) feeds the helper's color
+  // resolution since stacked areas without explicit colorBy still want
+  // distinct per-series colors. `groupField` keeps the prior tooltip
+  // label preference (`areaBy ?? colorBy`).
+  const { flattenedData, lineStyle, pointStyle, defaultTooltipContent } = useAreaSeriesSetup({
+    safeData, data,
+    areaBy, lineDataAccessor,
+    colorBy: actualColorBy, colorScale: setup.colorScale,
+    color, stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    areaOpacity, showLine, lineWidth, showPoints, pointRadius,
+    xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat,
+    groupField: areaBy || colorBy,
+  })
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({
@@ -453,20 +371,6 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
       yAccessor,
     },
   })
-
-  // Flatten area data into a single array for StreamXYFrame
-  const flattenedData = useMemo(() => {
-    if (isAreaObjectFormat || areaBy) {
-      return areaData.flatMap((area: Datum) => {
-        const coords = area[lineDataAccessor] || []
-        if (areaBy && typeof areaBy === "string") {
-          return coords.map((c: Datum) => ({ ...c, [areaBy]: area[areaBy] }))
-        }
-        return coords
-      })
-    }
-    return safeData
-  }, [areaData, lineDataAccessor, isAreaObjectFormat, areaBy, safeData])
 
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {

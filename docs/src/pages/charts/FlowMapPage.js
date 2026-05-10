@@ -105,7 +105,7 @@ const loadingStyle = {
 // Streaming demo — push flows incrementally
 // ---------------------------------------------------------------------------
 
-const streamingFlowCode = `import { useState, useEffect } from "react"
+const streamingFlowCode = `import { useRef, useEffect, useState } from "react"
 import { FlowMap, resolveReferenceGeography } from "semiotic/geo"
 
 const airports = [
@@ -121,9 +121,12 @@ const flights = [
   // ...more routes
 ]
 
+// Push API: omit \`flows\`, drive the chart through \`ref.current.push()\`.
+// FlowMap resolves source/target → coordinates HOC-side via the
+// \`nodes\` lookup, then forwards a coordinate-resolved line to the frame.
 function StreamingFlowMap() {
+  const ref = useRef(null)
   const [areas, setAreas] = useState(null)
-  const [flows, setFlows] = useState([])
 
   useEffect(() => {
     resolveReferenceGeography("world-110m").then(setAreas)
@@ -134,7 +137,7 @@ function StreamingFlowMap() {
     let i = 0
     const id = setInterval(() => {
       if (i < flights.length) {
-        setFlows(prev => [...prev, flights[i]])
+        ref.current?.push(flights[i])
         i++
       } else clearInterval(id)
     }, 500)
@@ -145,8 +148,8 @@ function StreamingFlowMap() {
 
   return (
     <FlowMap
+      ref={ref}
       nodes={airports}
-      flows={flows}
       areas={areas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
       valueAccessor="passengers"
@@ -161,8 +164,8 @@ function StreamingFlowMap() {
 }`
 
 function StreamingFlowDemo({ width }) {
+  const ref = React.useRef(null)
   const [areas, setAreas] = useState(null)
-  const [flows, setFlows] = useState([])
 
   useEffect(() => {
     resolveReferenceGeography("world-110m").then(setAreas)
@@ -173,8 +176,7 @@ function StreamingFlowDemo({ width }) {
     let i = 0
     const id = setInterval(() => {
       if (i < internationalFlights.length) {
-        const flow = internationalFlights[i]
-        setFlows(prev => [...prev, flow])
+        ref.current?.push(internationalFlights[i])
         i++
       } else {
         clearInterval(id)
@@ -189,8 +191,8 @@ function StreamingFlowDemo({ width }) {
 
   return (
     <FlowMap
+      ref={ref}
       nodes={airports}
-      flows={flows}
       areas={areas}
       areaStyle={{ fill: "#f0f0f0", stroke: "#ccc", strokeWidth: 0.5 }}
       valueAccessor="passengers"

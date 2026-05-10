@@ -474,6 +474,32 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.isError).toBe(true)
   })
 
+  it("suggestChart filters recommendations by capability constraint", async () => {
+    // Numeric x/y → ranks Scatterplot first by default. Demanding
+    // SSR support drops nothing (Scatterplot supports SSR). Demanding
+    // a constraint no XY chart satisfies should drop them all and
+    // surface the filteredOut list.
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestChart",
+      arguments: {
+        data: [
+          { x: 1, y: 10 },
+          { x: 2, y: 20 },
+          { x: 3, y: 15 },
+        ],
+        capabilities: { push: true, ssr: true },
+      },
+    }, "suggest-cap-1")
+
+    expect(result.result.isError).toBeFalsy()
+    const sc = result.result.structuredContent
+    expect(sc.ok).toBe(true)
+    // Scatterplot satisfies push + ssr — should be in the filtered set.
+    expect(sc.suggestions.some((s: any) => s.component === "Scatterplot")).toBe(true)
+    expect(sc.capabilities).toEqual({ push: true, ssr: true })
+  })
+
+
   it("renderChart produces SVG output", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "renderChart",

@@ -133,6 +133,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       sizeRange: { type: "array" },
       pointRadius: { type: "number" },
       pointOpacity: { type: "number" },
+      regression: { type: ["boolean", "string", "object"] },
     },
   },
 
@@ -151,6 +152,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       bubbleOpacity: { type: "number" },
       bubbleStrokeWidth: { type: "number" },
       bubbleStrokeColor: { type: "string" },
+      regression: { type: ["boolean", "string", "object"] },
     },
   },
 
@@ -250,6 +252,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       pointRadius: { type: "number" },
       pointIdAccessor: { type: ["string", "function"] },
       annotations: { type: "array" },
+      regression: { type: ["boolean", "string", "object"] },
     },
   },
 
@@ -268,6 +271,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
       roundedTop: { type: "number" },
+      regression: { type: ["boolean", "string", "object"] },
     },
   },
 
@@ -435,6 +439,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       sort: { type: ["boolean", "string", "function"] },
       dotRadius: { type: "number" },
       categoryPadding: { type: "number" },
+      regression: { type: ["boolean", "string", "object"] },
     },
   },
 
@@ -976,6 +981,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       flows: { type: "array" },
       nodes: { type: "array" },
       valueAccessor: { type: ["string", "function"] },
+      lineIdAccessor: { type: ["string", "function"] },
     },
   },
   DistanceCartogram: {

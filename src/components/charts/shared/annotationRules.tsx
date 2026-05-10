@@ -340,19 +340,120 @@ export function createDefaultAnnotationRules(
       }
 
       // ── Trend (regression line) ───────────────────────────────────────
+      //
+      // Supports both XY (continuous-axis) and ordinal frames. For
+      // ordinal frames the categorical axis is treated as a numeric
+      // category-index for regression input; pixel positions are
+      // resolved through the band scale via category-name lookup
+      // (with linear interpolation between band centers for
+      // fractional LOESS indices).
       case "trend": {
         const data = context.data || []
         if (data.length < 2) return null
         const xAcc = context.xAccessor || "x"
         const yAcc = context.yAccessor || "y"
-        const points: [number, number][] = data
-          .map((d) => [d[xAcc], d[yAcc]] as [number, number])
-          .filter((p) => p[0] != null && p[1] != null)
+
+        const isOrdinal = context.frameType === "ordinal"
+        const isHoriz = context.projection === "horizontal"
+
+        // Resolve which axis carries the categorical value for
+        // ordinal frames. Vertical projection: categories on x
+        // (using the o-centered scale.x); horizontal: categories on
+        // y (using scale.y). For XY the categorical concept doesn't
+        // apply — both axes are continuous.
+        const categoricalAccessor = isOrdinal ? (isHoriz ? yAcc : xAcc) : null
+        const valueAccessor = isOrdinal ? (isHoriz ? xAcc : yAcc) : null
+
+        // Build regression input + record category order so we can
+        // map regression x-output back to the band scale at render
+        // time.
+        let points: [number, number][]
+        const categoryNames: string[] = []
+        const indexByCategory = new Map<string, number>()
+
+        if (isOrdinal && categoricalAccessor && valueAccessor) {
+          // Walk data to assign each unique category an index in
+          // first-seen order. Regression uses the index as a stand-in
+          // for the discrete band position.
+          for (const d of data) {
+            const cat = d[categoricalAccessor]
+            if (cat == null) continue
+            const key = String(cat)
+            if (!indexByCategory.has(key)) {
+              indexByCategory.set(key, categoryNames.length)
+              categoryNames.push(key)
+            }
+          }
+          points = data
+            .map((d) => {
+              const cat = d[categoricalAccessor]
+              const v = d[valueAccessor]
+              if (cat == null || v == null) return null
+              const idx = indexByCategory.get(String(cat))
+              return idx != null ? ([idx, +v] as [number, number]) : null
+            })
+            .filter((p): p is [number, number] => p !== null)
+        } else {
+          // XY path — direct accessor read.
+          points = data
+            .map((d) => [d[xAcc], d[yAcc]] as [number, number])
+            .filter((p) => p[0] != null && p[1] != null)
+        }
         if (points.length < 2) return null
 
+        // Resolve the pair of axis scales we'll project trend points
+        // through. For XY both are linear and read directly. For
+        // ordinal, the categorical scale takes a category-name
+        // string → pixel; we wrap it in an interpolator that accepts
+        // fractional indices (for LOESS, which produces one trend
+        // point per input index).
         const scaleX = context.scales?.x ?? context.scales?.time
         const scaleY = context.scales?.y ?? context.scales?.value
         if (!scaleX || !scaleY) return null
+
+        const interpolateBandScale = (bandScale: (k: string) => number) => (idx: number) => {
+          const i0 = Math.max(0, Math.floor(idx))
+          const i1 = Math.min(categoryNames.length - 1, i0 + 1)
+          const t = idx - i0
+          const p0 = bandScale(categoryNames[i0])
+          const p1 = bandScale(categoryNames[i1])
+          return p0 + (p1 - p0) * t
+        }
+
+        // Build (xPixel, yPixel) projector for regression output.
+        // The cast through `unknown` is intentional: ordinal frames
+        // place a `(category-name) => pixel` function in `scales.x`
+        // (or `scales.y` when projection="horizontal"), but the
+        // shared type narrows to `ScaleLinear<number, number>`. At
+        // this branch we know the runtime shape from
+        // `frameType === "ordinal"` + projection.
+        //
+        // For ordinal regression, points are always
+        // `[categoryIndex, value]` regardless of projection. The
+        // projection-aware mapping back to pixels is
+        // - vertical: xPixel from band-scale on x, yPixel from
+        //   linear value scale on y
+        // - horizontal: xPixel from linear value scale on x (using
+        //   `value`), yPixel from band-scale on y (using
+        //   `categoryIndex`).
+        const sxAny = scaleX as unknown as (k: any) => number
+        const syAny = scaleY as unknown as (k: any) => number
+        let project: (regressionX: number, regressionY: number) => [number, number]
+        if (isOrdinal) {
+          if (isHoriz) {
+            // regressionX = categoryIndex → through band-scale (y axis)
+            // regressionY = value → through linear scale (x axis)
+            const yProject = interpolateBandScale(syAny)
+            project = (catIdx, value) => [sxAny(value), yProject(catIdx)]
+          } else {
+            // regressionX = categoryIndex → through band-scale (x axis)
+            // regressionY = value → through linear scale (y axis)
+            const xProject = interpolateBandScale(sxAny)
+            project = (catIdx, value) => [xProject(catIdx), syAny(value)]
+          }
+        } else {
+          project = (x, y) => [sxAny(x), syAny(y)]
+        }
 
         const method = ann.method || "linear"
         let trendPoints: [number, number][]
@@ -370,9 +471,14 @@ export function createDefaultAnnotationRules(
         }
 
         const linePoints = trendPoints
-          .map(([x, y]) => `${scaleX(x)},${scaleY(y)}`)
+          .map(([x, y]) => {
+            const [px, py] = project(x, y)
+            return `${px},${py}`
+          })
           .join(" ")
         const color = ann.color || "#6366f1"
+        const last = trendPoints[trendPoints.length - 1]
+        const [labelPx, labelPy] = project(last[0], last[1])
         return (
           <g key={`ann-${index}`}>
             <polyline
@@ -384,8 +490,8 @@ export function createDefaultAnnotationRules(
             />
             {ann.label && (
               <text
-                x={scaleX(trendPoints[trendPoints.length - 1][0]) + 4}
-                y={scaleY(trendPoints[trendPoints.length - 1][1]) - 4}
+                x={labelPx + 4}
+                y={labelPy - 4}
                 fill={color}
                 fontSize={11}
               >

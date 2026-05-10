@@ -6,8 +6,7 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -15,8 +14,7 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -162,36 +160,22 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  // Merge frameProps.pieceStyle (stroke/strokeWidth for themed borders) with
-  // the HOC's color-resolved fill. The HOC keeps control of fill; users can add borders.
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      const base: Datum = effectiveColorBy
-        ? (setup.colorScale ? { fill: getColor(d, effectiveColorBy, setup.colorScale) } : {})
-        : { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
-
-  // Overlay top-level primitive props (stroke/strokeWidth/opacity) last so they
-  // win over basePieceStyle + user frameProps.pieceStyle merge.
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style — same recipe as BarChart/StackedBarChart
+  // (base fill, user overlay, primitive props, selection wrap).
+  // GroupedBarChart previously had a stroke-only filter on
+  // frameProps.pieceStyle (it ignored user-supplied fills); aligning
+  // with the helper means users can override fill via
+  // `frameProps.pieceStyle: () => ({ fill: ... })` — consistent with
+  // BarChart and the rest of the bar family.
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy: effectiveColorBy,
+    colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({

@@ -6,8 +6,7 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -15,11 +14,10 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 
 /**
  * PieChart component props
@@ -195,31 +193,24 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      if (effectiveColorBy) {
-        if (setup.colorScale) return { fill: getColor(d, effectiveColorBy, setup.colorScale) }
-        return {} // Let frame use its own color scheme (push API)
-      }
-      return { fill: resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap) }
-    }
-  }, [effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
-
-  const mergedPieceStyle = useMemo(() => {
-    const userPieceStyle = frameProps?.pieceStyle
-    const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
-      ? basePieceStyle
-      : (d: Datum, category?: string) => ({
-        ...basePieceStyle(d, category),
-        ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
-      })
-    return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
-  }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // PieChart's `effectiveColorBy` may differ from the raw `colorBy`
+  // prop (e.g. when it derives from `categoryAccessor` for the
+  // standard one-color-per-slice case). The shared piece-style
+  // helper handles the push-mode colorScale-undefined branch
+  // identically to the previous hand-rolled basePieceStyle.
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy: effectiveColorBy,
+    colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    // Each slice gets its own scheme color when colorBy is unset —
+    // PieChart's "categoryAccessor implicitly differentiates slices"
+    // semantics.
+    cycleByCategory: true,
+  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({

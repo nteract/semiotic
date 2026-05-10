@@ -13,12 +13,13 @@ import type { LegendInteractionMode } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { DEFAULT_SELECTION_OPACITY, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 import { interpolateViridis } from "../shared/colorPalettes"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
  * ConnectedScatterplot component props
@@ -52,6 +53,12 @@ export interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends
   legendInteraction?: LegendInteractionMode
   /** Annotation objects to render on the chart */
   annotations?: Datum[]
+  /**
+   * Overlay a regression line under the connected path. Accepts
+   * `true`, a method name (`"linear"` | `"polynomial"` | `"loess"`),
+   * or a full `RegressionConfig`. Sugar over the `trend` annotation.
+   */
+  regression?: RegressionProp
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
   /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -137,6 +144,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     tooltip,
     pointIdAccessor,
     annotations,
+    regression,
     xExtent,
     yExtent,
     frameProps = {},
@@ -319,32 +327,30 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   // ── Point style — viridis colored, fixed radius ───────────────────────
   //
-  // Reads ordering from the WeakMap (no user data mutation).
-
-  const basePointStyle = useMemo(() => {
-    return (d: Datum) => {
-      const order = orderMap.get(d)
-      const i = order?.idx ?? 0
-      const n = order?.total ?? 1
-      return {
-        fill: n > 0 ? viridisColor(i, n) : "#6366f1",
-        stroke: "white",
-        strokeWidth: 1,
-        r: pointRadius,
-        fillOpacity: 1,
-      }
+  // Reads ordering from the WeakMap (no user data mutation). The
+  // viridis-by-order fill is supplied via `baseStyleExtras`, which
+  // bypasses `useXYPointStyle`'s standard color resolution (same
+  // bypass `useOrdinalPieceStyle` uses for LikertChart).
+  const pointStyleExtras = useMemo(() => (d: Datum) => {
+    const order = orderMap.get(d)
+    const i = order?.idx ?? 0
+    const n = order?.total ?? 1
+    return {
+      fill: n > 0 ? viridisColor(i, n) : "#6366f1",
+      stroke: "white",
+      strokeWidth: 1,
+      r: pointRadius,
+      fillOpacity: 1,
     }
   }, [pointRadius, orderMap])
 
-  const basePointStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
-    [basePointStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  const pointStyle = useXYPointStyle({
+    colorScale: undefined,
+    baseStyleExtras: pointStyleExtras,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // ── Tooltip ───────────────────────────────────────────────────────────
 
@@ -363,6 +369,12 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     data,
     accessors: { xAccessor, yAccessor },
   })
+
+  // Splice the `regression` sugar into annotations as a `trend` annotation.
+  const trendAnn = buildRegressionAnnotation(regression)
+  const resolvedAnnotations = trendAnn
+    ? [trendAnn, ...(annotations || [])]
+    : annotations
 
   // ── Render ────────────────────────────────────────────────────────────
 
@@ -393,7 +405,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...(pointIdAccessor && { pointIdAccessor }),
     canvasPreRenderers,
     svgPreRenderers,
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,

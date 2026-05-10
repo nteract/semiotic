@@ -149,6 +149,8 @@
     "check:surface": "node scripts/check-surface-parity.js",
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
+    "check:capabilities": "node scripts/check-capabilities.mjs",
+    "docs:capabilities": "node scripts/generate-capabilities-md.mjs && node scripts/generate-capabilities-json.mjs",
     "check:chart-specs": "npx tsx scripts/check-chart-specs.ts",
     "docs:chart-specs:schema": "npx tsx scripts/regenerate-schema.ts",
     "check:test-quality": "node scripts/check-test-quality-gate.mjs",
