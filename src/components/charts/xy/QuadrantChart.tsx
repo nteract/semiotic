@@ -311,10 +311,18 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     return quadrants.bottomLeft.color
   }, [getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
+  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
+  // internal memo — passing an inline literal would re-allocate the
+  // returned `pointStyle` on every render.
+  const sizedRadiusFn = useMemo(
+    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    [sizeBy, sizeRange, sizeDomain],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     pointRadius, fillOpacity: pointOpacity,
-    radiusFn: sizeBy ? (d) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    radiusFn: sizedRadiusFn,
     fallbackFill: quadrantFallbackFill,
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,

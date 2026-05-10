@@ -44,11 +44,23 @@ lines.push("- **Color**: `categorical`, `sequential`, `threshold`, `continuous`,
 lines.push("- **Layout**: `plugin` (built-in), `custom` (escape hatch), `synthetic` (no layout).")
 lines.push("")
 
+// Display labels for category headings. Plain capitalization
+// (`xy → Xy`) is wrong for the family acronyms — keep the surface
+// consistent with how the docs and CLAUDE.md refer to them.
+const CATEGORY_DISPLAY_LABEL = {
+  xy: "XY",
+  ordinal: "Ordinal",
+  network: "Network",
+  geo: "Geo",
+  realtime: "Realtime",
+}
+
 let lastCategory = null
 for (const e of entries) {
   if (e.category !== lastCategory) {
     if (lastCategory !== null) lines.push("")
-    lines.push(`## ${e.category[0].toUpperCase()}${e.category.slice(1)}`)
+    const label = CATEGORY_DISPLAY_LABEL[e.category] ?? e.category
+    lines.push(`## ${label}`)
     lines.push("")
     lines.push("| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |")
     lines.push("|---|:-:|:-:|:-:|:-:|:-:|---|---|---|")

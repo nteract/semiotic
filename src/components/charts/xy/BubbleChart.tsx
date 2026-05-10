@@ -398,11 +398,25 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   // Bubble's chart-shape defaults (default stroke + width) ride
   // through `baseStyleExtras`. sizeBy is mandatory on BubbleChart, so
   // `radiusFn` is always set.
+  //
+  // `baseStyleExtras` and `radiusFn` are useMemo-stabilized because
+  // both are deps of `useXYPointStyle`'s internal memo — passing
+  // inline literals would re-allocate the helper's `pointStyle` fn
+  // on every render even when nothing changed.
+  const bubbleBaseExtras = useMemo(
+    () => ({ stroke: bubbleStrokeColor, strokeWidth: bubbleStrokeWidth }),
+    [bubbleStrokeColor, bubbleStrokeWidth],
+  )
+  const bubbleRadiusFn = useCallback(
+    (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain),
+    [sizeBy, sizeRange, sizeDomain],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     fillOpacity: bubbleOpacity,
-    radiusFn: (d) => getSize(d, sizeBy, sizeRange, sizeDomain),
-    baseStyleExtras: { stroke: bubbleStrokeColor, strokeWidth: bubbleStrokeWidth },
+    radiusFn: bubbleRadiusFn,
+    baseStyleExtras: bubbleBaseExtras,
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,

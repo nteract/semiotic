@@ -16,7 +16,7 @@ Last regen: 2026-05-10 · 44 charts indexed.
 - **Color**: `categorical`, `sequential`, `threshold`, `continuous`, or `none`.
 - **Layout**: `plugin` (built-in), `custom` (escape hatch), `synthetic` (no layout).
 
-## Xy
+## XY
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|

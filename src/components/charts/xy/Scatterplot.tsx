@@ -273,10 +273,18 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
   }, [safeData, sizeBy])
 
+  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
+  // internal memo — passing an inline literal would re-allocate the
+  // returned `pointStyle` on every render.
+  const sizedRadiusFn = useMemo(
+    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    [sizeBy, sizeRange, sizeDomain],
+  )
+
   const pointStyle = useXYPointStyle({
     colorBy, colorScale: setup.colorScale, color,
     pointRadius, fillOpacity: pointOpacity,
-    radiusFn: sizeBy ? (d) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    radiusFn: sizedRadiusFn,
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
