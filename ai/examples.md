@@ -661,6 +661,38 @@ const edges = [
 
 Key props: **`edges`** (required, nodes inferred), `valueAccessor` controls band width
 
+### ProcessSankey
+
+```jsx
+import { ProcessSankey } from "semiotic/ai"
+
+const nodes = [
+  { id: "Alice", category: "Person", xExtent: ["2026-01-06", "2026-01-06"] },
+  { id: "Bob",   category: "Person", xExtent: ["2026-02-01", "2026-02-01"] },
+  { id: "Eng",     category: "Team" },
+  { id: "Release", category: "Milestone", xExtent: ["2026-04-15", "2026-05-30"] },
+]
+
+const edges = [
+  { id: "alice-eng", source: "Alice", target: "Eng", value: 8,
+    startTime: "2026-01-20", endTime: "2026-02-10" },
+  { id: "bob-eng",   source: "Bob",   target: "Eng", value: 5,
+    startTime: "2026-02-15", endTime: "2026-03-15" },
+  { id: "eng-rel",   source: "Eng",   target: "Release", value: 13,
+    startTime: "2026-04-15", endTime: "2026-05-15" },
+]
+
+<ProcessSankey
+  nodes={nodes}
+  edges={edges}
+  domain={["2026-01-01", "2026-05-31"]}
+  colorBy="category"
+  showLegend
+/>
+```
+
+Key props: **`edges`** with `startTime`/`endTime`, **`domain`** (required `[t0, t1]`); nodes optionally carry `xExtent: [start, end]` to bound the lane (`min(xExtent[0], earliestEdge)` to `max(xExtent[1], latestEdge)`). Use when flow events have timestamps; use SankeyDiagram for static total-flow snapshots.
+
 ### ChordDiagram
 
 ```jsx

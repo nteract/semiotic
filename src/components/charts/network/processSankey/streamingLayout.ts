@@ -102,6 +102,10 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     })
   }
 
+  // Labels omit `fill` so the network overlay falls through to its
+  // theme-resolved text color (`var(--semiotic-text)` via
+  // `currentColor`). Hardcoding `#1e293b` here would force dark labels
+  // on dark themes and break high-contrast mode.
   const labels: NetworkLabel[] = showLabels
     ? bands.map((b) => ({
         x: b.labelX,
@@ -111,7 +115,6 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
         baseline: "middle",
         fontSize: 11,
         fontWeight: 600,
-        fill: "#1e293b",
       }))
     : []
 

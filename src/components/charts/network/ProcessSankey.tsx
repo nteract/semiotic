@@ -728,7 +728,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
           )}
           {truncated != null && (
             <div style={{ marginTop: 4, fontSize: 10, opacity: 0.55 }}>
-              showing 5 of {truncated} samples
+              {/* `display.length` reflects the actual rows after
+                  same-time dedup — `pickMassQuantiles` returns 5 picks
+                  but collapses ties, so a flat-mass series can yield
+                  fewer. Use the real count so the footer never lies. */}
+              showing {display.length} of {truncated} samples
             </div>
           )}
         </div>

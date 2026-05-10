@@ -14,6 +14,7 @@ import { interpolateViridis } from "../charts/shared/colorPalettes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm.js"
+import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -544,8 +545,20 @@ const processSankey: ChartConfig = {
     const accVal = (acc: unknown, d: Datum): unknown =>
       typeof acc === "function" ? (acc as (d: Datum) => unknown)(d) : d[acc as string]
 
-    const rawNodes: Datum[] = Array.isArray(rest.nodes) ? rest.nodes : []
     const rawEdges: Datum[] = Array.isArray(rest.edges) ? rest.edges : []
+    // Match the HOC: when `nodes` is omitted, infer them from the
+    // edge endpoints. Otherwise every edge would emit a "missing-node"
+    // validation issue and `renderChart("ProcessSankey", { edges })`
+    // would refuse to draw.
+    const explicitNodes: Datum[] = Array.isArray(rest.nodes) ? rest.nodes : []
+    const rawNodes: Datum[] = explicitNodes.length > 0
+      ? explicitNodes
+      : (inferNodesFromEdges(
+          [],
+          rawEdges,
+          sourceAccessor as string | ((d: Datum) => string),
+          targetAccessor as string | ((d: Datum) => string),
+        ) as Datum[])
     const domain: [number, number] = [
       toTime((rest.domain as [unknown, unknown])?.[0]),
       toTime((rest.domain as [unknown, unknown])?.[1]),
@@ -575,8 +588,24 @@ const processSankey: ChartConfig = {
       }
     })
 
-    const [width, height] = (common.size as [number, number]) ?? [760, 520]
-    const margin = (common.margin as { top: number; right: number; bottom: number; left: number }) ?? { top: 30, right: 80, bottom: 40, left: 80 }
+    // Resolve the same dimensions `renderNetworkFrame` will use so the
+    // bands/ribbons paint to the exact inner plot the SVG <g> reserves.
+    // That helper applies its own legend-reservation on top of the
+    // margin, so we mirror it here and thread the resolved margin
+    // back through frame props (otherwise dimensions diverge and the
+    // chart visibly clips against the legend).
+    const [width, height] = (common.size as [number, number]) ?? [600, 400]
+    const userMargin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | undefined
+    const baseMargin = { top: 20, right: 20, bottom: 20, left: 20, ...userMargin }
+    const showLegend = Boolean(common.showLegend)
+    const legendPos = (common.legendPosition as string | undefined) ?? "right"
+    if (showLegend) {
+      if (legendPos === "right") baseMargin.right = Math.max(baseMargin.right, 100)
+      else if (legendPos === "left") baseMargin.left = Math.max(baseMargin.left, 100)
+      else if (legendPos === "bottom") baseMargin.bottom = Math.max(baseMargin.bottom, 70)
+      else if (legendPos === "top") baseMargin.top = Math.max(baseMargin.top, 40)
+    }
+    const margin = baseMargin
     const plotW = width - margin.left - margin.right
     const plotH = height - margin.top - margin.bottom
 
@@ -645,16 +674,35 @@ const processSankey: ChartConfig = {
 
     return {
       chartType: "force",
-      // Minimal frame nodes/edges so the SSR `buildScene` gate fires
-      // (`if (rawNodes.length > 0 || rawEdges.length > 0)`).
-      // ProcessSankey doesn't use the frame's force layout — bands
-      // and ribbons come from `layoutConfig` — but ingestion has to
-      // run for the customNetworkLayout to dispatch.
-      nodes: ns.map((n) => ({ id: n.id, data: n.__raw })),
-      edges: es.map((e) => ({ id: e.id, source: e.source, target: e.target, data: e.__raw })),
+      // Pass raw nodes/edges (not pre-wrapped { id, data }) — the
+      // frame's `buildRealtimeNodes/buildRealtimeEdges` already wraps
+      // them, so a `{ id, data: raw }` input would land as
+      // `RealtimeNode.data = { id, data: raw }`. The auto-legend
+      // pulls categories off `node.data[colorBy]`, so the double
+      // wrap surfaced as an empty/incorrect legend on SSR.
+      nodes: rawNodes,
+      edges: rawEdges,
       customNetworkLayout: emitProcessSankeyScenes,
       layoutConfig,
+      // Thread accessors + colorBy through so the SSR auto-legend can
+      // resolve categories. `colorBy` arrives as a positional buildProps
+      // arg (not via `common`), so without this passthrough the frame
+      // would fall back to nodeIDAccessor and produce per-node swatches
+      // instead of per-category. Match the shape SankeyDiagram returns.
+      sourceAccessor,
+      targetAccessor,
+      valueAccessor,
+      nodeIDAccessor: nodeIdAccessor,
+      colorBy,
+      colorScheme,
       ...common,
+      // Apply the resolved margin AFTER `...common` so the spread
+      // (which carries the user's original margin if any) doesn't
+      // overwrite our legend-aware adjustment. Bands/ribbons were
+      // computed against this exact `plotW`/`plotH`; without this the
+      // frame would overlay the data on a slightly different inner
+      // rect (visible as legend-clipping or band-shift).
+      margin,
     }
   },
 }
