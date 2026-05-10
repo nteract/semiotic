@@ -1,6 +1,5 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
-import { filterSparseArray } from "../shared/sparseArray"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
@@ -10,12 +9,13 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { createEdgeStyleFn } from "../shared/networkUtils"
+import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -141,56 +141,41 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
 
   const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
-  // Identity-preserving sparse-array filter for both edges and nodes
-  // before downstream iteration (`inferNodesFromEdges`, color extraction).
-  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
-  const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
-
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  // Drive empty-state off the filtered edge list so a sparse-only
-  // `[null, undefined]` triggers the empty UI instead of a blank chord.
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl
-    ? renderEmptyState(edges === undefined ? undefined : safeEdges, width, height, emptyContent)
-    : null
-
-  // Infer nodes from edges if not provided
-  const inferredNodes = useMemo(
-    () => inferNodesFromEdges(safeInputNodes, safeEdges, sourceAccessor, targetAccessor),
-    [safeInputNodes, safeEdges, sourceAccessor, targetAccessor]
-  )
-
-  const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of inferredNodes as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [inferredNodes, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
-  const themeCategorical = useThemeCategorical()
+  // Consolidated network setup. ChordDiagram doesn't have a top-level
+  // `showLegend` prop — its legend is the `legendInteraction`-driven
+  // hover/isolate behavior — so pass `showLegend: false` to suppress
+  // the hook's auto-legend (and thus the legend-aware margin
+  // reservation), matching the pre-migration manual margin.
+  const setup = useNetworkChartSetup({
+    nodes,
+    edges,
+    inferNodes: true,
+    nodeIdAccessor,
+    sourceAccessor,
+    targetAccessor,
+    colorBy,
+    colorScheme,
+    showLegend: false,
+    legendInteraction,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    chartType: "ChordDiagram",
+    chartId,
+    marginDefaults: resolved.marginDefaults,
+    userMargin,
+    width, height,
+    loading,
+    emptyContent,
+  })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
-
-  const effectivePalette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
 
   // When data is empty (push API, no edges at mount), the HOC's colorScale
   // is built from zero data points and returns "#999" for everything.
   // In that case, skip passing nodeStyle/edgeStyle so the chord layout
   // plugin's built-in nodeColorMap palette handles coloring per node index.
-  const hasColorData = inferredNodes.length > 0
+  const hasColorData = setup.safeNodes.length > 0
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
@@ -201,7 +186,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
         strokeWidth: 1
       }
       if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, setup.colorScale)
       } else {
         const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] || DEFAULT_COLORS)
         const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
@@ -210,7 +195,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       }
       return baseStyle
     }
-  }, [hasColorData, colorBy, colorScale, colorScheme])
+  }, [hasColorData, colorBy, setup.colorScale, colorScheme])
 
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) last.
   const nodeStyle = useMemo(
@@ -224,12 +209,12 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     return createEdgeStyleFn({
       edgeColorBy,
       colorBy,
-      colorScale,
-      nodeStyleFn: nodeStyle || ((_d: Datum) => ({ fill: resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap) })),
+      colorScale: setup.colorScale,
+      nodeStyleFn: nodeStyle || ((_d: Datum) => ({ fill: resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap) })),
       edgeOpacity,
       baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
     })
-  }, [hasColorData, edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity, themeCategorical, colorScheme, categoryIndexMap])
+  }, [hasColorData, edgeColorBy, colorBy, setup.colorScale, nodeStyle, edgeOpacity, setup.themeCategorical, colorScheme, categoryIndexMap])
 
   const edgeStyle = useMemo(
     () => baseEdgeStyle ? mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }) : undefined,
@@ -245,15 +230,6 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     return (d: Datum) => d.data?.[accessor] ?? d[accessor] ?? d.id
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
-  // Margin
-  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
-
-  const { customHoverBehavior, customClickBehavior } = useChartSelection({
-    selection, linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true, onObservation, onClick, chartType: "ChordDiagram", chartId,
-  })
-
   // Validate
   const error = validateNetworkData({
     componentName: "ChordDiagram",
@@ -263,20 +239,20 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   if (error) return <ChartError componentName="ChordDiagram" message={error} width={width} height={height} />
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.loadingEl) return setup.loadingEl
+  if (setup.emptyEl) return setup.emptyEl
 
   return (
     <SafeRender componentName="ChordDiagram" width={width} height={height}>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="chord"
-      {...(inferredNodes.length > 0 && { nodes: inferredNodes })}
-      {...(edges != null && { edges: safeEdges })}
+      {...(setup.safeNodes.length > 0 && { nodes: setup.safeNodes })}
+      {...(edges != null && { edges: setup.safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
-      margin={margin}
+      margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}
@@ -287,20 +263,20 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={effectivePalette}
+      colorScheme={setup.effectivePalette}
       edgeColorBy={edgeColorBy}
       edgeOpacity={edgeOpacity}
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
-      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
-        legendHoverBehavior: legendState.onLegendHover,
-        legendClickBehavior: legendState.onLegendClick,
-        legendHighlightedCategory: legendState.highlightedCategory,
-        legendIsolatedCategories: legendState.isolatedCategories,
+        legendHoverBehavior: setup.legendState.onLegendHover,
+        legendClickBehavior: setup.legendState.onLegendClick,
+        legendHighlightedCategory: setup.legendState.highlightedCategory,
+        legendIsolatedCategories: setup.legendState.isolatedCategories,
       })}
       className={className}
       title={title}

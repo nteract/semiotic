@@ -60,7 +60,16 @@ interface GeoPointsFrameLike {
   getData(): Datum[]
 }
 
-type FrameVariant = "xy" | "network" | "geo-points"
+/** Minimal shape the helper expects of a geo (line/flow) frame ref. */
+interface GeoLinesFrameLike {
+  pushLine(line: Datum): void
+  pushManyLines(lines: Datum[]): void
+  removeLine(id: string | string[]): Datum[]
+  getLines(): Datum[]
+  clear(): void
+}
+
+type FrameVariant = "xy" | "network" | "geo-points" | "geo-lines"
 
 interface Options {
   /**
@@ -177,24 +186,48 @@ function makeVariantDefaults(
         (r.current?.getTopology()?.nodes?.map((n) => n.data) as Datum[] | undefined) ?? [],
     }
   }
-  // variant === "geo-points"
-  // Same rationale as the network variant: pre-migration geo HOCs
-  // (`ProportionalSymbolMap`, `DistanceCartogram`) omitted `getScales`
-  // entirely, so the helper does too.
-  const r = frameRef as RefObject<GeoPointsFrameLike | null>
+  if (variant === "geo-points") {
+    // Same rationale as the network variant: pre-migration geo HOCs
+    // (`ProportionalSymbolMap`, `DistanceCartogram`) omitted `getScales`
+    // entirely, so the helper does too.
+    const r = frameRef as RefObject<GeoPointsFrameLike | null>
+    return {
+      push: (point) => r.current?.push(point),
+      pushMany: (points) => r.current?.pushMany(points),
+      remove: (id) => r.current?.removePoint(id) ?? [],
+      update: (id, updater) => {
+        // Geo frames don't expose a native in-place update — emulate via
+        // remove-then-push of the updater result. Mirrors the inline
+        // pattern in ProportionalSymbolMap.
+        const removed = r.current?.removePoint(id) ?? []
+        for (const old of removed) r.current?.push(updater(old))
+        return removed
+      },
+      clear: () => r.current?.clear(),
+      getData: () => r.current?.getData() ?? [],
+    }
+  }
+  // variant === "geo-lines"
+  // Mirrors `geo-points` but for line/flow records. FlowMap uses this
+  // variant with a `push` / `pushMany` override that resolves
+  // source/target through its `nodeLookup` before forwarding to
+  // `pushLine` / `pushManyLines`. Other line-shaped geo HOCs
+  // (potential future additions) can use the variant defaults
+  // directly when their push payload already carries resolved
+  // coordinates.
+  const r = frameRef as RefObject<GeoLinesFrameLike | null>
   return {
-    push: (point) => r.current?.push(point),
-    pushMany: (points) => r.current?.pushMany(points),
-    remove: (id) => r.current?.removePoint(id) ?? [],
+    push: (line) => r.current?.pushLine(line),
+    pushMany: (lines) => r.current?.pushManyLines(lines),
+    remove: (id) => r.current?.removeLine(id) ?? [],
     update: (id, updater) => {
-      // Geo frames don't expose a native in-place update — emulate via
-      // remove-then-push of the updater result. Mirrors the inline
-      // pattern in ProportionalSymbolMap.
-      const removed = r.current?.removePoint(id) ?? []
-      for (const old of removed) r.current?.push(updater(old))
+      // Same remove-then-push emulation pattern as geo-points — geo
+      // frames don't natively support in-place line updates.
+      const removed = r.current?.removeLine(id) ?? []
+      for (const old of removed) r.current?.pushLine(updater(old))
       return removed
     },
     clear: () => r.current?.clear(),
-    getData: () => r.current?.getData() ?? [],
+    getData: () => r.current?.getLines() ?? [],
   }
 }

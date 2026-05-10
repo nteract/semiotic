@@ -6,7 +6,7 @@ import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, SVGPreRendererFn, StreamScales, StreamLayout, SceneNode } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, getSize } from "../shared/colorUtils"
+import { getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -15,10 +15,9 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useXYPointStyle } from "../shared/useXYPointStyle"
 
 /**
  * Quadrant label and color configuration
@@ -296,42 +295,39 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     [yAccessor]
   )
 
-  const basePointStyle = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      if (colorBy) {
-        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
-        // else: let frame use its own color scheme (push API)
-      } else {
-        // Color by quadrant: determine which quadrant the point falls in
-        // based on xCenter/yCenter thresholds and use the quadrant's color
-        const xVal = getXValue(d)
-        const yVal = getYValue(d)
-        const isRight = xCenter != null ? xVal >= xCenter : undefined
-        const isTop = yCenter != null ? yVal >= yCenter : undefined
-        if (isTop === undefined || isRight === undefined) {
-          baseStyle.fill = color || DEFAULT_COLOR
-        } else if (isTop && isRight) baseStyle.fill = quadrants.topRight.color
-        else if (isTop && !isRight) baseStyle.fill = quadrants.topLeft.color
-        else if (!isTop && isRight) baseStyle.fill = quadrants.bottomRight.color
-        else baseStyle.fill = quadrants.bottomLeft.color
-      }
-      baseStyle.r = sizeBy
-        ? getSize(d, sizeBy, sizeRange, sizeDomain)
-        : pointRadius
-      return baseStyle
-    }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, getXValue, getYValue, xCenter, yCenter, quadrants, color])
+  // Per-quadrant fill — used as the helper's `fallbackFill` when
+  // `colorBy` is unset. When the centerlines aren't fully specified
+  // (xCenter / yCenter is null), each point falls back to the
+  // standard `color || DEFAULT_COLOR` resolution.
+  const quadrantFallbackFill = useMemo(() => (d: Datum) => {
+    const xVal = getXValue(d)
+    const yVal = getYValue(d)
+    const isRight = xCenter != null ? xVal >= xCenter : undefined
+    const isTop = yCenter != null ? yVal >= yCenter : undefined
+    if (isTop === undefined || isRight === undefined) return color || DEFAULT_COLOR
+    if (isTop && isRight) return quadrants.topRight.color
+    if (isTop && !isRight) return quadrants.topLeft.color
+    if (!isTop && isRight) return quadrants.bottomRight.color
+    return quadrants.bottomLeft.color
+  }, [getXValue, getYValue, xCenter, yCenter, quadrants, color])
 
-  const basePointStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
-    [basePointStyle, stroke, strokeWidth, opacity]
+  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
+  // internal memo — passing an inline literal would re-allocate the
+  // returned `pointStyle` on every render.
+  const sizedRadiusFn = useMemo(
+    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    [sizeBy, sizeRange, sizeDomain],
   )
 
-  const pointStyle = useMemo(
-    () => wrapStyleWithSelection(basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  const pointStyle = useXYPointStyle({
+    colorBy, colorScale: setup.colorScale, color,
+    pointRadius, fillOpacity: pointOpacity,
+    radiusFn: sizedRadiusFn,
+    fallbackFill: quadrantFallbackFill,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // Default tooltip
   // Auto-detect a title field: first string-valued field not used as an accessor

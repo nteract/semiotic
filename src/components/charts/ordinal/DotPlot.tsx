@@ -6,8 +6,7 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useSortedData, useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -15,11 +14,11 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -50,6 +49,14 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   legendPosition?: LegendPosition
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /**
+   * Overlay a regression line through the dots. Same shape as
+   * Scatterplot's regression prop — accepts boolean, method-string,
+   * or full `RegressionConfig`. Pixel positions resolve through the
+   * band scale, so the line passes through dot centers. Sugar over
+   * the `trend` annotation.
+   */
+  regression?: RegressionProp
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
@@ -113,7 +120,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
     colorBy, colorScheme, sort = "auto", dotRadius = 5,
-    categoryPadding = 10, tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
+    categoryPadding = 10, tooltip, annotations, regression, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, emptyContent,
     legendInteraction,
@@ -161,31 +168,20 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      const base: Record<string, string | number> = { r: dotRadius, fillOpacity: 0.8 }
-      base.fill = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [colorBy, setup.colorScale, dotRadius, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
-
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style. `r` and `fillOpacity` are mark-shape
+  // defaults flowed in via `baseStyleExtras` so they sit BEFORE the
+  // color resolution (and the user can override them via
+  // frameProps.pieceStyle / top-level primitive props).
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy,
+    colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    baseStyleExtras: { r: dotRadius, fillOpacity: 0.8 },
+  })
 
   const defaultTooltipContent = useMemo(
     () => buildOrdinalTooltip({ categoryAccessor, valueAccessor, valueFormat }),
@@ -197,6 +193,14 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="DotPlot" message={error} width={width} height={height} />
+
+  // Splice the `regression` sugar into annotations as a `trend`
+  // annotation. Trend goes first so user-supplied annotations paint
+  // above it.
+  const trendAnn = buildRegressionAnnotation(regression)
+  const resolvedAnnotations = trendAnn
+    ? [trendAnn, ...(annotations || [])]
+    : annotations
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "point",
@@ -227,7 +231,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.

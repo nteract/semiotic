@@ -168,6 +168,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       yAccessor,
       lineDataAccessor,
       pointIdAccessor,
+      lineIdAccessor,
 
       // Geo-specific
       lineType = "geo",
@@ -323,11 +324,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       transition,
       introAnimation: introEnabled,
       annotations,
-      pointIdAccessor
+      pointIdAccessor,
+      lineIdAccessor
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, currentTheme
+      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -468,6 +470,21 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       scheduleRender()
     }, [scheduleRender])
 
+    const pushLine = useCallback((line: Datum) => {
+      if (line == null || typeof line !== "object") return
+      storeRef.current?.pushLine(line)
+      dirtyRef.current = true
+      scheduleRender()
+    }, [scheduleRender])
+
+    const pushManyLines = useCallback((lines: Datum[]) => {
+      const safe = filterSparseArray(lines)
+      if (safe.length === 0) return
+      storeRef.current?.pushManyLines(safe)
+      dirtyRef.current = true
+      scheduleRender()
+    }, [scheduleRender])
+
     const clearAll = useCallback(() => {
       storeRef.current?.clear()
       dirtyRef.current = true
@@ -485,6 +502,17 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
         return removed
       },
+      pushLine,
+      pushManyLines,
+      removeLine: (id: string | string[]) => {
+        const removed = storeRef.current?.removeLine(id) ?? []
+        if (removed.length > 0) {
+          dirtyRef.current = true
+          scheduleRender()
+        }
+        return removed
+      },
+      getLines: () => storeRef.current?.getLines() ?? [],
       clear: clearAll,
       getProjection: () => storeRef.current?.scales?.projection ?? null,
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
@@ -501,7 +529,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
       },
       getData: () => storeRef.current?.getPoints() ?? []
-    }), [pushPoint, pushMany, clearAll, scheduleRender])
+    }), [pushPoint, pushMany, pushLine, pushManyLines, clearAll, scheduleRender])
 
     // ── Hover handler ─────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all

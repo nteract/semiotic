@@ -321,4 +321,70 @@ describe("Scatterplot", () => {
       expect(styleB.stroke).toBe("#strokeOverride")
     })
   })
+
+  // ── regression prop ────────────────────────────────────────────────────
+  // Sugar over the `trend` annotation. The HOC prepends a trend-typed
+  // annotation to the user's annotations array; user annotations
+  // remain visible above it.
+  describe("regression prop", () => {
+    it("does not inject a trend annotation when omitted", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.annotations).toBeUndefined()
+    })
+
+    it("`regression` injects a default linear trend annotation", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} regression />
+        </TooltipProvider>
+      )
+      const ann = lastXYFrameProps.annotations
+      expect(ann).toHaveLength(1)
+      expect(ann[0]).toEqual({ type: "trend", method: "linear" })
+    })
+
+    it("`regression='loess'` picks the LOESS method", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} regression="loess" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.annotations[0]).toEqual({ type: "trend", method: "loess" })
+    })
+
+    it("forwards a full RegressionConfig object", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot
+            data={sampleData}
+            regression={{ method: "polynomial", order: 3, color: "#ef4444", label: "Cubic" }}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.annotations[0]).toEqual({
+        type: "trend",
+        method: "polynomial",
+        order: 3,
+        color: "#ef4444",
+        label: "Cubic",
+      })
+    })
+
+    it("prepends the trend annotation in front of user annotations (z-order)", () => {
+      const userAnn = { type: "label", x: 1, y: 10, note: "hi" }
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} regression annotations={[userAnn]} />
+        </TooltipProvider>
+      )
+      const ann = lastXYFrameProps.annotations
+      expect(ann).toHaveLength(2)
+      expect(ann[0].type).toBe("trend")
+      expect(ann[1]).toBe(userAnn)
+    })
+  })
 })

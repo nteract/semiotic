@@ -1,22 +1,22 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
-import { filterSparseArray } from "../shared/sparseArray"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { createEdgeStyleFn } from "../shared/networkUtils"
+import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -163,58 +163,35 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
 
   const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
-  // Safe data defaults (hooks must always run). Identity-preserving
-  // sparse-array filter drops `null`/non-object entries before any
-  // iteration; downstream `inferNodesFromEdges` and color paths
-  // dereference fields without null-checks.
-  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
-  const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
-
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  // Drive empty-state off the filtered edge list so a sparse-only
-  // `[null, undefined]` triggers the empty UI rather than rendering
-  // a blank chart over zero valid edges.
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl
-    ? renderEmptyState(edges === undefined ? undefined : safeEdges, width, height, emptyContent)
-    : null
-
-  // Infer nodes from edges if not provided
-  const inferredNodes = useMemo(
-    () => inferNodesFromEdges(safeInputNodes, safeEdges, sourceAccessor, targetAccessor),
-    [safeInputNodes, safeEdges, sourceAccessor, targetAccessor]
-  )
-
-  // Create color scale if colorBy is specified
-  const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of inferredNodes as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [inferredNodes, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
+  // Consolidated setup — sparse filtering, node inference, color
+  // scale, palette resolution, category extraction, legend
+  // interaction, margin/legend composition, and selection wiring.
+  const setup = useNetworkChartSetup({
+    nodes,
+    edges,
+    inferNodes: true,
+    nodeIdAccessor,
+    sourceAccessor,
+    targetAccessor,
+    colorBy,
+    colorScheme,
+    showLegend: undefined,        // SankeyDiagram doesn't expose a top-level showLegend; auto from colorBy
+    legendInteraction,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    chartType: "SankeyDiagram",
+    chartId,
+    marginDefaults: resolved.marginDefaults,
+    userMargin,
+    width, height,
+    loading,
+    emptyContent,
+  })
 
   // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
-  const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
-
-  // Resolve the effective palette array. This is passed to StreamNetworkFrame so that
-  // its internal getNodeColor (used for particles, hover, interactions) uses the same
-  // colors as the HOC's nodeStyle. Without this, the frame only sees the raw colorScheme
-  // string and falls back to category10 regardless of ThemeProvider.
-  const effectivePalette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
 
   // Node style function
   // d is a RealtimeNode — user data lives on d.data
@@ -226,14 +203,14 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       }
 
       if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
 
       return baseStyle
     }
-  }, [colorBy, colorScale, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
   // Overlay top-level primitive props onto nodeStyle.
   const nodeStyle = useMemo(
@@ -246,11 +223,11 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   const baseEdgeStyle = useMemo(() => createEdgeStyleFn({
     edgeColorBy,
     colorBy,
-    colorScale,
+    colorScale: setup.colorScale,
     nodeStyleFn: nodeStyle,
     edgeOpacity,
     baseStyle: { stroke: "none", strokeWidth: 0 }
-  }), [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+  }), [edgeColorBy, colorBy, setup.colorScale, nodeStyle, edgeOpacity])
 
   const edgeStyle = useMemo(
     () => mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }),
@@ -266,20 +243,6 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     return (d: Datum) => d.data?.[accessor] ?? d[accessor] ?? d.id
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
-  // Margin
-  const margin = { ...resolved.marginDefaults, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
-
-  const { customHoverBehavior, customClickBehavior } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true,
-    onObservation,
-    onClick,
-    chartType: "SankeyDiagram",
-    chartId,
-  })
-
   // Validate data (after all hooks)
   const error = validateNetworkData({
     componentName: "SankeyDiagram",
@@ -289,20 +252,20 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   if (error) return <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.loadingEl) return setup.loadingEl
+  if (setup.emptyEl) return setup.emptyEl
 
   return (
     <SafeRender componentName="SankeyDiagram" width={width} height={height}>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="sankey"
-      {...(inferredNodes.length > 0 && { nodes: inferredNodes })}
-      {...(edges != null && { edges: safeEdges })}
+      {...(setup.safeNodes.length > 0 && { nodes: setup.safeNodes })}
+      {...(edges != null && { edges: setup.safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
-      margin={margin}
+      margin={setup.margin}
       nodeIDAccessor={nodeIdAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}
@@ -314,7 +277,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={effectivePalette}
+      colorScheme={setup.effectivePalette}
       edgeColorBy={edgeColorBy}
       edgeOpacity={edgeOpacity}
       edgeSort={edgeSort}
@@ -322,13 +285,13 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
-      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
       {...(legendInteraction && legendInteraction !== "none" && {
-        legendHoverBehavior: legendState.onLegendHover,
-        legendClickBehavior: legendState.onLegendClick,
-        legendHighlightedCategory: legendState.highlightedCategory,
-        legendIsolatedCategories: legendState.isolatedCategories,
+        legendHoverBehavior: setup.legendState.onLegendHover,
+        legendClickBehavior: setup.legendState.onLegendClick,
+        legendHighlightedCategory: setup.legendState.highlightedCategory,
+        legendIsolatedCategories: setup.legendState.isolatedCategories,
       })}
       className={className}
       title={title}

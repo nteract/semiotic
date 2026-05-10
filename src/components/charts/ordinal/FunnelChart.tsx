@@ -5,16 +5,14 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -216,38 +214,21 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     return "#4e79a7"
   }, [isSingleColor, color, themeCategorical, colorScheme])
 
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
-      const base: Record<string, string | number> = {}
-      if (uniformFill) {
-        // Single-category: every step gets the same color
-        base.fill = uniformFill
-      } else if (effectiveColorBy) {
-        base.fill = getColor(d, effectiveColorBy, setup.colorScale)
-      } else {
-        base.fill = resolveDefaultFill(color, themeCategorical, colorScheme, category, categoryIndexMap)
-      }
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [uniformFill, effectiveColorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap, fpPieceStyle])
-
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style. Single-category funnels override
+  // colorBy and feed the uniform color in via `color`, which the
+  // helper passes to `resolveDefaultFill` — every step lands on the
+  // same fill. cycleByCategory stays false for the bar-style
+  // semantic (consistent with BarChart/StackedBar).
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy: uniformFill ? undefined : effectiveColorBy,
+    colorScale: setup.colorScale,
+    color: uniformFill ?? color,
+    themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // Default tooltip showing step, value, and percentage
   const defaultTooltipContent = useMemo(() => {

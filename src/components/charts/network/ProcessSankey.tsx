@@ -24,12 +24,11 @@ import {
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import type { RealtimeFrameHandle, HoverData } from "../../realtime/types"
-import { useColorScale, useThemeCategorical } from "../shared/hooks"
-import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { inferNodesFromEdges } from "../shared/networkUtils"
 import { filterSparseArray } from "../shared/sparseArray"
-import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
   StreamNetworkFrameProps,
@@ -524,20 +523,56 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor,
   ])
 
-  // ── Margin: extend right/bottom for the legend just like the auto-legend hook does. ──
-  const legendActive = (showLegend ?? !!colorBy) && !!colorBy
+  // ── Consolidated network setup (aligned with SankeyDiagram et al). ──
+  // ProcessSankey shares the standard setup pieces with every other
+  // network HOC: sparse-filter, color scale, palette resolution,
+  // category extraction, legend interaction, selection/linkedHover
+  // wiring, and loading/empty states. The custom pieces — temporal
+  // scene specs, particles, axis chrome — stay below. We pass
+  // `inferNodes: false` because ProcessSankey requires explicit
+  // nodes (xExtent / category metadata can't be derived from edges)
+  // and `showLegend: false` so the hook skips its auto-legend
+  // (ProcessSankey builds its own swatch list using `colorOf` so
+  // the chart's palette-fallback behavior — visible bands when
+  // colorBy is unset — stays consistent between bands and legend).
+  const setup = useNetworkChartSetup({
+    nodes: rawNodes,
+    edges: rawEdges,
+    inferNodes: false,
+    nodeIdAccessor,
+    sourceAccessor,
+    targetAccessor,
+    colorBy,
+    colorScheme,
+    showLegend: false,                      // ProcessSankey owns the legend (see legendNode below)
+    legendPosition,
+    selection: undefined,                   // selection wiring not yet exposed; reserved
+    linkedHover: undefined,
+    onObservation,
+    onClick,
+    chartType: "ProcessSankey",
+    chartId,
+    marginDefaults: { top: 30, right: 80, bottom: 40, left: 80 },
+    userMargin,
+    width, height,
+    loading,
+    emptyContent,
+  })
 
+  // Margin extension for the legend. The setup hook's
+  // `useChartLegendAndMargin` is suppressed via `showLegend: false`,
+  // so we apply the same right/bottom reservation here that the hook
+  // would otherwise do — keeps the band/ribbon layout consistent
+  // whether the auto-legend or our custom legend is rendering.
+  const legendActive = (showLegend ?? !!colorBy) && !!colorBy
   const margin = useMemo(() => {
-    const base = { top: 30, right: 80, bottom: 40, left: 80 }
-    const merged = userMargin
-      ? { ...base, ...(userMargin as Record<string, number>) }
-      : base
+    const merged = { ...setup.margin }
     if (legendActive) {
       if (legendPosition === "right" && merged.right < 140) merged.right = 140
       else if (legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
     }
     return merged
-  }, [userMargin, legendActive, legendPosition])
+  }, [setup.margin, legendActive, legendPosition])
 
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
@@ -553,22 +588,20 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   const xScale = useMemo(() => scaleTime().domain(domain).range([0, plotW]), [domain, plotW])
 
   // ── Color resolution ────────────────────────────────────────────────
-  const themeCategorical = useThemeCategorical()
-  const colorScale = useColorScale((rawNodes ?? []) as Datum[], colorBy as ChartAccessor<Datum, string> | undefined, colorScheme)
-  const palette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
-
+  // `colorOf` falls through to the palette when colorBy is unset so
+  // each band gets a distinct color even without a categorical
+  // accessor — matches ProcessSankey's per-node visual identity.
+  // SankeyDiagram doesn't have this fallback (its bands collapse to
+  // a single theme color when colorBy is unset); the divergence
+  // is intentional because ProcessSankey is process-step coded
+  // and visual differentiation per node matters more.
   const colorOf = useCallback((id: string, idx: number): string => {
     if (colorBy && rawNodes) {
       const raw = rawNodeById.get(id)
-      if (raw) return getColor(raw, colorBy as ChartAccessor<Datum, string>, colorScale) as string
+      if (raw) return getColor(raw, colorBy as ChartAccessor<Datum, string>, setup.colorScale) as string
     }
-    return palette[idx % palette.length] || "#475569"
-  }, [colorBy, rawNodes, rawNodeById, colorScale, palette])
+    return setup.effectivePalette[idx % setup.effectivePalette.length] || "#475569"
+  }, [colorBy, rawNodes, rawNodeById, setup.colorScale, setup.effectivePalette])
 
   // ── Build band + ribbon scene specs from layout output. ─────────────
   // These flow to the customNetworkLayout via layoutConfig — the layout
@@ -931,17 +964,13 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     [rawEdges, getEdgeId, sourceAccessor, targetAccessor],
   )
 
-  // ── Loading / empty states ────────────────────────────────────────
-  // Both helpers fire AFTER all hooks above so React doesn't see a
-  // hook-count change when the chart switches between
-  // empty/loading/active. Empty state triggers when neither edges nor
-  // nodes were supplied AND nothing's been pushed.
-  const loadingEl = renderLoadingState(loading, width, height)
-  const noUserData = (rawEdgesProp === undefined && pushedEdges.length === 0)
-    && (rawNodesProp === undefined && pushedNodes.length === 0)
-  const emptyEl = !loadingEl
-    ? renderEmptyState(noUserData ? undefined : safeFrameEdges, width, height, emptyContent)
-    : null
+  // Loading / empty states come from `setup` — same gates every
+  // other network HOC uses. The hook keys empty-state on the edges
+  // list (default), which matches ProcessSankey's primary data
+  // shape. Push-mode (edges/nodes both undefined) bypasses the
+  // empty UI by design.
+  const loadingEl = setup.loadingEl
+  const emptyEl = setup.emptyEl
 
   // ── Validation gate ──
   if (issues.length > 0) {

@@ -47,6 +47,7 @@ import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
+import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
@@ -966,6 +967,22 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       </FlippingTooltip>
     ) : null
 
+    // ── Annotation accessor resolution ─────────────────────────────────
+    // OrdinalSVGOverlay needs string keys to read coordinates from
+    // annotationData. When `oAccessor` / `rAccessor` are functions
+    // we bake resolved values under synthetic stable keys and
+    // forward those keys as the annotation context's xAccessor /
+    // yAccessor. Without this, annotation rules like `trend` would
+    // see `undefined` accessors and silently fail to read the data.
+    // Mirrors StreamXYFrame's same pattern; helpers shared via
+    // `./annotationAccessorResolver`.
+    const xResolved = resolveAnnotationAccessor(oAccessor, undefined, "__semiotic_resolvedO", "")
+    const yResolved = resolveAnnotationAccessor(rAccessor, undefined, "__semiotic_resolvedR", "")
+    const annXAccessor = xResolved.key
+    const annYAccessor = yResolved.key
+    const hasAnnotations = (annotations && annotations.length > 0) || false
+    const enrichAnnotationData = buildEnrichAnnotationData(xResolved, yResolved, hasAnnotations)
+
     // ── SSR path: render SVG instead of canvas ──────────────────────────
 
     // SSR + actual SSR-hydration only — pure CSR mounts skip the
@@ -1046,9 +1063,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             annotations={annotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
-            xAccessor={typeof oAccessor === "string" ? oAccessor : undefined}
-            yAccessor={typeof rAccessor === "string" ? rAccessor : undefined}
-            annotationData={store?.getData()}
+            xAccessor={annXAccessor}
+            yAccessor={annYAccessor}
+            annotationData={enrichAnnotationData(store?.getData())}
           />
           {centerContent && projection === "radial" && (
             <div
@@ -1167,9 +1184,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
-          xAccessor={typeof oAccessor === "string" ? oAccessor : undefined}
-          yAccessor={typeof rAccessor === "string" ? rAccessor : undefined}
-          annotationData={storeRef.current?.getData()}
+          xAccessor={annXAccessor}
+          yAccessor={annYAccessor}
+          annotationData={enrichAnnotationData(storeRef.current?.getData())}
           underlayRendered
         />
 

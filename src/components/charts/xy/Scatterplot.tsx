@@ -7,20 +7,21 @@ import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, getSize } from "../shared/colorUtils"
+import { getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
  * Scatterplot component props
@@ -62,6 +63,26 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   legendPosition?: LegendPosition
   /** Annotation objects to render on the chart */
   annotations?: Datum[]
+  /**
+   * Overlay a regression line on the scatter. Accepts:
+   * - `true` — linear regression with default styling
+   * - `"linear"` | `"polynomial"` | `"loess"` — pick a method
+   * - `RegressionConfig` — full control (method, bandwidth, order,
+   *   color, strokeWidth, strokeDasharray, label)
+   *
+   * Sugar over `annotations={[{ type: "trend", … }]}` — for richer
+   * setups (multiple regression lines, custom anchoring) drop into
+   * the annotations array directly.
+   *
+   * @example
+   * ```tsx
+   * <Scatterplot data={d} xAccessor="x" yAccessor="y" regression />
+   * <Scatterplot data={d} xAccessor="x" yAccessor="y" regression="loess" />
+   * <Scatterplot data={d} xAccessor="x" yAccessor="y"
+   *   regression={{ method: "polynomial", order: 3, color: "#ef4444", label: "Cubic" }} />
+   * ```
+   */
+  regression?: RegressionProp
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
   /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -148,6 +169,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     marginalGraphics,
     pointIdAccessor,
     annotations,
+    regression,
     xExtent,
     yExtent,
     frameProps = {},
@@ -251,33 +273,22 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
   }, [safeData, sizeBy])
 
-  const basePointStyle = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
-      if (colorBy) {
-        if (setup.colorScale) baseStyle.fill = getColor(d, colorBy, setup.colorScale)
-        // else: let frame use its own color scheme (push API)
-      } else {
-        baseStyle.fill = color || DEFAULT_COLOR
-      }
-      baseStyle.r = sizeBy
-        ? getSize(d, sizeBy, sizeRange, sizeDomain)
-        : pointRadius
-      return baseStyle
-    }
-  }, [colorBy, setup.colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity, color])
-
-  // Overlay top-level primitive style props (stroke/strokeWidth/opacity) last
-  // so they win over the HOC base style and any per-datum color resolution.
-  const pointStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePointStyle, { stroke, strokeWidth, opacity }),
-    [basePointStyle, stroke, strokeWidth, opacity]
+  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
+  // internal memo — passing an inline literal would re-allocate the
+  // returned `pointStyle` on every render.
+  const sizedRadiusFn = useMemo(
+    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
+    [sizeBy, sizeRange, sizeDomain],
   )
 
-  const pointStyle = useMemo(
-    () => wrapStyleWithSelection(pointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [pointStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  const pointStyle = useXYPointStyle({
+    colorBy, colorScale: setup.colorScale, color,
+    pointRadius, fillOpacity: pointOpacity,
+    radiusFn: sizedRadiusFn,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.
@@ -287,6 +298,16 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
     ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
+
+  // Splice the `regression` sugar into annotations as a `trend`
+  // annotation. User-supplied annotations always win on z-order — the
+  // regression line goes underneath so explicit callouts/markers stay
+  // legible above it.
+  const resolvedAnnotations = useMemo(() => {
+    const trendAnn = buildRegressionAnnotation(regression)
+    if (!trendAnn) return annotations
+    return [trendAnn, ...(annotations || [])]
+  }, [regression, annotations])
 
   // Validate data (after all hooks)
   const error = validateArrayData({
@@ -330,7 +351,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),

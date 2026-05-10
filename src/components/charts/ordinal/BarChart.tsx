@@ -6,20 +6,19 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useSortedData, useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useSortedData, useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
  * BarChart component props
@@ -98,6 +97,17 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /**
+   * Overlay a regression line through the bar tops. Accepts `true`
+   * (linear), a method name (`"linear"` | `"polynomial"` | `"loess"`),
+   * or a full `RegressionConfig`. The regression treats categories
+   * as a numeric category-index for fit input; pixel positions are
+   * resolved through the band scale, so the line passes through bar
+   * centers. Best for ordered categories (months, quarters, score
+   * buckets) where a slope reads as a meaningful trend. Sugar over
+   * the `trend` annotation.
+   */
+  regression?: RegressionProp
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
@@ -220,6 +230,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     baselinePadding = false,
     tooltip,
     annotations,
+    regression,
     valueExtent,
     frameProps = {},
     selection,
@@ -290,35 +301,17 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, _category?: string) => {
-      const baseStyle: Record<string, string | number> = {}
-      if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, setup.colorScale)
-      } else {
-        baseStyle.fill = resolveDefaultFill(color, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      }
-      return baseStyle
-    }
-  }, [colorBy, setup.colorScale, color, themeCategorical, colorScheme, categoryIndexMap])
-
-  const mergedPieceStyle = useMemo(() => {
-    const userPieceStyle = frameProps?.pieceStyle
-    const baseWithUser = (!userPieceStyle || typeof userPieceStyle !== "function")
-      ? basePieceStyle
-      : (d: Datum, category?: string) => ({
-        ...basePieceStyle(d, category),
-        ...((userPieceStyle as ((...args: any[]) => any))(d, category) || {}),
-      })
-    // Top-level primitive props (stroke/strokeWidth/opacity) applied LAST so
-    // they win over both HOC base style and user-supplied frameProps.pieceStyle.
-    return mergeShapeStyle(baseWithUser, { stroke, strokeWidth, opacity })
-  }, [basePieceStyle, frameProps, stroke, strokeWidth, opacity])
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [mergedPieceStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated piece-style — base fill, user overlay, primitive
+  // props, and selection wrap all happen inside the shared hook.
+  // Each ordinal HOC drops ~25 lines of recipe by calling this.
+  const pieceStyle = useOrdinalPieceStyle({
+    colorBy, colorScale: setup.colorScale,
+    color, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // Default tooltip — pass valueFormat so the tooltip matches the value axis.
   const defaultTooltipContent = useMemo(
@@ -339,6 +332,14 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="BarChart" message={error} width={width} height={height} />
+
+  // Splice the `regression` sugar into annotations as a `trend`
+  // annotation. Trend goes first so user-supplied annotations paint
+  // above it.
+  const trendAnn = buildRegressionAnnotation(regression)
+  const resolvedAnnotations = trendAnn
+    ? [trendAnn, ...(annotations || [])]
+    : annotations
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "bar",
@@ -380,7 +381,7 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle is excluded
     // to prevent clobbering the HOC's color-resolved, selection-wrapped style.

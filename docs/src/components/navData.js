@@ -120,7 +120,8 @@ const navData = [
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
-      { title: "Custom Charts", path: "/features/custom-charts" }
+      { title: "Custom Charts", path: "/features/custom-charts" },
+      { title: "Capability Matrix", path: "/features/capabilities" }
     ]
   },
   {

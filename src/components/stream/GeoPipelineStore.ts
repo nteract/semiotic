@@ -366,7 +366,11 @@ export class GeoPipelineStore {
   }
 
   setLines(data: Datum[]): void {
-    this.lineData = data
+    // Defensive copy — `pushLine` / `pushManyLines` mutate
+    // `lineData` in place (no ring buffer for lines), so taking the
+    // user's array reference here would let a subsequent push leak
+    // into the React-owned array passed via the `lines` prop.
+    this.lineData = data.slice()
   }
 
   /** Initialize streaming mode with a ring buffer */
@@ -393,6 +397,62 @@ export class GeoPipelineStore {
       this.timestampBuffer!.push(now)
     }
     this.lastIngestTime = now
+  }
+
+  /** Append a single line/flow record (coordinates pre-resolved). Lines
+   *  aren't ring-buffered — the bounded set is the geography.
+   *  Mutates `lineData` in place to avoid the O(n) GC churn of an
+   *  array spread per push. The mutation is invisible to callers
+   *  because `setLines` defensive-copies on entry and `getLines`
+   *  defensive-copies on exit. */
+  pushLine(line: Datum): void {
+    if (line == null || typeof line !== "object") return
+    this.lineData.push(line)
+    this.version++
+  }
+
+  /** Append multiple line/flow records in one pass. Same in-place
+   *  mutation rationale as `pushLine`. Loops instead of
+   *  `Array.prototype.push(...safe)` so very large batches don't
+   *  blow the engine's argument-count limit (mirrors how `pushMany`
+   *  for points iterates rather than spreads). */
+  pushManyLines(lines: Datum[]): void {
+    if (!Array.isArray(lines) || lines.length === 0) return
+    const safe = lines.filter((l) => l != null && typeof l === "object")
+    if (safe.length === 0) return
+    for (const line of safe) this.lineData.push(line)
+    this.version++
+  }
+
+  /** Remove line records by id. Requires `lineIdAccessor`. */
+  removeLine(id: string | string[]): Datum[] {
+    const { lineIdAccessor } = this.config
+    if (!lineIdAccessor) {
+      throw new Error("removeLine() requires lineIdAccessor to be configured")
+    }
+    const getId = typeof lineIdAccessor === "function"
+      ? lineIdAccessor
+      : (d: Datum) => d[lineIdAccessor as string]
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const removed: Datum[] = []
+    this.lineData = this.lineData.filter((d) => {
+      if (ids.has(String(getId(d)))) {
+        removed.push(d)
+        return false
+      }
+      return true
+    })
+    if (removed.length > 0) this.version++
+    return removed
+  }
+
+  /** Read the current line/flow set (post-push, pre-projection).
+   *  Defensive copy — `pushLine` / `pushManyLines` mutate
+   *  `lineData` in place, so returning by reference would let
+   *  callers observe ingest-side mutations on a snapshot they
+   *  thought was stable. */
+  getLines(): Datum[] {
+    return this.lineData.slice()
   }
 
   /**

@@ -694,4 +694,71 @@ describe("BarChart", () => {
       expect(frameProps().gradientFill).toEqual(stops)
     })
   })
+
+  // ── regression prop ────────────────────────────────────────────────────
+  // Sugar over the `trend` annotation. The HOC prepends a trend-typed
+  // annotation to the user's annotations array; the annotation handler
+  // detects the ordinal frame and treats the categorical axis as a
+  // category-index for regression input. See annotationRules.tsx.
+  describe("regression prop", () => {
+    it("does not inject a trend annotation when omitted", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(frameProps().annotations).toBeUndefined()
+    })
+
+    it("`regression` injects a default linear trend annotation", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} regression />
+        </TooltipProvider>
+      )
+      const ann = frameProps().annotations
+      expect(ann).toHaveLength(1)
+      expect(ann[0]).toEqual({ type: "trend", method: "linear" })
+    })
+
+    it("`regression='loess'` picks the LOESS method", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} regression="loess" />
+        </TooltipProvider>
+      )
+      expect(frameProps().annotations[0]).toEqual({ type: "trend", method: "loess" })
+    })
+
+    it("forwards a full RegressionConfig object", () => {
+      render(
+        <TooltipProvider>
+          <BarChart
+            data={sampleData}
+            regression={{ method: "polynomial", order: 2, color: "#ef4444", label: "Quad" }}
+          />
+        </TooltipProvider>
+      )
+      expect(frameProps().annotations[0]).toEqual({
+        type: "trend",
+        method: "polynomial",
+        order: 2,
+        color: "#ef4444",
+        label: "Quad",
+      })
+    })
+
+    it("prepends the trend annotation in front of user annotations (z-order)", () => {
+      const userAnn = { type: "label", x: 1, y: 10, note: "hi" }
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} regression annotations={[userAnn]} />
+        </TooltipProvider>
+      )
+      const ann = frameProps().annotations
+      expect(ann).toHaveLength(2)
+      expect(ann[0].type).toBe("trend")
+      expect(ann[1]).toBe(userAnn)
+    })
+  })
 })

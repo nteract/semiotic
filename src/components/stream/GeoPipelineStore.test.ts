@@ -290,4 +290,65 @@ describe("GeoPipelineStore", () => {
       expect(points.length).toBe(3)
     })
   })
+
+  // ── Line ingest snapshot semantics ─────────────────────────────────
+  // pushLine / pushManyLines mutate `lineData` in place for
+  // performance; setLines and getLines must defensive-copy on the
+  // boundary so callers can't observe ingest-side mutation on a
+  // snapshot they thought was stable, and so push can't leak into
+  // a React-owned `lines` prop array.
+  describe("line ingest snapshot semantics", () => {
+    it("setLines defensive-copies the input so push doesn't leak", () => {
+      const store = new GeoPipelineStore(makeConfig({ lineIdAccessor: "id" }))
+      const userArray = [{ id: "a", coordinates: [[0, 0], [1, 1]] }]
+      store.setLines(userArray)
+      store.pushLine({ id: "b", coordinates: [[2, 2], [3, 3]] })
+      // User's original array must remain length-1.
+      expect(userArray).toHaveLength(1)
+      // Store's internal data has both.
+      expect(store.getLines()).toHaveLength(2)
+    })
+
+    it("getLines returns a snapshot — push doesn't mutate prior reads", () => {
+      const store = new GeoPipelineStore(makeConfig({ lineIdAccessor: "id" }))
+      store.pushLine({ id: "a", coordinates: [[0, 0], [1, 1]] })
+      const snapshot = store.getLines()
+      expect(snapshot).toHaveLength(1)
+      store.pushLine({ id: "b", coordinates: [[2, 2], [3, 3]] })
+      // Prior snapshot stays length-1; the new push is visible only
+      // on a fresh getLines() call.
+      expect(snapshot).toHaveLength(1)
+      expect(store.getLines()).toHaveLength(2)
+    })
+
+    it("pushManyLines appends and increments version", () => {
+      const store = new GeoPipelineStore(makeConfig({ lineIdAccessor: "id" }))
+      const v0 = store.version
+      store.pushManyLines([
+        { id: "a", coordinates: [[0, 0], [1, 1]] },
+        { id: "b", coordinates: [[2, 2], [3, 3]] },
+      ])
+      expect(store.getLines()).toHaveLength(2)
+      expect(store.version).toBeGreaterThan(v0)
+    })
+
+    it("removeLine filters by id and bumps version", () => {
+      const store = new GeoPipelineStore(makeConfig({ lineIdAccessor: "id" }))
+      store.pushManyLines([
+        { id: "a", coordinates: [[0, 0], [1, 1]] },
+        { id: "b", coordinates: [[2, 2], [3, 3]] },
+        { id: "c", coordinates: [[4, 4], [5, 5]] },
+      ])
+      const removed = store.removeLine("b")
+      expect(removed).toHaveLength(1)
+      expect(removed[0].id).toBe("b")
+      expect(store.getLines()).toHaveLength(2)
+    })
+
+    it("removeLine throws when lineIdAccessor isn't configured", () => {
+      const store = new GeoPipelineStore(makeConfig())
+      store.pushLine({ id: "a", coordinates: [[0, 0], [1, 1]] })
+      expect(() => store.removeLine("a")).toThrow(/lineIdAccessor/)
+    })
+  })
 })

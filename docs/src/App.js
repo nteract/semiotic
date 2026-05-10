@@ -92,6 +92,7 @@ import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
 import CustomChartsPage from "./pages/features/CustomChartsPage"
+import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 
 // New cookbook pages
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
@@ -396,6 +397,7 @@ export default function DocsApp() {
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
               <Route path="custom-charts" element={<CustomChartsPage />} />
+              <Route path="capabilities" element={<CapabilitiesPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

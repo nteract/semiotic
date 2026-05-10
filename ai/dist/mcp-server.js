@@ -6935,6 +6935,7 @@ var require_componentMetadata = __commonJS({
 var require_chartSuggestions = __commonJS({
   "ai/chartSuggestions.cjs"(exports2, module2) {
     "use strict";
+    var path2 = require("path");
     var VALID_INTENTS = [
       "comparison",
       "trend",
@@ -6946,6 +6947,69 @@ var require_chartSuggestions = __commonJS({
       "hierarchy"
     ];
     var MAX_SAMPLE_SIZE = 5;
+    var _capabilityMatrix = null;
+    var _capabilityMatrixLoaded = false;
+    function loadCapabilityMatrix() {
+      if (_capabilityMatrixLoaded) return _capabilityMatrix;
+      const candidates = [
+        path2.join(__dirname, "capabilities.json"),
+        path2.join(__dirname, "..", "capabilities.json")
+      ];
+      for (const candidate of candidates) {
+        try {
+          const json2 = require(candidate);
+          if (json2 && json2.charts) {
+            _capabilityMatrix = json2.charts;
+            _capabilityMatrixLoaded = true;
+            return _capabilityMatrix;
+          }
+        } catch {
+        }
+      }
+      _capabilityMatrixLoaded = true;
+      return _capabilityMatrix;
+    }
+    var CAPABILITY_KEY_MAP = {
+      push: "supportsPush",
+      linkedHover: "supportsLinkedHover",
+      ssr: "supportsSSR",
+      selection: "supportsSelection",
+      legend: "supportsLegend"
+    };
+    var VALID_CAPABILITY_KEYS = Object.keys(CAPABILITY_KEY_MAP);
+    function chartSatisfiesCapabilities(chartName, requirements) {
+      if (!requirements || Object.keys(requirements).length === 0) return true;
+      const matrix = loadCapabilityMatrix();
+      if (matrix == null) return false;
+      const spec = matrix[chartName];
+      if (!spec) return false;
+      for (const [shortKey, want] of Object.entries(requirements)) {
+        if (want == null) continue;
+        const matrixKey = CAPABILITY_KEY_MAP[shortKey];
+        if (!matrixKey) continue;
+        const has = spec[matrixKey] === true;
+        if (has !== want) return false;
+      }
+      return true;
+    }
+    function explainCapabilityMismatch(chartName, requirements) {
+      if (!requirements || Object.keys(requirements).length === 0) return null;
+      const matrix = loadCapabilityMatrix();
+      if (matrix == null) return "capability matrix unavailable (run `npm run docs:capabilities`)";
+      const spec = matrix[chartName];
+      if (!spec) return `${chartName} not found in capability matrix`;
+      const mismatches = [];
+      for (const [shortKey, want] of Object.entries(requirements)) {
+        if (want == null) continue;
+        const matrixKey = CAPABILITY_KEY_MAP[shortKey];
+        if (!matrixKey) continue;
+        const has = spec[matrixKey] === true;
+        if (has !== want) {
+          mismatches.push(`requires ${shortKey}=${want} but ${matrixKey}=${has}`);
+        }
+      }
+      return mismatches.length > 0 ? mismatches.join("; ") : null;
+    }
     function summarizeFields(data, keys) {
       const numericFields = [];
       const stringFields = [];
@@ -7004,16 +7068,38 @@ var require_chartSuggestions = __commonJS({
     function suggestCharts2(args = {}) {
       const data = args.data;
       const intent = args.intent;
+      const capabilities = args.capabilities;
       if (intent && !VALID_INTENTS.includes(intent)) {
         return {
           ok: false,
           error: `Unknown intent "${intent}". Expected one of: ${VALID_INTENTS.join(", ")}.`
         };
       }
+      if (capabilities) {
+        if (typeof capabilities !== "object" || Array.isArray(capabilities)) {
+          return {
+            ok: false,
+            error: "capabilities must be an object like { push: true, linkedHover: true, ssr: true, selection: true, legend: true }."
+          };
+        }
+        const unknown2 = Object.keys(capabilities).filter((k) => !VALID_CAPABILITY_KEYS.includes(k));
+        if (unknown2.length > 0) {
+          return {
+            ok: false,
+            error: `Unknown capability key(s): ${unknown2.join(", ")}. Expected: ${VALID_CAPABILITY_KEYS.join(", ")}.`
+          };
+        }
+        if (loadCapabilityMatrix() == null) {
+          return {
+            ok: false,
+            error: "Capability matrix unavailable: ai/capabilities.json is missing. Run `npm run docs:capabilities` to generate it. (Capability filtering requires the matrix; suggestions without a `capabilities` arg still work.)"
+          };
+        }
+      }
       if (!data || !Array.isArray(data) || data.length === 0) {
         return {
           ok: false,
-          error: "Pass { data: [{ ... }, ...] } with 1-5 sample data objects. Optionally include intent: 'comparison' | 'trend' | 'distribution' | 'relationship' | 'composition' | 'geographic' | 'network' | 'hierarchy'."
+          error: "Pass { data: [{ ... }, ...] } with 1-5 sample data objects. Optionally include intent: 'comparison' | 'trend' | 'distribution' | 'relationship' | 'composition' | 'geographic' | 'network' | 'hierarchy', or capabilities: { push, linkedHover, ssr, selection, legend }."
         };
       }
       if (data.length > MAX_SAMPLE_SIZE) {
@@ -7170,22 +7256,44 @@ var require_chartSuggestions = __commonJS({
           props: { data: jsxExpression("data"), xAccessor: jsxString(xField), yAccessor: jsxString(yField), valueAccessor: jsxString(valueField) }
         });
       }
+      const filteredSuggestions = capabilities ? suggestions.filter((s) => chartSatisfiesCapabilities(s.component, capabilities)) : suggestions;
       return {
         ok: true,
         intent,
+        capabilities,
         fieldSummary: `Fields: ${keys.join(", ")} (${numericFields.length} numeric, ${stringFields.length} categorical, ${dateFields.length} date)`,
         fields,
-        suggestions
+        suggestions: filteredSuggestions,
+        // Surface the pre-filter set when a capability constraint was
+        // applied — caller can see which suggestions were dropped and
+        // whether to relax the constraint.
+        ...capabilities && filteredSuggestions.length < suggestions.length && {
+          filteredOut: suggestions.filter((s) => !chartSatisfiesCapabilities(s.component, capabilities)).map((s) => ({
+            component: s.component,
+            // The `reason` here is the capability mismatch (which
+            // constraint failed), not the original data-shape rationale
+            // — callers debugging an empty result need to know which
+            // capability to relax, not why the chart was originally
+            // suggested.
+            reason: explainCapabilityMismatch(s.component, capabilities) || "did not satisfy capability constraints"
+          }))
+        }
       };
     }
     function formatSuggestionReport2(result) {
       if (!result.ok) return result.error;
       if (result.suggestions.length === 0) {
-        return `Could not confidently recommend a chart type.
+        const tail = result.capabilities && result.filteredOut && result.filteredOut.length > 0 ? `
 
-${result.fieldSummary}
+Dropped by capability filter (${formatCapabilityConstraints(result.capabilities)}):
+${result.filteredOut.map((s) => `- ${s.component}: ${s.reason}`).join("\n")}
+
+Relax the capability constraints, or use getSchema to browse alternatives.` : `
 
 Try providing intent ('${VALID_INTENTS.join("', '")}') to narrow recommendations, or use getSchema to browse available components.`;
+        return `Could not confidently recommend a chart type.
+
+${result.fieldSummary}${tail}`;
       }
       const lines = result.suggestions.map((suggestion, i) => {
         const propsStr = Object.entries(suggestion.props).map(([k, v]) => `${k}=${v}`).join(" ");
@@ -7217,10 +7325,18 @@ Or use \`<ThemeProvider theme="dark">\` / \`<ThemeProvider theme={{ colors: {...
 For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import from \`semiotic/themes\`) - 8-color palette safe for all forms of color blindness.`;
       return lines.join("\n\n") + themingTip;
     }
+    function formatCapabilityConstraints(capabilities) {
+      return Object.entries(capabilities).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join(", ");
+    }
     module2.exports = {
       VALID_INTENTS,
+      VALID_CAPABILITY_KEYS,
       formatSuggestionReport: formatSuggestionReport2,
-      suggestCharts: suggestCharts2
+      suggestCharts: suggestCharts2,
+      // Exported for tests + callers that want to filter their own
+      // chart-name set without re-running the suggestion pipeline.
+      chartSatisfiesCapabilities,
+      explainCapabilityMismatch
     };
   }
 });
@@ -32176,6 +32292,7 @@ var COMPONENT_REGISTRY = {
   ForceDirectedGraph: { component: import_ai.ForceDirectedGraph, category: "network" },
   ChordDiagram: { component: import_ai.ChordDiagram, category: "network" },
   SankeyDiagram: { component: import_ai.SankeyDiagram, category: "network" },
+  ProcessSankey: { component: import_ai.ProcessSankey, category: "network" },
   TreeDiagram: { component: import_ai.TreeDiagram, category: "network" },
   Treemap: { component: import_ai.Treemap, category: "network" },
   CirclePack: { component: import_ai.CirclePack, category: "network" },
@@ -32661,10 +32778,21 @@ function createServer2() {
   );
   srv.tool(
     "suggestChart",
-    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions. Returns ranked recommendations with example props.",
+    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions, or capabilities to require/forbid features (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props; charts that don't satisfy the capability constraints are dropped.",
     {
       data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).min(1).max(5).describe("1-5 sample data objects"),
-      intent: external_exports3.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions")
+      intent: external_exports3.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
+      capabilities: external_exports3.object({
+        push: external_exports3.boolean().optional().describe("Require ref-based push API (live streaming via ref.current.push())"),
+        linkedHover: external_exports3.boolean().optional().describe("Require cross-chart linked hover support"),
+        ssr: external_exports3.boolean().optional().describe("Require server-side rendering via renderChart()"),
+        selection: external_exports3.boolean().optional().describe("Require named selection / cross-filter support"),
+        legend: external_exports3.boolean().optional().describe("Require a top-level legend")
+        // `.strict()` so the MCP surface rejects unknown capability
+        // keys at the schema layer rather than silently stripping
+        // them — keeps the cjs-level "Unknown capability key(s)"
+        // validation from being unreachable from MCP callers.
+      }).strict().optional().describe("Capability constraints \u2014 set a key to true to require, false to forbid. Unset keys are ignored.")
     },
     suggestChartHandler
   );

@@ -1,20 +1,20 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
-import { filterSparseArray } from "../shared/sparseArray"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartLegendAndMargin, useChartMode, useChartSelection, useLegendInteraction, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 
 /**
@@ -239,63 +239,53 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
 
   const { width, height, enableHover, showLegend, showLabels = false, title, description, summary, accessibleTable } = resolved
 
-  // Identity-preserving sparse-array filter: drop `null`/non-object
-  // entries before any iteration. CSV/loader pipelines commonly emit
-  // such interlopers, and the network color/legend/scene paths read
-  // `n.id` / `e.source` without null-checks.
-  const safeNodes = useMemo(() => filterSparseArray(nodes), [nodes])
-  const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
+  // Consolidated network setup. ForceDirected requires explicit
+  // nodes (no inference from edges) and keys empty-state off nodes
+  // — pass `inferNodes: false` and `emptyDataKey: "nodes"` to match
+  // the pre-migration behavior.
+  const setup = useNetworkChartSetup({
+    nodes,
+    edges,
+    inferNodes: false,
+    nodeIdAccessor: nodeIDAccessor,
+    sourceAccessor,
+    targetAccessor,
+    colorBy,
+    colorScheme,
+    showLegend,
+    legendPosition: legendPositionProp,
+    legendInteraction,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    chartType: "ForceDirectedGraph",
+    chartId,
+    marginDefaults: resolved.marginDefaults,
+    userMargin,
+    width, height,
+    loading,
+    emptyContent,
+    emptyDataKey: "nodes",
+  })
 
-  // ── Loading / empty states (computed early, returned after all hooks) ───
-  // Drive the empty-state decision off the filtered node list so a
-  // sparse-only input like `[null, undefined]` lands on the empty UI
-  // instead of rendering a blank canvas.
-  const loadingEl = renderLoadingState(loading, width, height)
-  const emptyEl = !loadingEl
-    ? renderEmptyState(nodes === undefined ? undefined : safeNodes, width, height, emptyContent)
-    : null
-
-  const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
-
-  // Legend interaction
-  const allCategories = useMemo(() => {
-    if (!colorBy) return []
-    const vals = new Set<string>()
-    for (const d of safeNodes as Datum[]) {
-      const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy as string]
-      if (v != null) vals.add(String(v))
-    }
-    return Array.from(vals)
-  }, [safeNodes, colorBy])
-
-  const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
-
-  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
-  const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
-
-  const effectivePalette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
     return (d: Datum) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       if (typeof nodeSize === "number") {
         baseStyle.r = nodeSize
       }
       return baseStyle
     }
-  }, [colorBy, colorScale, nodeSize, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, setup.colorScale, nodeSize, setup.themeCategorical, colorScheme, categoryIndexMap])
 
   // Overlay top-level primitive props onto nodeStyle; top-level wins over base.
   const nodeStyle = useMemo(
@@ -326,25 +316,6 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     return (d: Datum) => d.data?.[nodeLabel] ?? d[nodeLabel] ?? d.id
   }, [showLabels, nodeLabel])
 
-  // Legend & margin
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: safeNodes,
-    colorBy,
-    colorScale,
-    showLegend,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults
-  })
-
-  const { customHoverBehavior, customClickBehavior } = useChartSelection({
-    selection,
-    linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true,
-    onObservation, onClick, chartType: "ForceDirectedGraph", chartId,
-  })
-
   // Validate
   const error = validateNetworkData({
     componentName: "ForceDirectedGraph",
@@ -357,20 +328,20 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.loadingEl) return setup.loadingEl
+  if (setup.emptyEl) return setup.emptyEl
 
   return (
     <SafeRender componentName="ForceDirectedGraph" width={width} height={height}>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="force"
-      {...(nodes != null && { nodes: safeNodes })}
-      {...(edges != null && { edges: safeEdges })}
+      {...(nodes != null && { nodes: setup.safeNodes })}
+      {...(edges != null && { edges: setup.safeEdges })}
       size={[width, height]}
       responsiveWidth={props.responsiveWidth}
       responsiveHeight={props.responsiveHeight}
-      margin={margin}
+      margin={setup.margin}
       nodeIDAccessor={nodeIDAccessor}
       sourceAccessor={sourceAccessor}
       targetAccessor={targetAccessor}
@@ -379,22 +350,22 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}
-      colorScheme={effectivePalette}
+      colorScheme={setup.effectivePalette}
       nodeSize={nodeSize}
       nodeSizeRange={nodeSizeRange}
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation || onClick) ? customHoverBehavior : undefined}
-      customClickBehavior={(onObservation || onClick) ? customClickBehavior : undefined}
-      legend={legend}
-      legendPosition={legendPosition}
+      customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
+      customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
-        legendHoverBehavior: legendState.onLegendHover,
-        legendClickBehavior: legendState.onLegendClick,
-        legendHighlightedCategory: legendState.highlightedCategory,
-        legendIsolatedCategories: legendState.isolatedCategories,
+        legendHoverBehavior: setup.legendState.onLegendHover,
+        legendClickBehavior: setup.legendState.onLegendClick,
+        legendHighlightedCategory: setup.legendState.highlightedCategory,
+        legendIsolatedCategories: setup.legendState.isolatedCategories,
       })}
       className={className}
       title={title}

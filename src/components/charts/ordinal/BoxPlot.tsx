@@ -6,16 +6,14 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
-import { getColor } from "../shared/colorUtils"
-import { useChartMode, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -153,22 +151,20 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
-  const baseSummaryStyle = useMemo(() => {
-    return (d: Datum) => {
-      const resolvedColor = colorBy ? getColor(d, colorBy, setup.colorScale) : resolveDefaultFill(colorProp, themeCategorical, colorScheme, undefined, categoryIndexMap)
-      return { fill: resolvedColor, stroke: resolvedColor, fillOpacity: 0.8 }
-    }
-  }, [colorBy, setup.colorScale, colorProp, themeCategorical, colorScheme, categoryIndexMap])
-
-  const baseSummaryStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(baseSummaryStyle, { stroke, strokeWidth, opacity }),
-    [baseSummaryStyle, stroke, strokeWidth, opacity]
-  )
-
-  const summaryStyle = useMemo(
-    () => wrapStyleWithSelection(baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseSummaryStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Consolidated summary-style. `linkStrokeToFill` mirrors the
+  // pre-migration "stroke equals fill" behavior so the box outline
+  // matches the box body. fillOpacity is a static extra.
+  const summaryStyle = useOrdinalPieceStyle({
+    colorBy,
+    colorScale: setup.colorScale,
+    color: colorProp, themeCategorical, colorScheme, categoryIndexMap,
+    userPieceStyle: undefined,                  // BoxPlot doesn't expose summaryStyle through frameProps
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    baseStyleExtras: { fillOpacity: 0.8 },
+    linkStrokeToFill: true,
+  })
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])
 

@@ -2,9 +2,20 @@
 import type { Datum } from "../shared/datumTypes"
 import { EMPTY_ARRAY, filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useRef, forwardRef } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
-import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
+import type { StreamGeoFrameProps, ProjectionProp, StreamGeoFrameHandle } from "../../stream/geoTypes"
+import type { RealtimeFrameHandle } from "../../realtime/types"
+import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+
+// Stable internal keys for synthesized line-coord objects. The
+// frame's xAccessor / yAccessor would otherwise need to know how to
+// read user-supplied function accessors against synthesized objects
+// (which have no user-controlled shape). By writing coords with
+// these fixed keys and passing hybrid accessors that prefer them,
+// FlowMap supports both string and function user accessors.
+const COORD_X_KEY = "__semiotic_x"
+const COORD_Y_KEY = "__semiotic_y"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { getColor } from "../shared/colorUtils"
@@ -90,6 +101,13 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   tileCacheSize?: number
   /** Annotations */
   annotations?: Datum[]
+  /**
+   * ID accessor on flow records — required for `ref.current.remove(id)`
+   * and `ref.current.update(id, …)`. The accessor reads the same field
+   * the user supplies on each flow; the field is preserved on the
+   * resolved line entry so the frame's `removeLine` can match by id.
+   */
+  lineIdAccessor?: string | ((d: Datum) => string)
   /** Passthrough */
   frameProps?: Partial<Omit<StreamGeoFrameProps, "projection">>
 }
@@ -144,7 +162,10 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum>) {
+export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>(
+  props: FlowMapProps<TDatum>,
+  ref: React.Ref<RealtimeFrameHandle>,
+) {
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -201,6 +222,7 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     stroke,
     strokeWidth,
     opacity,
+    lineIdAccessor,
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -278,6 +300,64 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
     return map
   }, [safeNodes, nodeIdAccessor])
 
+  // Push API. Flows arrive shaped `{ source, target, value, ... }`; the
+  // frame stores resolved line records `{ ...flow, coordinates: [...] }`.
+  // The translation needs the current `nodeLookup` + accessors, which
+  // change when their props change, so we route them through refs to
+  // keep the imperative handle reference-stable across renders.
+  const frameRef = useRef<StreamGeoFrameHandle>(null)
+  const nodeLookupRef = useRef(nodeLookup)
+  nodeLookupRef.current = nodeLookup
+  const xAccessorRef = useRef(xAccessor)
+  xAccessorRef.current = xAccessor
+  const yAccessorRef = useRef(yAccessor)
+  yAccessorRef.current = yAccessor
+
+  const resolveFlowToLine = useCallback((flow: Datum): Datum | null => {
+    if (!flow || typeof flow !== "object" || flow.source == null || flow.target == null) return null
+    const map = nodeLookupRef.current
+    const src = map.get(String(flow.source))
+    const tgt = map.get(String(flow.target))
+    if (!src || !tgt) return null
+    const xAcc = typeof xAccessorRef.current === "function"
+      ? xAccessorRef.current
+      : (d: Datum) => d[xAccessorRef.current as string]
+    const yAcc = typeof yAccessorRef.current === "function"
+      ? yAccessorRef.current
+      : (d: Datum) => d[yAccessorRef.current as string]
+    // Synthesized coords use stable keys. The frame reads them via
+    // the hybrid `xReader` / `yReader` defined below, which prefer
+    // these stable keys on coord objects and fall back to the
+    // user's accessor on nodes — supports both string and function
+    // user accessors.
+    return {
+      ...flow,
+      coordinates: [
+        { [COORD_X_KEY]: xAcc(src), [COORD_Y_KEY]: yAcc(src) },
+        { [COORD_X_KEY]: xAcc(tgt), [COORD_Y_KEY]: yAcc(tgt) },
+      ],
+    }
+  }, [])
+
+  useFrameImperativeHandle(ref, {
+    variant: "geo-lines",
+    frameRef,
+    overrides: {
+      push: (flow) => {
+        const line = resolveFlowToLine(flow)
+        if (line) frameRef.current?.pushLine(line)
+      },
+      pushMany: (flows) => {
+        const lines: Datum[] = []
+        for (const flow of flows) {
+          const line = resolveFlowToLine(flow)
+          if (line) lines.push(line)
+        }
+        if (lines.length > 0) frameRef.current?.pushManyLines(lines)
+      },
+    },
+  })
+
   // Reverse lookup: nodeId → first flow touching that node
   // Used to emit flow-relevant fields when a point node is hovered
   const nodeFlowLookup = useMemo(() => {
@@ -340,7 +420,8 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
   // Click behavior is the standard pass-through — no translation needed.
   const customClickBehavior = setup.customClickBehavior
 
-  // Convert flows to line data
+  // Convert flows to line data. Coords use stable internal keys
+  // (see resolveFlowToLine for the same pattern in the push path).
   const lineData = useMemo(() => {
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
@@ -353,12 +434,39 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
       return {
         ...flow,
         coordinates: [
-          { [xAccessor as string]: xAcc(src), [yAccessor as string]: yAcc(src) },
-          { [xAccessor as string]: xAcc(tgt), [yAccessor as string]: yAcc(tgt) }
+          { [COORD_X_KEY]: xAcc(src), [COORD_Y_KEY]: yAcc(src) },
+          { [COORD_X_KEY]: xAcc(tgt), [COORD_Y_KEY]: yAcc(tgt) },
         ]
       }
     }).filter(Boolean) as Datum[]
   }, [safeFlows, nodeLookup, xAccessor, yAccessor])
+
+  // Hybrid x/y readers passed to the frame as `xAccessor` /
+  // `yAccessor`. On synthesized line-coord objects (which carry
+  // `COORD_X_KEY` / `COORD_Y_KEY`) we read the stable keys; on
+  // anything else (nodes / user-shaped data) we fall back to the
+  // user's accessor. This is the integration point that lets
+  // FlowMap accept function accessors — the synthesized coords
+  // never have to satisfy a user-defined function shape.
+  const xReader = useMemo(() => {
+    const userRead = typeof xAccessor === "function"
+      ? xAccessor
+      : (d: Datum) => d[xAccessor as string]
+    return (d: Datum) => {
+      if (d != null && typeof d === "object" && COORD_X_KEY in d) return d[COORD_X_KEY]
+      return userRead(d)
+    }
+  }, [xAccessor])
+
+  const yReader = useMemo(() => {
+    const userRead = typeof yAccessor === "function"
+      ? yAccessor
+      : (d: Datum) => d[yAccessor as string]
+    return (d: Datum) => {
+      if (d != null && typeof d === "object" && COORD_Y_KEY in d) return d[COORD_Y_KEY]
+      return userRead(d)
+    }
+  }, [yAccessor])
 
   // Edge width scale
   const widthScale = useMemo(() => {
@@ -443,11 +551,16 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   const streamProps: StreamGeoFrameProps = {
     projection,
-    lines: lineData,
+    // Push-mode entry: when `flows` is undefined the user is driving
+    // the chart through `ref.current.push()`; omit `lines` so the frame
+    // doesn't reset its store on every parent re-render. With `flows`
+    // supplied we hand the translated `lineData` over as usual.
+    ...(flows != null && { lines: lineData }),
     points: safeNodes,
-    xAccessor: xAccessor as any,
-    yAccessor: yAccessor as any,
+    xAccessor: xReader as any,
+    yAccessor: yReader as any,
     lineDataAccessor: "coordinates",
+    ...(lineIdAccessor != null && { lineIdAccessor }),
     lineType,
     flowStyle,
     lineStyle: lineStyleFn,
@@ -488,8 +601,13 @@ export function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame {...streamProps} />
+      <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
+}) as unknown as {
+  <TDatum extends Datum = Datum>(
+    props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>,
+  ): React.ReactElement | null
+  displayName?: string
 }
 FlowMap.displayName = "FlowMap"

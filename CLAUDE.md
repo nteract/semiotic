@@ -23,9 +23,9 @@
 **LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time"), `tooltip="multi"` for hover-anywhere series comparison
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true), `tooltip="multi"` for hover-anywhere area comparison
 **StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered), `stackOrder` (`"key"` default alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"` by total). For canonical streamgraph aesthetic: `baseline="wiggle"` + `stackOrder="insideOut"` puts the largest series in the middle as a central anchor with smaller series wrapping outward. `baseline` is mutually exclusive with `normalize`. No `lineBy`/`lineDataAccessor`. Pass `tooltip="multi"` for hover-anywhere mode: a single tooltip lists every stacked series at the hovered x, with values interpolated between rendered path samples.
-**Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
-**BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40])
-**ConnectedScatterplot** — + `orderAccessor`
+**Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`, `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; sits underneath user annotations)
+**BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `regression`
+**ConnectedScatterplot** — + `orderAccessor`, `regression`
 **QuadrantChart** — Scatterplot + `quadrants` (required), `xCenter`, `yCenter`
 **MultiAxisLineChart** — Dual Y-axis. `series` (required: `[{ yAccessor, label?, color?, format?, extent? }]`). Falls back to multi-line if not 2 series.
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
@@ -35,7 +35,7 @@
 
 ## Ordinal Charts (`semiotic/ordinal`)
 
-**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40), `roundedTop`, `gradientFill` (`true` | `{topOpacity, bottomOpacity}` | `{colorStops}` — same API as AreaChart; runs tip→base)
+**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40), `roundedTop`, `gradientFill` (`true` | `{topOpacity, bottomOpacity}` | `{colorStops}` — same API as AreaChart; runs tip→base), `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; categories regressed as category-index, line projects through band scale)
 **StackedBarChart** — + `stackBy` (required), `normalize`, `sort` (default false — insertion order)
 **GroupedBarChart** — + `groupBy` (required), `barPadding` (60), `sort` (default false — insertion order)
 **SwarmPlot** — `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
@@ -43,7 +43,7 @@
 **Histogram** — + `bins` (25), `relative`. Always horizontal.
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **RidgelinePlot** — + `bins`, `amplitude` (1.5)
-**DotPlot** — + `sort` ("auto" — insertion order when streaming, value-desc on static), `dotRadius`, `showGrid` default true
+**DotPlot** — + `sort` ("auto" — insertion order when streaming, value-desc on static), `dotRadius`, `showGrid` default true, `regression`
 **PieChart** — `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent`
 **FunnelChart** — `stepAccessor`, `valueAccessor`, `categoryAccessor` (optional), `connectorOpacity`, `orientation`

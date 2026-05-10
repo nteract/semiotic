@@ -148,6 +148,8 @@ export interface GeoPipelineConfig {
   // Annotations
   annotations?: Datum[]
   pointIdAccessor?: string | ((d: Datum) => string)
+  /** ID accessor on line data — required for `removeLine` by id. */
+  lineIdAccessor?: string | ((d: Datum) => string)
 }
 
 // ── Frame props ──────────────────────────────────────────────────────
@@ -169,6 +171,8 @@ export interface StreamGeoFrameProps<T = Datum> {
   yAccessor?: string | ((d: T) => number)
   lineDataAccessor?: string | ((d: T) => Datum[])
   pointIdAccessor?: string | ((d: T) => string)
+  /** ID accessor on line data — required for ref `removeLine` by id. */
+  lineIdAccessor?: string | ((d: T) => string)
 
   // ── Geo-specific ──
   lineType?: "geo" | "line"
@@ -276,6 +280,14 @@ export interface StreamGeoFrameHandle {
   pushMany(data: Datum[]): void
   /** Remove points by ID. Requires pointIdAccessor. */
   removePoint(id: string | string[]): Datum[]
+  /** Append a single line/flow record. Coordinates pre-resolved per `lineDataAccessor`. */
+  pushLine(line: Datum): void
+  /** Append multiple line/flow records in one batch. */
+  pushManyLines(lines: Datum[]): void
+  /** Remove lines by ID. Requires `lineIdAccessor`. */
+  removeLine(id: string | string[]): Datum[]
+  /** Read the current line/flow set. */
+  getLines(): Datum[]
   clear(): void
   getProjection(): GeoProjection | null
   getGeoPath(): GeoPath<any, GeoPermissibleObjects> | null

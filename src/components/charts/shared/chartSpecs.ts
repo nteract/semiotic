@@ -37,6 +37,78 @@ export type PropType = "string" | "number" | "boolean" | "array" | "object" | "f
 export type DataShape = "array" | "object" | "network" | "realtime" | "none"
 export type ChartCategory = "xy" | "ordinal" | "network" | "geo" | "realtime"
 
+/**
+ * Capability tags for runtime behavior. Driven by the
+ * `hoc-frame-architecture-audit` Phase 1: each chart declares which
+ * features it actually supports so docs, AI/MCP tools, and CI gates
+ * can read structured truth instead of inferring it from the source.
+ *
+ * All fields are required so a new chart entry can't omit them
+ * silently — the audit's anti-goal "Do not make registry metadata
+ * aspirational. It should describe real runtime behavior and be
+ * checked." applies here.
+ */
+export interface ChartCapabilities {
+  /**
+   * Render pipeline. `canvas` for Stream-Frame-driven charts that
+   * paint to canvas with SVG overlays for chrome (the common case).
+   * `svg` for charts that are pure SVG (none today, but reserved).
+   * `hybrid` for charts that use both — currently every Stream-Frame
+   * HOC qualifies as hybrid; reserve `canvas` for any future
+   * canvas-only fallback.
+   */
+  renderModes: Array<"canvas" | "svg" | "hybrid">
+
+  /** Renders a legend swatch column when `colorBy` (or equivalent)
+   *  resolves to non-empty categories. */
+  supportsLegend: boolean
+  /** Reads from a `selection` prop and dims/highlights matching
+   *  marks via `wrapStyleWithSelection` or equivalent. */
+  supportsSelection: boolean
+  /** Produces a hover-driven selection (used by linked crosshair /
+   *  cross-filter patterns) via `linkedHover`. */
+  supportsLinkedHover: boolean
+  /** Exposes a ref handle (`push`, `pushMany`, etc.) so consumers
+   *  can mutate the data list without re-rendering. Hierarchy
+   *  charts (Treemap/CirclePack/TreeDiagram/OrbitDiagram) and
+   *  pure-synthetic charts (GaugeChart) declare false. */
+  supportsPush: boolean
+  /** Renders to a static SVG via `renderChart()` from `semiotic/server`
+   *  through a registered entry in `serverChartConfigs.ts`. SSR-only
+   *  charts (none yet) and HOC-SSR exclusions also declare false. */
+  supportsSSR: boolean
+
+  /**
+   * How color is consumed by the chart's data marks.
+   * - `categorical`: discrete buckets, paired with a `colorBy` accessor.
+   * - `sequential`: continuous scale (heatmap intensity, choropleth value).
+   * - `threshold`: stepped scale with explicit breakpoints (gauge zones).
+   * - `continuous`: smooth interpolation along a 1-D path (gradient fill).
+   * - `none`: chart doesn't use color encoding (sparkline, pure layout).
+   */
+  colorModel: "categorical" | "sequential" | "threshold" | "continuous" | "none"
+
+  /**
+   * Where the geometry comes from.
+   * - `plugin`: a built-in plugin in the frame (sankey/force/chord/tree
+   *   for network; bar/pie/swarm/etc. for ordinal; line/area/etc. for XY).
+   * - `custom`: emitted via the frame's customLayout escape hatch
+   *   (ProcessSankey via `customNetworkLayout`, NetworkCustomChart,
+   *   XYCustomChart, OrdinalCustomChart).
+   * - `synthetic`: no layout — the chart constructs its scene from
+   *   the input value(s) directly (GaugeChart computes arc geometry).
+   */
+  layoutMode: "plugin" | "custom" | "synthetic"
+
+  /**
+   * Free-form tag list for opt-in features that don't fit the
+   * boolean shape — e.g. "particles", "forecast", "anomaly", "brush",
+   * "streamgraph", "minimap". Used by docs feature tables and
+   * potential capability-driven AI suggestions.
+   */
+  specialFeatures: string[]
+}
+
 export interface ChartPropSpec {
   /** Allowed runtime types. May be a single value or a union. */
   type: PropType | PropType[]
@@ -74,6 +146,14 @@ export interface ChartSpec {
   propBags: ReadonlyArray<keyof typeof PROP_BAGS>
   /** Chart-specific prop spec, overlaid on top of the composed bags. */
   ownProps: Record<string, ChartPropSpec>
+  /**
+   * Capability matrix — declarative facts about runtime behavior.
+   * Drives docs feature tables, capability-aware AI/MCP tools, and
+   * the `check:capabilities` drift gate (which verifies, e.g., that
+   * a chart claiming `supportsSSR: true` has a matching entry in
+   * `serverChartConfigs.ts`).
+   */
+  capabilities: ChartCapabilities
 }
 
 // ---------------------------------------------------------------------------
@@ -209,6 +289,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // hand-curation oversight. Phase 3 can re-baseline schema with it
       // exposed; for now match the canonical surface.
       roundedTop: { type: "number", omitFromSchema: true },
+      regression: {
+        type: ["boolean", "string", "object"],
+        description: "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale.",
+      },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["regression-overlay"],
     },
   },
 
@@ -233,6 +324,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["stack"],
+    },
   },
 
   GroupedBarChart: {
@@ -254,6 +352,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       roundedTop: { type: "number", omitFromSchema: true },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -280,6 +385,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   BoxPlot: {
@@ -298,6 +410,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showOutliers: { type: "boolean", default: true, description: "Show outlier points" },
       outlierRadius: { type: "number", default: 3 },
       categoryPadding: { type: "number", default: 20 },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["statistical"],
     },
   },
 
@@ -319,6 +438,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -343,6 +469,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["statistical"],
+    },
   },
 
   RidgelinePlot: {
@@ -360,6 +493,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       bins: { type: "number", description: "Number of bins for density estimation" },
       amplitude: { type: "number", default: 1.5, description: "Unitless multiplier of row height (>1 creates overlap)" },
       categoryPadding: { type: "number", omitFromSchema: true },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -382,6 +522,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // Canonical schema flags showGrid `true` for DotPlot — grid lines help
       // readers eyeball values along the value axis.
       showGrid: { type: "boolean", default: true },
+      regression: {
+        type: ["boolean", "string", "object"],
+        description: "Overlay a regression line through the dots. Same shape as Scatterplot's regression prop.",
+      },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["regression-overlay"],
     },
   },
 
@@ -404,6 +555,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       startAngle: { type: "number", default: 0, description: "Starting angle in radians" },
       cornerRadius: { type: "number", omitFromSchema: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   DonutChart: {
@@ -422,6 +580,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       centerContent: { type: ["object", "string", "number"], description: "React node to render in the center of the donut (accepts string key or JSX)" },
       startAngle: { type: "number", default: 0 },
       cornerRadius: { type: "number", omitFromSchema: true },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -452,6 +617,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showScaleLabels: { type: "boolean", default: true },
       backgroundColor: { type: "string", omitFromSchema: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: false, supportsLinkedHover: false,
+      // Single-scalar `value` prop — push API is fundamentally
+      // array-append. Drive realtime via `value={state}` + setInterval
+      // / external store updates, exactly the controlled-prop pattern
+      // the docs streaming demo uses.
+      supportsPush: false, supportsSSR: true,
+      colorModel: "threshold", layoutMode: "synthetic",
+      specialFeatures: ["threshold-zones", "value-only", "controlled-prop-streaming"],
+    },
   },
 
   FunnelChart: {
@@ -472,6 +648,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showCategoryTicks: { type: "boolean", default: false, description: "Show category tick labels on ordinal axis" },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -496,6 +679,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showCategoryTicks: { type: "boolean", description: "Show lane labels on the category axis" },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["brush"],
     },
   },
 
@@ -523,6 +713,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       barPadding: { type: "number", default: 20 },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   // ─── XY family ────────────────────────────────────────────────────────
@@ -548,6 +745,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       fillArea: { type: "boolean", default: false, description: "Fill the area under the line" },
       areaOpacity: { type: "number", default: 0.3, description: "Opacity of the filled area (0-1)" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["forecast", "anomaly", "gap-handling", "direct-labels", "endpoint-labels"],
+    },
   },
 
   AreaChart: {
@@ -568,6 +772,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       areaOpacity: { type: "number", default: 0.7, description: "Area fill opacity (0-1)" },
       showLine: { type: "boolean", default: true, description: "Show stroke line on top of area" },
       lineWidth: { type: "number", default: 2 },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -591,6 +802,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       lineWidth: { type: "number", default: 2 },
       normalize: { type: "boolean", default: false, description: "Normalize stacks to 100%" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["stack", "streamgraph"],
+    },
   },
 
   Scatterplot: {
@@ -609,6 +827,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       sizeRange: { type: "array", default: [3, 15], description: "Min and max radius for sizeBy scaling" },
       pointRadius: { type: "number", default: 5, description: "Fixed point radius" },
       pointOpacity: { type: "number", default: 0.8 },
+      regression: {
+        type: ["boolean", "string", "object"],
+        description: "Overlay a regression line. true = linear, 'linear' | 'polynomial' | 'loess' = method, or full RegressionConfig object. Sugar over the trend annotation.",
+      },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["regression-overlay"],
     },
   },
 
@@ -629,6 +858,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       bubbleOpacity: { type: "number", default: 0.6 },
       bubbleStrokeWidth: { type: "number", default: 1 },
       bubbleStrokeColor: { type: "string", default: "white" },
+      regression: {
+        type: ["boolean", "string", "object"],
+        description: "Overlay a regression line on the bubbles. Same shape as Scatterplot's regression prop.",
+      },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["size-encoding", "streaming-domain", "regression-overlay"],
     },
   },
 
@@ -659,6 +899,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       cellBorderWidth: { type: "number", default: 1 },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM, default: "right", description: "Position of the gradient legend" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "sequential", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   QuadrantChart: {
@@ -686,6 +933,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       pointRadius: { type: "number", default: 5 },
       pointOpacity: { type: "number", default: 0.8 },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["quadrants", "hoc-ssr-only"],
+    },
   },
 
   MultiAxisLineChart: {
@@ -704,6 +958,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       colorScheme: { type: ["string", "array"] },
       curve: { type: "string", default: "monotoneX" },
       lineWidth: { type: "number", default: 2 },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["dual-axis", "hoc-ssr-only"],
     },
   },
 
@@ -725,6 +986,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       candlestickStyle: { type: "object", description: "Style overrides." },
       mode: { type: "string", enum: CHART_MODE_ENUM },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["ohlc"],
+    },
   },
 
   ConnectedScatterplot: {
@@ -743,6 +1011,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       orderLabel: { type: "string", description: "Label for the ordering metric in tooltips" },
       pointRadius: { type: "number", default: 4, description: "Point radius" },
       pointIdAccessor: { type: ["string", "function"], description: "Accessor for unique point IDs, used by point-anchored annotations" },
+      regression: {
+        type: ["boolean", "string", "object"],
+        description: "Overlay a regression line under the connected path. Same shape as Scatterplot's regression prop.",
+      },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["regression-overlay"],
     },
   },
 
@@ -758,6 +1037,16 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       data: { type: "array" },
       fields: { type: "array" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      // Composite chart — selection / linkedHover / push all flow
+      // through the inner Scatterplots, not this top-level wrapper.
+      // Consumers wire those features on the cells they configure.
+      supportsLegend: true, supportsSelection: false, supportsLinkedHover: false,
+      supportsPush: false, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["matrix", "brush", "composite-delegates-interaction", "hoc-ssr-only"],
+    },
   },
 
   MinimapChart: {
@@ -770,6 +1059,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["common"],
     ownProps: {
       data: { type: "array" },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      // Interactive composite — wraps an inner XY chart with a brush
+      // overview. Selection / linkedHover / push all flow through the
+      // wrapped chart's own ref and props; this wrapper doesn't
+      // wire them at its level.
+      supportsLegend: true, supportsSelection: false, supportsLinkedHover: false,
+      supportsPush: false, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["brush", "overview-detail", "composite-delegates-interaction", "hoc-ssr-only"],
     },
   },
 
@@ -799,6 +1099,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       forceStrength: { type: "number", default: 0.1 },
       showLabels: { type: "boolean", default: false },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["force-simulation"],
+    },
   },
 
   SankeyDiagram: {
@@ -826,6 +1133,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       edgeOpacity: { type: "number", default: 0.5 },
       // `edgeSort` is a comparator function — runtime-only.
       edgeSort: { type: "function", omitFromSchema: true },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
     },
   },
 
@@ -871,6 +1185,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       particleDensity: { type: "number", default: 1 },
       particleMaxPerEdge: { type: "number", default: 40 },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "custom",
+      specialFeatures: ["temporal", "particles", "lane-reuse"],
+    },
   },
 
   ChordDiagram: {
@@ -897,6 +1218,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showLabels: { type: "boolean", default: true },
       edgeOpacity: { type: "number", default: 0.5 },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   TreeDiagram: {
@@ -920,6 +1248,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showLabels: { type: "boolean", default: true },
       nodeSize: { type: "number", default: 5 },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: false, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["hierarchy"],
+    },
   },
 
   Treemap: {
@@ -938,6 +1273,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       colorByDepth: { type: "boolean", default: false },
       showLabels: { type: "boolean", default: true },
       nodeLabel: { type: ["string", "function"] },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: false, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["hierarchy"],
     },
   },
 
@@ -958,6 +1300,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       showLabels: { type: "boolean", default: true },
       nodeLabel: { type: ["string", "function"] },
       circleOpacity: { type: "number", default: 0.7 },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: false, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["hierarchy"],
     },
   },
 
@@ -988,6 +1337,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // pass-through), runtime-only.
       foregroundGraphics: { type: "object", omitFromSchema: true },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: false, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["hierarchy", "animated", "hoc-ssr-only"],
+    },
   },
 
   // ─── Geo family ──────────────────────────────────────────────────────
@@ -1006,6 +1362,19 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       colorScheme: { type: ["string", "array"] },
       projection: { type: "string", default: "equalEarth" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      // Values live on `feature.properties` — streaming is per-region
+      // value updates (`mergeData(features, liveRows, { featureKey })`)
+      // re-passed through the `areas` prop. The shared array-append
+      // push API doesn't fit this property-keyed update pattern; the
+      // controlled-prop pattern is the natural realtime API. See the
+      // docs streaming demo on `/charts/choropleth-map`.
+      supportsPush: false, supportsSSR: true,
+      colorModel: "sequential", layoutMode: "plugin",
+      specialFeatures: ["controlled-prop-streaming"],
+    },
   },
 
   ProportionalSymbolMap: {
@@ -1023,6 +1392,15 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       sizeBy: { type: ["string", "function"] },
       areas: { type: ["array", "string"] },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      // Points are array-shaped — push appends to the displayed
+      // points list via `useFrameImperativeHandle({ variant: "geo-points" })`.
+      supportsPush: true, supportsSSR: true,
+      colorModel: "sequential", layoutMode: "plugin",
+      specialFeatures: [],
+    },
   },
 
   FlowMap: {
@@ -1037,6 +1415,17 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       flows: { type: "array" },
       nodes: { type: "array" },
       valueAccessor: { type: ["string", "function"] },
+      lineIdAccessor: { type: ["string", "function"] },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      // Push API translates flow → resolved-line through nodeLookup HOC-side,
+      // then forwards to the frame's `pushLine`/`pushManyLines` via the
+      // `geo-lines` variant in `useFrameImperativeHandle`.
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["particles"],
     },
   },
 
@@ -1052,6 +1441,15 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       points: { type: "array" },
       center: { type: "array" },
       costAccessor: { type: ["string", "function"] },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      // Points are array-shaped — push appends to the displayed
+      // points list. Cost-driven distortion re-runs on each push.
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["distortion", "hoc-ssr-only"],
     },
   },
 
@@ -1073,6 +1471,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       strokeWidth: { type: "number" },
       strokeDasharray: { type: "string" },
       transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["live-stream"],
     },
   },
 
@@ -1097,6 +1502,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       linkedBrush: { type: ["string", "object"], description: "Cross-chart brush coordination via LinkedCharts. String: selection name. Object: { name, xField, yField }." },
       transition: { type: "object", description: "Transition config: { duration, easing }" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["live-stream", "brush"],
+    },
   },
 
   RealtimeSwarmChart: {
@@ -1116,6 +1528,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       stroke: { type: "string" },
       strokeWidth: { type: "number" },
       transition: { type: "object", description: "Transition config: { duration, easing }" },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["live-stream"],
     },
   },
 
@@ -1137,6 +1556,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       strokeWidth: { type: "number" },
       transition: { type: "object", description: "Transition config: { duration, easing }" },
     },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["live-stream"],
+    },
   },
 
   RealtimeHeatmap: {
@@ -1151,6 +1577,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       heatmapXBins: { type: "number" },
       heatmapYBins: { type: "number" },
       aggregation: { type: "string", enum: ["count", "sum", "mean"] as const },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: false,
+      colorModel: "sequential", layoutMode: "plugin",
+      specialFeatures: ["live-stream"],
     },
   },
 }

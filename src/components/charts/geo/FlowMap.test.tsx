@@ -4,13 +4,34 @@ import { render } from "@testing-library/react"
 import { FlowMap } from "./FlowMap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
-// Mock StreamGeoFrame to capture props
+// Mock StreamGeoFrame to capture props AND expose a fake imperative
+// handle so push-API tests can spy on `pushLine`/`pushManyLines`/etc.
 let lastGeoFrameProps: any = null
+const fakeFrameHandle = {
+  push: vi.fn(),
+  pushMany: vi.fn(),
+  removePoint: vi.fn(() => []),
+  pushLine: vi.fn(),
+  pushManyLines: vi.fn(),
+  removeLine: vi.fn(() => []),
+  getLines: vi.fn(() => []),
+  clear: vi.fn(),
+  getProjection: vi.fn(() => null),
+  getGeoPath: vi.fn(() => null),
+  getCartogramLayout: vi.fn(() => null),
+  getZoom: vi.fn(() => 1),
+  resetZoom: vi.fn(),
+  getData: vi.fn(() => []),
+}
 vi.mock("../../stream/StreamGeoFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef((props: any, ref: any) => {
       lastGeoFrameProps = props
+      // Wire the forwarded ref to the fake handle so `useFrameImperativeHandle`
+      // routes through it.
+      if (typeof ref === "function") ref(fakeFrameHandle)
+      else if (ref) ref.current = fakeFrameHandle
       return <div className="stream-geo-frame"><svg /></div>
     })
   }
@@ -40,6 +61,9 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 describe("FlowMap", () => {
   beforeEach(() => {
     lastGeoFrameProps = null
+    Object.values(fakeFrameHandle).forEach((fn) => {
+      if (typeof (fn as any)?.mockClear === "function") (fn as any).mockClear()
+    })
   })
 
   // ── Hooks-before-early-return fix ─────────────────────────────────────
@@ -154,11 +178,15 @@ describe("FlowMap", () => {
         </Wrapper>
       )
       expect(lastGeoFrameProps.lines).toHaveLength(3)
-      // Each line should have coordinates array
+      // Each line should have coordinates array. Synthesized coords
+      // carry stable internal keys (__semiotic_x / __semiotic_y);
+      // the frame reads them via FlowMap's hybrid xAccessor /
+      // yAccessor so the user-facing lon/lat is preserved at read
+      // time. See "hybrid xAccessor reads…" tests below.
       for (const line of lastGeoFrameProps.lines) {
         expect(line.coordinates).toHaveLength(2)
-        expect(line.coordinates[0]).toHaveProperty("lon")
-        expect(line.coordinates[0]).toHaveProperty("lat")
+        expect(line.coordinates[0]).toHaveProperty("__semiotic_x")
+        expect(line.coordinates[0]).toHaveProperty("__semiotic_y")
       }
     })
 
@@ -289,6 +317,132 @@ describe("FlowMap", () => {
         </Wrapper>
       )
       expect(lastGeoFrameProps.zoomable).toBe(true)
+    })
+  })
+
+  // ── Push API ──────────────────────────────────────────────────────────
+  //
+  // FlowMap pushes raw flows (`{ source, target, value }`); the HOC
+  // resolves source/target through `nodeLookup` HOC-side, then forwards
+  // a `{ ...flow, coordinates: [...] }` line entry to the frame's
+  // `pushLine`/`pushManyLines`. See `useFrameImperativeHandle` `geo-lines`
+  // variant.
+
+  describe("push API", () => {
+    it("translates a pushed flow into a coordinate-resolved line", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.push({ source: "A", target: "B", passengers: 100 })
+
+      expect(fakeFrameHandle.pushLine).toHaveBeenCalledTimes(1)
+      const line = (fakeFrameHandle.pushLine as any).mock.calls[0][0]
+      expect(line.source).toBe("A")
+      expect(line.target).toBe("B")
+      expect(line.passengers).toBe(100)
+      expect(line.coordinates).toHaveLength(2)
+      // Synthesized coords carry stable internal keys
+      // (`__semiotic_x` / `__semiotic_y`); the frame reads them via
+      // FlowMap's hybrid xReader/yReader (verified separately by
+      // checking lastGeoFrameProps.xAccessor returns the value when
+      // called on a synthesized coord).
+      expect(line.coordinates[0].__semiotic_x).toBe(-73.7)
+      expect(line.coordinates[1].__semiotic_x).toBe(-0.4)
+    })
+
+    it("hybrid xAccessor reads synthesized coords AND user nodes", () => {
+      // String-form user accessor: nodes use { lon, lat } keys, synthesized
+      // coords use the stable internal keys. Both must work through the
+      // single accessor passed to the frame.
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} />
+        </Wrapper>
+      )
+      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+      // Reads from a node (user shape).
+      expect(xAcc({ lon: 100, lat: 50 })).toBe(100)
+      // Reads from a synthesized coord (stable key).
+      expect(xAcc({ __semiotic_x: 7, __semiotic_y: 8 })).toBe(7)
+    })
+
+    it("hybrid xAccessor works with function user accessors", () => {
+      // Function accessor: would have silently failed with the old
+      // [xAccessor as string] coord-key pattern.
+      const lonFn = (d: any) => d.lon * 2
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} xAccessor={lonFn} />
+        </Wrapper>
+      )
+      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+      // Node shape — falls back to the user function.
+      expect(xAcc({ lon: 5 })).toBe(10)
+      // Synthesized coord — stable key wins (the user function would
+      // have returned NaN here because synthesized coords don't carry
+      // the user's expected shape).
+      expect(xAcc({ __semiotic_x: 99 })).toBe(99)
+    })
+
+    it("drops a pushed flow whose endpoints aren't in nodeLookup", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.push({ source: "A", target: "MISSING", value: 1 })
+      expect(fakeFrameHandle.pushLine).not.toHaveBeenCalled()
+    })
+
+    it("batches pushMany into a single pushManyLines call", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} />
+        </Wrapper>
+      )
+      ref.current?.pushMany([
+        { source: "A", target: "B", value: 1 },
+        { source: "B", target: "C", value: 2 },
+        { source: "A", target: "MISSING", value: 99 }, // dropped
+      ])
+
+      expect(fakeFrameHandle.pushManyLines).toHaveBeenCalledTimes(1)
+      const lines = (fakeFrameHandle.pushManyLines as any).mock.calls[0][0]
+      expect(lines).toHaveLength(2)
+    })
+
+    it("forwards remove(id) to the frame's removeLine", () => {
+      const ref = React.createRef<any>()
+      render(
+        <Wrapper>
+          <FlowMap ref={ref} nodes={sampleNodes} lineIdAccessor="id" />
+        </Wrapper>
+      )
+      ref.current?.remove("flow-1")
+      expect(fakeFrameHandle.removeLine).toHaveBeenCalledWith("flow-1")
+    })
+
+    it("forwards lineIdAccessor through to streamProps", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} lineIdAccessor="id" />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.lineIdAccessor).toBe("id")
+    })
+
+    it("omits `lines` from streamProps when flows prop is undefined (push mode)", () => {
+      render(
+        <Wrapper>
+          <FlowMap nodes={sampleNodes} />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.lines).toBeUndefined()
     })
   })
 

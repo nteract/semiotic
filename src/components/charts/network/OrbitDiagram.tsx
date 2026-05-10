@@ -8,10 +8,11 @@ import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from ".
 import { flattenHierarchy } from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, useChartSelection, useColorScale, useThemeCategorical, resolveDefaultFill } from "../shared/hooks"
+import { useChartMode, resolveDefaultFill } from "../shared/hooks"
+import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 
 // ── Orbit layout types (kept for API compatibility) ──────────────────
@@ -184,26 +185,35 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
 
   const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
 
-  // ── Loading state (computed early, returned after all hooks) ─────────────
-  const loadingEl = renderLoadingState(loading, width, height)
-
   // ── Flatten for color scale ──────────────────────────────────────────────
   const allNodes = useMemo(() => {
     return flattenHierarchy(data, childrenAccessor as string | ((d: Datum) => any[]))
   }, [data, childrenAccessor])
 
-  const colorScale = useColorScale(allNodes, colorByDepth ? undefined : colorBy, colorScheme)
-
-  // Theme-aware default fill: ThemeProvider categorical > colorScheme > DEFAULT_COLOR
-  const themeCategorical = useThemeCategorical()
+  // Consolidated network setup. OrbitDiagram uses tighter margin
+  // defaults (10px on all sides) than the standard chart-mode
+  // defaults — pass them through so the hook's margin reservation
+  // honors the legacy spacing instead of the standard chart-grid one.
+  const setup = useNetworkChartSetup({
+    nodes: allNodes,
+    edges: undefined,
+    inferNodes: false,
+    colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
+    colorScheme,
+    showLegend: false,             // no top-level legend
+    legendInteraction: undefined,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    chartType: "OrbitDiagram",
+    chartId,
+    marginDefaults: { top: 10, right: 10, bottom: 10, left: 10 },
+    userMargin,
+    width, height,
+    loading,
+  })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
-
-  const effectivePalette = useMemo(() => {
-    if (Array.isArray(colorScheme)) return colorScheme
-    if (themeCategorical && themeCategorical.length > 0) return themeCategorical
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    return Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-  }, [colorScheme, themeCategorical])
 
   // ── Node style — d is a RealtimeNode, user data on d.data ───────────────
   // Resolve the scheme colors array for root node coloring
@@ -223,14 +233,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
           ? schemeColors[0]
           : DEPTH_COLORS[(d.depth || 0) % DEPTH_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), setup.colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       baseStyle.opacity = isRoot ? 1 : 0.85
       return baseStyle
     }
-  }, [colorBy, colorByDepth, colorScale, schemeColors, themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, colorByDepth, setup.colorScale, schemeColors, setup.themeCategorical, colorScheme, categoryIndexMap])
 
   const nodeStyleFn = useMemo(
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
@@ -243,47 +253,36 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     return () => ({ stroke: "rgba(128,128,128,0.35)", strokeWidth: 0.5, opacity: 1 })
   }, [])
 
-  // Margin
-  const margin = { top: 10, right: 10, bottom: 10, left: 10, ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin) }
-
-  // Selection
-  const { customHoverBehavior, customClickBehavior } = useChartSelection({
-    selection, linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
-    unwrapData: true,
-    onObservation, onClick, chartType: "OrbitDiagram", chartId,
-  })
-
   // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
   // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
   const wrappedHoverBehavior = useMemo(() => {
-    if (!customHoverBehavior) return undefined
+    if (!setup.customHoverBehavior) return undefined
     return (hover: any) => {
       if (hover && hover.data && hover.data.data !== undefined) {
-        customHoverBehavior({ ...hover, data: hover.data.data })
+        setup.customHoverBehavior({ ...hover, data: hover.data.data })
       } else {
-        customHoverBehavior(hover)
+        setup.customHoverBehavior(hover)
       }
     }
-  }, [customHoverBehavior])
+  }, [setup.customHoverBehavior])
 
   const wrappedClickBehavior = useMemo(() => {
-    if (!customClickBehavior) return undefined
+    if (!setup.customClickBehavior) return undefined
     return (click: any) => {
       if (click && click.data && click.data.data !== undefined) {
-        customClickBehavior({ ...click, data: click.data.data })
+        setup.customClickBehavior({ ...click, data: click.data.data })
       } else {
-        customClickBehavior(click)
+        setup.customClickBehavior(click)
       }
     }
-  }, [customClickBehavior])
+  }, [setup.customClickBehavior])
 
   // Validate
   const error = validateObjectData({ componentName: "OrbitDiagram", data })
   if (error) return <ChartError componentName="OrbitDiagram" message={error} width={width} height={height} />
 
   // ── Loading guard (deferred to after all hooks) ────────────────────────
-  if (loadingEl) return loadingEl
+  if (setup.loadingEl) return setup.loadingEl
 
   return (
     <SafeRender componentName="OrbitDiagram" width={width} height={height}>
@@ -293,13 +292,13 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         size={[width, height]}
         responsiveWidth={props.responsiveWidth}
         responsiveHeight={props.responsiveHeight}
-        margin={margin}
+        margin={setup.margin}
         nodeIDAccessor={nodeIdAccessor}
         childrenAccessor={childrenAccessor as string | ((d: Datum) => any[])}
         nodeStyle={nodeStyleFn}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}
-        colorScheme={effectivePalette}
+        colorScheme={setup.effectivePalette}
         colorByDepth={colorByDepth}
         nodeSize={nodeRadiusProp}
         nodeLabel={showLabels ? nodeIdAccessor : undefined}

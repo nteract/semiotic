@@ -233,4 +233,46 @@ describe("DotPlot", () => {
       expect(lastOrdinalFrameProps.tooltipContent({ category: "A", value: 10 })).toBeNull()
     })
   })
+
+  // ── regression prop ────────────────────────────────────────────────────
+  describe("regression prop", () => {
+    it("does not inject a trend annotation when omitted", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.annotations).toBeUndefined()
+    })
+
+    it("`regression` injects a default linear trend annotation", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} regression />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.annotations).toEqual([{ type: "trend", method: "linear" }])
+    })
+
+    it("forwards method shorthand", () => {
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} regression="loess" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.annotations[0]).toEqual({ type: "trend", method: "loess" })
+    })
+
+    it("prepends the trend annotation in front of user annotations", () => {
+      const userAnn = { type: "label", x: 1, y: 10, note: "hi" }
+      render(
+        <TooltipProvider>
+          <DotPlot data={sampleData} regression annotations={[userAnn]} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.annotations).toHaveLength(2)
+      expect(lastOrdinalFrameProps.annotations[0].type).toBe("trend")
+      expect(lastOrdinalFrameProps.annotations[1]).toBe(userAnn)
+    })
+  })
 })

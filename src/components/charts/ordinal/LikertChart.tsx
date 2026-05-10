@@ -11,8 +11,7 @@ import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../T
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
@@ -22,6 +21,14 @@ import {
   NEUTRAL_NEG,
   NEUTRAL_POS,
 } from "../shared/useLikertAggregation"
+
+// Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
+// LikertChart drives fill from `baseStyleExtras` (level-keyed
+// palette) so the helper's category-cycling path never fires —
+// the map is genuinely unused. Keeping a single reference at
+// module scope avoids re-allocating on every render, which would
+// otherwise bust the helper's `basePieceStyle` memoization.
+const EMPTY_CATEGORY_INDEX_MAP = new Map<string, number>()
 
 /**
  * LikertChart — visualize Likert scale survey responses.
@@ -326,40 +333,35 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
   }, [levels, levelColorMap])
 
   // ── Piece style ──────────────────────────────────────────────────────
-  const fpPieceStyle = frameProps.pieceStyle as ((d: any, c?: string) => Datum) | undefined
-
-  const basePieceStyle = useMemo(() => {
-    return (d: Datum, category?: string) => {
+  // LikertChart's color model is level-keyed (a `levelColorMap` per
+  // diverging step), so the fill comes through `baseStyleExtras` as
+  // a function. The helper detects that extras supplied a fill and
+  // skips its standard color-resolution path; user pieceStyle and
+  // primitive props still merge over the level fill normally.
+  const pieceStyle = useOrdinalPieceStyle({
+    // colorBy/colorScheme are unused since extras supplies fill
+    // directly — pass undefined so the helper's fallback paths
+    // don't accidentally fire.
+    colorBy: undefined,
+    colorScale: undefined,
+    color: undefined,
+    themeCategorical: undefined,
+    colorScheme: undefined,
+    categoryIndexMap: EMPTY_CATEGORY_INDEX_MAP,  // stable; unused since extras supplies fill
+    userPieceStyle: frameProps?.pieceStyle,
+    stroke, strokeWidth, opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+    baseStyleExtras: (d) => {
       const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel
-      let base: Datum
-      if (level === NEUTRAL_NEG || level === NEUTRAL_POS) {
-        base = { fill: neutralColor }
-      } else {
-        const key = label || level
-        base = (key && levelColorMap.has(key))
-          ? { fill: levelColorMap.get(key)! }
-          : { fill: "#888" }
-      }
-      if (fpPieceStyle) {
-        const extra = fpPieceStyle(d, category)
-        if (extra.stroke) base.stroke = extra.stroke
-        if (extra.strokeWidth != null) base.strokeWidth = extra.strokeWidth
-        if (extra.strokeOpacity != null) base.strokeOpacity = extra.strokeOpacity
-      }
-      return base
-    }
-  }, [levelColorMap, neutralColor, fpPieceStyle])
-
-  const basePieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(basePieceStyle, { stroke, strokeWidth, opacity }),
-    [basePieceStyle, stroke, strokeWidth, opacity]
-  )
-
-  const pieceStyle = useMemo(
-    () => wrapStyleWithSelection(basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [basePieceStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+      if (level === NEUTRAL_NEG || level === NEUTRAL_POS) return { fill: neutralColor }
+      const key = label || level
+      return (key && levelColorMap.has(key))
+        ? { fill: levelColorMap.get(key)! }
+        : { fill: "#888" }
+    },
+  })
 
   // ── Tooltip ──────────────────────────────────────────────────────────
   const neutralLevelName = useMemo(() => {

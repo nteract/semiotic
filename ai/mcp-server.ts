@@ -65,7 +65,17 @@ const {
   suggestCharts,
 } = require("./chartSuggestions.cjs") as {
   formatSuggestionReport: (result: SuggestChartResult) => string
-  suggestCharts: (args: { data?: any[]; intent?: string }) => SuggestChartResult
+  suggestCharts: (args: {
+    data?: any[]
+    intent?: string
+    capabilities?: {
+      push?: boolean
+      linkedHover?: boolean
+      ssr?: boolean
+      selection?: boolean
+      legend?: boolean
+    }
+  }) => SuggestChartResult
 }
 const {
   BEHAVIOR_CONTRACTS,
@@ -184,7 +194,11 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   }
 }
 
-async function suggestChartHandler(args: { data?: any[]; intent?: string }): Promise<ToolResult> {
+async function suggestChartHandler(args: {
+  data?: any[]
+  intent?: string
+  capabilities?: { push?: boolean; linkedHover?: boolean; ssr?: boolean; selection?: boolean; legend?: boolean }
+}): Promise<ToolResult> {
   const result = suggestCharts(args)
   const content = [{ type: "text" as const, text: formatSuggestionReport(result) }]
   if (!result.ok) {
@@ -559,10 +573,21 @@ function createServer(): McpServer {
 
   srv.tool(
     "suggestChart",
-    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions. Returns ranked recommendations with example props.",
+    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions, or capabilities to require/forbid features (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props; charts that don't satisfy the capability constraints are dropped.",
     {
       data: z.array(z.record(z.string(), z.unknown())).min(1).max(5).describe("1-5 sample data objects"),
       intent: z.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
+      capabilities: z.object({
+        push: z.boolean().optional().describe("Require ref-based push API (live streaming via ref.current.push())"),
+        linkedHover: z.boolean().optional().describe("Require cross-chart linked hover support"),
+        ssr: z.boolean().optional().describe("Require server-side rendering via renderChart()"),
+        selection: z.boolean().optional().describe("Require named selection / cross-filter support"),
+        legend: z.boolean().optional().describe("Require a top-level legend"),
+        // `.strict()` so the MCP surface rejects unknown capability
+        // keys at the schema layer rather than silently stripping
+        // them — keeps the cjs-level "Unknown capability key(s)"
+        // validation from being unreachable from MCP callers.
+      }).strict().optional().describe("Capability constraints — set a key to true to require, false to forbid. Unset keys are ignored."),
     },
     suggestChartHandler
   )
