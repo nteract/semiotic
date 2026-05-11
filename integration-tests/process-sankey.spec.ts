@@ -31,6 +31,36 @@ async function canvasHasPaint(page: Page, testId: string): Promise<boolean> {
   }, testId)
 }
 
+// Lightweight checksum of the canvas's raw pixel bytes. Used to detect
+// motion across frames — particle animation (rAF-driven) makes the
+// pixel data differ between samples, while static bands/ribbons paint
+// the same bytes each frame. A non-cryptographic 32-bit hash is plenty
+// for "is anything moving" detection.
+async function canvasFingerprint(page: Page, testId: string): Promise<number> {
+  return page.evaluate((id) => {
+    const container = document.querySelector(`[data-testid="${id}"]`)
+    if (!container) return 0
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement | null
+    if (!canvas) return 0
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return 0
+    let data: Uint8ClampedArray
+    try {
+      data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+    } catch {
+      return 0
+    }
+    let hash = 0
+    // Stride-sample to keep this fast even on large canvases. The
+    // sample is dense enough (~1 byte / 64) that a couple of moving
+    // particles still perturb the hash.
+    for (let i = 0; i < data.length; i += 64) {
+      hash = ((hash * 31) | 0) ^ data[i]
+    }
+    return hash >>> 0
+  }, testId)
+}
+
 test.describe("ProcessSankey - Static", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(PAGE)
@@ -49,8 +79,20 @@ test.describe("ProcessSankey - Static", () => {
   test("particles render when showParticles is on", async ({ page }) => {
     const tc = page.locator('[data-testid="static-particles"]')
     await expect(tc).toBeVisible()
-    // Particles are <circle> elements in the foregroundGraphics overlay.
-    await expect.poll(async () => tc.locator("svg circle").count(), { timeout: 5_000 }).toBeGreaterThan(0)
+    // Particles ride the canvas + ParticlePool pipeline since the
+    // unification with SankeyDiagram (they used to be `<circle>`
+    // elements in an SVG overlay). The observable invariant is now
+    // canvas-pixel motion: rAF-driven particle stepping makes the
+    // pixel data change frame-to-frame, while a static
+    // band-and-ribbon paint is byte-identical between samples.
+    await expect.poll(() => canvasHasPaint(page, "static-particles"), { timeout: 5_000 }).toBe(true)
+    // Let any intro transition settle so the only remaining motion
+    // is the particle stream itself.
+    await page.waitForTimeout(700)
+    const first = await canvasFingerprint(page, "static-particles")
+    await page.waitForTimeout(400)
+    const second = await canvasFingerprint(page, "static-particles")
+    expect(second).not.toBe(first)
   })
 })
 
