@@ -233,13 +233,16 @@ function extractKbValues(block) {
   return out
 }
 
-/** Per-bundle tolerance in KB. Build environments produce sub-KB
- *  gzip differences (terser output, source-map placement, npm
- *  install state, etc.) that round-trip across the integer-KB
- *  boundary on different machines. The `docs:bundle-sizes` write
- *  step still writes the freshly-measured exact value; this only
- *  governs when `--check` decides drift is real. */
-const KB_TOLERANCE = 3
+/** Per-bundle tolerance in KB. Build environments produce
+ *  multi-KB gzip differences (terser output, source-map placement,
+ *  npm install state, node/rollup versions) that swing rounded
+ *  values on different machines. Real feature growth lands in
+ *  10-30 KB chunks, so a 10 KB threshold still trips on anything
+ *  worth re-running `docs:bundle-sizes` for while tolerating
+ *  build-noise drift. The `docs:bundle-sizes` write step always
+ *  writes the freshly-measured exact value; this only governs
+ *  when `--check` decides drift is real. */
+const KB_TOLERANCE = 10
 
 function blocksWithinTolerance(rendered, existing) {
   const a = extractKbValues(rendered)
