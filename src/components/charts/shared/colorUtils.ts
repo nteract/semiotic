@@ -210,13 +210,19 @@ function hashString(str: string): number {
 }
 
 /**
- * Generates a size function based on sizeBy configuration
+ * Generates a size function based on sizeBy configuration.
+ *
+ * Output is clamped to `sizeRange`. A pushed point whose `sizeBy`
+ * value falls outside the currently-known domain (which can happen
+ * in push mode before the running min/max catches up) renders at
+ * the boundary radius rather than producing an arbitrarily large
+ * (or negative) pixel value.
  *
  * @param dataPoint - The data point
  * @param sizeBy - Field name or function to determine size
  * @param sizeRange - Min and max size range [min, max]
  * @param domain - Optional domain for scaling [minValue, maxValue]
- * @returns Size value
+ * @returns Size value, clamped to `sizeRange` when a domain is given
  */
 export function getSize(
   dataPoint: Datum,
@@ -244,6 +250,13 @@ export function getSize(
     return (minSize + maxSize) / 2
   }
 
-  const normalized = (value - minDomain) / (maxDomain - minDomain)
+  // Clamp the normalized position to [0, 1] so the output stays
+  // within sizeRange even when `value` falls outside `domain`. Push
+  // mode initial state hits this most often — the first pushed
+  // point's value may be outside a fallback `[0, 1]` domain until
+  // `trackPushed` updates it on the next render.
+  let normalized = (value - minDomain) / (maxDomain - minDomain)
+  if (normalized < 0) normalized = 0
+  else if (normalized > 1) normalized = 1
   return minSize + normalized * (maxSize - minSize)
 }

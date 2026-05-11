@@ -258,4 +258,75 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneEdges).toHaveLength(1)
     expect(store.sceneEdges[0].type).toBe("line")
   })
+
+  it("drops malformed bezier values rather than passing them to the particle pipeline", () => {
+    // Truthiness-only checks let `bezier: true` or partial objects
+    // through, and the canvas particle code reads
+    // `edge.bezier.points[0].x` unguarded — those would crash. The
+    // validator should silently drop anything that isn't a real
+    // BezierCache shape.
+    const layout = () => ({ sceneNodes: [], sceneEdges: [], labels: [] })
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+      showParticles: true,
+    }))
+    const malformed: unknown[] = [
+      true,
+      "string",
+      42,
+      { circular: false },                          // missing points
+      { circular: false, points: [{ x: 0, y: 0 }] }, // too few points
+      { circular: false, points: [
+        { x: NaN, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 },
+      ], halfWidth: 2 },                            // non-finite x
+      { circular: true, halfWidth: 1 },             // circular missing segments
+      { circular: true, segments: [], halfWidth: 1 }, // empty segments
+    ]
+    store.ingestBounded(
+      [{ id: "a" }, { id: "b" }],
+      malformed.map((bezier, i) => ({
+        source: "a", target: "b", value: 1, bezier, _i: i,
+      })),
+      [400, 200],
+    )
+    const edges = Array.from(store.edges.values())
+    expect(edges).toHaveLength(malformed.length)
+    for (const e of edges) {
+      expect(e.bezier).toBeUndefined()
+    }
+  })
+
+  it("carries pre-computed bezier through ingestBounded for customNetworkLayout particles", () => {
+    // ProcessSankey writes bezier control points onto each edge before
+    // pushing to the frame; without this, `runLayout`'s customLayout
+    // short-circuit skips `finalizeLayout` and the particle pool's
+    // `if (!edge.bezier) continue` gates spawn off every edge. Pin the
+    // ingest-side carry-through here so the unification stays wired.
+    const layout = () => ({ sceneNodes: [], sceneEdges: [], labels: [] })
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+      showParticles: true,
+    }))
+    const bezier = {
+      circular: false as const,
+      points: [
+        { x: 0, y: 50 }, { x: 50, y: 50 },
+        { x: 50, y: 100 }, { x: 100, y: 100 },
+      ] as [
+        { x: number; y: number }, { x: number; y: number },
+        { x: number; y: number }, { x: number; y: number },
+      ],
+      halfWidth: 4,
+    }
+    store.ingestBounded(
+      [{ id: "a" }, { id: "b" }],
+      [{ source: "a", target: "b", value: 5, bezier }],
+      [400, 200],
+    )
+    const edges = Array.from(store.edges.values())
+    expect(edges).toHaveLength(1)
+    expect(edges[0].bezier).toBe(bezier)
+    // Particle pool gate (sankey OR customNetworkLayout) also fires.
+    expect(store.particlePool).not.toBeNull()
+  })
 })

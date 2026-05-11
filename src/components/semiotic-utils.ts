@@ -63,3 +63,27 @@ export { normalizeTooltip, MultiPointTooltip } from "./Tooltip/Tooltip"
 
 // ── Accessibility hooks ─────────────────────────────────────────────────
 export { useReducedMotion, useHighContrast } from "./stream/useMediaPreferences"
+
+// ── Radial chart geometry ────────────────────────────────────────────────
+// Pure math helpers extracted from GaugeChart for custom radial chart
+// authors using XYCustomChart or any bespoke radial layout.
+export {
+  sweepToAngles,
+  valueToAngle,
+  computeArcBoundingBox,
+} from "./charts/shared/radialGeometry"
+export type { SweepAngles, ArcBoundingBox } from "./charts/shared/radialGeometry"
+
+// ── Stream status observer ──────────────────────────────────────────────
+// User-facing hook for any push-API chart (realtime or HOC) — wraps
+// the ref and exposes a reactive `status` enum (idle/active/stale)
+// + last-push timestamp. The frame-internal staleness check in
+// `useStalenessCheck` powers per-mark dimming inside the canvas;
+// `useStreamStatus` is the user-facing surface for app-level
+// indicators ("Stale data" badges, idle banners, etc.).
+export { useStreamStatus } from "./charts/shared/useStreamStatus"
+export type {
+  StreamStatus,
+  StreamStatusOptions,
+  StreamStatusResult,
+} from "./charts/shared/useStreamStatus"

@@ -17,6 +17,8 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
+import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 
 /**
  * AreaChart component props
@@ -183,6 +185,30 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
   annotations?: Datum[]
 
   /**
+   * Forecast overlay — extends the area with a tagged training /
+   * observed / forecast region and (optionally) a confidence
+   * envelope. Same shape as LineChart's `forecast` prop. Pair with
+   * `anomaly` for combined anomaly + forecast visualization.
+   *
+   * @example
+   * ```tsx
+   * <AreaChart data={obs} xAccessor="t" yAccessor="value"
+   *            forecast={{ trainEnd: 80, steps: 10, color: "#6366f1" }} />
+   * ```
+   */
+  forecast?: ForecastConfig
+  /**
+   * Anomaly overlay — adds a ±σ band and per-point anomaly dots.
+   * Standalone (without forecast) gives raw anomaly detection.
+   *
+   * @example
+   * ```tsx
+   * <AreaChart data={obs} anomaly={{ threshold: 2 }} />
+   * ```
+   */
+  anomaly?: AnomalyConfig
+
+  /**
    * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
    * that side data-derived. Useful for pinning a time axis to a known
    * window (e.g. last 24 hours) so streamed updates don't shift the
@@ -297,6 +323,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     pointRadius = 3,
     tooltip,
     annotations,
+    forecast,
+    anomaly,
     xExtent,
     yExtent,
     frameProps = {},
@@ -350,9 +378,24 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     height,
   })
 
+  // ── Statistical features (forecast + anomaly overlays) ────────────────
+  // Same hook LineChart uses — produces post-forecast effective data
+  // (tagged future points appended) + envelope/anomaly annotations.
+  const {
+    effectiveData: featureEffectiveData,
+    statisticalAnnotations,
+  } = useSeriesFeatures({
+    data: safeData as Datum[],
+    xAccessor, yAccessor,
+    forecast, anomaly,
+    groupBy: areaBy,
+  })
+
   // ── Area-series construction (data shaping, line/point style, tooltip) ─
+  // Use featureEffectiveData when forecast is active so post-forecast
+  // future points flow into the area pipeline; otherwise raw safeData.
   const { flattenedData, lineStyle, pointStyle, defaultTooltipContent } = useAreaSeriesSetup({
-    safeData, data,
+    safeData: featureEffectiveData as TDatum[], data,
     areaBy, lineDataAccessor,
     colorBy, colorScale: setup.colorScale,
     color, stroke, strokeWidth, opacity,
@@ -408,7 +451,9 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),
-    ...(annotations && annotations.length > 0 && { annotations }),
+    ...(((annotations && annotations.length > 0) || statisticalAnnotations.length > 0) && {
+      annotations: [...(annotations || []), ...statisticalAnnotations],
+    }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,

@@ -744,13 +744,18 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       pointRadius: { type: "number", default: 3, description: "Radius of point markers when showPoints is true" },
       fillArea: { type: "boolean", default: false, description: "Fill the area under the line" },
       areaOpacity: { type: "number", default: 0.3, description: "Opacity of the filled area (0-1)" },
+      forecast: { type: "object", description: "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig." },
+      anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["forecast", "anomaly", "gap-handling", "direct-labels", "endpoint-labels"],
+      // `series-features` umbrella tag = uses the shared
+      // `useSeriesFeatures` hook; the specific `forecast` / `anomaly`
+      // tags describe individual capabilities for AI discovery.
+      specialFeatures: ["forecast", "anomaly", "series-features", "gap-handling", "direct-labels", "endpoint-labels"],
     },
   },
 
@@ -772,13 +777,15 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       areaOpacity: { type: "number", default: 0.7, description: "Area fill opacity (0-1)" },
       showLine: { type: "boolean", default: true, description: "Show stroke line on top of area" },
       lineWidth: { type: "number", default: 2 },
+      forecast: { type: "object", description: "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig." },
+      anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: [],
+      specialFeatures: ["forecast", "anomaly", "series-features"],
     },
   },
 
@@ -831,13 +838,15 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line. true = linear, 'linear' | 'polynomial' | 'loess' = method, or full RegressionConfig object. Sugar over the trend annotation.",
       },
+      forecast: { type: "object", description: "Forecast overlay config — tagged future points + optional envelope. See ForecastConfig." },
+      anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["regression-overlay"],
+      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features"],
     },
   },
 
@@ -1015,13 +1024,15 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line under the connected path. Same shape as Scatterplot's regression prop.",
       },
+      forecast: { type: "object", description: "Forecast overlay config — same shape as LineChart's forecast prop." },
+      anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations." },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["regression-overlay"],
+      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features"],
     },
   },
 
@@ -1180,10 +1191,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       timeFormat: { type: "function", omitFromSchema: true },
       valueFormat: { type: "function", omitFromSchema: true },
       showParticles: { type: "boolean", default: false },
-      particleRadius: { type: "number", default: 2.5 },
-      particleDuration: { type: "number", default: 6000 },
-      particleDensity: { type: "number", default: 1 },
-      particleMaxPerEdge: { type: "number", default: 40 },
+      particleStyle: { type: "object", description: "ParticleStyle config — same shape as SankeyDiagram. Defaults from DEFAULT_PARTICLE_STYLE (radius 3, opacity 0.7, spawnRate 0.1, maxPerEdge 50)." },
     },
     capabilities: {
       renderModes: ["hybrid"],

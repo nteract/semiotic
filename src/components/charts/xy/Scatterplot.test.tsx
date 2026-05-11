@@ -387,4 +387,42 @@ describe("Scatterplot", () => {
       expect(ann[1]).toBe(userAnn)
     })
   })
+
+  // ── seriesFeatures (forecast / anomaly) ────────────────────────────────
+  // Shared `useSeriesFeatures` hook with LineChart/AreaChart/ConnectedScatterplot.
+  // Lazy-loaded overlay module makes the async annotation/data pipeline
+  // hard to test end-to-end here — async coverage lives in the hook's
+  // own unit tests and LineChart forecast tests. These pin the
+  // smoke-level wiring so the props don't silently fall off.
+  describe("seriesFeatures prop wiring", () => {
+    it("accepts a forecast prop without crashing", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} forecast={{ trainEnd: 2, steps: 3 }} />
+        </TooltipProvider>
+      )
+      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    })
+
+    it("accepts an anomaly prop without crashing", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} anomaly={{ threshold: 2 }} />
+        </TooltipProvider>
+      )
+      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    })
+
+    it("forwards data to the frame untouched when forecast/anomaly are unset", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} />
+        </TooltipProvider>
+      )
+      // No statistical overlays → annotations remains undefined and
+      // the frame sees the raw data array.
+      expect(lastXYFrameProps.annotations).toBeUndefined()
+      expect(lastXYFrameProps.data).toEqual(sampleData)
+    })
+  })
 })

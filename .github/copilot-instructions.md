@@ -2,7 +2,7 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- **Use sub-path imports** — `semiotic/xy` (77KB gz), `semiotic/ordinal` (64KB), `semiotic/network` (51KB), `semiotic/geo` (49KB), `semiotic/realtime` (84KB), `semiotic/server` (64KB), `semiotic/recipes` (4KB), `semiotic/utils` (20KB), `semiotic/themes` (4KB), `semiotic/data` (3KB). Full `semiotic` is 165KB gz.
+- **Use sub-path imports** — `semiotic/xy` (200KB gz), `semiotic/ordinal` (159KB), `semiotic/network` (148KB), `semiotic/geo` (116KB), `semiotic/realtime` (206KB), `semiotic/server` (159KB), `semiotic/recipes` (13KB), `semiotic/utils` (39KB), `semiotic/themes` (7KB), `semiotic/data` (5KB). Full `semiotic` is 415KB gz.
 - CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor]`
 - MCP: `npx semiotic-mcp`
 
@@ -22,10 +22,10 @@
 
 **LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time"), `tooltip="multi"` for hover-anywhere series comparison
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true), `tooltip="multi"` for hover-anywhere area comparison
-**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` for streamgraph | `"silhouette"` for centered), `stackOrder` (`"key"` default alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"` by total). For canonical streamgraph aesthetic: `baseline="wiggle"` + `stackOrder="insideOut"` puts the largest series in the middle as a central anchor with smaller series wrapping outward. `baseline` is mutually exclusive with `normalize`. No `lineBy`/`lineDataAccessor`. Pass `tooltip="multi"` for hover-anywhere mode: a single tooltip lists every stacked series at the hovered x, with values interpolated between rendered path samples.
-**Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`
-**BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40])
-**ConnectedScatterplot** — + `orderAccessor`
+**StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` streamgraph | `"silhouette"` centered), `stackOrder` (`"key"` alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"`). Streamgraph: `baseline="wiggle"` + `stackOrder="insideOut"`. `baseline` ⊥ `normalize`. No `lineBy`/`lineDataAccessor`. `tooltip="multi"` lists every series at the hovered x (values interpolated between samples).
+**Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`, `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; sits underneath user annotations)
+**BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `regression`
+**ConnectedScatterplot** — + `orderAccessor`, `regression`
 **QuadrantChart** — Scatterplot + `quadrants` (required), `xCenter`, `yCenter`
 **MultiAxisLineChart** — Dual Y-axis. `series` (required: `[{ yAccessor, label?, color?, format?, extent? }]`). Falls back to multi-line if not 2 series.
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
@@ -35,7 +35,7 @@
 
 ## Ordinal Charts (`semiotic/ordinal`)
 
-**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40), `roundedTop`, `gradientFill` (`true` | `{topOpacity, bottomOpacity}` | `{colorStops}` — same API as AreaChart; runs tip→base)
+**BarChart** — `data`, `categoryAccessor`, `valueAccessor`, `orientation`, `colorBy`, `sort`, `barPadding` (40), `roundedTop`, `gradientFill` (`true` | `{topOpacity, bottomOpacity}` | `{colorStops}` — same API as AreaChart; runs tip→base), `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; categories regressed as category-index, line projects through band scale)
 **StackedBarChart** — + `stackBy` (required), `normalize`, `sort` (default false — insertion order)
 **GroupedBarChart** — + `groupBy` (required), `barPadding` (60), `sort` (default false — insertion order)
 **SwarmPlot** — `colorBy`, `sizeBy`, `pointRadius`, `pointOpacity`
@@ -43,7 +43,7 @@
 **Histogram** — + `bins` (25), `relative`. Always horizontal.
 **ViolinPlot** — + `bins`, `curve`, `showIQR`
 **RidgelinePlot** — + `bins`, `amplitude` (1.5)
-**DotPlot** — + `sort` ("auto" — insertion order when streaming, value-desc on static), `dotRadius`, `showGrid` default true
+**DotPlot** — + `sort` ("auto" — insertion order when streaming, value-desc on static), `dotRadius`, `showGrid` default true, `regression`
 **PieChart** — `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent`
 **FunnelChart** — `stepAccessor`, `valueAccessor`, `categoryAccessor` (optional), `connectorOpacity`, `orientation`
@@ -57,7 +57,7 @@ All ordinal: `colorBy`, `colorScheme`, `categoryFormat` (string|ReactNode), `sho
 
 **ForceDirectedGraph** — `nodes`, `edges`, `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `nodeSize`, `nodeSizeRange`, `edgeWidth`, `iterations` (300), `forceStrength` (0.1), `showLabels`, `nodeLabel`
 **SankeyDiagram** — `edges`, `nodes`, `valueAccessor`, `nodeIdAccessor`, `colorBy`, `edgeColorBy`, `orientation`, `nodeAlign`, `nodeWidth`, `nodePaddingRatio`, `showLabels`
-**ProcessSankey** — temporal sankey with a real time x-axis. `nodes`, `edges` (each with `startTime`/`endTime`), `domain` (required `[t0, t1]`), `axisTicks?`, `xExtentAccessor` (nodes can declare an explicit `[start, end]` lifetime — lane spans `min(xExtent[0], earliestEdge)` to `max(xExtent[1], latestEdge)`), `colorBy` + `colorScheme` + `showLegend` + `legendPosition` for categorical coloring, `pairing` ("value"|"temporal"), `packing` ("off"|"reuse"), `laneOrder` ("crossing-min"|"inside-out"|"crossing-min+inside-out"|"insertion"), `lifetimeMode` ("full"|"half"), `ribbonLane` ("source"|"target"|"both"), `showLaneRails`, `showQualityReadout`, `showParticles`, `timeFormat`/`valueFormat`, push API via ref. Static-graph cycles are valid as long as edges move forward in time. Use when flow events have timestamps; use `SankeyDiagram` for static total-flow snapshots.
+**ProcessSankey** — temporal sankey with a real time x-axis. `nodes`, `edges` (each with `startTime`/`endTime`), `domain` (required `[t0, t1]`), `axisTicks?`, `xExtentAccessor` (optional `[start, end]` lifetime per node — lane spans `min(xExtent[0], earliestEdge)` to `max(xExtent[1], latestEdge)`), `colorBy`/`colorScheme`/`showLegend`/`legendPosition`, `pairing` ("value"|"temporal"), `packing` ("off"|"reuse"), `laneOrder` ("crossing-min"|"inside-out"|"crossing-min+inside-out"|"insertion"), `lifetimeMode` ("full"|"half"), `ribbonLane` ("source"|"target"|"both"), `showLaneRails`, `showQualityReadout`, `showParticles` + `particleStyle` (same shape as SankeyDiagram, canvas + ParticlePool), `timeFormat`/`valueFormat`, push API via ref. Static-graph cycles are valid as long as edges move forward in time. Use for time-stamped flow events; use `SankeyDiagram` for static total-flow snapshots.
 **ChordDiagram** — `edges`, `nodes`, `valueAccessor`, `edgeColorBy`, `padAngle`, `showLabels`
 **TreeDiagram** — `data` (root), `layout`, `orientation`, `childrenAccessor`, `colorBy`, `colorByDepth`
 **Treemap** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `showLabels`
@@ -132,7 +132,7 @@ import {
 <NetworkCustomChart nodes={nodes} edges={edges} layout={flextreeLayout} layoutConfig={{ ... }} />
 ```
 
-**Recipes subpath** (`semiotic/recipes`, 4KB gz) ships pure layout functions. They emit standard SceneNodes — no chart code. BYO heavy deps (`d3-flextree`, `dagre`) live in user code.
+**Recipes subpath** (`semiotic/recipes`, 13KB gz) ships pure layout functions. They emit standard SceneNodes — no chart code. BYO heavy deps (`d3-flextree`, `dagre`) live in user code.
 
 ### Chrome (labels, axes, legends): the recipe owns it
 
@@ -171,11 +171,9 @@ const [hovered, setHovered] = useState(null)
 />
 ```
 
-The same predicate hook is the integration point for richer interactions on the roadmap: a future `<ParallelCoordinatesBrushes>` overlay that drag-brushes per-axis ranges, and `useBrushSelection`-style linked brushing across coordinated charts (selection store would carry per-field range constraints, downstream charts consume them via the same hook).
-
 ### Built-in chrome works when the layout uses standard scales
 
-Layouts that draw *within* the frame's standard scales can just use the HOC's chrome. Pass `showAxes` on `XYCustomChart` / `OrdinalCustomChart` and the frame will render the same x/y or o/r axes the built-in HOCs do — useful for custom XY layouts that overlay points/lines on regular axes. The recipe-managed chrome is for the cases where standard axes can't help (variable-width bars under a band scale, per-row independent scales, etc.).
+Pass `showAxes` on `XYCustomChart` / `OrdinalCustomChart` to get the same x/y or o/r axes the built-in HOCs render — useful for custom layouts that overlay points/lines on regular scales. Recipe-managed chrome is for cases where standard axes don't fit (variable-width bars under a band scale, per-row independent scales, etc.).
 
 **Notes:**
 - Coords are plot-relative (the frame translates the canvas/SVG group by `margin`). Read `ctx.dimensions.plot` for the drawing rect. Radial ordinal projection is the one exception: `plot.x = -width/2`, `plot.y = -height/2` because the canvas ctx is center-translated.
@@ -298,9 +296,8 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Legend**: "bottom" expands margin ~80px. MultiAxisLineChart: use `legendPosition="bottom"`.
 - **Log scale**: Domain min clamped to 1e-6.
 - **barPadding**: Pixel value (40/60 default). Reduce for small charts.
-- **sort on StackedBarChart/GroupedBarChart**: Default `false` preserves insertion order. The underlying frame defaults to value-descending if `oSort` is undefined, so always pass `sort` explicitly if order matters.
-- **sort `"auto"`** (BarChart/StackedBarChart/GroupedBarChart/DotPlot): insertion order while streaming, value-desc on static data. The right choice when using the push API — avoids categories shuffling as values fluctuate. DotPlot's default; opt-in on others.
-- **Tooltip format cascade**: `valueFormat` (ordinal) / `xFormat` / `yFormat` (XY) / `valueFormat` on Heatmap flow to the default tooltip automatically, so axis and tooltip read identically. Only applies to the default tooltip — a custom `tooltip` prop fully overrides; re-pass the formatter inside `Tooltip({format})` / `MultiLineTooltip({fields:[{format}]})` if you want it there. Bespoke-tooltip charts (Histogram, FunnelChart, LikertChart, GaugeChart) don't participate; customize via `tooltip`.
+- **sort** (BarChart/StackedBarChart/GroupedBarChart/DotPlot): `false` preserves insertion order; `"auto"` = insertion-order while streaming, value-desc on static (DotPlot default — opt-in on others, avoids category shuffling under the push API). StackedBar/GroupedBar default to `false`; the underlying frame value-sorts when `oSort` is undefined, so always pass `sort` explicitly if order matters.
+- **Tooltip format cascade**: `valueFormat`/`xFormat`/`yFormat` flow to the default tooltip automatically, so axis and tooltip read identically. A custom `tooltip` prop fully overrides — re-pass via `Tooltip({format})` / `MultiLineTooltip({fields:[{format}]})`. Bespoke-tooltip charts (Histogram, FunnelChart, LikertChart, GaugeChart) don't participate; customize via `tooltip`.
 - **Horizontal bars**: Need wider left margin: `margin={{ left: 120 }}`.
 - **Push API**: Omit `data` entirely. `data={[]}` clears on every render.
 - **frameProps style functions**: Bypass HOC color resolution — use `colorBy` prop instead.
@@ -313,7 +310,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **scalePadding**: Pixel inset on scale ranges. Pass via `frameProps={{ scalePadding: 12 }}`.
 - **categoryFormat/xFormat/yFormat**: Can return ReactNode (renders in `<foreignObject>`).
 - **Tick deduplication**: Adjacent identical labels auto-removed.
-- **Composing overlays**: XY/Ordinal charts paint `--semiotic-bg` across the full canvas by default, hiding anything beneath. When stacking charts (e.g. `position: absolute` overlay on top of a base), pass `frameProps={{ background: "transparent" }}` on the overlay to skip the fill. Network/Geo frames don't paint bg by default, so this only matters for XY/Ordinal.
+- **Composing overlays**: XY/Ordinal charts paint `--semiotic-bg` across the canvas; stack with `frameProps={{ background: "transparent" }}` on the overlay. Network/Geo don't paint bg by default.
 
 ## Performance
 

@@ -46,3 +46,18 @@ export type {
   NetworkLayoutContext,
   NetworkLayoutResult,
 } from "./stream/networkCustomLayout"
+
+// ProcessSankey temporal-validation primitives. External code
+// (data pipelines, AI agents constructing graphs, server-side
+// validators) can pre-check node/edge sets against the same rules
+// the chart enforces — value conservation per node, edge endpoints
+// resolve, etc.
+export {
+  validateProcessSankey,
+  formatProcessSankeyIssue,
+} from "./charts/network/processSankey/algorithm"
+export type {
+  ProcessSankeyNode as ProcessSankeyValidatorNode,
+  ProcessSankeyEdge as ProcessSankeyValidatorEdge,
+  ProcessSankeyIssue,
+} from "./charts/network/processSankey/algorithm"

@@ -124,6 +124,21 @@ export type { SankeyDiagramProps } from "./network/SankeyDiagram"
 export { ProcessSankey } from "./network/ProcessSankey"
 export type { ProcessSankeyProps, ProcessSankeyTick } from "./network/ProcessSankey"
 
+// ProcessSankey temporal-validation primitives. Surfaced so external
+// code (data pipelines, AI agents constructing graphs, server-side
+// validators) can pre-check node/edge sets against the same rules
+// the chart enforces — value conservation per node, edge endpoints
+// resolve, etc.
+export {
+  validateProcessSankey,
+  formatProcessSankeyIssue,
+} from "./network/processSankey/algorithm"
+export type {
+  ProcessSankeyNode as ProcessSankeyValidatorNode,
+  ProcessSankeyEdge as ProcessSankeyValidatorEdge,
+  ProcessSankeyIssue,
+} from "./network/processSankey/algorithm"
+
 export { TreeDiagram } from "./network/TreeDiagram"
 export type { TreeDiagramProps } from "./network/TreeDiagram"
 

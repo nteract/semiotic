@@ -9,18 +9,19 @@ import {
   computeProcessSankeyLayout,
   validateProcessSankey,
   buildBandPath,
-  buildRibbonPath,
   clampSamples,
   type ProcessSankeyOptions,
   type ProcessSankeyLayout,
   type ProcessSankeyIssue,
-} from "./algorithm.js"
+} from "./algorithm"
 import type {
   ProcessSankeyBandSpec,
   ProcessSankeyRibbonSpec,
   ProcessSankeyLayoutConfig,
 } from "./streamingLayout"
 import type { Datum } from "../../shared/datumTypes"
+import { buildRibbonGeometry } from "../../../geometry/ribbonGeometry"
+import { computeProcessSankeyRibbonInputs } from "./ribbonInputs"
 
 export interface ProcessSankeyNormalizedNode {
   id: string
@@ -120,17 +121,19 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
     if (!srcAtt || !tgtAtt) return
     const sourceIdx = nodeIndexById.get(e.source) ?? 0
     const fill = colorOf(e.source, sourceIdx)
-    const d = buildRibbonPath(
+    const ribbonInputs = computeProcessSankeyRibbonInputs(
       srcAtt, centerlines[e.source],
       tgtAtt, centerlines[e.target],
       S, xScale, ribbonLane, domain,
     )
+    const { pathD, bezier } = buildRibbonGeometry(ribbonInputs)
     ribbons.push({
       id: e.id,
-      pathD: d,
+      pathD,
       fill,
       opacity: edgeOpacity,
       rawDatum: (e.__raw ?? (e as Datum)),
+      bezier,
     })
   })
 

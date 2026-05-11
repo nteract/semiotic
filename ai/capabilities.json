@@ -11,7 +11,11 @@
       "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
-      "specialFeatures": []
+      "specialFeatures": [
+        "forecast",
+        "anomaly",
+        "series-features"
+      ]
     },
     "BubbleChart": {
       "category": "xy",
@@ -51,7 +55,10 @@
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "regression-overlay"
+        "regression-overlay",
+        "forecast",
+        "anomaly",
+        "series-features"
       ]
     },
     "Heatmap": {
@@ -77,6 +84,7 @@
       "specialFeatures": [
         "forecast",
         "anomaly",
+        "series-features",
         "gap-handling",
         "direct-labels",
         "endpoint-labels"
@@ -136,7 +144,10 @@
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "regression-overlay"
+        "regression-overlay",
+        "forecast",
+        "anomaly",
+        "series-features"
       ]
     },
     "ScatterplotMatrix": {

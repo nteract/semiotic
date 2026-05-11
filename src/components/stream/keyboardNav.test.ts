@@ -295,6 +295,31 @@ describe("extractNetworkNavPoints", () => {
     expect(extractNetworkNavPoints(scene)).toEqual([])
   })
 
+  it("skips zero-radius circle nodes (e.g. ProcessSankey color-binding placeholders)", () => {
+    // ProcessSankey emits sceneNodes with r:0 at off-canvas coords so
+    // the frame's `nodeColorMap` picks up band fills. They must not
+    // enter the nav graph or keyboard focus would land on an invisible
+    // node and break arrow-key navigation + accessibility.
+    const scene = [
+      { type: "circle", cx: -10000, cy: -10000, r: 0, datum: { id: "Alice" } },
+      { type: "circle", cx: -10000, cy: -10000, r: 0, datum: { id: "Bob" } },
+      { type: "circle", cx: 50, cy: 50, r: 8, datum: { id: "visible" } },
+    ]
+    const result = extractNetworkNavPoints(scene)
+    expect(result).toHaveLength(1)
+    expect(result[0].datum.id).toBe("visible")
+  })
+
+  it("skips zero-area rect nodes", () => {
+    const scene = [
+      { type: "rect", x: -10000, y: -10000, w: 0, h: 0, datum: { id: "hidden" } },
+      { type: "rect", x: 0, y: 0, w: 20, h: 30, datum: { id: "visible" } },
+    ]
+    const result = extractNetworkNavPoints(scene)
+    expect(result).toHaveLength(1)
+    expect(result[0].datum.id).toBe("visible")
+  })
+
   it("handles mixed node types", () => {
     const scene = [
       { type: "circle", cx: 300, cy: 100, r: 5, datum: { id: "c" } },

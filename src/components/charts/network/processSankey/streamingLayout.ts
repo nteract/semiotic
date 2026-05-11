@@ -14,7 +14,9 @@
 import type { NetworkCustomLayout } from "../../../stream/networkCustomLayout"
 import type {
   NetworkBezierEdge,
+  NetworkCircleNode,
   NetworkLabel,
+  BezierCache,
 } from "../../../stream/networkTypes"
 import type { Datum } from "../../shared/datumTypes"
 
@@ -39,6 +41,15 @@ export interface ProcessSankeyRibbonSpec {
   opacity: number
   /** The user's raw edge datum, surfaced as `data` in HoverData. */
   rawDatum: Datum
+  /**
+   * Pre-computed cubic bezier control points + halfWidth for the
+   * shared particle pipeline. ProcessSankey writes these alongside
+   * the ribbon's path-D string so the frame's particle pool can
+   * spawn / step / render against them without re-deriving the
+   * ribbon geometry. Optional — when omitted the ribbon paints
+   * normally but no particles flow along it.
+   */
+  bezier?: BezierCache
 }
 
 export interface ProcessSankeyLayoutConfig {
@@ -71,6 +82,12 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     sceneEdges.push({
       type: "bezier",
       pathD: r.pathD,
+      // `bezierCache` is the same data structure (and source) that
+      // gets attached to the user-pushed RealtimeEdge for particles.
+      // Including it here gives the canvas hit tester an analytic
+      // bezier to fall back on for ribbon-level hit detection,
+      // matching how SankeyDiagram populates it.
+      ...(r.bezier && { bezierCache: r.bezier }),
       style: {
         fill: r.fill,
         opacity: r.opacity,
@@ -118,8 +135,25 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
       }))
     : []
 
+  // Color-binding scene nodes — one per node id, off-canvas at r:0 so
+  // neither the canvas renderer nor the hit tester picks them up. Their
+  // sole purpose is to feed `StreamNetworkFrame`'s `nodeColorMap` from
+  // `style.fill`, which is then read by `getEdgeColor`/`getParticleColor`
+  // so particles inherit the source band's color. Without these, the
+  // frame's palette-by-array-index fallback assigns colors that don't
+  // match the HOC's `colorOf` resolution.
+  const sceneNodes: NetworkCircleNode[] = bands.map((b) => ({
+    type: "circle",
+    id: b.id,
+    cx: -10000,
+    cy: -10000,
+    r: 0,
+    style: { fill: b.fill },
+    datum: { __kind: "band", data: b.rawDatum, id: b.id } satisfies SceneDatumPayload as unknown as Datum,
+  }))
+
   return {
-    sceneNodes: [],
+    sceneNodes,
     sceneEdges,
     labels,
   }

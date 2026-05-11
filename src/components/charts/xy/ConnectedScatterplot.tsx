@@ -20,6 +20,8 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
+import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 
 /**
  * ConnectedScatterplot component props
@@ -59,6 +61,14 @@ export interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends
    * or a full `RegressionConfig`. Sugar over the `trend` annotation.
    */
   regression?: RegressionProp
+  /**
+   * Forecast overlay — same shape as LineChart's `forecast` prop.
+   * Adds tagged future points + envelope annotations to the
+   * connected path.
+   */
+  forecast?: ForecastConfig
+  /** Anomaly overlay — adds a ±σ band + anomaly dot annotations. */
+  anomaly?: AnomalyConfig
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
   /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -145,6 +155,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     pointIdAccessor,
     annotations,
     regression,
+    forecast,
+    anomaly,
     xExtent,
     yExtent,
     frameProps = {},
@@ -370,17 +382,36 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     accessors: { xAccessor, yAccessor },
   })
 
-  // Splice the `regression` sugar into annotations as a `trend` annotation.
+  // ── Statistical features (forecast + anomaly overlays) ────────────────
+  // Shared hook with LineChart/AreaChart/Scatterplot.
+  const {
+    effectiveData: featureEffectiveData,
+    statisticalAnnotations,
+  } = useSeriesFeatures({
+    data: safeData as Datum[],
+    xAccessor, yAccessor,
+    forecast, anomaly,
+  })
+
+  // Splice the `regression` sugar + statistical overlays into annotations.
   const trendAnn = buildRegressionAnnotation(regression)
-  const resolvedAnnotations = trendAnn
-    ? [trendAnn, ...(annotations || [])]
-    : annotations
+  const userAnns = annotations || []
+  const resolvedAnnotations =
+    trendAnn || statisticalAnnotations.length > 0
+      ? [
+          ...(trendAnn ? [trendAnn] : []),
+          ...userAnns,
+          ...statisticalAnnotations,
+        ]
+      : annotations
 
   // ── Render ────────────────────────────────────────────────────────────
 
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
-    ...(data != null && { data: safeData }),
+    // `featureEffectiveData` equals `safeData` reference when no
+    // forecast/anomaly is active.
+    ...(data != null && { data: featureEffectiveData }),
     xAccessor,
     yAccessor,
     pointStyle,

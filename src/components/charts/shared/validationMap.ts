@@ -77,6 +77,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       pointRadius: { type: "number" },
       fillArea: { type: "boolean" },
       areaOpacity: { type: "number" },
+      forecast: { type: "object" },
+      anomaly: { type: "object" },
     },
   },
 
@@ -96,6 +98,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       areaOpacity: { type: "number" },
       showLine: { type: "boolean" },
       lineWidth: { type: "number" },
+      forecast: { type: "object" },
+      anomaly: { type: "object" },
     },
   },
 
@@ -134,6 +138,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       pointRadius: { type: "number" },
       pointOpacity: { type: "number" },
       regression: { type: ["boolean", "string", "object"] },
+      forecast: { type: "object" },
+      anomaly: { type: "object" },
     },
   },
 
@@ -253,6 +259,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       pointIdAccessor: { type: ["string", "function"] },
       annotations: { type: "array" },
       regression: { type: ["boolean", "string", "object"] },
+      forecast: { type: "object" },
+      anomaly: { type: "object" },
     },
   },
 
@@ -616,10 +624,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       timeFormat: { type: "function" },
       valueFormat: { type: "function" },
       showParticles: { type: "boolean" },
-      particleRadius: { type: "number" },
-      particleDuration: { type: "number" },
-      particleDensity: { type: "number" },
-      particleMaxPerEdge: { type: "number" },
+      particleStyle: { type: "object" },
     },
   },
 

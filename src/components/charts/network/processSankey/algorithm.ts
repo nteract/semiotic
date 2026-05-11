@@ -11,11 +11,127 @@
 // for the long-form algorithm explanation.
 
 // ---------------------------------------------------------------------------
+// Public types (canonical home — `algorithm.d.ts` is deleted, this file
+// is the single source of truth now that the implementation is TS).
+// ---------------------------------------------------------------------------
+
+export interface ProcessSankeyNode {
+  id: string
+  /** Optional explicit lifetime bound [start, end]. Lifetime is
+   *  `min(xExtent[0], earliestEdge)` to `max(xExtent[1], latestEdge)`. */
+  xExtent?: [number, number]
+}
+
+export interface ProcessSankeyEdge {
+  id: string
+  source: string
+  target: string
+  value: number
+  startTime: number
+  endTime: number
+}
+
+export interface ProcessSankeyIssue {
+  kind: string
+  id?: string
+  source?: string
+  target?: string
+  endpoint?: string
+  nodeId?: string
+}
+
+export interface ProcessSankeySample {
+  t: number
+  topMass: number
+  botMass: number
+}
+
+export type AttachmentSide = "top" | "bot"
+export type AttachmentKind = "in" | "out"
+
+export interface ProcessSankeyAttachment {
+  side: AttachmentSide
+  time: number
+  sideMassBefore: number
+  sideMassAfter: number
+  kind: AttachmentKind
+  value: number
+}
+
+export interface ProcessSankeyNodeData {
+  samples: ProcessSankeySample[]
+  peak: number
+  topPeak: number
+  botPeak: number
+  localAttachments: Map<string, ProcessSankeyAttachment>
+}
+
+export interface ProcessSankeySlotPeak {
+  topPeak: number
+  botPeak: number
+}
+
+export interface ProcessSankeySlotOccupant {
+  id: string
+  end: number
+}
+
+export interface ProcessSankeySlot {
+  peak: ProcessSankeySlotPeak
+  occupants: ProcessSankeySlotOccupant[]
+}
+
+export interface ProcessSankeyLaneLifetime {
+  start: number | null
+  end: number | null
+}
+
+export interface ProcessSankeySideRecord {
+  sourceSide?: AttachmentSide
+  targetSide?: AttachmentSide
+}
+
+export interface ProcessSankeyLayout {
+  nodeData: Record<string, ProcessSankeyNodeData>
+  sides: Map<string, ProcessSankeySideRecord>
+  valueScale: number
+  padding: number
+  compressedPadding: boolean
+  centerlines: Record<string, number>
+  laneLifetime: Record<string, ProcessSankeyLaneLifetime>
+  slots: ProcessSankeySlot[]
+  slotByNode: Record<string, number>
+  crossingsBefore: number | null
+  crossingsAfter: number | null
+  lengthBefore: number | null
+  lengthAfter: number | null
+}
+
+export interface ProcessSankeyOptions {
+  plotH: number
+  pairing?: "value" | "temporal"
+  packing?: "off" | "reuse"
+  laneOrder?: "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
+  lifetimeMode?: "full" | "half"
+}
+
+export interface ProcessSankeyEdgeIndex {
+  incoming: Record<string, ProcessSankeyEdge[]>
+  outgoing: Record<string, ProcessSankeyEdge[]>
+}
+
+type Domain = [number, number] | null | undefined
+
+// ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
 
-export function validateProcessSankey(nodes, edges, domain) {
-  const issues = []
+export function validateProcessSankey(
+  nodes: ProcessSankeyNode[],
+  edges: ProcessSankeyEdge[],
+  domain: [number, number],
+): ProcessSankeyIssue[] {
+  const issues: ProcessSankeyIssue[] = []
   const nodeIds = new Set(nodes.map((n) => n.id))
   // Domain must be [start, end] with finite numbers and start <= end.
   // An inverted/malformed domain otherwise flows silently into scaleTime
@@ -55,7 +171,7 @@ export function validateProcessSankey(nodes, edges, domain) {
   return issues
 }
 
-export function formatProcessSankeyIssue(issue) {
+export function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string {
   if (issue.kind === "invalid-node-time") return `node ${issue.id} has an invalid xExtent (must be [start, end] with start <= end)`
   if (issue.kind === "invalid-edge-time") return `edge ${issue.id} has an invalid startTime or endTime`
   if (issue.kind === "invalid-domain") return "time domain must be a 2-tuple of finite times [start, end] with start <= end"
@@ -69,9 +185,12 @@ export function formatProcessSankeyIssue(issue) {
 // Side assignment + per-node walk
 // ---------------------------------------------------------------------------
 
-export function buildEdgeIndex(nodes, edges) {
-  const incoming = {}
-  const outgoing = {}
+export function buildEdgeIndex(
+  nodes: ProcessSankeyNode[],
+  edges: ProcessSankeyEdge[],
+): ProcessSankeyEdgeIndex {
+  const incoming: Record<string, ProcessSankeyEdge[]> = {}
+  const outgoing: Record<string, ProcessSankeyEdge[]> = {}
   for (const n of nodes) {
     incoming[n.id] = []
     outgoing[n.id] = []
@@ -83,20 +202,33 @@ export function buildEdgeIndex(nodes, edges) {
   return { incoming, outgoing }
 }
 
-export function assignSides(nodes, edges, edgeIndex, pairing = "value") {
+interface EdgeGroup {
+  partner: string
+  edges: ProcessSankeyEdge[]
+  total: number
+  earliestStart: number
+  latestEnd: number
+}
+
+export function assignSides(
+  nodes: ProcessSankeyNode[],
+  edges: ProcessSankeyEdge[],
+  edgeIndex: ProcessSankeyEdgeIndex,
+  pairing: "value" | "temporal" = "value",
+): Map<string, ProcessSankeySideRecord> {
   const sortIn = pairing === "temporal"
-    ? (a, b) => a.endTime - b.endTime
-    : (a, b) => b.value - a.value
+    ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => a.endTime - b.endTime
+    : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => b.value - a.value
   const sortOut = pairing === "temporal"
-    ? (a, b) => a.startTime - b.startTime
-    : (a, b) => b.value - a.value
-  const sides = new Map()
+    ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => a.startTime - b.startTime
+    : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) => b.value - a.value
+  const sides = new Map<string, ProcessSankeySideRecord>()
   for (const e of edges) sides.set(e.id, {})
 
   // Group edges by partner-node id. Multi-edge parallel ribbons between
   // the same pair land side-by-side rather than crossing.
-  const groupBy = (edgeList, partnerKey) => {
-    const groups = new Map()
+  const groupBy = (edgeList: ProcessSankeyEdge[], partnerKey: "source" | "target"): EdgeGroup[] => {
+    const groups = new Map<string, EdgeGroup>()
     for (const e of edgeList) {
       const partner = e[partnerKey]
       if (!groups.has(partner)) {
@@ -105,7 +237,7 @@ export function assignSides(nodes, edges, edgeIndex, pairing = "value") {
           earliestStart: Infinity, latestEnd: -Infinity,
         })
       }
-      const g = groups.get(partner)
+      const g = groups.get(partner)!
       g.edges.push(e)
       g.total += e.value
       g.earliestStart = Math.min(g.earliestStart, e.startTime)
@@ -131,37 +263,51 @@ export function assignSides(nodes, edges, edgeIndex, pairing = "value") {
     if (inn.length === 0) {
       const groups = groupBy(out, "target")
       groups.forEach((g, i) => {
-        const side = i % 2 === 0 ? "top" : "bot"
-        for (const e of g.edges) sides.get(e.id).sourceSide = side
+        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
+        for (const e of g.edges) sides.get(e.id)!.sourceSide = side
       })
     } else if (out.length === 0) {
       const groups = groupBy(inn, "source")
       groups.forEach((g, i) => {
-        const side = i % 2 === 0 ? "top" : "bot"
-        for (const e of g.edges) sides.get(e.id).targetSide = side
+        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
+        for (const e of g.edges) sides.get(e.id)!.targetSide = side
       })
     } else {
       const inGroups = groupBy(inn, "source")
       const outGroups = groupBy(out, "target")
       const pairs = Math.max(inGroups.length, outGroups.length)
       for (let i = 0; i < pairs; i++) {
-        const side = i % 2 === 0 ? "top" : "bot"
-        if (inGroups[i]) for (const e of inGroups[i].edges) sides.get(e.id).targetSide = side
-        if (outGroups[i]) for (const e of outGroups[i].edges) sides.get(e.id).sourceSide = side
+        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
+        if (inGroups[i]) for (const e of inGroups[i].edges) sides.get(e.id)!.targetSide = side
+        if (outGroups[i]) for (const e of outGroups[i].edges) sides.get(e.id)!.sourceSide = side
       }
     }
   }
   return sides
 }
 
-export function computeNode(node, edgeIndex, sides) {
+type EventKind = "create" | "in" | "out" | "transfer-in" | "transfer-out"
+
+interface NodeEvent {
+  time: number
+  delta: number
+  edge?: ProcessSankeyEdge
+  kind: EventKind
+  side: AttachmentSide
+}
+
+export function computeNode(
+  node: ProcessSankeyNode,
+  edgeIndex: ProcessSankeyEdgeIndex,
+  sides: Map<string, ProcessSankeySideRecord>,
+): ProcessSankeyNodeData {
   const incoming = edgeIndex.incoming[node.id]
   const outgoing = edgeIndex.outgoing[node.id]
-  const events = []
-  for (const e of incoming) events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id).targetSide })
-  for (const e of outgoing) events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id).sourceSide })
+  const events: NodeEvent[] = []
+  for (const e of incoming) events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
+  for (const e of outgoing) events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
 
-  const kindOrder = { create: 0, in: 1, "transfer-out": 2, "transfer-in": 3, out: 4 }
+  const kindOrder: Record<EventKind, number> = { create: 0, in: 1, "transfer-out": 2, "transfer-in": 3, out: 4 }
   const sortEvents = () => {
     events.sort((a, b) => a.time - b.time || (kindOrder[a.kind] ?? 99) - (kindOrder[b.kind] ?? 99))
   }
@@ -170,19 +316,19 @@ export function computeNode(node, edgeIndex, sides) {
   // other side if available; if a deficit remains, batch a `create`
   // event at `xExtent[0] - 1` (or `firstEventTime - 1`) so the band
   // reads as one continuous mass through the whole lifetime.
-  const firstEventTime = events.length ? Math.min(...events.map((e) => e.time)) : null
-  const xStart = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
+  const firstEventTime: number | null = events.length ? Math.min(...events.map((e) => e.time)) : null
+  const xStart: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
     ? node.xExtent[0]
     : null
-  const batchTime = xStart != null
+  const batchTime: number | null = xStart != null
     ? xStart - 1
-    : (Number.isFinite(firstEventTime) ? firstEventTime - 1 : null)
+    : (firstEventTime != null && Number.isFinite(firstEventTime) ? firstEventTime - 1 : null)
   const sortedDistinctTimes = [...new Set(events.map((e) => e.time))].sort((a, b) => a - b)
-  const prevDistinctTime = new Map()
+  const prevDistinctTime = new Map<number, number>()
   for (let i = 1; i < sortedDistinctTimes.length; i++) {
     prevDistinctTime.set(sortedDistinctTimes[i], sortedDistinctTimes[i - 1])
   }
-  const transferTimeFor = (eTime) => {
+  const transferTimeFor = (eTime: number): number => {
     const prev = prevDistinctTime.get(eTime)
     if (prev != null) return (prev + eTime) / 2
     if (batchTime != null) return batchTime
@@ -191,7 +337,7 @@ export function computeNode(node, edgeIndex, sides) {
 
   sortEvents()
 
-  const synthesized = []
+  const synthesized: NodeEvent[] = []
   let simTop = 0, simBot = 0
   for (const e of events) {
     if (e.kind === "out") {
@@ -199,7 +345,7 @@ export function computeNode(node, edgeIndex, sides) {
       const sideMass = e.side === "top" ? simTop : simBot
       let deficit = value - sideMass
       if (deficit > 0) {
-        const otherSide = e.side === "top" ? "bot" : "top"
+        const otherSide: AttachmentSide = e.side === "top" ? "bot" : "top"
         const otherMass = otherSide === "top" ? simTop : simBot
         const transfer = Math.min(deficit, otherMass)
         if (transfer > 0) {
@@ -231,11 +377,11 @@ export function computeNode(node, edgeIndex, sides) {
   sortEvents()
 
   let topMass = 0, botMass = 0, peak = 0, topPeak = 0, botPeak = 0
-  const samples = []
-  const localAttachments = new Map()
+  const samples: ProcessSankeySample[] = []
+  const localAttachments = new Map<string, ProcessSankeyAttachment>()
   for (const e of events) {
     samples.push({ t: e.time, topMass, botMass })
-    if (e.kind === "in" || e.kind === "out") {
+    if ((e.kind === "in" || e.kind === "out") && e.edge) {
       const sideBefore = e.side === "top" ? topMass : botMass
       const sideAfter = sideBefore + e.delta
       localAttachments.set(e.edge.id, {
@@ -254,7 +400,7 @@ export function computeNode(node, edgeIndex, sides) {
 
   // Same-t collapse keeps every distinct mass state in a same-t group
   // so synthesized transfer peaks survive into the rendered band.
-  const collapsed = []
+  const collapsed: ProcessSankeySample[] = []
   let i = 0
   while (i < samples.length) {
     let j = i
@@ -280,7 +426,7 @@ export function computeNode(node, edgeIndex, sides) {
   // commit lands. Skipping the zero-mass case avoids painting a
   // 1-pixel "backbone" line where the lane rail would be more
   // appropriate (the lane is open but holds nothing yet/anymore).
-  const xEnd = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
+  const xEnd: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
     ? node.xExtent[1]
     : null
   if (collapsed.length > 0) {
@@ -301,12 +447,12 @@ export function computeNode(node, edgeIndex, sides) {
 // Geometry helpers
 // ---------------------------------------------------------------------------
 
-export function clampTime(t, domain) {
+export function clampTime(t: number, domain: Domain): number {
   if (!domain) return t
   return Math.max(domain[0], Math.min(domain[1], t))
 }
 
-export function clampSamples(samples, domain) {
+export function clampSamples(samples: ProcessSankeySample[], domain: Domain): ProcessSankeySample[] {
   return samples.map((s) => ({
     t: clampTime(s.t, domain),
     topMass: s.topMass,
@@ -314,7 +460,7 @@ export function clampSamples(samples, domain) {
   }))
 }
 
-export function attachmentYRange(att, cl, S) {
+export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: number): [number, number] {
   const v = att.value * S
   if (att.kind === "out") {
     const before = att.sideMassBefore * S
@@ -334,11 +480,17 @@ export function attachmentYRange(att, cl, S) {
   return [newBot - v, newBot]
 }
 
-export function buildBandPath(samples, cl, S, xScale, domain) {
+export function buildBandPath(
+  samples: ProcessSankeySample[],
+  cl: number,
+  S: number,
+  xScale: (t: number) => number,
+  domain: Domain,
+): string | null {
   if (samples.length === 0) return null
   const sm = clampSamples(samples, domain)
-  const yTop = (i) => cl - sm[i].topMass * S
-  const yBot = (i) => cl + sm[i].botMass * S
+  const yTop = (i: number) => cl - sm[i].topMass * S
+  const yBot = (i: number) => cl + sm[i].botMass * S
   let path = `M${xScale(sm[0].t)},${yTop(0)}`
   for (let i = 1; i < sm.length; i++) {
     path += ` L${xScale(sm[i].t)},${yTop(i)}`
@@ -350,31 +502,24 @@ export function buildBandPath(samples, cl, S, xScale, domain) {
   return path + " Z"
 }
 
-export function buildRibbonPath(srcAtt, srcCl, tgtAtt, tgtCl, S, xScale, lane = "both", domain = null) {
-  const srcT = clampTime(srcAtt.time, domain)
-  const tgtT = clampTime(tgtAtt.time, domain)
-  const sx = xScale(srcT)
-  const tx = xScale(tgtT)
-  const [sy0, sy1] = attachmentYRange(srcAtt, srcCl, S)
-  const [ty0, ty1] = attachmentYRange(tgtAtt, tgtCl, S)
-  let cx
-  if (lane === "source") cx = sx + (tx - sx) * 0.85
-  else if (lane === "target") cx = sx + (tx - sx) * 0.15
-  else cx = (sx + tx) / 2
-  return [
-    `M${sx},${sy0}`,
-    `C${cx},${sy0} ${cx},${ty0} ${tx},${ty0}`,
-    `L${tx},${ty1}`,
-    `C${cx},${ty1} ${cx},${sy1} ${sx},${sy1}`,
-    "Z",
-  ].join(" ")
-}
+// `buildRibbonPath` lived here originally. It's been replaced by:
+//   1. `computeProcessSankeyRibbonInputs` in `./ribbonInputs.ts`
+//      — turns attachment data into the geometric inputs
+//      (sx/sTop/sBot, tx/tTop/tBot, cp1X, cp2X).
+//   2. `buildRibbonGeometry` in `src/components/geometry/ribbonGeometry`
+//      — emits the M-C-L-C-Z path-D + centerline bezier from those
+//      inputs. SankeyDiagram's `areaLink` calls the same helper, so
+//      both charts produce identical ribbon shapes (parameterized by
+//      control-point placement — Sankey uses curvature, ProcessSankey
+//      uses ribbonLane).
 
 // ---------------------------------------------------------------------------
 // Crossing/length scoring + slot reordering
 // ---------------------------------------------------------------------------
 
-export function countCrossings(slotByNode, edges) {
+type SlotByNode = Record<string, number>
+
+export function countCrossings(slotByNode: SlotByNode, edges: ProcessSankeyEdge[]): number {
   let count = 0
   for (let i = 0; i < edges.length; i++) {
     for (let j = i + 1; j < edges.length; j++) {
@@ -392,7 +537,7 @@ export function countCrossings(slotByNode, edges) {
   return count
 }
 
-export function totalEdgeLength(slotByNode, edges) {
+export function totalEdgeLength(slotByNode: SlotByNode, edges: ProcessSankeyEdge[]): number {
   let total = 0
   for (const e of edges) {
     const s = slotByNode[e.source], t = slotByNode[e.target]
@@ -402,31 +547,41 @@ export function totalEdgeLength(slotByNode, edges) {
 }
 
 const COST_K = 1000
-function score(slotByNode, edges) {
+function score(slotByNode: SlotByNode, edges: ProcessSankeyEdge[]): number {
   return countCrossings(slotByNode, edges) * COST_K + totalEdgeLength(slotByNode, edges)
 }
 
-function snapshotOrder(slots, slotByNode) {
+interface OrderSnapshot {
+  slots: ProcessSankeySlot[]
+  map: SlotByNode
+}
+
+function snapshotOrder(slots: ProcessSankeySlot[], slotByNode: SlotByNode): OrderSnapshot {
   return {
     slots: slots.map(s => ({ peak: { ...s.peak }, occupants: s.occupants.slice() })),
     map: { ...slotByNode },
   }
 }
-function restoreOrder(slots, slotByNode, snap) {
+function restoreOrder(slots: ProcessSankeySlot[], slotByNode: SlotByNode, snap: OrderSnapshot): void {
   slots.length = 0
   for (const s of snap.slots) slots.push(s)
   for (const k of Object.keys(slotByNode)) delete slotByNode[k]
   for (const k of Object.keys(snap.map)) slotByNode[k] = snap.map[k]
 }
 
-function reorderByBarycenter(slots, slotByNode, edges, passes = 6) {
+function reorderByBarycenter(
+  slots: ProcessSankeySlot[],
+  slotByNode: SlotByNode,
+  edges: ProcessSankeyEdge[],
+  passes = 6,
+): void {
   const n = slots.length
   if (n <= 1) return
   let bestSnap = snapshotOrder(slots, slotByNode)
   let bestScore = score(slotByNode, edges)
   for (let p = 0; p < passes; p++) {
-    const bary = new Array(n).fill(0)
-    const cnt = new Array(n).fill(0)
+    const bary = new Array(n).fill(0) as number[]
+    const cnt = new Array(n).fill(0) as number[]
     for (const e of edges) {
       const s = slotByNode[e.source], t = slotByNode[e.target]
       bary[s] += t * (e.value || 1)
@@ -440,10 +595,10 @@ function reorderByBarycenter(slots, slotByNode, edges, passes = 6) {
       return ba - bb
     })
     const newSlots = order.map(i => slots[i])
-    const remap = new Map()
+    const remap = new Map<number, number>()
     order.forEach((origIdx, newIdx) => remap.set(origIdx, newIdx))
     for (const id of Object.keys(slotByNode)) {
-      slotByNode[id] = remap.get(slotByNode[id])
+      slotByNode[id] = remap.get(slotByNode[id])!
     }
     slots.length = 0
     for (const s of newSlots) slots.push(s)
@@ -459,7 +614,12 @@ function reorderByBarycenter(slots, slotByNode, edges, passes = 6) {
   restoreOrder(slots, slotByNode, bestSnap)
 }
 
-function refineByAdjacentSwap(slots, slotByNode, edges, passes = 6) {
+function refineByAdjacentSwap(
+  slots: ProcessSankeySlot[],
+  slotByNode: SlotByNode,
+  edges: ProcessSankeyEdge[],
+  passes = 6,
+): void {
   const n = slots.length
   if (n <= 1) return
   let curScore = score(slotByNode, edges)
@@ -487,14 +647,18 @@ function refineByAdjacentSwap(slots, slotByNode, edges, passes = 6) {
   }
 }
 
-function reorderByBruteForce(slots, slotByNode, edges) {
+function reorderByBruteForce(
+  slots: ProcessSankeySlot[],
+  slotByNode: SlotByNode,
+  edges: ProcessSankeyEdge[],
+): void {
   const n = slots.length
   if (n <= 1) return
-  const initialMap = { ...slotByNode }
+  const initialMap: SlotByNode = { ...slotByNode }
   const ids = Object.keys(initialMap)
   const perm = Array.from({ length: n }, (_, i) => i)
   const position = perm.slice()
-  const trialMap = { ...initialMap }
+  const trialMap: SlotByNode = { ...initialMap }
   let bestPerm = perm.slice()
   let bestScore = Infinity
   const tryPerm = () => {
@@ -502,13 +666,13 @@ function reorderByBruteForce(slots, slotByNode, edges) {
     const s = score(trialMap, edges)
     if (s < bestScore) { bestScore = s; bestPerm = perm.slice() }
   }
-  const swap = (a, b) => {
+  const swap = (a: number, b: number) => {
     const va = perm[a], vb = perm[b]
     perm[a] = vb; perm[b] = va
     position[va] = b; position[vb] = a
   }
   tryPerm()
-  const c = new Array(n).fill(0)
+  const c = new Array(n).fill(0) as number[]
   let i = 0
   while (i < n) {
     if (c[i] < i) {
@@ -522,10 +686,10 @@ function reorderByBruteForce(slots, slotByNode, edges) {
     }
   }
   const newSlots = bestPerm.map(idx => slots[idx])
-  const remap = new Map()
+  const remap = new Map<number, number>()
   bestPerm.forEach((origIdx, newIdx) => remap.set(origIdx, newIdx))
   for (const id of Object.keys(slotByNode)) {
-    slotByNode[id] = remap.get(slotByNode[id])
+    slotByNode[id] = remap.get(slotByNode[id])!
   }
   slots.length = 0
   for (const s of newSlots) slots.push(s)
@@ -533,7 +697,11 @@ function reorderByBruteForce(slots, slotByNode, edges) {
 
 const BRUTE_FORCE_MAX = 8
 const BRUTE_FORCE_EDGE_MAX = 40
-function reorderForReadability(slots, slotByNode, edges) {
+function reorderForReadability(
+  slots: ProcessSankeySlot[],
+  slotByNode: SlotByNode,
+  edges: ProcessSankeyEdge[],
+): void {
   if (slots.length <= BRUTE_FORCE_MAX && edges.length <= BRUTE_FORCE_EDGE_MAX) {
     reorderByBruteForce(slots, slotByNode, edges)
   } else {
@@ -542,14 +710,14 @@ function reorderForReadability(slots, slotByNode, edges) {
   }
 }
 
-function reorderInsideOut(slots, slotByNode) {
+function reorderInsideOut(slots: ProcessSankeySlot[], slotByNode: SlotByNode): void {
   const n = slots.length
   if (n <= 1) return
-  const sizeOf = (s) => s.peak.topPeak + s.peak.botPeak
+  const sizeOf = (s: ProcessSankeySlot) => s.peak.topPeak + s.peak.botPeak
   const sortedDesc = slots
     .map((slot, idx) => ({ slot, idx }))
     .sort((a, b) => sizeOf(b.slot) - sizeOf(a.slot))
-  const result = new Array(n)
+  const result = new Array<number>(n)
   const middle = Math.floor((n - 1) / 2)
   result[middle] = sortedDesc[0].idx
   let above = middle - 1
@@ -560,19 +728,23 @@ function reorderInsideOut(slots, slotByNode) {
     else result[below++] = sortedDesc[i].idx
   }
   const newSlots = result.map(i => slots[i])
-  const remap = new Map()
+  const remap = new Map<number, number>()
   result.forEach((origIdx, newIdx) => remap.set(origIdx, newIdx))
   for (const id of Object.keys(slotByNode)) {
-    slotByNode[id] = remap.get(slotByNode[id])
+    slotByNode[id] = remap.get(slotByNode[id])!
   }
   slots.length = 0
   for (const s of newSlots) slots.push(s)
 }
 
-function biasLargestToCenter(slots, slotByNode, edges) {
+function biasLargestToCenter(
+  slots: ProcessSankeySlot[],
+  slotByNode: SlotByNode,
+  edges: ProcessSankeyEdge[],
+): void {
   const n = slots.length
   if (n <= 1) return
-  const sizeOf = (s) => s.peak.topPeak + s.peak.botPeak
+  const sizeOf = (s: ProcessSankeySlot) => s.peak.topPeak + s.peak.botPeak
   // Hold slot REFERENCES (not indices) since the loop body mutates the
   // slots array via splice. The original `idx` captured before the
   // first move would be stale on every subsequent iteration, leading
@@ -592,7 +764,7 @@ function biasLargestToCenter(slots, slotByNode, edges) {
     const tmp = slots[curPos]
     slots.splice(curPos, 1)
     slots.splice(targetPos, 0, tmp)
-    const remap = new Map()
+    const remap = new Map<number, number>()
     for (let i = 0; i < n; i++) remap.set(i, i)
     if (curPos < targetPos) {
       for (let i = curPos + 1; i <= targetPos; i++) remap.set(i, i - 1)
@@ -602,7 +774,7 @@ function biasLargestToCenter(slots, slotByNode, edges) {
       remap.set(curPos, targetPos)
     }
     for (const id of Object.keys(slotByNode)) {
-      slotByNode[id] = remap.get(slotByNode[id])
+      slotByNode[id] = remap.get(slotByNode[id])!
     }
     const newScore = score(slotByNode, edges)
     if (newScore <= curScore) {
@@ -611,7 +783,7 @@ function biasLargestToCenter(slots, slotByNode, edges) {
       const tmp2 = slots[targetPos]
       slots.splice(targetPos, 1)
       slots.splice(curPos, 0, tmp2)
-      const undo = new Map()
+      const undo = new Map<number, number>()
       for (let i = 0; i < n; i++) undo.set(i, i)
       if (targetPos < curPos) {
         for (let i = targetPos + 1; i <= curPos; i++) undo.set(i, i - 1)
@@ -621,7 +793,7 @@ function biasLargestToCenter(slots, slotByNode, edges) {
         undo.set(targetPos, curPos)
       }
       for (const id of Object.keys(slotByNode)) {
-        slotByNode[id] = undo.get(slotByNode[id])
+        slotByNode[id] = undo.get(slotByNode[id])!
       }
     }
   }
@@ -631,16 +803,45 @@ function biasLargestToCenter(slots, slotByNode, edges) {
 // Lane layout
 // ---------------------------------------------------------------------------
 
-export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
+interface LaneLayoutOptions {
+  plotH: number
+  padding: number
+  valueScale: number
+  packing?: "off" | "reuse"
+  laneOrder?: "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
+  lifetimeMode?: "full" | "half"
+}
+
+interface LaneLayoutResult {
+  effectiveSlotsHeight: number
+  centerlines: Record<string, number>
+  laneLifetime: Record<string, ProcessSankeyLaneLifetime>
+  slots: ProcessSankeySlot[]
+  slotByNode: SlotByNode
+  slotCenter: number[]
+  crossingsBefore: number | null
+  crossingsAfter: number | null
+  lengthBefore: number | null
+  lengthAfter: number | null
+}
+
+export function computeLaneLayout(
+  nodes: ProcessSankeyNode[],
+  edges: ProcessSankeyEdge[],
+  nodeData: Record<string, ProcessSankeyNodeData>,
+  edgeIndex: ProcessSankeyEdgeIndex,
+  opts: LaneLayoutOptions,
+): LaneLayoutResult {
   const { plotH, padding, valueScale, packing, laneOrder, lifetimeMode = "full" } = opts
-  const topPeak = {}, botPeak = {}
+  const topPeak: Record<string, number> = {}
+  const botPeak: Record<string, number> = {}
   for (const n of nodes) {
     topPeak[n.id] = nodeData[n.id].topPeak || 0
     botPeak[n.id] = nodeData[n.id].botPeak || 0
   }
 
   const half = lifetimeMode === "half"
-  const laneLifetime = {}
+  const laneLifetime: Record<string, ProcessSankeyLaneLifetime> = {}
   for (const n of nodes) {
     // xExtent: optional [start, end] explicit lifetime bounds. The
     // node's lane spans `min(xExtent[0], earliestEdge)` to
@@ -648,8 +849,8 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
     // lane *outward* but never trims it inside the actual edge range.
     const explicitStart = Array.isArray(n.xExtent) ? n.xExtent[0] : null
     const explicitEnd   = Array.isArray(n.xExtent) ? n.xExtent[1] : null
-    let tStart = Number.isFinite(explicitStart) ? explicitStart : Infinity
-    let tEnd   = Number.isFinite(explicitEnd)   ? explicitEnd   : -Infinity
+    let tStart: number = explicitStart != null && Number.isFinite(explicitStart) ? explicitStart : Infinity
+    let tEnd: number   = explicitEnd   != null && Number.isFinite(explicitEnd)   ? explicitEnd   : -Infinity
     for (const e of edgeIndex.outgoing[n.id]) {
       if (e.startTime < tStart) tStart = e.startTime
       const endForSource = half ? (e.startTime + e.endTime) / 2 : e.endTime
@@ -666,26 +867,26 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
     }
   }
 
-  const slotByNode = {}
-  const slots = []
+  const slotByNode: SlotByNode = {}
+  const slots: ProcessSankeySlot[] = []
 
   if (packing === "reuse") {
     // Sort by (topological depth, lifetime start). Hierarchical
     // fixtures pack one slot per depth level; cyclic graphs fall back
     // to lifetime sort within depth=0.
-    const depth = new Map()
+    const depth = new Map<string, number>()
     for (const n of nodes) depth.set(n.id, 0)
-    const indeg = new Map()
+    const indeg = new Map<string, number>()
     for (const n of nodes) indeg.set(n.id, 0)
     for (const e of edges) indeg.set(e.target, (indeg.get(e.target) ?? 0) + 1)
-    const queue = []
+    const queue: string[] = []
     for (const n of nodes) if ((indeg.get(n.id) ?? 0) === 0) queue.push(n.id)
     while (queue.length) {
-      const u = queue.shift()
+      const u = queue.shift()!
       for (const e of edgeIndex.outgoing[u] ?? []) {
         const cand = (depth.get(u) ?? 0) + 1
         if (cand > (depth.get(e.target) ?? 0)) depth.set(e.target, cand)
-        indeg.set(e.target, indeg.get(e.target) - 1)
+        indeg.set(e.target, indeg.get(e.target)! - 1)
         if (indeg.get(e.target) === 0) queue.push(e.target)
       }
     }
@@ -695,7 +896,7 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
         const da = depth.get(a.id) ?? 0
         const db = depth.get(b.id) ?? 0
         if (da !== db) return da - db
-        return laneLifetime[a.id].start - laneLifetime[b.id].start
+        return (laneLifetime[a.id].start as number) - (laneLifetime[b.id].start as number)
       })
     const orphans = nodes.filter(n => laneLifetime[n.id].start === null)
     for (const n of [...sorted, ...orphans]) {
@@ -726,8 +927,10 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
     })
   }
 
-  let crossingsBefore = null, crossingsAfter = null
-  let lengthBefore = null, lengthAfter = null
+  let crossingsBefore: number | null = null
+  let crossingsAfter: number | null = null
+  let lengthBefore: number | null = null
+  let lengthAfter: number | null = null
   const measureBefore = () => {
     crossingsBefore = countCrossings(slotByNode, edges)
     lengthBefore = totalEdgeLength(slotByNode, edges)
@@ -754,8 +957,8 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
   // Position slots vertically using max-simultaneous-sum between
   // adjacent slots instead of sum of per-slot peaks. Tightens layout
   // when peaks happen at different times.
-  const slotProfiles = slots.map((slot) => {
-    const byT = new Map()
+  const slotProfiles: Array<Array<[number, { top: number; bot: number }]>> = slots.map((slot) => {
+    const byT = new Map<number, { top: number; bot: number }>()
     for (const occ of slot.occupants) {
       const data = nodeData[occ.id]
       if (!data) continue
@@ -769,19 +972,19 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
     }
     return [...byT.entries()].sort((a, b) => a[0] - b[0])
   })
-  const massAt = (profile, t) => {
-    let cur = { top: 0, bot: 0 }
+  const massAt = (profile: Array<[number, { top: number; bot: number }]>, t: number): { top: number; bot: number } => {
+    let cur: { top: number; bot: number } = { top: 0, bot: 0 }
     for (const [st, m] of profile) {
       if (st > t) break
       cur = m
     }
     return cur
   }
-  const adjacentMaxSum = []
+  const adjacentMaxSum: number[] = []
   for (let i = 0; i < slots.length - 1; i++) {
     const profileA = slotProfiles[i]
     const profileB = slotProfiles[i + 1]
-    const allTimes = new Set([...profileA.map((p) => p[0]), ...profileB.map((p) => p[0])])
+    const allTimes = new Set<number>([...profileA.map((p) => p[0]), ...profileB.map((p) => p[0])])
     let maxSum = 0
     for (const t of allTimes) {
       const a = massAt(profileA, t)
@@ -791,7 +994,7 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
     adjacentMaxSum.push(maxSum)
   }
 
-  const slotCenter = []
+  const slotCenter: number[] = []
   let cursor = padding + (slots[0]?.peak.topPeak ?? 0) * valueScale
   if (slots.length > 0) slotCenter.push(cursor)
   for (let i = 1; i < slots.length; i++) {
@@ -813,7 +1016,7 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
       + adjacentMaxSum.reduce((a, b) => a + b, 0)
       + slots[slots.length - 1].peak.botPeak
 
-  const centerlines = {}
+  const centerlines: Record<string, number> = {}
   for (const n of nodes) centerlines[n.id] = slotCenter[slotByNode[n.id]]
 
   return {
@@ -832,22 +1035,16 @@ export function computeLaneLayout(nodes, edges, nodeData, edgeIndex, opts) {
  * configuration. Pure function, no side effects.
  *
  * The chart's time domain isn't a layout opt — domain handling lives
- * in the geometry helpers (`buildBandPath`, `buildRibbonPath`,
+ * in the geometry helpers (`buildBandPath`, `buildRibbonGeometry`,
  * `clampSamples`) which receive an `xScale` and a domain pair from
  * the caller. The layout itself is timeless apart from the per-node
  * sample/event timestamps.
- *
- * @param {Array} nodes   - [{ id, xExtent? }]   xExtent is an optional [start, end] tuple
- * @param {Array} edges   - [{ id, source, target, value, startTime, endTime }]
- * @param {Object} opts
- * @param {number} opts.plotH            - inner chart height in px
- * @param {string} [opts.pairing]        - "value" | "temporal"
- * @param {string} [opts.packing]        - "off" | "reuse"
- * @param {string} [opts.laneOrder]      - "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
- * @param {string} [opts.lifetimeMode]   - "full" | "half"
- * @returns layout result with centerlines, nodeData, sides, valueScale, etc.
  */
-export function computeProcessSankeyLayout(nodes, edges, opts) {
+export function computeProcessSankeyLayout(
+  nodes: ProcessSankeyNode[],
+  edges: ProcessSankeyEdge[],
+  opts: ProcessSankeyOptions,
+): ProcessSankeyLayout {
   const {
     plotH,
     pairing = "temporal",
@@ -858,7 +1055,7 @@ export function computeProcessSankeyLayout(nodes, edges, opts) {
 
   const edgeIndex = buildEdgeIndex(nodes, edges)
   const sides = assignSides(nodes, edges, edgeIndex, pairing)
-  let nodeData = {}
+  let nodeData: Record<string, ProcessSankeyNodeData> = {}
   for (const n of nodes) {
     nodeData[n.id] = computeNode(n, edgeIndex, sides)
   }
@@ -872,12 +1069,12 @@ export function computeProcessSankeyLayout(nodes, edges, opts) {
   // Override sides based on slot ordering: top when target is in a
   // higher slot, bot when lower. Same-slot edges become "handoff"
   // edges along the bottom of the shared lane.
-  const sameSlotEdgeIds = new Set()
+  const sameSlotEdgeIds = new Set<string>()
   for (const e of edges) {
     const ss = dry1.slotByNode[e.source]
     const ts = dry1.slotByNode[e.target]
     if (ss === undefined || ts === undefined) continue
-    const sObj = sides.get(e.id)
+    const sObj = sides.get(e.id)!
     if (ss === ts) {
       sameSlotEdgeIds.add(e.id)
       sObj.sourceSide = "bot"
@@ -893,13 +1090,13 @@ export function computeProcessSankeyLayout(nodes, edges, opts) {
   for (const n of nodes) {
     const out = edgeIndex.outgoing[n.id]
     const inn = edgeIndex.incoming[n.id]
-    const outSides = new Set(out.map((e) => sides.get(e.id).sourceSide))
-    const inSides  = new Set(inn.map((e) => sides.get(e.id).targetSide))
+    const outSides = new Set(out.map((e) => sides.get(e.id)!.sourceSide))
+    const inSides  = new Set(inn.map((e) => sides.get(e.id)!.targetSide))
     if (outSides.size === 1 && inn.length > 0) {
       const align = [...outSides][0]
       for (const e of inn) {
         if (dry1.slotByNode[e.source] === dry1.slotByNode[e.target]) {
-          sides.get(e.id).targetSide = align
+          sides.get(e.id)!.targetSide = align
         }
       }
     }
@@ -907,7 +1104,7 @@ export function computeProcessSankeyLayout(nodes, edges, opts) {
       const align = [...inSides][0]
       for (const e of out) {
         if (dry1.slotByNode[e.source] === dry1.slotByNode[e.target]) {
-          sides.get(e.id).sourceSide = align
+          sides.get(e.id)!.sourceSide = align
         }
       }
     }
@@ -922,28 +1119,28 @@ export function computeProcessSankeyLayout(nodes, edges, opts) {
     const tally = () => {
       const r = { inTop: 0, inBot: 0, outTop: 0, outBot: 0 }
       for (const e of inn) {
-        const s = sides.get(e.id).targetSide
+        const s = sides.get(e.id)!.targetSide
         if (s === "top") r.inTop += e.value
         else r.inBot += e.value
       }
       for (const e of out) {
-        const s = sides.get(e.id).sourceSide
+        const s = sides.get(e.id)!.sourceSide
         if (s === "top") r.outTop += e.value
         else r.outBot += e.value
       }
       return r
     }
-    const tryMove = (fromSide, toSide) => {
+    const tryMove = (fromSide: AttachmentSide, toSide: AttachmentSide): boolean => {
       const t = tally()
       const surplusFrom = (fromSide === "top" ? t.outTop - t.inTop : t.outBot - t.inBot)
       const slackTo = (toSide === "top" ? t.inTop - t.outTop : t.inBot - t.outBot)
       if (surplusFrom <= 0 || slackTo <= 0) return false
       const move = Math.min(surplusFrom, slackTo)
       const candidates = out
-        .filter((e) => !sameSlotEdgeIds.has(e.id) && sides.get(e.id).sourceSide === fromSide && e.value <= move)
+        .filter((e) => !sameSlotEdgeIds.has(e.id) && sides.get(e.id)!.sourceSide === fromSide && e.value <= move)
         .sort((a, b) => b.value - a.value)
       if (candidates.length === 0) return false
-      sides.get(candidates[0].id).sourceSide = toSide
+      sides.get(candidates[0].id)!.sourceSide = toSide
       return true
     }
     let safety = out.length + 1

@@ -104,8 +104,14 @@ export class NetworkPipelineStore {
       ...config.tensionConfig
     }
 
-    // Lazy particle pool — only for sankey with particles
-    if (config.chartType === "sankey" && config.showParticles) {
+    // Lazy particle pool — sankey (which sets edge.bezier via the
+    // sankey layout) plus any chart using `customNetworkLayout` that
+    // wants particles. ProcessSankey is the original
+    // customNetworkLayout consumer: it computes its own bezier
+    // control points HOC-side and writes them onto each edge before
+    // pushing to the frame, so the pool can drive particles through
+    // the standard ribbon path math.
+    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout)) {
       this.particlePool = new ParticlePool(2000)
     }
   }
@@ -124,8 +130,9 @@ export class NetworkPipelineStore {
     }
 
     // Create particle pool on demand; keep it alive when toggled off
-    // so that toggling showParticles false→true doesn't lose canvas state
-    if (config.chartType === "sankey" && config.showParticles && !this.particlePool) {
+    // so that toggling showParticles false→true doesn't lose canvas state.
+    // Gate matches the constructor — sankey OR customNetworkLayout.
+    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout) && !this.particlePool) {
       this.particlePool = new ParticlePool(2000)
     }
   }
@@ -230,7 +237,14 @@ export class NetworkPipelineStore {
       const raw = rawEdges[i]
       const sourceId = String(getSource(raw))
       const targetId = String(getTarget(raw))
-      const value = Number(getValue(raw)) || 1
+      // Preserve `value: 0` (e.g. an edge with no flow that should
+      // suppress particles); fall back to 1 only when the raw value is
+      // nullish or non-finite. The earlier `|| 1` pattern collapsed
+      // legitimate zeros into 1, which made "no-flow" edges still
+      // animate particles at the default rate.
+      const rawValue = getValue(raw)
+      const numValue = rawValue == null ? NaN : Number(rawValue)
+      const value = Number.isFinite(numValue) ? numValue : 1
 
       if (!this.nodes.has(sourceId)) {
         this.nodes.set(sourceId, { ...createNode(sourceId), data: raw })
@@ -240,7 +254,7 @@ export class NetworkPipelineStore {
       }
 
       const key = `${sourceId}\0${targetId}\0${i}`
-      this.edges.set(key, {
+      const edge: RealtimeEdge = {
         source: sourceId,
         target: targetId,
         value,
@@ -249,7 +263,23 @@ export class NetworkPipelineStore {
         sankeyWidth: 0,
         data: raw,
         _edgeKey: key,
-      })
+      }
+      // For customNetworkLayout charts (e.g. ProcessSankey), `runLayout`
+      // short-circuits before `finalizeLayout` would have computed
+      // bezier from node positions. The HOC pre-computes bezier
+      // control points and attaches them to each edge before push;
+      // copy them through here so the particle pool can read them.
+      // Harmless for built-in layouts — they overwrite this inside
+      // `finalizeLayout` anyway.
+      //
+      // Validate the shape before assigning — a truthiness-only check
+      // would let `bezier: true` or a partial object through and the
+      // particle pipeline would then crash reading
+      // `edge.bezier.points[0].x` etc.
+      if (raw && typeof raw === "object" && isValidBezierCache(raw.bezier)) {
+        edge.bezier = raw.bezier as BezierCache
+      }
+      this.edges.set(key, edge)
     }
 
     // Run layout
@@ -1292,4 +1322,35 @@ function createNode(id: string): RealtimeNode {
     value: 0,
     createdByFrame: true
   }
+}
+
+/** Validate a value matches the `BezierCache` shape before assigning it
+ *  to a `RealtimeEdge`. The particle pipeline reads
+ *  `edge.bezier.points[i].x` etc. unguarded — a malformed bezier
+ *  (e.g. `bezier: true`, missing points, non-finite coords) would
+ *  crash the canvas frame loop. */
+function isValidBezierCache(value: unknown): value is BezierCache {
+  if (!value || typeof value !== "object") return false
+  const b = value as Partial<BezierCache>
+  if (typeof b.circular !== "boolean") return false
+  if (typeof b.halfWidth !== "number" || !Number.isFinite(b.halfWidth)) return false
+  if (b.circular) {
+    if (!Array.isArray(b.segments) || b.segments.length === 0) return false
+    for (const seg of b.segments) {
+      if (!isFourFinitePoints(seg)) return false
+    }
+    return true
+  }
+  return isFourFinitePoints(b.points)
+}
+
+function isFourFinitePoints(pts: unknown): boolean {
+  if (!Array.isArray(pts) || pts.length !== 4) return false
+  for (const p of pts) {
+    if (!p || typeof p !== "object") return false
+    const pp = p as { x?: unknown; y?: unknown }
+    if (typeof pp.x !== "number" || !Number.isFinite(pp.x)) return false
+    if (typeof pp.y !== "number" || !Number.isFinite(pp.y)) return false
+  }
+  return true
 }

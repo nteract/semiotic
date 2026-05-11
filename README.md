@@ -13,7 +13,7 @@ dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
 ```jsx
-import { LineChart } from "semiotic/xy"    // 143 KB gzip
+import { LineChart } from "semiotic/xy"    // 200 KB gzip
 
 <LineChart
   data={salesData}
@@ -35,7 +35,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with 35 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
+- **`semiotic/ai`** — a single import with 40 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -280,21 +280,22 @@ for color, size, aggregation, and binning.
 
 ## Bundle Sizes
 
-Semiotic ships 11 entry points. **Don't import from `"semiotic"` unless you need everything** — use the sub-path that matches your chart type:
+Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need everything** — use the sub-path that matches your chart type:
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **143 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 7 more XY charts |
-| `semiotic/ordinal` | **109 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **98 KB** | ForceDirectedGraph, SankeyDiagram, Treemap, + 4 more |
-| `semiotic/geo` | **93 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **145 KB** | RealtimeLineChart, RealtimeHistogram, + 3 streaming charts |
-| `semiotic/server` | **100 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **31 KB** | ThemeProvider, validators, serialization — no chart components |
-| `semiotic/themes` | **5 KB** | Theme presets only (tufte, carbon, etc.) |
+| `semiotic/xy` | **200 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **159 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **148 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/geo` | **116 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/realtime` | **206 KB** | RealtimeLineChart, RealtimeHistogram, + 3 streaming charts |
+| `semiotic/server` | **159 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **39 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/recipes` | **13 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/themes` | **7 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **5 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
-| `semiotic/ai` | **269 KB** | All 38 HOCs + validation — optimized for LLM code generation |
-| `semiotic` | **278 KB** | Everything above (full bundle) |
+| `semiotic/ai` | **414 KB** | All 40 HOCs + validation — optimized for LLM code generation |
+| `semiotic` | **415 KB** | Everything above (full bundle) |
 
 ```jsx
 // Import from the sub-path, not from "semiotic"
@@ -306,7 +307,7 @@ import { ChoroplethMap } from "semiotic/geo"
 
 **Tree-shaking**: Each sub-path is a self-contained bundle with `"sideEffects": false`. Bundlers (webpack, Rollup, Vite, esbuild) will tree-shake unused exports. If you only use `LineChart` from `semiotic/xy`, the bar/pie/network code is never included.
 
-**When to use `"semiotic"`**: Only if your app uses charts from 3+ categories (XY + ordinal + network) and you'd rather have one import than three. The full bundle is 278 KB gzip — comparable to a single D3 import.
+**When to use `"semiotic"`**: Only if your app uses charts from 3+ categories (XY + ordinal + network) and you'd rather have one import than three. The full bundle is 415 KB gzip.
 
 ## TypeScript
 
@@ -496,7 +497,7 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 
 Agent-facing API surface:
 
-- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (43 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (44 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

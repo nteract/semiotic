@@ -565,13 +565,26 @@ const StreamNetworkFrame = forwardRef<
     currentTheme?.colors?.primary ||
     "#999"
 
+  // Resolve a source/target field to a RealtimeNode. For built-in
+  // sankey layouts, d3-sankey replaces string ids with node references
+  // during `computeLayout`. For customNetworkLayout charts (e.g.
+  // ProcessSankey), `ingestBounded` keeps the ids as strings — the
+  // customLayout path doesn't run plugin dispatch. Look up by id when
+  // we get a string so both paths converge on a RealtimeNode.
+  const resolveEdgeEndpoint = useCallback(
+    (endpoint: RealtimeNode | string | undefined): RealtimeNode | null => {
+      if (!endpoint) return null
+      if (typeof endpoint === "object") return endpoint
+      return storeRef.current?.nodes.get(endpoint) ?? null
+    },
+    []
+  )
+
   const getEdgeColor = useCallback(
     (edge: RealtimeEdge): string => {
       if (typeof edgeColorBy === "function") return edgeColorBy(edge)
-      const sourceNode =
-        typeof edge.source === "object" ? edge.source : null
-      const targetNode =
-        typeof edge.target === "object" ? edge.target : null
+      const sourceNode = resolveEdgeEndpoint(edge.source)
+      const targetNode = resolveEdgeEndpoint(edge.target)
 
       if (edgeColorBy === "target" && targetNode) {
         return getNodeColor(targetNode)
@@ -581,19 +594,34 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [edgeColorBy, getNodeColor, edgeFallbackColor]
+    [edgeColorBy, getNodeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   const getParticleColor = useCallback(
     (edge: RealtimeEdge): string => {
+      // Functional `particleStyle.color` runs first so users can fully
+      // control per-edge colors. The particle renderer no longer
+      // invokes the function directly — it delegates here so the
+      // user-supplied callback receives a real `RealtimeNode` even
+      // when `edge.source` is a string id (the case for
+      // `customNetworkLayout` charts like ProcessSankey, which the
+      // earlier `typeof edge.source === "object"` gate silently
+      // dropped).
+      if (typeof particleStyle.color === "function") {
+        const sourceNode = resolveEdgeEndpoint(edge.source)
+        if (sourceNode) {
+          return (particleStyle.color as (e: RealtimeEdge, n: RealtimeNode) => string)(edge, sourceNode)
+        }
+        return edgeFallbackColor
+      }
       // When the user hasn't explicitly set particleStyle.colorBy,
       // inherit the edge color so particles match their edge's fill.
       if (!particleStyleProp?.colorBy) {
         return getEdgeColor(edge)
       }
       const colorByMode = particleStyle.colorBy!
-      const sourceNode = typeof edge.source === "object" ? edge.source : null
-      const targetNode = typeof edge.target === "object" ? edge.target : null
+      const sourceNode = resolveEdgeEndpoint(edge.source)
+      const targetNode = resolveEdgeEndpoint(edge.target)
 
       if (colorByMode === "target" && targetNode) {
         return getNodeColor(targetNode)
@@ -603,7 +631,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor]
+    [particleStyleProp?.colorBy, particleStyle.color, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local
@@ -612,8 +640,13 @@ const StreamNetworkFrame = forwardRef<
   // isContinuous is still used elsewhere in this file for the render
   // loop's "should I keep ticking" decision; declared here so the
   // existing references continue to resolve.
+  // Animation gate: keep rAF ticking for any of (a) sankey with
+  // particles, (b) customNetworkLayout charts with particles (e.g.
+  // ProcessSankey — same particle pipeline, edges carry HOC-computed
+  // bezier control points), (c) pulse encoding, (d) explicit store
+  // animation state (transitions, push-mode intro).
   const isContinuous =
-    (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
+    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
 
   // Update config when props change
   useEffect(() => {

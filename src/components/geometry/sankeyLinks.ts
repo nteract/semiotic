@@ -4,6 +4,7 @@
 // as tech debt.
 import { interpolateNumber } from "d3-interpolate"
 import { line, curveLinearClosed } from "d3-shape"
+import { buildRibbonGeometry } from "./ribbonGeometry"
 
 const dedupeRibbonPoints =
   (weight = 1) =>
@@ -310,6 +311,8 @@ const _ribbonLink = (d) => {
 }
 
 export const areaLink = (d) => {
+  // Vertical-only locals — horizontal path delegates to
+  // buildRibbonGeometry below and re-declares its own coords.
   let x0, x1, x2, x3, y0, y1, xi, y2, y3
 
   if (d.direction === "down") {
@@ -330,18 +333,26 @@ export const areaLink = (d) => {
 
     return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- legacy d3 comma-sequence pattern; tracked by the file-level @ts-nocheck.
-  (x0 = d.source.x1),
-    (x1 = d.target.x0),
-    (xi = interpolateNumber(x0, x1)),
-    (x2 = xi(curvature)),
-    (x3 = xi(1 - curvature)),
-    (y0 = d.y0 - d.sankeyWidth / 2),
-    (y1 = d.y1 - d.sankeyWidth / 2),
-    (y2 = d.y1 + d.sankeyWidth / 2),
-    (y3 = d.y0 + d.sankeyWidth / 2)
-
-  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y3} ${x0},${y3}Z`
+  // Horizontal sankey ribbon — delegates path emission to the shared
+  // `buildRibbonGeometry` helper so SankeyDiagram and ProcessSankey
+  // produce the same M-C-L-C-Z shape from a single source. Each
+  // chart contributes its own coordinate math (Sankey reads
+  // source/target node x edges + edge band y from d3-sankey;
+  // ProcessSankey reads attachment time + centerline mass) but the
+  // emission rule is shared.
+  const hw = d.sankeyWidth / 2
+  const horizontalXi = interpolateNumber(d.source.x1, d.target.x0)
+  const { pathD } = buildRibbonGeometry({
+    sx: d.source.x1,
+    sTop: d.y0 - hw,
+    sBot: d.y0 + hw,
+    tx: d.target.x0,
+    tTop: d.y1 - hw,
+    tBot: d.y1 + hw,
+    cp1X: horizontalXi(curvature),
+    cp2X: horizontalXi(1 - curvature),
+  })
+  return pathD
 }
 
 export function circularAreaLink(link) {

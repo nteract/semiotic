@@ -26,17 +26,30 @@ export function renderNetworkParticles(
     const edge = edges[p.edgeIndex]
     if (!edge) continue
 
-    // Resolve color
-    if (typeof style.color === "function") {
-      const sourceNode = typeof edge.source === "object" ? edge.source : null
-      ctx.fillStyle = sourceNode
-        ? (style.color as ((...args: any[]) => any))(edge, sourceNode)
-        : resolveCSSColor(ctx, "var(--semiotic-secondary, #666)")!
-    } else if (style.color && style.color !== "inherit") {
-      ctx.fillStyle = style.color as string
+    // Resolve color.
+    //
+    // Functional `style.color` is resolved upstream in `getParticleColor`
+    // (the supplied `edgeColorFn`) — it has access to the node map and
+    // can hand the user-supplied function a real node even when
+    // `edge.source` is a string id (the case for `customNetworkLayout`
+    // charts like ProcessSankey). Previously this renderer tried to
+    // invoke `style.color` directly and only succeeded when
+    // `edge.source` happened to already be an object reference, which
+    // silently dropped the user's color function for any custom layout.
+    //
+    // Strings flow through `resolveCSSColor` so theme tokens like
+    // `var(--semiotic-primary)` paint correctly — canvas's `fillStyle`
+    // silently rejects CSS custom properties otherwise, leaving the
+    // prior frame's color in place.
+    let resolved: string
+    if (typeof style.color === "string" && style.color !== "inherit") {
+      resolved = style.color
     } else {
-      ctx.fillStyle = edgeColorFn(edge)
+      // Covers undefined, "inherit", and function — `edgeColorFn`
+      // handles each variant correctly.
+      resolved = edgeColorFn(edge)
     }
+    ctx.fillStyle = resolveCSSColor(ctx, resolved) || resolved
 
     ctx.beginPath()
     ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
