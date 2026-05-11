@@ -222,4 +222,18 @@ describe("getSize", () => {
     const size = getSize({ val: 50 }, "val", undefined, [0, 100])
     expect(size).toBe(11.5) // 3 + 0.5 * (20 - 3)
   })
+
+  it("clamps to maxSize when value exceeds domain max", () => {
+    // Push-mode initial state: first pushed point's value (500) is far
+    // outside the fallback domain [0, 1]. Without clamping, linear
+    // scaling would produce a radius far larger than `sizeRange` (e.g.
+    // 8503px). With clamping, it caps at maxSize.
+    const size = getSize({ val: 500 }, "val", [5, 25], [0, 1])
+    expect(size).toBe(25)
+  })
+
+  it("clamps to minSize when value falls below domain min", () => {
+    const size = getSize({ val: -50 }, "val", [5, 25], [0, 100])
+    expect(size).toBe(5)
+  })
 })

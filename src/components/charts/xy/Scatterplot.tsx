@@ -334,9 +334,10 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
 
   // Push-mode initial state — first pushed point arrives before the
   // domain-update setState re-renders, so `sizeDomain` is undefined
-  // for one render. Without a fallback, `getSize` returns the raw
-  // sizeBy value as the pixel radius (e.g. value=500 → 500px point).
-  // Same `[0, 1]` fallback BubbleChart uses; harmless in bounded mode
+  // for one render. The `[0, 1]` fallback combined with `getSize`'s
+  // internal clamp keeps the radius inside `sizeRange` even when the
+  // pushed value is well outside `[0, 1]`: the value normalizes
+  // above 1, then clamps to maxSize. Harmless in bounded mode
   // because `sizeDomain` is non-null whenever data is non-empty.
   const effectiveSizeDomain = useMemo<[number, number] | undefined>(
     () => sizeBy ? (sizeDomain ?? [0, 1]) : undefined,

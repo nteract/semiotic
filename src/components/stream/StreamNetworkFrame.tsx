@@ -599,6 +599,21 @@ const StreamNetworkFrame = forwardRef<
 
   const getParticleColor = useCallback(
     (edge: RealtimeEdge): string => {
+      // Functional `particleStyle.color` runs first so users can fully
+      // control per-edge colors. The particle renderer no longer
+      // invokes the function directly — it delegates here so the
+      // user-supplied callback receives a real `RealtimeNode` even
+      // when `edge.source` is a string id (the case for
+      // `customNetworkLayout` charts like ProcessSankey, which the
+      // earlier `typeof edge.source === "object"` gate silently
+      // dropped).
+      if (typeof particleStyle.color === "function") {
+        const sourceNode = resolveEdgeEndpoint(edge.source)
+        if (sourceNode) {
+          return (particleStyle.color as (e: RealtimeEdge, n: RealtimeNode) => string)(edge, sourceNode)
+        }
+        return edgeFallbackColor
+      }
       // When the user hasn't explicitly set particleStyle.colorBy,
       // inherit the edge color so particles match their edge's fill.
       if (!particleStyleProp?.colorBy) {
@@ -616,7 +631,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor, resolveEdgeEndpoint]
+    [particleStyleProp?.colorBy, particleStyle.color, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local

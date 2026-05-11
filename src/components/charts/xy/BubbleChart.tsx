@@ -385,9 +385,12 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     [bubbleStrokeColor, bubbleStrokeWidth],
   )
   // Push-mode initial state — no values seen yet → domain undefined.
-  // Preserve the prior [0, 1] fallback so bubbles render at a finite
-  // size rather than `getSize` returning the raw value as the radius.
-  // Memoized so the [0, 1] fallback doesn't churn the radius fn.
+  // Fall back to `[0, 1]` so `getSize` switches into its scaling
+  // branch; the internal clamp then bounds the radius to `sizeRange`
+  // even when the first pushed value is outside `[0, 1]` (otherwise
+  // the un-clamped linear scale would produce arbitrarily large
+  // pixel radii). Memoized so the fallback doesn't churn the radius
+  // fn.
   const effectiveSizeDomain = useMemo<[number, number]>(
     () => sizeDomain ?? [0, 1],
     [sizeDomain],

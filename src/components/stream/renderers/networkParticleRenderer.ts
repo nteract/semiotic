@@ -1,7 +1,6 @@
 import type { ParticlePool } from "../ParticlePool"
 import type { RealtimeEdge, ParticleStyle } from "../networkTypes"
 import { DEFAULT_PARTICLE_STYLE } from "../networkTypes"
-import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas particle renderer for sankey — ported directly from realtime-network.
@@ -26,15 +25,21 @@ export function renderNetworkParticles(
     const edge = edges[p.edgeIndex]
     if (!edge) continue
 
-    // Resolve color
-    if (typeof style.color === "function") {
-      const sourceNode = typeof edge.source === "object" ? edge.source : null
-      ctx.fillStyle = sourceNode
-        ? (style.color as ((...args: any[]) => any))(edge, sourceNode)
-        : resolveCSSColor(ctx, "var(--semiotic-secondary, #666)")!
-    } else if (style.color && style.color !== "inherit") {
-      ctx.fillStyle = style.color as string
+    // Resolve color.
+    //
+    // Functional `style.color` is resolved upstream in `getParticleColor`
+    // (the supplied `edgeColorFn`) — it has access to the node map and
+    // can hand the user-supplied function a real node even when
+    // `edge.source` is a string id (the case for `customNetworkLayout`
+    // charts like ProcessSankey). Previously this renderer tried to
+    // invoke `style.color` directly and only succeeded when
+    // `edge.source` happened to already be an object reference, which
+    // silently dropped the user's color function for any custom layout.
+    if (typeof style.color === "string" && style.color !== "inherit") {
+      ctx.fillStyle = style.color
     } else {
+      // Covers undefined, "inherit", and function — `edgeColorFn`
+      // handles each variant correctly.
       ctx.fillStyle = edgeColorFn(edge)
     }
 
