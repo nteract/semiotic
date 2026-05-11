@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo, useState, useRef, useCallback, useEffect } from "react"
+import { useMemo, useState, useRef, useCallback } from "react"
 import { scaleTime } from "d3-scale"
 import { forwardRef } from "react"
 
@@ -9,10 +9,11 @@ import {
   validateProcessSankey,
   formatProcessSankeyIssue,
   buildBandPath,
-  buildRibbonPath,
   clampSamples,
-} from "./processSankey/algorithm.js"
+} from "./processSankey/algorithm"
 import { massHistoryRows, pickMassQuantiles } from "./processSankey/tooltipUtils"
+import { computeProcessSankeyRibbonInputs } from "./processSankey/ribbonInputs"
+import { buildRibbonGeometry } from "../../geometry/ribbonGeometry"
 import {
   emitProcessSankeyScenes,
   isProcessSankeyScenePayload,
@@ -33,6 +34,8 @@ import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
   StreamNetworkFrameProps,
   StreamNetworkFrameHandle,
+  ParticleStyle,
+  BezierCache,
 } from "../../stream/networkTypes"
 import type { LegendGroup } from "../../types/legendTypes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -109,12 +112,17 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   enableHover?: boolean
   onClick?: (datum: Datum, position?: { x: number; y: number }) => void
 
-  // Particles
+  // Particles — same canvas + ParticlePool surface SankeyDiagram
+  // uses. The HOC writes bezier control points onto each ribbon
+  // edge before push so the frame's particle pipeline (spawnRate
+  // proportional to value, pool-recycled, continuous flow) drives
+  // them through unchanged.
   showParticles?: boolean
-  particleRadius?: number
-  particleDuration?: number
-  particleDensity?: number
-  particleMaxPerEdge?: number
+  /** Style config for the particle overlay — same shape
+   *  StreamNetworkFrame consumes from SankeyDiagram. Defaults
+   *  (radius 3, opacity 0.7, spawnRate 0.1, maxPerEdge 50) live in
+   *  `DEFAULT_PARTICLE_STYLE`. */
+  particleStyle?: ParticleStyle
 
   /** Pass-through to the underlying StreamNetworkFrame. */
   frameProps?: Partial<Omit<StreamNetworkFrameProps,
@@ -259,10 +267,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     onObservation,
     onClick,
     showParticles = false,
-    particleRadius = 2.5,
-    particleDuration = 6000,
-    particleDensity = 1,
-    particleMaxPerEdge = 40,
+    particleStyle,
     chartId,
     frameProps = {},
   } = props
@@ -607,10 +612,10 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   // These flow to the customNetworkLayout via layoutConfig — the layout
   // fn is a thin shim that maps these to NetworkBezierEdge primitives.
   // Map node id → array index for O(1) source-color lookups in the
-  // ribbon and particle loops below. Without this, each ribbon's color
-  // resolution does a linear scan over `nodes`, making layout cost
-  // O(|nodes|×|edges|) — quadratic on dense graphs. Computed once per
-  // layout render and reused by `sceneSpecs` and `foregroundGraphics`.
+  // ribbon loop below. Without this, each ribbon's color resolution
+  // does a linear scan over `nodes`, making layout cost
+  // O(|nodes|×|edges|) — quadratic on dense graphs. Computed once
+  // per layout render and reused by `sceneSpecs`.
   const nodeIndexById = useMemo(() => {
     const m = new Map<string, number>()
     nodes.forEach((n, i) => m.set(n.id, i))
@@ -652,18 +657,26 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       if (!srcAtt || !tgtAtt) return
       const sourceIdx = nodeIndexById.get(e.source) ?? 0
       const fill = colorOf(e.source, sourceIdx)
-      const d = buildRibbonPath(
+      // Both the visible ribbon and the centerline particle bezier
+      // come from the shared `buildRibbonGeometry` helper.
+      // SankeyDiagram routes through the same helper from `areaLink`,
+      // so the two charts emit the same M-C-L-C-Z shape from a
+      // single formula — only the control-point positions differ
+      // (Sankey curvature-based vs ProcessSankey lane-based).
+      const ribbonInputs = computeProcessSankeyRibbonInputs(
         srcAtt, centerlines[e.source],
         tgtAtt, centerlines[e.target],
-        S, xScale, ribbonLane, domain
+        S, xScale, ribbonLane, domain,
       )
+      const { pathD, bezier } = buildRibbonGeometry(ribbonInputs)
       const raw = rawEdgeById.get(e.id) ?? (e as Datum)
       ribbons.push({
         id: e.id,
-        pathD: d,
+        pathD,
         fill,
         opacity: edgeOpacity,
         rawDatum: raw,
+        bezier,
       })
     })
     return { bands, ribbons }
@@ -866,82 +879,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     )
   }, [layout, axisTicks, xScale, plotW, plotH, showLaneRails, nodes, colorOf, showQualityReadout, timeFormat])
 
-  // ── Particle overlay. rAF-driven; renders over the data layer. ──
-  const [particleProgress, setParticleProgress] = useState(0)
-  useEffect(() => {
-    if (!showParticles) return
-    // Guard against a bogus particleDuration prop (0, negative, NaN).
-    // Using one as the divisor below would produce NaN coordinates and
-    // particles would silently disappear; fall back to the default.
-    const cycleMs = Number.isFinite(particleDuration) && particleDuration > 0
-      ? particleDuration
-      : 6000
-    let raf = 0
-    let mounted = true
-    const start = performance.now()
-    const tick = (now: number) => {
-      if (!mounted) return
-      const t = ((now - start) % cycleMs) / cycleMs
-      setParticleProgress(t)
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => {
-      mounted = false
-      cancelAnimationFrame(raf)
-    }
-  }, [showParticles, particleDuration])
-
-  const foregroundGraphics = useMemo(() => {
-    if (!showParticles || !layout) return null
-    const { centerlines, nodeData, valueScale: S } = layout
-    const dots: React.ReactNode[] = []
-    edges.forEach((e) => {
-      const srcAtt = nodeData[e.source]?.localAttachments.get(e.id)
-      const tgtAtt = nodeData[e.target]?.localAttachments.get(e.id)
-      if (!srcAtt || !tgtAtt) return
-      const sx = xScale(Math.max(domain[0], Math.min(domain[1], srcAtt.time)))
-      const tx = xScale(Math.max(domain[0], Math.min(domain[1], tgtAtt.time)))
-      const cx = ribbonLane === "source" ? sx + (tx - sx) * 0.85
-              : ribbonLane === "target" ? sx + (tx - sx) * 0.15
-              : (sx + tx) / 2
-      const sCl = centerlines[e.source]
-      const tCl = centerlines[e.target]
-      const sCenter = srcAtt.side === "top"
-        ? sCl - (srcAtt.sideMassBefore - srcAtt.value / 2) * S
-        : sCl + (srcAtt.sideMassBefore - srcAtt.value / 2) * S
-      const tCenter = tgtAtt.side === "top"
-        ? tCl - (tgtAtt.sideMassAfter - tgtAtt.value / 2) * S
-        : tCl + (tgtAtt.sideMassAfter - tgtAtt.value / 2) * S
-      const target = Math.round(e.value * particleDensity)
-      const n = Math.max(1, Math.min(particleMaxPerEdge, target))
-      const sourceIdx = nodeIndexById.get(e.source) ?? 0
-      const fill = colorOf(e.source, sourceIdx)
-      for (let i = 0; i < n; i++) {
-        const phase = (particleProgress + i / n) % 1
-        const u = 1 - phase
-        const x = u * u * u * sx + 3 * u * u * phase * cx + 3 * u * phase * phase * cx + phase * phase * phase * tx
-        const y = u * u * u * sCenter + 3 * u * u * phase * sCenter + 3 * u * phase * phase * tCenter + phase * phase * phase * tCenter
-        dots.push(
-          <circle
-            key={`p-${e.id}-${i}`}
-            cx={x} cy={y} r={particleRadius}
-            fill={fill}
-            // Outline against the chart background so a particle that
-            // happens to land on a same-colored ribbon still reads.
-            // `--semiotic-bg` is the documented theme token; the
-            // `--surface-1` we used previously was a docs-page CSS
-            // variable that didn't resolve under ThemeProvider and
-            // always fell back to the literal color.
-            stroke="var(--semiotic-bg, #111827)"
-            strokeWidth={0.5}
-            pointerEvents="none"
-          />
-        )
-      }
-    })
-    return <g>{dots}</g>
-  }, [showParticles, layout, edges, xScale, domain, ribbonLane, colorOf, particleDensity, particleMaxPerEdge, particleProgress, particleRadius, nodeIndexById])
+  // Particles now ride the canvas + ParticlePool path StreamNetworkFrame
+  // uses for SankeyDiagram. ProcessSankey writes pre-computed bezier
+  // control points onto each ribbon spec (see `sceneSpecs` above)
+  // and onto each frame edge (see `safeFrameEdges` below); the frame
+  // handles spawn / step / render. No SVG overlay anymore.
 
   // ── Frame nodes/edges ─────────────────────────────────────────────
   // Computed BEFORE the early-return gates so hook ordering stays
@@ -954,14 +896,34 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     () => (rawNodes ?? []).map((n) => ({ id: getNodeId(n), data: n as Datum })),
     [rawNodes, getNodeId],
   )
+  // Build an edgeId → bezier map once per layout pass so safeFrameEdges
+  // can attach the pre-computed control points without re-deriving them.
+  const ribbonBezierById = useMemo(() => {
+    const map = new Map<string, BezierCache>()
+    for (const r of sceneSpecs.ribbons) {
+      if (r.bezier) map.set(r.id, r.bezier)
+    }
+    return map
+  }, [sceneSpecs])
+
   const safeFrameEdges = useMemo(
-    () => (rawEdges ?? []).map((e, i) => ({
-      id: getEdgeId(e, i),
-      source: String(accessor(sourceAccessor, e)),
-      target: String(accessor(targetAccessor, e)),
-      data: e as Datum,
-    })),
-    [rawEdges, getEdgeId, sourceAccessor, targetAccessor],
+    () => (rawEdges ?? []).map((e, i) => {
+      const id = getEdgeId(e, i)
+      // `value` flows through so the particle pool's spawnRate can
+      // scale proportionally per edge. `bezier` is the pre-computed
+      // ribbon path; the pool's particle.t parameter walks the
+      // cubic at the chord-direction perpendicular offset to
+      // produce a fan across the band width.
+      return {
+        id,
+        source: String(accessor(sourceAccessor, e)),
+        target: String(accessor(targetAccessor, e)),
+        value: Number(accessor(valueAccessor, e)) || 0,
+        bezier: ribbonBezierById.get(id),
+        data: e as Datum,
+      }
+    }),
+    [rawEdges, getEdgeId, sourceAccessor, targetAccessor, valueAccessor, ribbonBezierById],
   )
 
   // Loading / empty states come from `setup` — same gates every
@@ -1009,7 +971,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : tooltipContent}
       backgroundGraphics={backgroundGraphics}
-      foregroundGraphics={foregroundGraphics}
+      showParticles={showParticles}
+      particleStyle={particleStyle}
       legend={legendNode}
       legendPosition={legendPosition}
       onObservation={onObservation}

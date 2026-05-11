@@ -61,3 +61,13 @@ export type {
   StreamNetworkFrameHandle,
   NetworkChartType
 } from "./stream/networkTypes"
+
+// User-facing stream-status observer — wrap any push-API ref to
+// get a reactive idle/active/stale status enum and last-push
+// timestamp. Works on realtime + non-realtime push HOCs uniformly.
+export { useStreamStatus } from "./charts/shared/useStreamStatus"
+export type {
+  StreamStatus,
+  StreamStatusOptions,
+  StreamStatusResult,
+} from "./charts/shared/useStreamStatus"

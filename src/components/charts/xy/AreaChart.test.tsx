@@ -231,4 +231,38 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.tooltipMode).toBeUndefined()
     })
   })
+
+  // ── seriesFeatures (forecast / anomaly) ────────────────────────────────
+  // The shared `useSeriesFeatures` hook drives these props.
+  // Lazy-loaded overlay module makes the async pipeline behavior
+  // hard to test directly here — async coverage lives in the
+  // LineChart forecast tests and the hook's own unit tests.
+  describe("seriesFeatures prop wiring", () => {
+    it("accepts a forecast prop without crashing", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} forecast={{ trainEnd: 2, steps: 3 }} />
+        </TooltipProvider>
+      )
+      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    })
+
+    it("accepts an anomaly prop without crashing", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} anomaly={{ threshold: 2 }} />
+        </TooltipProvider>
+      )
+      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    })
+
+    it("does not inject annotations when forecast/anomaly are unset", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.annotations).toBeUndefined()
+    })
+  })
 })

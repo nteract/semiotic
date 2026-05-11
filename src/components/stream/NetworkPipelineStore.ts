@@ -104,8 +104,14 @@ export class NetworkPipelineStore {
       ...config.tensionConfig
     }
 
-    // Lazy particle pool — only for sankey with particles
-    if (config.chartType === "sankey" && config.showParticles) {
+    // Lazy particle pool — sankey (which sets edge.bezier via the
+    // sankey layout) plus any chart using `customNetworkLayout` that
+    // wants particles. ProcessSankey is the original
+    // customNetworkLayout consumer: it computes its own bezier
+    // control points HOC-side and writes them onto each edge before
+    // pushing to the frame, so the pool can drive particles through
+    // the standard ribbon path math.
+    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout)) {
       this.particlePool = new ParticlePool(2000)
     }
   }
@@ -124,8 +130,9 @@ export class NetworkPipelineStore {
     }
 
     // Create particle pool on demand; keep it alive when toggled off
-    // so that toggling showParticles false→true doesn't lose canvas state
-    if (config.chartType === "sankey" && config.showParticles && !this.particlePool) {
+    // so that toggling showParticles false→true doesn't lose canvas state.
+    // Gate matches the constructor — sankey OR customNetworkLayout.
+    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout) && !this.particlePool) {
       this.particlePool = new ParticlePool(2000)
     }
   }

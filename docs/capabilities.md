@@ -20,16 +20,16 @@ Last regen: 2026-05-10 · 44 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
+| **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `series-features` |
 | **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` |
 | **CandlestickChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `ohlc` |
-| **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` |
+| **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `series-features` |
 | **Heatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
-| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `gap-handling` `direct-labels` `endpoint-labels` |
+| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `series-features` `gap-handling` `direct-labels` `endpoint-labels` |
 | **MinimapChart** | ✓ | — | — | — | — | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `hoc-ssr-only` |
 | **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `dual-axis` `hoc-ssr-only` |
 | **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `quadrants` `hoc-ssr-only` |
-| **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` |
+| **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `series-features` |
 | **ScatterplotMatrix** | ✓ | — | — | — | — | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `hoc-ssr-only` |
 | **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` |
 

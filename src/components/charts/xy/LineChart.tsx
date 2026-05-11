@@ -20,7 +20,8 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
-import { buildForecastLazy, buildAnomalyAnnotationsLazy, createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
+import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
+import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 
 /**
  * LineChart component props
@@ -396,94 +397,25 @@ export const LineChart = forwardRef(
   warnMissingField("LineChart", safeData, "yAccessor", yAccessor)
 
   // ── Statistical overlay processing ────────────────────────────────────
-
-  // Statistical overlays need a string accessor to read x/y values from data.
-  // When the user provides a function accessor, we bake resolved values into
-  // each datum under a synthetic field so the overlay pipeline + annotation
-  // renderer can access them by string key.
-  const xAccStr = typeof xAccessor === "string" ? xAccessor : "__semiotic_resolvedX"
-  const yAccStr = typeof yAccessor === "string" ? yAccessor : "__semiotic_resolvedY"
-
-  // Lazy-load statistical overlays — only fetches the module when forecast/anomaly props are used
-  const [statisticalResult, setStatisticalResult] = useState<{
-    processedData: Datum[]
-    annotations: Datum[]
-  } | null>(null)
-  const [statisticalAnnotations, setStatisticalAnnotations] = useState<Datum[]>([])
-
-  // When accessors are functions, bake resolved values into data for the overlay pipeline
-  const overlayData = useMemo(() => {
-    if (!forecast && !anomaly) return safeData as Datum[]
-    const needsX = typeof xAccessor === "function"
-    const needsY = typeof yAccessor === "function"
-    if (!needsX && !needsY) return safeData as Datum[]
-    return (safeData as Datum[]).map(d => {
-      const copy = { ...d }
-      if (needsX) copy.__semiotic_resolvedX = (xAccessor as (d: Datum) => any)(d)
-      if (needsY) copy.__semiotic_resolvedY = (yAccessor as (d: Datum) => any)(d)
-      return copy
-    })
-  }, [safeData, forecast, anomaly, xAccessor, yAccessor])
-
-  // Track config identity to clear results only when config changes, not on every data update
-  const prevForecastRef = useRef(forecast)
-  const prevAnomalyRef = useRef(anomaly)
-
-  useEffect(() => {
-    if (!forecast && !anomaly) {
-      // Clear stale overlays when forecast/anomaly props are removed
-      if (prevForecastRef.current || prevAnomalyRef.current) {
-        setStatisticalResult(null)
-        setStatisticalAnnotations([])
-        prevForecastRef.current = forecast
-        prevAnomalyRef.current = anomaly
-      }
-      return
-    }
-    let cancelled = false
-    // Only clear previous results when the forecast/anomaly CONFIG changes.
-    // Data-only changes keep the previous result visible to avoid flicker
-    // (e.g., streaming forecast sparklines updating every 150ms).
-    const configChanged = forecast !== prevForecastRef.current || anomaly !== prevAnomalyRef.current
-    prevForecastRef.current = forecast
-    prevAnomalyRef.current = anomaly
-    if (configChanged) {
-      setStatisticalResult(null)
-      setStatisticalAnnotations([])
-    }
-    if (forecast) {
-      // When lineBy is a string, tell buildPrecomputed to do group-aware
-      // boundary duplication so multi-metric data doesn't create stray lines
-      const enrichedForecast = lineBy && typeof lineBy === "string" && typeof forecast === "object"
-        ? { ...forecast, _groupBy: lineBy }
-        : forecast
-      buildForecastLazy(overlayData, xAccStr, yAccStr, enrichedForecast, anomaly).then(result => {
-        if (!cancelled) {
-          setStatisticalResult(result)
-          setStatisticalAnnotations(result.annotations)
-        }
-      }).catch(() => {
-        if (!cancelled) {
-          setStatisticalResult(null)
-          setStatisticalAnnotations([])
-        }
-      })
-    } else if (anomaly) {
-      buildAnomalyAnnotationsLazy(anomaly).then(result => {
-        if (!cancelled) {
-          setStatisticalResult(null)
-          setStatisticalAnnotations(result)
-        }
-      }).catch(() => {
-        if (!cancelled) {
-          setStatisticalAnnotations([])
-        }
-      })
-    }
-    return () => { cancelled = true }
-  }, [overlayData, forecast, anomaly, xAccStr, yAccStr])
-
-  const effectiveData = statisticalResult ? statisticalResult.processedData : safeData
+  // Lifted to `useSeriesFeatures` — owns the function-accessor bake,
+  // lazy module load, state management, and stale-clear-on-config-
+  // removal. Any series-shaped XY HOC can adopt the same surface by
+  // calling this hook.
+  const {
+    effectiveData,
+    statisticalAnnotations,
+  } = useSeriesFeatures({
+    data: safeData as Datum[],
+    xAccessor,
+    yAccessor,
+    forecast,
+    anomaly,
+    // LineChart's group-aware boundary duplication: when the user
+    // supplies `lineBy` as a string, the overlay pipeline tags
+    // training/observed/forecast transitions per-group so multi-
+    // metric data doesn't create stray boundary lines across groups.
+    groupBy: lineBy,
+  })
 
   // When both lineBy and forecast are present, we need a compound group that
   // splits lines by BOTH the user's grouping field AND the forecast segment.
@@ -527,7 +459,9 @@ export const LineChart = forwardRef(
 
     let min = Infinity
     let max = -Infinity
-    const dataToScan = statisticalResult ? statisticalResult.processedData : safeData
+    // `effectiveData` is the post-forecast set when active, else
+    // the raw safeData — same conditional as before via the hook.
+    const dataToScan = effectiveData
     for (const d of dataToScan as Datum[]) {
       // Include the y value itself
       const yVal = typeof yAccessor === "function" ? (yAccessor as (d: Datum) => number)(d) : +(d[yAccessor as string])
@@ -546,7 +480,7 @@ export const LineChart = forwardRef(
     }
     if (!isFinite(min) || !isFinite(max)) return undefined
     return [min, max] as [number, number]
-  }, [forecast, statisticalResult, safeData, yAccessor])
+  }, [forecast, effectiveData, yAccessor])
 
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Datum) => {

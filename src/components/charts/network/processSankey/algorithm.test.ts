@@ -4,16 +4,19 @@ import {
   computeProcessSankeyLayout,
   buildEdgeIndex,
   formatProcessSankeyIssue,
-} from "./algorithm.js"
+  type ProcessSankeyNode,
+  type ProcessSankeyEdge,
+  type ProcessSankeyOptions,
+} from "./algorithm"
 
-const T = (n) => n // ms — tests use small integers, no Date conversion needed
+const T = (n: number): number => n // ms — tests use small integers, no Date conversion needed
 
 describe("validateProcessSankey", () => {
-  const dom = [T(0), T(100)]
+  const dom: [number, number] = [T(0), T(100)]
 
   it("returns no issues on a clean diamond", () => {
-    const nodes = [{ id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }]
-    const edges = [
+    const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }]
+    const edges: ProcessSankeyEdge[] = [
       { id: "ab", source: "A", target: "B", value: 4, startTime: 10, endTime: 20 },
       { id: "ac", source: "A", target: "C", value: 4, startTime: 10, endTime: 20 },
       { id: "bd", source: "B", target: "D", value: 4, startTime: 30, endTime: 40 },
@@ -68,16 +71,19 @@ describe("validateProcessSankey", () => {
   })
 
   it("validates xExtent shape — must be [start, end] with start <= end", () => {
+    // Each entry exercises a validation branch; bad shapes are deliberate
+    // (the cast lets us pass malformed values past TS so we can confirm
+    // the runtime check still flags them).
     const cases = [
       { id: "A", xExtent: [10, 20] },         // ok
       { id: "B", xExtent: [20, 10] },         // bad — start > end
       { id: "C", xExtent: [10] },              // bad — too short
       { id: "D", xExtent: [10, NaN] },         // bad — non-finite
       { id: "E", xExtent: "bogus" },           // bad — wrong type
-    ]
+    ] as unknown as ProcessSankeyNode[]
     const issues = validateProcessSankey(cases, [], dom)
     const badIds = issues.filter((i) => i.kind === "invalid-node-time").map((i) => i.id)
-    expect(badIds.sort()).toEqual(["B", "C", "D", "E"])
+    expect((badIds as string[]).sort()).toEqual(["B", "C", "D", "E"])
   })
 
   it("formats issues with a stable shape", () => {
@@ -86,7 +92,7 @@ describe("validateProcessSankey", () => {
   })
 
   it("flags malformed/inverted domains", () => {
-    const cases = [
+    const cases: unknown[] = [
       [],                  // wrong shape
       [10],                // wrong shape
       [10, 20, 30],        // wrong shape
@@ -95,7 +101,7 @@ describe("validateProcessSankey", () => {
       [50, 10],            // inverted (start > end)
     ]
     for (const dom of cases) {
-      const issues = validateProcessSankey([], [], dom)
+      const issues = validateProcessSankey([], [], dom as [number, number])
       expect(issues.some((i) => i.kind === "invalid-domain")).toBe(true)
     }
     // Equal endpoints are allowed (start == end) since `<=` is permitted.
@@ -106,8 +112,8 @@ describe("validateProcessSankey", () => {
 
 describe("buildEdgeIndex", () => {
   it("groups edges by source/target with zero-fill for nodes", () => {
-    const nodes = [{ id: "A" }, { id: "B" }, { id: "C" }]
-    const edges = [
+    const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }, { id: "C" }]
+    const edges: ProcessSankeyEdge[] = [
       { id: "ab", source: "A", target: "B", value: 1, startTime: 0, endTime: 1 },
       { id: "bc", source: "B", target: "C", value: 1, startTime: 1, endTime: 2 },
     ]
@@ -121,7 +127,7 @@ describe("buildEdgeIndex", () => {
 })
 
 describe("computeProcessSankeyLayout", () => {
-  const opts = {
+  const opts: ProcessSankeyOptions = {
     plotH: 400,
     pairing: "temporal",
     packing: "reuse",
@@ -130,12 +136,12 @@ describe("computeProcessSankeyLayout", () => {
   }
 
   it("computes a layout for the canonical Alice→Eng→Release path", () => {
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       { id: "Alice", xExtent: [5, 5] },
       { id: "Eng" },
       { id: "Release" },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "alice-eng", source: "Alice", target: "Eng", value: 8, startTime: 10, endTime: 20 },
       { id: "eng-rel",   source: "Eng",   target: "Release", value: 8, startTime: 30, endTime: 40 },
     ]
@@ -152,12 +158,12 @@ describe("computeProcessSankeyLayout", () => {
   })
 
   it("extends a sink's band past the last edge when xExtent[1] is later", () => {
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       { id: "Src",  xExtent: [5, 5] },
       // xExtent[1] = 100 — well past the IN at t=20
       { id: "Sink", xExtent: [5, 100] },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "s-k", source: "Src", target: "Sink", value: 5, startTime: 10, endTime: 20 },
     ]
     const layout = computeProcessSankeyLayout(nodes, edges, opts)
@@ -169,12 +175,12 @@ describe("computeProcessSankeyLayout", () => {
   })
 
   it("opens the lane before the first edge when xExtent[0] is earlier", () => {
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       // xExtent[0] = 0 — earlier than first edge (t=10).
       { id: "Src",  xExtent: [0, 5] },
       { id: "Sink" },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "s-k", source: "Src", target: "Sink", value: 5, startTime: 10, endTime: 20 },
     ]
     const layout = computeProcessSankeyLayout(nodes, edges, opts)
@@ -185,12 +191,12 @@ describe("computeProcessSankeyLayout", () => {
     // A's lane closes well before B's opens (lifetimes disjoint),
     // and both sit at the same topological depth (sources of Sink),
     // so reuse packing should merge them into a single slot.
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       { id: "A",    xExtent: [0,  10] },
       { id: "B",    xExtent: [50, 60] },
       { id: "Sink" },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "a-k", source: "A", target: "Sink", value: 3, startTime: 5,  endTime: 10 },
       { id: "b-k", source: "B", target: "Sink", value: 3, startTime: 55, endTime: 60 },
     ]
@@ -200,12 +206,12 @@ describe("computeProcessSankeyLayout", () => {
   })
 
   it("packs every node in its own slot when packing=off", () => {
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       { id: "A",    xExtent: [0,  10] },
       { id: "B",    xExtent: [50, 60] },
       { id: "Sink" },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "a-k", source: "A", target: "Sink", value: 3, startTime: 5,  endTime: 10 },
       { id: "b-k", source: "B", target: "Sink", value: 3, startTime: 55, endTime: 60 },
     ]
@@ -215,12 +221,12 @@ describe("computeProcessSankeyLayout", () => {
   })
 
   it("emits crossings/length quality metrics", () => {
-    const nodes = [
+    const nodes: ProcessSankeyNode[] = [
       { id: "A", xExtent: [0, 0] },
       { id: "B", xExtent: [0, 0] },
       { id: "X" }, { id: "Y" },
     ]
-    const edges = [
+    const edges: ProcessSankeyEdge[] = [
       { id: "ay", source: "A", target: "Y", value: 4, startTime: 5,  endTime: 10 },
       { id: "bx", source: "B", target: "X", value: 4, startTime: 5,  endTime: 10 },
     ]

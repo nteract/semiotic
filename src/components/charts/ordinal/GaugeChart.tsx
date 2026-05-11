@@ -9,6 +9,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
 import { useChartMode } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
@@ -245,44 +246,28 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     [pieceStyle, stroke, strokeWidth, opacity]
   )
 
-  // ── Start angle ─────────────────────────────────────────────────────────
-  // pieScene.ts: 0° = 12 o'clock, positive = clockwise. Adds startAngle (degrees→radians).
-  // Gap centered at 6 o'clock (180°). Gap half-width = (360 - sweep) / 2.
-  // Arc starts where the gap ends: 180° + gapHalf = 180° + (360 - sweep) / 2.
-  // For 240° sweep: 180 + 60 = 240° (≡ -120° from 12 o'clock = 8 o'clock position).
-  const sweepRad = (sweep * Math.PI) / 180
-  const gapDeg = 360 - sweep
-  const startAngleDegFinal = 180 + gapDeg / 2
+  // ── Arc geometry ────────────────────────────────────────────────────
+  // Sweep convention (pieScene.ts): 0° = 12 o'clock, positive = clockwise.
+  // `sweepToAngles` produces the matching start angle (gap centered at the
+  // 6 o'clock position) and the radian offset for unit-circle math.
+  // `computeArcBoundingBox` returns the visible bbox so the arc radius can
+  // be sized to fit the widget. Both helpers live in `radialGeometry.ts`
+  // and are exported from `semiotic/utils`.
+  const { sweepRad, startAngleDeg: startAngleDegFinal } = sweepToAngles(sweep)
+  const arcBBox = computeArcBoundingBox(sweep)
 
-  // ── Compute arc bounding box to maximize radius and center the arc ────
-  // PAD shrinks at very small widget sizes (sparkline 120×24 etc.) so the arc
-  // isn't squeezed to zero thickness by the fixed edge inset. At 120×24 with
-  // the old PAD=10, `(height - 20)/1 = 4` forced radius=10 (the floor) while
-  // innerRadius also hit 10 — resulting in a zero-thickness arc that painted
-  // nothing. Scaling PAD with the smaller dimension keeps the arc visible at
-  // sparkline sizes while leaving larger modes unchanged.
+  // PAD shrinks at very small widget sizes (sparkline 120×24 etc.) so the
+  // arc isn't squeezed to zero thickness by the fixed edge inset. At
+  // 120×24 with the old PAD=10, `(height - 20)/1 = 4` forced radius=10
+  // (the floor) while innerRadius also hit 10 — resulting in a
+  // zero-thickness arc that painted nothing. Scaling PAD with the smaller
+  // dimension keeps the arc visible at sparkline sizes while leaving
+  // larger modes unchanged.
   const PAD = Math.min(10, Math.max(1, Math.min(width, height) / 12))
-  const offsetRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
-  const arcPts: [number, number][] = [
-    [Math.cos(offsetRad), Math.sin(offsetRad)],
-    [Math.cos(offsetRad + sweepRad), Math.sin(offsetRad + sweepRad)],
-    [0, 0],
-  ]
-  for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
-    const norm = ((a - offsetRad) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
-    if (norm <= sweepRad + 0.001) arcPts.push([Math.cos(a), Math.sin(a)])
-  }
-  const arcMinX = Math.min(...arcPts.map(p => p[0]))
-  const arcMaxX = Math.max(...arcPts.map(p => p[0]))
-  const arcMinY = Math.min(...arcPts.map(p => p[1]))
-  const arcMaxY = Math.max(...arcPts.map(p => p[1]))
-  const arcW = arcMaxX - arcMinX   // e.g. 2.0 for symmetric arcs
-  const arcH = arcMaxY - arcMinY   // e.g. 1.0 for 180° half-circle
-  const arcCY = (arcMinY + arcMaxY) / 2
-
-  // Maximize radius: the arc's visible bbox must fit in the widget.
-  // The arc occupies arcW*R horizontally and arcH*R vertically.
-  const arcCX = (arcMinX + arcMaxX) / 2
+  const arcW = arcBBox.width
+  const arcH = arcBBox.height
+  const arcCX = arcBBox.cx
+  const arcCY = arcBBox.cy
   // Floor the radius at 4px (arbitrary but enough for the canvas content-check
   // to detect painted pixels) rather than 10, since a 10 floor at 120×24 would
   // push the gauge outside its own bbox. The arc stays legible at any realistic

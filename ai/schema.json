@@ -171,6 +171,14 @@
               "type": "number",
               "description": "Opacity of the filled area (0-1)",
               "default": 0.3
+            },
+            "forecast": {
+              "type": "object",
+              "description": "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig."
+            },
+            "anomaly": {
+              "type": "object",
+              "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
             }
           },
           "required": [
@@ -334,6 +342,14 @@
             "lineWidth": {
               "type": "number",
               "default": 2
+            },
+            "forecast": {
+              "type": "object",
+              "description": "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig."
+            },
+            "anomaly": {
+              "type": "object",
+              "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
             }
           },
           "required": [
@@ -650,6 +666,14 @@
                 "object"
               ],
               "description": "Overlay a regression line. true = linear, 'linear' | 'polynomial' | 'loess' = method, or full RegressionConfig object. Sugar over the trend annotation."
+            },
+            "forecast": {
+              "type": "object",
+              "description": "Forecast overlay config — tagged future points + optional envelope. See ForecastConfig."
+            },
+            "anomaly": {
+              "type": "object",
+              "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
             }
           },
           "required": [
@@ -1558,6 +1582,14 @@
                 "object"
               ],
               "description": "Overlay a regression line under the connected path. Same shape as Scatterplot's regression prop."
+            },
+            "forecast": {
+              "type": "object",
+              "description": "Forecast overlay config — same shape as LineChart's forecast prop."
+            },
+            "anomaly": {
+              "type": "object",
+              "description": "Anomaly overlay config — ±σ band + anomaly dot annotations."
             }
           },
           "required": [
@@ -6626,21 +6658,9 @@
               "type": "boolean",
               "default": false
             },
-            "particleRadius": {
-              "type": "number",
-              "default": 2.5
-            },
-            "particleDuration": {
-              "type": "number",
-              "default": 6000
-            },
-            "particleDensity": {
-              "type": "number",
-              "default": 1
-            },
-            "particleMaxPerEdge": {
-              "type": "number",
-              "default": 40
+            "particleStyle": {
+              "type": "object",
+              "description": "ParticleStyle config — same shape as SankeyDiagram. Defaults from DEFAULT_PARTICLE_STYLE (radius 3, opacity 0.7, spawnRate 0.1, maxPerEdge 50)."
             }
           },
           "required": [

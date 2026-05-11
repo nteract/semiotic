@@ -15,6 +15,7 @@ import type { NetworkCustomLayout } from "../../../stream/networkCustomLayout"
 import type {
   NetworkBezierEdge,
   NetworkLabel,
+  BezierCache,
 } from "../../../stream/networkTypes"
 import type { Datum } from "../../shared/datumTypes"
 
@@ -39,6 +40,15 @@ export interface ProcessSankeyRibbonSpec {
   opacity: number
   /** The user's raw edge datum, surfaced as `data` in HoverData. */
   rawDatum: Datum
+  /**
+   * Pre-computed cubic bezier control points + halfWidth for the
+   * shared particle pipeline. ProcessSankey writes these alongside
+   * the ribbon's path-D string so the frame's particle pool can
+   * spawn / step / render against them without re-deriving the
+   * ribbon geometry. Optional — when omitted the ribbon paints
+   * normally but no particles flow along it.
+   */
+  bezier?: BezierCache
 }
 
 export interface ProcessSankeyLayoutConfig {
@@ -71,6 +81,12 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     sceneEdges.push({
       type: "bezier",
       pathD: r.pathD,
+      // `bezierCache` is the same data structure (and source) that
+      // gets attached to the user-pushed RealtimeEdge for particles.
+      // Including it here gives the canvas hit tester an analytic
+      // bezier to fall back on for ribbon-level hit detection,
+      // matching how SankeyDiagram populates it.
+      ...(r.bezier && { bezierCache: r.bezier }),
       style: {
         fill: r.fill,
         opacity: r.opacity,

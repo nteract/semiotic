@@ -13,7 +13,7 @@ import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { interpolateViridis } from "../charts/shared/colorPalettes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
-import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm.js"
+import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"

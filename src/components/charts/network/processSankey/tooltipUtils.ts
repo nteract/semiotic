@@ -3,7 +3,7 @@
 // rendering React, and so future tooltip variants (sparkline, deltas,
 // full series) can compose against the same row-shaping primitives.
 
-import type { ProcessSankeyNodeData } from "./algorithm.js"
+import type { ProcessSankeyNodeData } from "./algorithm"
 
 export interface MassHistoryRow {
   t: number

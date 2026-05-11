@@ -612,8 +612,13 @@ const StreamNetworkFrame = forwardRef<
   // isContinuous is still used elsewhere in this file for the render
   // loop's "should I keep ticking" decision; declared here so the
   // existing references continue to resolve.
+  // Animation gate: keep rAF ticking for any of (a) sankey with
+  // particles, (b) customNetworkLayout charts with particles (e.g.
+  // ProcessSankey — same particle pipeline, edges carry HOC-computed
+  // bezier control points), (c) pulse encoding, (d) explicit store
+  // animation state (transitions, push-mode intro).
   const isContinuous =
-    (chartType === "sankey" && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
+    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
 
   // Update config when props change
   useEffect(() => {

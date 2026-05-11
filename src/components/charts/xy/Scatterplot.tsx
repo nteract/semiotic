@@ -21,7 +21,10 @@ import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
+import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 
 /**
  * Scatterplot component props
@@ -83,6 +86,18 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
    * ```
    */
   regression?: RegressionProp
+  /**
+   * Forecast overlay — extends the scatter with tagged future
+   * points + (optional) confidence-envelope annotations. Same shape
+   * as LineChart's `forecast` prop.
+   */
+  forecast?: ForecastConfig
+  /**
+   * Anomaly overlay — adds a ±σ band annotation and per-point
+   * anomaly dots. Standalone (without forecast) gives raw anomaly
+   * detection on the scatter.
+   */
+  anomaly?: AnomalyConfig
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
   /** Fixed y domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -138,8 +153,6 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
 export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
-
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -170,6 +183,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     pointIdAccessor,
     annotations,
     regression,
+    forecast,
+    anomaly,
     xExtent,
     yExtent,
     frameProps = {},
@@ -193,6 +208,55 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
+  const isPushMode = data === undefined
+
+  // ── Encoding domain (sizeBy) — bounded + push-mode tracking ──────────
+  // When `sizeBy` is set and the user streams data via ref, the
+  // domain has to be tracked from pushed values; otherwise the
+  // domain comes straight from bounded data. The shared hook owns
+  // the running min/max and the version counter that triggers
+  // radius-fn recompute on each new min/max.
+  const {
+    domain: sizeDomain,
+    trackPushed: trackSizeDomain,
+    reset: resetSizeDomain,
+  } = useEncodingDomain<Datum>({
+    accessor: sizeBy,
+    data: safeData,
+    isPushMode,
+  })
+
+  // Wrap push/pushMany/clear so sizeBy-driven radii stay in sync
+  // when the chart is driven through a ref. Other handle methods
+  // get the vanilla XY defaults from the helper.
+  const wrappedPush = useCallback(
+    (d: Datum) => {
+      trackSizeDomain([d])
+      frameRef.current?.push(d)
+    },
+    [trackSizeDomain]
+  )
+  const wrappedPushMany = useCallback(
+    (d: Datum[]) => {
+      trackSizeDomain(d)
+      frameRef.current?.pushMany(d)
+    },
+    [trackSizeDomain]
+  )
+
+  useFrameImperativeHandle(ref, {
+    variant: "xy",
+    frameRef,
+    overrides: {
+      push: wrappedPush,
+      pushMany: wrappedPushMany,
+      clear: () => {
+        resetSizeDomain()
+        frameRef.current?.clear()
+      },
+    },
+    deps: [wrappedPush, wrappedPushMany, resetSizeDomain],
+  })
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
@@ -264,14 +328,9 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
   warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
 
   // ── Core chart logic ───────────────────────────────────────────────────
-
-  const sizeDomain = useMemo(() => {
-    if (!sizeBy || safeData.length === 0) return undefined
-    const sizes = safeData.map((d) =>
-      typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy]
-    )
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [safeData, sizeBy])
+  // `sizeDomain` comes from the shared `useEncodingDomain` hook
+  // above — same value in bounded mode, push-mode-tracked when
+  // streaming.
 
   // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
   // internal memo — passing an inline literal would re-allocate the
@@ -299,15 +358,33 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
 
-  // Splice the `regression` sugar into annotations as a `trend`
-  // annotation. User-supplied annotations always win on z-order — the
-  // regression line goes underneath so explicit callouts/markers stay
-  // legible above it.
+  // ── Statistical features (forecast + anomaly overlays) ────────────────
+  // Shared hook with LineChart/AreaChart — produces post-forecast
+  // data (tagged future points) + envelope/anomaly annotations.
+  const {
+    effectiveData: featureEffectiveData,
+    statisticalAnnotations,
+  } = useSeriesFeatures({
+    data: safeData as Datum[],
+    xAccessor, yAccessor,
+    forecast, anomaly,
+  })
+
+  // Splice the `regression` sugar + statistical overlays into the
+  // annotations array. Order: trend regression first (paints under),
+  // then user annotations, then statistical (envelope, anomaly band /
+  // dots) — envelope tends to be background-shaded so it sits at the
+  // top of the annotation list and is rendered first by the frame.
   const resolvedAnnotations = useMemo(() => {
     const trendAnn = buildRegressionAnnotation(regression)
-    if (!trendAnn) return annotations
-    return [trendAnn, ...(annotations || [])]
-  }, [regression, annotations])
+    const userAnns = annotations || []
+    if (!trendAnn && statisticalAnnotations.length === 0) return annotations
+    return [
+      ...(trendAnn ? [trendAnn] : []),
+      ...userAnns,
+      ...statisticalAnnotations,
+    ]
+  }, [regression, annotations, statisticalAnnotations])
 
   // Validate data (after all hooks)
   const error = validateArrayData({
@@ -322,7 +399,10 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
 
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
-    ...(data != null && { data: safeData }),
+    // Use featureEffectiveData when forecast/anomaly is active so
+    // post-forecast tagged points flow into the frame; otherwise
+    // the hook returns safeData unchanged (same reference).
+    ...(data != null && { data: featureEffectiveData }),
     xAccessor,
     yAccessor,
     colorAccessor: colorBy || undefined,

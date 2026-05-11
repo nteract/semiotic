@@ -702,11 +702,11 @@ export default function ProcessSankeyPage() {
 
       <h3 id="example-particles">Particle flow</h3>
       <p>
-        <code>showParticles</code> renders a constant stream of dots
-        along every ribbon. Particle count is proportional to{" "}
-        <code>edge.value</code> and capped by{" "}
-        <code>particleMaxPerEdge</code>; tune density and radius to
-        match the chart&rsquo;s scale.
+        <code>showParticles</code> renders a continuous stream of dots
+        flowing along every ribbon. Spawn rate is proportional to{" "}
+        <code>edge.value</code>; tune visual style via{" "}
+        <code>particleStyle</code> — the same config shape{" "}
+        <a href="/charts/sankey-diagram">SankeyDiagram</a> uses.
       </p>
       <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
         <ProcessSankey
@@ -717,7 +717,7 @@ export default function ProcessSankeyPage() {
           colorBy="category"
           showLegend
           showParticles
-          particleRadius={3}
+          particleStyle={{ radius: 3 }}
           timeFormat={SANDBOX_TIME_FORMAT}
         />
       </div>
@@ -963,29 +963,27 @@ export default function ProcessSankeyPage() {
       <ul>
         <li>
           <code>showParticles</code> (default <code>false</code>) —
-          render a continuous stream of dots along every ribbon. Every
-          edge animates simultaneously; the band geometry encodes
-          <em> when</em> a flow happens, the particles encode
-          <em> how much</em>.
+          render a continuous stream of dots along every ribbon. The
+          band geometry encodes <em>when</em> a flow happens, the
+          particles encode <em>how much</em>.
         </li>
         <li>
-          <code>particleDuration</code> (default <code>6000</code>ms) —
-          one full source-to-target traversal per particle.
-        </li>
-        <li>
-          <code>particleRadius</code> (default <code>2.5</code>) — dot radius in px.
-        </li>
-        <li>
-          <code>particleDensity</code> (default <code>1</code>) —
-          particles per unit of edge value. Per-edge count is{" "}
-          <code>clamp(round(value × density), 1, max)</code>.
-        </li>
-        <li>
-          <code>particleMaxPerEdge</code> (default <code>40</code>) —
-          cap on particles per edge so very thick ribbons don&rsquo;t
-          flood the canvas.
+          <code>particleStyle</code> — visual config object. Same
+          shape{" "}
+          <a href="/charts/sankey-diagram">SankeyDiagram</a> uses:{" "}
+          <code>{`{ radius, opacity, spawnRate, maxPerEdge, speedMultiplier, color, colorBy, proportionalSpeed }`}</code>.
+          Defaults from <code>DEFAULT_PARTICLE_STYLE</code> (radius{" "}
+          <code>3</code>, opacity <code>0.7</code>, spawnRate{" "}
+          <code>0.1</code>, maxPerEdge <code>50</code>).
         </li>
       </ul>
+      <p>
+        Particles ride the shared canvas + ParticlePool path the rest
+        of the network family uses — spawn rate scales proportional
+        to <code>edge.value</code>, particles recycle out of a pre-
+        allocated pool, and the rAF loop pauses cleanly when{" "}
+        <code>showParticles</code> is toggled off.
+      </p>
 
       <h2 id="push-api">Push API</h2>
 

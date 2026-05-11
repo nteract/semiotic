@@ -3,7 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useState } from "react"
+import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -21,6 +21,7 @@ import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 
 /**
@@ -315,45 +316,38 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     height,
   })
 
-  // ── Streaming size domain — track min/max from pushed data ───────────
-  const streamingSizeDomainRef = useRef<[number, number] | null>(null)
-  const [sizeDomainVersion, setSizeDomainVersion] = useState(0)
-
-  const updateSizeDomain = useCallback((items: Datum[]) => {
-    if (!isPushMode) return
-    let changed = false
-    for (const d of items) {
-      const val = typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy as string]
-      if (val == null || !isFinite(val)) continue
-      if (!streamingSizeDomainRef.current) {
-        streamingSizeDomainRef.current = [val, val]
-        changed = true
-      } else {
-        if (val < streamingSizeDomainRef.current[0]) { streamingSizeDomainRef.current[0] = val; changed = true }
-        if (val > streamingSizeDomainRef.current[1]) { streamingSizeDomainRef.current[1] = val; changed = true }
-      }
-    }
-    if (changed) setSizeDomainVersion(v => v + 1)
-  }, [isPushMode, sizeBy])
+  // ── Encoding domain (sizeBy) — bounded + push-mode tracking ──────────
+  // The shared `useEncodingDomain` hook owns the running min/max
+  // across both bounded data and ref-pushed items. The HOC wraps
+  // the frame's push/pushMany to feed the hook before delegating.
+  const {
+    domain: sizeDomain,
+    trackPushed: trackSizeDomain,
+    reset: resetSizeDomain,
+  } = useEncodingDomain<Datum>({
+    accessor: sizeBy,
+    data: safeData,
+    isPushMode,
+  })
 
   const wrappedPush = useCallback(
     (d: Datum) => {
-      updateSizeDomain([d])
+      trackSizeDomain([d])
       frameRef.current?.push(d)
     },
-    [updateSizeDomain]
+    [trackSizeDomain]
   )
   const wrappedPushMany = useCallback(
     (d: Datum[]) => {
-      updateSizeDomain(d)
+      trackSizeDomain(d)
       frameRef.current?.pushMany(d)
     },
-    [updateSizeDomain]
+    [trackSizeDomain]
   )
 
   // Wrapped push/pushMany add streaming-size-domain tracking; clear
   // also resets that domain. Other 5 methods get the vanilla XY
-  // defaults from the helper. `deps` matches the inline form.
+  // defaults from the helper.
   useFrameImperativeHandle(ref, {
     variant: "xy",
     frameRef,
@@ -361,12 +355,11 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
       push: wrappedPush,
       pushMany: wrappedPushMany,
       clear: () => {
-        streamingSizeDomainRef.current = null
-        setSizeDomainVersion(v => v + 1)
+        resetSizeDomain()
         frameRef.current?.clear()
       },
     },
-    deps: [wrappedPush, wrappedPushMany],
+    deps: [wrappedPush, wrappedPushMany, resetSizeDomain],
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -378,22 +371,6 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
-
-  // Calculate size domain (bounded mode from data, push mode from tracked range)
-  const sizeDomain = useMemo(() => {
-    if (isPushMode) {
-      void sizeDomainVersion // trigger recompute when streaming domain changes
-      return streamingSizeDomainRef.current || [0, 1] as [number, number]
-    }
-    const sizes = safeData.map((d) => {
-      if (typeof sizeBy === "function") {
-        return sizeBy(d)
-      }
-      return d[sizeBy]
-    })
-
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [safeData, sizeBy, isPushMode, sizeDomainVersion])
 
   // Bubble's chart-shape defaults (default stroke + width) ride
   // through `baseStyleExtras`. sizeBy is mandatory on BubbleChart, so
@@ -407,9 +384,17 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     () => ({ stroke: bubbleStrokeColor, strokeWidth: bubbleStrokeWidth }),
     [bubbleStrokeColor, bubbleStrokeWidth],
   )
+  // Push-mode initial state — no values seen yet → domain undefined.
+  // Preserve the prior [0, 1] fallback so bubbles render at a finite
+  // size rather than `getSize` returning the raw value as the radius.
+  // Memoized so the [0, 1] fallback doesn't churn the radius fn.
+  const effectiveSizeDomain = useMemo<[number, number]>(
+    () => sizeDomain ?? [0, 1],
+    [sizeDomain],
+  )
   const bubbleRadiusFn = useCallback(
-    (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain),
-    [sizeBy, sizeRange, sizeDomain],
+    (d: Datum) => getSize(d, sizeBy, sizeRange, effectiveSizeDomain),
+    [sizeBy, sizeRange, effectiveSizeDomain],
   )
 
   const pointStyle = useXYPointStyle({
