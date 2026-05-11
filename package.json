@@ -216,27 +216,27 @@
   "size-limit": [
     {
       "path": "dist/semiotic.module.min.js",
-      "limit": "325 KB"
+      "limit": "240 KB"
     },
     {
       "path": "dist/xy.module.min.js",
-      "limit": "170 KB"
-    },
-    {
-      "path": "dist/ordinal.module.min.js",
-      "limit": "140 KB"
-    },
-    {
-      "path": "dist/network.module.min.js",
       "limit": "135 KB"
     },
     {
+      "path": "dist/ordinal.module.min.js",
+      "limit": "110 KB"
+    },
+    {
+      "path": "dist/network.module.min.js",
+      "limit": "95 KB"
+    },
+    {
       "path": "dist/geo.module.min.js",
-      "limit": "105 KB"
+      "limit": "90 KB"
     },
     {
       "path": "dist/realtime.module.min.js",
-      "limit": "175 KB"
+      "limit": "140 KB"
     }
   ],
   "devDependencies": {
