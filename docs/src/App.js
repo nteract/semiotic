@@ -107,6 +107,7 @@ import DotPlotRecipePage from "./pages/cookbook/DotPlotRecipePage"
 import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
 import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
 import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
+import DoomChartPage from "./pages/cookbook/DoomChartPage"
 // MatrixCookbookPage removed — matrix recipe no longer supported
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
@@ -325,6 +326,7 @@ export default function DocsApp() {
               <Route path="timeline" element={<TimelineCookbookPage />} />
               <Route path="radar-plot" element={<RadarPlotPage />} />
               <Route path="isotype-chart" element={<IsotypeChartPage />} />
+              <Route path="doom-chart" element={<DoomChartPage />} />
             </Route>
 
             {/* Recipes routes */}
