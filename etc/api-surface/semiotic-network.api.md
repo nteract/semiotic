@@ -14,6 +14,8 @@ function SankeyDiagram
 function StreamNetworkFrame
 function TreeDiagram
 function Treemap
+function formatProcessSankeyIssue
+function validateProcessSankey
 interface ChordDiagramProps
 interface CirclePackProps
 interface ForceDirectedGraphProps
@@ -22,8 +24,11 @@ interface NetworkLabel
 interface NetworkLayoutContext
 interface NetworkLayoutResult
 interface OrbitDiagramProps
+interface ProcessSankeyIssue
 interface ProcessSankeyProps
 interface ProcessSankeyTick
+interface ProcessSankeyValidatorEdge
+interface ProcessSankeyValidatorNode
 interface SankeyDiagramProps
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps

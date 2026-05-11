@@ -13,6 +13,7 @@ function RealtimeSwarmChart
 function RealtimeWaterfallChart
 function StreamNetworkFrame
 function StreamXYFrame
+function useStreamStatus
 interface AnnotationContext
 interface BarStyle
 interface CrosshairStyle
@@ -26,6 +27,8 @@ interface RealtimeSwarmChartProps
 interface RealtimeWaterfallChartProps
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps
+interface StreamStatusOptions
+interface StreamStatusResult
 interface StreamXYFrameHandle
 interface StreamXYFrameProps
 interface SwarmStyle
@@ -33,6 +36,7 @@ interface WaterfallStyle
 type ArrowOfTime
 type NetworkChartType
 type StreamChartType
+type StreamStatus
 type ThresholdType
 type WindowMode
 ```
