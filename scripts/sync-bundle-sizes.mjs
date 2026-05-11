@@ -1,0 +1,276 @@
+#!/usr/bin/env node
+/**
+ * Measures gzip size of every public-subpath ESM bundle in `dist/`,
+ * formats two views (table + bullet list), and upserts them into the
+ * docs targets that surface bundle sizes to consumers and AI agents.
+ *
+ * Source of truth: `package.json#exports` → resolves each subpath to
+ *   its `*.module.min.js` artifact under `dist/`. The script never
+ *   hand-maintains a list of subpaths — adding a new entry-point in
+ *   `package.json` makes the new bundle show up here automatically.
+ *
+ * Marker blocks (same pattern as `generate-ai-behavior-contracts.mjs`):
+ *   <!-- semiotic-bundle-sizes:start -->
+ *   ...generated content...
+ *   <!-- semiotic-bundle-sizes:end -->
+ *
+ * Targets:
+ *   - README.md                  full table view
+ *   - CLAUDE.md                  compact bullet list
+ *   - ai/system-prompt.md        compact bullet list
+ *
+ * Sub-path "what's inside" blurbs for the README table are kept in a
+ * static map below. They are short by design (one HOC name + count)
+ * and don't need to live in the build — but they DO need to stay in
+ * sync with the catalog, so the script throws if a subpath has no
+ * blurb to print.
+ *
+ * Usage:
+ *   node scripts/sync-bundle-sizes.mjs            # write (regen mode)
+ *   node scripts/sync-bundle-sizes.mjs --check    # CI gate; non-zero exit on drift
+ *   node scripts/sync-bundle-sizes.mjs --print    # print to stdout only
+ */
+
+import { readFileSync, writeFileSync, statSync, existsSync } from "node:fs"
+import { gzipSync, constants as zlibConstants } from "node:zlib"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const repoRoot = resolve(__dirname, "..")
+const args = new Set(process.argv.slice(2))
+const checkOnly = args.has("--check")
+const printOnly = args.has("--print")
+
+const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
+const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
+
+// Subpath → short "what's inside" blurb shown in the README table.
+// Keep these short and stable; they describe *which charts/utilities*
+// each bundle ships, not implementation detail.
+const BLURBS = {
+  ".":          "Everything below (full bundle)",
+  "./xy":       "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts",
+  "./ordinal":  "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
+  "./network":  "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
+  "./geo":      "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
+  "./realtime": "RealtimeLineChart, RealtimeHistogram, + 3 streaming charts",
+  "./server":   "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
+  "./utils":    "ThemeProvider, validators, serialization — no chart components",
+  "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
+  "./themes":   "Theme presets only (tufte, carbon, etc.)",
+  "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
+  "./ai":       "All 40 HOCs + validation — optimized for LLM code generation",
+}
+
+// Display order — independent of `package.json` key order so the
+// table reads consistently. Larger bundles first within each rank
+// (XY, ordinal, network, geo, realtime, server) so the "pick the
+// smallest sub-path that fits your charts" message lands clearly.
+const ORDER = [
+  "./xy", "./ordinal", "./network", "./geo", "./realtime", "./server",
+  "./utils", "./recipes", "./themes", "./data",
+  "./ai", ".",
+]
+
+// `./` → "semiotic", "./xy" → "semiotic/xy", "." → "semiotic".
+function subpathToImportPath(subpath) {
+  if (subpath === ".") return "semiotic"
+  if (subpath.startsWith("./")) return `semiotic/${subpath.slice(2)}`
+  return subpath
+}
+
+function resolveBundleFile(exportValue) {
+  if (typeof exportValue === "string") return exportValue
+  if (exportValue && typeof exportValue === "object") {
+    return exportValue.import ?? exportValue.module ?? exportValue.default ?? null
+  }
+  return null
+}
+
+function gzipSize(absolutePath) {
+  const raw = readFileSync(absolutePath)
+  // -9 maximum compression to match the `gzip -9c` baseline used by
+  // build dashboards. The default level (`-6`) would inflate sizes by
+  // ~5% and produce numbers that don't match what `bundlephobia` /
+  // `pkg-size` quote either.
+  const gz = gzipSync(raw, { level: zlibConstants.Z_BEST_COMPRESSION })
+  return gz.length
+}
+
+function kbRound(bytes) {
+  return Math.round(bytes / 1024)
+}
+
+function measure() {
+  const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8"))
+  const exports = pkg.exports ?? {}
+  const rows = []
+  const errors = []
+
+  for (const subpath of ORDER) {
+    if (!Object.prototype.hasOwnProperty.call(exports, subpath)) {
+      errors.push(`Missing export entry for ${subpath} in package.json`)
+      continue
+    }
+    if (!Object.prototype.hasOwnProperty.call(BLURBS, subpath)) {
+      errors.push(`Missing blurb for ${subpath} in sync-bundle-sizes.mjs (update BLURBS)`)
+      continue
+    }
+    const bundleRel = resolveBundleFile(exports[subpath])
+    if (!bundleRel) {
+      errors.push(`Could not resolve bundle file for ${subpath}`)
+      continue
+    }
+    const bundleAbs = resolve(repoRoot, bundleRel)
+    if (!existsSync(bundleAbs)) {
+      errors.push(`Bundle file missing: ${bundleRel} (run \`npm run dist\`)`)
+      continue
+    }
+    statSync(bundleAbs) // throws if unreadable
+    rows.push({
+      subpath,
+      importPath: subpathToImportPath(subpath),
+      bundle: bundleRel,
+      kb: kbRound(gzipSize(bundleAbs)),
+      blurb: BLURBS[subpath],
+    })
+  }
+
+  // Cross-check: every package export key should appear in ORDER
+  // (except the metadata-only `./package.json`). Catches a fresh
+  // export landing without an ORDER + BLURBS update.
+  for (const subpath of Object.keys(exports)) {
+    if (subpath === "./package.json") continue
+    if (!ORDER.includes(subpath)) {
+      errors.push(`Export ${subpath} is not listed in ORDER (sync-bundle-sizes.mjs)`)
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error("✗ bundle-sizes measurement failed:")
+    for (const err of errors) console.error(`  - ${err}`)
+    process.exit(1)
+  }
+
+  return rows
+}
+
+// ── Renderers ──────────────────────────────────────────────────────────
+
+function renderTable(rows) {
+  // Two-bold formatting on the KB column matches the prior hand-
+  // maintained table's emphasis.
+  const lines = [
+    "| Entry Point | gzip | What's inside |",
+    "|---|---|---|",
+  ]
+  for (const row of rows) {
+    lines.push(`| \`${row.importPath}\` | **${row.kb} KB** | ${row.blurb} |`)
+  }
+  return lines.join("\n")
+}
+
+function renderCompact(rows) {
+  // Compact one-line summary for CLAUDE.md / ai/system-prompt.md.
+  // Lists every subpath inline; full-bundle entry appears last so the
+  // "if you import everything" anchor reads naturally.
+  const pieces = rows.map((row) => {
+    if (row.subpath === ".") return null
+    const unit = "KB"
+    return `\`${row.importPath}\` (${row.kb}${unit} gz)`
+  }).filter(Boolean)
+  const full = rows.find((r) => r.subpath === ".")
+  const trailer = full ? ` Full \`semiotic\` is ${full.kb}KB gz.` : ""
+  return pieces.join(", ") + "." + trailer
+}
+
+function generatedTableBlock(rows) {
+  return [
+    MARKER_START,
+    "<!-- Auto-generated by `scripts/sync-bundle-sizes.mjs`. Edit dist/*, not this block. -->",
+    "",
+    renderTable(rows),
+    "",
+    MARKER_END,
+  ].join("\n")
+}
+
+function generatedCompactBlock(rows, { listItem = false } = {}) {
+  // `listItem: true` prefixes a markdown bullet so the block can sit
+  // inside an existing list (CLAUDE.md's Quick Start) without breaking
+  // markdown's list grouping when rendered.
+  const prefix = listItem ? "- " : ""
+  return [
+    MARKER_START,
+    "<!-- Auto-generated by scripts/sync-bundle-sizes.mjs — do not edit by hand. -->",
+    `${prefix}**Use sub-path imports** — ${renderCompact(rows)}`,
+    MARKER_END,
+  ].join("\n")
+}
+
+// ── Upsert ─────────────────────────────────────────────────────────────
+
+function upsertMarkerBlock(content, block) {
+  const start = content.indexOf(MARKER_START)
+  const end = content.indexOf(MARKER_END)
+  if (start === -1 || end === -1 || end <= start) {
+    return null // caller decides whether to error or no-op
+  }
+  const replaceEnd = end + MARKER_END.length
+  return content.slice(0, start) + block + content.slice(replaceEnd)
+}
+
+const TARGETS = [
+  { path: "README.md",           render: (rows) => generatedTableBlock(rows),                       required: true },
+  { path: "CLAUDE.md",           render: (rows) => generatedCompactBlock(rows, { listItem: true }), required: true },
+  { path: "ai/system-prompt.md", render: (rows) => generatedCompactBlock(rows),                     required: true },
+]
+
+function main() {
+  const rows = measure()
+
+  if (printOnly) {
+    console.log("Bundle sizes (gzip, KB):\n")
+    for (const row of rows) {
+      console.log(`  ${row.importPath.padEnd(20)}  ${String(row.kb).padStart(4)} KB`)
+    }
+    return
+  }
+
+  const stale = []
+  for (const target of TARGETS) {
+    const filePath = resolve(repoRoot, target.path)
+    const original = readFileSync(filePath, "utf8")
+    const block = target.render(rows)
+    const next = upsertMarkerBlock(original, block)
+    if (next == null) {
+      if (target.required) {
+        console.error(`✗ ${target.path}: missing marker block ${MARKER_START} / ${MARKER_END}`)
+        process.exit(1)
+      }
+      continue
+    }
+    if (next === original) continue
+    if (checkOnly) {
+      stale.push(target.path)
+    } else {
+      writeFileSync(filePath, next)
+      console.log(`✓ wrote bundle sizes → ${target.path}`)
+    }
+  }
+
+  if (checkOnly && stale.length > 0) {
+    console.error("\n✗ bundle-size docs drifted from current `dist/` output:")
+    for (const path of stale) console.error(`  - ${path}`)
+    console.error("\nRebuild + regenerate with:")
+    console.error("  npm run dist && npm run docs:bundle-sizes")
+    process.exit(1)
+  }
+
+  if (checkOnly) {
+    console.log("✓ bundle-size docs in sync with dist/*.module.min.js")
+  }
+}
+
+main()

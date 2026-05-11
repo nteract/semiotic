@@ -16,8 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useXYLineStyle } from "../shared/useXYLineStyle"
 
 // ── Internal field names ────────────────────────────────────────────────
 const UNITIZED_FIELD = "__ma_unitized"
@@ -418,29 +417,24 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Line style ────────────────────────────────────────────────────────
-  const baseLineStyle = useMemo(() => {
-    const colorMap = new Map<string, string>()
-    seriesLabels.forEach((label, i) => colorMap.set(label, seriesColors[i]))
+  // MultiAxisLineChart hands the shared hook a custom `resolveStroke`
+  // that reads from the per-series colorMap. The hook still does the
+  // primitives merge + selection wrap.
+  const seriesColorMap = useMemo(() => {
+    const map = new Map<string, string>()
+    seriesLabels.forEach((label, i) => map.set(label, seriesColors[i]))
+    return map
+  }, [seriesLabels, seriesColors])
 
-    return (d: Datum) => {
-      const seriesName = d[SERIES_FIELD]
-      return {
-        stroke: colorMap.get(seriesName) || seriesColors[0],
-        strokeWidth: lineWidth,
-        fill: "none"
-      }
-    }
-  }, [seriesLabels, seriesColors, lineWidth])
-
-  const baseLineStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
-    [baseLineStyle, stroke, strokeWidth, opacity]
-  )
-
-  const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  const lineStyle = useXYLineStyle({
+    lineWidth,
+    resolveStroke: (d) => seriesColorMap.get(d[SERIES_FIELD]) || seriesColors[0],
+    stroke,
+    strokeWidth,
+    opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // ── Tooltip ───────────────────────────────────────────────────────────
   const tooltipFn = useMemo(() => {

@@ -1070,9 +1070,8 @@ ref.current.clear()`} />
       </ul>
 
       <p style={{ marginTop: 24, fontSize: 13, color: "var(--semiotic-text-secondary, #64748b)" }}>
-        Algorithm internals and future directions are documented in{" "}
-        <code>docs/strategy/further_directions_sankey.md</code> and{" "}
-        <code>docs/strategy/process_sankey_internals.md</code>.
+        Algorithm internals and deferred future directions are documented in{" "}
+        <code>docs/strategy/process-sankey.md</code>.
       </p>
     </PageLayout>
   )

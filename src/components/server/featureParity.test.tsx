@@ -172,7 +172,7 @@ describe("SSR feature parity: annotations", () => {
 // All four frames now auto-build a categorical legend from a color-by
 // accessor + `showLegend`. Each also honors a caller-supplied pre-rendered
 // ReactNode passed via `props.legend` (the legend from a config object form
-// like `{legendGroups}` is not yet wired through SSR — see OUTSTANDING_WORK).
+// like `{legendGroups}` is not yet wired through SSR — see docs/strategy/roadmap.md).
 // The "explicit ReactNode wins over auto-build" tests below assert that
 // contract by using a marker only the explicit ReactNode would produce.
 

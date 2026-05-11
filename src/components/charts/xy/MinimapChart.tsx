@@ -9,6 +9,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamScales } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useXYLineStyle } from "../shared/useXYLineStyle"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -406,26 +407,34 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-  const mainLineStyle = useMemo(() => {
-    return (d: Datum) => {
-      const style: Datum = { strokeWidth: lineWidth }
-      style.stroke = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
-      if (fillArea) {
-        style.fill = style.stroke
-        style.fillOpacity = areaOpacity
-      }
-      return style
-    }
-  }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity])
+  // Main + overview line styles go through the shared hook. Neither
+  // wraps with primitives or selection (the minimap's overview is
+  // intentionally static, and the main chart doesn't expose selection
+  // here — selection wiring would round-trip through `setup` but the
+  // minimap predates that integration). The overview drops `fillArea`
+  // by design (a dimmer single-line context band, not a filled area).
+  const mainLineStyle = useXYLineStyle({
+    lineWidth,
+    colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
+    colorScale,
+    fillArea,
+    areaOpacity,
+  })
 
   const overviewLineStyle = useMemo(() => {
+    // Caller-supplied override wins (minimapConfig.lineStyle is the
+    // documented escape hatch for fully custom overview rendering).
     if (minimapConfig.lineStyle) return minimapConfig.lineStyle
-    return (d: Datum) => {
-      const style: Datum = { strokeWidth: 1 }
-      style.stroke = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
-      return style
-    }
-  }, [colorBy, colorScale, minimapConfig.lineStyle])
+    return undefined
+  }, [minimapConfig.lineStyle])
+
+  const defaultOverviewLineStyle = useXYLineStyle({
+    lineWidth: 1,
+    colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
+    colorScale,
+  })
+
+  const resolvedOverviewLineStyle = overviewLineStyle ?? defaultOverviewLineStyle
 
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
@@ -528,7 +537,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     yAccessor,
     groupAccessor: lineBy || undefined,
     curve,
-    lineStyle: overviewLineStyle,
+    lineStyle: resolvedOverviewLineStyle,
     size: [width, minimapHeight + minimapMargin.top + minimapMargin.bottom],
     margin: minimapMargin,
     showAxes: minimapConfig.showAxes ?? false,

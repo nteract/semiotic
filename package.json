@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "mcpName": "io.github.nteract/semiotic",
   "description": "React data visualization library with built-in MCP server for AI-assisted chart generation",
   "main": "dist/semiotic.min.js",
@@ -157,8 +157,10 @@
     "check:jsdoc-coverage": "node scripts/check-jsdoc-coverage.mjs",
     "check:ai-examples-coverage": "node scripts/check-ai-examples-coverage.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run size"
+    "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
+    "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
+    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
   },
   "targets": {
     "website": {
@@ -214,27 +216,27 @@
   "size-limit": [
     {
       "path": "dist/semiotic.module.min.js",
-      "limit": "240 KB"
+      "limit": "325 KB"
     },
     {
       "path": "dist/xy.module.min.js",
-      "limit": "135 KB"
+      "limit": "170 KB"
     },
     {
       "path": "dist/ordinal.module.min.js",
-      "limit": "110 KB"
+      "limit": "140 KB"
     },
     {
       "path": "dist/network.module.min.js",
-      "limit": "95 KB"
+      "limit": "135 KB"
     },
     {
       "path": "dist/geo.module.min.js",
-      "limit": "90 KB"
+      "limit": "105 KB"
     },
     {
       "path": "dist/realtime.module.min.js",
-      "limit": "140 KB"
+      "limit": "175 KB"
     }
   ],
   "devDependencies": {

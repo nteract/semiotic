@@ -68,6 +68,9 @@ jobs:
       - name: Build production bundles
         run: npm run dist:prod
 
+      - name: Check bundle-size docs (README + CLAUDE.md + ai/system-prompt.md)
+        run: npm run check:bundle-sizes
+
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
 
