@@ -914,11 +914,18 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       // ribbon path; the pool's particle.t parameter walks the
       // cubic at the chord-direction perpendicular offset to
       // produce a fan across the band width.
+      //
+      // Coerce value with an explicit finite check rather than `|| 0`
+      // — a legitimate edge with `value: 0` would otherwise collapse,
+      // and downstream `ingestBounded` further normalizes truthy-only
+      // (`Number(v) || 1`), so a 0 here would silently behave like a
+      // 1 in the particle pipeline.
+      const rawValue = Number(accessor(valueAccessor, e))
       return {
         id,
         source: String(accessor(sourceAccessor, e)),
         target: String(accessor(targetAccessor, e)),
-        value: Number(accessor(valueAccessor, e)) || 0,
+        value: Number.isFinite(rawValue) ? rawValue : 0,
         bezier: ribbonBezierById.get(id),
         data: e as Datum,
       }

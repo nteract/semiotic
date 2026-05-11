@@ -785,7 +785,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["series-features"],
+      specialFeatures: ["forecast", "anomaly", "series-features"],
     },
   },
 
@@ -846,7 +846,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["regression-overlay", "series-features"],
+      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features"],
     },
   },
 
@@ -1032,7 +1032,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["regression-overlay", "series-features"],
+      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features"],
     },
   },
 

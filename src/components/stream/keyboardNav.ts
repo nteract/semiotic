@@ -338,10 +338,17 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
 export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
+  // Skip non-visible scene nodes — same gates the canvas renderers use
+  // (`if (c.r <= 0) continue`, `if (r.w <= 0 || r.h <= 0) continue`).
+  // ProcessSankey emits zero-radius placeholder circles for color
+  // binding (read by `nodeColorMap`); they must not enter the keyboard
+  // nav graph or focus would start on an off-canvas invisible node.
   for (const node of scene) {
     if (node.type === "circle" && node.cx != null) {
+      if (node.r <= 0) continue
       points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
     } else if (node.type === "rect" && node.x != null) {
+      if (node.w <= 0 || node.h <= 0) continue
       points.push({
         x: node.x + node.w / 2,
         y: node.y + node.h / 2,
