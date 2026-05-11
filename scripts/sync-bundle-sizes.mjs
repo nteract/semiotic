@@ -223,6 +223,36 @@ function upsertMarkerBlock(content, block) {
   return content.slice(0, start) + block + content.slice(replaceEnd)
 }
 
+/** Pull every "<number> KB" pair out of a marker block. Both the table
+ *  and the compact bullet form share this pattern. */
+function extractKbValues(block) {
+  const out = []
+  const re = /(\d+)\s*KB/gi
+  let m
+  while ((m = re.exec(block)) !== null) out.push(Number(m[1]))
+  return out
+}
+
+/** Per-bundle tolerance in KB. Build environments produce sub-KB
+ *  gzip differences (terser output, source-map placement, npm
+ *  install state, etc.) that round-trip across the integer-KB
+ *  boundary on different machines. The `docs:bundle-sizes` write
+ *  step still writes the freshly-measured exact value; this only
+ *  governs when `--check` decides drift is real. */
+const KB_TOLERANCE = 3
+
+function blocksWithinTolerance(rendered, existing) {
+  const a = extractKbValues(rendered)
+  const b = extractKbValues(existing)
+  // Different number of KB entries → structural change (added a
+  // bundle, dropped a bundle); always fail.
+  if (a.length === 0 || a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (Math.abs(a[i] - b[i]) > KB_TOLERANCE) return false
+  }
+  return true
+}
+
 const TARGETS = [
   { path: "README.md",           render: (rows) => generatedTableBlock(rows),                       required: true },
   { path: "CLAUDE.md",           render: (rows) => generatedCompactBlock(rows, { listItem: true }), required: true },
@@ -255,6 +285,12 @@ function main() {
     }
     if (next === original) continue
     if (checkOnly) {
+      // Tolerance-aware compare: build-machine differences of ±3 KB
+      // per bundle aren't real drift. The committed doc shows the
+      // last `docs:bundle-sizes` write; only flag when reality has
+      // diverged enough that the user-facing numbers would mislead.
+      const existingBlock = extractMarkerBlock(original)
+      if (existingBlock != null && blocksWithinTolerance(block, existingBlock)) continue
       stale.push(target.path)
     } else {
       writeFileSync(filePath, next)
@@ -263,7 +299,7 @@ function main() {
   }
 
   if (checkOnly && stale.length > 0) {
-    console.error("\n✗ bundle-size docs drifted from current `dist/` output:")
+    console.error(`\n✗ bundle-size docs drifted beyond ±${KB_TOLERANCE} KB tolerance from current \`dist/\` output:`)
     for (const path of stale) console.error(`  - ${path}`)
     console.error("\nRebuild + regenerate with:")
     console.error("  npm run dist && npm run docs:bundle-sizes")
@@ -271,8 +307,16 @@ function main() {
   }
 
   if (checkOnly) {
-    console.log("✓ bundle-size docs in sync with dist/*.module.min.js")
+    console.log(`✓ bundle-size docs within ±${KB_TOLERANCE} KB of dist/*.module.min.js`)
   }
+}
+
+function extractMarkerBlock(content) {
+  const start = content.indexOf(MARKER_START)
+  if (start === -1) return null
+  const end = content.indexOf(MARKER_END, start + MARKER_START.length)
+  if (end === -1) return null
+  return content.slice(start, end + MARKER_END.length)
 }
 
 main()
