@@ -63,8 +63,8 @@ export function ChartGrid({
       }}
     >
       {React.Children.map(children, (child) => {
-        if (!React.isValidElement(child)) return child
-        const emphasis = (child.props as any).emphasis as ChartEmphasis | undefined
+        if (!React.isValidElement<{ emphasis?: ChartEmphasis }>(child)) return child
+        const emphasis = child.props.emphasis
         if (emphasis === "primary" && (numColumns === undefined || numColumns >= 2)) {
           return (
             <div style={{ gridColumn: "span 2" }}>

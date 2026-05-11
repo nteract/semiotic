@@ -111,10 +111,11 @@ describe("CategoryColorProvider with neither colors nor categories", () => {
 describe("CategoryColorProvider with unknown scheme name", () => {
   it("falls back to DEFAULT_COLORS for unrecognized scheme string", () => {
     const categories = ["A", "B"]
+    const unknownScheme = "nonexistent_scheme" as unknown as React.ComponentProps<typeof CategoryColorProvider>["colorScheme"]
     const { result } = renderHook(() => useCategoryColors(), {
       wrapper: createWrapper({
         categories,
-        colorScheme: "nonexistent_scheme" as any,
+        colorScheme: unknownScheme,
         children: null,
       }),
     })

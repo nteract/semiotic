@@ -120,7 +120,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
   const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => Datum[]))
   }, [data, childrenAccessor])
 
   // Consolidated network setup. Same shape as Treemap's migration —

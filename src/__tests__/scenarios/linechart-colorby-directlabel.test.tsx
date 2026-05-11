@@ -52,7 +52,7 @@ describe("LineChart colorBy + directLabel", () => {
       groupAccessor: "series",
       colorAccessor: "series",
       colorScheme: ["#E04F5F", "#6047FF"],
-      lineStyle: (_d: any, _group?: string) => {
+      lineStyle: (_d: unknown, _group?: string) => {
         // Simulate what the HOC lineStyle does
         return { stroke: "", strokeWidth: 2 }
       },

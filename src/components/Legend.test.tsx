@@ -13,7 +13,7 @@ function makeLegendGroup(overrides?: Partial<LegendGroup>): LegendGroup {
   return {
     label: "Group A",
     type: "fill",
-    styleFn: (item: LegendItem) => ({ fill: (item as any).color || "#ccc" }),
+    styleFn: (item: LegendItem) => ({ fill: item.color || "#ccc" }),
     items: [
       { label: "Alpha", color: "#e41a1c" },
       { label: "Beta", color: "#377eb8" },
@@ -260,7 +260,7 @@ describe("Legend — keyboard navigation (vertical)", () => {
       <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
     )
     const options = container.querySelectorAll("[role='option']")
-    const focusSpy = vi.spyOn(options[1] as any, "focus")
+    const focusSpy = vi.spyOn(options[1] as HTMLElement, "focus")
     fireEvent.keyDown(options[0], { key: "ArrowDown" })
     expect(focusSpy).toHaveBeenCalled()
   })
@@ -271,7 +271,7 @@ describe("Legend — keyboard navigation (vertical)", () => {
       <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
     )
     const options = container.querySelectorAll("[role='option']")
-    const focusSpy = vi.spyOn(options[0] as any, "focus")
+    const focusSpy = vi.spyOn(options[0] as HTMLElement, "focus")
     fireEvent.keyDown(options[1], { key: "ArrowUp" })
     expect(focusSpy).toHaveBeenCalled()
   })

@@ -17,6 +17,8 @@ import React from "react"
 import { render, cleanup } from "@testing-library/react"
 import { TooltipProvider } from "../components/store/TooltipStore"
 
+type MockFrameProps = Record<string, unknown>
+
 // ── Mock all four Stream Frames ─────────────────────────────────────────
 // The mocks swallow props and render an empty frame div. This suite only asserts
 // that HOCs render without throwing under prop permutations — no prop-capture
@@ -24,34 +26,34 @@ import { TooltipProvider } from "../components/store/TooltipStore"
 
 vi.mock("../components/stream/StreamXYFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((_props: any, _ref: any) => (
+  default: React.forwardRef<unknown, MockFrameProps>((_props, _ref) => (
     <div className="stream-xy-frame"><svg /></div>
   ))
 }))
 
 vi.mock("../components/stream/StreamOrdinalFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((_props: any, _ref: any) => (
+  default: React.forwardRef<unknown, MockFrameProps>((_props, _ref) => (
     <div className="stream-ordinal-frame"><svg /></div>
   ))
 }))
 
 vi.mock("../components/stream/StreamNetworkFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((_props: any, _ref: any) => (
+  default: React.forwardRef<unknown, MockFrameProps>((_props, _ref) => (
     <div className="stream-network-frame"><svg /></div>
   ))
 }))
 
 vi.mock("../components/stream/StreamGeoFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((_props: any, _ref: any) => (
+  default: React.forwardRef<unknown, MockFrameProps>((_props, _ref) => (
     <div className="stream-geo-frame"><svg /></div>
   ))
 }))
 
 vi.mock("../components/geo/useReferenceAreas", () => ({
-  useReferenceAreas: (areas: any) => areas
+  useReferenceAreas: (areas: unknown) => areas
 }))
 
 // ── Imports (after mocks) ───────────────────────────────────────────────
@@ -180,7 +182,7 @@ type PropSet = Datum
  */
 function smokeTest(
   name: string,
-  Component: React.ComponentType<any>,
+  Component: React.ElementType,
   baseProps: PropSet,
   variations: PropSet[]
 ) {
@@ -720,10 +722,10 @@ smokeTest("FlowMap", FlowMap, {
   { nodes: [], flows: [] },
   { nodes: geoPoints, flows: geoFlows.slice(0, 1) },
   // Adversarial: undefined entries in flows array (caused the crash we just fixed)
-  { flows: [undefined, ...geoFlows] as any },
-  { flows: [...geoFlows, null] as any },
-  { flows: [...geoFlows, { source: undefined, target: "P2", value: 1 }] as any },
-  { flows: [...geoFlows, { source: "P1", target: undefined, value: 1 }] as any },
+  { flows: [undefined, ...geoFlows] as unknown as typeof geoFlows },
+  { flows: [...geoFlows, null] as unknown as typeof geoFlows },
+  { flows: [...geoFlows, { source: undefined, target: "P2", value: 1 }] as unknown as typeof geoFlows },
+  { flows: [...geoFlows, { source: "P1", target: undefined, value: 1 }] as unknown as typeof geoFlows },
   { edgeColorBy: "source" },
   { edgeOpacity: 0 },
   { edgeOpacity: 1 },
@@ -867,7 +869,7 @@ describe("adversarial edge cases", () => {
       { source: null, target: null, value: 0 },
       { source: "P1", target: "P2", value: NaN },
       { source: "P1", target: "P2", value: Infinity },
-    ] as any[]
+    ] as unknown as typeof geoFlows
     expect(() => {
       render(<W>
         <FlowMap nodes={geoPoints} flows={messyFlows} nodeIdAccessor="id" />
@@ -989,7 +991,7 @@ describe("adversarial edge cases", () => {
     const badFeatures = [
       { type: "Feature", properties: null, geometry: { type: "Polygon", coordinates: [[[0,0],[1,0],[1,1],[0,0]]] } },
       { type: "Feature", geometry: { type: "Polygon", coordinates: [[[2,0],[3,0],[3,1],[2,0]]] } },
-    ] as any[]
+    ] as unknown as typeof geoFeatures
     expect(() => {
       render(<W>
         <ChoroplethMap areas={badFeatures} valueAccessor="value" />

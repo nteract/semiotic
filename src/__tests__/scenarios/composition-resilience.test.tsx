@@ -7,7 +7,7 @@
  * sibling charts.
  */
 import { render } from "@testing-library/react"
-import { ChartGrid } from "../../components/ChartGrid"
+import { ChartGrid, type ChartEmphasis } from "../../components/ChartGrid"
 import {
   SafeRender,
   renderEmptyState,
@@ -22,7 +22,7 @@ function ThrowingChart({ message = "Boom!" }: { message?: string }) {
 }
 
 /** A normal component */
-function StableChart({ label }: { label: string }) {
+function StableChart({ label }: { label: string; emphasis?: ChartEmphasis }) {
   return <div data-testid={`chart-${label}`}>{label}</div>
 }
 
@@ -33,7 +33,7 @@ describe("ChartGrid Composition", () => {
   it("emphasis='primary' wraps child in a div with gridColumn: span 2", () => {
     const { container } = render(
       <ChartGrid columns={2}>
-        <StableChart label="A" emphasis={"primary" as any} />
+        <StableChart label="A" emphasis="primary" />
         <StableChart label="B" />
         <StableChart label="C" />
       </ChartGrid>
@@ -57,7 +57,7 @@ describe("ChartGrid Composition", () => {
   it("emphasis='primary' does NOT span when columns=1", () => {
     const { container } = render(
       <ChartGrid columns={1}>
-        <StableChart label="A" emphasis={"primary" as any} />
+        <StableChart label="A" emphasis="primary" />
         <StableChart label="B" />
       </ChartGrid>
     )
@@ -73,7 +73,7 @@ describe("ChartGrid Composition", () => {
   it("emphasis='secondary' does not create a span-2 wrapper", () => {
     const { container } = render(
       <ChartGrid columns={3}>
-        <StableChart label="A" emphasis={"secondary" as any} />
+        <StableChart label="A" emphasis="secondary" />
       </ChartGrid>
     )
 
@@ -88,7 +88,7 @@ describe("ChartGrid Composition", () => {
   it("auto columns with emphasis='primary' still wraps in span-2", () => {
     const { container } = render(
       <ChartGrid columns="auto">
-        <StableChart label="A" emphasis={"primary" as any} />
+        <StableChart label="A" emphasis="primary" />
         <StableChart label="B" />
       </ChartGrid>
     )

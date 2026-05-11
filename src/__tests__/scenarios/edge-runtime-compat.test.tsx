@@ -18,6 +18,7 @@
 
 import { renderChart, renderToStaticSVG, renderDashboard } from "../../components/server/renderToStaticSVG"
 import { generateFrameSVGs } from "../../components/server/animatedGif"
+import type { StreamXYFrameProps } from "../../components/stream/types"
 
 function isValidSVG(svg: string): boolean {
   return svg.startsWith("<svg") && svg.includes("</svg>")
@@ -69,13 +70,14 @@ describe("Edge runtime compatibility — sync functions", () => {
   })
 
   it("renderToStaticSVG (frame-level) produces SVG", () => {
-    const svg = renderToStaticSVG("xy", {
+    const props: StreamXYFrameProps = {
       chartType: "line",
       data: [{ x: 1, y: 10 }, { x: 2, y: 20 }],
       xAccessor: "x",
       yAccessor: "y",
       size: [300, 200],
-    } as any)
+    }
+    const svg = renderToStaticSVG("xy", props)
     expect(isValidSVG(svg)).toBe(true)
   })
 

@@ -57,7 +57,7 @@ export interface LegendProps {
   highlightedCategory?: string | null
   /** Legend interaction mode — used to set aria-multiselectable on the listbox */
   legendInteraction?: string
-  title?: string
+  title?: string | boolean
   width?: number
   height?: number
   orientation?: string

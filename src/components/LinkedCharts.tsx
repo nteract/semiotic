@@ -2,7 +2,7 @@
 import * as React from "react"
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
-import type { ResolutionMode } from "./store/SelectionStore"
+import type { ResolutionMode, SelectionStoreState } from "./store/SelectionStore"
 import { ObservationProvider } from "./store/ObservationStore"
 import { useLinkedHover, useSelection } from "./store/useSelection"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
@@ -136,7 +136,7 @@ export interface LinkedChartsProps {
 // ── Resolution initializer ─────────────────────────────────────────────────
 
 function ResolutionInit({ selections }: { selections: Record<string, { resolution?: ResolutionMode }> }) {
-  const setResolution = useSelectionSelector((state: any) => state.setResolution)
+  const setResolution = useSelectionSelector((state: SelectionStoreState) => state.setResolution)
 
   useEffect(() => {
     for (const [name, config] of Object.entries(selections)) {
@@ -287,7 +287,7 @@ function LinkedLegend({
       >
         <Legend
           legendGroups={legendGroups}
-          title={false as any}
+          title={false}
           orientation="horizontal"
           width={measuredWidth}
           height={20}

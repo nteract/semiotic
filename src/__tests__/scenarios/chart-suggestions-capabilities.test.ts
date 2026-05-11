@@ -5,16 +5,32 @@
  * function boundary so a chartSpecs change can't quietly break the
  * suggestion ranking.
  */
+import { createRequire } from "node:module"
 import { describe, it, expect } from "vitest"
-// Dynamic require: the cjs module ships in `ai/` and we run vitest
-// in mixed-module mode. Casting to `any` keeps the test ergonomic
-// without authoring a `.d.ts` stub.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+type CapabilityRequirements = Partial<Record<"push" | "linkedHover" | "ssr" | "selection" | "legend", boolean>>
+type Suggestion = { component: string; reason?: string }
+type SuggestChartsResult =
+  | {
+      ok: true
+      suggestions: Suggestion[]
+      filteredOut?: Suggestion[]
+      capabilities?: CapabilityRequirements
+    }
+  | {
+      ok: false
+      error: string
+      suggestions?: Suggestion[]
+      filteredOut?: Suggestion[]
+      capabilities?: CapabilityRequirements
+    }
+
+const require = createRequire(import.meta.url)
 const { suggestCharts, chartSatisfiesCapabilities, explainCapabilityMismatch, VALID_CAPABILITY_KEYS } =
   require("../../../ai/chartSuggestions.cjs") as {
-    suggestCharts: (args: any) => any
-    chartSatisfiesCapabilities: (chartName: string, requirements: any) => boolean
-    explainCapabilityMismatch: (chartName: string, requirements: any) => string | null
+    suggestCharts: (args: { data?: unknown; intent?: string; capabilities?: unknown }) => SuggestChartsResult
+    chartSatisfiesCapabilities: (chartName: string, requirements?: CapabilityRequirements) => boolean
+    explainCapabilityMismatch: (chartName: string, requirements?: CapabilityRequirements) => string | null
     VALID_CAPABILITY_KEYS: string[]
   }
 
@@ -120,7 +136,7 @@ describe("chartSuggestions — capability filter", () => {
       // Force a constraint that nothing satisfies — `push: false` for
       // tabular numeric data which only suggests push-supporting charts.
       const allPushOnlySuggested = suggestCharts({ data: numericData })
-      expect(allPushOnlySuggested.suggestions.every((s: any) =>
+      expect(allPushOnlySuggested.suggestions.every((s) =>
         chartSatisfiesCapabilities(s.component, { push: true })
       )).toBe(true)
 
@@ -139,7 +155,7 @@ describe("chartSuggestions — capability filter", () => {
       // supports push, and forbid push to force a mismatch.
       const filtered = suggestCharts({ data: numericData, capabilities: { push: false } })
       expect(filtered.ok).toBe(true)
-      const scatterFiltered = filtered.filteredOut.find((f: any) => f.component === "Scatterplot")
+      const scatterFiltered = filtered.filteredOut?.find((f) => f.component === "Scatterplot")
       expect(scatterFiltered).toBeDefined()
       // Reason should mention the failed constraint, not the data-shape rationale.
       expect(scatterFiltered.reason).toMatch(/push=false/)
@@ -161,7 +177,7 @@ describe("chartSuggestions — capability filter", () => {
     it("rejects non-object capabilities", () => {
       const result = suggestCharts({
         data: numericData,
-        capabilities: "push" as any,
+        capabilities: "push",
       })
       expect(result.ok).toBe(false)
       expect(result.error).toContain("must be an object")

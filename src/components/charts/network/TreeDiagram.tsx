@@ -125,7 +125,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
 
   // Node style function
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => Datum[]))
   }, [data, childrenAccessor])
 
   // Consolidated network setup — same hierarchy-shape pattern as
