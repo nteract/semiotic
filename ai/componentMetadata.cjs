@@ -4,7 +4,7 @@ const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"]
 
 const COMPONENTS_BY_CATEGORY = {
   xy: [
-    "LineChart", "AreaChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
+    "LineChart", "AreaChart", "DifferenceChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
     "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap",
     "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart",
   ],

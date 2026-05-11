@@ -82,6 +82,11 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
    *  lanes read as filled vs. empty. Pass a color string (CSS vars
    *  supported, e.g. `"var(--semiotic-grid)"`) or `{ color, opacity }`. */
   trackFill?: string | { color: string; opacity?: number }
+  /** Rounded corner radius (in pixels) for the outermost ends of each
+   *  lane. Both ends round: left+right in horizontal orientation, top+bottom
+   *  in vertical. Middle segments of multi-segment lanes stay square so
+   *  pieces visually butt against each other. */
+  roundedTop?: number
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
   valueExtent?: [number | undefined, number | undefined] | [number]
   /** Pass-through props to StreamOrdinalFrame */
@@ -175,6 +180,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     showCategoryTicks,
     gradientFill,
     trackFill,
+    roundedTop,
     valueExtent,
   } = props
 
@@ -297,7 +303,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     ...(showCategoryTicks !== undefined && { showCategoryTicks }),
     showGrid,
     ...effectiveLegendProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,
@@ -311,6 +317,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
         : gradientFill
     }),
     ...(trackFill != null && { trackFill }),
+    ...(roundedTop != null && { roundedTop }),
     ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent

@@ -137,6 +137,59 @@ export function buildWaterfallTooltip<TDatum extends Datum = Datum>(
 }
 
 /**
+ * Histogram-specific default tooltip.
+ *
+ * The barScene's histogram path enriches each rect's datum with
+ * `{ binStart, binEnd, total, category?, categoryValue? }`. The generic
+ * `x: <time>, y: <value>` shape produces empty strings on those bins
+ * because neither `time` nor `value` exists on the aggregated payload.
+ * This builder surfaces the fields that actually carry meaning for a
+ * histogram bin:
+ *
+ *   range:    <binStart>–<binEnd>
+ *   count:    <total>
+ *   category: <category>        (only when categoryAccessor is set)
+ *
+ * Falls back to the canonical x/y shape if a bin's enriched fields are
+ * absent — guards against a non-streaming render path or a static frame
+ * that bypasses the bin scene.
+ */
+export function buildHistogramTooltip<TDatum extends Datum = Datum>(
+  options: DefaultRealtimeTooltipOptions<TDatum> = {},
+): (d: HoverData) => ReactNode {
+  const { timeAccessor, valueAccessor } = options
+  return (d: HoverData) => {
+    const datum = (d?.data ?? null) as (TDatum & {
+      binStart?: number; binEnd?: number; total?: number;
+      category?: string; categoryValue?: number;
+    }) | null
+    const hasBin = datum?.binStart != null && datum?.binEnd != null
+    if (!hasBin) {
+      // Static-data / non-streaming fallback — use the canonical x/y shape.
+      const x = readField(datum, timeAccessor, "time")
+      const y = readField(datum, valueAccessor, "value")
+      return (
+        <div className="semiotic-tooltip" style={tooltipStyle}>
+          <div><span style={labelStyle}>x:</span>{format(x)}</div>
+          <div><span style={labelStyle}>y:</span>{format(y)}</div>
+        </div>
+      )
+    }
+    return (
+      <div className="semiotic-tooltip" style={tooltipStyle}>
+        <div><span style={labelStyle}>range:</span>{format(datum!.binStart)}–{format(datum!.binEnd)}</div>
+        {datum!.total != null && (
+          <div><span style={labelStyle}>count:</span>{format(datum!.total)}</div>
+        )}
+        {datum!.category != null && (
+          <div><span style={labelStyle}>category:</span>{format(datum!.category)}</div>
+        )}
+      </div>
+    )
+  }
+}
+
+/**
  * Heatmap-specific default tooltip.
  *
  * The streaming heatmap aggregates raw points into 2D bins; each cell's

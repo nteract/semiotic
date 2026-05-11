@@ -93,6 +93,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -276,6 +285,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -447,6 +465,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -611,6 +638,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -770,6 +806,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "xLabel": {
               "type": "string"
@@ -932,6 +977,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -1057,6 +1111,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "xLabel": {
               "type": "string"
@@ -1212,6 +1275,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "xLabel": {
               "type": "string"
@@ -1371,6 +1443,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "xLabel": {
               "type": "string"
             },
@@ -1525,6 +1606,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "xLabel": {
               "type": "string"
@@ -1687,6 +1777,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -1842,6 +1941,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -1989,6 +2097,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "categoryLabel": {
               "type": "string"
@@ -2147,6 +2264,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -2289,6 +2415,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "categoryLabel": {
               "type": "string"
@@ -2447,6 +2582,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -2591,6 +2735,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -2727,6 +2880,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "categoryLabel": {
               "type": "string"
@@ -2878,6 +3040,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -3009,6 +3180,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "categoryLabel": {
               "type": "string"
@@ -3166,6 +3346,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -3284,6 +3473,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "data": {
               "type": "array",
@@ -3416,6 +3614,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "value": {
               "type": "number",
               "description": "Current gauge value"
@@ -3436,6 +3643,10 @@
               "type": "number",
               "description": "Arc thickness as fraction of radius (0-1)",
               "default": 0.3
+            },
+            "cornerRadius": {
+              "type": "number",
+              "description": "Pixel radius for rounded segment ends. Same semantics as DonutChart's cornerRadius. Omit for sharp corners."
             },
             "sweep": {
               "type": "number",
@@ -3551,6 +3762,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "nodes": {
               "type": "array",
@@ -3733,6 +3953,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "edges": {
               "type": "array",
@@ -3921,6 +4150,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "edges": {
               "type": "array",
               "description": "Array of edge objects with source, target, and value"
@@ -4085,6 +4323,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "data": {
               "type": "object",
@@ -4255,6 +4502,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -4389,6 +4645,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "data": {
               "type": "object",
@@ -4528,6 +4793,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "data": {
               "type": "object",
@@ -5514,6 +5788,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -5677,6 +5960,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "categoryLabel": {
               "type": "string"
             },
@@ -5726,6 +6018,10 @@
               "type": "number",
               "description": "Padding between lanes in pixels",
               "default": 40
+            },
+            "roundedTop": {
+              "type": "number",
+              "description": "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners."
             },
             "brush": {
               "type": "boolean",
@@ -5854,6 +6150,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "data": {
               "type": "array"
             },
@@ -5957,6 +6262,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "data": {
               "type": "array"
             }
@@ -6054,6 +6368,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "areas": {
               "type": [
@@ -6167,6 +6490,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "points": {
               "type": "array"
@@ -6293,6 +6625,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "flows": {
               "type": "array"
             },
@@ -6407,6 +6748,15 @@
                 ]
               }
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
             "points": {
               "type": "array"
             },
@@ -6514,6 +6864,15 @@
                   "type"
                 ]
               }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
             },
             "edges": {
               "type": "array",
@@ -6666,6 +7025,221 @@
           "required": [
             "domain"
           ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "DifferenceChart",
+        "description": "Two-series difference chart: fills the area between series A and series B with a color that switches at each crossover — A's color where A > B, B's color where B > A. Crossovers are linearly interpolated so segments meet at zero-width vertices. Both series can be drawn as overlay lines on top of the fill. Classic uses: temperature anomaly (actual vs. normal), forecast accuracy (actual vs. predicted), budget variance.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "data": {
+              "type": "array",
+              "description": "Array of `{x, a, b}` objects. Omit for push API mode."
+            },
+            "xAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for x values",
+              "default": "x"
+            },
+            "seriesAAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for series A values",
+              "default": "a"
+            },
+            "seriesBAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for series B values",
+              "default": "b"
+            },
+            "seriesALabel": {
+              "type": "string",
+              "description": "Display label for series A in legend + tooltip",
+              "default": "A"
+            },
+            "seriesBLabel": {
+              "type": "string",
+              "description": "Display label for series B",
+              "default": "B"
+            },
+            "seriesAColor": {
+              "type": "string",
+              "description": "Fill color when series A is higher. Defaults to var(--semiotic-danger)."
+            },
+            "seriesBColor": {
+              "type": "string",
+              "description": "Fill color when series B is higher. Defaults to var(--semiotic-info)."
+            },
+            "showLines": {
+              "type": "boolean",
+              "description": "Draw the two series as overlay lines on top of the fill",
+              "default": true
+            },
+            "lineWidth": {
+              "type": "number",
+              "default": 1.5
+            },
+            "showPoints": {
+              "type": "boolean",
+              "description": "Show points at each data vertex on the overlay lines",
+              "default": false
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 3
+            },
+            "curve": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "monotoneX",
+                "monotoneY",
+                "step",
+                "stepAfter",
+                "stepBefore",
+                "basis",
+                "cardinal",
+                "catmullRom"
+              ],
+              "default": "linear"
+            },
+            "areaOpacity": {
+              "type": "number",
+              "description": "Difference fill opacity (0-1)",
+              "default": 0.6
+            },
+            "gradientFill": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Tip→base gradient across each segment; same shape as AreaChart.gradientFill"
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Fixed x domain `[min, max]`. Either bound may be `undefined`."
+            },
+            "yExtent": {
+              "type": "array",
+              "description": "Fixed y domain `[min, max]`. Either bound may be `undefined`."
+            },
+            "pointIdAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Stable ID for push-mode remove()/update()"
+            }
+          },
+          "required": []
         }
       }
     }

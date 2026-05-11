@@ -15,6 +15,7 @@ import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildS
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
+import { computeDifferenceSegments } from "../charts/xy/DifferenceChart"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
 
@@ -124,6 +125,70 @@ const areaChart: ChartConfig = {
     colorScheme,
     ...common,
   }),
+}
+
+const differenceChart: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, _colorBy, _colorScheme, common, rest) => {
+    // Mirror the client HOC: compute crossover-segmented area data plus
+    // parallel overlay lines, then hand off to the mixed-frame path so
+    // the same SVG converters paint server-side as canvas paints client-side.
+    const xKey = rest.xAccessor || "x"
+    const aKey = rest.seriesAAccessor || "a"
+    const bKey = rest.seriesBAccessor || "b"
+    const getX = (d: Datum) => numericValue(accessorValue(xKey, "x", d))
+    const getA = (d: Datum) => numericValue(accessorValue(aKey, "a", d))
+    const getB = (d: Datum) => numericValue(accessorValue(bKey, "b", d))
+    const seriesAColor = rest.seriesAColor || "var(--semiotic-danger, #dc2626)"
+    const seriesBColor = rest.seriesBColor || "var(--semiotic-info, #2563eb)"
+    const areaOpacity = rest.areaOpacity ?? 0.6
+    const lineWidth = rest.lineWidth ?? 1.5
+    const showLines = rest.showLines !== false
+
+    const segmented = computeDifferenceSegments(Array.isArray(data) ? data : [], getX, getA, getB)
+    const overlay: Datum[] = []
+    if (showLines && Array.isArray(data)) {
+      const sorted = [...data].sort((p, q) => getX(p) - getX(q))
+      for (const d of sorted) {
+        const x = getX(d), a = getA(d), b = getB(d)
+        if (!Number.isFinite(x)) continue
+        if (Number.isFinite(a)) overlay.push({ __x: x, __y: a, __diffSegment: "line-A" })
+        if (Number.isFinite(b)) overlay.push({ __x: x, __y: b, __diffSegment: "line-B" })
+      }
+    }
+    const combined = [...segmented, ...overlay] as Datum[]
+    const areaGroups = Array.from(new Set(segmented.map(r => r.__diffSegment)))
+
+    return {
+      chartType: "mixed",
+      data: combined,
+      xAccessor: "__x",
+      yAccessor: "__y",
+      y0Accessor: "__y0",
+      groupAccessor: "__diffSegment",
+      areaGroups,
+      areaStyle: (d: Datum) => {
+        const key = d.__diffSegment as string
+        const winner = key?.endsWith("-A") ? "A" : "B"
+        return {
+          fill: winner === "A" ? seriesAColor : seriesBColor,
+          stroke: "none",
+          fillOpacity: areaOpacity,
+        }
+      },
+      lineStyle: (d: Datum) => {
+        const key = d.__diffSegment as string
+        const winner = key === "line-A" ? "A" : "B"
+        return {
+          stroke: winner === "A" ? seriesAColor : seriesBColor,
+          strokeWidth: lineWidth,
+          fill: "none",
+        }
+      },
+      curve: rest.curve || "linear",
+      ...common,
+    }
+  },
 }
 
 const stackedAreaChart: ChartConfig = {
@@ -983,6 +1048,7 @@ export const CHART_CONFIGS = {
   Sparkline: sparkline,
   LineChart: lineChart,
   AreaChart: areaChart,
+  DifferenceChart: differenceChart,
   StackedAreaChart: stackedAreaChart,
   Scatterplot: scatterplot,
   CandlestickChart: candlestickChart,

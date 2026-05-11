@@ -212,5 +212,25 @@ describe("SwarmPlot", () => {
       )
       expect(lastOrdinalFrameProps.barPadding).toBe(30)
     })
+
+    it("forwards axisExtent=\"exact\" to the ordinal frame", () => {
+      // SwarmPlot uses buildBaseMetadataProps; verify the helper carries
+      // axisExtent through to StreamOrdinalFrame for the r (value) axis.
+      render(
+        <TooltipProvider>
+          <SwarmPlot data={sampleData} axisExtent="exact" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.axisExtent).toBe("exact")
+    })
+
+    it("omits axisExtent when not provided", () => {
+      render(
+        <TooltipProvider>
+          <SwarmPlot data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.axisExtent).toBeUndefined()
+    })
   })
 })

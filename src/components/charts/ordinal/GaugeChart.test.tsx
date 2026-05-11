@@ -209,6 +209,48 @@ describe("GaugeChart", () => {
     expect(lastOrdinalFrameProps.centerContent).toBeTruthy()
   })
 
+  it("does not pass cornerRadius to the frame when unset (sharp corners default)", () => {
+    render(
+      <TooltipProvider>
+        <GaugeChart value={50} />
+      </TooltipProvider>
+    )
+    // Omitted entirely so the pie scene builder uses its default (no
+    // rounding). Setting `cornerRadius: undefined` would still flow
+    // through and is functionally the same, but omitting matches the
+    // DonutChart pattern.
+    expect(lastOrdinalFrameProps.cornerRadius).toBeUndefined()
+  })
+
+  it("forwards cornerRadius to the frame for rounded segment ends", () => {
+    render(
+      <TooltipProvider>
+        <GaugeChart
+          value={65}
+          thresholds={[
+            { value: 60, color: "#22c55e" },
+            { value: 80, color: "#f59e0b" },
+            { value: 100, color: "#ef4444" },
+          ]}
+          cornerRadius={6}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.cornerRadius).toBe(6)
+  })
+
+  it("accepts cornerRadius={0} as a valid value (explicit sharp corners)", () => {
+    // Per the `cornerRadius != null` check in the streamProps spread,
+    // 0 still flows through. Useful when a user wants to override a
+    // theme/default that supplied rounding.
+    render(
+      <TooltipProvider>
+        <GaugeChart value={50} cornerRadius={0} />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.cornerRadius).toBe(0)
+  })
+
   describe("chart mode resolution", () => {
     it("primary mode uses the gauge-specific 300×250 default", () => {
       // Gauge overrides the generic primary default (600×400) with a more

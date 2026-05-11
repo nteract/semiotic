@@ -15,7 +15,7 @@
 - Every HOC accepts `frameProps` for pass-through. TypeScript `strict: true`. Every HOC has error boundary + dev-mode validation.
 
 ## Common Props (all HOCs)
-`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `stroke` (uniform stroke color — CSS var OK), `strokeWidth` (uniform stroke width in px), `opacity` (uniform 0–1 opacity), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean — dims non-hovered series, requires `colorBy`), `hoverRadius` (30), `animate` (boolean | { duration?, easing?, intro? } — animated intro on first render + smooth transitions on data change; intro defaults to true when animate is enabled)
+`title`, `description` (aria-label), `summary` (sr-only), `width` (600), `height` (400), `responsiveWidth`, `responsiveHeight`, `margin`, `className`, `color` (uniform fill), `stroke` (uniform stroke color — CSS var OK), `strokeWidth` (uniform stroke width in px), `opacity` (uniform 0–1 opacity), `enableHover` (true), `tooltip` (boolean | "multi" | function | config object), `showLegend`, `showGrid` (false), `frameProps`, `onObservation`, `onClick`, `chartId`, `loading` (false), `emptyContent`, `legendInteraction` ("none"|"highlight"|"isolate"), `legendPosition` ("right"|"left"|"top"|"bottom"), `emphasis` ("primary"|"secondary"), `annotations` (array), `accessibleTable` (true), `hoverHighlight` (boolean — dims non-hovered series, requires `colorBy`), `hoverRadius` (30), `animate` (boolean | { duration?, easing?, intro? } — animated intro on first render + smooth transitions on data change; intro defaults to true when animate is enabled), `axisExtent` ("nice" default | "exact" — pins first/last tick to actual data min/max with equidistant intermediates. Applies to XY x/y axes and ordinal value axis only; no-op on network/geo/hierarchy. Explicit `tickValues` still wins.)
 
 **Primitive styling props** (`color`, `stroke`, `strokeWidth`, `opacity`) apply to any shape the chart draws (bars, circles, lines, wedges, rects). Precedence: top-level prop > `frameProps.*Style` function return > HOC base > theme fallback. Use CSS variables (`stroke="var(--semiotic-border)"`) for theme-aware, cascade-overridable styling. For per-datum customization, keep using the function-form `frameProps.pieceStyle` / `pointStyle` / `lineStyle` etc. — the top-level prop overlays on top of whatever the function returns.
 
@@ -25,6 +25,7 @@
 
 **LineChart** — `data`, `xAccessor` ("x"), `yAccessor` ("y"), `lineBy`, `lineDataAccessor`, `colorBy`, `colorScheme`, `curve`, `lineWidth` (2), `showPoints`, `pointRadius` (3), `fillArea` (boolean|string[]), `areaOpacity` (0.3), `lineGradient`, `anomaly`, `forecast`, `directLabel`, `gapStrategy`, `xScaleType`/`yScaleType` ("linear"|"log"|"time"), `tooltip="multi"` for hover-anywhere series comparison
 **AreaChart** — LineChart props + `areaBy`, `y0Accessor`, `gradientFill`, `areaOpacity` (0.7), `showLine` (true), `tooltip="multi"` for hover-anywhere area comparison
+**DifferenceChart** — Two-series A/B comparison. Fills the area between with `seriesAColor` where A > B and `seriesBColor` where B > A; crossovers interpolated. Props: `data`, `xAccessor` ("x"), `seriesAAccessor` ("a"), `seriesBAccessor` ("b"), `seriesALabel`/`seriesBLabel`, `seriesAColor` (var(--semiotic-danger))/`seriesBColor` (var(--semiotic-info)), `showLines` (true), `lineWidth` (1.5), `showPoints` (false), `pointRadius` (3), `curve` ("linear"), `areaOpacity` (0.6), `gradientFill`, `xExtent`/`yExtent`, `pointIdAccessor`. Push API via `ref.current.push({x, a, b})`.
 **StackedAreaChart** — flat array + `areaBy` (required), `colorBy`, `normalize`, `baseline` (`"zero"` default | `"wiggle"` streamgraph | `"silhouette"` centered), `stackOrder` (`"key"` alpha | `"insideOut"` largest-in-middle | `"asc"`/`"desc"`). Streamgraph: `baseline="wiggle"` + `stackOrder="insideOut"`. `baseline` ⊥ `normalize`. No `lineBy`/`lineDataAccessor`. `tooltip="multi"` lists every series at the hovered x (values interpolated between samples).
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`, `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; sits underneath user annotations)
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `regression`
@@ -50,9 +51,9 @@
 **PieChart** — `categoryAccessor`, `valueAccessor`, `colorBy`, `startAngle`
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent`
 **FunnelChart** — `stepAccessor`, `valueAccessor`, `categoryAccessor` (optional), `connectorOpacity`, `orientation`
-**SwimlaneChart** — `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`, `colorBy` (defaults to subcategoryAccessor), `orientation`
+**SwimlaneChart** — `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`, `colorBy` (defaults to subcategoryAccessor), `orientation`, `roundedTop` (pixel radius applied to both outer ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square so adjacent pieces butt against each other; single-segment lanes round all four corners.)
 **LikertChart** — `categoryAccessor`, `valueAccessor`|`levelAccessor`+`countAccessor`, `levels` (required), `orientation`, `colorScheme`
-**GaugeChart** — `value` (required), `min`, `max`, `thresholds`, `arcWidth`, `sweep`, `fillZones`, `showNeedle`, `centerContent`
+**GaugeChart** — `value` (required), `min`, `max`, `thresholds`, `arcWidth`, `cornerRadius` (pixel radius for rounded segment ends — same semantics as DonutChart), `sweep`, `fillZones`, `showNeedle`, `centerContent`
 
 All ordinal: `colorBy`, `colorScheme`, `categoryFormat` (string|ReactNode), `showCategoryTicks` (true).
 
@@ -221,7 +222,7 @@ Server SVGs include `role="img"`, `<title>`, `<desc>`, grid, legend, annotations
 - **GroupedBarChart** — `data`, `categoryAccessor`, `valueAccessor`, `groupBy` (required).
 - **PieChart/DonutChart** — `data`, `categoryAccessor`, `valueAccessor`.
 - **FunnelChart** — `data`, `stepAccessor` ("step"), `valueAccessor` ("value"). Renders with trapezoid connectors, no axes.
-- **GaugeChart** — `value`. Optional: `thresholds` (array of `{value, color, label}`), `min`, `max`, `sweep`, `arcWidth`.
+- **GaugeChart** — `value`. Optional: `thresholds` (array of `{value, color, label}`), `min`, `max`, `sweep`, `arcWidth`, `cornerRadius`.
 - **SwimlaneChart** — `data`, `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`.
 - **ForceDirectedGraph** — `nodes`, `edges` (both required). If deriving nodes from edge endpoints, materialize `nodes` before returning JSX/renderChart props.
 - **SankeyDiagram** — `edges` (required), `valueAccessor`.

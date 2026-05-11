@@ -1,0 +1,419 @@
+import { vi } from "vitest"
+import React from "react"
+import { render } from "@testing-library/react"
+import { DifferenceChart, computeDifferenceSegments } from "./DifferenceChart"
+import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
+
+// Mock StreamXYFrame to capture props
+let lastXYFrameProps: any = null
+vi.mock("../../stream/StreamXYFrame", () => {
+  return {
+    __esModule: true,
+    default: React.forwardRef((props: any, _ref: any) => {
+      lastXYFrameProps = props
+      return <div className="stream-xy-frame"><svg /></div>
+    }),
+  }
+})
+
+beforeEach(() => {
+  lastXYFrameProps = null
+})
+
+// ── Pure segment algorithm ──────────────────────────────────────────────
+describe("computeDifferenceSegments", () => {
+  const getX = (d: Datum) => d.x as number
+  const getA = (d: Datum) => d.a as number
+  const getB = (d: Datum) => d.b as number
+
+  it("returns empty array for empty input", () => {
+    expect(computeDifferenceSegments([], getX, getA, getB)).toEqual([])
+  })
+
+  it("single segment when A is always above B", () => {
+    const rows = computeDifferenceSegments(
+      [{ x: 0, a: 10, b: 5 }, { x: 1, a: 12, b: 6 }, { x: 2, a: 14, b: 7 }],
+      getX, getA, getB,
+    )
+    expect(rows.length).toBe(3)
+    const winners = new Set(rows.map(r => r.__diffWinner))
+    expect(winners.size).toBe(1)
+    expect(winners.has("A")).toBe(true)
+    // Upper boundary should be A, lower should be B.
+    expect(rows[0].__y).toBe(10)
+    expect(rows[0].__y0).toBe(5)
+    expect(rows[2].__y).toBe(14)
+    expect(rows[2].__y0).toBe(7)
+  })
+
+  it("two segments around a single crossover with interpolated vertex", () => {
+    // A=5,15 and B=10,8 cross between x=0 (B>A) and x=1 (A>B).
+    // Solve: 5 + t*10 = 10 + t*(-2) → t = 5/12 ≈ 0.4167
+    const rows = computeDifferenceSegments(
+      [{ x: 0, a: 5, b: 10 }, { x: 1, a: 15, b: 8 }],
+      getX, getA, getB,
+    )
+    // Expected: B-segment vertex at x=0, then TWO crossover vertices
+    // (one closing the B segment, one opening the A segment) at the
+    // same x, then A-segment vertex at x=1 → 4 rows total.
+    expect(rows.length).toBe(4)
+    expect(rows[0].__diffWinner).toBe("B")
+    expect(rows[1].__diffWinner).toBe("B")
+    expect(rows[2].__diffWinner).toBe("A")
+    expect(rows[3].__diffWinner).toBe("A")
+    // Closing-B and opening-A vertices share the same crossover x and y.
+    expect(rows[1].__x).toBeCloseTo(rows[2].__x, 5)
+    expect(rows[1].__y).toBeCloseTo(rows[2].__y, 5)
+    // At a crossover the upper === lower (zero-width).
+    expect(rows[1].__y).toBe(rows[1].__y0)
+    expect(rows[2].__y).toBe(rows[2].__y0)
+    // Crossover x in (0, 1)
+    expect(rows[1].__x).toBeGreaterThan(0)
+    expect(rows[1].__x).toBeLessThan(1)
+  })
+
+  it("skips non-finite rows", () => {
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 5, b: 3 },
+        { x: 1, a: NaN, b: 4 },
+        { x: 2, a: 8, b: 6 },
+      ],
+      getX, getA, getB,
+    )
+    // Two valid points; both have A>B so one segment, two vertices.
+    expect(rows.length).toBe(2)
+    expect(rows.every(r => r.__diffWinner === "A")).toBe(true)
+  })
+
+  it("sorts input by x before processing", () => {
+    const rows = computeDifferenceSegments(
+      [{ x: 2, a: 10, b: 5 }, { x: 0, a: 4, b: 6 }, { x: 1, a: 7, b: 7 }],
+      getX, getA, getB,
+    )
+    // Sorted by x: (0,4,6) → B-win, (1,7,7) → tie, (2,10,5) → A-win.
+    // First and last x reflect sorted order.
+    expect(rows[0].__x).toBe(0)
+    expect(rows[rows.length - 1].__x).toBe(2)
+  })
+
+  it("preserves source datum on non-crossover vertices", () => {
+    const source = { x: 0, a: 10, b: 5, meta: "first" }
+    const rows = computeDifferenceSegments([source], getX, getA, getB)
+    expect(rows[0].__sourceDatum).toBe(source)
+  })
+
+  it("attaches valA/valB for tooltip lookup", () => {
+    const rows = computeDifferenceSegments(
+      [{ x: 0, a: 10, b: 5 }, { x: 1, a: 12, b: 8 }],
+      getX, getA, getB,
+    )
+    expect(rows[0].__valA).toBe(10)
+    expect(rows[0].__valB).toBe(5)
+    expect(rows[1].__valA).toBe(12)
+    expect(rows[1].__valB).toBe(8)
+  })
+})
+
+// ── HOC prop forwarding ─────────────────────────────────────────────────
+describe("DifferenceChart", () => {
+  const sampleData = [
+    { date: 0, actual: 50, forecast: 45 },
+    { date: 1, actual: 52, forecast: 60 },
+    { date: 2, actual: 70, forecast: 58 },
+  ]
+
+  it("sets chartType to 'mixed' for area+line composition", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.chartType).toBe("mixed")
+  })
+
+  it("forwards segmented data via __x/__y/__y0 accessors", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.xAccessor).toBe("__x")
+    expect(lastXYFrameProps.yAccessor).toBe("__y")
+    expect(lastXYFrameProps.y0Accessor).toBe("__y0")
+    expect(lastXYFrameProps.groupAccessor).toBe("__diffSegment")
+  })
+
+  it("emits both area segment groups AND overlay line groups when showLines is true (default)", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+        />
+      </TooltipProvider>
+    )
+    const segments = new Set(lastXYFrameProps.data.map((d: any) => d.__diffSegment))
+    // At least the two overlay line groups
+    expect(segments.has("line-A")).toBe(true)
+    expect(segments.has("line-B")).toBe(true)
+    // Plus area segment(s) — actual cross-over count depends on data
+    const areaSegments = lastXYFrameProps.areaGroups
+    expect(Array.isArray(areaSegments)).toBe(true)
+    expect(areaSegments.length).toBeGreaterThan(0)
+    // None of the line groups should be in areaGroups
+    expect(areaSegments).not.toContain("line-A")
+    expect(areaSegments).not.toContain("line-B")
+  })
+
+  it("omits overlay lines when showLines is false", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          showLines={false}
+        />
+      </TooltipProvider>
+    )
+    const segments = new Set(lastXYFrameProps.data.map((d: any) => d.__diffSegment))
+    expect(segments.has("line-A")).toBe(false)
+    expect(segments.has("line-B")).toBe(false)
+  })
+
+  it("areaStyle resolves color from the segment-key suffix", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          seriesAColor="#ff0000"
+          seriesBColor="#0000ff"
+        />
+      </TooltipProvider>
+    )
+    const areaStyle = lastXYFrameProps.areaStyle
+    expect(areaStyle({ __diffSegment: "seg-0-A" }).fill).toBe("#ff0000")
+    expect(areaStyle({ __diffSegment: "seg-3-B" }).fill).toBe("#0000ff")
+  })
+
+  it("lineStyle resolves color from the line-key", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          seriesAColor="#ff0000"
+          seriesBColor="#0000ff"
+        />
+      </TooltipProvider>
+    )
+    const lineStyle = lastXYFrameProps.lineStyle
+    expect(lineStyle({ __diffSegment: "line-A" }).stroke).toBe("#ff0000")
+    expect(lineStyle({ __diffSegment: "line-B" }).stroke).toBe("#0000ff")
+  })
+
+  it("forwards a custom legend with series labels", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          seriesALabel="Actual"
+          seriesBLabel="Forecast"
+        />
+      </TooltipProvider>
+    )
+    const legend = lastXYFrameProps.legend
+    expect(legend).toBeDefined()
+    expect(legend.legendGroups[0].items[0].label).toBe("Actual")
+    expect(legend.legendGroups[0].items[1].label).toBe("Forecast")
+  })
+
+  it("omits legend when showLegend is false", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          showLegend={false}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.legend).toBeUndefined()
+  })
+
+  it("forwards gradientFill to the frame", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          gradientFill
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.gradientFill).toEqual({ topOpacity: 0.85, bottomOpacity: 0.15 })
+  })
+
+  it("forwards explicit gradientFill object unchanged", () => {
+    const stops = { colorStops: [{ offset: 0, color: "#aaa" }, { offset: 1, color: "#fff" }] }
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          gradientFill={stops}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.gradientFill).toEqual(stops)
+  })
+
+  it("forwards curve, xExtent, yExtent, annotations", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          curve="monotoneX"
+          xExtent={[0, 10]}
+          yExtent={[0, 100]}
+          annotations={[{ type: "x-threshold", value: 1 }]}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.curve).toBe("monotoneX")
+    expect(lastXYFrameProps.xExtent).toEqual([0, 10])
+    expect(lastXYFrameProps.yExtent).toEqual([0, 100])
+    expect(lastXYFrameProps.annotations).toHaveLength(1)
+  })
+
+  it("forwards axisExtent to the frame", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          axisExtent="exact"
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.axisExtent).toBe("exact")
+  })
+
+  it("forwards pointStyle when showPoints is true", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          showPoints
+        />
+      </TooltipProvider>
+    )
+    expect(typeof lastXYFrameProps.pointStyle).toBe("function")
+  })
+})
+
+// ── Push API ──────────────────────────────────────────────────────────
+describe("DifferenceChart push API", () => {
+  it("exposes push/pushMany/clear/getData via ref", () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
+      </TooltipProvider>
+    )
+    expect(typeof ref.current.push).toBe("function")
+    expect(typeof ref.current.pushMany).toBe("function")
+    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current.getData).toBe("function")
+  })
+
+  it("push() updates the segmented data flowing to the frame", () => {
+    const ref = React.createRef<any>()
+    const { rerender } = render(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
+      </TooltipProvider>
+    )
+    // Push two rows where A > B at both points (one segment).
+    ref.current.push({ x: 0, a: 10, b: 5 })
+    ref.current.push({ x: 1, a: 12, b: 7 })
+    rerender(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
+      </TooltipProvider>
+    )
+    // Frame should see both segment rows (2) + two line rows (2 each → 4).
+    const segmentRows = lastXYFrameProps.data.filter((d: any) => d.__diffSegment.startsWith("seg-"))
+    expect(segmentRows.length).toBe(2)
+    expect(ref.current.getData().length).toBe(2)
+  })
+
+  it("clear() empties the push buffer", () => {
+    const ref = React.createRef<any>()
+    const { rerender } = render(
+      <TooltipProvider>
+        <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
+      </TooltipProvider>
+    )
+    ref.current.push({ x: 0, a: 10, b: 5 })
+    ref.current.clear()
+    rerender(
+      <TooltipProvider>
+        <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
+      </TooltipProvider>
+    )
+    expect(ref.current.getData()).toEqual([])
+  })
+})

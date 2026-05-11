@@ -6808,6 +6808,7 @@ var require_componentMetadata = __commonJS({
       xy: [
         "LineChart",
         "AreaChart",
+        "DifferenceChart",
         "StackedAreaChart",
         "Scatterplot",
         "QuadrantChart",

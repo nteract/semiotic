@@ -87,6 +87,11 @@ export interface PipelineConfig {
   extentPadding: number
   /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
   scalePadding?: number
+  /** When `"exact"`, the x and y axis domains pin to the literal data
+   *  min/max — `extentPadding` is skipped so the first and last ticks
+   *  read as the actual data bounds. Default `"nice"` keeps the existing
+   *  padded domain so glyphs at the extremes don't clip the plot edge. */
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   maxCapacity?: number
 
   // Accessors
@@ -572,12 +577,20 @@ export class PipelineStore {
     const yFullySpecified = config.yExtent && config.yExtent[0] != null && config.yExtent[1] != null
     const _xFullySpecified = config.xExtent && config.xExtent[0] != null && config.xExtent[1] != null
 
+    // `axisExtent === "exact"` pins the y-domain to the literal data
+    // min/max — `extentPadding` is treated as 0 below so the first/last
+    // ticks read as the actual data bounds. Trade-off: glyphs at the
+    // extremes can sit at the plot edge. Per-branch padding sites are
+    // guarded by this constant rather than swapping the config value so
+    // user-supplied partial extents still merge correctly.
+    const exactMode = config.axisExtent === "exact"
+
     // Chart-type specific extent adjustments
     if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {
       // Stacked areas: y-extent must cover the cumulative sums, not raw values
       if (config.normalize) {
         // Normalized: all stacks sum to 1.0
-        yDomain = [0, 1 + config.extentPadding]
+        yDomain = [0, exactMode ? 1 : 1 + config.extentPadding]
       } else {
         // Cache the stacked extent computation — only rebuild when buffer data changes
         const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
@@ -679,10 +692,10 @@ export class PipelineStore {
               lo = 0; hi = 0
             }
             const range = hi - lo
-            const pad = range > 0 ? range * config.extentPadding : 1
+            const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
             yDomain = [lo - pad, hi + pad]
           } else {
-            const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
+            const pad = exactMode ? 0 : (maxStacked > 0 ? maxStacked * config.extentPadding : 1)
             yDomain = [0, maxStacked + pad]
           }
           this._stackExtentCache = { key: stackCacheKey, yDomain }
@@ -692,11 +705,11 @@ export class PipelineStore {
       const [, maxTotal] = computeBinExtent(
         buffer, this.getX, this.getY, config.binSize, this.getCategory
       )
-      yDomain = [0, maxTotal + maxTotal * config.extentPadding]
+      yDomain = [0, exactMode ? maxTotal : maxTotal + maxTotal * config.extentPadding]
     } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
       const [minCum, maxCum] = computeWaterfallExtent(buffer, this.getY)
       const range = maxCum - minCum
-      const pad = range > 0 ? range * config.extentPadding : 1
+      const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
       yDomain = [
         Math.min(0, minCum - Math.abs(pad)),
         Math.max(0, maxCum + Math.abs(pad))
@@ -713,7 +726,7 @@ export class PipelineStore {
         }
       }
       const range = yDomain[1] - yDomain[0]
-      const pad = range > 0 ? range * config.extentPadding : 1
+      const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
       // Only pad the data-derived side; preserve user-specified bounds
       const userMin = config.yExtent?.[0]
       const userMax = config.yExtent?.[1]
@@ -723,7 +736,9 @@ export class PipelineStore {
       ]
       // For log scales, ensure domain minimum stays positive (log(0) is undefined).
       // Use multiplicative padding instead of additive to avoid negative domains.
-      if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0) {
+      // Exact mode bypasses padding so the min sits at the literal data min;
+      // log() of a negative or zero `dataYDomain[0]` is the user's problem.
+      if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0 && !exactMode) {
         const logPad = 1 + config.extentPadding
         yDomain[0] = userMin != null ? yDomain[0] : dataYDomain[0] / logPad
       }

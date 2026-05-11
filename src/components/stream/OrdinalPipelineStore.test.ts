@@ -713,6 +713,71 @@ describe("OrdinalPipelineStore", () => {
     })
   })
 
+  // ── axisExtent="exact" skips extent padding ───────────────────────────
+
+  describe('axisExtent="exact"', () => {
+    it("pins r-domain to literal data min/max for swarm charts (no extentPadding)", () => {
+      // Without exact mode, the swarm r-domain would be padded by 5%
+      // (extentPadding default), so the first/last ticks land outside
+      // [dataMin, dataMax]. Exact mode collapses the padding so the
+      // ticks read as the actual data bounds.
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swarm",
+        axisExtent: "exact",
+        extentPadding: 0.05,
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 4.2 },
+          { category: "A", value: 30 },
+          { category: "B", value: 98.7 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // Vertical projection: scales.r maps domain → [height, 0].
+      // r(min) === 300 and r(max) === 0 only when the domain endpoints
+      // ARE the data min/max — i.e., extent padding was skipped.
+      expect(store.scales!.r(4.2)).toBeCloseTo(300, 5)
+      expect(store.scales!.r(98.7)).toBeCloseTo(0, 5)
+    })
+
+    it("nice mode (default) still pads the r-domain", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swarm",
+        extentPadding: 0.05,
+        // axisExtent omitted → defaults to nice
+      }))
+      store.ingest({
+        inserts: [
+          { category: "A", value: 4.2 },
+          { category: "B", value: 98.7 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // Padded: r(dataMin) is somewhere inside [0, 300], not at 300.
+      expect(store.scales!.r(4.2)).toBeLessThan(300)
+      expect(store.scales!.r(98.7)).toBeGreaterThan(0)
+    })
+
+    it("explicit rExtent still wins over exact mode (user override)", () => {
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "swarm",
+        axisExtent: "exact",
+        rExtent: [0, 100],
+      }))
+      store.ingest({
+        inserts: [{ category: "A", value: 50 }],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 300 })
+      // User pinned to [0, 100]; exact mode doesn't undo that.
+      expect(store.scales!.r(0)).toBe(300)
+      expect(store.scales!.r(100)).toBe(0)
+    })
+  })
+
   // ── Histogram shared bins with rExtent ────────────────────────────────
 
   describe("histogram shared bins via rExtent", () => {

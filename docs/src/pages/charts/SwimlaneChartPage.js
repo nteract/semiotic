@@ -250,6 +250,7 @@ const SwimlaneChartPropsTable = [
   { name: "colorBy", type: "string | function", required: false, default: "subcategoryAccessor", description: "Color accessor. Defaults to subcategoryAccessor." },
   { name: "colorScheme", type: "string | string[]", required: false, default: '"category10"', description: "Color scheme for subcategories." },
   { name: "barPadding", type: "number", required: false, default: "40", description: "Padding between lanes in pixels." },
+  { name: "roundedTop", type: "number", required: false, default: null, description: "Rounded corner radius (px) applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
   { name: "enableHover", type: "boolean", required: false, default: null, description: "Enable hover annotations on items." },
   { name: "showGrid", type: "boolean", required: false, default: null, description: "Show grid lines." },
   { name: "showCategoryTicks", type: "boolean", required: false, default: null, description: "Show lane labels on the category axis." },
@@ -563,6 +564,51 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
   annotations={[
     { type: "x-threshold", value: 50, color: "var(--semiotic-text)" },
   ]}
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Rounded corners */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="rounded-corners">Rounded Corners</h2>
+
+      <p>
+        Pass <code>roundedTop</code> (pixels) to round the outermost ends of
+        each lane &mdash; left and right in horizontal orientation, top and
+        bottom in vertical. Middle segments of multi-segment lanes stay square
+        so adjacent pieces visually butt against each other. Single-segment
+        lanes round all four corners.
+      </p>
+
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden", marginBottom: 16 }}>
+        <SwimlaneChart
+          data={[
+            { team: "Design",  task: "Spec",   value: 8 },
+            { team: "Design",  task: "Mocks",  value: 12 },
+            { team: "Eng",     task: "API",    value: 16 },
+            { team: "Eng",     task: "Client", value: 10 },
+            { team: "QA",      task: "Plan",   value: 14 },
+          ]}
+          categoryAccessor="team"
+          subcategoryAccessor="task"
+          valueAccessor="value"
+          width={600}
+          height={220}
+          roundedTop={8}
+          colorBy="task"
+          showLegend
+          margin={{ left: 80, right: 20, top: 10, bottom: 30 }}
+        />
+      </div>
+
+      <CodeBlock
+        code={`<SwimlaneChart
+  data={projectTasks}
+  categoryAccessor="team"
+  subcategoryAccessor="task"
+  valueAccessor="value"
+  roundedTop={8}
 />`}
         language="jsx"
       />

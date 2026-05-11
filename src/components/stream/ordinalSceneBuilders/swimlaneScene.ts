@@ -46,10 +46,17 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     }
   }
 
+  // Rounded-corner radius applied to the outermost ends of each lane (left
+  // and right for horizontal, top and bottom for vertical). 0 disables.
+  const cornerR = ctx.config.roundedTop && ctx.config.roundedTop > 0
+    ? Math.max(0, ctx.config.roundedTop)
+    : 0
+
   for (const col of Object.values(columns)) {
     // Each piece becomes its own rect, stacked sequentially within the lane.
     // No aggregation — duplicates of the same subcategory are expected.
     let offset = 0
+    const laneStartIndex = nodes.length
 
     for (const d of col.pieceData) {
       const val = Math.abs(getR(d))
@@ -82,6 +89,30 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
       nodes.push(node)
 
       offset += val
+    }
+
+    // Apply rounded corners on the outermost ends of the lane. A single
+    // piece rounds all four "outer" corners; multi-piece lanes round only
+    // the first piece's leading edge and the last piece's trailing edge.
+    // Middle pieces stay square so adjacent pieces visually butt against
+    // each other.
+    if (cornerR > 0 && nodes.length > laneStartIndex) {
+      const lanePieces = nodes.slice(laneStartIndex) as RectSceneNode[]
+      const first = lanePieces[0]
+      const last = lanePieces[lanePieces.length - 1]
+      if (lanePieces.length === 1) {
+        // Round all four corners on the single piece.
+        first.cornerRadii = { tl: cornerR, tr: cornerR, br: cornerR, bl: cornerR }
+      } else if (isHorizontal) {
+        // Horizontal lane: leftmost piece rounds left side, rightmost rounds right side.
+        first.cornerRadii = { tl: cornerR, bl: cornerR }
+        last.cornerRadii = { tr: cornerR, br: cornerR }
+      } else {
+        // Vertical lane: pieces stack bottom→top in pixel space. The first
+        // piece (offset 0) sits at the bottom in pixel space, last piece at top.
+        first.cornerRadii = { bl: cornerR, br: cornerR }
+        last.cornerRadii = { tl: cornerR, tr: cornerR }
+      }
     }
   }
 

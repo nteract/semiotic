@@ -197,7 +197,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     showGrid,
     showCategoryTicks,
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,

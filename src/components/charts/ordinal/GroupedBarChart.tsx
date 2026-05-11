@@ -222,7 +222,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     ...(categoryFormat && { oFormat: categoryFormat }),
     showGrid,
     ...effectiveLegendProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,

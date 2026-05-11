@@ -296,6 +296,17 @@ describe("Scatterplot", () => {
       expect(style).not.toHaveProperty("opacity")
     })
 
+    it("forwards axisExtent=\"exact\" to the frame via buildBaseMetadataProps", () => {
+      // Scatterplot uses the streamPropsHelpers broadcast path; verify
+      // the helper picks up axisExtent and forwards it to the frame.
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} axisExtent="exact" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.axisExtent).toBe("exact")
+    })
+
     it("point-level fill from colorBy still resolves alongside the top-level primitives", () => {
       const dataWithCat = [
         { x: 1, y: 10, cat: "A" },

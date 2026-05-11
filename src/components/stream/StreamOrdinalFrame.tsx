@@ -288,6 +288,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       oFormat: oFormatLegacy, rFormat: rFormatLegacy,
       rTickValues,
       tickLabelEdgeAlign,
+      axisExtent,
       enableHover = true,
       hoverAnnotation,
       tooltipContent,
@@ -428,6 +429,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       categoryAccessor: isStreaming ? (categoryAccessor || oAccessor) : undefined,
       rExtent,
       oExtent,
+      axisExtent,
       barPadding,
       roundedTop,
       gradientFill,
@@ -469,7 +471,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       chartType, windowSize, windowMode, extentPadding, projection,
       oAccessor, rAccessor, colorAccessor, stackBy, groupBy, multiAxis,
       timeAccessor, valueAccessor, categoryAccessor,
-      rExtent, oExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
+      rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
       bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors,
@@ -1049,6 +1051,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             rFormat={rFormat}
             rTickValues={rTickValues}
             tickLabelEdgeAlign={tickLabelEdgeAlign}
+            axisExtent={axisExtent}
             showGrid={showGrid}
             title={title}
             legend={legend}
@@ -1142,6 +1145,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           showGrid={showGrid}
           rFormat={rFormat}
           rTickValues={rTickValues}
+          axisExtent={axisExtent}
         />
 
         <canvas
@@ -1170,6 +1174,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           rLabel={rLabel}
           oFormat={oFormat}
           rFormat={rFormat}
+          rTickValues={rTickValues}
+          axisExtent={axisExtent}
           showGrid={showGrid}
           title={title}
           legend={legend}

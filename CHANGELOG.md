@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`DifferenceChart` (XY)** — two-series A/B comparison chart that fills the area between two series with a color that switches at each crossover (`seriesAColor` where A > B, `seriesBColor` where B > A). Crossover x-values are linearly interpolated so adjacent segments meet at zero-width vertices (no jagged seams). Both series can be drawn as overlay lines on top of the fill via `showLines` (default `true`). Renders through `chartType: "mixed"` with the segment groups in `areaGroups` — single frame, single set of scales, perfect geometric alignment between fill and overlay. Push API supported (HOC owns internal raw-data state; push triggers segment recomputation). Classic uses: temperature anomaly, forecast vs. actual, budget variance, any A/B comparison where the direction of the difference is the message. Live demos + Quick Start streaming toggle at `/charts/difference-chart`. New SSR config + validation map entry + chartSpecs entry → schema regenerated.
+- **`axisExtent` prop on all XY and ordinal HOCs** — `"nice"` (default, current behavior) uses d3-scale's rounded tick generator; `"exact"` pins the first and last tick to the literal data min/max with equidistant intermediate ticks. Applies to XY x/y axes and the ordinal value (r) axis only; no-op on network/geo/hierarchy. In exact mode the pipeline ALSO skips `extentPadding` so the domain reflects the literal data bounds, not a padded version — explicit `tickValues`, `xExtent`/`yExtent`/`rExtent` still win over both modes. Three demos at `/features/axes#axis-extent` (temporal LineChart, Scatterplot, SwarmPlot). Centralized `equidistantTicks` + `ticksForMode` helpers in `src/components/charts/shared/axisExtent.ts`.
+- **`roundedTop` on SwimlaneChart** — pixel radius rounds the outermost ends of each lane (left+right for horizontal, top+bottom for vertical). Middle segments stay square so adjacent pieces butt against each other; single-segment lanes round all four corners. Implemented via a new `cornerRadii?: { tl, tr, br, bl }` field on `RectSceneNode` and shared shape utilities in `src/components/stream/renderers/cornerRadii.ts` (canvas and SVG renderers share the geometry; each owns its drawing language). Live demo at `/charts/swimlane-chart#rounded-corners`.
+- **`buildHistogramTooltip` helper** — histogram-specific default tooltip for `RealtimeHistogram`, sibling to `buildWaterfallTooltip` / `buildHeatmapTooltip`. Surfaces `range: <binStart>–<binEnd>`, `count: <total>`, and `category: <category>` instead of the canonical `x:`/`y:` shape, which produced empty strings on aggregated bin datums. Falls back to the canonical shape when a non-binned datum sneaks through.
+
+### Fixed
+
+- **Area canvas renderer respects CSS-variable fills** — `areaCanvasRenderer.ts` now resolves `style.fill` through the existing `resolveCanvasFill` helper (same primitive bars use), so `var(--…)` references resolve from the canvas DOM ancestor. Previously the fill path skipped this resolution while the stroke path included it — passing a CSS variable as the area fill produced no visible color (canvas silently rejects unresolved CSS vars) and the gradient path fell back to the sentinel blue regardless of the requested color. Affects any chart that emits area-type scene nodes with `var(--…)` fills.
+
+### Changed
+
+- **`extentPadding` skipped in `axisExtent="exact"` mode** — both `PipelineStore` and `OrdinalPipelineStore` now treat `extentPadding` as 0 when `config.axisExtent === "exact"`, so the scale domain pins to the literal data min/max and the first/last ticks read as the actual bounds. Trade-off documented: glyphs at the extremes can sit at the plot edge in exact mode. Default `"nice"` keeps the existing padded domain.
+- **Per-corner radius geometry centralized** — `hasAnyCornerRadius` and corner-clamping logic extracted from `barCanvasRenderer.ts` and `SceneToSVG.tsx` to a shared `cornerRadii.ts` module. Each renderer keeps its own path-tracing primitives (`arcTo` vs SVG `A`); the geometry agrees by construction.
+
 ## [3.5.2] - 2026-05-10
 
 ### Added

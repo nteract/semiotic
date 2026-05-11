@@ -6,6 +6,7 @@ import { area as d3Area, line as d3Line } from "d3-shape"
 import {
   buildColorStopGradient,
   buildLinearFillGradient,
+  resolveCanvasFill,
   resolveCurveFactory,
 } from "./canvasRenderHelpers"
 
@@ -74,7 +75,12 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.clip()
     }
 
-    const fillColor = node.style.fill || "#4e79a7"
+    // `resolveCanvasFill` runs `style.fill` through `resolveCSSColor` so
+    // `var(--…)` references resolve from the canvas DOM ancestor — without
+    // it canvas silently rejects unresolved CSS-variable strings and the
+    // gradient path falls back to the sentinel blue. Same helper bars use;
+    // the area path used to skip it.
+    const fillColor = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
     const decayOpacities = node._decayOpacities
 
     // Decay path: render area as vertical strips with per-strip opacity

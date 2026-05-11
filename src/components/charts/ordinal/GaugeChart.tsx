@@ -39,6 +39,11 @@ export interface GaugeChartProps extends BaseChartProps {
   backgroundColor?: string
   /** Arc thickness as fraction of radius (0–1, default 0.3) */
   arcWidth?: number
+  /** Pixel radius for the rounded ends of each arc segment, same prop
+   *  semantics as `DonutChart.cornerRadius`. Default `undefined`
+   *  (sharp corners). Useful for the "pill" aesthetic where each
+   *  threshold zone reads as a discrete capsule. */
+  cornerRadius?: number
   /** Show needle indicator (default true) */
   showNeedle?: boolean
   /** Needle color (default: var(--semiotic-text, #333)) */
@@ -109,6 +114,21 @@ export interface GaugeChartProps extends BaseChartProps {
  *   fillZones
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // Rounded segment ends — same `cornerRadius` semantics as DonutChart.
+ * // Each threshold zone reads as a capsule with the others.
+ * <GaugeChart
+ *   value={65}
+ *   thresholds={[
+ *     { value: 60, color: "#22c55e" },
+ *     { value: 80, color: "#f59e0b" },
+ *     { value: 100, color: "#ef4444" },
+ *   ]}
+ *   cornerRadius={6}
+ * />
+ * ```
  */
 export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
@@ -142,6 +162,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     color: fillColor,
     backgroundColor = "var(--semiotic-grid, #e0e0e0)",
     arcWidth = 0.3,
+    cornerRadius,
     showNeedle = true,
     needleColor = "var(--semiotic-text, #333)",
     centerContent,
@@ -456,6 +477,10 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     innerRadius,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,
+    // Flow through to the pie scene builder + canvas wedge renderer; both
+    // already honor `cornerRadius` the same way DonutChart does, so the
+    // arc segments render with rounded ends without any new infrastructure.
+    ...(cornerRadius != null && { cornerRadius }),
     centerContent: centerEl,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

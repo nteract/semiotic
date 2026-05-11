@@ -17,6 +17,7 @@ import GettingStartedPage from "./pages/GettingStartedPage"
 import MigrationPage from "./pages/MigrationPage"
 import LineChartPage from "./pages/charts/LineChartPage"
 import AreaChartPage from "./pages/charts/AreaChartPage"
+import DifferenceChartPage from "./pages/charts/DifferenceChartPage"
 import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
 import ScatterplotPage from "./pages/charts/ScatterplotPage"
 import ConnectedScatterplotPage from "./pages/charts/ConnectedScatterplotPage"
@@ -421,6 +422,7 @@ export default function DocsApp() {
               {/* XY Charts */}
               <Route path="line-chart" element={<LineChartPage />} />
               <Route path="area-chart" element={<AreaChartPage />} />
+              <Route path="difference-chart" element={<DifferenceChartPage />} />
               <Route path="stacked-area-chart" element={<StackedAreaChartPage />} />
               <Route path="scatterplot" element={<ScatterplotPage />} />
               <Route path="connected-scatterplot" element={<ConnectedScatterplotPage />} />

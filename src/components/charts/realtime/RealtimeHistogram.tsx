@@ -20,7 +20,7 @@ import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
+import { buildHistogramTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
@@ -244,7 +244,7 @@ export const RealtimeHistogram = forwardRef(
     const resolvedSize: [number, number] = size ?? [resolved.width, resolved.height]
     // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
     const resolvedTooltip =
-      tooltipContent ?? tooltip ?? buildDefaultRealtimeTooltip({ timeAccessor, valueAccessor })
+      tooltipContent ?? tooltip ?? buildHistogramTooltip({ timeAccessor, valueAccessor })
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 

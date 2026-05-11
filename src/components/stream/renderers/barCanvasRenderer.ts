@@ -3,6 +3,29 @@ import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { buildLinearFillGradient, resolveCanvasFill } from "./canvasRenderHelpers"
+import { hasAnyCornerRadius, clampCornerRadii } from "./cornerRadii"
+
+/**
+ * Trace a rect path with per-corner radii. Shared shape utilities live
+ * in `./cornerRadii.ts`; this function owns the canvas drawing language
+ * (`beginPath` / `arcTo` / `closePath`). Sweep direction is CCW from
+ * top-left so the resulting path matches the existing rounded path.
+ */
+function tracePerCornerPath(ctx: CanvasRenderingContext2D, node: RectSceneNode): void {
+  const { x, y, w, h } = node
+  const { tl, tr, br, bl } = clampCornerRadii(node)
+  ctx.beginPath()
+  ctx.moveTo(x + tl, y)
+  ctx.lineTo(x + w - tr, y)
+  if (tr > 0) ctx.arcTo(x + w, y, x + w, y + tr, tr)
+  ctx.lineTo(x + w, y + h - br)
+  if (br > 0) ctx.arcTo(x + w, y + h, x + w - br, y + h, br)
+  ctx.lineTo(x + bl, y + h)
+  if (bl > 0) ctx.arcTo(x, y + h, x, y + h - bl, bl)
+  ctx.lineTo(x, y + tl)
+  if (tl > 0) ctx.arcTo(x, y, x + tl, y, tl)
+  ctx.closePath()
+}
 
 /**
  * Resolve the tip→base axis for a `RectSceneNode`. Mirrors AreaChart's
@@ -37,6 +60,23 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
     if (node.style.icon) {
       // Icon/isotype mode: stamp the image to fill the bar
       drawIconBar(ctx, node)
+    } else if (node.cornerRadii && hasAnyCornerRadius(node.cornerRadii)) {
+      // Explicit per-corner radii (swimlane's leading/trailing rounding).
+      // Same fill resolution as the roundedTop branch so gradients still
+      // flow tip→base along the bar axis.
+      const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
+      const axis = barGradientAxis(node)
+      const grad = node.fillGradient && typeof solid === "string"
+        ? buildLinearFillGradient(ctx, node.fillGradient, solid, axis.x0, axis.y0, axis.x1, axis.y1)
+        : null
+      ctx.fillStyle = grad || solid
+      tracePerCornerPath(ctx, node)
+      ctx.fill()
+      if (node.style.stroke && node.style.stroke !== "none") {
+        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+        ctx.lineWidth = node.style.strokeWidth || 1
+        ctx.stroke()
+      }
     } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
       const solid = resolveCanvasFill(ctx, node.style.fill, resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!)
