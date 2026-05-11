@@ -264,7 +264,12 @@ export class NetworkPipelineStore {
       // copy them through here so the particle pool can read them.
       // Harmless for built-in layouts — they overwrite this inside
       // `finalizeLayout` anyway.
-      if (raw && typeof raw === "object" && raw.bezier) {
+      //
+      // Validate the shape before assigning — a truthiness-only check
+      // would let `bezier: true` or a partial object through and the
+      // particle pipeline would then crash reading
+      // `edge.bezier.points[0].x` etc.
+      if (raw && typeof raw === "object" && isValidBezierCache(raw.bezier)) {
         edge.bezier = raw.bezier as BezierCache
       }
       this.edges.set(key, edge)
@@ -1310,4 +1315,35 @@ function createNode(id: string): RealtimeNode {
     value: 0,
     createdByFrame: true
   }
+}
+
+/** Validate a value matches the `BezierCache` shape before assigning it
+ *  to a `RealtimeEdge`. The particle pipeline reads
+ *  `edge.bezier.points[i].x` etc. unguarded — a malformed bezier
+ *  (e.g. `bezier: true`, missing points, non-finite coords) would
+ *  crash the canvas frame loop. */
+function isValidBezierCache(value: unknown): value is BezierCache {
+  if (!value || typeof value !== "object") return false
+  const b = value as Partial<BezierCache>
+  if (typeof b.circular !== "boolean") return false
+  if (typeof b.halfWidth !== "number" || !Number.isFinite(b.halfWidth)) return false
+  if (b.circular) {
+    if (!Array.isArray(b.segments) || b.segments.length === 0) return false
+    for (const seg of b.segments) {
+      if (!isFourFinitePoints(seg)) return false
+    }
+    return true
+  }
+  return isFourFinitePoints(b.points)
+}
+
+function isFourFinitePoints(pts: unknown): boolean {
+  if (!Array.isArray(pts) || pts.length !== 4) return false
+  for (const p of pts) {
+    if (!p || typeof p !== "object") return false
+    const pp = p as { x?: unknown; y?: unknown }
+    if (typeof pp.x !== "number" || !Number.isFinite(pp.x)) return false
+    if (typeof pp.y !== "number" || !Number.isFinite(pp.y)) return false
+  }
+  return true
 }

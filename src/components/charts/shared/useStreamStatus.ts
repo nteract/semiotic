@@ -45,8 +45,10 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 // Marker on a handle we've already wrapped — prevents double-wrap
 // when React 18 StrictMode re-runs effects, or any flow that
 // reassigns the same handle to `wrappedRef.current`. Module-scoped
-// so the same `useStreamStatus` instance tags consistently.
-const WRAPPED_BY_STREAM_STATUS = Symbol.for("semiotic.useStreamStatus.wrapped")
+// (plain `Symbol()`, not `Symbol.for`) so duplicate-bundled copies
+// of Semiotic on the same page each carry their own marker rather
+// than colliding through the global symbol registry.
+const WRAPPED_BY_STREAM_STATUS = Symbol("semiotic.useStreamStatus.wrapped")
 
 /**
  * Status enum exposed by the hook.
