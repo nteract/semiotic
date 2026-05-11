@@ -332,12 +332,23 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
   // above — same value in bounded mode, push-mode-tracked when
   // streaming.
 
+  // Push-mode initial state — first pushed point arrives before the
+  // domain-update setState re-renders, so `sizeDomain` is undefined
+  // for one render. Without a fallback, `getSize` returns the raw
+  // sizeBy value as the pixel radius (e.g. value=500 → 500px point).
+  // Same `[0, 1]` fallback BubbleChart uses; harmless in bounded mode
+  // because `sizeDomain` is non-null whenever data is non-empty.
+  const effectiveSizeDomain = useMemo<[number, number] | undefined>(
+    () => sizeBy ? (sizeDomain ?? [0, 1]) : undefined,
+    [sizeBy, sizeDomain],
+  )
+
   // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
   // internal memo — passing an inline literal would re-allocate the
   // returned `pointStyle` on every render.
   const sizedRadiusFn = useMemo(
-    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
-    [sizeBy, sizeRange, sizeDomain],
+    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, effectiveSizeDomain) : undefined,
+    [sizeBy, sizeRange, effectiveSizeDomain],
   )
 
   const pointStyle = useXYPointStyle({

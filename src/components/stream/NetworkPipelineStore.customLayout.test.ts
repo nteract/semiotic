@@ -258,4 +258,38 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneEdges).toHaveLength(1)
     expect(store.sceneEdges[0].type).toBe("line")
   })
+
+  it("carries pre-computed bezier through ingestBounded for customNetworkLayout particles", () => {
+    // ProcessSankey writes bezier control points onto each edge before
+    // pushing to the frame; without this, `runLayout`'s customLayout
+    // short-circuit skips `finalizeLayout` and the particle pool's
+    // `if (!edge.bezier) continue` gates spawn off every edge. Pin the
+    // ingest-side carry-through here so the unification stays wired.
+    const layout = () => ({ sceneNodes: [], sceneEdges: [], labels: [] })
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+      showParticles: true,
+    }))
+    const bezier = {
+      circular: false as const,
+      points: [
+        { x: 0, y: 50 }, { x: 50, y: 50 },
+        { x: 50, y: 100 }, { x: 100, y: 100 },
+      ] as [
+        { x: number; y: number }, { x: number; y: number },
+        { x: number; y: number }, { x: number; y: number },
+      ],
+      halfWidth: 4,
+    }
+    store.ingestBounded(
+      [{ id: "a" }, { id: "b" }],
+      [{ source: "a", target: "b", value: 5, bezier }],
+      [400, 200],
+    )
+    const edges = Array.from(store.edges.values())
+    expect(edges).toHaveLength(1)
+    expect(edges[0].bezier).toBe(bezier)
+    // Particle pool gate (sankey OR customNetworkLayout) also fires.
+    expect(store.particlePool).not.toBeNull()
+  })
 })

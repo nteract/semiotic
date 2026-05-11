@@ -51,6 +51,31 @@ describe("useEncodingDomain", () => {
       )
       expect(result.current.domain).toEqual([1, 5])
     })
+
+    it("coerces numeric strings to numbers so the domain is never string-valued", () => {
+      // String-field accessors can hit fields that arrived from JSON
+      // / form inputs as strings. Without coercion, `isFinite` would
+      // pass them through (it coerces internally) but the stored
+      // value would still be a string — downstream `d3-scale` math
+      // and consumers expecting numbers would silently break.
+      const data = [{ size: "5" as any }, { size: "12" as any }, { size: "1" as any }]
+      const { result } = renderHook(
+        () => useEncodingDomain({ accessor: "size", data, isPushMode: false }),
+        { wrapper },
+      )
+      expect(result.current.domain).toEqual([1, 12])
+      expect(typeof result.current.domain![0]).toBe("number")
+      expect(typeof result.current.domain![1]).toBe("number")
+    })
+
+    it("ignores non-numeric strings", () => {
+      const data = [{ size: "5" as any }, { size: "bogus" as any }, { size: "10" as any }]
+      const { result } = renderHook(
+        () => useEncodingDomain({ accessor: "size", data, isPushMode: false }),
+        { wrapper },
+      )
+      expect(result.current.domain).toEqual([5, 10])
+    })
   })
 
   describe("push mode", () => {
@@ -96,6 +121,18 @@ describe("useEncodingDomain", () => {
         result.current.reset()
       })
       expect(result.current.domain).toBeUndefined()
+    })
+
+    it("coerces numeric strings on the push-mode path too", () => {
+      const { result } = renderHook(
+        () => useEncodingDomain({ accessor: "size", data: [], isPushMode: true }),
+        { wrapper },
+      )
+      act(() => {
+        result.current.trackPushed([{ size: "3" as any }, { size: "10" as any }])
+      })
+      expect(result.current.domain).toEqual([3, 10])
+      expect(typeof result.current.domain![0]).toBe("number")
     })
 
     it("trackPushed is a no-op when accessor is undefined", () => {

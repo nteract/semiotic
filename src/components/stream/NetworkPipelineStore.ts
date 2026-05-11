@@ -247,7 +247,7 @@ export class NetworkPipelineStore {
       }
 
       const key = `${sourceId}\0${targetId}\0${i}`
-      this.edges.set(key, {
+      const edge: RealtimeEdge = {
         source: sourceId,
         target: targetId,
         value,
@@ -256,7 +256,18 @@ export class NetworkPipelineStore {
         sankeyWidth: 0,
         data: raw,
         _edgeKey: key,
-      })
+      }
+      // For customNetworkLayout charts (e.g. ProcessSankey), `runLayout`
+      // short-circuits before `finalizeLayout` would have computed
+      // bezier from node positions. The HOC pre-computes bezier
+      // control points and attaches them to each edge before push;
+      // copy them through here so the particle pool can read them.
+      // Harmless for built-in layouts — they overwrite this inside
+      // `finalizeLayout` anyway.
+      if (raw && typeof raw === "object" && raw.bezier) {
+        edge.bezier = raw.bezier as BezierCache
+      }
+      this.edges.set(key, edge)
     }
 
     // Run layout

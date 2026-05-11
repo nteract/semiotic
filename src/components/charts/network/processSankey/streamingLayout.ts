@@ -14,6 +14,7 @@
 import type { NetworkCustomLayout } from "../../../stream/networkCustomLayout"
 import type {
   NetworkBezierEdge,
+  NetworkCircleNode,
   NetworkLabel,
   BezierCache,
 } from "../../../stream/networkTypes"
@@ -134,8 +135,25 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
       }))
     : []
 
+  // Color-binding scene nodes — one per node id, off-canvas at r:0 so
+  // neither the canvas renderer nor the hit tester picks them up. Their
+  // sole purpose is to feed `StreamNetworkFrame`'s `nodeColorMap` from
+  // `style.fill`, which is then read by `getEdgeColor`/`getParticleColor`
+  // so particles inherit the source band's color. Without these, the
+  // frame's palette-by-array-index fallback assigns colors that don't
+  // match the HOC's `colorOf` resolution.
+  const sceneNodes: NetworkCircleNode[] = bands.map((b) => ({
+    type: "circle",
+    id: b.id,
+    cx: -10000,
+    cy: -10000,
+    r: 0,
+    style: { fill: b.fill },
+    datum: { __kind: "band", data: b.rawDatum, id: b.id } satisfies SceneDatumPayload as unknown as Datum,
+  }))
+
   return {
-    sceneNodes: [],
+    sceneNodes,
     sceneEdges,
     labels,
   }

@@ -42,6 +42,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
+// Marker on a handle we've already wrapped — prevents double-wrap
+// when React 18 StrictMode re-runs effects, or any flow that
+// reassigns the same handle to `wrappedRef.current`. Module-scoped
+// so the same `useStreamStatus` instance tags consistently.
+const WRAPPED_BY_STREAM_STATUS = Symbol.for("semiotic.useStreamStatus.wrapped")
+
 /**
  * Status enum exposed by the hook.
  *
@@ -94,28 +100,71 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
   // ref records the assignment for React's ref-forwarding and then
   // wraps the frame's push/pushMany so each call records its
   // timestamp.
+  //
+  // Wrap-once guard: React 18 StrictMode (and any flow that re-assigns
+  // the same handle to `current`) used to double-wrap, so a single
+  // `push()` fired `markPushed()` twice. We tag the handle with a
+  // private symbol on first wrap; subsequent assignments of the same
+  // handle short-circuit. When a *new* handle arrives we also restore
+  // the previous handle's originals (if we still have them) so leaked
+  // handles don't keep our wrappers alive.
   const wrappedRef = useMemo(() => {
-    const obj = { _frame: null as THandle | null } as { _frame: THandle | null }
+    const obj = {
+      _frame: null as THandle | null,
+      _origPush: null as ((d: Datum) => unknown) | null,
+      _origPushMany: null as ((ds: Datum[]) => unknown) | null,
+    }
     return {
       get current(): THandle | null {
         return obj._frame
       },
       set current(handle: THandle | null) {
+        // Restore the previous handle's originals before we let go of it.
+        // Also clear our wrap-once tag so a future re-assignment of the
+        // same handle (e.g. handed to a different `useStreamStatus`
+        // instance, or back to this one after a remount) re-wraps cleanly.
+        const prev = obj._frame
+        if (prev && prev !== handle && obj._origPush && obj._origPushMany) {
+          ;(prev as { push: (d: Datum) => unknown }).push = obj._origPush
+          ;(prev as { pushMany: (ds: Datum[]) => unknown }).pushMany = obj._origPushMany
+          delete (prev as { [WRAPPED_BY_STREAM_STATUS]?: true })[WRAPPED_BY_STREAM_STATUS]
+        }
         obj._frame = handle
         frameRef.current = handle
-        if (!handle) return
+        if (!handle) {
+          obj._origPush = null
+          obj._origPushMany = null
+          return
+        }
+        // Wrap-once: if the same handle is being assigned a second time
+        // (StrictMode double-effect, parent re-renders that re-pass the
+        // same ref target), bail. Without this, `push` becomes
+        // `markPushed(); markPushed(); origPush()` after the second wrap.
+        const tagged = handle as THandle & { [WRAPPED_BY_STREAM_STATUS]?: true }
+        if (tagged[WRAPPED_BY_STREAM_STATUS]) return
+        tagged[WRAPPED_BY_STREAM_STATUS] = true
         // Wrap push / pushMany in place so the caller's
         // `ref.current.push(...)` records the timestamp before
         // delegating to the real implementation.
-        const origPush = handle.push.bind(handle)
-        const origPushMany = handle.pushMany.bind(handle)
-        ;(handle as any).push = (d: Datum) => {
+        //
+        // Stash the *unbound* originals on `obj._origPush` so handle
+        // swaps can restore the property to byte-identical reference
+        // equality with the function the consumer passed in. We still
+        // bind for the internal call site so `this` is preserved on
+        // class-instance handles.
+        const rawPush = handle.push
+        const rawPushMany = handle.pushMany
+        const boundPush = rawPush.bind(handle)
+        const boundPushMany = rawPushMany.bind(handle)
+        obj._origPush = rawPush as (d: Datum) => unknown
+        obj._origPushMany = rawPushMany as (ds: Datum[]) => unknown
+        ;(handle as { push: (d: Datum) => unknown }).push = (d: Datum) => {
           markPushed()
-          return origPush(d)
+          return boundPush(d)
         }
-        ;(handle as any).pushMany = (ds: Datum[]) => {
+        ;(handle as { pushMany: (ds: Datum[]) => unknown }).pushMany = (ds: Datum[]) => {
           if (ds && ds.length > 0) markPushed()
-          return origPushMany(ds)
+          return boundPushMany(ds)
         }
       },
     } as React.MutableRefObject<THandle | null>

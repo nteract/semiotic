@@ -85,11 +85,16 @@ export function useEncodingDomain<TDatum extends Datum = Datum>(
     if (!isPushMode || !accessor) return
     let changed = false
     for (const d of items) {
-      const val = typeof accessor === "function"
+      const raw = typeof accessor === "function"
         ? (accessor as (d: TDatum) => number)(d)
         : (d as Datum)[accessor as string]
-      if (val == null || !isFinite(val as number)) continue
-      const n = val as number
+      if (raw == null) continue
+      // String-field accessors can return numeric strings ("5"). Coerce
+      // before storing so the domain never contains strings — downstream
+      // math (`d3-scale`, getSize) would happily multiply "5" * 1 but
+      // tests and other consumers expect numbers.
+      const n = typeof raw === "number" ? raw : Number(raw)
+      if (!Number.isFinite(n)) continue
       if (!streamingDomainRef.current) {
         streamingDomainRef.current = [n, n]
         changed = true
@@ -120,12 +125,15 @@ export function useEncodingDomain<TDatum extends Datum = Datum>(
     let min = Infinity
     let max = -Infinity
     for (const d of data) {
-      const v = get(d)
-      if (v == null || !isFinite(v)) continue
+      const raw = get(d)
+      if (raw == null) continue
+      // Coerce before comparing — same reason as `trackPushed` above.
+      const v = typeof raw === "number" ? raw : Number(raw)
+      if (!Number.isFinite(v)) continue
       if (v < min) min = v
       if (v > max) max = v
     }
-    if (!isFinite(min) || !isFinite(max)) return undefined
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return undefined
     return [min, max]
   }, [data, accessor, isPushMode, streamingVersion])
 

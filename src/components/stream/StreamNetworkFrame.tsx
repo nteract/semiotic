@@ -565,13 +565,26 @@ const StreamNetworkFrame = forwardRef<
     currentTheme?.colors?.primary ||
     "#999"
 
+  // Resolve a source/target field to a RealtimeNode. For built-in
+  // sankey layouts, d3-sankey replaces string ids with node references
+  // during `computeLayout`. For customNetworkLayout charts (e.g.
+  // ProcessSankey), `ingestBounded` keeps the ids as strings — the
+  // customLayout path doesn't run plugin dispatch. Look up by id when
+  // we get a string so both paths converge on a RealtimeNode.
+  const resolveEdgeEndpoint = useCallback(
+    (endpoint: RealtimeNode | string | undefined): RealtimeNode | null => {
+      if (!endpoint) return null
+      if (typeof endpoint === "object") return endpoint
+      return storeRef.current?.nodes.get(endpoint) ?? null
+    },
+    []
+  )
+
   const getEdgeColor = useCallback(
     (edge: RealtimeEdge): string => {
       if (typeof edgeColorBy === "function") return edgeColorBy(edge)
-      const sourceNode =
-        typeof edge.source === "object" ? edge.source : null
-      const targetNode =
-        typeof edge.target === "object" ? edge.target : null
+      const sourceNode = resolveEdgeEndpoint(edge.source)
+      const targetNode = resolveEdgeEndpoint(edge.target)
 
       if (edgeColorBy === "target" && targetNode) {
         return getNodeColor(targetNode)
@@ -581,7 +594,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [edgeColorBy, getNodeColor, edgeFallbackColor]
+    [edgeColorBy, getNodeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   const getParticleColor = useCallback(
@@ -592,8 +605,8 @@ const StreamNetworkFrame = forwardRef<
         return getEdgeColor(edge)
       }
       const colorByMode = particleStyle.colorBy!
-      const sourceNode = typeof edge.source === "object" ? edge.source : null
-      const targetNode = typeof edge.target === "object" ? edge.target : null
+      const sourceNode = resolveEdgeEndpoint(edge.source)
+      const targetNode = resolveEdgeEndpoint(edge.target)
 
       if (colorByMode === "target" && targetNode) {
         return getNodeColor(targetNode)
@@ -603,7 +616,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor]
+    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local
