@@ -237,7 +237,14 @@ export class NetworkPipelineStore {
       const raw = rawEdges[i]
       const sourceId = String(getSource(raw))
       const targetId = String(getTarget(raw))
-      const value = Number(getValue(raw)) || 1
+      // Preserve `value: 0` (e.g. an edge with no flow that should
+      // suppress particles); fall back to 1 only when the raw value is
+      // nullish or non-finite. The earlier `|| 1` pattern collapsed
+      // legitimate zeros into 1, which made "no-flow" edges still
+      // animate particles at the default rate.
+      const rawValue = getValue(raw)
+      const numValue = rawValue == null ? NaN : Number(rawValue)
+      const value = Number.isFinite(numValue) ? numValue : 1
 
       if (!this.nodes.has(sourceId)) {
         this.nodes.set(sourceId, { ...createNode(sourceId), data: raw })

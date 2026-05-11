@@ -916,10 +916,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       // produce a fan across the band width.
       //
       // Coerce value with an explicit finite check rather than `|| 0`
-      // — a legitimate edge with `value: 0` would otherwise collapse,
-      // and downstream `ingestBounded` further normalizes truthy-only
-      // (`Number(v) || 1`), so a 0 here would silently behave like a
-      // 1 in the particle pipeline.
+      // — a legitimate edge with `value: 0` (e.g. suppressed-flow
+      // marker) needs to flow through as 0, not collapse to a
+      // non-zero default. `NetworkPipelineStore.ingestBounded` does
+      // the same finite-check so 0 survives end-to-end through the
+      // particle pipeline.
       const rawValue = Number(accessor(valueAccessor, e))
       return {
         id,
