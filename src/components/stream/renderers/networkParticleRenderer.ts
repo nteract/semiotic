@@ -1,6 +1,7 @@
 import type { ParticlePool } from "../ParticlePool"
 import type { RealtimeEdge, ParticleStyle } from "../networkTypes"
 import { DEFAULT_PARTICLE_STYLE } from "../networkTypes"
+import { resolveCSSColor } from "./resolveCSSColor"
 
 /**
  * Canvas particle renderer for sankey — ported directly from realtime-network.
@@ -35,13 +36,20 @@ export function renderNetworkParticles(
     // invoke `style.color` directly and only succeeded when
     // `edge.source` happened to already be an object reference, which
     // silently dropped the user's color function for any custom layout.
+    //
+    // Strings flow through `resolveCSSColor` so theme tokens like
+    // `var(--semiotic-primary)` paint correctly — canvas's `fillStyle`
+    // silently rejects CSS custom properties otherwise, leaving the
+    // prior frame's color in place.
+    let resolved: string
     if (typeof style.color === "string" && style.color !== "inherit") {
-      ctx.fillStyle = style.color
+      resolved = style.color
     } else {
       // Covers undefined, "inherit", and function — `edgeColorFn`
       // handles each variant correctly.
-      ctx.fillStyle = edgeColorFn(edge)
+      resolved = edgeColorFn(edge)
     }
+    ctx.fillStyle = resolveCSSColor(ctx, resolved) || resolved
 
     ctx.beginPath()
     ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)

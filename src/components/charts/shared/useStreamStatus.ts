@@ -89,11 +89,6 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
 ): StreamStatusResult<THandle> {
   const { staleThresholdMs = 5000, pollIntervalMs = 1000 } = options
 
-  // Underlying frame ref the chart actually receives. The hook's
-  // public ref proxies into a wrapped object that intercepts
-  // push/pushMany. `current` on the public ref is set by React's
-  // ref-forwarding to the frame's handle.
-  const frameRef = useRef<THandle | null>(null)
   const lastPushRef = useRef<number | null>(null)
   const [status, setStatus] = useState<StreamStatus>("idle")
   const [lastPushTime, setLastPushTime] = useState<number | null>(null)
@@ -132,7 +127,6 @@ export function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFr
           delete (prev as { [WRAPPED_BY_STREAM_STATUS]?: true })[WRAPPED_BY_STREAM_STATUS]
         }
         obj._frame = handle
-        frameRef.current = handle
         if (!handle) {
           obj._origPush = null
           obj._origPushMany = null
