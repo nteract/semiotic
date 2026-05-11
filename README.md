@@ -287,7 +287,7 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **196 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/xy` | **198 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **159 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **150 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **116 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
@@ -297,8 +297,8 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/recipes` | **14 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **7 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **6 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
-| `semiotic/ai` | **411 KB** | All 40 HOCs + validation — optimized for LLM code generation |
-| `semiotic` | **412 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **412 KB** | All 40 HOCs + validation — optimized for LLM code generation |
+| `semiotic` | **414 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
