@@ -73,6 +73,23 @@ describe("useXYLineStyle", () => {
       result.current({ x: 3 })
       expect(seen).toEqual(["series-a", "series-b", "<none>"])
     })
+
+    it("leaves stroke undefined when colorBy is set but colorScale is missing (push-mode)", () => {
+      // Push-mode initial state: `useColorScale` returns undefined for
+      // empty data. The hook must NOT back-fill `style.stroke` here —
+      // `PipelineStore.resolveLineStyle` injects per-group palette colors
+      // when stroke is missing, and a back-filled fallback would lock
+      // every push-mode series into a single color.
+      const { result } = renderHook(
+        () => useXYLineStyle({ colorBy: "series", color: "#fallback" }),
+        { wrapper },
+      )
+      const style = result.current({ series: "A" })
+      expect(style.stroke).toBeUndefined()
+      // strokeWidth is still emitted so the line draws with default sizing
+      // until the frame back-fills color on the next render.
+      expect(style.strokeWidth).toBe(2)
+    })
   })
 
   describe("fillArea", () => {
@@ -185,6 +202,28 @@ describe("useXYLineStyle", () => {
       )
       const style = result.current({ x: 1 })
       expect(style.opacity).toBeUndefined()
+    })
+
+    it("forwards the `group` argument through the selection wrap", () => {
+      // When a selection is active, `wrapStyleWithSelection` builds a new
+      // function — but the variadic forwarding must preserve the
+      // `(datum, group)` calling convention. Verify group-aware
+      // `fillArea: string[]` still fills the right series with selection on.
+      const hook = makeHook(true, () => true) // every datum selected
+      const { result } = renderHook(
+        () => useXYLineStyle({
+          color: "#000",
+          fillArea: ["A"],
+          areaOpacity: 0.5,
+          effectiveSelectionHook: hook,
+        }),
+        { wrapper },
+      )
+      const styleFor = result.current
+      // group "A" → fill present (group-aware fillArea hit)
+      expect(styleFor({ x: 1 }, "A").fill).toBe("#000")
+      // group "B" → no fill (group-aware fillArea miss)
+      expect(styleFor({ x: 1 }, "B").fill).toBeUndefined()
     })
   })
 

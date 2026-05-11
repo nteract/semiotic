@@ -413,7 +413,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
   // honor a caller-supplied pre-rendered ReactNode. Config-object form
   // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; the
-  // categorical auto-build covers that case. Tracked in docs/strategy/roadmap.md.
+  // categorical auto-build covers that case.
   const xyAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.groupAccessor
     const categories = extractCategories(data, colorAccessor)
@@ -766,7 +766,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // the auto-build. The frame's `legend` prop also accepts a config-object
   // form ({legendGroups} or {gradient}) — those are SVGOverlay-side concerns
   // and aren't yet wired through SSR; auto-build covers the categorical case
-  // either way. Tracked in docs/strategy/roadmap.md → SSR feature parity.
+  // either way.
   const networkLegendOut = React.isValidElement((props as any).legend)
     ? (props as any).legend as React.ReactNode
     : networkLegend
@@ -1052,7 +1052,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
 
   // Legend — auto-build from colorAccessor/stackBy/groupBy + showLegend, OR
   // honor caller-supplied pre-rendered ReactNode. See XY block for the
-  // contract; same pattern. Config-object form deferred (docs/strategy/roadmap.md).
+  // contract; same pattern. Config-object form deferred.
   const ordinalAutoLegend = props.showLegend ? (() => {
     const colorAccessor = props.colorAccessor || props.stackBy || props.groupBy
     const categories = extractCategories(data, colorAccessor)
@@ -1247,7 +1247,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
 
   // Honor caller-supplied pre-rendered legend element. Config-object form
   // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; auto-build
-  // covers the categorical case. Tracked in docs/strategy/roadmap.md.
+  // covers the categorical case.
   const geoLegend = React.isValidElement(props.legend)
     ? (props.legend as React.ReactNode)
     : geoAutoLegend

@@ -96,5 +96,4 @@ If you follow the recipe correctly, these gates engage without extra test wiring
 ## See also
 
 - `src/components/stream/useHydration.ts` — the three hooks (`useHydration`, `useWasHydratingFromSSR`, `useHydrationLifecycle`) plus full prose on the detection mechanism.
-- `docs/strategy/roadmap.md` — roadmap and maintenance context, including the shipped SSR phases and future planning notes.
 - `docs/src/pages/UsingSSRPage.js` — user-facing docs for the auto-hydration feature.

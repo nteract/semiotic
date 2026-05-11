@@ -97,16 +97,23 @@ export const DEFAULT_SELECTION_OPACITY = 0.5
  * Dimming opacity is resolved in this order:
  * 1. `config.unselectedOpacity` (explicit, usually per-chart or theme-merged)
  * 2. `DEFAULT_SELECTION_OPACITY`
+ *
+ * Variadic in the trailing args so callers can pass `(datum, group)` —
+ * the `group` argument that `PipelineStore.resolveLineStyle` threads
+ * through for line/area styles must reach the wrapped base function,
+ * or group-dependent styling (`fillArea: string[]`, `resolveStroke(d,
+ * group)` in `useXYLineStyle`'s MultiAxisLineChart path) silently
+ * drops to its no-group branch whenever a selection is active.
  */
-export function wrapStyleWithSelection(
-  baseStyleFn: (d: Datum) => Datum,
+export function wrapStyleWithSelection<TArgs extends unknown[]>(
+  baseStyleFn: (d: Datum, ...args: TArgs) => Datum,
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
-): (d: Datum) => Datum {
+): (d: Datum, ...args: TArgs) => Datum {
   if (!selectionHook) return baseStyleFn
 
-  return (d: Datum) => {
-    const style = { ...baseStyleFn(d) }
+  return (d: Datum, ...args: TArgs) => {
+    const style = { ...baseStyleFn(d, ...args) }
 
     if (selectionHook.isActive) {
       if (selectionHook.predicate(d)) {

@@ -1069,10 +1069,6 @@ ref.current.clear()`} />
         </li>
       </ul>
 
-      <p style={{ marginTop: 24, fontSize: 13, color: "var(--semiotic-text-secondary, #64748b)" }}>
-        Algorithm internals and deferred future directions are documented in{" "}
-        <code>docs/strategy/process-sankey.md</code>.
-      </p>
     </PageLayout>
   )
 }

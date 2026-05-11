@@ -346,7 +346,7 @@ async function build() {
     // unconditionally asserting clientOnly would make Server Component
     // consumers think they can't import the pure exports — and they
     // can't, because the directive is file-level. Tracked as a
-    // structural follow-up in docs/strategy/roadmap.md; until then we don't
+    // structural follow-up; until then we don't
     // gate either way.
     { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
     { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },

@@ -139,6 +139,15 @@ export function useXYLineStyle(
   } = options
 
   // Step 1+2+3 — base style with resolved stroke (and optional fill).
+  //
+  // Push-mode contract: when `colorBy` is set but `colorScale` is
+  // undefined (e.g. `useColorScale` returning undefined for empty
+  // initial data), leave `stroke` unset so
+  // `PipelineStore.resolveLineStyle` can inject per-group palette
+  // colors as series arrive. Setting `stroke` here would back-fill
+  // a single fallback color and lock every push-mode series into
+  // it — the original LineChart code had this branch intentionally
+  // bare for that reason.
   const baseLineStyle = useMemo(() => {
     return (d: Datum, group?: string): Datum => {
       const style: Datum = { strokeWidth: lineWidth }
@@ -148,16 +157,25 @@ export function useXYLineStyle(
       const shouldFill = fillArea === true
         || (Array.isArray(fillArea) && group != null && fillArea.includes(group))
 
-      const resolved = resolveStroke
-        ? resolveStroke(d, group)
-        : (colorBy && colorScale
-          ? (getColor(d, colorBy as ChartAccessor<Datum, string>, colorScale) as string)
-          : (color || DEFAULT_COLOR))
+      let resolved: string | undefined
+      if (resolveStroke) {
+        resolved = resolveStroke(d, group)
+      } else if (colorBy) {
+        // colorBy set but colorScale missing → leave stroke undefined
+        // (frame back-fills); only resolve when both are present.
+        if (colorScale) {
+          resolved = getColor(d, colorBy as ChartAccessor<Datum, string>, colorScale) as string
+        }
+      } else {
+        resolved = color || DEFAULT_COLOR
+      }
 
-      style.stroke = resolved
-      if (shouldFill) {
-        style.fill = resolved
-        style.fillOpacity = areaOpacity
+      if (resolved !== undefined) {
+        style.stroke = resolved
+        if (shouldFill) {
+          style.fill = resolved
+          style.fillOpacity = areaOpacity
+        }
       }
       return style
     }

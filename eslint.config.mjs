@@ -64,7 +64,7 @@ export default [
       // typescript-eslint 8's recommended is stricter than the legacy config's
       // scope (which only wired the parser, no rule sets). Disable the rules
       // that surface codebase-wide existing patterns — each is its own follow-up
-      // sweep, tracked in docs/strategy/roadmap.md. Re-enable individually by removing
+      // sweep. Re-enable individually by removing
       // its line below.
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["error", {
