@@ -176,31 +176,22 @@ jobs:
       - name: Build library
         run: npm run dist
 
-      - name: Generate missing Linux snapshot baselines (smoke fallback)
-        run: |
-          # Smoke-test fallback: if no Linux baselines have been committed,
-          # generate them so the e2e job doesn't fail with "missing snapshot."
-          # IMPORTANT: this also rewrites any committed baselines that
-          # differ — meaning once you opt in here, you lose the regression
-          # gate for the run. Use this only to bootstrap baselines for
-          # newly-added specs, then:
-          #   1. Download the `playwright-snapshots` artifact from this run
-          #      (uploaded below regardless of pass/fail).
-          #   2. Copy the new *-chromium-linux.png (and *-webkit-linux.png,
-          #      *-firefox-linux.png) files into the matching
-          #      integration-tests/<spec>.spec.ts-snapshots/ directory.
-          #   3. Commit and push. The next CI run uses them as the
-          #      regression gate.
-          HAVE_LINUX=$(find integration-tests -name "*-chromium-linux.png" -print -quit)
-          if [ -z "$HAVE_LINUX" ]; then
-            echo "::warning::No Linux baselines committed — generating on the fly. Visual regression is non-binding until baselines are committed."
-            npx playwright test --update-snapshots || true
-          else
-            echo "Linux baselines present — running tests as a regression gate"
-          fi
-
       - name: Run E2E tests
-        run: npx playwright test
+        # `--update-snapshots=missing` (playwright 1.42+) writes a baseline
+        # only when the spec×browser×OS combination has none. Existing
+        # baselines stay locked in — diff failures still fail the build,
+        # so the regression gate is intact for everything that's been
+        # bootstrapped. New tests / new OS-browser combos get their
+        # baseline on first run instead of failing. The freshly-written
+        # baselines flow into the `playwright-snapshots` artifact below;
+        # maintainers commit them periodically to make the gate denser.
+        #
+        # Replaces a prior HAVE_LINUX binary gate that ran a full
+        # `--update-snapshots` (no value, overwrites everything) the
+        # first time and skipped on subsequent runs — which left
+        # single-test misses (a flaky run, a renamed test) permanently
+        # failing CI because no second bootstrap pass would fire.
+        run: npx playwright test --update-snapshots=missing
 
       - name: Upload snapshot baselines
         if: always()
