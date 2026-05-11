@@ -213,10 +213,12 @@ function generatedCompactBlock(rows, { listItem = false } = {}) {
 
 function upsertMarkerBlock(content, block) {
   const start = content.indexOf(MARKER_START)
-  const end = content.indexOf(MARKER_END)
-  if (start === -1 || end === -1 || end <= start) {
-    return null // caller decides whether to error or no-op
-  }
+  if (start === -1) return null // caller decides whether to error or no-op
+  // Constrain the end-marker search to AFTER the start marker so an
+  // earlier occurrence of `MARKER_END` (in an unrelated example, a
+  // duplicated block, or quoted prose) doesn't cause a false miss.
+  const end = content.indexOf(MARKER_END, start + MARKER_START.length)
+  if (end === -1) return null
   const replaceEnd = end + MARKER_END.length
   return content.slice(0, start) + block + content.slice(replaceEnd)
 }

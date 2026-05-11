@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CurveType } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -420,15 +420,25 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   // MultiAxisLineChart hands the shared hook a custom `resolveStroke`
   // that reads from the per-series colorMap. The hook still does the
   // primitives merge + selection wrap.
+  //
+  // Both `seriesColorMap` and `resolveStroke` are memoized so the hook's
+  // internal `useMemo` keys see stable references across renders —
+  // otherwise an inline arrow would rebuild the style function every
+  // render and force StreamXYFrame to re-derive line style downstream.
   const seriesColorMap = useMemo(() => {
     const map = new Map<string, string>()
     seriesLabels.forEach((label, i) => map.set(label, seriesColors[i]))
     return map
   }, [seriesLabels, seriesColors])
 
+  const resolveStroke = useCallback(
+    (d: Datum) => seriesColorMap.get(d[SERIES_FIELD]) || seriesColors[0],
+    [seriesColorMap, seriesColors],
+  )
+
   const lineStyle = useXYLineStyle({
     lineWidth,
-    resolveStroke: (d) => seriesColorMap.get(d[SERIES_FIELD]) || seriesColors[0],
+    resolveStroke,
     stroke,
     strokeWidth,
     opacity,
