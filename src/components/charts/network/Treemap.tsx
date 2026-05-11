@@ -127,7 +127,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
   // build its color scale + categories off the same node array
   // node-style/legend logic uses below.
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => any[]))
+    return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => Datum[]))
   }, [data, childrenAccessor])
 
   // Consolidated network setup. Treemap's data shape is a hierarchy

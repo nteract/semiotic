@@ -18,7 +18,7 @@ import { validateObjectData } from "../shared/validateChartData"
 // ── Orbit layout types (kept for API compatibility) ──────────────────
 
 export interface OrbitNode {
-  datum: any
+  datum: Datum
   x: number
   y: number
   ring: number
@@ -56,11 +56,11 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
    */
   orbitMode?: OrbitMode
   /** Ring size divisor per depth. Larger = tighter orbits. @default 2.95 */
-  orbitSize?: number | ((node: any) => number)
+  orbitSize?: number | ((node: Datum) => number)
   /** Orbit speed in degrees per frame @default 0.25 */
   speed?: number
   /** Per-node speed modifier @default (node) => 1 / (node.depth + 1) */
-  revolution?: (node: any) => number
+  revolution?: (node: Datum) => number
   /**
    * Built-in revolution style presets:
    * - "locked": children rotate with parent at decreasing speed (default)
@@ -71,11 +71,11 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
    */
   revolutionStyle?: "locked" | "decay" | "alternate"
   /** Vertical squash for elliptical orbits. 1 = circle, 0.5 = ellipse @default 1 */
-  eccentricity?: number | ((node: any) => number)
+  eccentricity?: number | ((node: Datum) => number)
   /** Show orbital ring paths @default true */
   showRings?: boolean
   /** Node radius. Number or function of node. @default 6 */
-  nodeRadius?: number | ((node: any) => number)
+  nodeRadius?: number | ((node: Datum) => number)
   /** Show node labels @default false */
   showLabels?: boolean
   /** Enable animation @default true */
@@ -187,7 +187,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
 
   // ── Flatten for color scale ──────────────────────────────────────────────
   const allNodes = useMemo(() => {
-    return flattenHierarchy(data, childrenAccessor as string | ((d: Datum) => any[]))
+    return flattenHierarchy(data, childrenAccessor as string | ((d: Datum) => Datum[]))
   }, [data, childrenAccessor])
 
   // Consolidated network setup. OrbitDiagram uses tighter margin
@@ -257,7 +257,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
   // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
   const wrappedHoverBehavior = useMemo(() => {
     if (!setup.customHoverBehavior) return undefined
-    return (hover: any) => {
+    return (hover: Datum | null) => {
       if (hover && hover.data && hover.data.data !== undefined) {
         setup.customHoverBehavior({ ...hover, data: hover.data.data })
       } else {
@@ -268,7 +268,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
 
   const wrappedClickBehavior = useMemo(() => {
     if (!setup.customClickBehavior) return undefined
-    return (click: any) => {
+    return (click: Datum | null) => {
       if (click && click.data && click.data.data !== undefined) {
         setup.customClickBehavior({ ...click, data: click.data.data })
       } else {
@@ -294,7 +294,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         responsiveHeight={props.responsiveHeight}
         margin={setup.margin}
         nodeIDAccessor={nodeIdAccessor}
-        childrenAccessor={childrenAccessor as string | ((d: Datum) => any[])}
+        childrenAccessor={childrenAccessor as string | ((d: Datum) => Datum[])}
         nodeStyle={nodeStyleFn}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}

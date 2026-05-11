@@ -2,7 +2,7 @@
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
-import { useMemo, forwardRef, useRef, useImperativeHandle } from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CurveType } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -16,8 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useXYLineStyle } from "../shared/useXYLineStyle"
 
 // ── Internal field names ────────────────────────────────────────────────
 const UNITIZED_FIELD = "__ma_unitized"
@@ -418,29 +417,34 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Line style ────────────────────────────────────────────────────────
-  const baseLineStyle = useMemo(() => {
-    const colorMap = new Map<string, string>()
-    seriesLabels.forEach((label, i) => colorMap.set(label, seriesColors[i]))
+  // MultiAxisLineChart hands the shared hook a custom `resolveStroke`
+  // that reads from the per-series colorMap. The hook still does the
+  // primitives merge + selection wrap.
+  //
+  // Both `seriesColorMap` and `resolveStroke` are memoized so the hook's
+  // internal `useMemo` keys see stable references across renders —
+  // otherwise an inline arrow would rebuild the style function every
+  // render and force StreamXYFrame to re-derive line style downstream.
+  const seriesColorMap = useMemo(() => {
+    const map = new Map<string, string>()
+    seriesLabels.forEach((label, i) => map.set(label, seriesColors[i]))
+    return map
+  }, [seriesLabels, seriesColors])
 
-    return (d: Datum) => {
-      const seriesName = d[SERIES_FIELD]
-      return {
-        stroke: colorMap.get(seriesName) || seriesColors[0],
-        strokeWidth: lineWidth,
-        fill: "none"
-      }
-    }
-  }, [seriesLabels, seriesColors, lineWidth])
-
-  const baseLineStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
-    [baseLineStyle, stroke, strokeWidth, opacity]
+  const resolveStroke = useCallback(
+    (d: Datum) => seriesColorMap.get(d[SERIES_FIELD]) || seriesColors[0],
+    [seriesColorMap, seriesColors],
   )
 
-  const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection),
-    [baseLineStyleWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  const lineStyle = useXYLineStyle({
+    lineWidth,
+    resolveStroke,
+    stroke,
+    strokeWidth,
+    opacity,
+    effectiveSelectionHook: setup.effectiveSelectionHook,
+    resolvedSelection: setup.resolvedSelection,
+  })
 
   // ── Tooltip ───────────────────────────────────────────────────────────
   const tooltipFn = useMemo(() => {

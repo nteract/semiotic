@@ -7,8 +7,7 @@
 // weighted edge length) the chart needs to render.
 //
 // The HOC component (`ProcessSankey.tsx`) wraps this with prop parsing,
-// SVG drawing, and accessor unwrapping. See `docs/strategy/process_sankey_internals.md`
-// for the long-form algorithm explanation.
+// SVG drawing, and accessor unwrapping.
 
 // ---------------------------------------------------------------------------
 // Public types (canonical home — `algorithm.d.ts` is deleted, this file

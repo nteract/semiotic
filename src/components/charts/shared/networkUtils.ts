@@ -13,7 +13,7 @@ import type { Accessor } from "./types"
  */
 export function flattenHierarchy(
   data: Datum | null,
-  childrenAccessor: string | ((d: Datum) => any[])
+  childrenAccessor: string | ((d: Datum) => Datum[])
 ): Array<Datum> {
   if (!data) return []
   const nodes: Array<Datum> = []
@@ -35,11 +35,11 @@ export function flattenHierarchy(
  * Returns the provided nodes array if it's non-empty.
  */
 export function inferNodesFromEdges(
-  nodes: any[] | undefined,
-  edges: any[],
+  nodes: Datum[] | undefined,
+  edges: Datum[],
   sourceAccessor: string | ((d: Datum) => string),
   targetAccessor: string | ((d: Datum) => string)
-): Array<{ id: string }> {
+): Datum[] {
   if (nodes && nodes.length > 0) return nodes
 
   const nodeSet = new Set<string>()
@@ -85,7 +85,7 @@ export function createEdgeStyleFn({
   edgeColorBy: "source" | "target" | "gradient" | ((d: Datum) => string)
   colorBy: Accessor<string> | undefined
   colorScale: ((v: string) => string) | undefined
-  nodeStyleFn: (d: any, index?: number) => Datum
+  nodeStyleFn: (d: Datum, index?: number) => Datum
   edgeOpacity: number
   baseStyle?: Record<string, string | number>
 }): (d: Datum) => Datum {

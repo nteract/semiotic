@@ -8,12 +8,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { DataSourceAdapter } from "../../components/stream/DataSourceAdapter"
 import type { Changeset } from "../../components/stream/types"
-import type { Datum } from "../../components/charts/shared/datumTypes"
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
+interface PipelineDatum {
+  id: number
+  value: number
+}
+
 /** Generate N items with sequential IDs */
-function generateData(n: number) {
+function generateData(n: number): PipelineDatum[] {
   return Array.from({ length: n }, (_, i) => ({ id: i, value: i * 10 }))
 }
 
@@ -40,7 +44,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
       const id = nextId++
       rafCallbacks.push(() => cb(performance.now()))
       return id
-    }) as any
+    }) as typeof requestAnimationFrame
     globalThis.cancelAnimationFrame = vi.fn()
   })
 
@@ -58,7 +62,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 1. Small bounded data → single synchronous changeset
   it("small bounded dataset emits a single synchronous changeset", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     const data = generateData(100)
@@ -72,7 +76,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   })
 
   it("same bounded data reference is a no-op", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     const data = generateData(100)
@@ -83,7 +87,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   })
 
   it("same large bounded data reference does not restart chunking", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     const data = generateData(12000)
@@ -97,7 +101,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 2. Large bounded data chunks progressively
   it("large bounded dataset (>5000) chunks: first synchronous, rest on rAF", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     const data = generateData(12000)
@@ -127,7 +131,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 3. Push after bounded data appends (hybrid mode)
   it("push after setBoundedData appends without clearing", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.setBoundedData(generateData(10))
@@ -144,7 +148,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 4. pushMany emits single changeset after microtask flush
   it("pushMany emits a single changeset with all items", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.pushMany([
@@ -161,7 +165,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 5. pushMany with empty array is no-op
   it("pushMany with empty array does not emit a changeset", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.pushMany([])
@@ -171,7 +175,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 6. New setBoundedData cancels previous chunking
   it("setting new bounded data cancels in-flight chunking from previous data", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     // Start chunking a large dataset
@@ -194,7 +198,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 7. clearLastData allows same reference to re-ingest
   it("clearLastData resets dedup so same reference can be re-ingested", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     const data = generateData(10)
@@ -209,7 +213,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 8. Rapid setBoundedData calls — only last dataset completes chunking
   it("rapid setBoundedData calls: only the last dataset's chunks complete", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     // Fire off 3 large datasets rapidly
@@ -232,7 +236,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 9. Rapid push() calls are batched into a single changeset via microtask
   it("rapid push() calls within the same task are batched", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     // Simulate high-frequency pushes — all within the same synchronous task
@@ -252,7 +256,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 10. Mixed push() and pushMany() within same task are coalesced
   it("mixed push() and pushMany() within same task are coalesced", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
@@ -265,12 +269,12 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     await flushMicrotasks()
     expect(changesets).toHaveLength(1)
     expect(changesets[0].inserts).toHaveLength(4)
-    expect(changesets[0].inserts.map((d: Datum) => d.id)).toEqual([1, 2, 3, 4])
+    expect(changesets[0].inserts.map((d) => d.id)).toEqual([1, 2, 3, 4])
   })
 
   // 11. clear() discards buffered pushes
   it("clear() discards buffered push data", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
@@ -283,7 +287,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 12. Successive flushes across microtask boundaries produce separate changesets
   it("pushes across separate microtask ticks produce separate changesets", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
@@ -299,7 +303,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   // 13. flush() provides synchronous escape hatch
   it("flush() immediately processes buffered pushes synchronously", () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
@@ -312,12 +316,12 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     adapter.flush()
     expect(changesets).toHaveLength(1)
     expect(changesets[0].inserts).toHaveLength(2)
-    expect(changesets[0].inserts.map((d: Datum) => d.id)).toEqual([1, 2])
+    expect(changesets[0].inserts.map((d) => d.id)).toEqual([1, 2])
   })
 
   // 14. clearLastData discards buffered pushes
   it("clearLastData discards buffered push data", async () => {
-    const changesets: Changeset<any>[] = []
+    const changesets: Changeset<PipelineDatum>[] = []
     const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })

@@ -1,4 +1,3 @@
-import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * Scenario tests: Coordinated views across multiple charts.
  *
@@ -15,6 +14,8 @@ import {
   useSelection,
   useLinkedHover,
   useFilteredData,
+  type UseLinkedHoverResult,
+  type UseSelectionResult,
 } from "../../components/LinkedCharts"
 import { CategoryColorProvider, useCategoryColors } from "../../components/CategoryColors"
 import { ChartGrid } from "../../components/ChartGrid"
@@ -27,10 +28,7 @@ function SelectionProbe({
   probeRef,
 }: {
   name: string
-  probeRef: React.MutableRefObject<{
-    isActive: boolean
-    predicate: (d: Datum) => boolean
-  }>
+  probeRef: React.MutableRefObject<SelectionProbeHandle>
 }) {
   const { isActive, predicate } = useSelection({ name })
   probeRef.current = { isActive, predicate }
@@ -43,10 +41,7 @@ function SelectionEmitter({
   emitRef,
 }: {
   name: string
-  emitRef: React.MutableRefObject<{
-    selectPoints: (fields: Record<string, any[]>) => void
-    clear: () => void
-  }>
+  emitRef: React.MutableRefObject<SelectionEmitterHandle>
 }) {
   const { selectPoints, clear } = useSelection({ name })
   emitRef.current = { selectPoints, clear }
@@ -61,9 +56,7 @@ function HoverEmitter({
 }: {
   name: string
   fields: string[]
-  emitRef: React.MutableRefObject<{
-    onHover: (datum: Datum | null) => void
-  }>
+  emitRef: React.MutableRefObject<HoverEmitterHandle>
 }) {
   const { onHover } = useLinkedHover({ name, fields })
   emitRef.current = { onHover }
@@ -81,14 +74,22 @@ function ColorProbe({
   return null
 }
 
+type SelectionProbeHandle = Pick<UseSelectionResult, "isActive" | "predicate">
+type SelectionEmitterHandle = Pick<UseSelectionResult, "selectPoints" | "clear">
+type HoverEmitterHandle = Pick<UseLinkedHoverResult, "onHover">
+
+function testRef<T>(): React.MutableRefObject<T> {
+  return { current: null as unknown as T }
+}
+
 // ── Tests ───────────────────────────────────────────────────────────────
 
 describe("Coordinated Dashboard Scenarios", () => {
   // 1. Three producers/consumers sharing a selection
   it("selection propagates from one producer to two independent consumers", () => {
-    const emitRef = { current: null as any }
-    const probe1Ref = { current: null as any }
-    const probe2Ref = { current: null as any }
+    const emitRef = testRef<SelectionEmitterHandle>()
+    const probe1Ref = testRef<SelectionProbeHandle>()
+    const probe2Ref = testRef<SelectionProbeHandle>()
 
     render(
       <LinkedCharts>
@@ -113,10 +114,10 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 2. Independent selection names don't interfere
   it("two selection names in the same LinkedCharts are independent", () => {
-    const emitA = { current: null as any }
-    const probeA = { current: null as any }
-    const emitB = { current: null as any }
-    const probeB = { current: null as any }
+    const emitA = testRef<SelectionEmitterHandle>()
+    const probeA = testRef<SelectionProbeHandle>()
+    const emitB = testRef<SelectionEmitterHandle>()
+    const probeB = testRef<SelectionProbeHandle>()
 
     render(
       <LinkedCharts>
@@ -137,9 +138,9 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 3. Two separate LinkedCharts don't share state
   it("sibling LinkedCharts instances are isolated", () => {
-    const emit1 = { current: null as any }
-    const probe1 = { current: null as any }
-    const probe2 = { current: null as any }
+    const emit1 = testRef<SelectionEmitterHandle>()
+    const probe1 = testRef<SelectionProbeHandle>()
+    const probe2 = testRef<SelectionProbeHandle>()
 
     render(
       <div>
@@ -163,8 +164,8 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 4. LinkedHover → selection → predicate pipeline
   it("hover datum flows through linkedHover to selection predicate", () => {
-    const hoverRef = { current: null as any }
-    const probeRef = { current: null as any }
+    const hoverRef = testRef<HoverEmitterHandle>()
+    const probeRef = testRef<SelectionProbeHandle>()
 
     render(
       <LinkedCharts>
@@ -192,10 +193,10 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 5. Clearing one selection doesn't affect another name
   it("clearing selection A does not affect selection B", () => {
-    const emitA = { current: null as any }
-    const probeA = { current: null as any }
-    const emitB = { current: null as any }
-    const probeB = { current: null as any }
+    const emitA = testRef<SelectionEmitterHandle>()
+    const probeA = testRef<SelectionProbeHandle>()
+    const emitB = testRef<SelectionEmitterHandle>()
+    const probeB = testRef<SelectionProbeHandle>()
 
     render(
       <LinkedCharts>
@@ -224,8 +225,8 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 6. CategoryColorProvider produces consistent colors for the same categories
   it("CategoryColorProvider assigns deterministic colors from a scheme", () => {
-    const probe1 = { current: null as any }
-    const probe2 = { current: null as any }
+    const probe1 = testRef<Record<string, string> | null>()
+    const probe2 = testRef<Record<string, string> | null>()
 
     render(
       <CategoryColorProvider categories={["A", "B", "C"]} colorScheme="category10">
@@ -255,7 +256,7 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 7. Explicit color map overrides scheme
   it("explicit color map in CategoryColorProvider overrides defaults", () => {
-    const probeRef = { current: null as any }
+    const probeRef = testRef<Record<string, string> | null>()
     const explicitColors = { Revenue: "#ff0000", Cost: "#00ff00" }
 
     render(
@@ -270,15 +271,15 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 8. useCategoryColors returns null outside provider
   it("useCategoryColors returns null when no provider is present", () => {
-    const probeRef = { current: null as any }
+    const probeRef = testRef<Record<string, string> | null>()
     render(<ColorProbe probeRef={probeRef} />)
     expect(probeRef.current).toBeNull()
   })
 
   // 9. Full dashboard composition: LinkedCharts + CategoryColorProvider + ChartGrid
   it("LinkedCharts + CategoryColorProvider + ChartGrid compose without errors", () => {
-    const probeRef = { current: null as any }
-    const colorRef = { current: null as any }
+    const probeRef = testRef<SelectionProbeHandle>()
+    const colorRef = testRef<Record<string, string> | null>()
 
     const { container } = render(
       <CategoryColorProvider categories={["North", "South"]}>
@@ -303,8 +304,8 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 10. Selection with multi-field predicate (both fields must match)
   it("point selection with multiple fields requires all fields to match", () => {
-    const emitRef = { current: null as any }
-    const probeRef = { current: null as any }
+    const emitRef = testRef<SelectionEmitterHandle>()
+    const probeRef = testRef<SelectionProbeHandle>()
 
     render(
       <LinkedCharts>
@@ -338,7 +339,7 @@ describe("Coordinated Dashboard Scenarios", () => {
     ]
 
     let filtered: typeof data = []
-    const emitRef = { current: null as any }
+    const emitRef = testRef<SelectionEmitterHandle>()
 
     function FilterConsumer() {
       filtered = useFilteredData(data, "hl")
@@ -366,7 +367,7 @@ describe("Coordinated Dashboard Scenarios", () => {
 
   // 12. LinkedCharts legend + selection + CategoryColorProvider full integration
   it("legend hover in LinkedCharts activates selection consumed by chart hooks", () => {
-    const probeRef = { current: null as any }
+    const probeRef = testRef<SelectionProbeHandle>()
 
     const { container } = render(
       <CategoryColorProvider colors={{ Alpha: "#f00", Beta: "#0f0", Gamma: "#00f" }}>

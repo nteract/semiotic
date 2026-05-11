@@ -9,15 +9,14 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
-import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
@@ -706,39 +705,33 @@ export const LineChart = forwardRef(
   const customClickBehavior = setup.customClickBehavior
   const crosshairFrameProps = setup.crosshairProps
 
-  // Line style function
-  const baseLineStyle = useMemo(() => {
-    // Second arg is the group key (series name), passed by PipelineStore.resolveLineStyle
-    return (d: Datum, group?: string) => {
-      const baseStyle: Record<string, string | number> = {
-        strokeWidth: lineWidth
-      }
+  // Base line style — color/fill/strokeWidth + primitives + selection wrap
+  // are all collapsed into the shared `useXYLineStyle` hook. The
+  // forecast/anomaly segment-aware wrap stays HOC-side because its
+  // lazy-load + state-management contract has no counterpart in the
+  // other line HOCs (MultiAxisLineChart, MinimapChart).
+  // Note: `lineWidth` is a LineChart-specific alias for strokeWidth.
+  // When both are set, the top-level `strokeWidth` wins via the
+  // hook's `mergeShapeStyle` pass — consistent with the "top-level
+  // primitive > chart-specific" precedence elsewhere.
+  const baseLineStyle = useXYLineStyle({
+    lineWidth,
+    colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
+    colorScale,
+    color,
+    fillArea,
+    areaOpacity,
+    stroke,
+    strokeWidth: topLevelStrokeWidth,
+    opacity,
+    effectiveSelectionHook,
+    resolvedSelection,
+  })
 
-      // When fillArea is a string[], only apply fill to matching series
-      const shouldFill = fillArea === true
-        || (Array.isArray(fillArea) && group != null && fillArea.includes(group))
-
-      if (colorBy) {
-        if (colorScale) {
-          baseStyle.stroke = getColor(d, colorBy, colorScale)
-          if (shouldFill) {
-            baseStyle.fill = baseStyle.stroke
-            baseStyle.fillOpacity = areaOpacity
-          }
-        }
-      } else {
-        baseStyle.stroke = color || DEFAULT_COLOR
-        if (shouldFill) {
-          baseStyle.fill = color || DEFAULT_COLOR
-          baseStyle.fillOpacity = areaOpacity
-        }
-      }
-
-      return baseStyle
-    }
-  }, [colorBy, colorScale, lineWidth, fillArea, areaOpacity, color])
-
-  // Lazy-load segment-aware styling — only loads module when forecast is set
+  // Lazy-load segment-aware styling — only loads module when forecast is set.
+  // The post-pass wraps `baseLineStyle`'s output so forecast/anomaly
+  // regions get their own visual treatment; selection dimming applied
+  // upstream by `useXYLineStyle` is preserved per-segment.
   const [segmentAwareStyle, setSegmentAwareStyle] = useState<((d: Datum) => Datum) | null>(null)
   useEffect(() => {
     if (!forecast) {
@@ -754,22 +747,7 @@ export const LineChart = forwardRef(
     return () => { cancelled = true }
   }, [baseLineStyle, forecast])
 
-  const effectiveLineStyle = segmentAwareStyle || baseLineStyle
-
-  // Overlay top-level primitive props (stroke / strokeWidth / opacity) last.
-  // Note: `lineWidth` is a LineChart-specific alias for strokeWidth that
-  // predates Phase B. When both are set, the top-level `strokeWidth` wins
-  // via mergeShapeStyle — consistent with "top-level primitive > chart-
-  // specific" precedence.
-  const lineStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(effectiveLineStyle, { stroke, strokeWidth: topLevelStrokeWidth, opacity }),
-    [effectiveLineStyle, stroke, topLevelStrokeWidth, opacity]
-  )
-
-  const lineStyle = useMemo(
-    () => wrapStyleWithSelection(lineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection),
-    [lineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
-  )
+  const lineStyle = segmentAwareStyle || baseLineStyle
 
   // Point style function (if showPoints is true)
   const pointStyle = useMemo(() => {
