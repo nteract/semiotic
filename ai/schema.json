@@ -7237,6 +7237,10 @@
                 "function"
               ],
               "description": "Stable ID for push-mode remove()/update()"
+            },
+            "windowSize": {
+              "type": "number",
+              "description": "Max raw rows in the push buffer; older rows evict FIFO. Recommended for long-running streams."
             }
           },
           "required": []

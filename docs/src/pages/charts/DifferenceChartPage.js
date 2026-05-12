@@ -94,7 +94,7 @@ function StreamingDifference() {
       seriesBLabel="Series B"
       width={600}
       height={280}
-      frameProps={{ windowSize: 80 }}
+      windowSize={80}
     />
   )
 }`
@@ -125,7 +125,7 @@ function StreamingDifferenceDemo({ width }) {
       seriesBLabel="Series B"
       width={width}
       height={280}
-      frameProps={{ windowSize: 80 }}
+      windowSize={80}
     />
   )
 }
@@ -154,6 +154,7 @@ const differenceChartProps = [
   { name: "yExtent", type: "[number, number]", required: false, default: null, description: "Fixed y domain. Either bound may be undefined." },
   { name: "axisExtent", type: '"nice" | "exact"', required: false, default: '"nice"', description: "Tick endpoint mode (see /features/axes#axis-extent)." },
   { name: "pointIdAccessor", type: "string | function", required: false, default: null, description: "Stable ID accessor for push-mode remove()/update()." },
+  { name: "windowSize", type: "number", required: false, default: null, description: "Maximum number of raw rows kept in the push buffer. When exceeded, oldest rows are evicted FIFO. Recommended for long-running streams so segment recomputation stays bounded." },
   { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects (x-threshold, y-threshold, etc.)." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Custom tooltip; default tooltip shows both series + Δ at the hovered x." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamXYFrame." },
@@ -431,8 +432,9 @@ export default function DifferenceChartPage() {
         DifferenceChart supports the standard semiotic push API: omit
         <code>data</code>, attach a <code>ref</code>, and push raw{" "}
         <code>{`{ x, a, b }`}</code> rows. The HOC recomputes crossovers
-        and re-renders each push. Use <code>frameProps.windowSize</code> to
-        cap the visible buffer.
+        and re-renders each push. Use the top-level <code>windowSize</code>{" "}
+        prop to cap the raw-data buffer — older rows evict FIFO so the
+        per-render segment recomputation stays bounded.
       </p>
 
       <CodeBlock
@@ -441,7 +443,7 @@ export default function DifferenceChartPage() {
   xAccessor="x"
   seriesAAccessor="a"
   seriesBAccessor="b"
-  frameProps={{ windowSize: 100 }}
+  windowSize={100}
 />
 
 // In an effect:

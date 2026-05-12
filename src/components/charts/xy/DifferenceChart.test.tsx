@@ -114,6 +114,29 @@ describe("computeDifferenceSegments", () => {
     expect(rows[1].__valA).toBe(12)
     expect(rows[1].__valB).toBe(8)
   })
+
+  it("detects a crossover that straddles a non-finite row", () => {
+    // Earlier implementation compared against `sorted[i - 1]` even when
+    // that row was non-finite — losing the crossover. The fix tracks the
+    // last valid point. Data: A>B at x=0, gap at x=1 (NaN), B>A at x=2.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 10, b: 5 },
+        { x: 1, a: NaN, b: NaN },
+        { x: 2, a: 4, b: 9 },
+      ],
+      getX, getA, getB,
+    )
+    // Expect the crossover between x=0 (A-winner) and x=2 (B-winner)
+    // to produce both segments — the NaN row in between must not
+    // suppress the segment break.
+    const winners = new Set(rows.map(r => r.__diffWinner))
+    expect(winners.has("A")).toBe(true)
+    expect(winners.has("B")).toBe(true)
+    // Two segment groups → ≥ 1 crossover-vertex pair emitted.
+    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    expect(segKeys.size).toBe(2)
+  })
 })
 
 // ── HOC prop forwarding ─────────────────────────────────────────────────
@@ -415,5 +438,130 @@ describe("DifferenceChart push API", () => {
       </TooltipProvider>
     )
     expect(ref.current.getData()).toEqual([])
+  })
+
+  it("remove() returns the actually-removed records synchronously", () => {
+    // Verifies the ref-backed path: results must be deterministic at
+    // call time, not dependent on when React flushes the setState.
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+          pointIdAccessor="id"
+        />
+      </TooltipProvider>
+    )
+    ref.current.pushMany([
+      { id: "r1", x: 0, a: 10, b: 5 },
+      { id: "r2", x: 1, a: 12, b: 8 },
+      { id: "r3", x: 2, a: 9, b: 14 },
+    ])
+    const removed = ref.current.remove(["r1", "r3"])
+    expect(removed).toHaveLength(2)
+    expect(removed.map((d: any) => d.id).sort()).toEqual(["r1", "r3"])
+    // Live buffer should now contain only r2.
+    expect(ref.current.getData()).toHaveLength(1)
+    expect(ref.current.getData()[0].id).toBe("r2")
+  })
+
+  it("update() returns the updated records synchronously", () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+          pointIdAccessor="id"
+        />
+      </TooltipProvider>
+    )
+    ref.current.push({ id: "r1", x: 0, a: 10, b: 5 })
+    const updated = ref.current.update("r1", (d: any) => ({ ...d, a: 99 }))
+    expect(updated).toHaveLength(1)
+    expect(updated[0].a).toBe(99)
+    expect(ref.current.getData()[0].a).toBe(99)
+  })
+
+  it("windowSize bounds the push buffer (FIFO eviction)", () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          ref={ref}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+          windowSize={3}
+        />
+      </TooltipProvider>
+    )
+    ref.current.pushMany([
+      { x: 0, a: 10, b: 5 },
+      { x: 1, a: 11, b: 6 },
+      { x: 2, a: 12, b: 7 },
+      { x: 3, a: 13, b: 8 },
+      { x: 4, a: 14, b: 9 },
+    ])
+    const live = ref.current.getData()
+    expect(live).toHaveLength(3)
+    // Oldest two rows (x=0, x=1) evicted; last three retained.
+    expect(live.map((d: any) => d.x)).toEqual([2, 3, 4])
+  })
+})
+
+// ── Accessor coercion ─────────────────────────────────────────────────
+describe("DifferenceChart accessor coercion", () => {
+  it("accepts Date values for the x accessor (time series)", () => {
+    const date0 = new Date(2024, 0, 1)
+    const date1 = new Date(2024, 0, 2)
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={[
+            { date: date0, a: 10, b: 5 },
+            { date: date1, a: 4, b: 9 },
+          ]}
+          xAccessor="date"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
+      </TooltipProvider>
+    )
+    // Segment rows should carry x as milliseconds (Date.getTime()).
+    const segmentRows = lastXYFrameProps.data.filter(
+      (d: any) => d.__diffSegment.startsWith("seg-")
+    )
+    expect(segmentRows.length).toBeGreaterThan(0)
+    expect(typeof segmentRows[0].__x).toBe("number")
+    expect(segmentRows[0].__x).toBe(date0.getTime())
+  })
+
+  it("accepts numeric-string values from CSV-style data", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={[
+            { x: "0", a: "10", b: "5" },
+            { x: "1", a: "4", b: "9" },
+          ] as any}
+          xAccessor="x"
+          seriesAAccessor="a"
+          seriesBAccessor="b"
+        />
+      </TooltipProvider>
+    )
+    const segmentRows = lastXYFrameProps.data.filter(
+      (d: any) => d.__diffSegment.startsWith("seg-")
+    )
+    expect(segmentRows.length).toBeGreaterThan(0)
+    // x and y values must be numbers after coercion, not strings.
+    expect(typeof segmentRows[0].__x).toBe("number")
+    expect(typeof segmentRows[0].__y).toBe("number")
   })
 })

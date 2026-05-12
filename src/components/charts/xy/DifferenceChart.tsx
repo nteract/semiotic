@@ -70,8 +70,40 @@ export interface DifferenceChartProps<TDatum extends Datum = Datum> extends Base
   yExtent?: [number | undefined, number | undefined] | [number]
   /** Stable ID accessor for push-mode `remove()` / `update()`. */
   pointIdAccessor?: string | ((d: Datum) => string)
+  /** Maximum number of raw rows kept in the push buffer. When exceeded,
+   *  oldest rows are evicted FIFO (sliding window). Default: unbounded.
+   *  Recommended for long-running streams so the per-render segment
+   *  recomputation stays bounded. */
+  windowSize?: number
   /** Pass-through StreamXYFrame props. */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
+}
+
+/**
+ * Coerce an accessor result to a `number` the way the Stream Frame
+ * pipeline does:
+ *
+ *   - `number` → passed through.
+ *   - `Date` → `getTime()` (milliseconds), so `xScaleType="time"` users
+ *     can pass `Date` objects through `xAccessor` without the segment
+ *     algorithm silently dropping every row at the `Number.isFinite`
+ *     guard. This matches `xExtent.ts` and the XY pipeline's time-axis
+ *     handling.
+ *   - numeric string (`"5"`, `"3.14"`) → parsed via `+v`. Common when
+ *     consuming CSV or JSON that wasn't type-coerced upstream.
+ *   - `null` / `undefined` / non-numeric string → `NaN`. The caller's
+ *     `Number.isFinite` filter then drops the row cleanly.
+ */
+function toNumber(v: unknown): number {
+  if (v == null) return NaN
+  if (typeof v === "number") return v
+  if (v instanceof Date) return v.getTime()
+  if (typeof v === "string") {
+    if (v.trim() === "") return NaN
+    const n = +v
+    return Number.isFinite(n) ? n : NaN
+  }
+  return NaN
 }
 
 /**
@@ -111,6 +143,10 @@ interface LineRow {
  * interpolated vertex on BOTH sides of every crossover so adjacent
  * segments meet at a zero-width point (no jagged edges).
  *
+ * Skipping non-finite rows is supported: the algorithm tracks the most
+ * recent VALID point (not the index neighbor) for crossover detection,
+ * so a non-finite gap doesn't drop a crossover that straddles it.
+ *
  * Exported for direct unit-testing — the area pipeline depends on the
  * exact crossover-vertex shape produced here.
  */
@@ -125,6 +161,11 @@ export function computeDifferenceSegments<TDatum extends Datum>(
   const out: SegmentRow[] = []
   let segIdx = 0
   let currentWinner: "A" | "B" | null = null
+  // Track the last valid (finite a, b) row's x / a / b / winner so the
+  // crossover check survives non-finite gaps. Using `sorted[i - 1]`
+  // directly would compare against an invalid neighbor and drop the
+  // crossover between the last valid point and the current one.
+  let lastValid: { x: number; a: number; b: number; w: "A" | "B" | null } | null = null
   const winnerAt = (a: number, b: number): "A" | "B" | null =>
     a > b ? "A" : b > a ? "B" : null
   const segKey = (w: "A" | "B") => `seg-${segIdx}-${w}`
@@ -140,37 +181,32 @@ export function computeDifferenceSegments<TDatum extends Datum>(
       // Pick a winner; if exactly tied, default to "A" (the tied lead-in
       // segment collapses to zero width either way).
       currentWinner = w ?? "A"
-    } else {
-      const prev = sorted[i - 1]
-      const px = getX(prev), pa = getA(prev), pb = getB(prev)
-      if (Number.isFinite(px) && Number.isFinite(pa) && Number.isFinite(pb)) {
-        const pw = winnerAt(pa, pb)
-        if (pw && w && pw !== w) {
-          // Solve `pa + t*(a-pa) === pb + t*(b-pb)` for t ∈ [0, 1].
-          const denom = (a - pa) - (b - pb)
-          if (denom !== 0) {
-            const t = (pb - pa) / denom
-            const tc = Math.max(0, Math.min(1, t))
-            const xc = px + tc * (x - px)
-            const yc = pa + tc * (a - pa)
-            // Close the current segment at the crossover.
-            out.push({
-              __x: xc, __y: yc, __y0: yc,
-              __diffSegment: segKey(currentWinner),
-              __diffWinner: currentWinner,
-              __valA: yc, __valB: yc,
-            })
-            // Open the new segment at the same vertex.
-            segIdx++
-            currentWinner = w
-            out.push({
-              __x: xc, __y: yc, __y0: yc,
-              __diffSegment: segKey(currentWinner),
-              __diffWinner: currentWinner,
-              __valA: yc, __valB: yc,
-            })
-          }
-        }
+    } else if (lastValid && lastValid.w && w && lastValid.w !== w) {
+      // Crossover between the last valid row and this one.
+      // Solve `pa + t*(a-pa) === pb + t*(b-pb)` for t ∈ [0, 1].
+      const px = lastValid.x, pa = lastValid.a, pb = lastValid.b
+      const denom = (a - pa) - (b - pb)
+      if (denom !== 0) {
+        const t = (pb - pa) / denom
+        const tc = Math.max(0, Math.min(1, t))
+        const xc = px + tc * (x - px)
+        const yc = pa + tc * (a - pa)
+        // Close the current segment at the crossover.
+        out.push({
+          __x: xc, __y: yc, __y0: yc,
+          __diffSegment: segKey(currentWinner),
+          __diffWinner: currentWinner,
+          __valA: yc, __valB: yc,
+        })
+        // Open the new segment at the same vertex.
+        segIdx++
+        currentWinner = w
+        out.push({
+          __x: xc, __y: yc, __y0: yc,
+          __diffSegment: segKey(currentWinner),
+          __diffWinner: currentWinner,
+          __valA: yc, __valB: yc,
+        })
       }
     }
 
@@ -184,6 +220,7 @@ export function computeDifferenceSegments<TDatum extends Datum>(
       __valA: a, __valB: b,
       __sourceDatum: d,
     })
+    lastValid = { x, a, b, w }
   }
   return out
 }
@@ -298,30 +335,52 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     legendInteraction,
     legendPosition: legendPositionProp,
     pointIdAccessor,
+    windowSize,
   } = props
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   // ── Resolve string accessors once ────────────────────────────────────
+  // Every accessor result flows through `toNumber` so `Date` (common for
+  // `xScaleType="time"`) and numeric-string fields (CSV / JSON without
+  // upstream type coercion) survive the `Number.isFinite` guards in
+  // segment computation. The raw-field cast still trips on object types
+  // it can't coerce — those produce `NaN` and the row is dropped cleanly.
   const getX = useMemo(
-    () => typeof xAccessor === "function" ? xAccessor : (d: TDatum) => d[xAccessor as string] as number,
+    () => typeof xAccessor === "function"
+      ? (d: TDatum) => toNumber(xAccessor(d))
+      : (d: TDatum) => toNumber(d[xAccessor as string]),
     [xAccessor],
   )
   const getA = useMemo(
-    () => typeof seriesAAccessor === "function" ? seriesAAccessor : (d: TDatum) => d[seriesAAccessor as string] as number,
+    () => typeof seriesAAccessor === "function"
+      ? (d: TDatum) => toNumber(seriesAAccessor(d))
+      : (d: TDatum) => toNumber(d[seriesAAccessor as string]),
     [seriesAAccessor],
   )
   const getB = useMemo(
-    () => typeof seriesBAccessor === "function" ? seriesBAccessor : (d: TDatum) => d[seriesBAccessor as string] as number,
+    () => typeof seriesBAccessor === "function"
+      ? (d: TDatum) => toNumber(seriesBAccessor(d))
+      : (d: TDatum) => toNumber(d[seriesBAccessor as string]),
     [seriesBAccessor],
   )
 
   // ── Push-mode raw data state ────────────────────────────────────────
   // The HOC owns a copy of the raw rows so push/pushMany/clear can
-  // drive re-renders without going through the parent. When `data` is
-  // provided statically, push state is ignored. Static and push modes
-  // are mutually exclusive.
+  // drive re-renders without going through the parent. Two-tier
+  // storage:
+  //   - `pushRowsRef` holds the LIVE array, mutated synchronously by
+  //     the imperative-handle methods. Reading it inside `remove()` /
+  //     `update()` returns the actually-removed records deterministically
+  //     even under React's concurrent batching (React may defer the
+  //     `setState` updater; the ref doesn't).
+  //   - `pushRows` is the state mirror that triggers re-renders. The
+  //     `sync()` helper updates both in lockstep so the ref never
+  //     diverges from the rendered value.
+  // When `data` is provided statically, push state is ignored — static
+  // and push modes are mutually exclusive.
   const [pushRows, setPushRows] = useState<TDatum[]>([])
+  const pushRowsRef = useRef<TDatum[]>([])
   const isPushMode = data == null
 
   const safeData = useMemo(
@@ -358,47 +417,64 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
   }, [segmented])
 
   // ── Imperative handle (push API) ────────────────────────────────────
-  useImperativeHandle(ref, () => ({
-    push: (point) => setPushRows(prev => [...prev, point as TDatum]),
-    pushMany: (points) => setPushRows(prev => [...prev, ...points as TDatum[]]),
-    remove: (id) => {
-      if (!pointIdAccessor) return []
-      const getId = typeof pointIdAccessor === "function"
+  // All mutations route through `sync()` so the ref and state stay
+  // aligned. Return values are computed BEFORE the setState call so
+  // they're deterministic under React 18+ concurrent batching — the
+  // earlier pattern of building results inside the updater function
+  // could return empty arrays if React deferred or replayed the
+  // updater.
+  useImperativeHandle(ref, () => {
+    const sync = (next: TDatum[]) => {
+      // FIFO window: when `windowSize` is set, evict the oldest rows so
+      // the segment recomputation cost on each render stays bounded.
+      // Without this, push streams accumulate forever even when the
+      // user has indicated a maximum buffer size via prop.
+      const trimmed = windowSize && next.length > windowSize
+        ? next.slice(next.length - windowSize)
+        : next
+      pushRowsRef.current = trimmed
+      setPushRows(trimmed)
+    }
+    const resolveId = pointIdAccessor
+      ? (typeof pointIdAccessor === "function"
         ? pointIdAccessor
-        : (d: Datum) => d[pointIdAccessor as string] as string
-      const ids = Array.isArray(id) ? id : [id]
-      const removed: Datum[] = []
-      setPushRows(prev => {
+        : (d: Datum) => d[pointIdAccessor as string] as string)
+      : null
+    return {
+      push: (point) => sync([...pushRowsRef.current, point as TDatum]),
+      pushMany: (points) => sync([...pushRowsRef.current, ...points as TDatum[]]),
+      remove: (id) => {
+        if (!resolveId) return []
+        const ids = Array.isArray(id) ? id : [id]
+        const removed: TDatum[] = []
         const next: TDatum[] = []
-        for (const d of prev) {
-          if (ids.includes(getId(d))) removed.push(d)
+        for (const d of pushRowsRef.current) {
+          if (ids.includes(resolveId(d))) removed.push(d)
           else next.push(d)
         }
-        return next
-      })
-      return removed
-    },
-    update: (id, updater) => {
-      if (!pointIdAccessor) return []
-      const getId = typeof pointIdAccessor === "function"
-        ? pointIdAccessor
-        : (d: Datum) => d[pointIdAccessor as string] as string
-      const ids = Array.isArray(id) ? id : [id]
-      const updated: Datum[] = []
-      setPushRows(prev => prev.map(d => {
-        if (ids.includes(getId(d))) {
-          const newD = updater(d) as TDatum
-          updated.push(newD)
-          return newD
-        }
-        return d
-      }))
-      return updated
-    },
-    clear: () => setPushRows([]),
-    getData: () => (isPushMode ? pushRows : safeData) as Datum[],
-    getScales: () => frameRef.current?.getScales() ?? null,
-  }), [isPushMode, pushRows, safeData, pointIdAccessor])
+        sync(next)
+        return removed
+      },
+      update: (id, updater) => {
+        if (!resolveId) return []
+        const ids = Array.isArray(id) ? id : [id]
+        const updated: TDatum[] = []
+        const next: TDatum[] = pushRowsRef.current.map(d => {
+          if (ids.includes(resolveId(d))) {
+            const newD = updater(d) as TDatum
+            updated.push(newD)
+            return newD
+          }
+          return d
+        })
+        sync(next)
+        return updated
+      },
+      clear: () => sync([]),
+      getData: () => (isPushMode ? pushRowsRef.current : safeData) as Datum[],
+      getScales: () => frameRef.current?.getScales() ?? null,
+    }
+  }, [isPushMode, safeData, pointIdAccessor, windowSize])
 
   // ── Setup (margin, selection, hover behavior; legend custom below) ──
   // colorBy is set to `__diffWinner` so the hover/selection wiring has

@@ -131,6 +131,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       xExtent: { type: "array" },
       yExtent: { type: "array" },
       pointIdAccessor: { type: ["string", "function"] },
+      windowSize: { type: "number" },
     },
   },
 

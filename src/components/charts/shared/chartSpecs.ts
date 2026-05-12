@@ -824,6 +824,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       xExtent: { type: "array", description: "Fixed x domain `[min, max]`. Either bound may be `undefined`." },
       yExtent: { type: "array", description: "Fixed y domain `[min, max]`. Either bound may be `undefined`." },
       pointIdAccessor: { type: ["string", "function"], description: "Stable ID for push-mode remove()/update()" },
+      windowSize: { type: "number", description: "Max raw rows in the push buffer; older rows evict FIFO. Recommended for long-running streams." },
     },
     capabilities: {
       renderModes: ["hybrid"],
