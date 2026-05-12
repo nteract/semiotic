@@ -112,4 +112,81 @@ describe("PipelineStore — partial yExtent override on chart-type-specific path
       expect(hi).toBe(100) // user-pinned, no longer 25
     })
   })
+
+  // ── axisExtent="exact" skips extentPadding on the y-axis ─────────────
+  describe("axisExtent=\"exact\"", () => {
+    it("scatter y-domain pins to literal data min/max (no padding)", () => {
+      const store = new PipelineStore({
+        chartType: "scatter",
+        runtimeMode: "bounded",
+        windowSize: 200,
+        windowMode: "sliding",
+        arrowOfTime: "right",
+        extentPadding: 0.1, // non-trivial padding to make the test meaningful
+        axisExtent: "exact",
+        xAccessor: "x",
+        yAccessor: "y",
+      })
+      store.ingest({
+        inserts: [
+          { x: 1, y: 12 },
+          { x: 2, y: 50 },
+          { x: 3, y: 87 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 200 })
+      const [lo, hi] = store.scales!.y.domain() as [number, number]
+      expect(lo).toBe(12)
+      expect(hi).toBe(87)
+    })
+
+    it("nice mode (default) still applies extentPadding", () => {
+      const store = new PipelineStore({
+        chartType: "scatter",
+        runtimeMode: "bounded",
+        windowSize: 200,
+        windowMode: "sliding",
+        arrowOfTime: "right",
+        extentPadding: 0.1,
+        xAccessor: "x",
+        yAccessor: "y",
+      })
+      store.ingest({
+        inserts: [
+          { x: 1, y: 12 },
+          { x: 2, y: 87 },
+        ],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 200 })
+      const [lo, hi] = store.scales!.y.domain() as [number, number]
+      // 10% padding around a 75-unit range → ±7.5 pad
+      expect(lo).toBeLessThan(12)
+      expect(hi).toBeGreaterThan(87)
+    })
+
+    it("explicit yExtent still wins over exact mode", () => {
+      const store = new PipelineStore({
+        chartType: "scatter",
+        runtimeMode: "bounded",
+        windowSize: 200,
+        windowMode: "sliding",
+        arrowOfTime: "right",
+        extentPadding: 0.1,
+        axisExtent: "exact",
+        yExtent: [0, 100],
+        xAccessor: "x",
+        yAccessor: "y",
+      })
+      store.ingest({
+        inserts: [{ x: 1, y: 50 }],
+        bounded: true,
+      })
+      store.computeScene({ width: 400, height: 200 })
+      const [lo, hi] = store.scales!.y.domain() as [number, number]
+      expect(lo).toBe(0)
+      expect(hi).toBe(100)
+    })
+  })
 })

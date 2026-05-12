@@ -527,6 +527,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     // Apply brush extent to main chart
     ...(brushExtent && { xExtent: brushExtent }),
     ...(yExtent && { yExtent }),
+    ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
     ...frameProps
   }
 

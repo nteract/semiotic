@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
-import { LineChart, BarChart } from "semiotic"
+import { LineChart, Scatterplot, SwarmPlot } from "semiotic"
 
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
@@ -56,6 +56,82 @@ const frameLineData = [
     label: "Revenue",
     coordinates: lineData.map((d) => ({ step: d.month, value: d.sales })),
   },
+]
+
+// ---------------------------------------------------------------------------
+// Datasets for the axisExtent demos
+// ---------------------------------------------------------------------------
+
+// Sparse temporal series — picks dates that the d3 "nice" algorithm wouldn't
+// land on (a Tuesday close-of-quarter), so the difference between nice and
+// exact endpoints is visible.
+const axisExtentTemporalData = [
+  { date: new Date(2024, 0, 17), value: 4200 },
+  { date: new Date(2024, 1, 11), value: 4900 },
+  { date: new Date(2024, 2, 4), value: 6100 },
+  { date: new Date(2024, 3, 23), value: 7500 },
+  { date: new Date(2024, 4, 14), value: 6800 },
+  { date: new Date(2024, 5, 28), value: 8900 },
+  { date: new Date(2024, 6, 9), value: 9600 },
+  { date: new Date(2024, 7, 30), value: 11200 },
+]
+
+// Scatter data with intentionally odd extents (x: 1.7→9.3, y: 12→87) so the
+// exact-mode axes pin to those boundaries rather than round to 0–10 / 0–100.
+const axisExtentScatterData = [
+  { x: 1.7, y: 12 },
+  { x: 2.4, y: 28 },
+  { x: 3.1, y: 19 },
+  { x: 4.0, y: 41 },
+  { x: 4.8, y: 35 },
+  { x: 5.5, y: 52 },
+  { x: 6.2, y: 48 },
+  { x: 6.9, y: 61 },
+  { x: 7.6, y: 58 },
+  { x: 8.4, y: 73 },
+  { x: 8.9, y: 71 },
+  { x: 9.3, y: 87 },
+]
+
+// Ordinal swarm — three KPI categories with values whose true min (4.2) and
+// max (98.7) are deliberately not round numbers. Values are picked from a
+// fixed list (not Math.random) so re-renders, hydration, and SSR all
+// produce the same set; the docs page would otherwise diff between
+// builds and could trigger React hydration mismatches.
+const axisExtentSwarmData = [
+  // Engagement (gi=0): base 20, span 40 → roughly [20, 60], plus the
+  // pinned floor 4.2 for the data minimum.
+  { group: "Engagement",  score: 4.2 },
+  { group: "Engagement",  score: 23.1 },
+  { group: "Engagement",  score: 31.5 },
+  { group: "Engagement",  score: 27.8 },
+  { group: "Engagement",  score: 42.4 },
+  { group: "Engagement",  score: 38.9 },
+  { group: "Engagement",  score: 50.2 },
+  { group: "Engagement",  score: 46.7 },
+  { group: "Engagement",  score: 55.6 },
+  { group: "Engagement",  score: 59.3 },
+  // Retention (gi=1): base 35, span 50 → roughly [35, 85].
+  { group: "Retention",   score: 37.4 },
+  { group: "Retention",   score: 41.8 },
+  { group: "Retention",   score: 48.6 },
+  { group: "Retention",   score: 54.2 },
+  { group: "Retention",   score: 60.5 },
+  { group: "Retention",   score: 65.9 },
+  { group: "Retention",   score: 71.3 },
+  { group: "Retention",   score: 76.4 },
+  { group: "Retention",   score: 80.1 },
+  { group: "Retention",   score: 83.7 },
+  // Activation (gi=2): base 50, span 60 → roughly [50, 110], plus the
+  // pinned ceiling 98.7 for the data maximum.
+  { group: "Activation",  score: 53.2 },
+  { group: "Activation",  score: 61.5 },
+  { group: "Activation",  score: 68.9 },
+  { group: "Activation",  score: 74.4 },
+  { group: "Activation",  score: 81.7 },
+  { group: "Activation",  score: 87.3 },
+  { group: "Activation",  score: 92.1 },
+  { group: "Activation",  score: 98.7 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -211,6 +287,145 @@ export default function AxesPage() {
   }}
 />`}
         language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Exact-extent axes */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="axis-extent">Exact vs. Nice Tick Endpoints</h2>
+
+      <p>
+        By default every Semiotic chart uses d3-scale's <em>nice</em> tick
+        algorithm: tick values are rounded to readable numbers, but as a side
+        effect the first and last tick may sit inside the data domain rather
+        than at the actual min and max. For dashboards where the endpoints
+        are the message — KPI dials, fixed score bands, regulatory-cutoff
+        readouts — pass <code>axisExtent="exact"</code>. The first and last
+        tick pin to the literal data min and max, with equidistant
+        intermediate ticks in between.
+      </p>
+
+      <p>
+        The prop is available on every XY and ordinal HOC and applies to:
+      </p>
+      <ul>
+        <li><strong>XY charts</strong> — both x and y axes (linear, time, log)</li>
+        <li><strong>Ordinal charts</strong> — the value axis (the categorical axis is a band scale and has no numeric ticks)</li>
+        <li><strong>Network / geo / hierarchy</strong> — no-op (no continuous axis)</li>
+      </ul>
+
+      <p>
+        Explicit <code>tickValues</code> still win over both modes. Use
+        <code> "exact"</code> when you want the algorithm to do the work
+        but the endpoints must read as the actual boundaries; reach for{" "}
+        <code>tickValues</code> when you have hand-picked tick locations.
+      </p>
+
+      <p>
+        <strong>Trade-off:</strong> exact mode also pins the scale domain
+        to the data extent — the usual 5% extent padding (which keeps
+        symbols clear of the plot edge) is skipped. Data marks at the
+        extremes will sit at the plot boundary. If you need both exact
+        labels and visual breathing room, pass a hand-picked{" "}
+        <code>tickValues</code> array via <code>frameProps.axes</code> and
+        leave the default <code>"nice"</code> mode in place.
+      </p>
+
+      <p>
+        <strong>Log-scale caveat:</strong> log scales always clamp both
+        domain bounds to <code>≥ 1e-6</code> (log of zero is undefined),
+        so a dataset whose values include <code>0</code> or negatives
+        will render with that clamp in place even under exact mode —
+        the first tick reads as <code>max(dataMin, 1e-6)</code>, not the
+        literal data minimum.
+      </p>
+
+      <h3 id="axis-extent-time">Time-series LineChart with exact endpoints</h3>
+      <p>
+        The default-nice version snaps to month boundaries — January 1st,
+        February 1st, and so on. With <code>axisExtent="exact"</code>, the
+        first and last ticks read as the actual data dates (mid-January
+        through end-of-August), and the y-axis pins to the actual revenue
+        min and max rather than rounding to 4,000 / 12,000.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: axisExtentTemporalData,
+          xAccessor: "date",
+          yAccessor: "value",
+          xScaleType: "time",
+          xLabel: "Date",
+          yLabel: "Revenue ($)",
+          axisExtent: "exact",
+          frameProps: {
+            axes: [
+              { orient: "left", tickFormat: (d) => `$${(d / 1000).toFixed(1)}k` },
+              { orient: "bottom", tickFormat: (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) },
+            ],
+          },
+          size: [600, 320],
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `axisExtentTemporalData`,
+          frameProps: `{
+  axes: [
+    { orient: "left",   tickFormat: d => "$" + (d / 1000).toFixed(1) + "k" },
+    { orient: "bottom", tickFormat: d => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) },
+  ],
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="axis-extent-scatter">Scatterplot pinning both axes</h3>
+      <p>
+        With <code>axisExtent="exact"</code> the x-axis pins to 1.7 / 9.3
+        and the y-axis pins to 12 / 87 — the actual data ranges, not 0–10
+        and 0–100 like the nice algorithm would produce.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: axisExtentScatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "Engagement score",
+          yLabel: "Conversion rate (%)",
+          axisExtent: "exact",
+          pointRadius: 6,
+          size: [600, 360],
+        }}
+        type={Scatterplot}
+        overrideProps={{
+          data: `axisExtentScatterData`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="axis-extent-swarm">SwarmPlot ordinal value axis</h3>
+      <p>
+        For ordinal charts the prop affects the <em>r</em> (value) axis
+        only; the band-scaled categorical axis is unaffected. Here the
+        value axis endpoints sit at the actual swarm min (4.2) and max
+        (98.7) rather than rounding to 0 and 100.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: axisExtentSwarmData,
+          categoryAccessor: "group",
+          valueAccessor: "score",
+          axisExtent: "exact",
+          colorBy: "group",
+          size: [600, 360],
+        }}
+        type={SwarmPlot}
+        overrideProps={{
+          data: `axisExtentSwarmData`,
+        }}
+        hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}

@@ -416,6 +416,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yLabelRight,
       xFormat,
       yFormat,
+      axisExtent,
       tickFormatTime,
       tickFormatValue,
       hoverAnnotation,
@@ -606,6 +607,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       arrowOfTime: isStreaming ? arrowOfTime : "right",
       extentPadding,
       scalePadding,
+      axisExtent,
       // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
       // The store's streaming-mode resolution chain
       // (`timeAccessor || xAccessor || "time"`) already gives `timeAccessor`
@@ -678,7 +680,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       layoutConfig,
       layoutMargin: margin,
     }), [
-      chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding,
+      chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
@@ -1473,6 +1475,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             yLabelRight={yLabelRight}
             xFormat={ssrXFormat}
             yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
+            axisExtent={axisExtent}
             showGrid={showGrid}
             title={title}
             legend={legend}
@@ -1563,6 +1566,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           showGrid={showGrid}
           xFormat={effectiveXFormat}
           yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
+          axisExtent={axisExtent}
         />
         <canvas
           ref={canvasRef}
@@ -1597,6 +1601,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           yLabelRight={yLabelRight}
           xFormat={effectiveXFormat}
           yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
+          axisExtent={axisExtent}
           showGrid={showGrid}
           title={title}
           legend={legend}

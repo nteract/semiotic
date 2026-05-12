@@ -290,6 +290,26 @@ describe("LineChart", () => {
       )
       expect(lastXYFrameProps.hoverAnnotation).toBe(false)
     })
+
+    it("forwards axisExtent=\"exact\" to the frame", () => {
+      // LineChart uses a manual thread-through (not buildBaseMetadataProps);
+      // verify the explicit branch reaches the frame.
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} axisExtent="exact" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.axisExtent).toBe("exact")
+    })
+
+    it("omits axisExtent when not provided (defaults to nice in the frame)", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.axisExtent).toBeUndefined()
+    })
   })
 
   describe("gapStrategy", () => {

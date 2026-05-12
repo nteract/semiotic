@@ -213,7 +213,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: false,
     ...effectiveLegendProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,

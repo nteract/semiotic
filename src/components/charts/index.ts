@@ -22,6 +22,9 @@ export type { LineChartProps } from "./xy/LineChart"
 export { AreaChart } from "./xy/AreaChart"
 export type { AreaChartProps } from "./xy/AreaChart"
 
+export { DifferenceChart } from "./xy/DifferenceChart"
+export type { DifferenceChartProps } from "./xy/DifferenceChart"
+
 export { StackedAreaChart } from "./xy/StackedAreaChart"
 export type { StackedAreaChartProps } from "./xy/StackedAreaChart"
 

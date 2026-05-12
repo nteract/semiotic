@@ -22,6 +22,7 @@ const navData = [
         children: [
           { title: "Line Chart", path: "/charts/line-chart" },
           { title: "Area Chart", path: "/charts/area-chart" },
+          { title: "Difference Chart", path: "/charts/difference-chart" },
           { title: "Stacked Area Chart", path: "/charts/stacked-area-chart" },
           { title: "Scatterplot", path: "/charts/scatterplot" },
           { title: "Connected Scatterplot", path: "/charts/connected-scatterplot" },

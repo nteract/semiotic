@@ -11,6 +11,7 @@ import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
+import { ticksForMode } from "../charts/shared/axisExtent"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 export interface AxisConfig {
@@ -20,6 +21,17 @@ export interface AxisConfig {
   tickFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
   baseline?: boolean | "under"
   jaggedBase?: boolean
+  /** Explicit tick values. When provided, bypasses both d3's "nice"
+   *  generator and `axisExtent: "exact"` — the caller has hand-picked
+   *  the positions. Pixel-distance filtering downstream still drops
+   *  overlapping labels. Accepts `number | Date`: values pass through
+   *  to the scale (d3-scale's `scaleTime` reads Dates natively;
+   *  `scaleLinear` accepts numbers — feeding a Date into a linear
+   *  scale via `valueOf()` works at runtime but `tickFormat` receives
+   *  the Date as-is, so user formatters should match the axis's
+   *  underlying scale type). Mirrors the ordinal frame's
+   *  `rTickValues` contract. */
+  tickValues?: Array<number | Date>
   /** Grid line stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. Applied to grid lines extending from ticks across the chart area. */
   gridStyle?: "dashed" | "dotted" | string
   /** Always include the domain max as a tick, even if d3 omits it. */
@@ -95,6 +107,12 @@ interface SVGOverlayProps {
   yLabelRight?: string
   xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
   yFormat?: (d: number | Date | string) => string | ReactNode
+  /** Axis extent mode. "nice" (default) uses d3-scale's rounded
+   *  tick generator — labels stay round but the first/last tick
+   *  may sit inside the data domain. "exact" pins the first and
+   *  last tick to the actual data min and max with equidistant
+   *  intermediate ticks. Applies to both x and y axes. */
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
 
   // Grid
   showGrid?: boolean
@@ -178,6 +196,7 @@ interface SVGUnderlayProps {
   showGrid?: boolean
   xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
   yFormat?: (d: number | Date | string) => string | ReactNode
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
 }
 
 export function SVGUnderlay(props: SVGUnderlayProps) {
@@ -192,7 +211,8 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     axes,
     showGrid,
     xFormat,
-    yFormat
+    yFormat,
+    axisExtent
   } = props
 
   const xTicks = useMemo(() => {
@@ -201,8 +221,16 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
-    const tickCount = Math.min(requested, maxFit)
-    const rawTicks = scales.x.ticks(tickCount)
+    // Explicit `tickValues` bypasses both d3's "nice" generator and
+    // `axisExtent: "exact"` — the caller has hand-picked the positions
+    // and we honor them verbatim. Same contract as the ordinal frame's
+    // `rTickValues`. Pixel-distance filtering downstream still drops
+    // overlapping labels.
+    // Exact mode (without explicit values) honors the requested count
+    // rather than clamping it to `maxFit`; floor at 2 because
+    // `equidistantTicks` needs both endpoints.
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawTicks = bottomAxis?.tickValues ?? ticksForMode(scales.x, tickCount, axisExtent)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
       value: v,
@@ -214,7 +242,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
     const minPx = Math.max(55, maxLabelWidth + 8)
     return filterTicksByPixelDistance(candidates, minPx)
-  }, [scales, axes, xFormat, width])
+  }, [scales, axes, xFormat, width, axisExtent])
 
   const yTicks = useMemo(() => {
     if (!scales) return []
@@ -222,14 +250,16 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = Math.min(requested, maxFit)
-    const candidates = scales.y.ticks(tickCount).map(v => ({
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    // Explicit `tickValues` wins over generated ticks — see xTicks comment.
+    const rawTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const candidates = rawTicks.map(v => ({
       value: v,
       pixel: scales.y(v),
       label: fmt(v)
     }))
     return filterTicksByPixelDistance(candidates, 22)
-  }, [scales, axes, yFormat, height])
+  }, [scales, axes, yFormat, height, axisExtent])
 
   const hasGrid = showGrid && scales
   const hasBaselines = showAxes && scales
@@ -319,7 +349,10 @@ function defaultTickFormat(v: any, _index?: number, _allTicks?: number[]): strin
 
 /** Greedily filter ticks so consecutive labels are at least `minPx` apart.
  *  Always keeps the first and last tick. */
-function filterTicksByPixelDistance<T extends { value: number; pixel: number; label: string | ReactNode }>(
+// `value` is widened to `number | Date` so this helper accepts the
+// candidates produced for both linear scales and time-scale axes (the
+// latter emit Date instances; only `pixel` is used for distance math).
+function filterTicksByPixelDistance<T extends { value: number | Date; pixel: number; label: string | ReactNode }>(
   ticks: T[],
   minPx: number
 ): T[] {
@@ -355,6 +388,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     yLabelRight,
     xFormat,
     yFormat,
+    axisExtent,
     showGrid,
     title,
     legend,
@@ -391,8 +425,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
-    const tickCount = Math.min(requested, maxFit)
-    const rawTicks = scales.x.ticks(tickCount)
+    // Exact-mode contract: honor the requested count verbatim. The
+    // `maxFit` clamp would silently collapse "give me exactly 7 ticks"
+    // to whatever the width permits — pixel-distance filtering below
+    // still drops physically-overlapping labels, but we don't pre-clamp
+    // away an explicit count.
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    // Explicit `tickValues` wins over generated ticks (and skips
+    // `includeMax` below since the user already locked in the set).
+    const rawTicks = bottomAxis?.tickValues ?? ticksForMode(scales.x, tickCount, axisExtent)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
       value: v,
@@ -409,8 +450,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
     if (filtered.length > 1) {
       filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
     }
-    // includeMax: ensure the domain max is represented as a tick
-    if (bottomAxis?.includeMax && filtered.length > 0) {
+    // includeMax: ensure the domain max is represented as a tick.
+    // In exact-mode the last tick is always pinned to the domain max
+    // already, so this branch is a no-op there. Skip it entirely when
+    // the user supplied explicit `tickValues` — they've already picked
+    // the set they want, and appending would violate that contract.
+    if (bottomAxis?.includeMax && filtered.length > 0 && axisExtent !== "exact" && !bottomAxis?.tickValues) {
       const domain = scales.x.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.x(domainMax)
@@ -422,7 +467,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       }
     }
     return filtered
-  }, [showAxes, scales, axes, xFormat, width])
+  }, [showAxes, scales, axes, xFormat, width, axisExtent])
 
   const yTicks = useMemo(() => {
     if (!showAxes || !scales) return []
@@ -430,8 +475,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = Math.min(requested, maxFit)
-    const candidates = scales.y.ticks(tickCount).map(v => ({
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawYTicks = leftAxis?.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const candidates = rawYTicks.map(v => ({
       value: v,
       pixel: scales.y(v),
       label: fmt(v)
@@ -441,7 +487,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     if (filtered.length > 1) {
       filtered = filtered.filter((t, i) => i === 0 || String(t.label) !== String(filtered[i - 1].label))
     }
-    if (leftAxis?.includeMax && filtered.length > 0) {
+    if (leftAxis?.includeMax && filtered.length > 0 && axisExtent !== "exact" && !leftAxis?.tickValues) {
       const domain = scales.y.domain() as [number, number]
       const domainMax = domain[1]
       const maxPx = scales.y(domainMax)
@@ -456,7 +502,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       }
     }
     return filtered
-  }, [showAxes, scales, axes, yFormat, height])
+  }, [showAxes, scales, axes, yFormat, height, axisExtent])
 
   // Right Y axis ticks — same pixel positions as left but different labels
   const yTicksRight = useMemo(() => {
@@ -466,14 +512,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = rightAxis.ticks ?? 5
-    const tickCount = Math.min(requested, maxFit)
-    const candidates = scales.y.ticks(tickCount).map(v => ({
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
+    const rawYTicksRight = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, axisExtent)
+    const candidates = rawYTicksRight.map(v => ({
       value: v,
       pixel: scales.y(v),
       label: fmt(v)
     }))
     return filterTicksByPixelDistance(candidates, 22)
-  }, [showAxes, scales, axes, yFormat, height])
+  }, [showAxes, scales, axes, yFormat, height, axisExtent])
 
   // Persistent cache for sticky annotation positions (survives re-renders)
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())

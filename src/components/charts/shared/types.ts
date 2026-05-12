@@ -138,6 +138,20 @@ export interface BaseChartProps {
    * `true` uses defaults (300ms ease-out, intro enabled). Object form allows customization.
    * Set `{ intro: false }` to disable the animated intro on first render. */
   animate?: AnimateProp
+
+  /** Axis extent mode. `"nice"` (default) uses d3-scale's rounded
+   *  tick generator — labels stay round but ticks may sit inside the
+   *  data domain. `"exact"` pins the first and last tick to the
+   *  actual data min and max with equidistant intermediate ticks.
+   *  Useful when a fixed scale (gauge, score band, KPI dial) needs
+   *  endpoints to read as the actual boundaries.
+   *
+   *  Applies to:
+   *  - XY charts: both x and y axes (linear, time, log).
+   *  - Ordinal charts: the value (r) axis only — the categorical
+   *    axis is a band scale and doesn't have a numeric tick set.
+   *  - Network / geo / hierarchy charts: no-op (no continuous axis). */
+  axisExtent?: import("./axisExtent").AxisExtentMode
 }
 
 /**

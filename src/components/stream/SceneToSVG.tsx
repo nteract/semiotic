@@ -45,6 +45,8 @@ import type {
   NetworkCurvedEdge
 } from "./networkTypes"
 
+import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
+
 import type {
   OrdinalSceneNode,
   WedgeSceneNode,
@@ -94,6 +96,28 @@ function safeSvgId(candidate: string): string {
   // SVG ids can't start with a digit; prepend a letter in that edge case.
   if (!cleaned || /^\d/.test(cleaned)) return `s_${cleaned}`
   return cleaned
+}
+
+/**
+ * Emit an SVG path string for a rect with per-corner radii. Same trace
+ * order as the canvas helper (CCW from top-left); shared shape utilities
+ * (`hasAnyCornerRadius`, `clampCornerRadii`) live in
+ * `./renderers/cornerRadii.ts` so both paint paths agree on geometry.
+ */
+function perCornerSvgPath(n: RectSceneNode): string {
+  const { x, y, w, h } = n
+  const { tl, tr, br, bl } = clampCornerRadii(n)
+  let d = `M${x + tl},${y}`
+  d += ` L${x + w - tr},${y}`
+  if (tr > 0) d += ` A${tr},${tr} 0 0 1 ${x + w},${y + tr}`
+  d += ` L${x + w},${y + h - br}`
+  if (br > 0) d += ` A${br},${br} 0 0 1 ${x + w - br},${y + h}`
+  d += ` L${x + bl},${y + h}`
+  if (bl > 0) d += ` A${bl},${bl} 0 0 1 ${x},${y + h - bl}`
+  d += ` L${x},${y + tl}`
+  if (tl > 0) d += ` A${tl},${tl} 0 0 1 ${x + tl},${y}`
+  d += " Z"
+  return d
 }
 
 /**
@@ -472,6 +496,21 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       const gradientId = `${safeSvgId(baseKey)}-grad`
       const gradientDefs = buildRectSVGGradient(n, gradientId)
       const fillValue = gradientDefs ? `url(#${gradientId})` : svgFill(n.style.fill)
+      if (n.cornerRadii && hasAnyCornerRadius(n.cornerRadii)) {
+        const d = perCornerSvgPath(n)
+        return (
+          <React.Fragment key={baseKey}>
+            {gradientDefs && <defs>{gradientDefs}</defs>}
+            <path
+              d={d}
+              fill={fillValue}
+              opacity={n.style.opacity}
+              stroke={n.style.stroke}
+              strokeWidth={n.style.strokeWidth}
+            />
+          </React.Fragment>
+        )
+      }
       if (n.roundedTop && n.roundedTop > 0) {
         const r = Math.min(n.roundedTop, n.w / 2, n.h / 2)
         const { x, y, w, h } = n

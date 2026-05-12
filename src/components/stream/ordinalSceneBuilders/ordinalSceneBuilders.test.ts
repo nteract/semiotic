@@ -1786,4 +1786,100 @@ describe("buildSwimlaneScene", () => {
       expect(nodes[0].y).toBeCloseTo(nodes[1].y + nodes[1].h, 1)
     }
   })
+
+  // ── roundedTop ────────────────────────────────────────────────────────
+  describe("roundedTop", () => {
+    it("horizontal multi-segment lane: first piece rounds left, last piece rounds right", () => {
+      const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+      const ctx = makeCtx({
+        scales,
+        config: makeConfig({ chartType: "swimlane", projection: "horizontal", roundedTop: 6 }),
+        getStack: (d: Datum) => d.sub,
+        columns: {
+          Lane: makeColumn("Lane", [
+            { value: 20, sub: "a" },
+            { value: 30, sub: "b" },
+            { value: 10, sub: "c" },
+          ]),
+        },
+        getR: (d: Datum) => d.value,
+      })
+
+      const nodes = buildSwimlaneScene(ctx, layout)
+      expect(nodes.length).toBe(3)
+      if (nodes[0].type === "rect" && nodes[1].type === "rect" && nodes[2].type === "rect") {
+        // First piece: left corners rounded only
+        expect(nodes[0].cornerRadii).toEqual({ tl: 6, bl: 6 })
+        // Middle piece: no rounding
+        expect(nodes[1].cornerRadii).toBeUndefined()
+        // Last piece: right corners rounded only
+        expect(nodes[2].cornerRadii).toEqual({ tr: 6, br: 6 })
+      }
+    })
+
+    it("horizontal single-segment lane: rounds all four corners", () => {
+      const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+      const ctx = makeCtx({
+        scales,
+        config: makeConfig({ chartType: "swimlane", projection: "horizontal", roundedTop: 8 }),
+        getStack: (d: Datum) => d.sub,
+        columns: { Lane: makeColumn("Lane", [{ value: 50, sub: "only" }]) },
+        getR: (d: Datum) => d.value,
+      })
+
+      const nodes = buildSwimlaneScene(ctx, layout)
+      expect(nodes.length).toBe(1)
+      if (nodes[0].type === "rect") {
+        expect(nodes[0].cornerRadii).toEqual({ tl: 8, tr: 8, br: 8, bl: 8 })
+      }
+    })
+
+    it("vertical multi-segment lane: bottom piece rounds bottom, top piece rounds top", () => {
+      const scales = makeScales({ projection: "vertical", rDomain: [0, 100], rRange: [400, 0] })
+      const ctx = makeCtx({
+        scales,
+        config: makeConfig({ chartType: "swimlane", projection: "vertical", roundedTop: 5 }),
+        getStack: (d: Datum) => d.sub,
+        columns: {
+          Lane: makeColumn("Lane", [
+            { value: 30, sub: "low" },
+            { value: 20, sub: "mid" },
+            { value: 10, sub: "high" },
+          ]),
+        },
+        getR: (d: Datum) => d.value,
+      })
+
+      const nodes = buildSwimlaneScene(ctx, layout)
+      expect(nodes.length).toBe(3)
+      if (nodes[0].type === "rect" && nodes[1].type === "rect" && nodes[2].type === "rect") {
+        // First piece (offset 0) sits at bottom of column in pixel space → bottom corners round
+        expect(nodes[0].cornerRadii).toEqual({ bl: 5, br: 5 })
+        expect(nodes[1].cornerRadii).toBeUndefined()
+        // Last piece (top in pixel space) → top corners round
+        expect(nodes[2].cornerRadii).toEqual({ tl: 5, tr: 5 })
+      }
+    })
+
+    it("zero roundedTop leaves all pieces square", () => {
+      const scales = makeScales({ projection: "horizontal", rDomain: [0, 100], rRange: [0, 400] })
+      const ctx = makeCtx({
+        scales,
+        config: makeConfig({ chartType: "swimlane", projection: "horizontal", roundedTop: 0 }),
+        getStack: (d: Datum) => d.sub,
+        columns: {
+          Lane: makeColumn("Lane", [
+            { value: 20, sub: "a" },
+            { value: 30, sub: "b" },
+          ]),
+        },
+        getR: (d: Datum) => d.value,
+      })
+
+      const nodes = buildSwimlaneScene(ctx, layout)
+      for (const n of nodes) {
+        if (n.type === "rect") expect(n.cornerRadii).toBeUndefined()
+      }
+    })
+  })
 })

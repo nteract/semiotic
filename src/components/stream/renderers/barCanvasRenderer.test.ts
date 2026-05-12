@@ -374,4 +374,39 @@ describe("barCanvasRenderer", () => {
       expect(ctx.createLinearGradient).toHaveBeenCalled()
     })
   })
+
+  // ── per-corner cornerRadii (swimlane two-sided rounding) ────────────────
+  describe("cornerRadii", () => {
+    it("traces a path (not fillRect) when cornerRadii has any radius > 0", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({ cornerRadii: { tl: 4, bl: 4 } })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // Path-based rounded rect; fillRect should be skipped.
+      expect(ctx.beginPath).toHaveBeenCalled()
+      expect(ctx.fill).toHaveBeenCalled()
+      expect(ctx.fillRect).not.toHaveBeenCalled()
+    })
+
+    it("rounds only the corners with positive radii", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({ cornerRadii: { tr: 5, br: 5 } })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      // Two arcTo calls for two rounded corners.
+      expect(ctx.arcTo).toHaveBeenCalledTimes(2)
+    })
+
+    it("falls through to fillRect when cornerRadii has no positive radius", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({ cornerRadii: { tl: 0, tr: 0, br: 0, bl: 0 } })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.fillRect).toHaveBeenCalledWith(10, 20, 50, 100)
+    })
+
+    it("rounds all four corners when each radius is set (single-piece lane)", () => {
+      const ctx = createMockCanvasContext()
+      const node = makeRectNode({ cornerRadii: { tl: 3, tr: 3, br: 3, bl: 3 } })
+      barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+      expect(ctx.arcTo).toHaveBeenCalledTimes(4)
+    })
+  })
 })

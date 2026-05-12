@@ -68,10 +68,15 @@ export interface BaseMetadataProps {
   accessibleTable?: boolean
   className?: string
   animate?: AnimateProp
+  /** Strictly speaking not "metadata" — but the spread-when-defined
+   *  pattern is identical, and every XY/ordinal HOC needs to forward
+   *  this to the frame. Bundling it here avoids a parallel helper
+   *  + 22 separate adoption edits. */
+  axisExtent?: import("./axisExtent").AxisExtentMode
 }
 
 export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataProps {
-  const { title, description, summary, accessibleTable, className, animate } = input
+  const { title, description, summary, accessibleTable, className, animate, axisExtent } = input
   // Returning `BaseMetadataProps` rather than `Record<string, unknown>`
   // preserves per-key types on the spread site, so a typo like
   // `{ titel }` in this helper body would fail the return contract
@@ -84,6 +89,7 @@ export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataPr
   if (accessibleTable !== undefined) out.accessibleTable = accessibleTable
   if (className) out.className = className
   if (animate != null) out.animate = animate
+  if (axisExtent !== undefined) out.axisExtent = axisExtent
   return out
 }
 

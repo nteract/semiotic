@@ -576,7 +576,11 @@ export class OrdinalPipelineStore {
     }
 
     // Apply padding AFTER include-zero (bar-funnel needs exact [0, max])
-    if (chartType !== "bar-funnel") {
+    // `axisExtent === "exact"` opts out of extent padding entirely so the
+    // first and last ticks land on the literal data min/max — the user
+    // accepts the trade-off that symbols at the extremes may sit at the
+    // plot edge.
+    if (chartType !== "bar-funnel" && this.config.axisExtent !== "exact") {
       const range = max - min
       const padAmount = range > 0 ? range * pad : 1
       // When baselinePadding is false (default), don't pad the side that sits at 0

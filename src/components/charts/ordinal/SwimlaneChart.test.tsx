@@ -238,6 +238,26 @@ describe("SwimlaneChart", () => {
     })
   })
 
+  describe("roundedTop", () => {
+    it("forwards roundedTop to the ordinal frame", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" roundedTop={6} />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.roundedTop).toBe(6)
+    })
+
+    it("omits roundedTop when not provided", () => {
+      render(
+        <TooltipProvider>
+          <SwimlaneChart data={sampleData} subcategoryAccessor="task" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.roundedTop).toBeUndefined()
+    })
+  })
+
   it("passes showCategoryTicks={false} to frame and suppresses oLabel", () => {
     render(
       <TooltipProvider>

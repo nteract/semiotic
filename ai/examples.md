@@ -199,6 +199,42 @@ const data = [
 
 Key props: `y0Accessor` defines band bottom, `yAccessor` defines band top, `showLine={false}` hides the top edge stroke. Layer a `LineChart` on top for the main metric.
 
+### DifferenceChart
+
+```jsx
+import { DifferenceChart } from "semiotic/ai"
+
+const tempData = [
+  { month: 1,  actual: 38, normal: 32 },
+  { month: 2,  actual: 41, normal: 36 },
+  { month: 3,  actual: 45, normal: 48 },
+  { month: 4,  actual: 55, normal: 57 },
+  { month: 5,  actual: 61, normal: 66 },
+  { month: 6,  actual: 70, normal: 75 },
+  { month: 7,  actual: 79, normal: 79 },
+  { month: 8,  actual: 81, normal: 78 },
+  { month: 9,  actual: 74, normal: 70 },
+  { month: 10, actual: 64, normal: 58 },
+  { month: 11, actual: 52, normal: 47 },
+  { month: 12, actual: 42, normal: 37 }
+]
+
+<DifferenceChart
+  data={tempData}
+  xAccessor="month"
+  seriesAAccessor="actual"
+  seriesBAccessor="normal"
+  seriesALabel="Actual"
+  seriesBLabel="Normal"
+  xLabel="Month"
+  yLabel="°F"
+/>
+```
+
+Fills the region between two series with a color that switches based on which series is higher at each x — `seriesAColor` where A > B, `seriesBColor` where B > A. Crossover x-values are linearly interpolated so adjacent segments meet at zero-width vertices (no jagged seams). Classic uses: temperature anomaly, forecast vs. actual, budget variance, any A/B comparison.
+
+Key props: `seriesALabel` / `seriesBLabel` (legend + tooltip), `seriesAColor` / `seriesBColor` (defaults to `var(--semiotic-danger)` / `var(--semiotic-info)`), `showLines` (default `true` — draws both series on top of the fill), `areaOpacity` (0.6), `gradientFill` (same shape as AreaChart), `windowSize` (max raw rows in push buffer; FIFO eviction). Push API: `ref.current.push({ x, a, b })` — accessor outputs coerce through a `toNumber` helper so `Date` (time series) and numeric strings (CSV/JSON) work transparently.
+
 ### StackedAreaChart
 
 ```jsx

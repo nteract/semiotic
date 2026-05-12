@@ -139,7 +139,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     enableHover,
     showGrid,
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...(props.tooltip != null && { tooltipContent: props.tooltip as StreamXYFrameProps["tooltipContent"] }),
     ...buildCustomBehaviorProps({
       linkedHover,

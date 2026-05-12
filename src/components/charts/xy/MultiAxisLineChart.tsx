@@ -525,6 +525,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
+    ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),
     ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),

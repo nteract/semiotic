@@ -6,6 +6,7 @@
 // XY Charts
 export { LineChart } from "./charts/xy/LineChart"
 export { AreaChart } from "./charts/xy/AreaChart"
+export { DifferenceChart } from "./charts/xy/DifferenceChart"
 export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
 export { Scatterplot } from "./charts/xy/Scatterplot"
 export { ConnectedScatterplot } from "./charts/xy/ConnectedScatterplot"

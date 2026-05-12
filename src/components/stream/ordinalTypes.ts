@@ -204,6 +204,11 @@ export interface OrdinalPipelineConfig {
   windowSize: number
   windowMode: WindowMode
   extentPadding: number
+  /** When `"exact"`, the value-axis domain is pinned to the literal data
+   *  min/max — `extentPadding` is skipped so the first and last ticks
+   *  land on the actual data bounds. Default `"nice"` keeps the existing
+   *  padded domain so symbols at the extremes don't clip the plot edge. */
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   projection: "vertical" | "horizontal" | "radial"
 
   // Primary accessors
@@ -403,6 +408,13 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   rTickValues?: number[]
   /** Align first tick label to start and last tick label to end. Default false. */
   tickLabelEdgeAlign?: boolean
+  /** Axis extent mode for the value (r) axis. `"nice"` (default) uses
+   *  d3-scale's rounded tick generator. `"exact"` pins the first and
+   *  last tick to the actual data min and max with equidistant
+   *  intermediate ticks. The categorical (o) axis is unaffected since
+   *  it's a band scale, not a continuous one. Ignored when explicit
+   *  `rTickValues` are provided — caller has hand-picked positions. */
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
 
   // Style
   pieceStyle?: (d: Datum, category?: string) => Style

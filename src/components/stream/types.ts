@@ -272,6 +272,14 @@ export interface RectSceneNode {
    *  bar scene builders unconditionally so gradients resolve without
    *  requiring roundedTop. */
   roundedEdge?: "top" | "bottom" | "right" | "left"
+  /** Explicit per-corner radii. Overrides the `roundedTop` + `roundedEdge`
+   *  shortcut when present. Used by swimlanes (and any future chart that
+   *  needs to round arbitrary subsets of a rect's four corners) — the
+   *  outermost pieces of a lane round their leading/trailing corners and
+   *  middle pieces stay square. Keys map to physical corners: `tl`
+   *  top-left, `tr` top-right, `br` bottom-right, `bl` bottom-left.
+   *  Missing keys are treated as 0 (square). */
+  cornerRadii?: { tl?: number; tr?: number; br?: number; bl?: number }
   /** Gradient fill — same shape as the area-scene version. Runs tip → base
    *  along the bar axis (inferred from `roundedEdge`). */
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
@@ -558,6 +566,10 @@ export interface StreamXYFrameProps<T = Datum> {
     orient: "left" | "right" | "top" | "bottom"
     label?: string
     ticks?: number
+    /** Explicit tick values. When provided, bypasses both d3's nice-tick
+     *  generator and `axisExtent`; pixel-distance filtering still drops
+     *  overlapping labels. Mirrors the ordinal frame's `rTickValues`. */
+    tickValues?: Array<number | Date>
     tickFormat?: AxisTickFormat
     baseline?: boolean | "under"
     jaggedBase?: boolean
@@ -568,6 +580,12 @@ export interface StreamXYFrameProps<T = Datum> {
   yLabelRight?: string
   xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
   yFormat?: (d: number | Date | string) => string | ReactNode
+  /** Axis extent mode. `"nice"` (default) uses d3-scale's rounded
+   *  tick generator — round tick labels at the cost of ticks not
+   *  reaching the exact data min/max. `"exact"` pins the first
+   *  and last tick to the data domain and spaces intermediate
+   *  ticks equidistantly. Applies to both x and y axes. */
+  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string
 

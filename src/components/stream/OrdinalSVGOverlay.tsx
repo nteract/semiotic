@@ -8,6 +8,7 @@ import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
+import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
 interface OrdinalSVGOverlayProps {
   width: number
@@ -28,6 +29,12 @@ interface OrdinalSVGOverlayProps {
   rTickValues?: number[]
   /** Align first tick label to start, last to end */
   tickLabelEdgeAlign?: boolean
+  /** Axis extent mode. "nice" (default) uses d3-scale's rounded
+   *  tick generator. "exact" pins the first and last value-axis
+   *  tick to the actual data min and max with equidistant
+   *  intermediate ticks. Ignored for the categorical (o) axis;
+   *  applies to the value (r) axis only. */
+  axisExtent?: AxisExtentMode
 
   // Grid
   showGrid?: boolean
@@ -80,6 +87,7 @@ interface OrdinalSVGUnderlayProps {
   showGrid?: boolean
   rFormat?: (d: number) => string
   rTickValues?: number[]
+  axisExtent?: AxisExtentMode
 }
 
 export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
@@ -95,19 +103,24 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     rFormat
   } = props
 
-  const { rTickValues } = props
+  const { rTickValues, axisExtent } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
 
   const valueTicks = useMemo(() => {
     if (!scales || isRadial) return []
-    const rawTicks = rTickValues || scales.r.ticks(5)
+    // Explicit `rTickValues` wins over both modes — caller has hand-
+    // picked the positions. Otherwise `ticksForMode` resolves
+    // axisExtent: "nice" → d3-scale rounded; "exact" → equidistant
+    // from data min to data max inclusive. The r-scale is always
+    // linear in ordinal frames; the type narrows naturally.
+    const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
     return rawTicks.map(v => ({
       value: v,
       pixel: scales.r(v),
       label: (rFormat || defaultRFormat)(v)
     }))
-  }, [scales, rFormat, isRadial, rTickValues])
+  }, [scales, rFormat, isRadial, rTickValues, axisExtent])
 
   const hasGrid = showGrid && scales && !isRadial
   const hasBaselines = showAxes && scales && !isRadial
@@ -225,15 +238,19 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   // Value ticks (linear scale) — custom rTickValues override d3 ticks
   const rTickValues = props.rTickValues
   const tickLabelEdgeAlign = props.tickLabelEdgeAlign
+  const axisExtent = props.axisExtent
   const valueTicks = useMemo(() => {
     if (!showAxes || !scales || isRadial) return []
-    const rawTicks = rTickValues || scales.r.ticks(5)
+    // Explicit `rTickValues` wins; otherwise resolve via `axisExtent`
+    // ("nice" → d3-scale rounded | "exact" → equidistant from data
+    // min to data max inclusive). The r-scale is always linear.
+    const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
     return rawTicks.map(v => ({
       value: v,
       pixel: scales.r(v),
       label: (rFormat || defaultRFormat)(v)
     }))
-  }, [showAxes, scales, rFormat, isRadial, rTickValues])
+  }, [showAxes, scales, rFormat, isRadial, rTickValues, axisExtent])
 
   // Persistent cache for sticky annotation positions
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())

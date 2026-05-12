@@ -10,6 +10,7 @@ export { StreamXYFrame }
 // Chart HOCs
 export { LineChart } from "./charts/xy/LineChart"
 export { AreaChart } from "./charts/xy/AreaChart"
+export { DifferenceChart } from "./charts/xy/DifferenceChart"
 export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
 export { Scatterplot } from "./charts/xy/Scatterplot"
 export { ConnectedScatterplot } from "./charts/xy/ConnectedScatterplot"
@@ -38,6 +39,7 @@ export type {
 // Chart prop types
 export type { LineChartProps } from "./charts/xy/LineChart"
 export type { AreaChartProps } from "./charts/xy/AreaChart"
+export type { DifferenceChartProps } from "./charts/xy/DifferenceChart"
 export type { StackedAreaChartProps } from "./charts/xy/StackedAreaChart"
 export type { ScatterplotProps } from "./charts/xy/Scatterplot"
 export type { ConnectedScatterplotProps } from "./charts/xy/ConnectedScatterplot"

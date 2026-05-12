@@ -499,6 +499,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
+    ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
     tooltipContent: tooltip === false
       ? () => null
       : tooltip === true

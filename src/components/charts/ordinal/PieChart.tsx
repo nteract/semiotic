@@ -250,7 +250,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     ...(props.dataIdAccessor && { dataIdAccessor: props.dataIdAccessor }),
     showAxes: false,
     ...effectiveLegendProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,

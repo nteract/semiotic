@@ -342,6 +342,7 @@ export const LineChart = forwardRef(
     className,
     xFormat,
     yFormat,
+    axisExtent,
     xAccessor = "x",
     yAccessor = "y",
     lineBy,
@@ -917,6 +918,7 @@ export const LineChart = forwardRef(
     yLabel,
     xFormat,
     yFormat,
+    ...(axisExtent !== undefined && { axisExtent }),
     enableHover,
     showGrid,
     // `setup.legendBehaviorProps` carries the legend slot, legend

@@ -17,6 +17,7 @@ function CirclePack
 function ConnectedScatterplot
 function ContextLayout
 function DetailsPanel
+function DifferenceChart
 function DonutChart
 function DotPlot
 function ForceDirectedGraph
