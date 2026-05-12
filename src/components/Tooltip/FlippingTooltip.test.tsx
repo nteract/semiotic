@@ -14,6 +14,15 @@ import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
+import { defaultTooltipStyle } from "./Tooltip"
+
+// The string `FlippingTooltip` assigns to `wrapper.style.background`
+// when it auto-applies chrome. jsdom keeps `var(...)` declarations
+// verbatim on inline `style.background`, so this is the literal value
+// the assertions below pin against — matching it proves the wrapper
+// painted the canonical chrome rather than letting through whatever
+// the user inlined.
+const EXPECTED_CHROME_BACKGROUND = String(defaultTooltipStyle.background)
 
 const baseProps = {
   x: 100,
@@ -34,13 +43,14 @@ describe("FlippingTooltip — chrome auto-apply", () => {
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper).toBeTruthy()
     expect(wrapper.className).toContain("semiotic-tooltip")
-    // The chrome style is applied directly on the wrapper.
-    const style = wrapper.style
-    expect(style.background).toBeTruthy()
+    // Chrome background pinned to the canonical value from
+    // `defaultTooltipStyle` — proves the wrapper painted the right
+    // chrome and not just any non-empty background string.
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
     // `padding` is set via the `padding` shorthand in defaultTooltipStyle;
     // jsdom expands it onto paddingTop. Either form is acceptable evidence.
+    const style = wrapper.style
     const hasPadding = style.padding !== "" || style.paddingTop !== ""
     expect(hasPadding).toBe(true)
   })
@@ -57,9 +67,9 @@ describe("FlippingTooltip — chrome auto-apply", () => {
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper).toBeTruthy()
     // Wrapper should NOT have its own background since chrome is owned
-    // by the inner element.
+    // by the inner element; the user's "background: red" stays on the
+    // inner div alone, with no double-wrap from defaultTooltipStyle.
     expect(wrapper.style.background).toBe("")
   })
 
@@ -114,7 +124,7 @@ describe("FlippingTooltip — chrome auto-apply", () => {
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.style.background).toBeTruthy()
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
 
   it("respects any non-empty className as chrome ownership (CSS-class-styled tooltips)", () => {
@@ -142,7 +152,7 @@ describe("FlippingTooltip — chrome auto-apply", () => {
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.style.background).toBeTruthy()
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
 
   it("auto-applies chrome when content is a plain text node", () => {
@@ -150,7 +160,7 @@ describe("FlippingTooltip — chrome auto-apply", () => {
       <FlippingTooltip {...baseProps}>just a string</FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.style.background).toBeTruthy()
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
 })
 
@@ -188,7 +198,14 @@ describe("FlippingTooltip — non-finite position guard", () => {
         <div>content</div>
       </FlippingTooltip>
     )
-    expect(container.firstChild).not.toBeNull()
+    // Pin the actual positioned wrapper rather than just "something
+    // rendered": x=50 + margin.left=20 → left=70px, y=75 +
+    // margin.top=10 → top=85px. If the guard incorrectly fired here
+    // the wrapper would be null; if positioning regressed, these
+    // values would shift.
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.left).toBe("70px")
+    expect(wrapper.style.top).toBe("85px")
   })
 
   it("transitioning between finite ↔ NaN positions does not throw the React hook-order error", () => {
@@ -210,7 +227,9 @@ describe("FlippingTooltip — non-finite position guard", () => {
           <div>content</div>
         </FlippingTooltip>
       )
-      expect(container.firstChild).not.toBeNull()
+      // Same position pinning as the standalone finite-render test:
+      // x=50 + margin.left=20 → 70px; y=75 + margin.top=10 → 85px.
+      expect((container.firstChild as HTMLElement)?.style.top).toBe("85px")
       // Transition to NaN — bails out.
       rerender(
         <FlippingTooltip {...baseProps} x={50} y={NaN}>
@@ -218,14 +237,14 @@ describe("FlippingTooltip — non-finite position guard", () => {
         </FlippingTooltip>
       )
       expect(container.firstChild).toBeNull()
-      // Back to finite — re-renders.
+      // Back to finite — re-renders at the same position.
       rerender(
         <FlippingTooltip {...baseProps} x={50} y={75}>
           <div>content</div>
         </FlippingTooltip>
       )
-      expect(container.firstChild).not.toBeNull()
-      // And back to NaN again.
+      expect((container.firstChild as HTMLElement)?.style.top).toBe("85px")
+      // And back to NaN again — bails again, no hook-order complaint.
       rerender(
         <FlippingTooltip {...baseProps} x={NaN} y={75}>
           <div>content</div>
