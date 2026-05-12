@@ -172,7 +172,16 @@ export function computeDifferenceSegments<TDatum extends Datum>(
   getB: (d: TDatum) => number,
 ): SegmentRow[] {
   if (!raw.length) return []
-  const sorted = [...raw].sort((p, q) => getX(p) - getX(q))
+  // Filter to finite-x rows BEFORE sorting. The comparator returns
+  // `NaN - finite` for non-finite-x rows, and `Array.sort` treats NaN
+  // returns as "equal", which can leave surrounding finite-x rows out
+  // of order. The loop below already skips non-finite-x rows when
+  // emitting; doing the filter first keeps the sort total-ordered so
+  // crossover math against `lastNonTie` is anchored to truly-prior x
+  // values.
+  const sorted = raw
+    .filter(d => Number.isFinite(getX(d)))
+    .sort((p, q) => getX(p) - getX(q))
   const out: SegmentRow[] = []
   let segIdx = 0
   let currentWinner: "A" | "B" | null = null
@@ -329,11 +338,15 @@ function buildOverlayLineRows<TDatum extends Datum>(
   getB: (d: TDatum) => number,
 ): LineRow[] {
   if (!raw.length) return []
-  const sorted = [...raw].sort((p, q) => getX(p) - getX(q))
+  // Filter non-finite-x rows BEFORE sorting (see segment-builder
+  // comment for rationale — `Array.sort` treats NaN-comparator
+  // returns as 0, leaving finite rows out of order).
+  const sorted = raw
+    .filter(d => Number.isFinite(getX(d)))
+    .sort((p, q) => getX(p) - getX(q))
   const out: LineRow[] = []
   for (const d of sorted) {
     const x = getX(d), a = getA(d), b = getB(d)
-    if (!Number.isFinite(x)) continue
     if (Number.isFinite(a)) out.push({ __x: x, __y: a, __diffSegment: "line-A" })
     if (Number.isFinite(b)) out.push({ __x: x, __y: b, __diffSegment: "line-B" })
   }

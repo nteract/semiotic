@@ -24,9 +24,13 @@ export interface AxisConfig {
   /** Explicit tick values. When provided, bypasses both d3's "nice"
    *  generator and `axisExtent: "exact"` — the caller has hand-picked
    *  the positions. Pixel-distance filtering downstream still drops
-   *  overlapping labels. Accepts `number | Date` (Dates apply on
-   *  time-scale axes; otherwise they're coerced via `valueOf()`).
-   *  Mirrors the ordinal frame's `rTickValues` contract. */
+   *  overlapping labels. Accepts `number | Date`: values pass through
+   *  to the scale (d3-scale's `scaleTime` reads Dates natively;
+   *  `scaleLinear` accepts numbers — feeding a Date into a linear
+   *  scale via `valueOf()` works at runtime but `tickFormat` receives
+   *  the Date as-is, so user formatters should match the axis's
+   *  underlying scale type). Mirrors the ordinal frame's
+   *  `rTickValues` contract. */
   tickValues?: Array<number | Date>
   /** Grid line stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. Applied to grid lines extending from ticks across the chart area. */
   gridStyle?: "dashed" | "dotted" | string

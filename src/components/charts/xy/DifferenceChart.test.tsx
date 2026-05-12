@@ -228,6 +228,27 @@ describe("computeDifferenceSegments", () => {
     expect(bRows.some(r => r.__x === 4)).toBe(true)
   })
 
+  it("non-finite-x rows don't scramble the sort of finite-x rows", () => {
+    // Regression: `Array.sort` treats NaN-comparator returns as 0
+    // (equal), so interleaving finite-x rows with non-finite-x rows
+    // could leave the finite rows out of order. The filter-then-sort
+    // path keeps the total ordering well-defined.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 5,   a: 10, b: 5 },   // valid, ends up last after sort
+        { x: NaN, a: 10, b: 5 },   // invalid, dropped
+        { x: 0,   a: 12, b: 4 },   // valid, ends up first after sort
+        { x: 3,   a: 8,  b: 6 },   // valid, middle
+      ],
+      getX, getA, getB,
+    )
+    // Strip out crossover-only zero-width vertices (they share x/y
+    // with neighbors); the source rows should be in ascending x order.
+    const sourceXs = rows.filter(r => r.__sourceDatum).map(r => r.__x)
+    // Three valid source rows in order.
+    expect(sourceXs).toEqual([0, 3, 5])
+  })
+
   it("detects a crossover that straddles a non-finite row", () => {
     // Earlier implementation compared against `sorted[i - 1]` even when
     // that row was non-finite — losing the crossover. The fix tracks the

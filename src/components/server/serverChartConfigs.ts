@@ -148,10 +148,15 @@ const differenceChart: ChartConfig = {
     const segmented = computeDifferenceSegments(Array.isArray(data) ? data : [], getX, getA, getB)
     const overlay: Datum[] = []
     if (showLines && Array.isArray(data)) {
-      const sorted = [...data].sort((p, q) => getX(p) - getX(q))
+      // Filter non-finite x BEFORE sorting. `Array.sort`'s comparator
+      // returns NaN for NaN-NaN, which V8 treats like 0 (equal), so
+      // surrounding finite-x rows can land out of order. The downstream
+      // emission already skips non-finite-x rows; doing it first keeps
+      // the sort total-ordered.
+      const finite = data.filter(d => Number.isFinite(getX(d)))
+      const sorted = finite.sort((p, q) => getX(p) - getX(q))
       for (const d of sorted) {
         const x = getX(d), a = getA(d), b = getB(d)
-        if (!Number.isFinite(x)) continue
         if (Number.isFinite(a)) overlay.push({ __x: x, __y: a, __diffSegment: "line-A" })
         if (Number.isFinite(b)) overlay.push({ __x: x, __y: b, __diffSegment: "line-B" })
       }
