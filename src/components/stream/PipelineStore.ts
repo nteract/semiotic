@@ -735,9 +735,15 @@ export class PipelineStore {
         userMax != null ? yDomain[1] : yDomain[1] + pad
       ]
       // For log scales, ensure domain minimum stays positive (log(0) is undefined).
-      // Use multiplicative padding instead of additive to avoid negative domains.
-      // Exact mode bypasses padding so the min sits at the literal data min;
-      // log() of a negative or zero `dataYDomain[0]` is the user's problem.
+      // This branch handles the case where extent-padding pushed an
+      // otherwise-positive `dataYDomain[0]` to ≤ 0: substitute a
+      // multiplicative pad instead. Exact mode skips this rescue because
+      // it skips padding entirely — but note the downstream `makeScale`
+      // log branch ALSO clamps both bounds to ≥ 1e-6 unconditionally
+      // (see line ~807), so non-positive data extents produce a clamped
+      // scale even in exact mode. The first/last ticks in that case
+      // read as `max(dataMin, 1e-6)` and `max(dataMax, 1e-6)`, not the
+      // literal data values.
       if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0 && !exactMode) {
         const logPad = 1 + config.extentPadding
         yDomain[0] = userMin != null ? yDomain[0] : dataYDomain[0] / logPad

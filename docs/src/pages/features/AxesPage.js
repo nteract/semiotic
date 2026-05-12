@@ -308,6 +308,15 @@ export default function AxesPage() {
         leave the default <code>"nice"</code> mode in place.
       </p>
 
+      <p>
+        <strong>Log-scale caveat:</strong> log scales always clamp both
+        domain bounds to <code>≥ 1e-6</code> (log of zero is undefined),
+        so a dataset whose values include <code>0</code> or negatives
+        will render with that clamp in place even under exact mode —
+        the first tick reads as <code>max(dataMin, 1e-6)</code>, not the
+        literal data minimum.
+      </p>
+
       <h3 id="axis-extent-time">Time-series LineChart with exact endpoints</h3>
       <p>
         The default-nice version snaps to month boundaries — January 1st,

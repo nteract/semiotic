@@ -115,6 +115,45 @@ describe("computeDifferenceSegments", () => {
     expect(rows[1].__valB).toBe(8)
   })
 
+  it("leading tie rows flush into the first real winner's segment", () => {
+    // Regression: the previous algorithm defaulted `currentWinner` to
+    // "A" on the very first tie row, then emitted the subsequent
+    // (B-winning) row in the stale A segment with the wrong fill.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 5,  b: 5 },   // tie
+        { x: 1, a: 4,  b: 9 },   // B > A
+        { x: 2, a: 3,  b: 12 },  // B > A
+      ],
+      getX, getA, getB,
+    )
+    // Expect a single B segment containing all three rows.
+    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    expect(segKeys.size).toBe(1)
+    expect([...segKeys][0]).toMatch(/-B$/)
+    expect(rows.every(r => r.__diffWinner === "B")).toBe(true)
+    // The leading tie is in the B segment as a zero-width vertex.
+    const tieRow = rows.find(r => r.__x === 0)!
+    expect(tieRow.__y).toBe(5)
+    expect(tieRow.__y0).toBe(5)
+  })
+
+  it("multiple leading ties flush into the first non-tie segment", () => {
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 5, b: 5 },
+        { x: 1, a: 6, b: 6 },
+        { x: 2, a: 10, b: 4 },  // A > B (first real winner)
+      ],
+      getX, getA, getB,
+    )
+    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    expect(segKeys.size).toBe(1)
+    expect([...segKeys][0]).toMatch(/-A$/)
+    // All three rows in the A segment.
+    expect(rows.map(r => r.__x).sort()).toEqual([0, 1, 2])
+  })
+
   it("uses the tie row as the crossover when A→tie→B", () => {
     // Without tie-aware handling, the winner of the post-tie row would
     // be stale (the segment would keep the pre-tie winner) and/or the

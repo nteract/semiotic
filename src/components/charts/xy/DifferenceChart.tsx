@@ -190,41 +190,63 @@ export function computeDifferenceSegments<TDatum extends Datum>(
   const segKey = (w: "A" | "B") => `seg-${segIdx}-${w}`
   const pushRow = (row: SegmentRow) => out.push(row)
 
+  // Helper: emit a buffered tie row as a zero-width vertex into the
+  // given segment. Used for both leading-tie flush and mid-stream
+  // same-winner flush; pulled out so the two call sites agree on shape.
+  const emitTie = (t: { x: number; y: number; datum: Datum }, w: "A" | "B") => {
+    pushRow({
+      __x: t.x, __y: t.y, __y0: t.y,
+      __diffSegment: segKey(w),
+      __diffWinner: w,
+      __valA: t.y, __valB: t.y,
+      __sourceDatum: t.datum,
+    })
+  }
+
   for (let i = 0; i < sorted.length; i++) {
     const d = sorted[i]
     const x = getX(d), a = getA(d), b = getB(d)
     if (!Number.isFinite(x) || !Number.isFinite(a) || !Number.isFinite(b)) continue
     const w = winnerAt(a, b)
 
+    if (w === null) {
+      // Tie row: defer emission until the next non-tie row tells us
+      // which segment owns it. Ties before any winner is known (the
+      // dataset starts with one or more ties) sit in `pendingTies` and
+      // get flushed into the first real segment below; mid-stream ties
+      // either flush into the continuing segment or become the
+      // crossover vertex for a winner switch.
+      pendingTies.push({ x, y: a, datum: d })
+      continue
+    }
+
     if (currentWinner == null) {
-      // Pre-first-segment state. A tie at this position has no segment
-      // yet to collapse into — default to "A" so subsequent emissions
-      // have a key; the tie itself emits as a zero-width vertex in A.
-      currentWinner = w ?? "A"
+      // First real winner of the dataset. Commit `currentWinner = w`
+      // BEFORE emitting any leading ties so they paint in the correct
+      // segment — the previous default-to-"A" path mis-colored the
+      // segment when the actual first winner was "B".
+      currentWinner = w
+      for (const t of pendingTies) emitTie(t, currentWinner)
+      pendingTies = []
+      const upper = a >= b ? a : b
+      const lower = a >= b ? b : a
       pushRow({
-        __x: x, __y: a >= b ? a : b, __y0: a >= b ? b : a,
+        __x: x, __y: upper, __y0: lower,
         __diffSegment: segKey(currentWinner),
         __diffWinner: currentWinner,
         __valA: a, __valB: b,
         __sourceDatum: d,
       })
-      if (w !== null) lastNonTie = { x, a, b, w }
+      lastNonTie = { x, a, b, w }
       continue
     }
 
-    if (w === null) {
-      // Tie row: stash, decide where it goes when we see the next
-      // non-tie row. The first tie's (x, y) is the crossover candidate
-      // if the next non-tie row carries a different winner.
-      pendingTies.push({ x, y: a, datum: d })
-      continue
-    }
-
-    // Real winner. If different from the last non-tie row's winner, emit
-    // a crossover. The boundary x/y is the first pending tie's position
-    // when one exists (the data has an explicit zero-difference point);
-    // otherwise it's the linear-interpolation crossover between the last
-    // non-tie row and this one.
+    // Real winner with a current segment in flight. If different from
+    // the last non-tie row's winner, emit a crossover. The boundary
+    // x/y is the first pending tie's position when one exists (the
+    // data has an explicit zero-difference point); otherwise it's the
+    // linear-interpolation crossover between the last non-tie row and
+    // this one.
     if (lastNonTie && lastNonTie.w !== w) {
       let xc: number, yc: number
       if (pendingTies.length > 0) {
@@ -264,28 +286,11 @@ export function computeDifferenceSegments<TDatum extends Datum>(
       // Pending ties AFTER the boundary belong to the new segment as
       // zero-width vertices. The first one was the boundary itself, so
       // skip index 0.
-      for (let p = 1; p < pendingTies.length; p++) {
-        const t = pendingTies[p]
-        pushRow({
-          __x: t.x, __y: t.y, __y0: t.y,
-          __diffSegment: segKey(currentWinner),
-          __diffWinner: currentWinner,
-          __valA: t.y, __valB: t.y,
-          __sourceDatum: t.datum,
-        })
-      }
+      for (let p = 1; p < pendingTies.length; p++) emitTie(pendingTies[p], currentWinner)
     } else {
       // Same winner across the tie run — flush pending ties into the
       // current segment as-is.
-      for (const t of pendingTies) {
-        pushRow({
-          __x: t.x, __y: t.y, __y0: t.y,
-          __diffSegment: segKey(currentWinner),
-          __diffWinner: currentWinner,
-          __valA: t.y, __valB: t.y,
-          __sourceDatum: t.datum,
-        })
-      }
+      for (const t of pendingTies) emitTie(t, currentWinner)
     }
     pendingTies = []
 
@@ -303,16 +308,10 @@ export function computeDifferenceSegments<TDatum extends Datum>(
   }
 
   // Trailing tie run with no subsequent non-tie row — flush into the
-  // current segment as zero-width vertices.
-  for (const t of pendingTies) {
-    pushRow({
-      __x: t.x, __y: t.y, __y0: t.y,
-      __diffSegment: segKey(currentWinner ?? "A"),
-      __diffWinner: currentWinner ?? "A",
-      __valA: t.y, __valB: t.y,
-      __sourceDatum: t.datum,
-    })
-  }
+  // current segment as zero-width vertices. If the entire dataset was
+  // ties (no winner ever determined), arbitrarily put them in an "A"
+  // segment so consumers have a valid segment id to colour against.
+  for (const t of pendingTies) emitTie(t, currentWinner ?? "A")
   return out
 }
 

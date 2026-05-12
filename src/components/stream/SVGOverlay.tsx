@@ -210,11 +210,15 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const fmt = bottomAxis?.tickFormat || xFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(width / 70))
     const requested = bottomAxis?.ticks ?? 5
-    // Exact mode honors the requested count verbatim — collapsing to
-    // `maxFit` here would silently undo the user's "I want this many
-    // ticks at exactly these positions" contract. Pixel-distance
-    // filtering downstream still drops overlapping labels.
-    const tickCount = axisExtent === "exact" ? requested : Math.min(requested, maxFit)
+    // Exact mode honors the requested count rather than clamping it to
+    // `maxFit` — that clamp would silently undo the user's "I want
+    // this many ticks at exactly these positions" contract. Pixel-
+    // distance filtering downstream still drops overlapping labels.
+    // Floor at 2 because `equidistantTicks` needs both endpoints; a
+    // user-supplied `ticks: 1` (or 0) lands on the two endpoints
+    // either way, so being explicit here keeps the math and the
+    // contract aligned.
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawTicks = ticksForMode(scales.x, tickCount, axisExtent)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
@@ -235,7 +239,7 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? requested : Math.min(requested, maxFit)
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const candidates = ticksForMode(scales.y, tickCount, axisExtent).map(v => ({
       value: v,
       pixel: scales.y(v),
@@ -410,7 +414,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     // to whatever the width permits — pixel-distance filtering below
     // still drops physically-overlapping labels, but we don't pre-clamp
     // away an explicit count.
-    const tickCount = axisExtent === "exact" ? requested : Math.min(requested, maxFit)
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const rawTicks = ticksForMode(scales.x, tickCount, axisExtent)
     const rawValues = rawTicks.map(v => v.valueOf())
     const candidates = rawTicks.map((v, i) => ({
@@ -451,7 +455,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = leftAxis?.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = leftAxis?.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? requested : Math.min(requested, maxFit)
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const candidates = ticksForMode(scales.y, tickCount, axisExtent).map(v => ({
       value: v,
       pixel: scales.y(v),
@@ -487,7 +491,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
     const maxFit = Math.max(2, Math.floor(height / 30))
     const requested = rightAxis.ticks ?? 5
-    const tickCount = axisExtent === "exact" ? requested : Math.min(requested, maxFit)
+    const tickCount = axisExtent === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
     const candidates = ticksForMode(scales.y, tickCount, axisExtent).map(v => ({
       value: v,
       pixel: scales.y(v),
