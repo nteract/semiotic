@@ -5,7 +5,7 @@
 import type { ComponentType } from "react"
 
 import {
-  LineChart, AreaChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap,
+  LineChart, AreaChart, DifferenceChart, StackedAreaChart, Scatterplot, ConnectedScatterplot, BubbleChart, Heatmap,
   ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart,
   BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
   Histogram, ViolinPlot, RidgelinePlot,
@@ -25,6 +25,7 @@ export interface RegistryEntry {
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   LineChart: { component: LineChart, category: "xy" },
   AreaChart: { component: AreaChart, category: "xy" },
+  DifferenceChart: { component: DifferenceChart, category: "xy" },
   StackedAreaChart: { component: StackedAreaChart, category: "xy" },
   Scatterplot: { component: Scatterplot, category: "xy" },
   BubbleChart: { component: BubbleChart, category: "xy" },

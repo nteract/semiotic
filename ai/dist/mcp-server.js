@@ -32265,6 +32265,7 @@ var import_geo = require("semiotic/geo");
 var COMPONENT_REGISTRY = {
   LineChart: { component: import_ai.LineChart, category: "xy" },
   AreaChart: { component: import_ai.AreaChart, category: "xy" },
+  DifferenceChart: { component: import_ai.DifferenceChart, category: "xy" },
   StackedAreaChart: { component: import_ai.StackedAreaChart, category: "xy" },
   Scatterplot: { component: import_ai.Scatterplot, category: "xy" },
   BubbleChart: { component: import_ai.BubbleChart, category: "xy" },
