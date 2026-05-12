@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
-import { LineChart, BarChart, Scatterplot, SwarmPlot } from "semiotic"
+import { LineChart, Scatterplot, SwarmPlot } from "semiotic"
 
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
