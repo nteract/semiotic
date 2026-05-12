@@ -1,4 +1,5 @@
 import * as React from "react"
+import { defaultTooltipStyle } from "./Tooltip"
 
 interface FlippingTooltipProps {
   /** X position within the chart area (relative to margin.left) */
@@ -20,12 +21,50 @@ interface FlippingTooltipProps {
 }
 
 /**
+ * True when `node` is a React element whose root has `semiotic-tooltip`
+ * in its className — i.e., the tooltip producer already applied its own
+ * chrome (background, padding, shadow, etc. from `defaultTooltipStyle`
+ * or an equivalent inline rule). When the producer hasn't, this returns
+ * false and `FlippingTooltip` paints the chrome on its own wrapper so
+ * the tooltip can never come out transparent.
+ *
+ * Why this exists: chart-specific `tooltipContent` callbacks have
+ * recurringly forgotten to include the `semiotic-tooltip` class +
+ * `defaultTooltipStyle`, producing chrome-less floating divs (the
+ * ProcessSankey and DifferenceChart regressions of 2026-05-12). The
+ * shared `Tooltip()` / `MultiLineTooltip()` / `buildDefaultTooltip()`
+ * helpers do it right; bespoke per-chart tooltips don't. Auto-applying
+ * chrome at the wrapper level converts the "you forgot the wrapper"
+ * footgun into a no-op.
+ */
+function hasOwnChrome(node: React.ReactNode): boolean {
+  if (!React.isValidElement(node)) return false
+  const cls = (node.props as { className?: unknown })?.className
+  return typeof cls === "string" && cls.split(/\s+/).includes("semiotic-tooltip")
+}
+
+/**
  * Viewport-aware tooltip wrapper that flips horizontally and vertically
  * when the tooltip would overflow the chart container.
  *
  * On first render, uses a heuristic (similar to the old 70%/30% thresholds).
  * After measuring the actual tooltip size via ref, repositions precisely to
  * prevent clipping against container edges.
+ *
+ * Two defensive behaviors:
+ *
+ *   - **Chrome guarantee.** If the rendered tooltip content lacks the
+ *     `semiotic-tooltip` className on its root, the wrapper applies
+ *     `defaultTooltipStyle` to itself so the tooltip always has a
+ *     visible background, padding, and shadow. Shared tooltip helpers
+ *     keep working unchanged (their `semiotic-tooltip` class causes the
+ *     wrapper to stay transparent).
+ *   - **Non-finite position guard.** Returns `null` when `x` or `y` is
+ *     `NaN` / `Infinity`. The frame's hover plumbing can occasionally
+ *     produce a non-finite hit-test result during a scale rebuild or
+ *     when a custom layout emits a degenerate vertex; without the
+ *     guard, React throws `'NaN' is an invalid value for the 'top' css
+ *     style property` and the entire frame stops rendering.
  */
 export function FlippingTooltip({
   x,
@@ -37,6 +76,14 @@ export function FlippingTooltip({
   className = "stream-frame-tooltip",
   zIndex = 1
 }: FlippingTooltipProps) {
+  // Position guard. The early-return form (before hooks) tripped React's
+  // "static flag" hook-order check when y oscillated between NaN and a
+  // finite number (the hover handler can emit either as a frame transitions
+  // through a degenerate hit-test). Treat the guard as a render-time
+  // decision instead so the hooks always run in the same order, and emit
+  // null at the very end when the position is unusable.
+  const positionFinite = Number.isFinite(x) && Number.isFinite(y)
+
   const ref = React.useRef<HTMLDivElement>(null)
   const [measured, setMeasured] = React.useState<{
     width: number
@@ -79,18 +126,35 @@ export function FlippingTooltip({
     transform = `translate(${tx}, ${ty})`
   }
 
+  // Chrome auto-apply: if the rendered content's root already carries
+  // `.semiotic-tooltip`, the user/helper handled chrome — don't double
+  // up. Otherwise apply `defaultTooltipStyle` to the wrapper itself so
+  // the tooltip is never transparent. `width: max-content` overrides
+  // the chrome's `maxWidth` constraint to keep the existing flip math
+  // working; the chrome's `wordWrap: break-word` still handles long
+  // tokens. `pointerEvents` is set on the wrapper regardless.
+  const ownsChrome = hasOwnChrome(children)
+  const chromeStyle = ownsChrome ? null : defaultTooltipStyle
+  const compositeClassName = ownsChrome ? className : `${className} semiotic-tooltip`.trim()
+  // Late guard return: bail AFTER all hooks have run so the hook call
+  // order stays stable across re-renders. An earlier early-return form
+  // (before useRef / useState / useLayoutEffect) tripped React's
+  // "Expected static flag was missing" check whenever y oscillated
+  // between NaN and a finite number.
+  if (!positionFinite) return null
   return (
     <div
       ref={ref}
-      className={className}
+      className={compositeClassName}
       style={{
+        ...(chromeStyle || {}),
         position: "absolute",
         left: margin.left + x,
         top: margin.top + y,
         transform,
         pointerEvents: "none",
         zIndex,
-        width: "max-content"
+        width: "max-content",
       }}
     >
       {children}
