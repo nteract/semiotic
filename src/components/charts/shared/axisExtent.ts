@@ -12,10 +12,18 @@
  * intermediate ticks are equidistant within the domain. Labels are
  * whatever the value formatter produces — often not round.
  *
- * Works on `scaleLinear`, `scaleLog` (interpreted linearly), and
- * `scaleTime` (operates on millisecond timestamps, returns Date
- * objects so downstream formatters receive the same shape they get
- * from `scale.ticks()`).
+ * Works on `scaleLinear` and `scaleTime` (operates on millisecond
+ * timestamps, returns Date objects so downstream formatters receive
+ * the same shape they get from `scale.ticks()`).
+ *
+ * `scaleLog` is supported but the ticks come out evenly spaced in
+ * VALUE space, not pixel space — `[1, 250.75, 500.5, 750.25, 1000]`
+ * instead of `[1, 10, 100, 1000]`. That's intentional for the
+ * "endpoints must read as the actual data bounds" use case the
+ * feature was added for, but it's not "equidistant on the rendered
+ * axis". Users that want log-space-equidistant ticks should pass
+ * explicit `tickValues` (e.g. `[1, 10, 100, 1000]`) — those bypass
+ * `axisExtent` entirely.
  */
 export type AxisExtentMode = "nice" | "exact"
 

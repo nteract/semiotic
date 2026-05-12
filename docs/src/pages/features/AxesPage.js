@@ -94,22 +94,45 @@ const axisExtentScatterData = [
 ]
 
 // Ordinal swarm — three KPI categories with values whose true min (4.2) and
-// max (98.7) are deliberately not round numbers.
-const axisExtentSwarmData = (() => {
-  const groups = ["Engagement", "Retention", "Activation"]
-  const out = []
-  groups.forEach((g, gi) => {
-    const base = 20 + gi * 15
-    const span = 40 + gi * 10
-    for (let i = 0; i < 12; i++) {
-      out.push({ group: g, score: base + Math.random() * span })
-    }
-  })
-  // Pin the actual min and max so the demo is reproducible.
-  out.push({ group: "Engagement", score: 4.2 })
-  out.push({ group: "Activation", score: 98.7 })
-  return out
-})()
+// max (98.7) are deliberately not round numbers. Values are picked from a
+// fixed list (not Math.random) so re-renders, hydration, and SSR all
+// produce the same set; the docs page would otherwise diff between
+// builds and could trigger React hydration mismatches.
+const axisExtentSwarmData = [
+  // Engagement (gi=0): base 20, span 40 → roughly [20, 60], plus the
+  // pinned floor 4.2 for the data minimum.
+  { group: "Engagement",  score: 4.2 },
+  { group: "Engagement",  score: 23.1 },
+  { group: "Engagement",  score: 31.5 },
+  { group: "Engagement",  score: 27.8 },
+  { group: "Engagement",  score: 42.4 },
+  { group: "Engagement",  score: 38.9 },
+  { group: "Engagement",  score: 50.2 },
+  { group: "Engagement",  score: 46.7 },
+  { group: "Engagement",  score: 55.6 },
+  { group: "Engagement",  score: 59.3 },
+  // Retention (gi=1): base 35, span 50 → roughly [35, 85].
+  { group: "Retention",   score: 37.4 },
+  { group: "Retention",   score: 41.8 },
+  { group: "Retention",   score: 48.6 },
+  { group: "Retention",   score: 54.2 },
+  { group: "Retention",   score: 60.5 },
+  { group: "Retention",   score: 65.9 },
+  { group: "Retention",   score: 71.3 },
+  { group: "Retention",   score: 76.4 },
+  { group: "Retention",   score: 80.1 },
+  { group: "Retention",   score: 83.7 },
+  // Activation (gi=2): base 50, span 60 → roughly [50, 110], plus the
+  // pinned ceiling 98.7 for the data maximum.
+  { group: "Activation",  score: 53.2 },
+  { group: "Activation",  score: 61.5 },
+  { group: "Activation",  score: 68.9 },
+  { group: "Activation",  score: 74.4 },
+  { group: "Activation",  score: 81.7 },
+  { group: "Activation",  score: 87.3 },
+  { group: "Activation",  score: 92.1 },
+  { group: "Activation",  score: 98.7 },
+]
 
 // ---------------------------------------------------------------------------
 // Axis props definition

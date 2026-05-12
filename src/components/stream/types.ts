@@ -566,6 +566,10 @@ export interface StreamXYFrameProps<T = Datum> {
     orient: "left" | "right" | "top" | "bottom"
     label?: string
     ticks?: number
+    /** Explicit tick values. When provided, bypasses both d3's nice-tick
+     *  generator and `axisExtent`; pixel-distance filtering still drops
+     *  overlapping labels. Mirrors the ordinal frame's `rTickValues`. */
+    tickValues?: Array<number | Date>
     tickFormat?: AxisTickFormat
     baseline?: boolean | "under"
     jaggedBase?: boolean
