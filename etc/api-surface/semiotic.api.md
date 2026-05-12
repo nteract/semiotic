@@ -27,6 +27,7 @@ function CirclePack
 function ConnectedScatterplot
 function ContextLayout
 function DetailsPanel
+function DifferenceChart
 function DonutChart
 function DotPlot
 function ForceDirectedGraph
@@ -119,6 +120,7 @@ interface ConnectedScatterplotProps
 interface ContextLayoutProps
 interface CrosshairStyle
 interface DetailsPanelProps
+interface DifferenceChartProps
 interface DonutChartProps
 interface DotPlotProps
 interface ForceDirectedGraphProps

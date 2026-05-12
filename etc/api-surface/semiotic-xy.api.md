@@ -8,6 +8,7 @@ function AreaChart
 function BubbleChart
 function CandlestickChart
 function ConnectedScatterplot
+function DifferenceChart
 function Heatmap
 function LineChart
 function MinimapChart
@@ -22,6 +23,7 @@ interface AreaChartProps
 interface BubbleChartProps
 interface CandlestickChartProps
 interface ConnectedScatterplotProps
+interface DifferenceChartProps
 interface HeatmapProps
 interface LayoutContext
 interface LayoutResult
