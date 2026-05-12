@@ -21,35 +21,45 @@ interface FlippingTooltipProps {
 }
 
 /**
- * True when `node` is a React element whose root already carries
- * tooltip chrome — either via the canonical `.semiotic-tooltip`
- * className (the shared helpers' pattern) OR via an inline
- * `background` / `backgroundColor` style declaration. When neither
- * is present, `FlippingTooltip` paints `defaultTooltipStyle` on its
- * own wrapper so the tooltip can never come out chrome-less.
+ * True when the tooltip content's root element looks like the
+ * consumer is handling chrome themselves. Three signals, any one of
+ * which is enough:
  *
- * Why this exists: chart-specific `tooltipContent` callbacks have
- * recurringly forgotten the `.semiotic-tooltip` class +
- * `defaultTooltipStyle`, producing transparent floating divs (the
- * ProcessSankey and DifferenceChart regressions of 2026-05-12).
- * The shared `Tooltip()` / `MultiLineTooltip()` / `buildDefaultTooltip()`
- * helpers do it right; bespoke per-chart tooltips don't. Auto-applying
- * chrome at the wrapper level converts the "you forgot the wrapper"
- * footgun into a no-op.
+ *   1. A non-empty `className`. Three real cases that all hit this:
+ *      `.semiotic-tooltip` from the shared helpers; bespoke classes
+ *      like `.tooltip-content` whose chrome lives in a CSS file the
+ *      consumer ships alongside the chart; per-chart custom classes
+ *      for theming. We can't inspect computed CSS to know for sure,
+ *      but ANY className is a strong intent signal — the consumer
+ *      reached for the class hook because they're styling it.
+ *   2. An inline `background` declaration on `style`. Catches the
+ *      Landing-page gallery pattern (`style={{ background: "white",
+ *      ... }}` with no className).
+ *   3. An inline `backgroundColor` declaration on `style`. Same
+ *      intent as (2) just spelled differently.
  *
- * The inline-background fallback catches bespoke tooltips that paint
- * their OWN visual chrome via `style={{ background: "white", ... }}`
- * — applying `defaultTooltipStyle` on top of those wraps the user's
- * tooltip in a second, contrasting box (the Landing-page gallery
- * regression). The check is intentionally narrow: presence of either
- * declaration is treated as "chrome handled" — no attempt to parse
- * or validate the values, because partial declarations (just a
- * background with no padding, etc.) are still the consumer's call.
+ * When none of these fire, `FlippingTooltip` paints
+ * `defaultTooltipStyle` on its own wrapper so the tooltip can never
+ * come out chrome-less. The footgun this guards against: chart-
+ * specific `tooltipContent` callbacks have recurringly returned
+ * `<div style={{ minWidth: 160 }}>...</div>` — no class, no
+ * background, just sizing — producing transparent floating boxes
+ * (the ProcessSankey and original-DifferenceChart regressions).
+ *
+ * The "any className" rule was originally narrower ("only the exact
+ * `.semiotic-tooltip` word"), but that mis-fired on consumers using
+ * CSS-class-only chrome — the `/cookbook/canvas-interaction` example
+ * uses `className="tooltip-content"` with the actual chrome in a
+ * sibling CSS file. The narrow rule was double-wrapping that. The
+ * broader rule trusts the consumer's intent when they reached for
+ * the class hook, at the cost of letting through a genuinely chrome-
+ * less classed div — which is an acceptable trade for the recurring
+ * "extra black box around the user's tooltip" regression.
  */
 function hasOwnChrome(node: React.ReactNode): boolean {
   if (!React.isValidElement(node)) return false
   const props = node.props as { className?: unknown; style?: React.CSSProperties }
-  if (typeof props.className === "string" && props.className.split(/\s+/).includes("semiotic-tooltip")) return true
+  if (typeof props.className === "string" && props.className.trim().length > 0) return true
   const style = props.style
   if (style && typeof style === "object") {
     if (style.background != null && style.background !== "") return true

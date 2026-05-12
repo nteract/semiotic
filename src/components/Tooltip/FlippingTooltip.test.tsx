@@ -105,11 +105,40 @@ describe("FlippingTooltip — chrome auto-apply", () => {
   })
 
   it("still applies chrome when style is set but background is not", () => {
-    // A user style with only padding / fontSize is still chrome-less;
-    // wrap it. Pinning so the detection doesn't over-fire.
+    // A user div with only padding / fontSize (no class, no background)
+    // is still chrome-less; wrap it. Pinning so the detection doesn't
+    // over-fire on style-only declarations.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
         <div style={{ padding: 8, fontSize: 12 }}>plain</div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBeTruthy()
+  })
+
+  it("respects any non-empty className as chrome ownership (CSS-class-styled tooltips)", () => {
+    // Regression: `/cookbook/canvas-interaction` uses
+    // `<div className="tooltip-content">` with chrome in a sibling
+    // CSS file (no inline style, no `.semiotic-tooltip` class). The
+    // narrow detection that only matched the canonical class double-
+    // wrapped these, producing the extra-black-box-offset-to-right
+    // symptom. Any non-empty className is now treated as "consumer is
+    // handling chrome".
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div className="tooltip-content">CSS-styled</div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe("")
+  })
+
+  it("empty className is not enough to claim chrome", () => {
+    // `className=""` carries no intent — wrap it.
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div className="">no real class</div>
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
