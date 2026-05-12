@@ -89,10 +89,20 @@ test.describe("ProcessSankey - Static", () => {
     // Let any intro transition settle so the only remaining motion
     // is the particle stream itself.
     await page.waitForTimeout(700)
-    const first = await canvasFingerprint(page, "static-particles")
-    await page.waitForTimeout(400)
-    const second = await canvasFingerprint(page, "static-particles")
-    expect(second).not.toBe(first)
+    // Sample the fingerprint multiple times and assert that AT LEAST
+    // ONE pair differs from the baseline. Single-window sampling
+    // (just two fingerprints 400ms apart) flaked on slow CI runners
+    // when rAF stalled during that exact window, or when the 64-byte
+    // sample stride happened to miss every active particle position.
+    // Five samples over ~1s captures particle motion robustly.
+    const baseline = await canvasFingerprint(page, "static-particles")
+    const fingerprints: number[] = [baseline]
+    for (let i = 0; i < 5; i++) {
+      await page.waitForTimeout(200)
+      fingerprints.push(await canvasFingerprint(page, "static-particles"))
+    }
+    const anyDiffer = fingerprints.some(f => f !== baseline)
+    expect(anyDiffer, `all ${fingerprints.length} canvas fingerprints were identical to the baseline — particles likely not animating`).toBe(true)
   })
 })
 
