@@ -28,18 +28,23 @@ export interface ClampedCornerRadii {
 }
 
 /**
- * Read each corner's radius and clamp to `min(w, h) / 2` so a corner
- * never overdraws past the rect's center on thin lanes. Missing corners
- * collapse to 0 (square).
+ * Read each corner's radius and clamp to `[0, min(w, h) / 2]` so a
+ * corner never overdraws past the rect's center on thin lanes AND a
+ * negative input never leaks into the `moveTo` / `lineTo` math (where
+ * a negative radius would offset the start point into invalid space,
+ * producing visibly bent or escaping paths even though the `arcTo`
+ * is gated on `> 0`). Missing corners collapse to 0 (square).
  */
 export function clampCornerRadii(node: RectSceneNode): ClampedCornerRadii {
   const c = node.cornerRadii
   if (!c) return { tl: 0, tr: 0, br: 0, bl: 0 }
   const limit = Math.min(node.w, node.h) / 2
+  const clamp = (v: number | undefined): number =>
+    Math.max(0, Math.min(v ?? 0, limit))
   return {
-    tl: Math.min(c.tl ?? 0, limit),
-    tr: Math.min(c.tr ?? 0, limit),
-    br: Math.min(c.br ?? 0, limit),
-    bl: Math.min(c.bl ?? 0, limit),
+    tl: clamp(c.tl),
+    tr: clamp(c.tr),
+    br: clamp(c.br),
+    bl: clamp(c.bl),
   }
 }

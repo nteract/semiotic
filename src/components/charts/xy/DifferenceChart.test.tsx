@@ -115,6 +115,80 @@ describe("computeDifferenceSegments", () => {
     expect(rows[1].__valB).toBe(8)
   })
 
+  it("uses the tie row as the crossover when A→tie→B", () => {
+    // Without tie-aware handling, the winner of the post-tie row would
+    // be stale (the segment would keep the pre-tie winner) and/or the
+    // crossover would land at a linear-interpolated x that ignores the
+    // user-supplied zero-difference point. With it, the segment splits
+    // AT the tie row, which is what the data actually says.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 10, b: 5 },  // A > B
+        { x: 2, a: 8,  b: 8 },  // tie
+        { x: 3, a: 4,  b: 9 },  // B > A
+      ],
+      getX, getA, getB,
+    )
+    // Expect two segments split AT x=2 (the tie point).
+    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    expect(segKeys.size).toBe(2)
+    // The crossover vertices (close A, open B) sit at the tie's x=2,y=8.
+    const crossovers = rows.filter(r => r.__x === 2 && r.__y === 8 && r.__y0 === 8)
+    expect(crossovers.length).toBeGreaterThanOrEqual(2)
+    // The post-tie row must be in the B segment (the new winner), not
+    // stranded in the A segment.
+    const postRow = rows.find(r => r.__x === 3)!
+    expect(postRow.__diffWinner).toBe("B")
+  })
+
+  it("flushes a tie row into the current segment when winner does not change", () => {
+    // A > B → tie → A > B: the tie sits inside one continuous A segment
+    // (zero-width point), no new segment opens.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 10, b: 5 },
+        { x: 1, a: 8,  b: 8 },  // tie
+        { x: 2, a: 12, b: 4 },
+      ],
+      getX, getA, getB,
+    )
+    const segKeys = new Set(rows.map(r => r.__diffSegment))
+    expect(segKeys.size).toBe(1)
+    expect([...segKeys][0]).toMatch(/-A$/)
+    // The tie row is in the segment as a zero-width vertex.
+    const tieRow = rows.find(r => r.__x === 1)!
+    expect(tieRow.__y).toBe(8)
+    expect(tieRow.__y0).toBe(8)
+  })
+
+  it("multi-tie run with winner switch splits at the first tie", () => {
+    // A > B → tie, tie, tie → B > A. First tie is the segment boundary;
+    // subsequent ties belong to the new (B) segment.
+    const rows = computeDifferenceSegments(
+      [
+        { x: 0, a: 10, b: 5 },
+        { x: 1, a: 8,  b: 8 },
+        { x: 2, a: 7,  b: 7 },
+        { x: 3, a: 6,  b: 6 },
+        { x: 4, a: 4,  b: 9 },
+      ],
+      getX, getA, getB,
+    )
+    const segKeys = [...new Set(rows.map(r => r.__diffSegment))]
+    expect(segKeys.length).toBe(2)
+    // First-tie x=1 is the boundary: vertices at (1, 8) close A, open B.
+    const aRows = rows.filter(r => r.__diffWinner === "A")
+    const bRows = rows.filter(r => r.__diffWinner === "B")
+    // A segment ends at x=1 (no later non-tie rows are A-winning).
+    expect(Math.max(...aRows.map(r => r.__x))).toBe(1)
+    // B segment opens at x=1 (the first tie) and includes the remaining
+    // ties + the final non-tie row.
+    expect(Math.min(...bRows.map(r => r.__x))).toBe(1)
+    expect(bRows.some(r => r.__x === 2)).toBe(true)
+    expect(bRows.some(r => r.__x === 3)).toBe(true)
+    expect(bRows.some(r => r.__x === 4)).toBe(true)
+  })
+
   it("detects a crossover that straddles a non-finite row", () => {
     // Earlier implementation compared against `sorted[i - 1]` even when
     // that row was non-finite — losing the crossover. The fix tracks the

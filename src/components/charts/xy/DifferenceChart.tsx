@@ -143,9 +143,24 @@ interface LineRow {
  * interpolated vertex on BOTH sides of every crossover so adjacent
  * segments meet at a zero-width point (no jagged edges).
  *
- * Skipping non-finite rows is supported: the algorithm tracks the most
- * recent VALID point (not the index neighbor) for crossover detection,
+ * Non-finite rows are skipped; the algorithm tracks the most recent
+ * VALID non-tie row (not the index neighbor) for crossover detection,
  * so a non-finite gap doesn't drop a crossover that straddles it.
+ *
+ * Tie rows (a === b) are handled distinctly from non-tie rows:
+ *
+ *   - When a tie row sits BETWEEN two non-tie rows with the SAME
+ *     winner, the tie is emitted in that winner's segment as a
+ *     zero-width vertex.
+ *   - When a tie row sits between non-tie rows with DIFFERENT winners,
+ *     the FIRST tie of the run becomes the crossover vertex. The old
+ *     segment closes at the tie's x, the new segment opens at the same
+ *     point, and any subsequent tie rows (multi-tie runs) carry into
+ *     the new segment as zero-width vertices.
+ *
+ * This preserves the data's actual zero-difference point: if the user
+ * supplied a tie row explicitly, the fill switches color exactly at
+ * that x rather than at a linear-interpolated x that ignored the tie.
  *
  * Exported for direct unit-testing — the area pipeline depends on the
  * exact crossover-vertex shape produced here.
@@ -161,14 +176,19 @@ export function computeDifferenceSegments<TDatum extends Datum>(
   const out: SegmentRow[] = []
   let segIdx = 0
   let currentWinner: "A" | "B" | null = null
-  // Track the last valid (finite a, b) row's x / a / b / winner so the
-  // crossover check survives non-finite gaps. Using `sorted[i - 1]`
-  // directly would compare against an invalid neighbor and drop the
-  // crossover between the last valid point and the current one.
-  let lastValid: { x: number; a: number; b: number; w: "A" | "B" | null } | null = null
+  // Last row with a clear winner (a !== b). Crossover detection compares
+  // against this — not the immediate prior index — so non-finite gaps
+  // AND tie rows don't suppress a real winner switch.
+  let lastNonTie: { x: number; a: number; b: number; w: "A" | "B" } | null = null
+  // Buffered tie rows since the last non-tie. Held back from emission
+  // until we know which segment they belong to: same-winner-continues
+  // ⇒ flush into current segment; winner-switches ⇒ first tie becomes
+  // the crossover boundary, remainder carry into the new segment.
+  let pendingTies: { x: number; y: number; datum: Datum }[] = []
   const winnerAt = (a: number, b: number): "A" | "B" | null =>
     a > b ? "A" : b > a ? "B" : null
   const segKey = (w: "A" | "B") => `seg-${segIdx}-${w}`
+  const pushRow = (row: SegmentRow) => out.push(row)
 
   for (let i = 0; i < sorted.length; i++) {
     const d = sorted[i]
@@ -177,50 +197,121 @@ export function computeDifferenceSegments<TDatum extends Datum>(
     const w = winnerAt(a, b)
 
     if (currentWinner == null) {
-      // First valid point of the dataset (or after consecutive ties).
-      // Pick a winner; if exactly tied, default to "A" (the tied lead-in
-      // segment collapses to zero width either way).
+      // Pre-first-segment state. A tie at this position has no segment
+      // yet to collapse into — default to "A" so subsequent emissions
+      // have a key; the tie itself emits as a zero-width vertex in A.
       currentWinner = w ?? "A"
-    } else if (lastValid && lastValid.w && w && lastValid.w !== w) {
-      // Crossover between the last valid row and this one.
-      // Solve `pa + t*(a-pa) === pb + t*(b-pb)` for t ∈ [0, 1].
-      const px = lastValid.x, pa = lastValid.a, pb = lastValid.b
-      const denom = (a - pa) - (b - pb)
-      if (denom !== 0) {
-        const t = (pb - pa) / denom
-        const tc = Math.max(0, Math.min(1, t))
-        const xc = px + tc * (x - px)
-        const yc = pa + tc * (a - pa)
-        // Close the current segment at the crossover.
-        out.push({
-          __x: xc, __y: yc, __y0: yc,
+      pushRow({
+        __x: x, __y: a >= b ? a : b, __y0: a >= b ? b : a,
+        __diffSegment: segKey(currentWinner),
+        __diffWinner: currentWinner,
+        __valA: a, __valB: b,
+        __sourceDatum: d,
+      })
+      if (w !== null) lastNonTie = { x, a, b, w }
+      continue
+    }
+
+    if (w === null) {
+      // Tie row: stash, decide where it goes when we see the next
+      // non-tie row. The first tie's (x, y) is the crossover candidate
+      // if the next non-tie row carries a different winner.
+      pendingTies.push({ x, y: a, datum: d })
+      continue
+    }
+
+    // Real winner. If different from the last non-tie row's winner, emit
+    // a crossover. The boundary x/y is the first pending tie's position
+    // when one exists (the data has an explicit zero-difference point);
+    // otherwise it's the linear-interpolation crossover between the last
+    // non-tie row and this one.
+    if (lastNonTie && lastNonTie.w !== w) {
+      let xc: number, yc: number
+      if (pendingTies.length > 0) {
+        xc = pendingTies[0].x
+        yc = pendingTies[0].y
+      } else {
+        const denom = (a - lastNonTie.a) - (b - lastNonTie.b)
+        if (denom !== 0) {
+          const t = (lastNonTie.b - lastNonTie.a) / denom
+          const tc = Math.max(0, Math.min(1, t))
+          xc = lastNonTie.x + tc * (x - lastNonTie.x)
+          yc = lastNonTie.a + tc * (a - lastNonTie.a)
+        } else {
+          // Parallel lines never cross — defensive fallback that
+          // shouldn't fire for different-winner endpoints, but keeps
+          // the algorithm well-defined.
+          xc = lastNonTie.x
+          yc = lastNonTie.a
+        }
+      }
+      // Close old segment at crossover.
+      pushRow({
+        __x: xc, __y: yc, __y0: yc,
+        __diffSegment: segKey(currentWinner),
+        __diffWinner: currentWinner,
+        __valA: yc, __valB: yc,
+      })
+      // Open new segment at the same vertex.
+      segIdx++
+      currentWinner = w
+      pushRow({
+        __x: xc, __y: yc, __y0: yc,
+        __diffSegment: segKey(currentWinner),
+        __diffWinner: currentWinner,
+        __valA: yc, __valB: yc,
+      })
+      // Pending ties AFTER the boundary belong to the new segment as
+      // zero-width vertices. The first one was the boundary itself, so
+      // skip index 0.
+      for (let p = 1; p < pendingTies.length; p++) {
+        const t = pendingTies[p]
+        pushRow({
+          __x: t.x, __y: t.y, __y0: t.y,
           __diffSegment: segKey(currentWinner),
           __diffWinner: currentWinner,
-          __valA: yc, __valB: yc,
+          __valA: t.y, __valB: t.y,
+          __sourceDatum: t.datum,
         })
-        // Open the new segment at the same vertex.
-        segIdx++
-        currentWinner = w
-        out.push({
-          __x: xc, __y: yc, __y0: yc,
+      }
+    } else {
+      // Same winner across the tie run — flush pending ties into the
+      // current segment as-is.
+      for (const t of pendingTies) {
+        pushRow({
+          __x: t.x, __y: t.y, __y0: t.y,
           __diffSegment: segKey(currentWinner),
           __diffWinner: currentWinner,
-          __valA: yc, __valB: yc,
+          __valA: t.y, __valB: t.y,
+          __sourceDatum: t.datum,
         })
       }
     }
+    pendingTies = []
 
-    const winner: "A" | "B" = currentWinner ?? (w ?? "A")
+    // Emit the current (non-tie) row.
     const upper = a >= b ? a : b
     const lower = a >= b ? b : a
-    out.push({
+    pushRow({
       __x: x, __y: upper, __y0: lower,
-      __diffSegment: segKey(winner),
-      __diffWinner: winner,
+      __diffSegment: segKey(currentWinner),
+      __diffWinner: currentWinner,
       __valA: a, __valB: b,
       __sourceDatum: d,
     })
-    lastValid = { x, a, b, w }
+    lastNonTie = { x, a, b, w }
+  }
+
+  // Trailing tie run with no subsequent non-tie row — flush into the
+  // current segment as zero-width vertices.
+  for (const t of pendingTies) {
+    pushRow({
+      __x: t.x, __y: t.y, __y0: t.y,
+      __diffSegment: segKey(currentWinner ?? "A"),
+      __diffWinner: currentWinner ?? "A",
+      __valA: t.y, __valB: t.y,
+      __sourceDatum: t.datum,
+    })
   }
   return out
 }
